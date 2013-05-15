@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions" 
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      >
+
+    <ui:composition template="layout.xhtml">
+
+        <ui:define name="title">
+            #{settingsController.name} - Cluster Setup
+        </ui:define>
+        <ui:define name="css"/>
+        <ui:define name="scripts"/>
+        <ui:define name="content">
+            <!--Navigation Bar - Begin -->
+            <h:form styleClass="styleNav">
+                <p:panelGrid>  
+                    <p:row>  
+                        <p:column>
+                            <h:outputText value="Cluster"/>
+                        </p:column>
+                    </p:row>
+                </p:panelGrid>
+            </h:form>
+            <!--Navigation Bar - End-->
+
+
+            <div id="content" align="center">
+                <div class="services-header">Add Cluster:</div>
+
+
+                <p:spacer width="1" height="8" />
+                <div id="clusterForm" >
+                    <h:form id="clusterUpload" enctype="multipart/form-data">  
+
+                        <p:fileUpload fileUploadListener="#{clusterController.handleFileUpload}"  
+                                      mode="advanced"   showButtons="false"
+                                      update="messages next"  
+                                      sizeLimit="5000"   
+                                      allowTypes="/(\.|\/)(yml)$/"/>  
+
+                        <p:growl id="messages" showDetail="true"/>
+                        <br/>            
+                        <p:commandButton id="next" value="Next" action="proceedLaunchCluster" ajax="false" disabled="#{clusterController.clusterLoaded()}" />
+
+                    </h:form>  
+                </div>
+            </div>
+        </ui:define>
+
+    </ui:composition>
+</html>

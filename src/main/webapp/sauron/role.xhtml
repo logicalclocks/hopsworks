@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+
+   <ui:composition template="layout.xhtml">
+
+      <ui:define name="title">
+         #{settingsController.name} - Role Status
+      </ui:define>
+
+      <ui:define name="content">
+
+         <!--Navigation Bar - Begin -->
+         <h:form styleClass="styleNav">
+            <p:panelGrid>  
+               <p:row>  
+                  <p:column>
+                     <p:commandLink action="clusters" ajax="false">  
+                        <h:outputText value="Clusters" />
+                     </p:commandLink> 
+                     <h:outputText value=" &raquo; "/>
+                     <p:commandLink action="#{serviceController.gotoClusterStatus}" ajax="false">  
+                        <h:outputText value="#{serviceController.cluster}" />
+                        <f:param name="cluster" value="#{serviceController.cluster}"/>    
+                     </p:commandLink> 
+                     <h:outputText value=" &raquo; "/>
+                     <p:commandLink action="#{serviceController.gotoServiceStatus}" ajax="false">  
+                        <h:outputText value="#{serviceController.serviceGroup}" />
+                        <f:param name="cluster" value="#{serviceController.cluster}"/>
+                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                          
+                     </p:commandLink>                      
+                     <h:outputText value=" &raquo; "/>
+                     <p:commandLink action="#{serviceController.gotoServiceInstances}" ajax="false">  
+                        <h:outputText value="#{serviceController.role}" />
+                        <f:param name="cluster" value="#{serviceController.cluster}"/>
+                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>
+                        <f:param name="role" value="#{serviceController.role}"/>                                                  
+                     </p:commandLink>  
+                  </p:column>
+               </p:row>
+            </p:panelGrid>
+         </h:form>
+         <!--Navigation Bar - End-->
+
+         <!-- Second Toolbar-->
+         <h:form>  
+            <p:toolbar styleClass="SecondToolbarGood">  
+               <p:toolbarGroup align="left">  
+                  <p:commandLink  action="#{serviceController.gotoRole()}" ajax="false">
+                     <h:outputText value="#{serviceController.role} (#{serviceController.hostname})"/>
+                     <f:param name="cluster" value="#{serviceController.cluster}"/>
+                     <f:param name="role" value="#{serviceController.role}"/>
+                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                              
+                     <f:param name="hostname" value="#{serviceController.hostname}"/>
+                  </p:commandLink>
+
+                  <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{serviceController.gotoRole()}" ajax="false">
+                     <f:param name="cluster" value="#{serviceController.cluster}"/>
+                     <f:param name="role" value="#{serviceController.role}"/>
+                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                             
+                     <f:param name="hostname" value="#{serviceController.hostname}"/>                          
+                  </p:commandButton>  
+
+               </p:toolbarGroup>  
+
+               <p:toolbarGroup align="right">  
+                  <p:menuButton value="Actions">  
+                     <p:menuitem value="Init" actionListener="#{hostController.doCommand}" ajax ="true" update="@form :Instance" disabled="true" 
+                                 onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
+                        <f:param name="hostname" value="#{hostController.hostname}" />
+                        <f:param name="cluster" value="#{hostController.cluster}" />
+                        <f:param name="role" value="#{hostController.role}" />
+                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                                   
+                        <f:param name="command" value="init" />
+                     </p:menuitem>
+                     <p:menuitem value="Start" actionListener="#{hostController.doCommand}" ajax ="true" update="@form :Instance"
+                                 onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
+                        <f:param name="hostname" value="#{hostController.hostname}" />
+                        <f:param name="cluster" value="#{hostController.cluster}" />
+                        <f:param name="role" value="#{hostController.role}" />
+                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                                   
+                        <f:param name="command" value="start" />
+                     </p:menuitem>
+                     <p:menuitem value="Stop" actionListener="#{hostController.doCommand}" ajax ="true" update="@form :Instance"
+                                 onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
+                        <f:param name="hostname" value="#{hostController.hostname}" />
+                        <f:param name="cluster" value="#{hostController.cluster}" />
+                        <f:param name="role" value="#{hostController.role}" />
+                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                                  
+                        <f:param name="command" value="stop" />
+                     </p:menuitem>
+
+                  </p:menuButton>  
+               </p:toolbarGroup>  
+            </p:toolbar>  
+         </h:form>
+
+         <!-- Second Toolbar - End -->
+
+         <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
+            <p:graphicImage library="images" name="ajaxloadingbar.gif" />  
+         </p:dialog>          
+
+         <p:spacer width="1" height="10" />
+
+         <h:form id="form_messages" >
+            <p:messages id="messages" showDetail="true" autoUpdate="true"/>  
+         </h:form>
+
+         <h:form id="Instance" styleClass="styleInfoPanel">
+            <p:panel header="Role Status">
+               <p:dataTable id="instances" var="instance" value="#{serviceController.instanceFullInfo}">
+                  <p:column headerText="Name"><h:outputText value="#{instance.name}"/></p:column>
+                  <p:column headerText="Host">
+                     <h:outputLink id="hostlink" value="#{serviceController.hostUrl}">
+                        <h:outputText value="#{instance.host}"/>
+                        <f:param name="hostname" value="#{instance.host}"/>
+                     </h:outputLink>
+                  </p:column>
+                  <p:column headerText="Status"><h:outputText value="#{instance.status}"/></p:column>
+                  <p:column headerText="Health">
+                     <div class="Health-#{instance.health}"><h:outputText value="#{instance.health}"/></div>
+                  </p:column>
+                  <p:column headerText="Pid"><h:outputText value="#{instance.pid}"/></p:column>
+                  <p:column headerText="Uptime"><h:outputText value="#{instance.uptime}"/></p:column>
+                  <p:column headerText="Web UI" rendered="#{serviceController.hasWebUi()}">
+                     <h:outputLink target="_blank" value="#{instance.webUiLink}">#{instance.webUiLabel}</h:outputLink>
+                  </p:column>
+               </p:dataTable> 
+            </p:panel>                    
+         </h:form>
+
+         <p:spacer width="1" height="40" />
+
+         <p:accordionPanel id="panels" activeIndex="2">         
+
+            <p:tab title ="Recent Log">
+               <h:form id="logform">
+                  <p:commandLink styleClass="AccordionPanelLink" value="Refresh Log" update="log"
+                                 onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
+                     <f:param name="cluster" value="#{serviceController.cluster}"/>
+                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                       
+                     <f:param name="role" value="#{serviceController.role}"/>  
+                     <f:param name="hostname" value="#{serviceController.hostname}"/>
+                  </p:commandLink>
+                  <p:panelGrid id="log" styleClass="LogOutput">
+                     <p:row>
+                        <p:column  styleClass="LogOutput column">
+                           Stdout<br/>
+                           <div>
+                              <h:outputText escape="false" value="#{serviceController.getRoleLog(20)}"/>
+                           </div>
+                        </p:column>
+                     </p:row>
+                  </p:panelGrid>
+               </h:form>
+            </p:tab>           
+         </p:accordionPanel>
+
+         <p:spacer width="1" height="20" />
+
+         <p:outputPanel rendered="#{serviceController.roleHasGraphs()}">
+
+            <h:form id="formdate" style="text-align: center">  
+               <h:panelGrid columns="10"> 
+                  <p:selectOneButton id ="periods" value="#{graphController.period}">  
+                     <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
+                     <f:param name="hostname" value="#{hostController.hostname}"/>
+                     <f:param name="role" value="#{serviceController.role}"/>                  
+                     <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
+                  </p:selectOneButton>
+                  <h:outputText value="or from" />
+                  <p:calendar title="from" value="#{graphController.start}" id="calstart" showOn="button" pattern="dd/MM/yyyy HH:mm"/>  
+                  <h:outputText value=" to " />
+                  <p:calendar title="to" value="#{graphController.end}" id="calend" showOn="button" pattern="dd/MM/yyyy HH:mm"/>
+                  <h:outputText value=" in " />
+                  <p:selectOneMenu id="cols" value="#{settingsController.numOfGraphColumns}" >  
+                     <f:selectItems var="n" value="#{graphController.columns}" />  
+                  </p:selectOneMenu>
+                  <h:outputText value=" columns " />
+                  <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
+                     <f:param name="hostname" value="#{hostController.hostname}"/>
+                     <f:param name="role" value="#{serviceController.role}"/>                  
+                  </p:commandButton> 
+               </h:panelGrid>
+            </h:form> 
+
+            <h:form id="graphs">
+
+               <p:outputPanel rendered="#{serviceController.showNamenodeGraphs()}">
+                  <p:toolbar>
+                     <p:toolbarGroup align="left"><p:outputLabel value="Name Node Info"/></p:toolbarGroup>
+                  </p:toolbar>                     
+                  <p:dataGrid  var="g" value="#{graphController.namenodeInstanceGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                     <p:graphicImage value="#{graphController.getNamenodeInstanceGraphUrl(g)}" />  
+                  </p:dataGrid> 
+
+                  <p:toolbar>
+                     <p:toolbarGroup align="left"><p:outputLabel value="Name Node Activity"/></p:toolbarGroup>
+                  </p:toolbar>
+                  <p:dataGrid  var="g" value="#{graphController.namenodeInstanceActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                     <p:graphicImage value="#{graphController.getNamenodeInstanceGraphUrl(g)}" />   
+                  </p:dataGrid>               
+               </p:outputPanel>
+
+               <p:outputPanel rendered="#{serviceController.showDatanodeGraphs()}">
+                  <p:toolbar>
+                     <p:toolbarGroup align="left"><p:outputLabel value="Data Node Activity"/></p:toolbarGroup>
+                  </p:toolbar>
+                  <p:dataGrid  var="g" value="#{graphController.datanodeInstanceActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                     <p:graphicImage value="#{graphController.getDatanodeInstanceGraphUrl(g)}" />   
+                  </p:dataGrid>                 
+               </p:outputPanel>            
+
+            </h:form>         
+
+         </p:outputPanel>               
+
+      </ui:define>
+
+   </ui:composition>
+
+</html>

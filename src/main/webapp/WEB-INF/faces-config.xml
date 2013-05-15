@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<!-- =========== FULL CONFIGURATION FILE ================================== -->
+
+<faces-config version="2.0"
+              xmlns="http://java.sun.com/xml/ns/javaee" 
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+              xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd">
+
+<!--    <lifecycle>
+        <phase-listener>
+            se.kth.kthfsdashboard.user.AuthenticationPhaseListener
+        </phase-listener>
+    </lifecycle>-->
+    
+    
+    <navigation-rule>        
+        <navigation-case>
+            <from-outcome>logout</from-outcome>
+            <to-view-id>/index.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>login</from-outcome>
+            <to-view-id>/index.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>app-main</from-outcome>
+            <to-view-id>/sauron/hosts.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>welcome</from-outcome>
+            <to-view-id>/index.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>hosts</from-outcome>
+            <to-view-id>/sauron/hosts.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>host</from-outcome>
+            <to-view-id>/sauron/host.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>alerts</from-outcome>
+            <to-view-id>/sauron/alerts.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>        
+        <navigation-case>
+            <from-outcome>backuprestore</from-outcome>
+            <to-view-id>/sauron/backup-restore.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case> 
+        <navigation-case>
+            <from-outcome>services</from-outcome>
+            <to-view-id>/sauron/services.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>clusters</from-outcome>
+            <to-view-id>/sauron/clusters.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>setupCredentials</from-outcome>
+            <to-view-id>/sauron/setup.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        
+        <navigation-case>
+            <from-outcome>addcluster</from-outcome>
+            <to-view-id>/sauron/manageCluster.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>proceedLaunchCluster</from-outcome>
+            <to-view-id>/sauron/clusterLauncher.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>    
+
+   
+            
+</faces-config>

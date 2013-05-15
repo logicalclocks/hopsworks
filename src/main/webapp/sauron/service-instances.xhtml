@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+   <ui:composition template="layout.xhtml">
+
+      <ui:define name="title">
+         #{settingsController.name} - Role Instances
+      </ui:define>
+
+        <ui:define name="scripts">
+
+            <script>
+                jQuery(document).ready(function() {
+                    jQuery('select[id*="Name"]').val('#{serviceInstanceController.role}');             
+                    jQuery('select[id*="Status1"]').val('#{serviceInstanceController.status}');
+                });
+            </script>
+
+        </ui:define>
+      
+      <ui:define name="content">
+
+         <!--Navigation Bar - Begin -->
+         <h:form styleClass="styleNav">
+            <p:panelGrid>  
+               <p:row>  
+                  <p:column>
+                     <p:commandLink action="clusters" ajax="false">  
+                        <h:outputText value="Clusters" />
+                     </p:commandLink> 
+                     <h:outputText value=" &raquo; "/>
+                     <p:commandLink action="#{serviceController.gotoClusterStatus}" ajax="false">  
+                        <h:outputText value="#{serviceController.cluster}" />
+                        <f:param name="cluster" value="#{serviceController.cluster}"/>    
+                     </p:commandLink> 
+                     <h:outputText value=" &raquo; "/>
+                     <p:commandLink action="#{serviceController.gotoServiceStatus}" ajax="false">  
+                        <h:outputText value="#{serviceController.serviceGroup}" />
+                        <f:param name="cluster" value="#{serviceController.cluster}"/>
+                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                          
+                     </p:commandLink>                      
+                  </p:column>
+               </p:row>
+            </p:panelGrid>
+         </h:form>
+         <!--Navigation Bar - End-->
+
+         <!-- Second Toolbar-->
+         <h:form>  
+            <p:toolbar styleClass="SecondToolbarGood">  
+               <p:toolbarGroup align="left">  
+                  <p:commandLink  action="#{serviceController.gotoServiceStatus}" ajax="false">
+                     <h:outputText value="#{serviceController.serviceGroup}"/>
+                     <f:param name="cluster" value="#{serviceController.cluster}"/>
+                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                      
+                  </p:commandLink>
+
+                  <p:commandButton value="Status" icon="ui-icon-home" action="#{serviceController.gotoServiceStatus}" ajax="false">
+                     <f:param name="cluster" value="#{serviceController.cluster}"/>
+                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>
+                  </p:commandButton>  
+                  <p:commandButton styleClass="Selected" value="Instances" icon="ui-icon-note" action="#{serviceController.gotoServiceInstances}">
+                     <f:param name="cluster" value="#{serviceController.cluster}"/>
+                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>
+                  </p:commandButton>  
+                  <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" action="#{serviceController.gotoServiceCommandHistory}">
+                     <f:param name="cluster" value="#{serviceController.cluster}"/>
+                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                      
+                  </p:commandButton>  
+               </p:toolbarGroup>  
+
+               <p:toolbarGroup align="right">  
+                  <p:menuButton value="Actions" disabled="true">  
+                     <p:menuitem value="Start..." url="???" /> 
+                     <p:menuitem value="Stop..." url="???" /> 
+                  </p:menuButton>  
+               </p:toolbarGroup>  
+
+            </p:toolbar>  
+         </h:form>
+
+
+         <p:spacer width="1" height="10" />
+
+         <h:form styleClass="styleInfoPanel" id="formInstances">
+
+            <p:panel id="panelInstances" header="Role Instances">
+
+               <p:dataTable id="instances" var="instance" value="#{serviceInstanceController.instances}" 
+                            widgetVar="instancesTable" filteredValue="#{serviceInstanceController.filteredInstances}" >
+
+                  <p:column id="Name" headerText="Name" filterBy="#{instance.name}" filterMatchMode="contains" 
+                            filterOptions="#{serviceInstanceController.roleOptions}" filterPosition="top">
+
+                     <h:outputLink id="link1" value="#{serviceController.roleUrl}">
+                        <h:outputText value="#{instance.name}"/>
+                        <f:param name="hostname" value="#{instance.host}"/>
+                        <f:param name="cluster" value="#{instance.cluster}"/>
+                        <f:param name="role" value="#{instance.role}"/>
+                        <f:param name="servicegroup" value="#{instance.serviceGroup}"/>
+                     </h:outputLink>
+                  </p:column>
+
+                  <p:column headerText="Host" filterBy="#{instance.host}" filterMatchMode="contains" filterPosition="top">
+                     <p:commandLink action="#{hostController.gotoHost}" ajax="false">
+                        <h:outputText value="#{instance.host}"/>
+                        <f:param name="hostname" value="#{instance.host}"/>
+                     </p:commandLink> 
+                  </p:column>
+
+                  <p:column id="Rack" headerText="Rack" filterBy="#{instance.rack}" filterMatchMode="contains" filterPosition="top">
+                     <h:outputText value="#{instance.rack}"/>
+                  </p:column>
+
+                  <p:column id="Status1" headerText="Status" filterBy="#{instance.status}" 
+                            filterMatchMode="exact" filterOptions="#{serviceInstanceController.statusOptions}" filterPosition="top">
+                     <h:outputText value="#{instance.status}"/>
+                  </p:column>
+
+                  <p:column id="Health" headerText="Health" filterBy="#{instance.health}"  
+                            filterMatchMode="exact" filterOptions="#{serviceInstanceController.healthOptions}" filterPosition="top">
+                     <div class="Health-#{instance.health}"><h:outputText value="#{instance.health}"/></div>
+                  </p:column>
+
+               </p:dataTable> 
+            </p:panel>                    
+         </h:form>
+
+      </ui:define>
+
+   </ui:composition>
+
+</html>
+

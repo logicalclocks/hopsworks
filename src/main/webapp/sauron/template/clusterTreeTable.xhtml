@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions" 
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      >
+
+    <h:body>
+        <h:form>
+            <p:treeTable id="clusterTreeStatus" value="#{clusterController.root}" var="element">
+                <p:column style="width:50px">
+                    <f:facet name="header">
+                        Name
+                    </f:facet>    
+                    <h:outputText value="#{element.name}" />
+                </p:column>
+                <p:column style="width:50px">
+                    <f:facet name="header">
+                        Instances
+                    </f:facet>             
+                    <h:outputText value="#{element.number}" />
+                </p:column>
+                <p:column style="width:50px">
+                    <f:facet name="header">
+                        Status
+                    </f:facet>
+                    <h:outputText value="#{element.status}" />
+                </p:column>
+                <p:column style="width:150px" >
+                    <f:facet name="header">
+                        Notes
+                    </f:facet>
+                </p:column>
+            </p:treeTable>
+
+            
+        </h:form>
+    </h:body>
+</html>
+

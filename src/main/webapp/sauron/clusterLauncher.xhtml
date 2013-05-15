@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions" 
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      >
+
+    <ui:composition template="layout.xhtml">
+
+        <ui:define name="title">
+            #{settingsController.name} - Cluster Launcher
+        </ui:define>
+        <ui:define name="css"/>
+        <ui:define name="scripts"/>
+        <ui:define name="content">
+            <!--Navigation Bar - Begin -->
+            <h:form styleClass="styleNav">
+                <p:panelGrid>  
+                    <p:row>  
+                        <p:column>
+                            <h:outputText value="Launch Cluster"/>
+                        </p:column>
+                    </p:row>
+                </p:panelGrid>
+            </h:form>
+            <!--Navigation Bar - End-->
+
+
+            <div id="content" align="center">
+                <div class="services-header">Cluster Launcher:</div>
+
+                <div id="launchLayout">
+                    <p:layout  id="launch" fullPage="false">
+                        <p:layoutUnit id="launcher" position="west" size="350" header="Cluster Details" resizable="true" closable="false" collapsible="true" >
+                            <h:form id="launchForm">
+                                <p:accordionPanel dynamic="true" cache="true">
+                                    <p:tab title="General Cluster Details:">
+                                        <h:panelGrid columns="2" cellpadding="5">
+                                            <h:outputLabel value="Name:"/>
+                                            <h:outputText value="#{clusterController.cluster.name}" />
+                                            <h:outputLabel value="Global Services:"/>
+                                            <h:outputText value="#{clusterController.cluster.globalServices}" />
+                                            <h:outputLabel value="Authorize Ports:"/>
+                                            <h:outputText value="#{clusterController.cluster.authorizePorts}" />
+                                            <h:outputLabel value="Authorize Specific Ports:"/>
+                                            <h:outputText value="#{clusterController.cluster.authorizeSpecificPorts}" />
+                                        </h:panelGrid>
+                                    </p:tab>
+                                    <p:tab title="Provider Details:">
+                                        <h:panelGrid columns="2" cellpadding="5">
+                                            <h:outputLabel value="Name:"/>
+                                            <h:outputText value="#{clusterController.cluster.provider.name}" />
+                                            <h:outputLabel value="Instance Type:"/>
+                                            <h:outputText value="#{clusterController.cluster.provider.instanceType}" />
+                                            <h:outputLabel value="Image Details:"/>
+                                            <h:outputText value="#{clusterController.cluster.provider.image}" />
+                                            <h:outputLabel value="Region:"/>
+                                            <h:outputText value="#{clusterController.cluster.provider.region}" />
+                                            <h:outputLabel value="Zones:"/>
+                                            <h:outputText value="#{clusterController.cluster.provider.zones}" />
+                                        </h:panelGrid>
+                                    </p:tab>
+                                    <p:tab title="Nodes:" >
+                                        <p:accordionPanel value="#{clusterController.cluster.nodes}" var="node">
+                                            <p:tab title="Security Group: #{node.securityGroup}">
+                                                <h:panelGrid columns="2" cellpadding="5">
+                                                    <h:outputLabel value="Number:"/>
+                                                    <h:outputText value="#{node.number}" />
+                                                    <h:outputLabel value="Roles:"/>
+                                                    <h:outputText value="#{node.roles}" />
+                                                    <h:outputLabel value="Authorize Ports:"/>
+                                                    <h:outputText value="#{node.authorizePorts}" />
+                                                </h:panelGrid>
+                                            </p:tab>
+                                        </p:accordionPanel>
+                                    </p:tab>
+                                    <p:tab title="Chef Attributes:" >
+                                        <p:accordionPanel value="#{clusterController.cluster.chefAttributes}" var="chef">
+                                            <p:tab title="Role: #{chef.role}">
+                                                <h:panelGrid columns="2" cellpadding="5">
+                                                    <h:outputLabel value="Json:"/>
+                                                    <h:outputText value="#{chef.chefJson}" />
+
+                                                </h:panelGrid>
+                                            </p:tab>
+                                        </p:accordionPanel>
+                                    </p:tab>
+                                </p:accordionPanel>
+                                <br/>
+                                <p:commandButton id="startCluster" value="startCluster" 
+                                                 action="#{virtualizationController.launchCluster()}"
+                                                 update="success"
+                                                 onclick="pollCreate.start();"
+                                                 onerror="pollCreate.stop();"
+                                                 oncomplete="pollCreate.stop();"/>
+                                
+                                
+                                <p:growl id="success" showDetail="true" sticky="true" />
+
+                                <p:blockUI block=":centerStatus" trigger=":launchForm:startCluster">
+                                    <h:panelGrid id="blockContent" columns="2" >
+                                        <div class="windows8" >
+                                            <div class="wBall" id="wBall_1">
+                                                <div class="wInnerBall">
+                                                </div>
+                                            </div>
+                                            <div class="wBall" id="wBall_2">
+                                                <div class="wInnerBall">
+                                                </div>
+                                            </div>
+                                            <div class="wBall" id="wBall_3">
+                                                <div class="wInnerBall">
+                                                </div>
+                                            </div>
+                                            <div class="wBall" id="wBall_4">
+                                                <div class="wInnerBall">
+                                                </div>
+                                            </div>
+                                            <div class="wBall" id="wBall_5">
+                                                <div class="wInnerBall">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <h:outputLabel id="statusCreate" value="#{virtualizationController.messages.showMessage()}" 
+                                                       />
+                                        
+                                        <p:poll widgetVar="pollCreate" interval="2" autoStart="false" update="statusCreate" async="true" partialSubmit="true" process="@this"/>
+                                    </h:panelGrid>
+                                </p:blockUI>
+                            </h:form>
+
+                        </p:layoutUnit>
+                        <p:layoutUnit id="centerStatus" position="center" header="Launch Status:">
+                            <ui:include src="/sauron/template/clusterTreeTable.xhtml"/>
+                        </p:layoutUnit>
+                        
+                    </p:layout>
+                    
+                </div>
+            </div>
+        </ui:define>
+
+    </ui:composition>
+</html>

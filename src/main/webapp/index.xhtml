@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <h:head>
+       <title>#{settingsController.name} - Login</title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    </h:head>
+
+    <!--            <form method='post' action='j_security_check'>
+                    <h:messages layout='table' errorStyle='background: #AFEEEE;'
+                                infoStyle='background: #AFEEEE;' globalOnly='true' />
+                    <h:panelGrid columns='2'>
+                        <h:outputLabel value='Username: ' />
+                        <input type='text' id='j_username' name='j_username' />
+                        <h:outputLabel value='Password: ' />
+                        <input type='password' id='j_password' name='j_password' />
+                        <h:outputText value='' />
+                        <h:panelGrid columns='1'>
+                            <input type='submit' name='submit' value='Login' />
+                        </h:panelGrid>
+                    </h:panelGrid>
+                </form>    -->
+    <!--            <form method="post" action="j_security_check">
+                    <h:panelGrid columns="2">
+                        <h:outputLabel for="j_username" value="Username" />
+                        <input type="text" id="j_username" name="j_username" />
+                        <h:outputLabel for="j_password" value="Password" />
+                        <input type="password" id='j_password' name="j_password" />
+                        <h:outputText value="" />
+                        <h:panelGrid columns="2">
+                            <input type="submit" name="submit" value="Login" />
+                            <h:button outcome="index" value="Cancel" />
+                        </h:panelGrid>
+                    </h:panelGrid>
+                    <hr/>
+                </form>-->
+
+    <h:body >
+       
+       <div align="center">
+         <br/>          
+           
+       </div>
+       <p:panel header="#{settingsController.name} Login" style="width: 300px; margin: 0 auto;">
+
+            <p> Login to access secure pages:</p>  
+            <h:messages />  
+            <h:form id="loginForm">  
+                <h:panelGrid columns="2">  
+                    <h:outputLabel for="username" value="Username:" />  
+                    <h:inputText id="username" value="#{authBackingBean.username}" />  
+
+                    <h:outputLabel for="password" value="Password:" />  
+                    <h:inputSecret id="password" value="#{authBackingBean.password}" />  
+
+                    <h:commandButton id="loginButton" value="Login" action="#{authBackingBean.login()}" />  
+                </h:panelGrid>  
+            </h:form>            
+        </p:panel>
+
+    </h:body>  
+
+</html>
+
+

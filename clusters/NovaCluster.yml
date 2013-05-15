@@ -1,0 +1,36 @@
+## YAML Template.
+---
+!!se.kth.kthfsdashboard.virtualization.clusterparser.Cluster
+  name: test
+  environment: dev
+  globalServices: 
+    [ssh, chefClient]
+  authorizePorts:
+    [ssh, chefClient, chefServer, http&https, webserver]
+  authorizeSpecificPorts:
+    [3306, 4343, 3321]
+  provider:
+    name: openstack-nova
+    instanceType: 4
+    loginUser: ubuntu
+    image: 281956fa-198e-4da9-9404-cd5c958318df
+    region: RegionSICS
+
+  ##lists of service, we define a service with the number of instances and roles?  
+  nodes:
+  - securityGroup: namenodes
+    number: 2
+    roles:
+     [kthfs*namenode]
+    authorizePorts:
+     [kthfs*namenode]
+  - securityGroup: datanodes
+    number: 1
+    roles:
+     [kthfs*datanode]
+    authorizePorts:
+     [kthfs*datanode]
+  ##Override chef attributes for roles:
+  chefAttributes:
+
+...

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      >
+
+   <h:head>
+      <title>Test Page</title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+
+   </h:head>
+
+   <h:body>
+      <p>Test</p>
+
+      <h:form>  
+         <p:dataTable var="item" value="#{mySQLController.info}">  
+            <p:column headerText="Node id">  
+               <h:outputText value="#{item.nodeId}" />  
+            </p:column>  
+
+            <p:column headerText="Status">  
+               <h:outputText value="#{item.status}" />  
+            </p:column>  
+            <p:column headerText="Up time">  
+               <h:outputText value="#{item.upTime}" />  
+            </p:column>
+
+            <p:column headerText="Start phase">  
+               <h:outputText value="#{item.startPhase}" />  
+            </p:column>
+            <p:column headerText="Up time">  
+               <h:outputText value="#{item.configGeneration}" />  
+            </p:column>
+         </p:dataTable>
+      </h:form>
+
+
+
+   </h:body>
+
+</html>
+

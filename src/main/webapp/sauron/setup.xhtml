@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions" 
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      >
+    
+    <ui:composition template="layout.xhtml">
+
+        <ui:define name="title">
+            #{settingsController.name} - Setup Credentials
+        </ui:define>
+        <ui:define name="css"/>
+        <ui:define name="scripts"/>
+        <ui:define name="content">
+            <!--Navigation Bar - Begin -->
+            <h:form styleClass="styleNav">
+                <p:panelGrid>  
+                    <p:row>  
+                        <p:column>
+                            <h:outputText value="Setup Credentials"/>
+                        </p:column>
+                    </p:row>
+                </p:panelGrid>
+            </h:form>
+            <!--Navigation Bar - End-->
+
+            
+            
+        </ui:define>
+        
+        <ui:define name="form">
+            <div id="content" align="center">
+                <div class="services-header">Setup Credentials:</div>
+
+
+            <p:spacer width="1" height="8" />
+            <ui:include src="/sauron/template/computeCredentialsForm.xhtml"/></div>
+        </ui:define>
+        
+    </ui:composition>
+</html>
+

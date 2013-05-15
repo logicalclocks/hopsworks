@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+
+   <ui:composition template="layout.xhtml">
+
+      <ui:define name="title">
+         #{settingsController.name} - Cluster Services Status
+      </ui:define>
+
+      <ui:define name="content">
+
+         <!--Navigation Bar - Begin -->
+         <h:form styleClass="styleNav">
+            <p:panelGrid>  
+               <p:row>  
+                  <p:column>
+                     <p:commandLink id="services" action="clusters" ajax="false">  
+                        <h:outputText value="Clusters" />
+                     </p:commandLink> 
+                     <h:outputText value=" &raquo;"/>
+                  </p:column>
+               </p:row>
+            </p:panelGrid>
+         </h:form>
+         <!--Navigation Bar - End-->
+
+         <!-- Second Toolbar-->
+         <h:form>  
+            <p:toolbar styleClass="SecondToolbarGood">  
+               <p:toolbarGroup align="left">  
+                  <p:commandLink  action="#{serviceController.gotoClusterStatus}" ajax="false">
+                     <h:outputText value="#{serviceController.cluster}"/>
+                     <f:param name="cluster" value="#{serviceController.cluster}"/>                         
+                  </p:commandLink>
+
+                  <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{serviceController.gotoClusterStatus}" ajax="false">
+                     <f:param name="cluster" value="#{serviceController.cluster}"/>                            
+                  </p:commandButton> 
+                  <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" action="#{serviceController.gotoClusterCommandHistory}">
+                     <f:param name="cluster" value="#{serviceController.cluster}"/>                            
+                  </p:commandButton>  
+               </p:toolbarGroup>  
+
+               <p:toolbarGroup align="right">  
+                  <p:menuButton value="Actions" disabled="true">  
+                     <p:menuitem value="Start..." url="???" /> 
+                     <p:menuitem value="Stop..." url="???" /> 
+                  </p:menuButton>  
+               </p:toolbarGroup>  
+
+            </p:toolbar>  
+         </h:form>
+
+         <p:spacer width="1" height="10" />
+
+         <h:form styleClass="styleInfoPanel">
+            <p:panel header="Services">
+
+               <p:dataTable id="serviceRole" var="serviceRole" value="#{serviceController.serviceGroups}">
+
+                  <p:column headerText="Service">
+                     <p:commandLink action="#{serviceController.gotoServiceStatus}" ajax="false">
+                        <h:outputText value="#{serviceRole}"/>
+                        <f:param name="cluster" value="#{serviceController.cluster}"/>
+                        <f:param name="servicegroup" value="#{serviceRole}"/>
+                     </p:commandLink>                         
+                  </p:column>  
+
+                  <p:column headerText="Status">
+                     <h:outputText value="-"/>
+                  </p:column>  
+
+                  <p:column headerText="Health"><h:outputText value="-"/></p:column> 
+               </p:dataTable> 
+
+            </p:panel>                    
+         </h:form>
+
+         <p:spacer width="1" height="50" />
+
+
+
+
+      </ui:define>
+
+   </ui:composition>
+
+</html>
+

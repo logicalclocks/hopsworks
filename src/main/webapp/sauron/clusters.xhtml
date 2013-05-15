@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions" 
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      >
+
+   <ui:composition template="layout.xhtml">
+
+      <ui:define name="title">
+         #{settingsController.name} - Clusters
+      </ui:define>
+      <ui:define name="css"/>
+      <ui:define name="scripts"/>
+      <ui:define name="content">
+         <!--Navigation Bar - Begin -->
+         <h:form styleClass="styleNav">
+            <p:panelGrid>  
+               <p:row>  
+                  <p:column>
+                     <h:outputText value="Clusters"/>
+                  </p:column>
+               </p:row>
+            </p:panelGrid>
+         </h:form>
+         <!--Navigation Bar - End-->
+
+         <div class="services-header">#{fn:length(serviceController.clusters)} Cluster(s) Under Management:</div>
+
+         <p:panel header="Clusters">  
+            <h:form id="formServices">  
+
+               <p:growl id="messages"/>  
+
+               <p:dataTable id="table_services" var="cluster" value="#{serviceController.clusters}">
+
+                  <p:column  headerText="Cluster name"  style="" >  
+                     <p:commandLink id="id#{cluster.name}" action="#{serviceController.doGotoClusterStatus()}" ajax="false">  
+                        <h:outputText value="#{cluster.name}" />
+                        <f:param name="cluster" value="#{cluster.name}"/>
+                     </p:commandLink> 
+                  </p:column>
+
+                  <p:column headerText="Status"><h:outputText value="#{cluster.status}"/></p:column>  
+                  <p:column headerText="Health"><h:outputText value="#{cluster.health}"/></p:column>  
+
+                  <p:column headerText="Services">
+                     <ui:repeat value="#{cluster.services.toArray()}" var="item" varStatus="status">
+                        <p:commandLink action="#{serviceController.gotoServiceStatus}" ajax="false">
+                           <h:outputText value="#{item}"/>
+                           <f:param name="cluster" value="#{cluster.name}"/>
+                           <f:param name="servicegroup" value="#{item}"/>
+                        </p:commandLink>
+                        <p:spacer width="6" height="0" rendered="#{!status.last}"/>
+                     </ui:repeat>
+                  </p:column>
+
+                  <p:column headerText="Roles">
+                     <ui:repeat value="#{cluster.roleCounts.entrySet().toArray()}" var="item" varStatus="status">
+                        <p:commandLink action="#{serviceController.gotoServiceInstances}" ajax="false">
+                           <h:outputText value="${item.value} ${item.key}"/>
+                           <f:param name="cluster" value="#{cluster.name}"/>
+                           <f:param name="role" value="#{item.key}"/>
+                           <f:param name="servicegroup" value="#{serviceController.findServiceByRole(item.key)}"/>
+                        </p:commandLink>
+                        <p:spacer width="6" height="0" rendered="#{!status.last}"/>
+                     </ui:repeat>
+                  </p:column>  
+
+                  <p:column headerText="" style="width:10%">
+                     <p:menuButton value="Actions">  
+                        <p:menuitem disabled="true" value="Start..." update=":formServices:messages" actionListener="#{serviceController.startService()}" />  
+                        <p:menuitem disabled="true" value="Stop..." update=":formServices:messages" actionListener="#{serviceController.stopService()}" />  
+                        <p:menuitem disabled="true" value="Restart..." update=":formServices:messages" actionListener="#{serviceController.restartService()}"/>  
+                        <p:separator />  
+                        <p:menuitem disabled="true" value="Delete..." update=":formServices:messages" actionListener="#{serviceController.deleteService()}"/>  
+                     </p:menuButton>  
+                  </p:column>
+               </p:dataTable>  
+            </h:form> 
+         </p:panel>
+         <p:spacer width="1" height="8" />
+      </ui:define>
+   </ui:composition>
+</html>
