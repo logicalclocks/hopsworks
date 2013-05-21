@@ -35,13 +35,15 @@ public class HostEJB {
         }
     }
 
-    public Host storeHost(Host host, boolean init) {
+    public Host storeHost(Host host, boolean register) {
 
-        if (init) {
+        if (register) {
             em.merge(host);
         } else {
-            Host h = em.find(Host.class, host.getName());
+           Host h = em.find(Host.class, host.getHostname());
             host.setRack(h.getRack());
+            host.setPrivateIp(h.getPrivateIp());
+            host.setPublicIp(h.getPublicIp());
             host.setCores(h.getCores());
             em.merge(host);
         }
