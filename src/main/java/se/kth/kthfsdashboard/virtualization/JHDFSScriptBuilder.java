@@ -32,7 +32,7 @@ public class JHDFSScriptBuilder implements Statement {
 
     public static enum ScriptType {
 
-        INIT, JHDFS
+        INIT, INSTALL,JHDFS
     }
 
     public static Builder builder() {
@@ -134,7 +134,7 @@ public class JHDFSScriptBuilder implements Statement {
             return new JHDFSScriptBuilder(scriptType, ndbs, mgms, mysql, namenodes, roles, nodeIP, key, privateIP);
         }
         /*
-         * Same as default but in this case we include the ip during the build.
+         * Same as default but in this case we include the ip during the build and the roles.
          */
 
         public JHDFSScriptBuilder build(String ip, List<String> roles) {
@@ -218,6 +218,10 @@ public class JHDFSScriptBuilder implements Statement {
                 statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
                 break;
 
+            case INSTALL:
+                createNodeInstall(statements);
+                statements.add(exec("sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
+                break;
             case JHDFS:
                 createNodeConfiguration(statements);
                 statements.add(exec("sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
@@ -235,7 +239,7 @@ public class JHDFSScriptBuilder implements Statement {
      * We need the ndbs, mgms, mysqlds and namenodes ips.
      * Also we need to know the security group to generate the runlist of recipes for that group based on 
      * the roles and the node metadata to get its ips.
-     */
+     */    
     private void createNodeConfiguration(ImmutableList.Builder<Statement> statements) {
         //First we generate the recipe runlist based on the roles defined in the security group of the cluster
         List<String> runlist = createRunList();
@@ -342,6 +346,32 @@ public class JHDFSScriptBuilder implements Statement {
         statements.add(createOrOverwriteFile("/etc/chef/chef.json", ImmutableSet.of(json.toString())));
     }
 
+    private void createNodeInstall(ImmutableList.Builder<Statement> statements){
+        List<String> installList = createInstallList();
+        //Start json
+        StringBuilder json = new StringBuilder();
+        //Open json bracket
+        json.append("{");
+        //Recipe runlist append in the json
+        json.append("\"run_list\":[");
+        for (int i = 0; i < installList.size(); i++) {
+            if (i == installList.size() - 1) {
+                json.append("\"").append(installList.get(i)).append("\"");
+            } else {
+                json.append("\"").append(installList.get(i)).append("\",");
+            }
+        }
+        //close the json
+        json.append("]}");
+    }
+    
+    private List<String> createInstallList(){
+        RunListBuilder builder = new RunListBuilder();
+        builder.addRecipe("ndb::install");
+        builder.addRecipe("java");
+        builder.addRecipe("kthfs::install");
+        return builder.build();
+    }
     private List<String> createRunList() {
         RunListBuilder builder = new RunListBuilder();
         builder.addRecipe("kthfsagent");

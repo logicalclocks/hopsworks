@@ -36,7 +36,7 @@
 
                 <div id="launchLayout">
                     <p:layout  id="launch" fullPage="false">
-                        <p:layoutUnit id="launcher" position="west" size="350" header="Cluster Details" resizable="true" closable="false" collapsible="true" >
+                        <p:layoutUnit id="launcher" position="west" size="350" header="Cluster Details" resizable="false" closable="false" collapsible="false" >
                             <h:form id="launchForm">
                                 <p:accordionPanel dynamic="true" cache="true">
                                     <p:tab title="General Cluster Details:">
@@ -92,6 +92,7 @@
                                     </p:tab>
                                 </p:accordionPanel>
                                 <br/>
+                                
                                 <p:commandButton id="startCluster" value="startCluster" 
                                                  action="#{virtualizationController.launchCluster()}"
                                                  update="success"
@@ -135,7 +136,7 @@
                             </h:form>
 
                         </p:layoutUnit>
-                        <p:layoutUnit id="centerStatus" position="center" header="Launch Status:">
+                        <p:layoutUnit id="centerStatus" position="center" header="Launch Status:" >
                             <ui:include src="/sauron/template/clusterTreeTable.xhtml"/>
                         </p:layoutUnit>
                         
