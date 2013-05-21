@@ -14,9 +14,15 @@
         <jclouds.version>1.6.0-rc.4</jclouds.version>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        
+<!--        <glassfish.hostname>193.10.64.126</glassfish.hostname>
+        <glassfish.admin>admin</glassfish.admin>
+        <glassfish.passwd>admin</glassfish.passwd>-->
+            
         <glassfish.hostname>lucan.sics.se</glassfish.hostname>
         <glassfish.admin>admin</glassfish.admin>
         <glassfish.passwd>dight12</glassfish.passwd>  
+           
         <netbeans.hint.deploy.server>gfv3ee6</netbeans.hint.deploy.server>
     </properties>
 
@@ -27,6 +33,12 @@
             <version>1.4</version>
             <type>jar</type>
         </dependency>       
+<!--        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>-->
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
@@ -125,6 +137,12 @@
             <artifactId>chef</artifactId>
             <version>1.6.0-rc.4</version>
         </dependency>
+<!--        <dependency>
+            <groupId>org.jclouds</groupId>
+            <artifactId>jclouds-allcompute</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>-->
+
         <dependency>
             <groupId>org.jclouds.provider</groupId>
             <artifactId>aws-ec2</artifactId>
@@ -151,6 +169,11 @@
             <artifactId>joyentcloud</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
+<!--        <dependency>
+            <groupId>org.jclouds.labs</groupId>
+            <artifactId>virtualbox</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>-->
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk16</artifactId>
@@ -173,6 +196,7 @@
                </exclusion>
             </exclusions>
         </dependency>
+        
         <dependency>
             <groupId>org.jclouds.driver</groupId>
             <artifactId>jclouds-sshj</artifactId>

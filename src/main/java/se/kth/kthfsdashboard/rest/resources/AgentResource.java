@@ -2,6 +2,8 @@ package se.kth.kthfsdashboard.rest.resources;
 
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -36,16 +38,17 @@ public class AgentResource {
    private RoleEJB roleEjb;
    @EJB
    private AlertEJB alertEJB;
-   
-   @GET   
+   final static Logger logger = Logger.getLogger(AgentResource.class.getName());
+
+   @GET
    @Path("ping")
    @Produces(MediaType.TEXT_PLAIN)
    public String getLog() {
       return "KTHFSDashboard: Pong";
    }
-   
+
    @GET
-   @Path("load/{name}")   
+   @Path("load/{name}")
    @Produces(MediaType.APPLICATION_JSON)
    public Response getLoadAvg(@PathParam("name") String name) {
       Host host = hostEJB.findHostByName(name);
@@ -54,13 +57,13 @@ public class AgentResource {
       }
       JSONObject json = new JSONObject();
       try {
-         json.put("hostname", host.getName());
+         json.put("hostname", host.getHostname());
          json.put("cores", host.getCores());
          json.put("load1", host.getLoad1());
          json.put("load5", host.getLoad5());
          json.put("load15", host.getLoad15());
       } catch (Exception ex) {
-          // TODO - Should log all exceptions 
+         // TODO - Should log all exceptions 
          return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
       }
       return Response.ok(json).build();
@@ -79,7 +82,7 @@ public class AgentResource {
       for (Host host : hosts) {
          try {
             json = new JSONObject();
-            json.put("hostname", host.getName());
+            json.put("hostname", host.getHostname());
             json.put("cores", host.getCores());
             json.put("load1", host.getLoad1());
             json.put("load5", host.getLoad5());
@@ -93,19 +96,40 @@ public class AgentResource {
    }
 
    @POST
-   @Path("/keep-alive")
+   @Path("/heartbeat")
    @Consumes(MediaType.APPLICATION_JSON)
-   public Response keepAlive(@Context HttpServletRequest req, String jsonStrig)  {
+   public Response register(@Context HttpServletRequest req, String jsonStrig) {
       try {
          JSONObject json = new JSONObject(jsonStrig);
-         
-//         System.err.println(json);
+
+         Host host = new Host();
+         host.setLastHeartbeat((new Date()).getTime());
+         host.setHostname(json.getString("hostname"));
+         host.setPublicIp(json.getString("public-ip"));
+         host.setPrivateIp(json.getString("private-ip"));
+         host.setCores(json.getInt("cores"));
+         host.setRack(json.getString("rack"));
+         hostEJB.storeHost(host, true);
+
+      } catch (Exception ex) {
+         logger.log(Level.SEVERE, "Exception: {0}", ex);
+         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+      }
+      return Response.ok().build();
+   }
+
+   @PUT
+   @Path("/heartbeat")
+   @Consumes(MediaType.APPLICATION_JSON)
+   public Response heartbeat(@Context HttpServletRequest req, String jsonStrig) {
+      try {
+         JSONObject json = new JSONObject(jsonStrig);
+
          long agentTime = json.getLong("agent-time");
 
          Host host = new Host();
          host.setLastHeartbeat((new Date()).getTime());
-         host.setName(json.getString("hostname"));
-         host.setIp(json.getString("ip"));
+         host.setHostname(json.getString("hostname"));         
          host.setLoad1(json.getDouble("load1"));
          host.setLoad5(json.getDouble("load5"));
          host.setLoad15(json.getDouble("load15"));
@@ -113,26 +137,20 @@ public class AgentResource {
          host.setDiskUsed(json.getLong("disk-used"));
          host.setMemoryCapacity(json.getLong("memory-capacity"));
          host.setMemoryUsed(json.getLong("memory-used"));
+         hostEJB.storeHost(host, false);
 
-         if (!json.isNull("init")) {
-            host.setCores(json.getInt("cores"));
-            host.setRack(json.getString("rack"));
-            hostEJB.storeHost(host, true);
-         } else {
-            hostEJB.storeHost(host, false);
-         }
          JSONArray roles = json.getJSONArray("services");
 
          for (int i = 0; i < roles.length(); i++) {
             JSONObject s = roles.getJSONObject(i);
             Role role = new Role();
-            role.setHostname(host.getName());
-            role.setCluster(s.getString("cluster"));           
+            role.setHostname(host.getHostname());
+            role.setCluster(s.getString("cluster"));
             role.setServiceGroup(s.getString("service"));
             role.setRole(s.getString("role"));
-            role.setWebPort(s.has("web-port") ? s.getInt("web-port"): null);
+            role.setWebPort(s.has("web-port") ? s.getInt("web-port") : null);
             role.setPid(s.has("pid") ? s.getInt("pid") : 0);
-            role.setStatus(Role.Status.valueOf(s.getString("status")));            
+            role.setStatus(Role.Status.valueOf(s.getString("status")));
             if (s.has("stop-time")) {
                role.setUptime(s.getLong("stop-time") - s.getLong("start-time"));
             } else if (s.has("start-time")) {
@@ -141,10 +159,10 @@ public class AgentResource {
             roleEjb.store(role);
          }
       } catch (Exception ex) {
-         System.err.println("Exception: " + ex);
+         logger.log(Level.SEVERE, "Exception: {0}", ex);
          return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
       }
-      return Response.ok("OK").build();
+      return Response.ok().build();
    }
 
    @POST
@@ -180,16 +198,16 @@ public class AgentResource {
          if (json.has("WarningMax")) {
             alert.setWarningMax(json.getString("WarningMax"));
          }
-         if (json.has("FailureMin")) {         
+         if (json.has("FailureMin")) {
             alert.setFailureMin(json.getString("FailureMin"));
          }
-         if (json.has("FailureMax")) {          
+         if (json.has("FailureMax")) {
             alert.setFailureMax(json.getString("FailureMax"));
          }
          alertEJB.persistAlert(alert);
 
       } catch (Exception ex) {
-         System.err.println("Exception: " + ex);
+         logger.log(Level.SEVERE, "Exception: {0}", ex);
          return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
       }
       return Response.ok().build();

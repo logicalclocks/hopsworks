@@ -36,7 +36,7 @@
             <p:toolbar styleClass="SecondToolbar#{hostController.host.health}">  
                <p:toolbarGroup align="left">  
                   <p:commandLink action="#{hostController.gotoHost}" ajax="false">
-                     <h:outputText value="#{hostController.host.name}"/>
+                     <h:outputText value="#{hostController.host.hostname}"/>
                      <f:param name="hostname" value="#{serviceController.hostname}"/>   
                   </p:commandLink>
 
@@ -58,7 +58,7 @@
                   <p:inputText id="rackId" value="#{hostController.host.rack}" />  
                </h:panelGrid>  
                <p:commandButton id="submitButton" actionListener="#{hostController.doSetRackId()}" value="Set Rack Id" oncomplete="dlg.hide();" update=":form_host">
-                  <f:param name="name" value="#{hostController.host.name}" />
+                  <f:param name="name" value="#{hostController.host.hostname}" />
                </p:commandButton> 
             </h:form>  
          </p:dialog>  
@@ -66,11 +66,11 @@
          <h:form styleClass="styleInfoPanel" id="form_host">
             <p:panel  header="Details">
                <p:dataTable id="host" var="host" value="#{hostController.host}">
-                  <p:column headerText="IP"><h:outputText value="#{host.ip}"/></p:column>
+                  <p:column headerText="IP"><h:outputText value="#{host.publicIp}"/></p:column>
                   <p:column headerText="Rack">
                      <p:commandLink id="showD" onclick="dlg.show()">
                         <h:outputText value="#{host.rack}" />
-                        <f:param name="name" value="#{hostController.host.name}" />
+                        <f:param name="name" value="#{hostController.host.hostname}" />
                      </p:commandLink> 
                   </p:column>  
 <!--                        <p:column headerText="Role(s)"><h:outputText value="#{host.role}"/></p:column>-->
@@ -114,14 +114,14 @@
                            <h:outputText value="#{command}" />
                            <f:param name="cluster" value="#{serviceController.cluster}" />
                            <f:param name="role" value="namenode" />
-                           <f:param name="hostname" value="#{hostController.host.name}" />
+                           <f:param name="hostname" value="#{hostController.host.hostname}" />
                            <f:param name="command" value="#{command}" />
                         </p:commandLink> 
                      </p:column>   
                      <p:column headerText="datanode">
                         <p:commandLink id="cmd2" actionListener="#{hostController.doCommand}" ajax="true">
                            <h:outputText value="#{command}" />
-                           <f:param name="hostname" value="#{hostController.host.name}" />
+                           <f:param name="hostname" value="#{hostController.host.hostname}" />
                            <f:param name="cluster" value="#{serviceController.cluster}" />
                            <f:param name="role" value="datanode" />
                            <f:param name="command" value="#{command}" />

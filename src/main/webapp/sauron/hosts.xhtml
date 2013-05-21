@@ -36,11 +36,11 @@
 
                         <p:column  headerText="Name">  
                             <p:commandLink id="gotohost" action="#{hostController.gotoHost}" ajax="false">
-                                <h:outputText value="#{host.name}" />
-                                <f:param name="hostname" value="#{host.name}"/>
+                                <h:outputText value="#{host.hostname}" />
+                                <f:param name="hostname" value="#{host.hostname}"/>
                             </p:commandLink> 
                         </p:column>  
-                        <p:column headerText="IP"><h:outputText value="#{host.ip}"/></p:column>  
+                        <p:column headerText="IP"><h:outputText value="#{host.publicIp}"/></p:column>  
                         <p:column headerText="Rack"><h:outputText value="#{host.rack}"/></p:column>  
                         <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
                         <p:column headerText="Last Heartbeat"><h:outputText value="#{host.lastHeartbeatFormatted} ago"/></p:column>  

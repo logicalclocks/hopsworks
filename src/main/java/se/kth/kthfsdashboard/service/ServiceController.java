@@ -161,7 +161,7 @@ public class ServiceController {
       List<InstanceFullInfo> instanceInfoList = new ArrayList<InstanceFullInfo>();
       List<Role> roles = roleEjb.findByHostnameClusterRole(hostname, cluster, role);
       for (Role r : roles) {
-         String ip = hostEJB.findHostByName(hostname).getIp();
+         String ip = hostEJB.findHostByName(hostname).getPublicIp();
          InstanceFullInfo i = new InstanceFullInfo(r.getCluster(), r.getServiceGroup(), r.getRole(), r.getHostname(), ip, r.getWebPort(), "?", r.getStatus(), r.getHealth().toString());
          i.setPid(r.getPid());
          i.setUptime(Formatter.time(r.getUptime() * 1000));
