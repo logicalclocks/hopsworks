@@ -20,8 +20,8 @@ public class CommandController {
     private String hostname;
     @ManagedProperty("#{param.role}")
     private String role;
-    @ManagedProperty("#{param.servicegroup}")
-    private String serviceGroup;
+    @ManagedProperty("#{param.service}")
+    private String service;
     @ManagedProperty("#{param.cluster}")
     private String cluster;
 
@@ -36,12 +36,12 @@ public class CommandController {
         this.role = role;
     }
 
-    public String getServiceGroup() {
-        return serviceGroup;
+    public String getService() {
+        return service;
     }
 
-    public void setServiceGroup(String serviceGroup) {
-        this.serviceGroup = serviceGroup;
+    public void setService(String service) {
+        this.service = service;
     }
 
     public String getHostname() {
@@ -72,12 +72,12 @@ public class CommandController {
     }
 
     public List<Command> getRecentCommandsByInstanceGroup() {
-        List<Command> commands = commandEJB.findRecentByClusterGroup(cluster, serviceGroup);
+        List<Command> commands = commandEJB.findRecentByClusterGroup(cluster, service);
         return commands;
     }
 
     public List<Command> getRunningCommandsByInstanceGroup() {
-        List<Command> commands = commandEJB.findRunningByClusterGroup(cluster, serviceGroup);
+        List<Command> commands = commandEJB.findRunningByClusterGroup(cluster, service);
         return commands;
     }    
 }

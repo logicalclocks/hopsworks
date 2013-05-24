@@ -27,8 +27,8 @@ public class ServiceInstanceController implements Serializable {
    private String hostname;
    @ManagedProperty("#{param.role}")
    private String role;
-   @ManagedProperty("#{param.servicegroup}")
-   private String serviceGroup;
+   @ManagedProperty("#{param.service}")
+   private String service;
    @ManagedProperty("#{param.cluster}")
    private String cluster;
    @ManagedProperty("#{param.status}")
@@ -79,12 +79,12 @@ public class ServiceInstanceController implements Serializable {
       this.role = role;
    }
 
-   public String getServiceGroup() {
-      return serviceGroup;
+   public String getService() {
+      return service;
    }
 
-   public void setServiceGroup(String serviceGroup) {
-      this.serviceGroup = serviceGroup;
+   public void setService(String service) {
+      this.service = service;
    }
 
    public String getHostname() {
@@ -123,31 +123,31 @@ public class ServiceInstanceController implements Serializable {
       List<InstanceInfo> instances = new ArrayList<InstanceInfo>();
       List<Role> roles;
       
-      if (cluster != null && role != null && serviceGroup != null && status != null) {
-         roles = roleEjb.findRoles(cluster, serviceGroup, role, Role.getServiceStatus(status));
+      if (cluster != null && role != null && service != null && status != null) {
+         roles = roleEjb.findRoles(cluster, service, role, Role.getServiceStatus(status));
          cookie.write("cluster", cluster);
-         cookie.write("service", serviceGroup);
+         cookie.write("service", service);
 
-      } else if (cluster != null && serviceGroup != null && role != null) {
-         roles = roleEjb.findRoles(cluster, serviceGroup, role);
+      } else if (cluster != null && service != null && role != null) {
+         roles = roleEjb.findRoles(cluster, service, role);
          cookie.write("cluster", cluster);
-         cookie.write("service", serviceGroup);
+         cookie.write("service", service);
 
-      } else if (cluster != null && serviceGroup != null) {
-         roles = roleEjb.findRoles(cluster, serviceGroup);
+      } else if (cluster != null && service != null) {
+         roles = roleEjb.findRoles(cluster, service);
          cookie.write("cluster", cluster);
-         cookie.write("service", serviceGroup);
+         cookie.write("service", service);
 
       } else if (cluster != null) {
          roles = roleEjb.findRoles(cluster);
          cookie.write("cluster", cluster);
-         cookie.write("service", serviceGroup);
+         cookie.write("service", service);
 
       } else {
          roles = roleEjb.findRoles(cookie.read("cluster"), cookie.read("service"));
       }
       for (Role r : roles) {                
-         instances.add(new InstanceInfo(r.getCluster(), r.getServiceGroup(), r.getRole(), r.getHostname(), "-", r.getStatus(), r.getHealth().toString()));
+         instances.add(new InstanceInfo(r.getCluster(), r.getService(), r.getRole(), r.getHostname(), "-", r.getStatus(), r.getHealth().toString()));
       }
       return instances;
    }
@@ -169,11 +169,11 @@ public class ServiceInstanceController implements Serializable {
 
    public SelectItem[] getRoleOptions() {
 
-      if (serviceGroup.equals(ServiceType.KTHFS.toString())) {
+      if (service.equals(ServiceType.KTHFS.toString())) {
          return hdfsRoleOptions;
-      } else if (serviceGroup.equals(ServiceType.MySQLCluster.toString())) {
+      } else if (service.equals(ServiceType.MySQLCluster.toString())) {
          return mysqlclusterRoleOptions;
-      } else if (serviceGroup.equals(ServiceType.YARN.toString())) {
+      } else if (service.equals(ServiceType.YARN.toString())) {
          return yarnRoleOptions;
       } else {
          return new SelectItem[]{};
@@ -186,10 +186,10 @@ public class ServiceInstanceController implements Serializable {
 
    public boolean getShowConfiguration() {
       
-      if (serviceGroup == null) {
+      if (service == null) {
          return false;
       }
-      if (serviceGroup.equalsIgnoreCase(ServiceType.MySQLCluster.toString())) {
+      if (service.equalsIgnoreCase(ServiceType.MySQLCluster.toString())) {
          return true;
       }
       return false;

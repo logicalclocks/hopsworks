@@ -31,15 +31,15 @@
                      </p:commandLink> 
                      <h:outputText value=" &raquo; "/>
                      <p:commandLink action="#{serviceController.gotoServiceStatus}" ajax="false">  
-                        <h:outputText value="#{serviceController.serviceGroup}" />
+                        <h:outputText value="#{serviceController.service}" />
                         <f:param name="cluster" value="#{serviceController.cluster}"/>
-                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                          
+                        <f:param name="service" value="#{serviceController.service}"/>                          
                      </p:commandLink>                      
                      <h:outputText value=" &raquo; "/>
                      <p:commandLink action="#{serviceController.gotoServiceInstances}" ajax="false">  
                         <h:outputText value="#{serviceController.role}" />
                         <f:param name="cluster" value="#{serviceController.cluster}"/>
-                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>
+                        <f:param name="service" value="#{serviceController.service}"/>
                         <f:param name="role" value="#{serviceController.role}"/>                                                  
                      </p:commandLink>  
                   </p:column>
@@ -56,14 +56,14 @@
                      <h:outputText value="#{serviceController.role} (#{serviceController.hostname})"/>
                      <f:param name="cluster" value="#{serviceController.cluster}"/>
                      <f:param name="role" value="#{serviceController.role}"/>
-                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                              
+                     <f:param name="service" value="#{serviceController.service}"/>                              
                      <f:param name="hostname" value="#{serviceController.hostname}"/>
                   </p:commandLink>
 
                   <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{serviceController.gotoRole()}" ajax="false">
                      <f:param name="cluster" value="#{serviceController.cluster}"/>
                      <f:param name="role" value="#{serviceController.role}"/>
-                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                             
+                     <f:param name="service" value="#{serviceController.service}"/>                             
                      <f:param name="hostname" value="#{serviceController.hostname}"/>                          
                   </p:commandButton>  
 
@@ -76,7 +76,7 @@
                         <f:param name="hostname" value="#{hostController.hostname}" />
                         <f:param name="cluster" value="#{hostController.cluster}" />
                         <f:param name="role" value="#{hostController.role}" />
-                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                                   
+                        <f:param name="service" value="#{serviceController.service}"/>                                   
                         <f:param name="command" value="init" />
                      </p:menuitem>
                      <p:menuitem value="Start" actionListener="#{hostController.doCommand}" ajax ="true" update="@form :Instance"
@@ -84,7 +84,7 @@
                         <f:param name="hostname" value="#{hostController.hostname}" />
                         <f:param name="cluster" value="#{hostController.cluster}" />
                         <f:param name="role" value="#{hostController.role}" />
-                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                                   
+                        <f:param name="service" value="#{serviceController.service}"/>                                   
                         <f:param name="command" value="start" />
                      </p:menuitem>
                      <p:menuitem value="Stop" actionListener="#{hostController.doCommand}" ajax ="true" update="@form :Instance"
@@ -92,7 +92,7 @@
                         <f:param name="hostname" value="#{hostController.hostname}" />
                         <f:param name="cluster" value="#{hostController.cluster}" />
                         <f:param name="role" value="#{hostController.role}" />
-                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                                  
+                        <f:param name="service" value="#{serviceController.service}"/>                                  
                         <f:param name="command" value="stop" />
                      </p:menuitem>
 
@@ -145,7 +145,7 @@
                   <p:commandLink styleClass="AccordionPanelLink" value="Refresh Log" update="log"
                                  onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
                      <f:param name="cluster" value="#{serviceController.cluster}"/>
-                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                       
+                     <f:param name="service" value="#{serviceController.service}"/>                       
                      <f:param name="role" value="#{serviceController.role}"/>  
                      <f:param name="hostname" value="#{serviceController.hostname}"/>
                   </p:commandLink>

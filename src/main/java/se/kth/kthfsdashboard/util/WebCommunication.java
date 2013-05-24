@@ -35,15 +35,15 @@ public class WebCommunication {
    private static String NOT_AVAILABLE = "Not available.";
    private String hostname;
    private String cluster;
-   private String serviceGroup;   
+   private String service;   
    private String role;
    
    private static final Logger logger = Logger.getLogger(WebCommunication.class.getName());
 
-   public WebCommunication(String hostname, String cluster, String serviceGroup, String role) {
+   public WebCommunication(String hostname, String cluster, String service, String role) {
       this.hostname = hostname;
       this.cluster = cluster;
-      this.serviceGroup = serviceGroup;
+      this.service = service;
       this.role = role;
    }
    
@@ -68,7 +68,7 @@ public class WebCommunication {
    
    public String getRoleLog(int lines) {
       
-      String path = "/log/" + cluster + "/" + serviceGroup + "/" + role + "/" + lines;
+      String path = "/log/" + cluster + "/" + service + "/" + role + "/" + lines;
       String url = baseUrl(hostname) + path;
       
       
@@ -86,7 +86,7 @@ public class WebCommunication {
    public String getConfig() {
 
       String conf = NOT_AVAILABLE;
-      String path = "/config/" + cluster + "/" + serviceGroup + "/" + role;
+      String path = "/config/" + cluster + "/" + service + "/" + role;
       String url = baseUrl(hostname) + path;
       try {
          ClientResponse response = getWebResource(url);

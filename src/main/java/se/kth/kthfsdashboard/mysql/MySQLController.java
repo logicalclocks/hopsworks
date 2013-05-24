@@ -28,8 +28,8 @@ public class MySQLController implements Serializable {
 
    @EJB
    RoleEJB roleEjb;
-   @ManagedProperty("#{param.servicegroup}")
-   private String serviceGroup;
+   @ManagedProperty("#{param.service}")
+   private String service;
    @ManagedProperty("#{param.cluster}")
    private String cluster;
    private boolean flag;
@@ -40,12 +40,12 @@ public class MySQLController implements Serializable {
    public MySQLController() {
    }
 
-   public String getServiceGroup() {
-      return serviceGroup;
+   public String getService() {
+      return service;
    }
 
-   public void setServiceGroup(String serviceGroup) {
-      this.serviceGroup = serviceGroup;
+   public void setService(String service) {
+      this.service = service;
    }
 
    public void setCluster(String cluster) {
@@ -122,7 +122,7 @@ public class MySQLController implements Serializable {
          // Finds hostname of mysqld
          // Role=mysqld , Service=MySQLCluster, Cluster=cluster
          final String ROLE = "mysqld";
-         String host = roleEjb.findRoles(cluster, serviceGroup, ROLE).get(0).getHostname();
+         String host = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostname();
          return dao.readNodesFromNdbinfo(host);
       } catch (Exception e) {
          return null;

@@ -24,16 +24,16 @@ public class RoleEJB {
       return query.getResultList();
    }
 
-   public List<String> findServiceGroups(String cluster) {
-      TypedQuery<String> query = em.createNamedQuery("Role.findServiceGroups", String.class)
+   public List<String> findServices(String cluster) {
+      TypedQuery<String> query = em.createNamedQuery("Role.findServices", String.class)
               .setParameter("cluster", cluster);
       return query.getResultList();
    }
 
-   public Role find(String hostname, String cluster, String serviceGroup, String role) {
+   public Role find(String hostname, String cluster, String service, String role) {
       TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
               .setParameter("hostname", hostname).setParameter("cluster", cluster)
-              .setParameter("serviceGroup", serviceGroup).setParameter("role", role);
+              .setParameter("service", service).setParameter("role", role);
       return query.getSingleResult();
    }
 
@@ -43,21 +43,21 @@ public class RoleEJB {
       return query.getResultList();
    }
 
-   public List<Role> findRoles(String cluster, String group) {
+   public List<Role> findRoles(String cluster, String service) {
       TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group", Role.class)
-              .setParameter("cluster", cluster).setParameter("group", group);
+              .setParameter("cluster", cluster).setParameter("service", service);
       return query.getResultList();
    }
 
-   public List<Role> findRoles(String cluster, String group, String role) {
+   public List<Role> findRoles(String cluster, String service, String role) {
       TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group-Role", Role.class)
-              .setParameter("cluster", cluster).setParameter("group", group).setParameter("role", role);
+              .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role);
       return query.getResultList();
    }
 
-   public List<Role> findRoles(String cluster, String group, String role, Role.Status status) {
+   public List<Role> findRoles(String cluster, String service, String role, Role.Status status) {
       TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group-Role-Status", Role.class)
-              .setParameter("cluster", cluster).setParameter("group", group).setParameter("role", role)
+              .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role)
               .setParameter("status", status);
       return query.getResultList();
    }
@@ -68,25 +68,24 @@ public class RoleEJB {
       return query.getResultList();
    }
 
-   public List<String> findHostname(String cluster, String group, String role) {
+   public List<String> findHostname(String cluster, String service, String role) {
       TypedQuery<String> query = em.createNamedQuery("Role.findHostnameBy-Cluster-Group-Role", String.class)
-              .setParameter("cluster", cluster).setParameter("group", group).setParameter("role", role);
+              .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role);
       return query.getResultList();
    }
 
-   public Long count(String cluster, String serviceGroup, String role) {
+   public Long count(String cluster, String service, String role) {
       TypedQuery<Long> query = em.createNamedQuery("Role.Count", Long.class)
-              .setParameter("cluster", cluster)
-              .setParameter("serviceGroup", serviceGroup)
+              .setParameter("cluster", cluster).setParameter("service", service)
               .setParameter("role", role);
       return query.getSingleResult();
    }
 
-   public int countStatus(String cluster, String group, String role, Role.Status status) {
+   public int countStatus(String cluster, String service, String role, Role.Status status) {
       TypedQuery<Role> query;
       query = em.createNamedQuery("Role.findBy-Cluster-Group-Role-Status", Role.class)
-              .setParameter("cluster", cluster).setParameter("group", group).setParameter("role", role)
-              .setParameter("status", status);
+              .setParameter("cluster", cluster).setParameter("service", service)
+              .setParameter("role", role).setParameter("status", status);
       return query.getResultList().size();
    }
 

@@ -13,17 +13,17 @@ public class InstanceInfo implements Serializable {
     private String host;
     private String cluster;
     private String role;
-    private String serviceGroup;
+    private String service;
     private String rack;
     private Role.Status status;
     private String health;
 
-    public InstanceInfo(String cluster, String serviceGroup, String role, String host, String rack, Role.Status status, String health) {
+    public InstanceInfo(String cluster, String service, String role, String host, String rack, Role.Status status, String health) {
 
         this.name = role + " (" + host + ")";
         this.host = host;
         this.cluster = cluster;
-        this.serviceGroup = serviceGroup;
+        this.service = service;
         this.role = role;
         this.rack = rack;
         this.status = status;
@@ -54,8 +54,8 @@ public class InstanceInfo implements Serializable {
         return role;
     }
     
-    public String getServiceGroup(){
-       return serviceGroup;
+    public String getService(){
+       return service;
     }
 
    public String getCluster() {
