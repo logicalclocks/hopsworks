@@ -146,7 +146,7 @@ public class AgentResource {
             Role role = new Role();
             role.setHostname(host.getHostname());
             role.setCluster(s.getString("cluster"));
-            role.setServiceGroup(s.getString("service"));
+            role.setService(s.getString("service"));
             role.setRole(s.getString("role"));
             role.setWebPort(s.has("web-port") ? s.getInt("web-port") : null);
             role.setPid(s.has("pid") ? s.getInt("pid") : 0);

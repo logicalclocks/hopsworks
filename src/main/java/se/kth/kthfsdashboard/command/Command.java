@@ -15,8 +15,8 @@ import se.kth.kthfsdashboard.util.Formatter;
    @NamedQuery(name = "Commands.find", query = "SELECT c FROM Command c"),
    @NamedQuery(name = "Commands.findRecentByCluster", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND (NOT c.status = :status)  ORDER BY c.startTime DESC"),
    @NamedQuery(name = "Commands.findRunningByCluster", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.status = :status  ORDER BY c.startTime DESC"),
-   @NamedQuery(name = "Commands.findRecentByCluster-Group", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.serviceGroup = :group AND (NOT c.status = :status)  ORDER BY c.startTime DESC"),
-   @NamedQuery(name = "Commands.findRunningByCluster-Group", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.serviceGroup = :group AND c.status = :status  ORDER BY c.startTime DESC")   
+   @NamedQuery(name = "Commands.findRecentByCluster-Group", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :group AND (NOT c.status = :status)  ORDER BY c.startTime DESC"),
+   @NamedQuery(name = "Commands.findRunningByCluster-Group", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :group AND c.status = :status  ORDER BY c.startTime DESC")   
 })
 public class Command implements Serializable {
 
@@ -27,20 +27,20 @@ public class Command implements Serializable {
    @Id
    @GeneratedValue(strategy = GenerationType.SEQUENCE)
    private Long id;
-   @Column(name = "command", nullable = false, length = 256)
+   @Column(nullable = false, length = 256)
    private String command;
-   @Column(name = "host_name", nullable = false, length = 128)
+   @Column(name = "HOSTNAME_", nullable = false, length = 128)
    private String hostname;
    @Column(nullable = false, length = 48)
-   private String serviceGroup;
-   @Column(nullable = false, length = 48)
+   private String service;
+   @Column(name = "ROLE_", nullable = false, length = 48)
    private String role;
    @Column(nullable = false, length = 48)
    private String cluster;
-   @Column(name = "start_time")
+   @Column(name = "START_TIME")
    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
    private Date startTime;
-   @Column(name = "end_time")
+   @Column(name = "END_TIME")
    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
    private Date endTime;
    private commandStatus status;
@@ -48,10 +48,10 @@ public class Command implements Serializable {
    public Command() {
    }
 
-   public Command(String command, String hostname, String serviceGroup, String role, String cluster) {
+   public Command(String command, String hostname, String service, String role, String cluster) {
       this.command = command;
       this.hostname = hostname;
-      this.serviceGroup = serviceGroup;
+      this.service = service;
       this.role = role;
       this.cluster = cluster;
 
@@ -71,8 +71,8 @@ public class Command implements Serializable {
       return hostname;
    }
 
-   public String getServiceGroup() {
-      return serviceGroup;
+   public String getService() {
+      return service;
    }
 
    public String getRole() {

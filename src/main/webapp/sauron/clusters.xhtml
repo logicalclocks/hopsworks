@@ -54,7 +54,7 @@
                         <p:commandLink action="#{serviceController.gotoServiceStatus}" ajax="false">
                            <h:outputText value="#{item}"/>
                            <f:param name="cluster" value="#{cluster.name}"/>
-                           <f:param name="servicegroup" value="#{item}"/>
+                           <f:param name="service" value="#{item}"/>
                         </p:commandLink>
                         <p:spacer width="6" height="0" rendered="#{!status.last}"/>
                      </ui:repeat>
@@ -66,7 +66,7 @@
                            <h:outputText value="${item.value} ${item.key}"/>
                            <f:param name="cluster" value="#{cluster.name}"/>
                            <f:param name="role" value="#{item.key}"/>
-                           <f:param name="servicegroup" value="#{serviceController.findServiceByRole(item.key)}"/>
+                           <f:param name="service" value="#{serviceController.findServiceByRole(item.key)}"/>
                         </p:commandLink>
                         <p:spacer width="6" height="0" rendered="#{!status.last}"/>
                      </ui:repeat>

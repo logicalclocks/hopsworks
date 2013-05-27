@@ -33,8 +33,8 @@ public class GraphController implements Serializable {
    private String cluster;
    @ManagedProperty("#{param.hostname}")
    private String hostname;
-   @ManagedProperty("#{param.servicegroup}")
-   private String serviceGroup;
+   @ManagedProperty("#{param.service}")
+   private String service;
    private String role;
    private Date start;
    private Date end;
@@ -124,12 +124,12 @@ public class GraphController implements Serializable {
       this.hostname = hostname;
    }
 
-   public String getServiceGroup() {
-      return serviceGroup;
+   public String getService() {
+      return service;
    }
 
-   public void setServiceGroup(String serviceGroup) {
-      this.serviceGroup = serviceGroup;
+   public void setService(String service) {
+      this.service = service;
    }
 
    public String getRole() {
@@ -305,7 +305,7 @@ public class GraphController implements Serializable {
       // Role=mysqld , Service=MySQLCluster, Clusters=cluster
       final String MYSQLD_ROLE = "mysqld";
 
-      List<Role> roles = roleEjb.findRoles(cluster, serviceGroup, MYSQLD_ROLE);
+      List<Role> roles = roleEjb.findRoles(cluster, service, MYSQLD_ROLE);
       String host = "";
       if (roles.size() > 0) {
          host = roles.get(0).getHostname();
@@ -319,7 +319,7 @@ public class GraphController implements Serializable {
       if (chartType.equals("mysql_freeDataMemory") || chartType.equals("mysql_freeIndexMemory")
               || chartType.equals("mysql_totalDataMemory") || chartType.equals("mysql_totalIndexMemory")) {
          final String NDB_ROLE = "ndb";
-         Long n = roleEjb.count(cluster, serviceGroup, NDB_ROLE);
+         Long n = roleEjb.count(cluster, service, NDB_ROLE);
          params.put("n", n.toString());
       }
       for (Entry<String, String> entry : params.entrySet()) {

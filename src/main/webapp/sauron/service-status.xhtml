@@ -46,23 +46,23 @@
             <p:toolbar styleClass="SecondToolbarGood">  
                <p:toolbarGroup align="left">  
                   <p:commandLink  action="#{serviceController.gotoServiceStatus}" ajax="false">
-                     <h:outputText value="#{serviceController.serviceGroup}"/>
+                     <h:outputText value="#{serviceController.service}"/>
                      <f:param name="cluster" value="#{serviceController.cluster}"/>
                      <f:param name="cluster" value="#{serviceController.cluster}"/>                            
-                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                      
+                     <f:param name="service" value="#{serviceController.service}"/>                      
                   </p:commandLink>
 
                   <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{serviceController.gotoServiceStatus}" ajax="false">
                      <f:param name="cluster" value="#{serviceController.cluster}"/>                            
-                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/> 
+                     <f:param name="service" value="#{serviceController.service}"/> 
                   </p:commandButton>  
                   <p:commandButton value="Instances" icon="ui-icon-note" action="#{serviceController.gotoServiceInstances}">
                      <f:param name="cluster" value="#{serviceController.cluster}"/>   
-                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>
+                     <f:param name="service" value="#{serviceController.service}"/>
                   </p:commandButton>  
                   <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" action="#{serviceController.gotoServiceCommandHistory}">
                      <f:param name="cluster" value="#{serviceController.cluster}"/>
-                     <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                      
+                     <f:param name="service" value="#{serviceController.service}"/>                      
                   </p:commandButton>  
                </p:toolbarGroup>  
 
@@ -75,7 +75,13 @@
 
             </p:toolbar>  
          </h:form>
-
+         
+         <!-- Second Toolbar - End -->         
+         
+         <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
+            <p:graphicImage library="images" name="ajaxloadingbar.gif" />  
+         </p:dialog>             
+         
          <p:spacer width="1" height="10" />
 
          <h:form styleClass="styleInfoPanel">
@@ -88,7 +94,7 @@
                      <p:commandLink action="#{serviceController.gotoServiceInstances}" ajax="false">
                         <h:outputText value="#{serviceRole.name}"/>
                         <f:param name="cluster" value="#{serviceController.cluster}"/>
-                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                        
+                        <f:param name="service" value="#{serviceController.service}"/>                        
                         <f:param name="role" value="#{serviceRole.shortName}"/>
                      </p:commandLink>                         
                   </p:column>  
@@ -97,7 +103,7 @@
                      <p:commandLink action="#{serviceController.gotoServiceInstances}" ajax="false">
                         <h:outputText value="#{serviceRole.statusStarted}"/>
                         <f:param name="cluster" value="#{serviceController.cluster}"/>
-                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                       
+                        <f:param name="service" value="#{serviceController.service}"/>                       
                         <f:param name="role" value="#{serviceRole.shortName}"/>
                         <f:param name="status" value="Started"/>
                      </p:commandLink> 
@@ -105,7 +111,7 @@
                      <p:commandLink action="#{serviceController.gotoServiceInstances}" ajax="false">
                         <h:outputText value="#{serviceRole.statusStopped}"/>
                         <f:param name="cluster" value="#{serviceController.cluster}"/>
-                        <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                        
+                        <f:param name="service" value="#{serviceController.service}"/>                        
                         <f:param name="role" value="#{serviceRole.shortName}"/>
                         <f:param name="status" value="Stopped"/>
                      </p:commandLink> 
@@ -122,6 +128,26 @@
 
          <p:accordionPanel activeIndex="-1">
 
+            <p:tab title="Recent Log" rendered="#{serviceInstanceController.showLog}">
+               <h:form id="logform">
+                  <p:commandLink styleClass="AccordionPanelLink" value="Refresh Log" update="log"
+                                 onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
+                     <f:param name="cluster" value="#{serviceController.cluster}"/>
+                     <f:param name="service" value="#{serviceController.service}"/>
+                  </p:commandLink>
+                  <p:panelGrid id="log" styleClass="LogOutput">
+                     <p:row>
+                        <p:column  styleClass="LogOutput column">
+                           Stdout<br/>
+                           <div>
+                              <h:outputText escape="false" value="#{serviceController.getServiceLog(20)}"/>
+                           </div>
+                        </p:column>
+                     </p:row>
+                  </p:panelGrid>
+               </h:form>
+            </p:tab>
+            
             <p:tab title="Configuration File" rendered="#{serviceInstanceController.showConfiguration}">
                <h:form id="configform">
                   Configuration:<br/>
@@ -166,7 +192,7 @@
                <p:selectOneButton id ="periods" value="#{graphController.period}">  
                   <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
                   <f:param name="cluster" value="#{serviceController.cluster}"/>
-                  <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>
+                  <f:param name="service" value="#{serviceController.service}"/>
                   <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
                </p:selectOneButton>
                <h:outputText value="or from" />
@@ -180,7 +206,7 @@
                <h:outputText value=" columns " />
                <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
                   <f:param name="cluster" value="#{serviceController.cluster}"/>
-                  <f:param name="servicegroup" value="#{serviceController.serviceGroup}"/>                   
+                  <f:param name="service" value="#{serviceController.service}"/>                   
                </p:commandButton> 
             </h:panelGrid>
          </h:form> 

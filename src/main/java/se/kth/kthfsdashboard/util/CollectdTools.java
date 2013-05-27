@@ -279,7 +279,7 @@ public class CollectdTools {
 
          case serv_nn_heartbeats:
             cmd.setTitle("Heartbeats");
-            cmd.setVerticalLabel("heartbeats/sec");
+            cmd.setVerticalLabel("heartbeats/s");
             cmd.setPlugin("GenericJMX-FSNamesystem", "");
             cmd.setHostname(namenode);
             cmd.drawLine("counter-ExpiredHeartbeats", "", "value", "Expired Heartbeats", RED, "%5.2lf %S");
@@ -328,56 +328,56 @@ public class CollectdTools {
 
          case serv_nn_r_fileinfo:
             cmd.setTitle("Number of FileInfo operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-FileInfoOps", "", "value", "FileInfo", RED, "%5.2lf %S");
             break;
 
          case serv_nn_r_getblocklocations:
             cmd.setTitle("Number of GetBlockLocations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-GetBlockLocations", "", "value", "GetBlockLocations", RED, "%5.2lf %S");
             break;
 
          case serv_nn_r_getlisting:
             cmd.setTitle("Number of GetListing operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-GetListingOps", "", "value", "GetListing", RED, "%5.2lf %S");
             break;
 
          case serv_nn_r_getlinktarget:
             cmd.setTitle("Number of GetLinkTarget operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-GetLinkTargetOps", "", "value", "GetLinkTarget", RED, "%5.2lf %S");
             break;
 
          case serv_nn_r_filesingetlisting:
             cmd.setTitle("Number of FilesInGetListing operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-FilesInGetListingOps", "", "value", "FilesInGetListing", RED, "%5.2lf %S");
             break;
 
          case serv_nn_w_createfile:
             cmd.setTitle("Number of CreateFile operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-CreateFileOps", "", "value", "CreateFile", RED, "%5.2lf %S");
             break;
 
          case serv_nn_w_filescreated:
             cmd.setTitle("Number of Files Created");
-            cmd.setVerticalLabel("files/sec");
+            cmd.setVerticalLabel("files/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-FilesCreated", "", "value", "Files Created", RED, "%5.2lf %S");
             break;
 
          case serv_nn_w_createfile_all:
             cmd.setTitle("CreateFile operations");
-            cmd.setVerticalLabel("/sec");
+            cmd.setVerticalLabel("/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-CreateFileOps", "", "value", "CreateFile Operations", RED, "%5.2lf %S");
             cmd.drawSummedLines(namenodes, "counter-FilesCreated", "", "value", "Files Created", BLUE, "%5.2lf %S");
@@ -385,35 +385,35 @@ public class CollectdTools {
 
          case serv_nn_w_filesappended:
             cmd.setTitle("Number of Files Appended");
-            cmd.setVerticalLabel("files/sec");
+            cmd.setVerticalLabel("files/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-FilesAppended", "", "value", "Files Appended", RED, "%5.2lf %S");
             break;
 
          case serv_nn_w_filesrenamed:
             cmd.setTitle("Number of Files Renamed");
-            cmd.setVerticalLabel("files/sec");
+            cmd.setVerticalLabel("files/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-FilesRenamed", "", "value", "Files Renamed", RED, "%5.2lf %S");
             break;
 
          case serv_nn_w_deletefile:
             cmd.setTitle("Number of Delete File Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-DeleteFileOps", "", "value", "DeleteFile", RED, "%5.2lf %S");
             break;
 
          case serv_nn_w_filesdeleted:
             cmd.setTitle("Number of Files Deleted");
-            cmd.setVerticalLabel("files/sec");
+            cmd.setVerticalLabel("files/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-FilesDeleted", "", "value", "Files Deleted", RED, "%5.2lf %S");
             break;
 
          case serv_nn_w_deletefile_all:
             cmd.setTitle("Delete File Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-DeleteFileOps", "", "value", "DeleteFile Operations", RED, "%5.2lf %S");
             cmd.drawSummedLines(namenodes, "counter-FilesDeleted", "", "value", "Files Deleted", BLUE, "%5.2lf %S");
@@ -421,49 +421,49 @@ public class CollectdTools {
 
          case serv_nn_w_addblock:
             cmd.setTitle("AddBlock Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-AddBlockOps", "", "value", "AddBlock Operations", RED, "%5.2lf %S");
             break;
 
          case serv_nn_w_createsymlink:
             cmd.setTitle("CreateSymlink Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-CreateSymlinkOps", "", "value", "CreateSymlink Operations", RED, "%5.2lf %S");
             break;
 
          case serv_nn_o_getadditionaldatanode:
             cmd.setTitle("GetAdditionalDatanode Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-GetAdditionalDatanodeOps", "", "value", "GetAdditionalDatanode Operations", RED, "%5.2lf %S");
             break;
 
          case serv_nn_o_transactions:
             cmd.setTitle("Number of Transaction Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-TransactionsNumOps", "", "value", "Transactions Operations", RED, "%5.2lf %S");
             break;
 
          case serv_nn_o_transactionsbatchedinsync:
             cmd.setTitle("Number of Transactions Batched In Sync");
-            cmd.setVerticalLabel(" transactions/sec");
+            cmd.setVerticalLabel(" transactions/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-TransactionsBatchedInSync", "", "value", "Transactions Batched In Sync", RED, "%5.2lf %S");
             break;
 
          case serv_nn_o_blockreport:
             cmd.setTitle("Number of BlockReport Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-BlockReportNumOps", "", "value", "BlockReport Operations", RED, "%5.2lf %S");
             break;
 
          case serv_nn_o_syncs:
             cmd.setTitle("Number of Syncs");
-            cmd.setVerticalLabel("syncs/sec");
+            cmd.setVerticalLabel("syncs/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawSummedLines(namenodes, "counter-SyncsNumOps", "", "value", "Syncs", RED, "%5.2lf %S");
             break;
@@ -523,14 +523,14 @@ public class CollectdTools {
 
          case nn_heartbeats:
             cmd.setTitle("Heartbeats");
-            cmd.setVerticalLabel("heartbeats/sec");
+            cmd.setVerticalLabel("heartbeats/s");
             cmd.setPlugin("GenericJMX-FSNamesystem", "");
             cmd.drawLine("counter-ExpiredHeartbeats", "", "value", "Expired Heartbeats", RED, "%5.2lf %S");
             break;
 
          case nn_blockreplication:
             cmd.setTitle("Block Replication");
-            cmd.setVerticalLabel("blocks/sec");
+            cmd.setVerticalLabel("blocks/s");
             cmd.setPlugin("GenericJMX-FSNamesystem", "");
             cmd.drawLine("counter-UnderReplicatedBlocks", "", "value", "Under-Replicated", GREEN, "%5.2lf %S");
             cmd.drawLine("counter-PendingReplicationBlocks", "", "value", "Pending", BLUE, "%5.2lf %S");
@@ -548,7 +548,7 @@ public class CollectdTools {
 
          case nn_specialblocks:
             cmd.setTitle("Special Blocks");
-            cmd.setVerticalLabel("blocks/sec");
+            cmd.setVerticalLabel("blocks/s");
             cmd.setPlugin("GenericJMX-FSNamesystem", "");
             cmd.setHostname(hostname);
             cmd.drawLine("counter-CorruptBlocks", "", "value", "Corrupt", RED, "%5.2lf %S");
@@ -569,42 +569,42 @@ public class CollectdTools {
 
          case nn_r_fileinfo:
             cmd.setTitle("Number of FileInfo operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-FileInfoOps", "", "value", "FileInfo", RED, "%5.2lf %S");
             break;
 
          case nn_r_getblocklocations:
             cmd.setTitle("Number of GetBlockLocations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-GetBlockLocations", "", "value", "GetBlockLocations", RED, "%5.2lf %S");
             break;
 
          case nn_r_getlisting:
             cmd.setTitle("Number of GetListing operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-GetListingOps", "", "value", "GetListing", RED, "%5.2lf %S");
             break;
 
          case nn_r_getlinktarget:
             cmd.setTitle("Number of GetLinkTarget operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-GetLinkTargetOps", "", "value", "GetLinkTarget", RED, "%5.2lf %S");
             break;
 
          case nn_r_filesingetlisting:
             cmd.setTitle("Number of FilesInGetListing operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-FilesInGetListingOps", "", "value", "FilesInGetListing", RED, "%5.2lf %S");
             break;
 
          case nn_w_createfile:
             cmd.setTitle("Number of CreateFile operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-CreateFileOps", "", "value", "CreateFile", RED, "%5.2lf %S");
             break;
@@ -618,7 +618,7 @@ public class CollectdTools {
 
          case nn_w_createfile_all:
             cmd.setTitle("CreateFile operations");
-            cmd.setVerticalLabel("/sec");
+            cmd.setVerticalLabel("/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-CreateFileOps", "", "value", "CreateFile Operations", RED, "%5.2lf %S");
             cmd.drawLine("counter-FilesCreated", "", "value", "Files Created", BLUE, "%5.2lf %S");
@@ -626,35 +626,35 @@ public class CollectdTools {
 
          case nn_w_filesappended:
             cmd.setTitle("Number of Files Appended");
-            cmd.setVerticalLabel("files/sec");
+            cmd.setVerticalLabel("files/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-FilesAppended", "", "value", "Files Appended", RED, "%5.2lf %S");
             break;
 
          case nn_w_filesrenamed:
             cmd.setTitle("Number of Files Renamed");
-            cmd.setVerticalLabel("/sec");
+            cmd.setVerticalLabel("/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-FilesRenamed", "", "value", "Files Renamed", RED, "%5.2lf %S");
             break;
 
          case nn_w_deletefile:
             cmd.setTitle("Number of Delete File Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-DeleteFileOps", "", "value", "DeleteFile", RED, "%5.2lf %S");
             break;
 
          case nn_w_filesdeleted:
             cmd.setTitle("Number of Files Deleted");
-            cmd.setVerticalLabel("files/sec");
+            cmd.setVerticalLabel("files/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-FilesDeleted", "", "value", "Files Deleted", RED, "%5.2lf %S");
             break;
 
          case nn_w_deletefile_all:
             cmd.setTitle("Delete File Operations");
-            cmd.setVerticalLabel("/sec");
+            cmd.setVerticalLabel("/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-DeleteFileOps", "", "value", "DeleteFile Operations", RED, "%5.2lf %S");
             cmd.drawLine("counter-FilesDeleted", "", "value", "Files Deleted", BLUE, "%5.2lf %S");
@@ -662,49 +662,49 @@ public class CollectdTools {
 
          case nn_w_addblock:
             cmd.setTitle("AddBlock Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-AddBlockOps", "", "value", "AddBlock Operations", RED, "%5.2lf %S");
             break;
 
          case nn_w_createsymlink:
             cmd.setTitle("CreateSymlink Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-CreateSymlinkOps", "", "value", "CreateSymlink Operations", RED, "%5.2lf %S");
             break;
 
          case nn_o_getadditionaldatanode:
             cmd.setTitle("GetAdditionalDatanode Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-GetAdditionalDatanodeOps", "", "value", "GetAdditionalDatanode Operations", RED, "%5.2lf %S");
             break;
 
          case nn_o_transactions:
             cmd.setTitle("Number of Transaction Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-TransactionsNumOps", "", "value", "Transactions Operations", RED, "%5.2lf %S");
             break;
 
          case nn_o_transactionsbatchedinsync:
             cmd.setTitle("Number of Transactions Batched In Sync");
-            cmd.setVerticalLabel("transactions/sec");
+            cmd.setVerticalLabel("transactions/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-TransactionsBatchedInSync", "", "value", "Transactions Batched In Sync", RED, "%5.2lf %S");
             break;
 
          case nn_o_blockreport:
             cmd.setTitle("Number of BlockReport Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-BlockReportNumOps", "", "value", "BlockReport Operations", RED, "%5.2lf %S");
             break;
 
          case nn_o_syncs:
             cmd.setTitle("Number of Syncs");
-            cmd.setVerticalLabel("sync/sec");
+            cmd.setVerticalLabel("sync/s");
             cmd.setPlugin("GenericJMX-NameNodeActivity", "");
             cmd.drawLine("counter-SyncsNumOps", "", "value", "Syncs", RED, "%5.2lf %S");
             break;
@@ -741,7 +741,7 @@ public class CollectdTools {
 
          case dd_heartbeats:
             cmd.setTitle("Number of Heartbeats");
-            cmd.setVerticalLabel("heartbeats/sec");
+            cmd.setVerticalLabel("heartbeats/s");
             cmd.setPlugin("GenericJMX-DataNodeActivity", "");
             cmd.drawLine("counter-HeartbeatsNumOps", "", "value", "Heartbeats", GREEN, "%5.2lf %S");
             break;
@@ -828,7 +828,7 @@ public class CollectdTools {
 
          case dd_opsCopyBlock:
             cmd.setTitle("Copy Block Operations");
-            cmd.setVerticalLabel("ops/sec");
+            cmd.setVerticalLabel("ops/s");
             cmd.setPlugin("GenericJMX-DataNodeActivity", "");
             cmd.drawLine("counter-CopyBlockOpNumOps", "", "value", "Copy Block Operations", GREEN, "%5.2lf %S");
             break;
@@ -950,37 +950,37 @@ public class CollectdTools {
 
          case mysql_simpleReads:
             cmd.setTitle("Simple Reads");
-            cmd.setVerticalLabel(" ");
+            cmd.setVerticalLabel("reads/s");
             cmd.setPlugin("dbi-ndbinfo", "");
-            cmd.drawLine("gauge-counters_sum-SIMPLE_READS", "", "value", "Simple Reads", GREEN, "%5.2lf %S");
+            cmd.drawLine("derive-rate_counters_sum-SIMPLE_READS", "", "value", "Simple Reads", GREEN, "%5.2lf %S");
             break;
 
          case mysql_Reads:
             cmd.setTitle("Reads");
-            cmd.setVerticalLabel(" ");
+            cmd.setVerticalLabel("reads/s ");
             cmd.setPlugin("dbi-ndbinfo", "");
-            cmd.drawLine("gauge-counters_sum-READS", "", "value", "Reads", GREEN, "%5.2lf %S");
+            cmd.drawLine("derive-rate_counters_sum-READS", "", "value", "Reads", GREEN, "%5.2lf %S");
             break;
 
          case mysql_Writes:
             cmd.setTitle("Writes");
-            cmd.setVerticalLabel(" ");
+            cmd.setVerticalLabel("writes/s");
             cmd.setPlugin("dbi-ndbinfo", "");
-            cmd.drawLine("gauge-counters_sum-WRITES", "", "value", "Writes", GREEN, "%5.2lf %S");
+            cmd.drawLine("derive-rate_counters_sum-WRITES", "", "value", "Writes", GREEN, "%5.2lf %S");
             break;
 
          case mysql_rangeScans:
             cmd.setTitle("Range Scans");
-            cmd.setVerticalLabel(" ");
+            cmd.setVerticalLabel("scans/s");
             cmd.setPlugin("dbi-ndbinfo", "");
-            cmd.drawLine("gauge-counters_sum-RANGE_SCANS", "", "value", "Range Scans", GREEN, "%5.2lf %S");
+            cmd.drawLine("derive-rate_counters_sum-RANGE_SCANS", "", "value", "Range Scans", GREEN, "%5.2lf %S");
             break;
 
          case mysql_tableScans:
             cmd.setTitle("Table Scans");
-            cmd.setVerticalLabel(" ");
+            cmd.setVerticalLabel("scans/s");
             cmd.setPlugin("dbi-ndbinfo", "");
-            cmd.drawLine("gauge-counters_sum-TABLE_SCANS", "", "value", "Table Scans", GREEN, "%5.2lf %S");
+            cmd.drawLine("derive-rate_counters_sum-TABLE_SCANS", "", "value", "Table Scans", GREEN, "%5.2lf %S");
             break;
 
          default:
