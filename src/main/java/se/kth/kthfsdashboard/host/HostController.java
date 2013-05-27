@@ -251,10 +251,10 @@ public class HostController implements Serializable {
 
       //Todo: does not work with hostname. Only works with IP address.
       Host h = hostEJB.findHostByName(hostname);      
-      WebCommunication webComm = new WebCommunication(h.getPublicIp(), cluster, service ,role);
-      
+      String ip = h.getPublicIp();
       try {
-         ClientResponse response = webComm.doCommand(command);
+         WebCommunication webComm = new WebCommunication();         
+         ClientResponse response = webComm.doCommand(ip, cluster, service, role, command);
 
          if (response.getClientResponseStatus().getFamily() == Family.SUCCESSFUL) {
             c.succeeded();

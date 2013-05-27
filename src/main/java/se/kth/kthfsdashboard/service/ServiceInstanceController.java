@@ -194,4 +194,15 @@ public class ServiceInstanceController implements Serializable {
       }
       return false;
    }
+   
+   public boolean getShowLog() {
+      
+      if (service == null) {
+         return false;
+      }
+      if (service.equalsIgnoreCase(ServiceType.MySQLCluster.toString())) {
+         return true;
+      }
+      return false;
+   }   
 }

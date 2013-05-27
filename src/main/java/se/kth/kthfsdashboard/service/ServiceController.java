@@ -302,13 +302,20 @@ public class ServiceController {
    }
 
    public String getRoleLog(int lines) {
-      WebCommunication webComm = new WebCommunication(hostname, cluster, service, role);
-      return webComm.getRoleLog(lines);
+      WebCommunication webComm = new WebCommunication();
+      return webComm.getRoleLog(hostname, cluster, service, role, lines);
    }
+   
+   public String getServiceLog(int lines) {
+      final String ROLE = "mgmserver";
+      String host = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostname();      
+      WebCommunication webComm = new WebCommunication();
+      return webComm.getServiceLog(host, cluster, service, lines);
+   }   
 
    public String getAgentLog(int lines) {
-      WebCommunication webComm = new WebCommunication(hostname);
-      return webComm.getAgentLog(lines);
+      WebCommunication webCom = new WebCommunication();
+      return webCom.getAgentLog(hostname, lines);
    }
 
    public String getMySQLClusterConfig() throws Exception {
@@ -317,8 +324,8 @@ public class ServiceController {
       // Role=mgmserver , Service=MySQLCluster, Cluster=cluster
       final String ROLE = "mgmserver";
       String host = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostname();
-      WebCommunication webComm = new WebCommunication(host, cluster, service, ROLE);
-      return webComm.getConfig();
+      WebCommunication webComm = new WebCommunication();
+      return webComm.getConfig(host, cluster, service, ROLE);
    }
 
    public String getNotAvailable() {
