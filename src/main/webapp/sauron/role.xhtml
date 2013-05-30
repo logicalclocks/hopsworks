@@ -71,14 +71,6 @@
 
                <p:toolbarGroup align="right">  
                   <p:menuButton value="Actions">  
-                     <p:menuitem value="Init" actionListener="#{hostController.doCommand}" ajax ="true" update="@form :Instance" disabled="true" 
-                                 onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
-                        <f:param name="hostname" value="#{hostController.hostname}" />
-                        <f:param name="cluster" value="#{hostController.cluster}" />
-                        <f:param name="role" value="#{hostController.role}" />
-                        <f:param name="service" value="#{serviceController.service}"/>                                   
-                        <f:param name="command" value="init" />
-                     </p:menuitem>
                      <p:menuitem value="Start" actionListener="#{hostController.doCommand}" ajax ="true" update="@form :Instance"
                                  onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
                         <f:param name="hostname" value="#{hostController.hostname}" />
