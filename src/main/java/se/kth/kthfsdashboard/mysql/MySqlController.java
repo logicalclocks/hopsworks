@@ -17,6 +17,7 @@ import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 import se.kth.kthfsdashboard.role.RoleEJB;
 import se.kth.kthfsdashboard.struct.NodesTableItem;
+import se.kth.kthfsdashboard.util.WebCommunication;
 
 /**
  *
@@ -24,7 +25,7 @@ import se.kth.kthfsdashboard.struct.NodesTableItem;
  */
 @ManagedBean
 @RequestScoped
-public class MySQLController implements Serializable {
+public class MySqlController implements Serializable {
 
    @EJB
    RoleEJB roleEjb;
@@ -37,7 +38,7 @@ public class MySQLController implements Serializable {
    private UploadedFile file;
    MySQLAccess mysql = new MySQLAccess();
 
-   public MySQLController() {
+   public MySqlController() {
    }
 
    public String getService() {
@@ -110,23 +111,20 @@ public class MySQLController implements Serializable {
       try {
          Thread.sleep(3000);
       } catch (InterruptedException ex) {
-         Logger.getLogger(MySQLController.class.getName()).log(Level.SEVERE, null, ex);
+         Logger.getLogger(MySqlController.class.getName()).log(Level.SEVERE, null, ex);
       }
 
       FacesContext.getCurrentInstance().addMessage(null, msg);
    }
 
    private List<NodesTableItem> loadItems() {
-      MySQLAccess dao = new MySQLAccess();
-      try {
-         // Finds hostname of mysqld
-         // Role=mysqld , Service=MySQLCluster, Cluster=cluster
-         final String ROLE = "mysqld";
-         String host = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostname();
-         return dao.readNodesFromNdbinfo(host);
-      } catch (Exception e) {
-         return null;
-      }
+      System.err.println("Load Items");      
+      // Finds hostname of mysqld
+      // Role=mysqld , Service=MySQLCluster, Cluster=cluster
+      final String ROLE = "mysqld";
+      String host = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostname();
+      WebCommunication wc = new WebCommunication();      
+      return wc.getNdbinfoNodesTable(host);
    }
 
    public void upload() {

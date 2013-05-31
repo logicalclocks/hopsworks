@@ -156,10 +156,10 @@
             </p:tab>
 
             <p:tab id="nodes" title="NDB Info (Nodes)" rendered="#{serviceController.showNdbInfo}">
-               <h:form id ="frm" >
-                  <p:outputPanel id="op" autoUpdate="true" rendered="true">
+               <h:form id ="frm_nodes" >
+                  <p:outputPanel id="nodes_table" autoUpdate="true" rendered="true">
 
-                     <p:dataTable id="nodestable" var="item" value="#{mySQLController.info}">  
+                     <p:dataTable id="nodestable" var="item" value="#{mySqlController.info}">  
                         <p:column headerText="Node id">  
                            <h:outputText value="#{item.nodeId}" />  
                         </p:column>  
@@ -180,12 +180,11 @@
                      </p:dataTable>
                   </p:outputPanel>
                </h:form>
-
-            </p:tab>             
+            </p:tab> 
+           
          </p:accordionPanel>
 
          <p:spacer width="1" height="25" />          
-
 
          <h:form id="formdate" style="text-align: center">  
             <h:panelGrid columns="10"> 
