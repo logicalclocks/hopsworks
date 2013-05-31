@@ -168,11 +168,11 @@ public class AgentResource {
    @POST
    @Path("/alert")
    @Consumes(MediaType.APPLICATION_JSON)
-   public Response alert(@Context HttpServletRequest req, String jsonStrig) {
+   public Response alert(@Context HttpServletRequest req, String jsonString) {
 
 //       TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
       try {
-         JSONObject json = new JSONObject(jsonStrig);
+         JSONObject json = new JSONObject(jsonString);
 
          Alert alert = new Alert();
          alert.setAlertTime(new Date());
