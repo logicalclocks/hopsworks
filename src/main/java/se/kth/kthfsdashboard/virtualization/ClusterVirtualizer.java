@@ -21,7 +21,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import static org.jclouds.Constants.PROPERTY_CONNECTION_TIMEOUT;
@@ -81,11 +80,11 @@ public final class ClusterVirtualizer {
     private List<String> mgmIP = new LinkedList();
     private List<String> mySQLClientsIP = new LinkedList();
     private List<String> namenodesIP = new LinkedList();
-    
     private ListeningExecutorService pool;
     private CountDownLatch latch;
     private CopyOnWriteArraySet<NodeMetadata> pendingNodes;
     private int max = 0;
+    private int totalNodes=0;
     /*
      * Constructor of a ClusterVirtualizer
      */
@@ -130,7 +129,7 @@ public final class ClusterVirtualizer {
         //If EC2 client
         if (provider.toString().equals(Provider.AWS_EC2.toString())) {
             //Unwrap the compute service context and retrieve a rest context to speak with EC2
-            RestContext<EC2Client, EC2AsyncClient> temp  = service.getContext().unwrap();
+            RestContext<EC2Client, EC2AsyncClient> temp = service.getContext().unwrap();
             //Fetch a synchronous rest client
             EC2Client client = temp.getApi();
             //For each group of the security groups
@@ -257,6 +256,13 @@ public final class ClusterVirtualizer {
                                 openTCP.add(port);
                             }
                         }
+                        //This is a delay we must use for EC2. There is a limit on REST requests and if we dont limit the
+                        //bursts of the requests it will fail
+                        try {
+                            Thread.sleep(15000);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
@@ -285,17 +291,18 @@ public final class ClusterVirtualizer {
                 messages.addMessage("Creating " + group.getNumber() + "  nodes in Security Group " + group.getSecurityGroup());
                 Set<? extends NodeMetadata> ready = service.createNodesInGroup(group.getSecurityGroup(), group.getNumber(), kthfsTemplate.build());
                 //For the demo, we keep track of the returned set of node Metadata launched and which group 
-                //was
                 messages.addMessage("Nodes created in Security Group " + group.getSecurityGroup() + " with "
                         + "basic setup");
                 nodes.put(group.getSecurityGroup(), ready);
                 //Identify the biggest group
                 max = max < group.getNumber() ? group.getNumber() : max;
+                //Fetch the total of nodes
+                totalNodes +=group.getNumber();
 
                 //Fetch the nodes info so we can launch first mgm before the rest!
                 //Supposing ideal approach that the users dont mix roles.
                 //Think if it is possible to optimize
-                
+
                 Set<String> roles = new HashSet(group.getRoles());
                 if (roles.contains("MySQLCluster*mgm")) {
                     Iterator<? extends NodeMetadata> iter = ready.iterator();
@@ -347,11 +354,32 @@ public final class ClusterVirtualizer {
     }
 
     /*
+     * Method for the install phase
+     * 
+     */
+    public void installPhase() {
+        //We specify a thread pool with the same number of nodes in the system and resources are
+        //Total Nodes*1.7
+        pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool((int)(totalNodes*1.7)));
+        JHDFSScriptBuilder.Builder scriptBuilder = 
+                JHDFSScriptBuilder.builder().scriptType(JHDFSScriptBuilder.ScriptType.INSTALL);
+        Set<NodeMetadata> groupLaunch = new HashSet<NodeMetadata>(mgms.keySet());
+        groupLaunch.addAll(ndbs.keySet());
+        groupLaunch.addAll(mysqlds.keySet());
+        groupLaunch.addAll(namenodes.keySet());
+        groupLaunch.addAll(datanodes.keySet());
+        messages.addMessage("Configuring installation phase in all nodes");
+        messages.addMessage("Running install process of software");
+        nodeInstall(groupLaunch, scriptBuilder);
+
+    }
+
+    /*
      * Method to setup the nodes in the correct order for our platform in the first run
      */
     public void deployingConfigurations() {
         //create pool of threads taking the biggest cluster
-        pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(max));
+        pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(max*2));
         //latch = new CountDownLatch(mgmNodes.size());
         //First phase mgm configuration
         JHDFSScriptBuilder.Builder scriptBuilder = JHDFSScriptBuilder.builder()
@@ -371,11 +399,11 @@ public final class ClusterVirtualizer {
         //launch ndbs
         groupLaunch = ndbs.keySet();
         messages.addMessage("Configuring ndb nodes");
-        nodePhase(groupLaunch,ndbs,scriptBuilder);
+        nodePhase(groupLaunch, ndbs, scriptBuilder);
         //launch mysqlds
         groupLaunch = mysqlds.keySet();
         messages.addMessage("Configuring mysqld nodes");
-        nodePhase(groupLaunch, mysqlds,scriptBuilder);
+        nodePhase(groupLaunch, mysqlds, scriptBuilder);
         //launch namenodes
         groupLaunch = namenodes.keySet();
         messages.addMessage("Configuring namenodes");
@@ -629,7 +657,7 @@ public final class ClusterVirtualizer {
                 }
             }
         }
-        
+
 //
 //        //All follow the same description
 //        for (NodeGroup group : cluster.getNodes()) {
@@ -892,7 +920,7 @@ public final class ClusterVirtualizer {
             case OPENSTACK:
                 template.os64Bit(true);
                 template.imageId(cluster.getProvider().getRegion()
-                        +"/"+cluster.getProvider().getImage());
+                        + "/" + cluster.getProvider().getImage());
                 template.hardwareId(cluster.getProvider().getRegion()
                         + "/" + cluster.getProvider().getInstanceType());
                 break;
@@ -906,7 +934,7 @@ public final class ClusterVirtualizer {
         return template;
     }
 
-    private void nodePhase(Set<NodeMetadata> nodes, Map<NodeMetadata, List<String>> map,JHDFSScriptBuilder.Builder scriptBuilder) {
+    private void nodePhase(Set<NodeMetadata> nodes, Map<NodeMetadata, List<String>> map, JHDFSScriptBuilder.Builder scriptBuilder) {
         if (!nodes.isEmpty()) {
             //Initialize countdown latch
             latch = new CountDownLatch(nodes.size());
@@ -916,37 +944,56 @@ public final class ClusterVirtualizer {
                 final NodeMetadata node = iter.next();
                 List<String> ips = new LinkedList(node.getPrivateAddresses());
                 //Listenable Future
-                JHDFSScriptBuilder script =scriptBuilder.build(ips.get(0), map.get(node));
-                final ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
-                        RunScriptOptions.NONE);
-                future.addListener(new Runnable() {
-                    private NodeMetadata launchingNode= node;
-                    @Override
-                    public void run() {
-                        try {
-                            final ExecResponse contents = future.get();
-                            latch.countDown();
-                            //...process 
-                            pendingNodes.remove(launchingNode);
-                        } catch (InterruptedException e) {
-                            System.out.println("Interrupted" + e);
-                        } catch (ExecutionException e) {
-                            System.out.println("Interrupted" + e.getCause());
-                        }
-                    }
-                }, pool);
+                JHDFSScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node));
+                ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
+                        RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
+//              
+                future.addListener(new nodeStatusTracker(node, latch, pendingNodes, future), pool);
             }
             try {
                 //wait for all the works to finish, 45 min estimated for each node +60 min extra margin to give
                 //some extra time.
-                latch.await(45*nodes.size()+60, TimeUnit.MINUTES);
+                latch.await(45 * nodes.size() + 60, TimeUnit.MINUTES);
                 messages.addMessage("Launch phase complete...");
             } catch (InterruptedException e) {
                 //need to think to do about retries
-                if(!pendingNodes.isEmpty()){
-                    
-                    Set<NodeMetadata>remain= new HashSet<NodeMetadata>(pendingNodes);
-                    nodePhase(remain, map,scriptBuilder);
+                if (!pendingNodes.isEmpty()) {
+
+                    Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+                    nodePhase(remain, map, scriptBuilder);
+                }
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    private void nodeInstall(Set<NodeMetadata> nodes, JHDFSScriptBuilder.Builder scriptBuilder) {
+        if (!nodes.isEmpty()) {
+            //Initialize countdown latch
+            latch = new CountDownLatch(nodes.size());
+            pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
+            Iterator<NodeMetadata> iter = nodes.iterator();
+            while (iter.hasNext()) {
+                final NodeMetadata node = iter.next();
+//                List<String> ips = new LinkedList(node.getPrivateAddresses());
+                //Listenable Future
+                JHDFSScriptBuilder script = scriptBuilder.build();
+                ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
+                        RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
+//              
+                future.addListener(new nodeStatusTracker(node, latch, pendingNodes, future), pool);
+            }
+            try {
+                //wait for all the works to finish, 45 min estimated for each node +60 min extra margin to give
+                //some extra time.
+                latch.await(45 * nodes.size() + 60, TimeUnit.MINUTES);
+                messages.addMessage("Install phase complete...");
+            } catch (InterruptedException e) {
+                //need to think to do about retries
+                if (!pendingNodes.isEmpty()) {
+
+                    Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+                    nodeInstall(remain, scriptBuilder);
                 }
                 e.printStackTrace();
             }

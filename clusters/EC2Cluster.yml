@@ -11,7 +11,7 @@
     [3306, 4343, 3321]
   provider:
     name: aws-ec2
-    instanceType: m1.medium
+    instanceType: m1.large
     image: eu-west-1/ami-ffcdce8b
     region: eu-west-1
     zones: 

@@ -166,7 +166,8 @@ public class VirtualizationController implements Serializable {
         virtualizer = new ClusterVirtualizer(this);
         virtualizer.createSecurityGroups(clusterController.getCluster());
         if(virtualizer.launchNodesBasicSetup(clusterController.getCluster())){
-            messages.addMessage("All nodes installed with basic software");
+            messages.addMessage("All nodes launched");
+            virtualizer.installPhase();
             virtualizer.deployingConfigurations();
             messages.addSuccessMessage("Cluster launched");
         }

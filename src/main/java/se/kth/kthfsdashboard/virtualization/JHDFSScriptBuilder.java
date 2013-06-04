@@ -180,22 +180,26 @@ public class JHDFSScriptBuilder implements Statement {
         ImmutableList.Builder<Statement> statements = ImmutableList.builder();
         switch (scriptType) {
             case INIT:
-                statements.add(exec("sudo apt-get update -qq;"));
+                statements.add(exec("sudo apt-key update -qq;"));
+                statements.add(exec("sudo apt-get update;"));
                 List<String> keys = new ArrayList();
                 keys.add(key);
                 statements.add(new AuthorizeRSAPublicKeys(keys));
-                statements.add(exec("sudo apt-get update -qq;"));
+                statements.add(exec("sudo apt-get update;"));
                 statements.add(exec("sudo apt-get install make;"));
                 statements.add(exec("sudo apt-get install -f -y -qq --force-yes ruby1.9.1-full;"));
+                statements.add(exec("sudo apt-get install git;"));
                 statements.add(InstallRubyGems.builder()
                         .version("1.8.10")
                         .build());
                 statements.add(
                         InstallChefGems.builder()
                         .version("10.20.0").build());
-                InstallGit git = new InstallGit();
-                statements.add(git);
-                statements.add(exec("apt-get install -q -y python-dev=2.7.3-0ubuntu2"));
+                
+               
+                //statements.add(exec("apt-get install -q -y python;"));
+                statements.add(exec("sudo apt-get update;"));
+                statements.add(exec("sudo apt-get install -y git;"));
                 statements.add(exec("sudo mkdir /etc/chef;"));
                 statements.add(exec("cd /etc/chef;"));
                 statements.add(exec("sudo wget http://lucan.sics.se/kthfs/solo.rb;"));
@@ -216,6 +220,8 @@ public class JHDFSScriptBuilder implements Statement {
                 statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
                 statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
                 statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
+//                createNodeInstall(statements);
+//                statements.add(exec("sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
                 break;
 
             case INSTALL:
@@ -363,6 +369,7 @@ public class JHDFSScriptBuilder implements Statement {
         }
         //close the json
         json.append("]}");
+        statements.add(createOrOverwriteFile("/etc/chef/chef.json", ImmutableSet.of(json.toString())));
     }
     
     private List<String> createInstallList(){
@@ -374,7 +381,7 @@ public class JHDFSScriptBuilder implements Statement {
     }
     private List<String> createRunList() {
         RunListBuilder builder = new RunListBuilder();
-        builder.addRecipe("kthfsagent");
+       // builder.addRecipe("kthfsagent");
 
         boolean collectdAdded = false;
         //Look at the roles, if it matches add the recipes for that role
@@ -415,6 +422,7 @@ public class JHDFSScriptBuilder implements Statement {
                 collectdAdded = true;
             }
             if (collectdAdded) {
+                builder.addRecipe("kthfsagent");
                 builder.addRecipe("collect::attr-driven");
             }
             // We always need to restart the kthfsagent after we have
