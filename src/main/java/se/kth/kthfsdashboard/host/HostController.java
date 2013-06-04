@@ -52,8 +52,8 @@ public class HostController implements Serializable {
    private String hostname;
    @ManagedProperty("#{param.command}")
    private String command;
-   @ManagedProperty("#{param.servicegroup}")
-   private String serviceGroup;
+   @ManagedProperty("#{param.service}")
+   private String service;
    @ManagedProperty("#{param.role}")
    private String role;
    
@@ -111,12 +111,12 @@ public class HostController implements Serializable {
       this.hostname = hostname;
    }
 
-   public void setServiceGroup(String serviceGroup) {
-      this.serviceGroup = serviceGroup;
+   public void setService(String service) {
+      this.service = service;
    }
 
-   public String getServiceGroup() {
-      return serviceGroup;
+   public String getService() {
+      return service;
    }
 
    public String getHostname() {
@@ -245,21 +245,21 @@ public class HostController implements Serializable {
    public void doCommand(ActionEvent actionEvent) throws NoSuchAlgorithmException, Exception {
 
       //  TODO: If the web application server craches, status will remain 'Running'.
-      Command c = new Command(command, hostname, serviceGroup, role, cluster);
+      Command c = new Command(command, hostname, service, role, cluster);
       commandEJB.persistCommand(c);
       FacesMessage message;
 
       //Todo: does not work with hostname. Only works with IP address.
       Host h = hostEJB.findHostByName(hostname);      
-      WebCommunication webComm = new WebCommunication(h.getPublicIp(), cluster, serviceGroup ,role);
-      
+      String ip = h.getPublicIp();
       try {
-         ClientResponse response = webComm.doCommand(command);
+         WebCommunication webComm = new WebCommunication();         
+         ClientResponse response = webComm.doCommand(ip, cluster, service, role, command);
 
          if (response.getClientResponseStatus().getFamily() == Family.SUCCESSFUL) {
             c.succeeded();
             String messageText = "";
-            Role s = roleEjb.find(hostname, cluster, serviceGroup, role);
+            Role s = roleEjb.find(hostname, cluster, service, role);
             
             if (command.equalsIgnoreCase("init")) {
 //               Todo:

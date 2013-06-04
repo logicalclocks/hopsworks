@@ -63,13 +63,13 @@
          <h:form styleClass="styleInfoPanel">
             <p:panel header="Services">
 
-               <p:dataTable id="serviceRole" var="serviceRole" value="#{serviceController.serviceGroups}">
+               <p:dataTable id="serviceRole" var="serviceRole" value="#{serviceController.services}">
 
                   <p:column headerText="Service">
                      <p:commandLink action="#{serviceController.gotoServiceStatus}" ajax="false">
                         <h:outputText value="#{serviceRole}"/>
                         <f:param name="cluster" value="#{serviceController.cluster}"/>
-                        <f:param name="servicegroup" value="#{serviceRole}"/>
+                        <f:param name="service" value="#{serviceRole}"/>
                      </p:commandLink>                         
                   </p:column>  
 

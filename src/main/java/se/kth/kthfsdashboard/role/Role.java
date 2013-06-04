@@ -14,20 +14,20 @@ import javax.persistence.*;
    @NamedQuery(name = "Role.findClusters", query = "SELECT DISTINCT r.cluster FROM Role r"),
    
 //   @NamedQuery(name = "Role.findServiceClass", query = "SELECT DISTINCT r.serviceClass FROM Role r WHERE r.cluster = :cluster"),   
-   @NamedQuery(name = "Role.findServiceGroups", query = "SELECT DISTINCT r.serviceGroup FROM Role r WHERE r.cluster = :cluster"),
+   @NamedQuery(name = "Role.findServices", query = "SELECT DISTINCT r.service FROM Role r WHERE r.cluster = :cluster"),
    
-   @NamedQuery(name = "Role.find", query = "SELECT r FROM Role r WHERE r.hostname = :hostname AND r.cluster = :cluster AND r.serviceGroup = :serviceGroup AND r.role = :role"),
+   @NamedQuery(name = "Role.find", query = "SELECT r FROM Role r WHERE r.hostname = :hostname AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),
 
    @NamedQuery(name = "Role.findBy.Cluster", query = "SELECT r FROM Role r WHERE r.cluster = :cluster"),  
    @NamedQuery(name = "Role.findBy.Cluster.Role.Hostname", query = "SELECT r FROM Role r WHERE r.hostname = :hostname AND r.cluster = :cluster AND r.role = :role"),
-   @NamedQuery(name = "Role.findBy-Cluster-Group", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.serviceGroup = :group"),
-   @NamedQuery(name = "Role.findBy-Cluster-Group-Role", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.serviceGroup = :group AND r.role = :role"),
-   @NamedQuery(name = "Role.findBy-Cluster-Group-Role-Status", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.serviceGroup = :group AND r.role = :role AND r.status = :status"),
+   @NamedQuery(name = "Role.findBy-Cluster-Group", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service"),
+   @NamedQuery(name = "Role.findBy-Cluster-Group-Role", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
+   @NamedQuery(name = "Role.findBy-Cluster-Group-Role-Status", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
 
 // need this?   
-   @NamedQuery(name = "Role.findHostnameBy-Cluster-Group-Role", query = "SELECT r.hostname FROM Role r WHERE r.cluster = :cluster AND r.serviceGroup = :group AND r.role = :role ORDER BY r.hostname"),
+   @NamedQuery(name = "Role.findHostnameBy-Cluster-Group-Role", query = "SELECT r.hostname FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role ORDER BY r.hostname"),
 
-   @NamedQuery(name = "Role.Count", query="SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.serviceGroup = :serviceGroup AND r.role = :role")
+   @NamedQuery(name = "Role.Count", query="SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role")
 })
 public class Role implements Serializable {
 
@@ -48,13 +48,11 @@ public class Role implements Serializable {
    @Id
    @GeneratedValue(strategy = GenerationType.SEQUENCE)
    private Long id;
-   @Column(name = "host_name", nullable = false, length = 128)
+   @Column(name = "HOSTNAME_", nullable = false, length = 128)
    private String hostname;
-//   @Column(nullable = false)
-//   private ServiceClass serviceClass;
    @Column(nullable = false, length = 48)
-   private String serviceGroup;
-   @Column(nullable = false, length = 48)
+   private String service;
+   @Column(name = "ROLE_", nullable = false, length = 48)
    private String role;
    @Column(nullable = false, length = 48)
    private String cluster;
@@ -67,30 +65,27 @@ public class Role implements Serializable {
    public Role() {
    }
 
-   public Role(String hostname, String cluster, String serviceGroup, String role, Integer webPort, Role.Status status) {
+   public Role(String hostname, String cluster, String service, String role, Integer webPort, Role.Status status) {
       this.hostname = hostname;
       this.cluster = cluster;
-//      this.serviceClass = serviceClass;
-      this.serviceGroup = serviceGroup;
+      this.service = service;
       this.role = role;
       this.status = status;
       this.webPort = webPort;
    }
 
-   public Role(String hostname, String cluster, String serviceGroup, String role, Integer webPort) {
+   public Role(String hostname, String cluster, String service, String role, Integer webPort) {
       this.hostname = hostname;
       this.cluster = cluster;
-//      this.serviceClass = serviceClass;
-      this.serviceGroup = serviceGroup;
+      this.service = service;
       this.role = role;
       this.webPort = webPort;
    }
 
-   public Role(String hostname, String cluster, String serviceGroup, String role) {
+   public Role(String hostname, String cluster, String service, String role) {
       this.hostname = hostname;
       this.cluster = cluster;
-//      this.serviceClass = serviceClass;
-      this.serviceGroup = serviceGroup;
+      this.service = service;
       this.role = role;
    }
 
@@ -118,20 +113,12 @@ public class Role implements Serializable {
       this.hostname = hostname;
    }
 
-//   public ServiceClass getServiceClass() {
-//      return serviceClass;
-//   }
-//
-//   public void setServiceClass(ServiceClass serviceClass) {
-//      this.serviceClass = serviceClass;
-//   }
-
-   public String getServiceGroup() {
-      return serviceGroup;
+   public String getService() {
+      return service;
    }
 
-   public void setServiceGroup(String serviceGroup) {
-      this.serviceGroup = serviceGroup;
+   public void setService(String service) {
+      this.service = service;
    }
 
    public String getRole() {

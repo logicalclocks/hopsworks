@@ -24,8 +24,8 @@ public class AlertController implements Serializable{
    private String hostname;
    @ManagedProperty("#{param.role}")
    private String role;
-   @ManagedProperty("#{param.servicegroup}")
-   private String serviceGroup;
+   @ManagedProperty("#{param.service}")
+   private String service;
    @ManagedProperty("#{param.cluster}")
    private String cluster;
    private Alert[] selectedAlerts;
@@ -41,12 +41,12 @@ public class AlertController implements Serializable{
       this.role = role;
    }
 
-   public String getServiceGroup() {
-      return serviceGroup;
+   public String getService() {
+      return service;
    }
 
-   public void setServiceGroup(String serviceGroup) {
-      this.serviceGroup = serviceGroup;
+   public void setService(String service) {
+      this.service = service;
    }
 
    public String getHostname() {
