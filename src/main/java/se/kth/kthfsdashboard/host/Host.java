@@ -20,8 +20,8 @@ import se.kth.kthfsdashboard.util.Formatter;
 })
 public class Host implements Serializable {
 
-   private static final int HOST_TIMEOUT = 20;
-
+   private static final int HEARTBEAT_INTERVAL = 10;
+   
    public enum Health {
 
       Good, Bad
@@ -175,9 +175,10 @@ public class Host implements Serializable {
 
    public Health getHealth() {
 
+      int hostTimeout = HEARTBEAT_INTERVAL * 2 + 1;      
       long deltaInSec = ((new Date()).getTime() - lastHeartbeat) / 1000;
 
-      if (deltaInSec < HOST_TIMEOUT) {
+      if (deltaInSec < hostTimeout) {
          return Health.Good;
       }
       return Health.Bad;
