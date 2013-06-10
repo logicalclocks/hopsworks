@@ -377,7 +377,7 @@ public final class ClusterVirtualizer {
     /*
      * Method to setup the nodes in the correct order for our platform in the first run
      */
-    public void deployingConfigurations() {
+    public void deployingConfigurations(Cluster cluster) {
         //create pool of threads taking the biggest cluster
         pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(max*2));
         //latch = new CountDownLatch(mgmNodes.size());
@@ -389,6 +389,7 @@ public final class ClusterVirtualizer {
                 .ndbs(ndbsIP)
                 .privateIP(privateIP)
                 .publicKey(publicKey)
+                .clusterName(cluster.getName())
                 .scriptType(JHDFSScriptBuilder.ScriptType.JHDFS);
 
         //Asynchronous node launch
@@ -529,6 +530,7 @@ public final class ClusterVirtualizer {
                             .roles(group.getRoles())
                             .nodeIP(ips.get(0))
                             .privateIP(privateIP)
+                            .clusterName(cluster.getName())
                             .build());
 
                     //We connect to the specific node using its metadata id and give him the json and the chef command to run

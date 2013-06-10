@@ -50,6 +50,7 @@ public class JHDFSScriptBuilder implements Statement {
         private String nodeIP;
         private String key;
         private String privateIP;
+        private String clusterName;
 
         /*
          * Define the type of script we are going to prepare
@@ -126,19 +127,26 @@ public class JHDFSScriptBuilder implements Statement {
             this.privateIP= ip;
             return this;
         }
+        
+        public Builder clusterName(String name){
+            this.clusterName=name;
+            return this;
+        }
         /*
          * Default script build, use when defined all the other building options
          */
 
         public JHDFSScriptBuilder build() {
-            return new JHDFSScriptBuilder(scriptType, ndbs, mgms, mysql, namenodes, roles, nodeIP, key, privateIP);
+            return new JHDFSScriptBuilder(scriptType, ndbs, mgms, mysql, 
+                    namenodes, roles, nodeIP, key, privateIP,clusterName);
         }
         /*
          * Same as default but in this case we include the ip during the build and the roles.
          */
 
         public JHDFSScriptBuilder build(String ip, List<String> roles) {
-            return new JHDFSScriptBuilder(scriptType, ndbs, mgms, mysql, namenodes, roles, ip, key,privateIP);
+            return new JHDFSScriptBuilder(scriptType, ndbs, mgms, mysql, 
+                    namenodes, roles, ip, key,privateIP,clusterName);
         }
     }
     
@@ -151,10 +159,11 @@ public class JHDFSScriptBuilder implements Statement {
     private String key;
     private String ip;
     private String privateIP;
+    private String clusterName;
 
     protected JHDFSScriptBuilder(ScriptType scriptType, List<String> ndbs, List<String> mgms,
             List<String> mysql, List<String> namenodes, List<String> roles, String ip, String key, 
-            String privateIP) {
+            String privateIP, String clusterName) {
         this.scriptType = scriptType;
         this.ndbs = ndbs;
         this.mgms = mgms;
@@ -164,6 +173,7 @@ public class JHDFSScriptBuilder implements Statement {
         this.ip = ip;
         this.key = key;
         this.privateIP= privateIP;
+        this.clusterName=clusterName;
     }
 
     @Override
@@ -197,7 +207,7 @@ public class JHDFSScriptBuilder implements Statement {
                         .version("10.20.0").build());
                 
                
-                //statements.add(exec("apt-get install -q -y python;"));
+                
                 statements.add(exec("sudo apt-get update;"));
                 statements.add(exec("sudo apt-get install -y git;"));
                 statements.add(exec("sudo mkdir /etc/chef;"));
@@ -220,6 +230,7 @@ public class JHDFSScriptBuilder implements Statement {
                 statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
                 statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
                 statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
+                statements.add(exec("sudo apt-get install -f -q -y libmysqlclient-dev;"));
 //                createNodeInstall(statements);
 //                statements.add(exec("sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
                 break;
@@ -296,7 +307,11 @@ public class JHDFSScriptBuilder implements Statement {
         json.append("\"ip\":\"").append(ip).append("\",");
         //***
         json.append("\"data_memory\":\"120\",");
-        json.append("\"num_ndb_slots_per_client\":\"2\"},");
+        
+        //Generate name of cluster and service for MYSQL
+        json.append("\"cluster\":\"").append(clusterName).append("\",");
+        
+        json.append("\"num_ndb_slots_per_client\":\"2\"},");               
         json.append("\"memcached\":{\"mem_size\":\"128\"},");
         //***
         //Generate collectd fragment
@@ -308,7 +323,7 @@ public class JHDFSScriptBuilder implements Statement {
                 //                || group.getSecurityGroup().equals("mgm")
                 //                || group.getSecurityGroup().equals("ndb")
                 ) {
-            json.append("\"mysql\"");
+            json.append("\"mysqld\"");
         }
         if (roleSet.contains("KTHFS*datanode")) {
             json.append("\"dn\"");
@@ -324,6 +339,16 @@ public class JHDFSScriptBuilder implements Statement {
         //TODO ADD SUPPORT FOR MULTIPLE MGMS
         json.append("\"ndb_connectstring\":\"").append(mgms.get(0)).append("\",");
         //namenodes ips
+        
+        json.append("\"cluster\":\"").append(clusterName).append("\",");
+        
+        if(roleSet.contains("KTHFS*datanode")||roleSet.contains("KTHFS*namenode")){
+            json.append("\"service\":\"").append("KTHFS").append("\",");
+        }
+//        else{
+//            json.append("\"service\":\"").append("MySQLCluster").append("\",");
+//        }
+        
         json.append("\"namenode\":{\"addrs\":[");
 
         for (int i = 0; i < namenodes.size(); i++) {
@@ -382,7 +407,7 @@ public class JHDFSScriptBuilder implements Statement {
     private List<String> createRunList() {
         RunListBuilder builder = new RunListBuilder();
        // builder.addRecipe("kthfsagent");
-
+        builder.addRecipe("kthfsagent");
         boolean collectdAdded = false;
         //Look at the roles, if it matches add the recipes for that role
         for (String role : roles) {
@@ -422,7 +447,7 @@ public class JHDFSScriptBuilder implements Statement {
                 collectdAdded = true;
             }
             if (collectdAdded) {
-                builder.addRecipe("kthfsagent");
+                //builder.addRecipe("kthfsagent");
                 builder.addRecipe("collect::attr-driven");
             }
             // We always need to restart the kthfsagent after we have

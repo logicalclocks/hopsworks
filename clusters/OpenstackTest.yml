@@ -11,9 +11,9 @@
     [3306, 4343, 3321]
   provider:
     name: openstack-nova
-    instanceType: 3
+    instanceType: 7
     loginUser: ubuntu
-    image: RegionSICS/281956fa-198e-4da9-9404-cd5c958318df
+    image: 281956fa-198e-4da9-9404-cd5c958318df
     region: RegionSICS
   ##lists of service, we define a service with the number of instances and roles?  
   nodes:
