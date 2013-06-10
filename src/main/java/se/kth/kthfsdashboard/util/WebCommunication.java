@@ -6,6 +6,8 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.HostnameVerifier;
@@ -16,6 +18,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONObject;
+import se.kth.kthfsdashboard.struct.NodesTableItem;
 
 /**
  *
@@ -69,8 +74,8 @@ public class WebCommunication {
    public String getConfig(String hostname, String cluster, String service, String role) {
       String url = createUrl("config", hostname, cluster, service, role);
       return fetchContent(url);
-   }   
-   
+   }
+
    public String getRoleLog(String hostname, String cluster, String service, String role, int lines) {
       String url = createUrl("log", hostname, cluster, service, role, String.valueOf(lines));
       return fetchLog(url);
@@ -84,6 +89,33 @@ public class WebCommunication {
    public String getAgentLog(String hostname, int lines) {
       String url = createUrl("agentlog", hostname, String.valueOf(lines));
       return fetchLog(url);
+   }
+
+   public List<NodesTableItem> getNdbinfoNodesTable(String hostname) {
+      List<NodesTableItem> resultList = new ArrayList<NodesTableItem>();
+
+      String url = createUrl("mysql", hostname, "ndbinfo", "nodes");
+      String jsonString = fetchContent(url);
+      try {
+         JSONArray json = new JSONArray(jsonString);
+         if (json.get(0).equals( "Error")) {
+            resultList.add(new NodesTableItem(null, json.getString(1), null, null, null));
+            return resultList;
+         }
+         for (int i = 0; i < json.length(); i++) {
+            JSONArray node = json.getJSONArray(i);
+            Integer nodeId = node.getInt(0);
+            Long uptime = node.getLong(1);            
+            String status = node.getString(2);
+            Integer startPhase = node.getInt(3);
+            Integer configGeneration = node.getInt(4);
+            resultList.add(new NodesTableItem(nodeId, status, uptime, startPhase, configGeneration));
+         }
+      } catch (Exception ex) {
+         logger.log(Level.SEVERE, "Exception: {0}", ex);
+         resultList.add(new NodesTableItem(null, "Error", null, null, null));         
+      }
+      return resultList;
    }
 
    public ClientResponse doCommand(String hostname, String cluster, String service, String role, String command) throws Exception {

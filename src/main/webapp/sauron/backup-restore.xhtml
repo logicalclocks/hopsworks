@@ -44,7 +44,7 @@
                   <p:outputLabel value="Backup the database and download the backup file:"/>
                   <h:form>                 
                      <p:commandButton update ="msg" value="Download Backup File" ajax="false" onclick="PrimeFaces.monitorDownload(dlgBackup.show(), function end(){dlgBackup.hide();})" >
-                        <p:fileDownload value="#{mySQLController.backup}" />
+                        <p:fileDownload value="#{mySqlController.backup}" />
                      </p:commandButton>
                      <p:growl id="messages" showDetail="true" sticky="true" />      
                   </h:form>  
@@ -60,7 +60,7 @@
                <h:panelGrid columns="1" >
                   <p:outputLabel value="Upload backup file and restore the database:"/>               
                   <h:form enctype="multipart/form-data">  
-                     <p:fileUpload fileUploadListener="#{mySQLController.handleRestoreFileUpload}" 
+                     <p:fileUpload fileUploadListener="#{mySqlController.handleRestoreFileUpload}" 
                                    onstart="dlgRestore.show()" oncomplete="dlgRestore.hide()" 
                                    mode="advanced"  
                                    update="messages"  
