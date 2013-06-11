@@ -189,15 +189,15 @@
                   <p:toolbar>
                      <p:toolbarGroup align="left"><p:outputLabel value="Name Node Info"/></p:toolbarGroup>
                   </p:toolbar>                     
-                  <p:dataGrid  var="g" value="#{graphController.namenodeInstanceGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                     <p:graphicImage value="#{graphController.getNamenodeInstanceGraphUrl(g)}" />  
+                  <p:dataGrid  var="g" value="#{graphController.namenodeGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                     <p:graphicImage value="#{graphController.namenodeGraphUrl(g)}" />  
                   </p:dataGrid> 
 
                   <p:toolbar>
                      <p:toolbarGroup align="left"><p:outputLabel value="Name Node Activity"/></p:toolbarGroup>
                   </p:toolbar>
-                  <p:dataGrid  var="g" value="#{graphController.namenodeInstanceActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                     <p:graphicImage value="#{graphController.getNamenodeInstanceGraphUrl(g)}" />   
+                  <p:dataGrid  var="g" value="#{graphController.namenodeActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                     <p:graphicImage value="#{graphController.namenodeGraphUrl(g)}" />   
                   </p:dataGrid>               
                </p:outputPanel>
 
@@ -205,8 +205,8 @@
                   <p:toolbar>
                      <p:toolbarGroup align="left"><p:outputLabel value="Data Node Activity"/></p:toolbarGroup>
                   </p:toolbar>
-                  <p:dataGrid  var="g" value="#{graphController.datanodeInstanceActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                     <p:graphicImage value="#{graphController.getDatanodeInstanceGraphUrl(g)}" />   
+                  <p:dataGrid  var="g" value="#{graphController.datanodeActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                     <p:graphicImage value="#{graphController.datanodeGraphUrl(g)}" />   
                   </p:dataGrid>                 
                </p:outputPanel>            
 
