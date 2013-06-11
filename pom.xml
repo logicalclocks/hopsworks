@@ -11,7 +11,7 @@
     <name>KTHFS Dashboard</name>
 
     <properties>
-        <jclouds.version>1.6.0-rc.4</jclouds.version>
+        <jclouds.version>1.6.0</jclouds.version>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
@@ -130,12 +130,12 @@
         <dependency>
             <groupId>org.jclouds</groupId>
             <artifactId>jclouds-compute</artifactId>
-            <version>1.6.0-rc.4</version>
+            <version>1.6.0</version>
         </dependency>
         <dependency>
             <groupId>org.jclouds.api</groupId>
             <artifactId>chef</artifactId>
-            <version>1.6.0-rc.4</version>
+            <version>1.6.0</version>
         </dependency>
 <!--        <dependency>
             <groupId>org.jclouds</groupId>

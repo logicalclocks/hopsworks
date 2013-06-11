@@ -25,7 +25,8 @@ public class ClusterParserTest extends TestCase {
 
 
         try {
-            Object document = yaml.load(new BufferedReader(new FileReader(new File(dir + separator + "ClusterDraft.yml"))));
+            Object document = yaml.load(new BufferedReader(new FileReader(new File(dir + separator + 
+                    "clusters"+separator+"BigEC2Cluster.yml"))));
             assertNotNull(document);
             assertTrue(document.getClass().toString(), document instanceof Cluster);
             Cluster cluster =(Cluster) document;

@@ -1,7 +1,7 @@
 ## YAML Template.
 ---
 !!se.kth.kthfsdashboard.virtualization.clusterparser.Cluster
-  name: test
+  name: Big
   environment: dev
   globalServices: 
     [ssh, chefClient]
@@ -19,35 +19,35 @@
   ##lists of groups, with the roles the nodes will have and open ports 
   nodes:
   - securityGroup: ndb
-    number: 2
+    number: 4
     roles:
-     [MySQLCluster*ndb]
+     [MySQLCluster-ndb]
     authorizePorts:
-     [MySQLCluster*ndb]
+     [MySQLCluster-ndb]
   - securityGroup: mgm
-    number: 1
+    number: 2
     roles:
-     [MySQLCluster*mgm]
+     [MySQLCluster-mgm]
     authorizePorts:
-     [MySQLCluster*mgm]
+     [MySQLCluster-mgm]
   - securityGroup: mysql
-    number: 1
+    number: 2
     roles:
-     [MySQLCluster*mysqld]
+     [MySQLCluster-mysqld]
     authorizePorts:
-     [MySQLCluster*mysqld]
+     [MySQLCluster-mysqld]
   - securityGroup: namenodes
-    number: 2
+    number: 4
     roles:
-     [KTHFS*namenode]
+     [KTHFS-namenode]
     authorizePorts:
-     [KTHFS*namenode]
+     [KTHFS-namenode]
   - securityGroup: datanodes
-    number: 2
+    number: 4
     roles:
-     [KTHFS*datanode]
+     [KTHFS-datanode]
     authorizePorts:
-     [KTHFS*datanode]   
+     [KTHFS-datanode]   
   ##Override chef attributes for roles://TODO
   chefAttributes:
 

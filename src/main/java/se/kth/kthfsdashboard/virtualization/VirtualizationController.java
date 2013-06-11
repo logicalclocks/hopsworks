@@ -162,17 +162,23 @@ public class VirtualizationController implements Serializable {
     public void launchCluster() {
         setCredentials();
         messages.addMessage("Setting up credentials and initializing virtualization context...");
-        service = initContexts();
-//        virtualizer = new ClusterVirtualizer(this);
-//        virtualizer.createSecurityGroups(clusterController.getCluster());
-//        if(virtualizer.launchNodesBasicSetup(clusterController.getCluster())){
-//            messages.addMessage("All nodes installed with basic software");
-//        }
-//        virtualizer.demoOnly(clusterController.getCluster());
-        createSecurityGroups();
-        launchNodesBasicSetup();
-        demoOnly();
-        messages.addSuccessMessage("Cluster launched");
+        //service = initContexts();
+        virtualizer = new ClusterVirtualizer(this);
+        virtualizer.createSecurityGroups(clusterController.getCluster());
+        if(virtualizer.launchNodesBasicSetup(clusterController.getCluster())){
+            messages.addMessage("All nodes launched");
+            virtualizer.installPhase();
+            virtualizer.deployingConfigurations(clusterController.getCluster());
+            messages.addSuccessMessage("Cluster launched");
+        }
+        else{
+            messages.addSuccessMessage("Deployment failure");
+        }
+        //virtualizer.demoOnly(clusterController.getCluster());
+        //createSecurityGroups();
+        //launchNodesBasicSetup();
+        //demoOnly();
+        
         messages.clearMessages();
         //installRoles();
     }
