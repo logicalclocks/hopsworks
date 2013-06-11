@@ -30,7 +30,7 @@ public class CollectdResource {
    @Path("ping")
    @Produces(MediaType.TEXT_PLAIN)
    public String ping() {
-      return "KTHFSDashboard: Pong";
+      return "KTHFS Dashboard: Pong";
    }
 
    @GET
@@ -50,10 +50,6 @@ public class CollectdResource {
 
       CollectdTools collectdTools = new CollectdTools();
       try {
-
-         
-
-
          ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
          InputStream inputStream = collectdTools.getGraphStream(chartType, hostname, plugin, pluginInstance, type, typeInstance, ds, start, end, n);
          BufferedImage image = ImageIO.read(inputStream);
