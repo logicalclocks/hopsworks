@@ -23,7 +23,7 @@ import org.jclouds.scriptbuilder.statements.ruby.InstallRubyGems;
 import org.jclouds.scriptbuilder.statements.ssh.AuthorizeRSAPublicKeys;
 
 /**
- * Beta, not defined completely Setups the script to run on the VM node. For now
+ * Setups the script to run on the VM node. For now
  * it has the init script and the generic script for the nodes.
  *
  * @author Alberto Lorente Leal <albll@kth.se>
@@ -319,16 +319,16 @@ public class JHDFSScriptBuilder implements Statement {
         json.append("\"clients\":[");
         //Depending of the security group name of the demo we specify which collectd config to use
         Set<String> roleSet = new HashSet<String>(roles);
-        if (roleSet.contains("MySQLCluster*mysqld") // JIM: We can just have an empty clients list for mgm and ndb nodes    
+        if (roleSet.contains("MySQLCluster-mysqld") // JIM: We can just have an empty clients list for mgm and ndb nodes    
                 //                || group.getSecurityGroup().equals("mgm")
                 //                || group.getSecurityGroup().equals("ndb")
                 ) {
             json.append("\"mysqld\"");
         }
-        if (roleSet.contains("KTHFS*datanode")) {
+        if (roleSet.contains("KTHFS-datanode")) {
             json.append("\"dn\"");
         }
-        if (roleSet.contains("KTHFS*namenode")) {
+        if (roleSet.contains("KTHFS-namenode")) {
             json.append("\"nn\"");
         }
         json.append("]},");
@@ -342,7 +342,7 @@ public class JHDFSScriptBuilder implements Statement {
         
         json.append("\"cluster\":\"").append(clusterName).append("\",");
         
-        if(roleSet.contains("KTHFS*datanode")||roleSet.contains("KTHFS*namenode")){
+        if(roleSet.contains("KTHFS-datanode")||roleSet.contains("KTHFS-namenode")){
             json.append("\"service\":\"").append("KTHFS").append("\",");
         }
 //        else{
@@ -411,37 +411,37 @@ public class JHDFSScriptBuilder implements Statement {
         boolean collectdAdded = false;
         //Look at the roles, if it matches add the recipes for that role
         for (String role : roles) {
-            if (role.equals("MySQLCluster*ndb")) {
+            if (role.equals("MySQLCluster-ndb")) {
 
                 builder.addRecipe("ndb::ndbd");
                 builder.addRecipe("ndb::ndbd-kthfs");
                 collectdAdded = true;
             }
-            if (role.equals("MySQLCluster*mysqld")) {
+            if (role.equals("MySQLCluster-mysqld")) {
 
                 builder.addRecipe("ndb::mysqld");
                 builder.addRecipe("ndb::mysqld-kthfs");
                 collectdAdded = true;
             }
-            if (role.equals("MySQLCluster*mgm")) {
+            if (role.equals("MySQLCluster-mgm")) {
 
                 builder.addRecipe("ndb::mgmd");
 
                 builder.addRecipe("ndb::mgmd-kthfs");
                 collectdAdded = true;
             }
-            if (role.equals("MySQLCluster*memcached")) {
+            if (role.equals("MySQLCluster-memcached")) {
                 builder.addRecipe("ndb::memcached");
                 builder.addRecipe("ndb::memcached-kthfs");
             }
 
             //This are for the Hadoop nodes
-            if (role.equals("KTHFS*namenode")) {
+            if (role.equals("KTHFS-namenode")) {
                 builder.addRecipe("java");
                 builder.addRecipe("kthfs::namenode");
                 collectdAdded = true;
             }
-            if (role.equals("KTHFS*datanode")) {
+            if (role.equals("KTHFS-datanode")) {
                 builder.addRecipe("java");
                 builder.addRecipe("kthfs::datanode");
                 collectdAdded = true;

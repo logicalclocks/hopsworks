@@ -122,19 +122,19 @@ public class ClusterController implements Serializable {
         int mysql = 0;
 
         for (NodeGroup group : cluster.getNodes()) {
-            if (group.getRoles().contains("KTHFS*namenode")) {
+            if (group.getRoles().contains("KTHFS-namenode")) {
                 namenode += group.getNumber();
             }
-            if (group.getRoles().contains("KTHFS*datanode")) {
+            if (group.getRoles().contains("KTHFS-datanode")) {
                 datanode += group.getNumber();
             }
-            if (group.getRoles().contains("MySQLCluster*mgm")) {
+            if (group.getRoles().contains("MySQLCluster-mgm")) {
                 mgmd += group.getNumber();
             }
-            if (group.getRoles().contains("MySQLCluster*mysqld")) {
+            if (group.getRoles().contains("MySQLCluster-mysqld")) {
                 mysql += group.getNumber();
             }
-            if (group.getRoles().contains("MySQLCluster*ndb")) {
+            if (group.getRoles().contains("MySQLCluster-ndb")) {
                 ndbd += group.getNumber();
             }
 

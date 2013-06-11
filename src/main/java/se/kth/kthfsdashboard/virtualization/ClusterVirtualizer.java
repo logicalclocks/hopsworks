@@ -304,7 +304,7 @@ public final class ClusterVirtualizer {
                 //Think if it is possible to optimize
 
                 Set<String> roles = new HashSet(group.getRoles());
-                if (roles.contains("MySQLCluster*mgm")) {
+                if (roles.contains("MySQLCluster-mgm")) {
                     Iterator<? extends NodeMetadata> iter = ready.iterator();
                     while (iter.hasNext()) {
                         //Add private ip to mgm
@@ -312,28 +312,28 @@ public final class ClusterVirtualizer {
                         mgmIP.addAll(node.getPrivateAddresses());
                         mgms.put(node, group.getRoles());
                     }
-                } else if (roles.contains("MySQLCluster*ndb")) {
+                } else if (roles.contains("MySQLCluster-ndb")) {
                     Iterator<? extends NodeMetadata> iter = ready.iterator();
                     while (iter.hasNext()) {
                         NodeMetadata node = iter.next();
                         ndbsIP.addAll(node.getPrivateAddresses());
                         ndbs.put(node, group.getRoles());
                     }
-                } else if (roles.contains("MySQLCluster*mysqld")) {
+                } else if (roles.contains("MySQLCluster-mysqld")) {
                     Iterator<? extends NodeMetadata> iter = ready.iterator();
                     while (iter.hasNext()) {
                         NodeMetadata node = iter.next();
                         mySQLClientsIP.addAll(node.getPrivateAddresses());
                         mysqlds.put(node, group.getRoles());
                     }
-                } else if (roles.contains("KTHFS*namenode")) {
+                } else if (roles.contains("KTHFS-namenode")) {
                     Iterator<? extends NodeMetadata> iter = ready.iterator();
                     while (iter.hasNext()) {
                         NodeMetadata node = iter.next();
                         namenodesIP.addAll(node.getPrivateAddresses());
                         namenodes.put(node, group.getRoles());
                     }
-                } else if (roles.contains("KTHFS*datanode")) {
+                } else if (roles.contains("KTHFS-datanode")) {
                     Iterator<? extends NodeMetadata> iter = ready.iterator();
                     while (iter.hasNext()) {
                         NodeMetadata node = iter.next();
