@@ -40,7 +40,6 @@
     </welcome-file-list>
     
 
-
     <!--  REST  -->
     
     <servlet>
@@ -62,7 +61,6 @@
         <url-pattern>/resources/*</url-pattern>
     </servlet-mapping>
 
-    
     <!-- declare the roles relevant for our webapp -->
     <security-role>
         <role-name>ADMIN</role-name>
@@ -91,34 +89,25 @@
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
         </user-data-constraint>-->
     </security-constraint>
+    
     <security-constraint>
         <web-resource-collection>
-            <web-resource-name>Secured Content</web-resource-name>
-            <url-pattern>/admin/*</url-pattern>
-        </web-resource-collection>
-        <auth-constraint>
-            <role-name>ADMIN</role-name>
-        </auth-constraint>
-    </security-constraint>
-
-    <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>Secured Content for REST agents sending alerts data</web-resource-name>
+            <web-resource-name>Secured Content for agents sending alerts data</web-resource-name>
             <url-pattern>/rest/collectd/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
             <role-name>AGENT</role-name>
             <role-name>ADMIN</role-name>            
         </auth-constraint>
-        <user-data-constraint>
+<!--        <user-data-constraint>
             <description>SSL Support</description>
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint>        
+        </user-data-constraint>        -->
     </security-constraint>                  
             
     <security-constraint>
         <web-resource-collection>
-            <web-resource-name>Secured Content for REST agents sending status data</web-resource-name>
+            <web-resource-name>Secured Content for agents sending status data</web-resource-name>
             <url-pattern>/rest/agent/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
@@ -130,8 +119,7 @@
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
         </user-data-constraint> -->
     </security-constraint>
-                                  
-                     
+                                                       
     <login-config>
         <!--<auth-method>FORM</auth-method>-->
         <auth-method>BASIC</auth-method>
@@ -153,19 +141,6 @@
             <name>SESSIONID</name>
         </cookie-config>
     </session-config>    
-    
-    <!-- <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>CollectdResource</web-resource-name>
-            <url-pattern>/*</url-pattern>
-            <http-method>GET</http-method>
-            <http-method>POST</http-method>
-        </web-resource-collection>
-        <auth-constraint>
-            <role-name>*</role-name> 
-        </auth-constraint>
-    </security-constraint>-->
-    
     
     <!-- PrimeFaces FileUpload Filter -->
     <filter>

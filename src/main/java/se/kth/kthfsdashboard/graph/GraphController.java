@@ -210,13 +210,44 @@ public class GraphController implements Serializable {
       return namenodeServiceGraphs;
    }
 
+   public List<Integer> getColumns() {
+      return columns;
+   }
+
+   public void setColumns(List<Integer> columns) {
+      this.columns = columns;
+   }
+
+   public List<String> getNamenodeServiceActivitiesGraphs() {
+      return namenodeServiceActivitiesGraphs;
+   }
+
+   public List<String> getHostGraphs() {
+      return hostGraphs;
+   }
+
+   public List<String> getNamenodeInstanceGraphs() {
+      return namenodeInstanceGraphs;
+   }
+
+   public List<String> getNamenodeInstanceActivitiesGraphs() {
+      return namenodeInstanceActivitiesGraphs;
+   }
+
+   public List<String> getDatanodeInstanceActivitiesGraphs() {
+      return datanodeInstanceActivitiesGraphs;
+   }
+
+   public List<String> getMysqlclusterInstanceActivitiesGraphs() {
+      return mysqlclusterInstanceActivitiesGraphs;
+   }
+   
    public String getPlaneGraphUrl() throws MalformedURLException {
       HashMap<String, String> params = new HashMap<String, String>();
       params.put("start", getStartTime().toString());
       params.put("end", getEndTime().toString());
       params.put("hostname", "ubuntu");
       params.put("plugin", "memory");
-//      params.put("plugin_instance", "memory");
       params.put("type", "memory");
       params.put("type_instance", "used");
 
@@ -326,37 +357,5 @@ public class GraphController implements Serializable {
          url += entry.getKey() + "=" + entry.getValue() + "&";
       }
       return url;
-   }
-
-   public List<Integer> getColumns() {
-      return columns;
-   }
-
-   public void setColumns(List<Integer> columns) {
-      this.columns = columns;
-   }
-
-   public List<String> getNamenodeServiceActivitiesGraphs() {
-      return namenodeServiceActivitiesGraphs;
-   }
-
-   public List<String> getHostGraphs() {
-      return hostGraphs;
-   }
-
-   public List<String> getNamenodeInstanceGraphs() {
-      return namenodeInstanceGraphs;
-   }
-
-   public List<String> getNamenodeInstanceActivitiesGraphs() {
-      return namenodeInstanceActivitiesGraphs;
-   }
-
-   public List<String> getDatanodeInstanceActivitiesGraphs() {
-      return datanodeInstanceActivitiesGraphs;
-   }
-
-   public List<String> getMysqlclusterInstanceActivitiesGraphs() {
-      return mysqlclusterInstanceActivitiesGraphs;
    }
 }

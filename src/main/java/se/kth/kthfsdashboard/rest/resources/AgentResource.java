@@ -44,7 +44,7 @@ public class AgentResource {
    @Path("ping")
    @Produces(MediaType.TEXT_PLAIN)
    public String getLog() {
-      return "KTHFSDashboard: Pong";
+      return "kthfs-dashboard: Pong";
    }
 
    @GET
