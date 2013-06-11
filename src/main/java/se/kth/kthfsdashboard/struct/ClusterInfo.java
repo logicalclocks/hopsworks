@@ -14,13 +14,15 @@ public class ClusterInfo {
    private String status;
    private String health;
    private Map roleCounts;
+   private Long numberOfMachines;
    private List<String> services;
 
-   public ClusterInfo(String name, String status, String health) {
+   public ClusterInfo(String name, String status, String health, Long numberOfMachines) {
       roleCounts = new HashMap<String, Integer>();
       this.name = name;
       this.status = status;
       this.health = health;
+      this.numberOfMachines = numberOfMachines;
 
    }
 
@@ -38,6 +40,10 @@ public class ClusterInfo {
 
    public Map getRoleCounts() {
       return roleCounts;
+   }
+   
+   public Long getNumberOfMachines() {
+      return numberOfMachines;
    }
 
    public void putToRoleCounts(String service, Integer count) {

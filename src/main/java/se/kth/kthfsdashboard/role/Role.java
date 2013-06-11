@@ -27,7 +27,9 @@ import javax.persistence.*;
 // need this?   
    @NamedQuery(name = "Role.findHostnameBy-Cluster-Group-Role", query = "SELECT r.hostname FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role ORDER BY r.hostname"),
 
-   @NamedQuery(name = "Role.Count", query="SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role")
+   @NamedQuery(name = "Role.Count", query="SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
+   @NamedQuery(name = "Role.Count-hosts", query="SELECT count(DISTINCT r.hostname) FROM Role r WHERE r.cluster = :cluster")
+        
 })
 public class Role implements Serializable {
 

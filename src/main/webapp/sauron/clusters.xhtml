@@ -72,6 +72,8 @@
                      </ui:repeat>
                   </p:column>  
 
+                  <p:column headerText="Number of Machines"><h:outputText value="#{cluster.numberOfMachines}"/></p:column>                   
+                  
                   <p:column headerText="" style="width:10%">
                      <p:menuButton value="Actions">  
                         <p:menuitem disabled="true" value="Start..." update=":formServices:messages" actionListener="#{serviceController.startService()}" />  

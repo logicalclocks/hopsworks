@@ -18,6 +18,12 @@ public class RoleEJB {
 
    public RoleEJB() {
    }
+   
+   public Long countClusterMachines(String cluster) {
+      TypedQuery<Long> query = em.createNamedQuery("Role.Count-hosts", Long.class)
+              .setParameter("cluster", cluster);
+      return query.getSingleResult();
+   }
 
    public List<String> findClusters() {
       TypedQuery<String> query = em.createNamedQuery("Role.findClusters", String.class);
@@ -82,8 +88,7 @@ public class RoleEJB {
    }
 
    public int countStatus(String cluster, String service, String role, Role.Status status) {
-      TypedQuery<Role> query;
-      query = em.createNamedQuery("Role.findBy-Cluster-Group-Role-Status", Role.class)
+      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group-Role-Status", Role.class)
               .setParameter("cluster", cluster).setParameter("service", service)
               .setParameter("role", role).setParameter("status", status);
       return query.getResultList().size();

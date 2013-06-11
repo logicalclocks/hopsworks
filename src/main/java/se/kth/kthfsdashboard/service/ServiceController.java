@@ -131,7 +131,8 @@ public class ServiceController {
       
       List<ClusterInfo> allClusters = new ArrayList<ClusterInfo>();
       for (String c : roleEjb.findClusters()) {
-         ClusterInfo clusterInfo = new ClusterInfo(c, "-", "-");
+         Long numberOfHosts = roleEjb.countClusterMachines(c);
+         ClusterInfo clusterInfo = new ClusterInfo(c, "-", "-", numberOfHosts);
          List<Role> roles = roleEjb.findRoles(c);
          for (Role r : roles) {
             if (clusterInfo.getRoleCounts().containsKey(r.getRole())) {
@@ -383,4 +384,5 @@ public class ServiceController {
    public String findServiceByRole(String role) {
       return servicesRolesMap.get(role);
    }
+ 
 }
