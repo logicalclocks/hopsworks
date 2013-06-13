@@ -48,7 +48,7 @@ public class GraphController implements Serializable {
    private List<String> namenodeActivitiesGraphs;
    private List<String> datanodeActivitiesGraphs;
    private List<String> mysqlclusterActivitiesGraphs;
-   private static String URL_PATH = "../rest/collectd/graph?";
+   private static String URL_PATH = "/rest/collectd/graph?";
 
    public GraphController() {
 
@@ -64,7 +64,7 @@ public class GraphController implements Serializable {
               "serv_nn_w_deletefile_all", "serv_nn_w_addblock", "serv_nn_w_createsymlink",
               "serv_nn_o_getadditionaldatanode", "serv_nn_o_transactions", "serv_nn_o_transactionsbatchedinsync",
               "serv_nn_o_blockreport", "serv_nn_o_syncs",
-              "serv_nn _t_safemodetime", "serv_nn_t_transactionsavgtime", "serv_nn_t_syncsavgtime",
+              "serv_nn_t_safemodetime", "serv_nn_t_transactionsavgtime", "serv_nn_t_syncsavgtime",
               "serv_nn_t_blockreportavgtime"));
 
 
