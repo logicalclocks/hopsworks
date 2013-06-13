@@ -1,0 +1,91 @@
+<pretty-config xmlns="http://ocpsoft.org/schema/rewrite-config-prettyfaces" 
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+               xsi:schemaLocation="http://ocpsoft.org/schema/rewrite-config-prettyfaces
+                      http://ocpsoft.org/xml/ns/prettyfaces/rewrite-config-prettyfaces.xsd">
+
+   <url-mapping id="test">
+      <pattern value="/test" />
+      <view-id value="/test.xhtml" />
+   </url-mapping>
+
+   <url-mapping id="error">
+      <pattern value="/error" />
+      <view-id value="/error.xhtml" />
+   </url-mapping>
+   
+   <url-mapping id="start">
+      <pattern value="/" />
+      <view-id value="/index.xhtml" />
+   </url-mapping>
+   
+   <url-mapping id="backup">
+      <pattern value="/sauron/backup" />
+      <view-id value="/sauron/backup-restore.xhtml" />
+   </url-mapping> 
+
+   <url-mapping id="setup">
+      <pattern value="/sauron/setup" />
+      <view-id value="/sauron/setup.xhtml" />
+   </url-mapping> 
+
+   <url-mapping id="manageCluster">
+      <pattern value="/sauron/managecluster" />
+      <view-id value="/sauron/manageCluster.xhtml" />
+   </url-mapping> 
+   
+   <url-mapping id="hosts">
+      <pattern value="/sauron/hosts" />
+      <view-id value="/sauron/hosts.xhtml" />
+   </url-mapping>
+      
+   <url-mapping id="host">
+      <pattern value="/sauron/host/#{ hostname : hostname }" />
+      <view-id value="/sauron/host.xhtml" />
+   </url-mapping>     
+
+   <url-mapping id="alerts">
+      <pattern value="/sauron/alerts" />
+      <view-id value="/sauron/alerts.xhtml" />
+   </url-mapping>     
+   
+   <url-mapping id="clusters">
+      <pattern value="/sauron/clusters" />
+      <view-id value="/sauron/clusters.xhtml" />
+   </url-mapping>   
+
+   <url-mapping id="cluster-status">
+      <pattern value="/sauron/cluster/#{ cluster : cluster }" />
+      <view-id value="/sauron/cluster-status.xhtml" />
+   </url-mapping>  
+   <url-mapping id="cluster-commands">
+      <pattern value="/sauron/cluster/#{cluster : cluster}/commands" />
+      <view-id value="/sauron/cluster-commands.xhtml" />
+   </url-mapping>     
+
+   <url-mapping id="service-status">
+      <pattern value="/sauron/service/#{cluster : cluster}/#{service : service}" />
+      <view-id value="/sauron/service-status.xhtml" />
+   </url-mapping>
+   <url-mapping id="service-instances3">
+      <pattern value="/sauron/service/instances/#{cluster : cluster}/#{service : service}/#{role : role}/#{status : status}" />
+      <view-id value="/sauron/service-instances.xhtml" />
+   </url-mapping>   
+   <url-mapping id="service-instances2">
+      <pattern value="/sauron/service/instances/#{cluster : cluster}/#{service : service}/#{role : role}" />
+      <view-id value="/sauron/service-instances.xhtml" />
+   </url-mapping>
+   <url-mapping id="service-instances">
+      <pattern value="/sauron/service/instances/#{cluster : cluster}/#{service : service}" />
+      <view-id value="/sauron/service-instances.xhtml" />
+   </url-mapping>   
+   <url-mapping id="service-commands">
+      <pattern value="/sauron/service/#{cluster : cluster}/#{service : service}/commands" />
+      <view-id value="/sauron/service-commands.xhtml" />
+   </url-mapping>      
+
+   <url-mapping id="role">
+      <pattern value="/sauron/role/#{cluster : cluster}/#{service : service}/#{role : role}/#{hostname : hostname}" />
+      <view-id value="/sauron/role.xhtml" />
+   </url-mapping>   
+
+</pretty-config>
