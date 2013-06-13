@@ -15,27 +15,6 @@
    <h:body>
       <p>Test</p>
 
-      <h:form>  
-         <p:dataTable var="item" value="#{mySqlController.info}">  
-            <p:column headerText="Node id">  
-               <h:outputText value="#{item.nodeId}" />  
-            </p:column>  
-
-            <p:column headerText="Status">  
-               <h:outputText value="#{item.status}" />  
-            </p:column>  
-            <p:column headerText="Up time">  
-               <h:outputText value="#{item.upTime}" />  
-            </p:column>
-
-            <p:column headerText="Start phase">  
-               <h:outputText value="#{item.startPhase}" />  
-            </p:column>
-            <p:column headerText="Up time">  
-               <h:outputText value="#{item.configGeneration}" />  
-            </p:column>
-         </p:dataTable>
-      </h:form>
 
 
 

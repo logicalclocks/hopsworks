@@ -63,30 +63,37 @@
          <h:form styleClass="styleInfoPanel">
             <p:panel header="Services">
 
-               <p:dataTable id="serviceRole" var="serviceRole" value="#{serviceController.services}">
+               <p:dataTable id="service" var="service" value="#{serviceController.services}">
 
                   <p:column headerText="Service">
                      <p:commandLink action="#{serviceController.gotoServiceStatus}" ajax="false">
-                        <h:outputText value="#{serviceRole}"/>
+                        <h:outputText value="#{service.name}"/>
                         <f:param name="cluster" value="#{serviceController.cluster}"/>
-                        <f:param name="service" value="#{serviceRole}"/>
+                        <f:param name="service" value="#{service.name}"/>
                      </p:commandLink>                         
                   </p:column>  
 
-                  <p:column headerText="Status">
-                     <h:outputText value="-"/>
-                  </p:column>  
+                  <p:column headerText="Status"><h:outputText value="#{service.status}"/></p:column>  
 
-                  <p:column headerText="Health"><h:outputText value="-"/></p:column> 
+                  <p:column headerText="Health"><h:outputText value="#{service.health}"/></p:column> 
+                  
+                  <p:column headerText="Roles">
+                     <ui:repeat value="#{service.roleCounts.entrySet().toArray()}" var="item" varStatus="status">
+                        <p:commandLink action="#{serviceController.gotoServiceInstances}" ajax="false">
+                           <h:outputText value="${item.value} ${item.key}"/>
+                           <f:param name="cluster" value="#{serviceController.cluster}"/>
+                           <f:param name="role" value="#{item.key}"/>
+                           <f:param name="service" value="#{service.name}"/>
+                        </p:commandLink>
+                        <p:spacer width="6" height="0" rendered="#{!status.last}"/>
+                     </ui:repeat>
+                  </p:column>                   
                </p:dataTable> 
 
             </p:panel>                    
          </h:form>
 
          <p:spacer width="1" height="50" />
-
-
-
 
       </ui:define>
 

@@ -20,6 +20,7 @@ import se.kth.kthfsdashboard.role.Role.RoleType;
 import se.kth.kthfsdashboard.struct.InstanceInfo;
 import se.kth.kthfsdashboard.struct.ClusterInfo;
 import se.kth.kthfsdashboard.struct.InstanceFullInfo;
+import se.kth.kthfsdashboard.struct.ServiceInfo;
 import se.kth.kthfsdashboard.struct.ServiceRoleInfo;
 import se.kth.kthfsdashboard.util.Formatter;
 import se.kth.kthfsdashboard.util.WebCommunication;
@@ -238,13 +239,31 @@ public class ServiceController {
       return serviceRoles;
    }
 
-   public List<String> getServices() {
-
-      List<String> serviceRoles = new ArrayList<String>();
+   public List<ServiceInfo> getServices() {
+      
+      List<ServiceInfo> services = new ArrayList<ServiceInfo>();
+      
+//      List<String> serviceRoles = new ArrayList<String>();
       for (String s : roleEjb.findServices(cluster)) {
-         serviceRoles.add(s);
+         
+         List<Role> roles = roleEjb.findRoles(cluster, s);
+         
+         ServiceInfo serviceInfo = new ServiceInfo(s, "?", "?");
+         
+         
+         for (Role r : roles) {
+            if (serviceInfo.getRoleCounts().containsKey(r.getRole())) {
+               Integer count = (Integer) serviceInfo.getRoleCounts().get(r.getRole());
+               serviceInfo.putToRoleCounts(r.getRole(), count + 1);
+            } else {
+               serviceInfo.putToRoleCounts(r.getRole(), 1);
+            }
+         }         
+         
+         
+         services.add(serviceInfo);
       }
-      return serviceRoles;
+      return services;
    }
 
    public List<ServiceRoleInfo> getSuberviceRoles() {
