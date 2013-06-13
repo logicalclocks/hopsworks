@@ -128,7 +128,7 @@ public class ServiceController {
    public List<ClusterInfo> getClusters() {
 
       // TODO: Insert correct Info for Service Types, ...
-      
+
       List<ClusterInfo> allClusters = new ArrayList<ClusterInfo>();
       for (String c : roleEjb.findClusters()) {
          Long numberOfHosts = roleEjb.countClusterMachines(c);
@@ -304,29 +304,30 @@ public class ServiceController {
 
    public String getRoleLog(int lines) {
       WebCommunication webComm = new WebCommunication();
-      return webComm.getRoleLog(hostname, cluster, service, role, lines);
+      String ip = findIpByHostname(hostname);
+      return webComm.getRoleLog(ip, cluster, service, role, lines);
    }
-   
+
    public String getServiceLog(int lines) {
-      final String ROLE = "mgmserver";
-      String host = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostname();      
+      String ip = findIpByRole(cluster, service, "mgmserver");
       WebCommunication webComm = new WebCommunication();
-      return webComm.getServiceLog(host, cluster, service, lines);
-   }   
+      return webComm.getServiceLog(ip, cluster, service, lines);
+   }
 
    public String getAgentLog(int lines) {
       WebCommunication webCom = new WebCommunication();
-      return webCom.getAgentLog(hostname, lines);
+      String ip = findIpByHostname(hostname);
+      return webCom.getAgentLog(ip, lines);
    }
 
    public String getMySQLClusterConfig() throws Exception {
 
       // Finds hostname of mgmserver
       // Role=mgmserver , Service=MySQLCluster, Cluster=cluster
-      final String ROLE = "mgmserver";
-      String host = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostname();
+      String mgmserverRole = "mgmserver";
+      String ip = findIpByRole(cluster, service, mgmserverRole);
       WebCommunication webComm = new WebCommunication();
-      return webComm.getConfig(host, cluster, service, ROLE);
+      return webComm.getConfig(ip, cluster, service, mgmserverRole);
    }
 
    public String getNotAvailable() {
@@ -384,5 +385,17 @@ public class ServiceController {
    public String findServiceByRole(String role) {
       return servicesRolesMap.get(role);
    }
- 
+
+   private String findIpByHostname(String hostname) {
+      String ip = hostEJB.findHostByName(hostname).getPrivateIp();
+      if (ip == null || ip.equals("")) {
+         hostEJB.findHostByName(hostname).getPublicIp();
+      }
+      return ip;
+   }
+
+   private String findIpByRole(String cluster, String service, String role) {
+      String host = roleEjb.findRoles(cluster, service, role).get(0).getHostname();
+      return findIpByHostname(host);
+   }
 }
