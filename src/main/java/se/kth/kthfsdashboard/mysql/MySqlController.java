@@ -2,6 +2,7 @@ package se.kth.kthfsdashboard.mysql;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -122,9 +123,15 @@ public class MySqlController implements Serializable {
       // Finds hostname of mysqld
       // Role=mysqld , Service=MySQLCluster, Cluster=cluster
       final String ROLE = "mysqld";
-      String host = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostname();
-      WebCommunication wc = new WebCommunication();      
-      return wc.getNdbinfoNodesTable(host);
+      List<NodesTableItem> results;
+      try {
+         String host = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostname();
+         WebCommunication wc = new WebCommunication();      
+         results = wc.getNdbinfoNodesTable(host);
+      } catch(Exception ex) {
+         results = new ArrayList<NodesTableItem>();
+      }
+      return results;
    }
 
    public void upload() {
