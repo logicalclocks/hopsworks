@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.kthfsdashboard.virtualization;
+package se.kth.kthfsdashboard.command;
 
 /**
  *
@@ -13,11 +13,12 @@ import java.util.ArrayList;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 
 @ManagedBean
 @SessionScoped
-public class MessageController implements Serializable {
+public class CommandMessageController implements Serializable {
     
     private ArrayList<String> messageStatus = new ArrayList();
     private String lastMessage = "Preparing to submit operation";
