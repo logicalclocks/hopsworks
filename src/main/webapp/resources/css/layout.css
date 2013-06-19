@@ -155,7 +155,7 @@ body {
    border-width: 0px;
    border-style: none;
    border-color: inherit;
-   padding:4px;
+   padding:3px;
    padding-left: 10px;
    padding-right: 10px;   
    margin:0px;
@@ -340,6 +340,11 @@ body {
    padding: 0px;
    background-color: transparent;
 }
+
+.ui-datatable.innerDataTable .ui-widget-content {
+    background: transparent;
+}
+
 
 
 
