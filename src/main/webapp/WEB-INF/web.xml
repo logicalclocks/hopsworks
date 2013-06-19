@@ -130,14 +130,14 @@
       </form-login-config>
    </login-config>
    
-   <error-page>
+<!--   <error-page>
       <error-code>404</error-code>
       <location>/error</location>
    </error-page>   
    <error-page>
       <error-code>500</error-code>
       <location>/error</location>
-   </error-page> 
+   </error-page> -->
       
    <session-config>
       <!-- on production systems you might have another value for the timeout -->
