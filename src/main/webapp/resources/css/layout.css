@@ -131,7 +131,11 @@ body {
    font-family: Arial,sans-serif;
    font-size: 12px;
    margin-left: 0px;
-   margin-right: 0px;
+   margin-right: 0px;  
+}
+
+.ui-datatable thead th {
+      text-align: left; 
 }
 
 .ui-datatable th, .ui-datatable tfoot td {
