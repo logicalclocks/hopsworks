@@ -133,9 +133,16 @@ public class ServiceController {
       List<ClusterInfo> allClusters = new ArrayList<ClusterInfo>();
       for (String c : roleEjb.findClusters()) {
          Long numberOfHosts = roleEjb.countClusterMachines(c);
-         ClusterInfo clusterInfo = new ClusterInfo(c, "-", "-", numberOfHosts);
+         ClusterInfo clusterInfo = new ClusterInfo(c, numberOfHosts);
          List<Role> roles = roleEjb.findRoles(c);
+         int started = 0;         
+         int stopped = 0;
          for (Role r : roles) {
+            if (r.getStatus() == Role.Status.Started) {
+               started += 1;
+            } else {
+               stopped += 1; 
+            }            
             if (clusterInfo.getRoleCounts().containsKey(r.getRole())) {
                Integer count = (Integer) clusterInfo.getRoleCounts().get(r.getRole());
                clusterInfo.putToRoleCounts(r.getRole(), count + 1);
@@ -143,9 +150,13 @@ public class ServiceController {
                clusterInfo.putToRoleCounts(r.getRole(), 1);
             }
          }
-         List<String> serviceClasses = roleEjb.findServices(c);
-         clusterInfo.setServices(serviceClasses);
-
+         List<String> services = roleEjb.findServices(c);
+         clusterInfo.setServices(services);
+         String clusterStatus = started + " Started, " + stopped + " Stopped";
+         String clusterHealth = (stopped == 0) ? Role.Health.Good.toString()
+                 : Role.Health.Bad.toString();         
+         clusterInfo.setHealth(clusterHealth);
+         clusterInfo.setStatus(clusterStatus);
          allClusters.add(clusterInfo);
       }
       return allClusters;
@@ -240,27 +251,31 @@ public class ServiceController {
    }
 
    public List<ServiceInfo> getServices() {
-      
+
       List<ServiceInfo> services = new ArrayList<ServiceInfo>();
-      
-//      List<String> serviceRoles = new ArrayList<String>();
       for (String s : roleEjb.findServices(cluster)) {
-         
          List<Role> roles = roleEjb.findRoles(cluster, s);
-         
-         ServiceInfo serviceInfo = new ServiceInfo(s, "?", "?");
-         
-         
+         ServiceInfo serviceInfo = new ServiceInfo(s);
+         int started = 0;
+         int stopped = 0;
          for (Role r : roles) {
+            if (r.getStatus() == Role.Status.Started) {
+               started += 1;
+            } else {
+               stopped += 1; 
+            }
             if (serviceInfo.getRoleCounts().containsKey(r.getRole())) {
                Integer count = (Integer) serviceInfo.getRoleCounts().get(r.getRole());
                serviceInfo.putToRoleCounts(r.getRole(), count + 1);
             } else {
                serviceInfo.putToRoleCounts(r.getRole(), 1);
             }
-         }         
-         
-         
+         }
+         String serviceStatus = started + " Started, " + stopped + " Stopped";
+         String serviceHealth = (stopped == 0) ? Role.Health.Good.toString()
+                 : Role.Health.Bad.toString();
+         serviceInfo.setStatus(serviceStatus);
+         serviceInfo.setHealth(serviceHealth);
          services.add(serviceInfo);
       }
       return services;

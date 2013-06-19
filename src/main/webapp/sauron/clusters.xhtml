@@ -7,7 +7,6 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       xmlns:fn="http://java.sun.com/jsp/jstl/functions" 
-      xmlns:c="http://java.sun.com/jsp/jstl/core"
       >
 
    <ui:composition template="layout.xhtml">
@@ -46,8 +45,8 @@
                      </p:commandLink> 
                   </p:column>
 
-                  <p:column headerText="Status"><h:outputText value="#{cluster.status}"/></p:column>  
-                  <p:column headerText="Health"><h:outputText value="#{cluster.health}"/></p:column>  
+                  <p:column headerText="Status (Roles)"><h:outputText value="#{cluster.status}"/></p:column>  
+                  <p:column headerText="Health"  styleClass="Health-#{cluster.health}"><h:outputText value="#{cluster.health}"/></p:column>  
 
                   <p:column headerText="Services">
                      <ui:repeat value="#{cluster.services.toArray()}" var="item" varStatus="status">
@@ -75,7 +74,7 @@
                   <p:column headerText="Number of Machines"><h:outputText value="#{cluster.numberOfMachines}"/></p:column>                   
                   
                   <p:column headerText="" style="width:10%">
-                     <p:menuButton value="Actions">  
+                     <p:menuButton value="Actions" disabled="true">  
                         <p:menuitem disabled="true" value="Start..." update=":formServices:messages" actionListener="#{serviceController.startService()}" />  
                         <p:menuitem disabled="true" value="Stop..." update=":formServices:messages" actionListener="#{serviceController.stopService()}" />  
                         <p:menuitem disabled="true" value="Restart..." update=":formServices:messages" actionListener="#{serviceController.restartService()}"/>  

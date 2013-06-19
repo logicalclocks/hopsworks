@@ -17,11 +17,9 @@ public class ClusterInfo {
    private Long numberOfMachines;
    private List<String> services;
 
-   public ClusterInfo(String name, String status, String health, Long numberOfMachines) {
+   public ClusterInfo(String name, Long numberOfMachines) {
       roleCounts = new HashMap<String, Integer>();
       this.name = name;
-      this.status = status;
-      this.health = health;
       this.numberOfMachines = numberOfMachines;
 
    }
@@ -30,10 +28,18 @@ public class ClusterInfo {
       return name;
    }
 
+   public void setStatus(String status) {
+      this.status = status;
+   }   
+   
    public String getStatus() {
       return status;
    }
 
+   public void setHealth(String health) {
+      this.health = health;
+   }   
+   
    public String getHealth() {
       return health;
    }
