@@ -41,7 +41,6 @@
                             </p:commandLink> 
                         </p:column>  
                         <p:column headerText="IP"><h:outputText value="#{host.publicIp}"/></p:column>  
-                        <p:column headerText="Rack"><h:outputText value="#{host.rack}"/></p:column>  
                         <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
                         <p:column headerText="Last Heartbeat"><h:outputText value="#{host.lastHeartbeatFormatted} ago"/></p:column>  
                         <p:column headerText="Number of Cores"><h:outputText value="#{host.cores}"/></p:column> 

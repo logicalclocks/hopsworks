@@ -12,7 +12,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import se.kth.kthfsdashboard.alert.Alert;
@@ -21,6 +20,7 @@ import se.kth.kthfsdashboard.host.Host;
 import se.kth.kthfsdashboard.host.HostEJB;
 import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
+import se.kth.kthfsdashboard.role.Status;
 
 /**
  * :
@@ -53,7 +53,7 @@ public class AgentResource {
    public Response getLoadAvg(@PathParam("name") String name) {
       Host host = hostEJB.findHostByName(name);
       if (host == null) {
-         return Response.status(Status.NOT_FOUND).build();
+         return Response.status(Response.Status.NOT_FOUND).build();
       }
       JSONObject json = new JSONObject();
       try {
@@ -77,7 +77,7 @@ public class AgentResource {
       JSONObject json;
       List<Host> hosts = hostEJB.findHosts();
       if (hosts == null) {
-         return Response.status(Status.NOT_FOUND).build();
+         return Response.status(Response.Status.NOT_FOUND).build();
       }
       for (Host host : hosts) {
          try {
@@ -150,7 +150,7 @@ public class AgentResource {
             role.setRole(s.getString("role"));
             role.setWebPort(s.has("web-port") ? s.getInt("web-port") : null);
             role.setPid(s.has("pid") ? s.getInt("pid") : 0);
-            role.setStatus(Role.Status.valueOf(s.getString("status")));
+            role.setStatus(Status.valueOf(s.getString("status")));
             if (s.has("stop-time")) {
                role.setUptime(s.getLong("stop-time") - s.getLong("start-time"));
             } else if (s.has("start-time")) {

@@ -51,30 +51,13 @@
 
          <p:spacer width="1" height="8" />    
 
-         <p:dialog header="Set Rack Id" widgetVar="dlg" resizable="false">  
-            <h:form id="form3">  
-               <h:panelGrid columns="2" style="margin-bottom:10px">  
-                  <h:outputLabel for="rackId" value="Rack Id:" />  
-                  <p:inputText id="rackId" value="#{hostController.host.rack}" />  
-               </h:panelGrid>  
-               <p:commandButton id="submitButton" actionListener="#{hostController.doSetRackId()}" value="Set Rack Id" oncomplete="dlg.hide();" update=":form_host">
-                  <f:param name="name" value="#{hostController.host.hostname}" />
-               </p:commandButton> 
-            </h:form>  
-         </p:dialog>  
 
          <h:form styleClass="styleInfoPanel" id="form_host">
             <p:panel  header="Details">
                <p:dataTable id="host" var="host" value="#{hostController.host}">
                   <p:column headerText="IP"><h:outputText value="#{host.publicIp}"/></p:column>
-                  <p:column headerText="Rack">
-                     <p:commandLink id="showD" onclick="dlg.show()">
-                        <h:outputText value="#{host.rack}" />
-                        <f:param name="name" value="#{hostController.host.hostname}" />
-                     </p:commandLink> 
-                  </p:column>  
 <!--                        <p:column headerText="Role(s)"><h:outputText value="#{host.role}"/></p:column>-->
-                  <p:column headerText="Health"><h:outputText value="?"/></p:column> 
+                  <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
                   <p:column headerText="Last Heartbeat"><h:outputText value="#{host.lastHeartbeatFormatted} ago"/></p:column>
                   <p:column headerText="Number of Cores"><h:outputText value="#{host.cores}" /></p:column> 
                   <p:column headerText="Load Average">

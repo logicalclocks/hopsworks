@@ -70,9 +70,9 @@ body {
    background: none;
    padding: 0.2em 0.25em;
    margin-top: 0px;
-   margin-left: -2px;
-   margin-right: -2px;
-   margin-bottom: -2px; /* -6? -8?*/
+   margin-left: -4px;
+   margin-right: -4px;
+   margin-bottom: -3px; /* -6? -8?*/
 }
 
 .styleInfoPanel .ui-panel .ui-panel-content {
@@ -80,9 +80,9 @@ body {
    background: none;
    padding: 0.2em 0.25em;
    margin-top: 0px;
-   margin-left: -2px;
-   margin-right: -2px;
-   margin-bottom: -8px; /* -6? -8?*/
+   margin-left: -4px;
+   margin-right: -4px;
+   margin-bottom: -3px; /* -6? -8?*/
 }
 
 
@@ -131,7 +131,11 @@ body {
    font-family: Arial,sans-serif;
    font-size: 12px;
    margin-left: 0px;
-   margin-right: 0px;
+   margin-right: 0px;  
+}
+
+.ui-datatable thead th {
+      text-align: left; 
 }
 
 .ui-datatable th, .ui-datatable tfoot td {
@@ -151,7 +155,9 @@ body {
    border-width: 0px;
    border-style: none;
    border-color: inherit;
-   padding:0px;
+   padding:3px;
+   padding-left: 10px;
+   padding-right: 10px;   
    margin:0px;
    overflow: hidden;
 }
@@ -334,6 +340,11 @@ body {
    padding: 0px;
    background-color: transparent;
 }
+
+.ui-datatable.innerDataTable .ui-widget-content {
+    background: transparent;
+}
+
 
 
 

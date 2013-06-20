@@ -130,14 +130,14 @@
       </form-login-config>
    </login-config>
    
-   <error-page>
+<!--   <error-page>
       <error-code>404</error-code>
       <location>/error</location>
    </error-page>   
    <error-page>
       <error-code>500</error-code>
       <location>/error</location>
-   </error-page> 
+   </error-page> -->
       
    <session-config>
       <!-- on production systems you might have another value for the timeout -->
@@ -164,10 +164,10 @@
    </filter-mapping>
     
     
-   <!--ONLY Development Mode:  disable the default caching mechanism -->
-   <context-param>
+   <!--PrettyFaces: ONLY Development Mode: disable the default caching mechanism -->
+<!--   <context-param>
       <param-name>org.ocpsoft.rewrite.config.CONFIG_RELOADING</param-name>
       <param-value>true</param-value>
-   </context-param>    
+   </context-param>    -->
     
 </web-app>

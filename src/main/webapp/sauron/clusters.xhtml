@@ -7,7 +7,6 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       xmlns:fn="http://java.sun.com/jsp/jstl/functions" 
-      xmlns:c="http://java.sun.com/jsp/jstl/core"
       >
 
    <ui:composition template="layout.xhtml">
@@ -39,19 +38,18 @@
 
                <p:dataTable id="table_services" var="cluster" value="#{serviceController.clusters}">
 
-                  <p:column  headerText="Cluster name"  style="" >  
-                     <p:commandLink id="id#{cluster.name}" action="#{serviceController.doGotoClusterStatus()}" ajax="false">  
+                  <p:column  headerText="Cluster name">  
+                     <p:commandLink styleClass="Health-#{cluster.health}" id="id#{cluster.name}" 
+                                    action="#{serviceController.doGotoClusterStatus()}" ajax="false">  
                         <h:outputText value="#{cluster.name}" />
                         <f:param name="cluster" value="#{cluster.name}"/>
                      </p:commandLink> 
-                  </p:column>
-
-                  <p:column headerText="Status"><h:outputText value="#{cluster.status}"/></p:column>  
-                  <p:column headerText="Health"><h:outputText value="#{cluster.health}"/></p:column>  
-
+                  </p:column> 
+                  
                   <p:column headerText="Services">
-                     <ui:repeat value="#{cluster.services.toArray()}" var="item" varStatus="status">
-                        <p:commandLink action="#{serviceController.gotoServiceStatus}" ajax="false">
+                     <ui:repeat value="#{cluster.services.keySet().toArray()}" var="item" varStatus="status">
+                        <p:commandLink styleClass="Health-#{cluster.services.get(item)}" 
+                                       action="#{serviceController.gotoServiceStatus}" ajax="false">
                            <h:outputText value="#{item}"/>
                            <f:param name="cluster" value="#{cluster.name}"/>
                            <f:param name="service" value="#{item}"/>
@@ -62,7 +60,8 @@
 
                   <p:column headerText="Roles">
                      <ui:repeat value="#{cluster.roleCounts.entrySet().toArray()}" var="item" varStatus="status">
-                        <p:commandLink action="#{serviceController.gotoServiceInstances}" ajax="false">
+                        <p:commandLink styleClass="Health-#{cluster.rolesHealth.get(item.key)}" 
+                                       action="#{serviceController.gotoServiceInstances}" ajax="false">
                            <h:outputText value="${item.value} ${item.key}"/>
                            <f:param name="cluster" value="#{cluster.name}"/>
                            <f:param name="role" value="#{item.key}"/>
@@ -71,11 +70,14 @@
                         <p:spacer width="6" height="0" rendered="#{!status.last}"/>
                      </ui:repeat>
                   </p:column>  
+                  
+                  <p:column headerText="Roles Status"><h:outputText value="#{cluster.status}"/></p:column>                      
+                  <p:column headerText="Health"  styleClass="Health-#{cluster.health}"><h:outputText value="#{cluster.health}"/></p:column>                 
 
                   <p:column headerText="Number of Machines"><h:outputText value="#{cluster.numberOfMachines}"/></p:column>                   
                   
-                  <p:column headerText="" style="width:10%">
-                     <p:menuButton value="Actions">  
+                  <p:column headerText="Actions" style="width:10%">
+                     <p:menuButton value="Actions" disabled="true">  
                         <p:menuitem disabled="true" value="Start..." update=":formServices:messages" actionListener="#{serviceController.startService()}" />  
                         <p:menuitem disabled="true" value="Stop..." update=":formServices:messages" actionListener="#{serviceController.stopService()}" />  
                         <p:menuitem disabled="true" value="Restart..." update=":formServices:messages" actionListener="#{serviceController.restartService()}"/>  

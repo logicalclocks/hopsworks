@@ -14,11 +14,9 @@ public class ServiceInfo {
    private String health;
    private Map roleCounts;
 
-   public ServiceInfo(String name, String status, String health) {
+   public ServiceInfo(String name) {
       roleCounts = new HashMap<String, Integer>();
       this.name = name;
-      this.status = status;
-      this.health = health;
    }
 
    public String getName() {
@@ -28,7 +26,15 @@ public class ServiceInfo {
    public String getStatus() {
       return status;
    }
+   
+   public void setStatus(String status) {
+      this.status = status;
+   }   
 
+   public void setHealth(String health) {
+      this.health = health;
+   }
+   
    public String getHealth() {
       return health;
    }

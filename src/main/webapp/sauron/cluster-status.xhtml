@@ -75,7 +75,7 @@
 
                   <p:column headerText="Status"><h:outputText value="#{service.status}"/></p:column>  
 
-                  <p:column headerText="Health"><h:outputText value="#{service.health}"/></p:column> 
+                  <p:column headerText="Health"  styleClass="Health-#{service.health}"><h:outputText value="#{service.health}"/></p:column> 
                   
                   <p:column headerText="Roles">
                      <ui:repeat value="#{service.roleCounts.entrySet().toArray()}" var="item" varStatus="status">

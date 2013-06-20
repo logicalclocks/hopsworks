@@ -1,7 +1,5 @@
 package se.kth.kthfsdashboard.service;
 
-import se.kth.kthfsdashboard.role.RoleEJB;
-import se.kth.kthfsdashboard.role.Role;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,10 +14,14 @@ import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.kthfsdashboard.host.HostEJB;
-import se.kth.kthfsdashboard.role.Role.RoleType;
-import se.kth.kthfsdashboard.struct.InstanceInfo;
+import se.kth.kthfsdashboard.role.Role;
+import se.kth.kthfsdashboard.role.RoleEJB;
+import se.kth.kthfsdashboard.role.RoleType;
+import se.kth.kthfsdashboard.role.Status;
 import se.kth.kthfsdashboard.struct.ClusterInfo;
+import se.kth.kthfsdashboard.struct.Health;
 import se.kth.kthfsdashboard.struct.InstanceFullInfo;
+import se.kth.kthfsdashboard.struct.InstanceInfo;
 import se.kth.kthfsdashboard.struct.ServiceInfo;
 import se.kth.kthfsdashboard.struct.ServiceRoleInfo;
 import se.kth.kthfsdashboard.util.Formatter;
@@ -126,31 +128,6 @@ public class ServiceController {
       return status;
    }
 
-   public List<ClusterInfo> getClusters() {
-
-      // TODO: Insert correct Info for Service Types, ...
-
-      List<ClusterInfo> allClusters = new ArrayList<ClusterInfo>();
-      for (String c : roleEjb.findClusters()) {
-         Long numberOfHosts = roleEjb.countClusterMachines(c);
-         ClusterInfo clusterInfo = new ClusterInfo(c, "-", "-", numberOfHosts);
-         List<Role> roles = roleEjb.findRoles(c);
-         for (Role r : roles) {
-            if (clusterInfo.getRoleCounts().containsKey(r.getRole())) {
-               Integer count = (Integer) clusterInfo.getRoleCounts().get(r.getRole());
-               clusterInfo.putToRoleCounts(r.getRole(), count + 1);
-            } else {
-               clusterInfo.putToRoleCounts(r.getRole(), 1);
-            }
-         }
-         List<String> serviceClasses = roleEjb.findServices(c);
-         clusterInfo.setServices(serviceClasses);
-
-         allClusters.add(clusterInfo);
-      }
-      return allClusters;
-   }
-
    public String requestParams() {
       FacesContext context = FacesContext.getCurrentInstance();
       HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
@@ -239,51 +216,87 @@ public class ServiceController {
       return serviceRoles;
    }
 
-   public List<ServiceInfo> getServices() {
-      
-      List<ServiceInfo> services = new ArrayList<ServiceInfo>();
-      
-//      List<String> serviceRoles = new ArrayList<String>();
-      for (String s : roleEjb.findServices(cluster)) {
-         
-         List<Role> roles = roleEjb.findRoles(cluster, s);
-         
-         ServiceInfo serviceInfo = new ServiceInfo(s, "?", "?");
-         
-         
+   public List<ClusterInfo> getClusters() {
+
+      // TODO: Insert correct Info for Service Types, ...
+
+      List<ClusterInfo> allClusters = new ArrayList<ClusterInfo>();
+      for (String c : roleEjb.findClusters()) {
+         Map services = new HashMap<String, String>();
+         Map rolesHealth = new HashMap<String, String>();
+         Long numberOfHosts = roleEjb.countClusterMachines(c);
+         ClusterInfo clusterInfo = new ClusterInfo(c, numberOfHosts);
+         List<Role> roles = roleEjb.findRoles(c);
+         int startedRoles = 0;
+         int stoppedRoles = 0;
          for (Role r : roles) {
+            if (r.getStatus() == Status.Started) {
+               if (!services.containsKey(r.getService())) {
+                  services.put(r.getService(), Health.None.toString());
+               }
+               if (!rolesHealth.containsKey(r.getRole())) {
+                  rolesHealth.put(r.getRole(), Health.None.toString());
+               }
+               startedRoles += 1;
+            } else {
+               services.put(r.getService(), Health.Bad.toString());
+               rolesHealth.put(r.getRole(), Health.Bad.toString());
+               stoppedRoles += 1;
+            }
+            if (clusterInfo.getRoleCounts().containsKey(r.getRole())) {
+               Integer count = (Integer) clusterInfo.getRoleCounts().get(r.getRole());
+               clusterInfo.putToRoleCounts(r.getRole(), count + 1);
+            } else {
+               clusterInfo.putToRoleCounts(r.getRole(), 1);
+            }
+
+         }
+         String clusterStatus = startedRoles + " Started, " + stoppedRoles + " Stopped";
+         String clusterHealth = (stoppedRoles == 0) ? Health.Good.toString() : Health.Bad.toString();
+         clusterInfo.setServices(services);
+         clusterInfo.setRolesHealth(rolesHealth);
+         clusterInfo.setHealth(clusterHealth);
+         clusterInfo.setStatus(clusterStatus);
+         allClusters.add(clusterInfo);
+      }
+      return allClusters;
+   }
+
+   public List<ServiceInfo> getServices() {
+
+      List<ServiceInfo> services = new ArrayList<ServiceInfo>();
+      for (String s : roleEjb.findServices(cluster)) {
+         List<Role> roles = roleEjb.findRoles(cluster, s);
+         ServiceInfo serviceInfo = new ServiceInfo(s);
+         int started = 0;
+         int stopped = 0;
+         for (Role r : roles) {
+            if (r.getStatus() == Status.Started) {
+               started += 1;
+            } else {
+               stopped += 1;
+            }
             if (serviceInfo.getRoleCounts().containsKey(r.getRole())) {
                Integer count = (Integer) serviceInfo.getRoleCounts().get(r.getRole());
                serviceInfo.putToRoleCounts(r.getRole(), count + 1);
             } else {
                serviceInfo.putToRoleCounts(r.getRole(), 1);
             }
-         }         
-         
-         
+         }
+         String serviceStatus = started + " Started, " + stopped + " Stopped";
+         String serviceHealth = (stopped == 0) ? Health.Good.toString() : Health.Bad.toString();
+         serviceInfo.setStatus(serviceStatus);
+         serviceInfo.setHealth(serviceHealth);
          services.add(serviceInfo);
       }
       return services;
    }
 
-   public List<ServiceRoleInfo> getSuberviceRoles() {
-
-      List<ServiceRoleInfo> serviceRoles = new ArrayList<ServiceRoleInfo>();
-      if (service != null) { // service = mysqlcluster
-         for (ServiceRoleInfo r : rolesMap.get(service)) {
-            serviceRoles.add(setStatus(cluster, service, r));
-         }
-      }
-      return serviceRoles;
-   }
-
    private ServiceRoleInfo setStatus(String cluster, String group, ServiceRoleInfo role) {
       int started, stopped, failed, good, bad;
-      started = roleEjb.countStatus(cluster, group, role.getShortName(), Role.Status.Started);
-      stopped = roleEjb.countStatus(cluster, group, role.getShortName(), Role.Status.Stopped);
-      failed = roleEjb.countStatus(cluster, group, role.getShortName(), Role.Status.Failed);
-//      good = started + stopped;
-//      bad = failed;
+      started = roleEjb.countStatus(cluster, group, role.getShortName(), Status.Started);
+      stopped = roleEjb.countStatus(cluster, group, role.getShortName(), Status.Stopped);
+      failed = roleEjb.countStatus(cluster, group, role.getShortName(), Status.Failed);
       good = started;
       bad = failed + stopped;
       role.setStatusStarted(started + " Started");

@@ -19,15 +19,19 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.ws.rs.core.Response.Status.Family;
 import org.codehaus.jettison.json.JSONObject;
+import org.primefaces.context.RequestContext;
 import se.kth.kthfsdashboard.command.Command;
 import se.kth.kthfsdashboard.command.CommandEJB;
+import se.kth.kthfsdashboard.command.CommandMessageController;
 import se.kth.kthfsdashboard.log.Log;
 import se.kth.kthfsdashboard.log.LogEJB;
 import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
+import se.kth.kthfsdashboard.role.Status;
 import se.kth.kthfsdashboard.struct.DiskInfo;
 import se.kth.kthfsdashboard.util.CollectdTools;
 import se.kth.kthfsdashboard.util.WebCommunication;
+
 
 /**
  *
@@ -56,6 +60,9 @@ public class HostController implements Serializable {
    private String service;
    @ManagedProperty("#{param.role}")
    private String role;
+
+   @ManagedProperty(value = "#{commandMessageController}")   
+   private CommandMessageController messages;   
    
    private Host host;
    private boolean currentHostAvailable;
@@ -80,6 +87,14 @@ public class HostController implements Serializable {
 
       return "host?faces-redirect=true&hostname=" + hostname;
    }
+   
+    public CommandMessageController getMessages() {
+        return messages;
+    }
+
+    public void setMessages(CommandMessageController messages) {
+        this.messages = messages;
+    }   
 
    public void doSetRackId() {
 
@@ -243,7 +258,7 @@ public class HostController implements Serializable {
    }
    
    public void doCommand(ActionEvent actionEvent) throws NoSuchAlgorithmException, Exception {
-
+     
       //  TODO: If the web application server craches, status will remain 'Running'.
       Command c = new Command(command, hostname, service, role, cluster);
       commandEJB.persistCommand(c);
@@ -267,11 +282,11 @@ public class HostController implements Serializable {
             } else if (command.equalsIgnoreCase("start")) {
                JSONObject json = new JSONObject(response.getEntity(String.class));
                messageText = json.getString("msg");
-               s.setStatus(Role.Status.Started);
+               s.setStatus(Status.Started);
 
             } else if (command.equalsIgnoreCase("stop")) {
                messageText = command + ": " + response.getEntity(String.class);
-               s.setStatus(Role.Status.Stopped);
+               s.setStatus(Status.Stopped);
             }
             roleEjb.store(s);
             message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", messageText);

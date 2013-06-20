@@ -79,14 +79,18 @@
                         <f:param name="service" value="#{serviceController.service}"/>                                   
                         <f:param name="command" value="start" />
                      </p:menuitem>
-                     <p:menuitem value="Stop" actionListener="#{hostController.doCommand}" ajax ="true" update="@form :Instance"
-                                 onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
+                     <p:menuitem id="stop_role" value="Stop" actionListener="#{hostController.doCommand}" 
+                                 ajax ="true" update="@form :Instance"
+                                 onstart="dlgAction.show();pollCreate.start();" 
+                                 oncomplete="dlgAction.hide();pollCreate.stop();">
                         <f:param name="hostname" value="#{hostController.hostname}" />
                         <f:param name="cluster" value="#{hostController.cluster}" />
                         <f:param name="role" value="#{hostController.role}" />
                         <f:param name="service" value="#{serviceController.service}"/>                                  
                         <f:param name="command" value="stop" />
                      </p:menuitem>
+
+
 
                   </p:menuButton>  
                </p:toolbarGroup>  
@@ -96,7 +100,11 @@
          <!-- Second Toolbar - End -->
 
          <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
-            <p:graphicImage library="images" name="ajaxloadingbar.gif" />  
+            <p:graphicImage library="images" name="ajaxloadingbar.gif" /> 
+<!--            <h:form>               
+               <h:outputLabel id="statusCreate" value="#{hostController.messages.showMessage()}"/>
+               <p:poll widgetVar="pollCreate" interval="1" autoStart="false" update="statusCreate" async="true" partialSubmit="true" process="@this"/>            
+            </h:form>-->
          </p:dialog>          
 
          <p:spacer width="1" height="10" />
