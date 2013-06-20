@@ -97,14 +97,6 @@
 
                   <p:column id="Name" headerText="Name" filterBy="#{instance.name}" filterMatchMode="contains" 
                             filterOptions="#{serviceInstanceController.roleOptions}" filterPosition="top">
-
-<!--                     <h:outputLink id="link1" value="#{serviceController.roleUrl}">
-                        <h:outputText value="#{instance.name}"/>
-                        <f:param name="hostname" value="#{instance.host}"/>
-                        <f:param name="cluster" value="#{instance.cluster}"/>
-                        <f:param name="role" value="#{instance.role}"/>
-                        <f:param name="service" value="#{instance.service}"/>
-                     </h:outputLink>-->
                      
                      <p:commandLink action="#{serviceController.gotoRole()}" ajax="false">
                         <h:outputText value="#{instance.name}"/>

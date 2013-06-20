@@ -25,22 +25,22 @@
                         <h:outputText value="Clusters" />
                      </p:commandLink> 
                      <h:outputText value=" &raquo; "/>
-                     <p:commandLink action="#{serviceController.gotoClusterStatus}" ajax="false">  
-                        <h:outputText value="#{serviceController.cluster}" />
-                        <f:param name="cluster" value="#{serviceController.cluster}"/>    
+                     <p:commandLink action="#{urlController.gotoClusterStatus}" ajax="false">  
+                        <h:outputText value="#{urlController.cluster}" />
+                        <f:param name="cluster" value="#{urlController.cluster}"/>    
                      </p:commandLink> 
                      <h:outputText value=" &raquo; "/>
-                     <p:commandLink action="#{serviceController.gotoServiceStatus}" ajax="false">  
-                        <h:outputText value="#{serviceController.service}" />
-                        <f:param name="cluster" value="#{serviceController.cluster}"/>
-                        <f:param name="service" value="#{serviceController.service}"/>                          
+                     <p:commandLink action="#{urlController.gotoServiceStatus}" ajax="false">  
+                        <h:outputText value="#{urlController.service}" />
+                        <f:param name="cluster" value="#{urlController.cluster}"/>
+                        <f:param name="service" value="#{urlController.service}"/>                          
                      </p:commandLink>                      
                      <h:outputText value=" &raquo; "/>
-                     <p:commandLink action="#{serviceController.gotoServiceInstances}" ajax="false">  
-                        <h:outputText value="#{serviceController.role}" />
-                        <f:param name="cluster" value="#{serviceController.cluster}"/>
-                        <f:param name="service" value="#{serviceController.service}"/>
-                        <f:param name="role" value="#{serviceController.role}"/>                                                  
+                     <p:commandLink action="#{urlController.gotoServiceInstances}" ajax="false">  
+                        <h:outputText value="#{urlController.role}" />
+                        <f:param name="cluster" value="#{urlController.cluster}"/>
+                        <f:param name="service" value="#{urlController.service}"/>
+                        <f:param name="role" value="#{urlController.role}"/>                                                  
                      </p:commandLink>  
                   </p:column>
                </p:row>
@@ -50,21 +50,21 @@
 
          <!-- Second Toolbar-->
          <h:form>  
-            <p:toolbar styleClass="SecondToolbarGood">  
+            <p:toolbar styleClass="SecondToolbar#{roleController.health}">  
                <p:toolbarGroup align="left">  
-                  <p:commandLink  action="#{serviceController.gotoRole()}" ajax="false">
-                     <h:outputText value="#{serviceController.role} (#{serviceController.hostname})"/>
-                     <f:param name="cluster" value="#{serviceController.cluster}"/>
-                     <f:param name="role" value="#{serviceController.role}"/>
-                     <f:param name="service" value="#{serviceController.service}"/>                              
-                     <f:param name="hostname" value="#{serviceController.hostname}"/>
+                  <p:commandLink  action="#{urlController.gotoRole()}" ajax="false">
+                     <h:outputText value="#{urlController.role} (#{urlController.hostname})"/>
+                     <f:param name="cluster" value="#{urlController.cluster}"/>
+                     <f:param name="role" value="#{urlController.role}"/>
+                     <f:param name="service" value="#{urlController.service}"/>                              
+                     <f:param name="hostname" value="#{urlController.hostname}"/>
                   </p:commandLink>
 
-                  <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{serviceController.gotoRole()}" ajax="false">
-                     <f:param name="cluster" value="#{serviceController.cluster}"/>
-                     <f:param name="role" value="#{serviceController.role}"/>
-                     <f:param name="service" value="#{serviceController.service}"/>                             
-                     <f:param name="hostname" value="#{serviceController.hostname}"/>                          
+                  <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{urlController.gotoRole()}" ajax="false">
+                     <f:param name="cluster" value="#{urlController.cluster}"/>
+                     <f:param name="role" value="#{urlController.role}"/>
+                     <f:param name="service" value="#{urlController.service}"/>                             
+                     <f:param name="hostname" value="#{urlController.hostname}"/>                          
                   </p:commandButton>  
 
                </p:toolbarGroup>  
@@ -76,7 +76,7 @@
                         <f:param name="hostname" value="#{hostController.hostname}" />
                         <f:param name="cluster" value="#{hostController.cluster}" />
                         <f:param name="role" value="#{hostController.role}" />
-                        <f:param name="service" value="#{serviceController.service}"/>                                   
+                        <f:param name="service" value="#{hostController.service}"/>                                   
                         <f:param name="command" value="start" />
                      </p:menuitem>
                      <p:menuitem id="stop_role" value="Stop" actionListener="#{hostController.doCommand}" 
@@ -86,12 +86,9 @@
                         <f:param name="hostname" value="#{hostController.hostname}" />
                         <f:param name="cluster" value="#{hostController.cluster}" />
                         <f:param name="role" value="#{hostController.role}" />
-                        <f:param name="service" value="#{serviceController.service}"/>                                  
+                        <f:param name="service" value="#{hostController.service}"/>                                  
                         <f:param name="command" value="stop" />
                      </p:menuitem>
-
-
-
                   </p:menuButton>  
                </p:toolbarGroup>  
             </p:toolbar>  
@@ -101,10 +98,10 @@
 
          <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
             <p:graphicImage library="images" name="ajaxloadingbar.gif" /> 
-<!--            <h:form>               
-               <h:outputLabel id="statusCreate" value="#{hostController.messages.showMessage()}"/>
-               <p:poll widgetVar="pollCreate" interval="1" autoStart="false" update="statusCreate" async="true" partialSubmit="true" process="@this"/>            
-            </h:form>-->
+            <!--            <h:form>               
+                           <h:outputLabel id="statusCreate" value="#{hostController.messages.showMessage()}"/>
+                           <p:poll widgetVar="pollCreate" interval="1" autoStart="false" update="statusCreate" async="true" partialSubmit="true" process="@this"/>            
+                        </h:form>-->
          </p:dialog>          
 
          <p:spacer width="1" height="10" />
@@ -115,13 +112,13 @@
 
          <h:form id="Instance" styleClass="styleInfoPanel">
             <p:panel header="Role Status">
-               <p:dataTable id="instances" var="instance" value="#{serviceController.instanceFullInfo}">
+               <p:dataTable id="instances" var="instance" value="#{roleController.instanceFullInfo}">
                   <p:column headerText="Name"><h:outputText value="#{instance.name}"/></p:column>
                   <p:column headerText="Host">
-                     <h:outputLink id="hostlink" value="#{serviceController.hostUrl}">
-                        <h:outputText value="#{instance.host}"/>
-                        <f:param name="hostname" value="#{instance.host}"/>
-                     </h:outputLink>
+                     <p:commandLink id="gotohost" action="#{urlController.gotoHost}" ajax="false">
+                        <h:outputText value="#{instance.host}" />
+                        <f:param name="hostname" value="#{host.hostname}"/>
+                     </p:commandLink>                      
                   </p:column>
                   <p:column headerText="Status"><h:outputText value="#{instance.status}"/></p:column>
                   <p:column headerText="Health">
@@ -165,14 +162,14 @@
 
          <p:spacer width="1" height="20" />
 
-         <p:outputPanel rendered="#{serviceController.roleHasGraphs()}">
+         <p:outputPanel rendered="#{graphController.roleHasGraphs()}">
 
             <h:form id="formdate" style="text-align: center">  
                <h:panelGrid columns="10"> 
                   <p:selectOneButton id ="periods" value="#{graphController.period}">  
                      <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
-                     <f:param name="hostname" value="#{hostController.hostname}"/>
-                     <f:param name="role" value="#{serviceController.role}"/>                  
+                     <f:param name="hostname" value="#{graphController.hostname}"/>
+                     <f:param name="role" value="#{graphController.role}"/>                  
                      <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
                   </p:selectOneButton>
                   <h:outputText value="or from" />
@@ -185,15 +182,15 @@
                   </p:selectOneMenu>
                   <h:outputText value=" columns " />
                   <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
-                     <f:param name="hostname" value="#{hostController.hostname}"/>
-                     <f:param name="role" value="#{serviceController.role}"/>                  
+                     <f:param name="hostname" value="#{graphController.hostname}"/>
+                     <f:param name="role" value="#{graphController.role}"/>                  
                   </p:commandButton> 
                </h:panelGrid>
             </h:form> 
 
             <h:form id="graphs">
 
-               <p:outputPanel rendered="#{serviceController.showNamenodeGraphs()}">
+               <p:outputPanel rendered="#{graphController.showNamenodeGraphs()}">
                   <p:toolbar>
                      <p:toolbarGroup align="left"><p:outputLabel value="Name Node Info"/></p:toolbarGroup>
                   </p:toolbar>                     
@@ -209,7 +206,7 @@
                   </p:dataGrid>               
                </p:outputPanel>
 
-               <p:outputPanel rendered="#{serviceController.showDatanodeGraphs()}">
+               <p:outputPanel rendered="#{graphController.showDatanodeGraphs()}">
                   <p:toolbar>
                      <p:toolbarGroup align="left"><p:outputLabel value="Data Node Activity"/></p:toolbarGroup>
                   </p:toolbar>

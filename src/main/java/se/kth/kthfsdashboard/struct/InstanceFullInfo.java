@@ -16,14 +16,13 @@ public class InstanceFullInfo implements Serializable {
     private String instance;
     private String service;
     private String role;
-    private String rack;
     private Status status;
     private String health;
     private int pid;
     private String uptime;
     private Integer webPort;
 
-    public InstanceFullInfo(String instance, String service, String role, String host, String ip, Integer webPort, String rack, Status status, String health) {
+    public InstanceFullInfo(String instance, String service, String role, String host, String ip, Integer webPort, Status status, String health) {
 
         this.name = role + " (" + host + ")";
         this.host = host;
@@ -31,7 +30,6 @@ public class InstanceFullInfo implements Serializable {
         this.instance = instance;
         this.role = role;
         this.service = service;
-        this.rack = rack;
         this.status = status;
         this.health = health;
         this.webPort = webPort;
@@ -49,10 +47,6 @@ public class InstanceFullInfo implements Serializable {
         return ip;
     }
     
-    public String getRack() {
-        return rack;
-    }
-
     public Status getStatus() {
         return status;
     }

@@ -1,8 +1,10 @@
 package se.kth.kthfsdashboard.role;
 
 import java.util.List;
+import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
@@ -18,7 +20,7 @@ public class RoleEJB {
 
    public RoleEJB() {
    }
-   
+
    public Long countClusterMachines(String cluster) {
       TypedQuery<Long> query = em.createNamedQuery("Role.Count-hosts", Long.class)
               .setParameter("cluster", cluster);
@@ -36,11 +38,15 @@ public class RoleEJB {
       return query.getResultList();
    }
 
-   public Role find(String hostname, String cluster, String service, String role) {
+   public Role find(String hostname, String cluster, String service, String role) throws Exception{
       TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
               .setParameter("hostname", hostname).setParameter("cluster", cluster)
               .setParameter("service", service).setParameter("role", role);
-      return query.getSingleResult();
+      try {
+         return query.getSingleResult();
+      } catch (NoResultException ex) {
+         throw new Exception("NoResultException");
+      }
    }
 
    public List<Role> findRoles(String cluster) {
@@ -65,12 +71,6 @@ public class RoleEJB {
       TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group-Role-Status", Role.class)
               .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role)
               .setParameter("status", status);
-      return query.getResultList();
-   }
-
-   public List<Role> findByHostnameClusterRole(String host, String cluster, String role) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.findBy.Cluster.Role.Hostname", Role.class)
-              .setParameter("hostname", host).setParameter("role", role).setParameter("cluster", cluster);
       return query.getResultList();
    }
 

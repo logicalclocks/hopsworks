@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
@@ -13,6 +14,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+import se.kth.kthfsdashboard.host.Host;
 import se.kth.kthfsdashboard.host.HostEJB;
 import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
@@ -20,11 +22,9 @@ import se.kth.kthfsdashboard.role.RoleType;
 import se.kth.kthfsdashboard.role.Status;
 import se.kth.kthfsdashboard.struct.ClusterInfo;
 import se.kth.kthfsdashboard.struct.Health;
-import se.kth.kthfsdashboard.struct.InstanceFullInfo;
 import se.kth.kthfsdashboard.struct.InstanceInfo;
 import se.kth.kthfsdashboard.struct.ServiceInfo;
 import se.kth.kthfsdashboard.struct.ServiceRoleInfo;
-import se.kth.kthfsdashboard.util.Formatter;
 import se.kth.kthfsdashboard.util.WebCommunication;
 
 /**
@@ -51,10 +51,11 @@ public class ServiceController {
    private String status;
    private HashMap<String, ClusterInfo> clusters = new HashMap<String, ClusterInfo>();
    private HashMap<String, InstanceInfo> instances = new HashMap<String, InstanceInfo>();
-   private static Logger log = Logger.getLogger(ServiceController.class.getName());
    public static String NOT_AVAILABLE = "Not available.";
    public static Map<String, List<ServiceRoleInfo>> rolesMap = new HashMap<String, List<ServiceRoleInfo>>();
    public static Map<String, String> servicesRolesMap = new HashMap<String, String>();
+   
+   private static final Logger logger = Logger.getLogger(ServiceController.class.getName());   
 
    public ServiceController() {
 
@@ -87,6 +88,11 @@ public class ServiceController {
       servicesRolesMap.put(RoleType.nodemanager.toString(), ServiceType.YARN.toString());
 
    }
+   
+   @PostConstruct
+   public void init() {
+      logger.info("init ServiceController");
+   }      
 
    public String getRole() {
       return role;
@@ -134,19 +140,6 @@ public class ServiceController {
       Principal principal = request.getUserPrincipal();
 
       return request.getAuthType().toString() + " - " + principal.getName();
-   }
-
-   public List<InstanceFullInfo> getInstanceFullInfo() {
-      List<InstanceFullInfo> instanceInfoList = new ArrayList<InstanceFullInfo>();
-      List<Role> roles = roleEjb.findByHostnameClusterRole(hostname, cluster, role);
-      for (Role r : roles) {
-         String ip = hostEJB.findHostByName(hostname).getPublicIp();
-         InstanceFullInfo i = new InstanceFullInfo(r.getCluster(), r.getService(), r.getRole(), r.getHostname(), ip, r.getWebPort(), "?", r.getStatus(), r.getHealth().toString());
-         i.setPid(r.getPid());
-         i.setUptime(Formatter.time(r.getUptime() * 1000));
-         instanceInfoList.add(i);
-      }
-      return instanceInfoList;
    }
 
    public String doGotoClusterStatus() {
@@ -197,14 +190,6 @@ public class ServiceController {
    public String gotoRole() {
       return "role?faces-redirect=true&hostname=" + hostname + "&cluster=" + cluster
               + "&service=" + service + "&role=" + role;
-   }
-
-   public String getRoleUrl() {
-      return "role.xhtml";
-   }
-
-   public String getHostUrl() {
-      return "host.xhtml";
    }
 
    public List<ServiceRoleInfo> getRoles() {
@@ -327,29 +312,45 @@ public class ServiceController {
    }
 
    public boolean hasWebUi() {
-      Role s = roleEjb.find(hostname, cluster, service, role);
-      if (s.getWebPort() == null || s.getWebPort() == 0) {
+      try {
+      Role r = roleEjb.find(hostname, cluster, service, role);
+      if (r == null || r.getWebPort() == null || r.getWebPort() == 0) {
          return false;
       }
       return true;
+      } catch(Exception ex) {
+         return false;
+      }
    }
 
    public String getRoleLog(int lines) {
-      WebCommunication webComm = new WebCommunication();
-      String ip = findIpByHostname(hostname);
-      return webComm.getRoleLog(ip, cluster, service, role, lines);
+      try {
+         WebCommunication webComm = new WebCommunication();
+         String ip = findIpByHostname(hostname);
+         return webComm.getRoleLog(ip, cluster, service, role, lines);
+      } catch (Exception ex) {
+         return ex.getMessage();
+      }
    }
 
    public String getServiceLog(int lines) {
-      String ip = findIpByRole(cluster, service, "mgmserver");
-      WebCommunication webComm = new WebCommunication();
-      return webComm.getServiceLog(ip, cluster, service, lines);
+      try {
+         String ip = findIpByRole(cluster, service, "mgmserver");
+         WebCommunication webComm = new WebCommunication();
+         return webComm.getServiceLog(ip, cluster, service, lines);
+      } catch (Exception ex) {
+         return ex.getMessage();
+      }
    }
 
    public String getAgentLog(int lines) {
-      WebCommunication webCom = new WebCommunication();
-      String ip = findIpByHostname(hostname);
-      return webCom.getAgentLog(ip, lines);
+      try {
+         WebCommunication webCom = new WebCommunication();
+         String ip = findIpByHostname(hostname);
+         return webCom.getAgentLog(ip, lines);
+      } catch (Exception ex) {
+         return ex.getMessage();
+      }
    }
 
    public String getMySQLClusterConfig() throws Exception {
@@ -390,43 +391,24 @@ public class ServiceController {
       return false;
    }
 
-   public boolean showNamenodeGraphs() {
-      if (role.equals("namenode")) {
-         return true;
-      }
-      return false;
-   }
-
-   public boolean roleHasGraphs() {
-      if (role == null) {
-         return false;
-      }
-      if (role.equals("datanode") || role.equals("namenode")) {
-         return true;
-      }
-      return false;
-   }
-
-   public boolean showDatanodeGraphs() {
-      if (role.equals("datanode")) {
-         return true;
-      }
-      return false;
-   }
 
    public String findServiceByRole(String role) {
       return servicesRolesMap.get(role);
    }
 
-   private String findIpByHostname(String hostname) {
-      String ip = hostEJB.findHostByName(hostname).getPrivateIp();
+   private String findIpByHostname(String hostname) throws Exception {
+      Host h = hostEJB.findHostByName(hostname);
+      if (h == null) {
+         throw new RuntimeException("Hostname " + hostname + " not found.");
+      }
+      String ip = h.getPrivateIp();
       if (ip == null || ip.equals("")) {
-         hostEJB.findHostByName(hostname).getPublicIp();
+         h.getPublicIp();
       }
       return ip;
    }
 
-   private String findIpByRole(String cluster, String service, String role) {
+   private String findIpByRole(String cluster, String service, String role) throws Exception {
       String host = roleEjb.findRoles(cluster, service, role).get(0).getHostname();
       return findIpByHostname(host);
    }
