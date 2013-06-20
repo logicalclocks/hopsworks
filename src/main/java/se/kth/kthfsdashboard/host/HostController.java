@@ -27,6 +27,7 @@ import se.kth.kthfsdashboard.log.Log;
 import se.kth.kthfsdashboard.log.LogEJB;
 import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
+import se.kth.kthfsdashboard.role.Status;
 import se.kth.kthfsdashboard.struct.DiskInfo;
 import se.kth.kthfsdashboard.util.CollectdTools;
 import se.kth.kthfsdashboard.util.WebCommunication;
@@ -281,11 +282,11 @@ public class HostController implements Serializable {
             } else if (command.equalsIgnoreCase("start")) {
                JSONObject json = new JSONObject(response.getEntity(String.class));
                messageText = json.getString("msg");
-               s.setStatus(Role.Status.Started);
+               s.setStatus(Status.Started);
 
             } else if (command.equalsIgnoreCase("stop")) {
                messageText = command + ": " + response.getEntity(String.class);
-               s.setStatus(Role.Status.Stopped);
+               s.setStatus(Status.Stopped);
             }
             roleEjb.store(s);
             message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", messageText);

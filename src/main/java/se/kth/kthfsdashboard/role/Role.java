@@ -3,6 +3,7 @@ package se.kth.kthfsdashboard.role;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import javax.persistence.*;
+import se.kth.kthfsdashboard.struct.Health;
 
 /**
  *
@@ -12,10 +13,7 @@ import javax.persistence.*;
 @Table(name = "Roles")
 @NamedQueries({
    @NamedQuery(name = "Role.findClusters", query = "SELECT DISTINCT r.cluster FROM Role r"),
-   
-//   @NamedQuery(name = "Role.findServiceClass", query = "SELECT DISTINCT r.serviceClass FROM Role r WHERE r.cluster = :cluster"),   
    @NamedQuery(name = "Role.findServices", query = "SELECT DISTINCT r.service FROM Role r WHERE r.cluster = :cluster"),
-   
    @NamedQuery(name = "Role.find", query = "SELECT r FROM Role r WHERE r.hostname = :hostname AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),
 
    @NamedQuery(name = "Role.findBy.Cluster", query = "SELECT r FROM Role r WHERE r.cluster = :cluster"),  
@@ -28,25 +26,10 @@ import javax.persistence.*;
    @NamedQuery(name = "Role.findHostnameBy-Cluster-Group-Role", query = "SELECT r.hostname FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role ORDER BY r.hostname"),
 
    @NamedQuery(name = "Role.Count", query="SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
-   @NamedQuery(name = "Role.Count-hosts", query="SELECT count(DISTINCT r.hostname) FROM Role r WHERE r.cluster = :cluster")
-        
+   @NamedQuery(name = "Role.Count-hosts", query="SELECT count(DISTINCT r.hostname) FROM Role r WHERE r.cluster = :cluster")        
 })
 public class Role implements Serializable {
 
-   public enum Status {
-      Started, Stopped, Failed, None, All
-   }
-
-   public enum Health {
-      Good, Bad
-   }
-
-   public enum RoleType {
-      namenode, datanode, 
-      mgmserver, mysqld, ndb,
-      resourcemanager, nodemanager,
-   }    
-   
    @Id
    @GeneratedValue(strategy = GenerationType.SEQUENCE)
    private Long id;
@@ -67,7 +50,7 @@ public class Role implements Serializable {
    public Role() {
    }
 
-   public Role(String hostname, String cluster, String service, String role, Integer webPort, Role.Status status) {
+   public Role(String hostname, String cluster, String service, String role, Integer webPort, Status status) {
       this.hostname = hostname;
       this.cluster = cluster;
       this.service = service;
@@ -91,7 +74,7 @@ public class Role implements Serializable {
       this.role = role;
    }
 
-   public static Status getServiceStatus(String status) {
+   public static Status getRoleStatus(String status) {
       try {
          return Status.valueOf(status);
       } catch (Exception ex) {
@@ -179,7 +162,7 @@ public class Role implements Serializable {
 
    public Health getHealth() {
 
-      if (status == Status.Failed) {
+      if (status == Status.Failed || status == Status.Stopped) {
          return Health.Bad;
       }
       return Health.Good;

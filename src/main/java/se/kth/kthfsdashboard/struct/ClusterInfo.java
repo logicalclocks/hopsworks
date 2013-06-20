@@ -1,7 +1,6 @@
 package se.kth.kthfsdashboard.struct;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,7 +14,8 @@ public class ClusterInfo {
    private String health;
    private Map roleCounts;
    private Long numberOfMachines;
-   private List<String> services;
+   private Map<String, String> services;
+   private Map<String, String> rolesHealth;   
 
    public ClusterInfo(String name, Long numberOfMachines) {
       roleCounts = new HashMap<String, Integer>();
@@ -56,11 +56,19 @@ public class ClusterInfo {
       this.roleCounts.put(service, count);
    }
 
-   public List<String> getServices() {
+   public Map<String, String> getServices() {
       return services;
    }
 
-   public void setServices(List<String> services) {
+   public void setServices(Map<String, String> services) {
       this.services = services;
    }
+   
+   public Map<String, String> getRolesHealth() {
+      return rolesHealth;
+   }
+
+   public void setRolesHealth(Map<String, String> rolesHealth) {
+      this.rolesHealth = rolesHealth;
+   }   
 }

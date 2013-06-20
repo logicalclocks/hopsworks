@@ -1,7 +1,5 @@
 package se.kth.kthfsdashboard.service;
 
-import se.kth.kthfsdashboard.role.RoleEJB;
-import se.kth.kthfsdashboard.role.Role;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +9,9 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.model.SelectItem;
-import se.kth.kthfsdashboard.role.Role.RoleType;
+import se.kth.kthfsdashboard.role.Role;
+import se.kth.kthfsdashboard.role.RoleEJB;
+import se.kth.kthfsdashboard.role.Status;
 import se.kth.kthfsdashboard.struct.InstanceInfo;
 import se.kth.kthfsdashboard.util.CookieTools;
 
@@ -52,9 +52,9 @@ public class ServiceInstanceController implements Serializable {
 
    static {
       statusStates = new String[3];
-      statusStates[0] = Role.Status.Started.toString();
-      statusStates[1] = Role.Status.Stopped.toString();
-      statusStates[2] = Role.Status.Failed.toString();
+      statusStates[0] = Status.Started.toString();
+      statusStates[1] = Status.Stopped.toString();
+      statusStates[2] = Status.Failed.toString();
 
       hdfsRoles = new String[]{"namenode", "datanode"};
       mysqlClusterRoles = new String[]{"ndb", "mgmserver", "mysqld"};
@@ -124,7 +124,7 @@ public class ServiceInstanceController implements Serializable {
       List<Role> roles;
       
       if (cluster != null && role != null && service != null && status != null) {
-         roles = roleEjb.findRoles(cluster, service, role, Role.getServiceStatus(status));
+         roles = roleEjb.findRoles(cluster, service, role, Role.getRoleStatus(status));
          cookie.write("cluster", cluster);
          cookie.write("service", service);
 
