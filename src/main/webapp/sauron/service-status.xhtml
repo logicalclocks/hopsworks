@@ -30,7 +30,7 @@
                         <h:outputText value="Clusters" />
                      </p:commandLink> 
                      <h:outputText value=" &raquo; "/>
-                     <p:commandLink action="#{serviceController.gotoClusterStatus}" ajax="false">  
+                     <p:commandLink action="#{urlController.clusterStatus}" ajax="false">  
                         <h:outputText value="#{serviceController.cluster}" />
                         <f:param name="cluster" value="#{serviceController.cluster}"/>    
                      </p:commandLink> 
@@ -45,22 +45,25 @@
          <h:form>  
             <p:toolbar styleClass="SecondToolbarGood">  
                <p:toolbarGroup align="left">  
-                  <p:commandLink  action="#{serviceController.gotoServiceStatus}" ajax="false">
+                  <p:commandLink  action="#{urlController.serviceStatus}" ajax="false">
                      <h:outputText value="#{serviceController.service}"/>
                      <f:param name="cluster" value="#{serviceController.cluster}"/>
                      <f:param name="cluster" value="#{serviceController.cluster}"/>                            
                      <f:param name="service" value="#{serviceController.service}"/>                      
                   </p:commandLink>
 
-                  <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{serviceController.gotoServiceStatus}" ajax="false">
+                  <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" 
+                                   action="#{urlController.serviceStatus}" ajax="false">
                      <f:param name="cluster" value="#{serviceController.cluster}"/>                            
                      <f:param name="service" value="#{serviceController.service}"/> 
                   </p:commandButton>  
-                  <p:commandButton value="Instances" icon="ui-icon-note" action="#{serviceController.gotoServiceInstances}">
+                  <p:commandButton value="Instances" icon="ui-icon-note" 
+                                   action="#{urlController.serviceInstances}">
                      <f:param name="cluster" value="#{serviceController.cluster}"/>   
                      <f:param name="service" value="#{serviceController.service}"/>
                   </p:commandButton>  
-                  <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" action="#{serviceController.gotoServiceCommandHistory}">
+                  <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" 
+                                   action="#{urlController.serviceCommandHistory}">
                      <f:param name="cluster" value="#{serviceController.cluster}"/>
                      <f:param name="service" value="#{serviceController.service}"/>                      
                   </p:commandButton>  
@@ -91,7 +94,7 @@
 
                   <p:column headerText="Role name">
 
-                     <p:commandLink action="#{serviceController.gotoServiceInstances}" ajax="false">
+                     <p:commandLink action="#{urlController.serviceInstances}" ajax="false">
                         <h:outputText value="#{serviceRole.name}"/>
                         <f:param name="cluster" value="#{serviceController.cluster}"/>
                         <f:param name="service" value="#{serviceController.service}"/>                        
@@ -100,7 +103,7 @@
                   </p:column>  
 
                   <p:column headerText="Status">
-                     <p:commandLink action="#{serviceController.gotoServiceInstances}" ajax="false">
+                     <p:commandLink action="#{urlController.serviceInstances}" ajax="false">
                         <h:outputText value="#{serviceRole.statusStarted}"/>
                         <f:param name="cluster" value="#{serviceController.cluster}"/>
                         <f:param name="service" value="#{serviceController.service}"/>                       
@@ -108,7 +111,7 @@
                         <f:param name="status" value="Started"/>
                      </p:commandLink> 
                      <p:spacer width="10" height="0" />
-                     <p:commandLink action="#{serviceController.gotoServiceInstances}" ajax="false">
+                     <p:commandLink action="#{urlController.serviceInstances}" ajax="false">
                         <h:outputText value="#{serviceRole.statusStopped}"/>
                         <f:param name="cluster" value="#{serviceController.cluster}"/>
                         <f:param name="service" value="#{serviceController.service}"/>                        

@@ -33,18 +33,18 @@
 
          <!-- Second Toolbar-->
          <h:form>  
-            <p:toolbar styleClass="SecondToolbarGood">  
+            <p:toolbar styleClass="SecondToolbar#{clusterStatusController.clusterHealth}">  
                <p:toolbarGroup align="left">  
-                  <p:commandLink  action="#{serviceController.gotoClusterStatus}" ajax="false">
-                     <h:outputText value="#{serviceController.cluster}"/>
-                     <f:param name="cluster" value="#{serviceController.cluster}"/>                         
+                  <p:commandLink  action="#{urlController.clusterStatus}" ajax="false">
+                     <h:outputText value="#{clusterStatusController.cluster}"/>
+                     <f:param name="cluster" value="#{clusterStatusController.cluster}"/>                         
                   </p:commandLink>
 
-                  <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{serviceController.gotoClusterStatus}" ajax="false">
-                     <f:param name="cluster" value="#{serviceController.cluster}"/>                            
+                  <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{urlController.clusterStatus}" ajax="false">
+                     <f:param name="cluster" value="#{clusterStatusController.cluster}"/>                            
                   </p:commandButton> 
-                  <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" action="#{serviceController.gotoClusterCommandHistory}">
-                     <f:param name="cluster" value="#{serviceController.cluster}"/>                            
+                  <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" action="#{urlController.clusterCommandHistory}">
+                     <f:param name="cluster" value="#{clusterStatusController.cluster}"/>                            
                   </p:commandButton>  
                </p:toolbarGroup>  
 
@@ -63,12 +63,12 @@
          <h:form styleClass="styleInfoPanel">
             <p:panel header="Services">
 
-               <p:dataTable id="service" var="service" value="#{serviceController.services}">
+               <p:dataTable id="service" var="service" value="#{clusterStatusController.services}">
 
                   <p:column headerText="Service">
-                     <p:commandLink action="#{serviceController.gotoServiceStatus}" ajax="false">
+                     <p:commandLink action="#{urlController.serviceStatus}" ajax="false">
                         <h:outputText value="#{service.name}"/>
-                        <f:param name="cluster" value="#{serviceController.cluster}"/>
+                        <f:param name="cluster" value="#{clusterStatusController.cluster}"/>
                         <f:param name="service" value="#{service.name}"/>
                      </p:commandLink>                         
                   </p:column>  
@@ -79,9 +79,9 @@
                   
                   <p:column headerText="Roles">
                      <ui:repeat value="#{service.roleCounts.entrySet().toArray()}" var="item" varStatus="status">
-                        <p:commandLink action="#{serviceController.gotoServiceInstances}" ajax="false">
+                        <p:commandLink action="#{urlController.serviceInstances}" ajax="false">
                            <h:outputText value="${item.value} ${item.key}"/>
-                           <f:param name="cluster" value="#{serviceController.cluster}"/>
+                           <f:param name="cluster" value="#{clusterStatusController.cluster}"/>
                            <f:param name="role" value="#{item.key}"/>
                            <f:param name="service" value="#{service.name}"/>
                         </p:commandLink>

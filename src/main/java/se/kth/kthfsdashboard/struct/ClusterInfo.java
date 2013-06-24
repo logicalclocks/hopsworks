@@ -1,7 +1,12 @@
 package se.kth.kthfsdashboard.struct;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import se.kth.kthfsdashboard.role.Role;
+import se.kth.kthfsdashboard.role.Status;
 
 /**
  *
@@ -10,65 +15,91 @@ import java.util.Map;
 public class ClusterInfo {
 
    private String name;
-   private String status;
-   private String health;
-   private Map roleCounts;
    private Long numberOfMachines;
-   private Map<String, String> services;
-   private Map<String, String> rolesHealth;   
+   private Set<String> services = new HashSet<String>();
+   private Set<String> roles = new HashSet<String>();
+   private Set<String> badServices = new HashSet<String>();
+   private Set<String> badRoles = new HashSet<String>();
+   private Map<String, Integer> rolesCount = new HashMap<String, Integer>();
+   private Integer started;
+   private Integer stopped;
 
-   public ClusterInfo(String name, Long numberOfMachines) {
-      roleCounts = new HashMap<String, Integer>();
+   public ClusterInfo(String name) {
+      started = 0;
+      stopped = 0;
       this.name = name;
-      this.numberOfMachines = numberOfMachines;
+   }
 
+   public void setNumberOfMachines(Long numberOfMachines) {
+      this.numberOfMachines = numberOfMachines;
+   }
+
+   public Long getNumberOfMachines() {
+      return numberOfMachines;
    }
 
    public String getName() {
       return name;
    }
 
-   public void setStatus(String status) {
-      this.status = status;
-   }   
-   
+   public String[] getServices() {
+      return services.toArray(new String[services.size()]);
+   }
+
+   public String[] getRoles() {
+      return roles.toArray(new String[roles.size()]);
+   }
+
+   public Integer roleCount(String role) {
+      return rolesCount.get(role);
+   }
+
+   public Health getClusterHealth() {
+      if (badRoles.isEmpty()) {
+         return Health.Good;
+      }
+      return Health.Bad;
+   }
+
+   public Health serviceHealth(String service) {
+      if (badServices.contains(service)) {
+         return Health.Bad;
+      }
+      return Health.None;
+   }
+
+   public Health roleHealth(String role) {
+      if (badRoles.contains(role)) {
+         return Health.Bad;
+      }
+      return Health.None;
+   }
+
    public String getStatus() {
-      return status;
+      return String.format("%d Started, %d Stopped", started, stopped);
    }
 
-   public void setHealth(String health) {
-      this.health = health;
-   }   
-   
-   public String getHealth() {
-      return health;
+   public void addRoles(List<Role> rolesList) {
+      for (Role role : rolesList) {
+         services.add(role.getService());
+         roles.add(role.getRole());
+         if (role.getStatus() == Status.Started) {
+            started += 1;
+         } else {
+            badServices.add(role.getService());
+            badRoles.add(role.getRole());
+            stopped += 1;
+         }
+         addRole(role.getRole());
+      }
    }
 
-   public Map getRoleCounts() {
-      return roleCounts;
+   private void addRole(String role) {
+      if (rolesCount.containsKey(role)) {
+         Integer current = rolesCount.get(role);
+         rolesCount.put(role, current + 1);
+      } else {
+         rolesCount.put(role, 1);
+      }
    }
-   
-   public Long getNumberOfMachines() {
-      return numberOfMachines;
-   }
-
-   public void putToRoleCounts(String service, Integer count) {
-      this.roleCounts.put(service, count);
-   }
-
-   public Map<String, String> getServices() {
-      return services;
-   }
-
-   public void setServices(Map<String, String> services) {
-      this.services = services;
-   }
-   
-   public Map<String, String> getRolesHealth() {
-      return rolesHealth;
-   }
-
-   public void setRolesHealth(Map<String, String> rolesHealth) {
-      this.rolesHealth = rolesHealth;
-   }   
 }

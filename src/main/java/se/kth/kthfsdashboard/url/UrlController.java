@@ -28,6 +28,7 @@ public class UrlController {
    private static final Logger logger = Logger.getLogger(UrlController.class.getName());
 
    public UrlController() {
+      logger.info("UrlController");      
    }
 
    public String getRole() {
@@ -70,32 +71,28 @@ public class UrlController {
       return status;
    }   
 
-   public String gotoHost() {
+   public String host() {
       return "host?faces-redirect=true&hostname=" + hostname;
    }   
 
-   public String doGotoClusterStatus() {
+   public String clusterStatus() {
       return "cluster-status?faces-redirect=true&cluster=" + cluster;
    }
 
-   public String gotoServiceInstance() {
+   public String serviceInstance() {
       return "services-instances-status?faces-redirect=true&hostname="
               + hostname + "&cluster=" + cluster + "&role=" + role;
    }
 
-   public String gotoClusterStatus() {
-      return "cluster-status?faces-redirect=true&cluster=" + cluster;
-   }
-
-   public String gotoClusterCommandHistory() {
+   public String clusterCommandHistory() {
       return "cluster-commands?faces-redirect=true&cluster=" + cluster;
    }
 
-   public String gotoServiceStatus() {
+   public String serviceStatus() {
       return "service-status?faces-redirect=true&cluster=" + cluster + "&service=" + service;
    }
 
-   public String gotoServiceInstances() {
+   public String serviceInstances() {
       String url = "service-instances?faces-redirect=true";
       if (hostname != null) {
          url += "&hostname=" + hostname;
@@ -115,11 +112,11 @@ public class UrlController {
       return url;
    }
 
-   public String gotoServiceCommandHistory() {
+   public String serviceCommandHistory() {
       return "service-commands?faces-redirect=true&cluster=" + cluster + "&service=" + service;
    }
 
-   public String gotoRole() {
+   public String role() {
       return "role?faces-redirect=true&hostname=" + hostname + "&cluster=" + cluster
               + "&service=" + service + "&role=" + role;
    }

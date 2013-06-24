@@ -6,7 +6,6 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:fn="http://java.sun.com/jsp/jstl/functions" 
       >
 
    <ui:composition template="layout.xhtml">
@@ -29,50 +28,50 @@
          </h:form>
          <!--Navigation Bar - End-->
 
-         <div class="services-header">#{fn:length(serviceController.clusters)} Cluster(s) Under Management:</div>
+         <div class="services-header">#{clustersController.clusters.size()} Cluster(s) Under Management:</div>
 
          <p:panel header="Clusters">  
             <h:form id="formServices">  
 
                <p:growl id="messages"/>  
 
-               <p:dataTable id="table_services" var="cluster" value="#{serviceController.clusters}">
+               <p:dataTable id="table_services" var="cluster" value="#{clustersController.clusters}">
 
                   <p:column  headerText="Cluster name">  
-                     <p:commandLink styleClass="Health-#{cluster.health}" id="id#{cluster.name}" 
-                                    action="#{serviceController.doGotoClusterStatus()}" ajax="false">  
+                     <p:commandLink styleClass="Health-#{cluster.clusterHealth}" id="id#{cluster.name}" 
+                                    action="#{urlController.clusterStatus}" ajax="false">  
                         <h:outputText value="#{cluster.name}" />
                         <f:param name="cluster" value="#{cluster.name}"/>
                      </p:commandLink> 
                   </p:column> 
                   
                   <p:column headerText="Services">
-                     <ui:repeat value="#{cluster.services.keySet().toArray()}" var="item" varStatus="status">
-                        <p:commandLink styleClass="Health-#{cluster.services.get(item)}" 
-                                       action="#{serviceController.gotoServiceStatus}" ajax="false">
-                           <h:outputText value="#{item}"/>
+                     <ui:repeat value="#{cluster.services}" var="service" varStatus="status">
+                        <p:commandLink styleClass="Health-#{cluster.serviceHealth(service)}" 
+                                       action="#{urlController.serviceStatus}" ajax="false">
+                           <h:outputText value="#{service}"/>
                            <f:param name="cluster" value="#{cluster.name}"/>
-                           <f:param name="service" value="#{item}"/>
+                           <f:param name="service" value="#{service}"/>
                         </p:commandLink>
                         <p:spacer width="6" height="0" rendered="#{!status.last}"/>
                      </ui:repeat>
                   </p:column>
 
                   <p:column headerText="Roles">
-                     <ui:repeat value="#{cluster.roleCounts.entrySet().toArray()}" var="item" varStatus="status">
-                        <p:commandLink styleClass="Health-#{cluster.rolesHealth.get(item.key)}" 
-                                       action="#{serviceController.gotoServiceInstances}" ajax="false">
-                           <h:outputText value="${item.value} ${item.key}"/>
+                     <ui:repeat value="#{cluster.roles}" var="role" varStatus="status">
+                        <p:commandLink styleClass="Health-#{cluster.roleHealth(role)}" 
+                                       action="#{urlController.gotoServiceInstances}" ajax="false">
+                           <h:outputText value="${cluster.roleCount(role)} ${role}"/>
                            <f:param name="cluster" value="#{cluster.name}"/>
-                           <f:param name="role" value="#{item.key}"/>
-                           <f:param name="service" value="#{serviceController.findServiceByRole(item.key)}"/>
+                           <f:param name="role" value="#{role}"/>
+                           <f:param name="service" value="#{serviceController.findServiceByRole(role)}"/>
                         </p:commandLink>
                         <p:spacer width="6" height="0" rendered="#{!status.last}"/>
                      </ui:repeat>
                   </p:column>  
                   
                   <p:column headerText="Roles Status"><h:outputText value="#{cluster.status}"/></p:column>                      
-                  <p:column headerText="Health"  styleClass="Health-#{cluster.health}"><h:outputText value="#{cluster.health}"/></p:column>                 
+                  <p:column headerText="Health"  styleClass="Health-#{cluster.clusterHealth}"><h:outputText value="#{cluster.clusterHealth}"/></p:column>                 
 
                   <p:column headerText="Number of Machines"><h:outputText value="#{cluster.numberOfMachines}"/></p:column>                   
                   

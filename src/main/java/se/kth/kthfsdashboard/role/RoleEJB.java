@@ -1,7 +1,6 @@
 package se.kth.kthfsdashboard.role;
 
 import java.util.List;
-import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -21,7 +20,7 @@ public class RoleEJB {
    public RoleEJB() {
    }
 
-   public Long countClusterMachines(String cluster) {
+   public Long clusterMachinesCount(String cluster) {
       TypedQuery<Long> query = em.createNamedQuery("Role.Count-hosts", Long.class)
               .setParameter("cluster", cluster);
       return query.getSingleResult();
