@@ -31,9 +31,9 @@
                   <p:menuitem value="All Clusters" action="clusters"/>
                   <p:separator />  
 
-                  <c:forEach var="cluster" items="#{clustersController.clusters}">                          
-                     <p:menuitem value="#{cluster.name}" action='#{urlController.clusterStatus}'>
-                        <f:param name="cluster" value="#{cluster.name}" />
+                  <c:forEach var="cluster" items="#{clustersLayoutController.clusters}">                          
+                     <p:menuitem value="#{cluster}" action='#{urlController.clusterStatus}'>
+                        <f:param name="cluster" value="#{cluster}" />
                      </p:menuitem>
                   </c:forEach>
                </p:menuButton>

@@ -60,11 +60,11 @@
                   <p:column headerText="Roles">
                      <ui:repeat value="#{cluster.roles}" var="role" varStatus="status">
                         <p:commandLink styleClass="Health-#{cluster.roleHealth(role)}" 
-                                       action="#{urlController.gotoServiceInstances}" ajax="false">
+                                       action="#{urlController.serviceInstances()}" ajax="false">
                            <h:outputText value="${cluster.roleCount(role)} ${role}"/>
                            <f:param name="cluster" value="#{cluster.name}"/>
                            <f:param name="role" value="#{role}"/>
-                           <f:param name="service" value="#{serviceController.findServiceByRole(role)}"/>
+                           <f:param name="service" value="#{cluster.roleService(role)}"/>
                         </p:commandLink>
                         <p:spacer width="6" height="0" rendered="#{!status.last}"/>
                      </ui:repeat>

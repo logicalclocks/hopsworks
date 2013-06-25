@@ -25,7 +25,7 @@ import se.kth.kthfsdashboard.role.RoleEJB;
 import se.kth.kthfsdashboard.role.Status;
 import se.kth.kthfsdashboard.struct.DiskInfo;
 import se.kth.kthfsdashboard.util.CollectdTools;
-import se.kth.kthfsdashboard.util.WebCommunication;
+import se.kth.kthfsdashboard.communication.WebCommunication;
 
 
 /**
@@ -151,7 +151,11 @@ public class HostController implements Serializable {
    }
 
    public Host getHost() {
-      host = hostEJB.findHostByName(hostname);
+      try {
+         host = hostEJB.findHostByName(hostname);
+      } catch (Exception ex) {
+         logger.warning("Host ".concat(hostname).concat(" not found."));
+      }
       return host;
    }
 

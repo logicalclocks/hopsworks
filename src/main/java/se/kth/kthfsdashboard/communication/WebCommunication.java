@@ -1,4 +1,4 @@
-package se.kth.kthfsdashboard.util;
+package se.kth.kthfsdashboard.communication;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;

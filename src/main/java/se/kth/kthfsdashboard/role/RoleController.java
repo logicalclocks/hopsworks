@@ -35,6 +35,7 @@ public class RoleController {
    private String cluster;
    private List<InstanceFullInfo> instanceInfoList;
    private String health;
+   private boolean renderWebUi;
    private static final Logger logger = Logger.getLogger(RoleController.class.getName());
 
    public RoleController() {
@@ -54,6 +55,7 @@ public class RoleController {
          info.setPid(r.getPid());
          info.setUptime(Formatter.time(r.getUptime() * 1000));
          instanceInfoList.add(info);
+         renderWebUi = r.getWebPort() != null && r.getWebPort() != 0;
          health = r.getHealth().toString();
       } catch (Exception ex) {
          logger.warning("init: ".concat(ex.getMessage()));
@@ -95,8 +97,13 @@ public class RoleController {
    public String getCluster() {
       return cluster;
    }
+   
+   public boolean getRenderWebUi(){
+      return renderWebUi;
+   }
 
    public List<InstanceFullInfo> getInstanceFullInfo() {
       return instanceInfoList;
    }
+   
 }

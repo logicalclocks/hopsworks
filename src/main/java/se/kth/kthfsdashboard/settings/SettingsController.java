@@ -22,7 +22,7 @@ public class SettingsController implements Serializable{
       logger.info("SettingsController");      
       name = "Jumbo Hadoop Dashboard";
       logLines = 2;
-      numOfGraphColumns = 5;
+      numOfGraphColumns = 3;
    }
 
    public String getName() {

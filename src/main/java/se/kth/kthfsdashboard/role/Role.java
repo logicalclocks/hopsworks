@@ -15,18 +15,20 @@ import se.kth.kthfsdashboard.struct.Health;
    @NamedQuery(name = "Role.findClusters", query = "SELECT DISTINCT r.cluster FROM Role r"),
    @NamedQuery(name = "Role.findServices", query = "SELECT DISTINCT r.service FROM Role r WHERE r.cluster = :cluster"),
    @NamedQuery(name = "Role.find", query = "SELECT r FROM Role r WHERE r.hostname = :hostname AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),
-
-   @NamedQuery(name = "Role.findBy.Cluster", query = "SELECT r FROM Role r WHERE r.cluster = :cluster"),  
+   @NamedQuery(name = "Role.findBy.Cluster", query = "SELECT r FROM Role r WHERE r.cluster = :cluster"),
    @NamedQuery(name = "Role.findBy-Cluster-Group", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service"),
    @NamedQuery(name = "Role.findBy-Cluster-Group-Role", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
    @NamedQuery(name = "Role.findBy-Cluster-Group-Role-Status", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
 
-// need this?   
+   
+   // need this?   
    @NamedQuery(name = "Role.findHostnameBy-Cluster-Group-Role", query = "SELECT r.hostname FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role ORDER BY r.hostname"),
-
-   @NamedQuery(name = "Role.Count", query="SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
-   @NamedQuery(name = "Role.Count-hosts", query="SELECT count(DISTINCT r.hostname) FROM Role r WHERE r.cluster = :cluster")        
+   @NamedQuery(name = "Role.Count", query = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
+   @NamedQuery(name = "Role.CountBy-Cluster-Service-Role-Status", query = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
+   
+   @NamedQuery(name = "Role.Count-hosts", query = "SELECT count(DISTINCT r.hostname) FROM Role r WHERE r.cluster = :cluster")
 })
+
 public class Role implements Serializable {
 
    @Id

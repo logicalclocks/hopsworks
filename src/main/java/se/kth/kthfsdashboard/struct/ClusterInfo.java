@@ -21,6 +21,7 @@ public class ClusterInfo {
    private Set<String> badServices = new HashSet<String>();
    private Set<String> badRoles = new HashSet<String>();
    private Map<String, Integer> rolesCount = new HashMap<String, Integer>();
+   private Map<String, String> rolesServicesMap = new HashMap<String, String>();   
    private Integer started;
    private Integer stopped;
 
@@ -53,6 +54,10 @@ public class ClusterInfo {
    public Integer roleCount(String role) {
       return rolesCount.get(role);
    }
+   
+   public String roleService(String role) {
+      return rolesServicesMap.get(role);
+   }
 
    public Health getClusterHealth() {
       if (badRoles.isEmpty()) {
@@ -83,6 +88,7 @@ public class ClusterInfo {
       for (Role role : rolesList) {
          services.add(role.getService());
          roles.add(role.getRole());
+         rolesServicesMap.put(role.getRole(), role.getService());
          if (role.getStatus() == Status.Started) {
             started += 1;
          } else {

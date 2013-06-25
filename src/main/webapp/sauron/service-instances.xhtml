@@ -17,8 +17,8 @@
 
             <script>
                 jQuery(document).ready(function() {
-                    jQuery('select[id*="Name"]').val('#{serviceInstanceController.role}');             
-                    jQuery('select[id*="Status1"]').val('#{serviceInstanceController.status}');
+                    jQuery('select[id*="Name"]').val('#{serviceInstancesController.role}');             
+                    jQuery('select[id*="Status1"]').val('#{serviceInstancesController.status}');
                 });
             </script>
 
@@ -36,14 +36,14 @@
                      </p:commandLink> 
                      <h:outputText value=" &raquo; "/>
                      <p:commandLink action="#{urlController.clusterStatus}" ajax="false">  
-                        <h:outputText value="#{serviceController.cluster}" />
-                        <f:param name="cluster" value="#{serviceController.cluster}"/>    
+                        <h:outputText value="#{serviceInstancesController.cluster}" />
+                        <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>    
                      </p:commandLink> 
                      <h:outputText value=" &raquo; "/>
                      <p:commandLink action="#{urlController.serviceStatus}" ajax="false">  
-                        <h:outputText value="#{serviceController.service}" />
-                        <f:param name="cluster" value="#{serviceController.cluster}"/>
-                        <f:param name="service" value="#{serviceController.service}"/>                          
+                        <h:outputText value="#{serviceInstancesController.service}" />
+                        <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                        <f:param name="service" value="#{serviceInstancesController.service}"/>                          
                      </p:commandLink>                      
                   </p:column>
                </p:row>
@@ -53,28 +53,28 @@
 
          <!-- Second Toolbar-->
          <h:form>  
-            <p:toolbar styleClass="SecondToolbarGood">  
+            <p:toolbar styleClass="SecondToolbar#{serviceStatusController.health}">
                <p:toolbarGroup align="left">  
                   <p:commandLink  action="#{urlController.serviceStatus}" ajax="false">
-                     <h:outputText value="#{serviceController.service}"/>
-                     <f:param name="cluster" value="#{serviceController.cluster}"/>
-                     <f:param name="service" value="#{serviceController.service}"/>                      
+                     <h:outputText value="#{serviceInstancesController.service}"/>
+                     <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                     <f:param name="service" value="#{serviceInstancesController.service}"/>                      
                   </p:commandLink>
 
                   <p:commandButton value="Status" icon="ui-icon-home" 
                                    action="#{urlController.serviceStatus}" ajax="false">
-                     <f:param name="cluster" value="#{serviceController.cluster}"/>
-                     <f:param name="service" value="#{serviceController.service}"/>
+                     <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                     <f:param name="service" value="#{serviceInstancesController.service}"/>
                   </p:commandButton>  
                   <p:commandButton styleClass="Selected" value="Instances" icon="ui-icon-note" 
                                    action="#{urlController.serviceInstances}">
-                     <f:param name="cluster" value="#{serviceController.cluster}"/>
-                     <f:param name="service" value="#{serviceController.service}"/>
+                     <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                     <f:param name="service" value="#{serviceInstancesController.service}"/>
                   </p:commandButton>  
                   <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" 
                                    action="#{urlController.serviceCommandHistory}">
-                     <f:param name="cluster" value="#{serviceController.cluster}"/>
-                     <f:param name="service" value="#{serviceController.service}"/>                      
+                     <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                     <f:param name="service" value="#{serviceInstancesController.service}"/>                      
                   </p:commandButton>  
                </p:toolbarGroup>  
 
@@ -95,11 +95,11 @@
 
             <p:panel id="panelInstances" header="Role Instances">
 
-               <p:dataTable id="instances" var="instance" value="#{serviceInstanceController.instances}" 
-                            widgetVar="instancesTable" filteredValue="#{serviceInstanceController.filteredInstances}" >
+               <p:dataTable id="instances" var="instance" value="#{serviceInstancesController.instances}" 
+                            widgetVar="instancesTable" filteredValue="#{serviceInstancesController.filteredInstances}" >
 
                   <p:column id="Name" headerText="Name" filterBy="#{instance.name}" filterMatchMode="contains" 
-                            filterOptions="#{serviceInstanceController.roleOptions}" filterPosition="top">
+                            filterOptions="#{serviceInstancesController.roleOptions}" filterPosition="top">
                      
                      <p:commandLink action="#{urlController.role()}" ajax="false">
                         <h:outputText value="#{instance.name}"/>
@@ -123,12 +123,12 @@
                   </p:column>
 
                   <p:column id="Status1" headerText="Status" filterBy="#{instance.status}" 
-                            filterMatchMode="exact" filterOptions="#{serviceInstanceController.statusOptions}" filterPosition="top">
+                            filterMatchMode="exact" filterOptions="#{serviceInstancesController.statusOptions}" filterPosition="top">
                      <h:outputText value="#{instance.status}"/>
                   </p:column>
 
                   <p:column id="Health" headerText="Health" filterBy="#{instance.health}"  
-                            filterMatchMode="exact" filterOptions="#{serviceInstanceController.healthOptions}" filterPosition="top">
+                            filterMatchMode="exact" filterOptions="#{serviceInstancesController.healthOptions}" filterPosition="top">
                      <div class="Health-#{instance.health}"><h:outputText value="#{instance.health}"/></div>
                   </p:column>
 

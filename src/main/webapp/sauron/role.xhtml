@@ -26,21 +26,21 @@
                      </p:commandLink> 
                      <h:outputText value=" &raquo; "/>
                      <p:commandLink action="#{urlController.clusterStatus}" ajax="false">  
-                        <h:outputText value="#{urlController.cluster}" />
-                        <f:param name="cluster" value="#{urlController.cluster}"/>    
+                        <h:outputText value="#{roleController.cluster}" />
+                        <f:param name="cluster" value="#{roleController.cluster}"/>    
                      </p:commandLink> 
                      <h:outputText value=" &raquo; "/>
                      <p:commandLink action="#{urlController.serviceStatus}" ajax="false">  
-                        <h:outputText value="#{urlController.service}" />
-                        <f:param name="cluster" value="#{urlController.cluster}"/>
-                        <f:param name="service" value="#{urlController.service}"/>                          
+                        <h:outputText value="#{roleController.service}" />
+                        <f:param name="cluster" value="#{roleController.cluster}"/>
+                        <f:param name="service" value="#{roleController.service}"/>                          
                      </p:commandLink>                      
                      <h:outputText value=" &raquo; "/>
-                     <p:commandLink action="#{urlController.gotoServiceInstances}" ajax="false">  
-                        <h:outputText value="#{urlController.role}" />
-                        <f:param name="cluster" value="#{urlController.cluster}"/>
-                        <f:param name="service" value="#{urlController.service}"/>
-                        <f:param name="role" value="#{urlController.role}"/>                                                  
+                     <p:commandLink action="#{urlController.serviceInstances()}" ajax="false">  
+                        <h:outputText value="#{roleController.role}" />
+                        <f:param name="cluster" value="#{roleController.cluster}"/>
+                        <f:param name="service" value="#{roleController.service}"/>
+                        <f:param name="role" value="#{roleController.role}"/>                                                  
                      </p:commandLink>  
                   </p:column>
                </p:row>
@@ -53,18 +53,18 @@
             <p:toolbar styleClass="SecondToolbar#{roleController.health}">  
                <p:toolbarGroup align="left">  
                   <p:commandLink  action="#{urlController.role}" ajax="false">
-                     <h:outputText value="#{urlController.role} (#{urlController.hostname})"/>
-                     <f:param name="cluster" value="#{urlController.cluster}"/>
-                     <f:param name="role" value="#{urlController.role}"/>
-                     <f:param name="service" value="#{urlController.service}"/>                              
-                     <f:param name="hostname" value="#{urlController.hostname}"/>
+                     <h:outputText value="#{roleController.role} (#{roleController.hostname})"/>
+                     <f:param name="cluster" value="#{roleController.cluster}"/>
+                     <f:param name="role" value="#{roleController.role}"/>
+                     <f:param name="service" value="#{roleController.service}"/>                              
+                     <f:param name="hostname" value="#{roleController.hostname}"/>
                   </p:commandLink>
 
                   <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{urlController.role}" ajax="false">
-                     <f:param name="cluster" value="#{urlController.cluster}"/>
-                     <f:param name="role" value="#{urlController.role}"/>
-                     <f:param name="service" value="#{urlController.service}"/>                             
-                     <f:param name="hostname" value="#{urlController.hostname}"/>                          
+                     <f:param name="cluster" value="#{roleController.cluster}"/>
+                     <f:param name="role" value="#{roleController.role}"/>
+                     <f:param name="service" value="#{roleController.service}"/>                             
+                     <f:param name="hostname" value="#{roleController.hostname}"/>                          
                   </p:commandButton>  
 
                </p:toolbarGroup>  
@@ -73,20 +73,20 @@
                   <p:menuButton value="Actions">  
                      <p:menuitem value="Start" actionListener="#{hostController.doCommand}" ajax ="true" update="@form :Instance"
                                  onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
-                        <f:param name="hostname" value="#{hostController.hostname}" />
-                        <f:param name="cluster" value="#{hostController.cluster}" />
-                        <f:param name="role" value="#{hostController.role}" />
-                        <f:param name="service" value="#{hostController.service}"/>                                   
+                        <f:param name="hostname" value="#{roleController.hostname}" />
+                        <f:param name="cluster" value="#{roleController.cluster}" />
+                        <f:param name="role" value="#{roleController.role}" />
+                        <f:param name="service" value="#{roleController.service}"/>                                   
                         <f:param name="command" value="start" />
                      </p:menuitem>
                      <p:menuitem id="stop_role" value="Stop" actionListener="#{hostController.doCommand}" 
                                  ajax ="true" update="@form :Instance"
                                  onstart="dlgAction.show();pollCreate.start();" 
                                  oncomplete="dlgAction.hide();pollCreate.stop();">
-                        <f:param name="hostname" value="#{hostController.hostname}" />
-                        <f:param name="cluster" value="#{hostController.cluster}" />
-                        <f:param name="role" value="#{hostController.role}" />
-                        <f:param name="service" value="#{hostController.service}"/>                                  
+                        <f:param name="hostname" value="#{roleController.hostname}" />
+                        <f:param name="cluster" value="#{roleController.cluster}" />
+                        <f:param name="role" value="#{roleController.role}" />
+                        <f:param name="service" value="#{roleController.service}"/>                                  
                         <f:param name="command" value="stop" />
                      </p:menuitem>
                   </p:menuButton>  
@@ -99,7 +99,7 @@
          <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
             <p:graphicImage library="images" name="ajaxloadingbar.gif" /> 
             <!--            <h:form>               
-                           <h:outputLabel id="statusCreate" value="#{hostController.messages.showMessage()}"/>
+                           <h:outputLabel id="statusCreate" value="# {hostController.messages.showMessage()}"/>
                            <p:poll widgetVar="pollCreate" interval="1" autoStart="false" update="statusCreate" async="true" partialSubmit="true" process="@this"/>            
                         </h:form>-->
          </p:dialog>          
@@ -126,7 +126,7 @@
                   </p:column>
                   <p:column headerText="Pid"><h:outputText value="#{instance.pid}"/></p:column>
                   <p:column headerText="Uptime"><h:outputText value="#{instance.uptime}"/></p:column>
-                  <p:column headerText="Web UI" rendered="#{serviceController.hasWebUi()}">
+                  <p:column headerText="Web UI" rendered="#{roleController.renderWebUi}">
                      <h:outputLink target="_blank" value="#{instance.webUiLink}">#{instance.webUiLabel}</h:outputLink>
                   </p:column>
                </p:dataTable> 
@@ -141,17 +141,17 @@
                <h:form id="logform">
                   <p:commandLink styleClass="AccordionPanelLink" value="Refresh Log" update="log"
                                  onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
-                     <f:param name="cluster" value="#{serviceController.cluster}"/>
-                     <f:param name="service" value="#{serviceController.service}"/>                       
-                     <f:param name="role" value="#{serviceController.role}"/>  
-                     <f:param name="hostname" value="#{serviceController.hostname}"/>
+                     <f:param name="cluster" value="#{roleController.cluster}"/>
+                     <f:param name="service" value="#{roleController.service}"/>                       
+                     <f:param name="role" value="#{roleController.role}"/>  
+                     <f:param name="hostname" value="#{roleController.hostname}"/>
                   </p:commandLink>
                   <p:panelGrid id="log" styleClass="LogOutput">
                      <p:row>
                         <p:column  styleClass="LogOutput column">
                            Stdout<br/>
                            <div>
-                              <h:outputText escape="false" value="#{serviceController.getRoleLog(20)}"/>
+                              <h:outputText escape="false" value="#{communicationController.getRoleLog(20)}"/>
                            </div>
                         </p:column>
                      </p:row>

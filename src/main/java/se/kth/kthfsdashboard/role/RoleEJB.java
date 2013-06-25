@@ -6,6 +6,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.kthfsdashboard.struct.StatusCount;
 
 /**
  *
@@ -65,6 +66,12 @@ public class RoleEJB {
               .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role);
       return query.getResultList();
    }
+   
+   public Role findOneRole(String cluster, String service, String role) {
+      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group-Role", Role.class)
+              .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role);
+      return query.getSingleResult();
+   }   
 
    public List<Role> findRoles(String cluster, String service, String role, Status status) {
       TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group-Role-Status", Role.class)
@@ -86,12 +93,19 @@ public class RoleEJB {
       return query.getSingleResult();
    }
 
-   public int countStatus(String cluster, String service, String role, Status status) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group-Role-Status", Role.class)
+   public Long countStatus(String cluster, String service, String role, Status status) {
+      TypedQuery<Long> query = em.createNamedQuery("Role.CountBy-Cluster-Service-Role-Status", Long.class)
               .setParameter("cluster", cluster).setParameter("service", service)
               .setParameter("role", role).setParameter("status", status);
-      return query.getResultList().size();
+      return query.getSingleResult();
    }
+   
+   public List<StatusCount> countStatus(String cluster, String service, String role) {
+      TypedQuery<StatusCount> query = em.createNamedQuery("Role.findStatusCountBy-Cluster-Group-Role", StatusCount.class)
+              .setParameter("cluster", cluster).setParameter("service", service)
+              .setParameter("role", role);
+      return query.getResultList();
+   }   
 
    public void persist(Role role) {
       em.persist(role);
