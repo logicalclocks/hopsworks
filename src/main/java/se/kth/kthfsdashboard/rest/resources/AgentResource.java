@@ -162,7 +162,7 @@ public class AgentResource {
             roleEjb.store(role);
          }
       } catch (Exception ex) {
-         logger.log(Level.SEVERE, "Exception: {0}", ex);
+         logger.log(Level.SEVERE, "Exception: ".concat(ex.getMessage()));
          return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
       }
       return Response.ok().build();

@@ -112,9 +112,9 @@ public class RoleEJB {
    }
 
    public void store(Role role) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.findBy.Cluster.Role.Hostname", Role.class)
+      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Service-Role-Hostname", Role.class)
               .setParameter("hostname", role.getHostname()).setParameter("cluster", role.getCluster())
-              .setParameter("role", role.getRole());
+              .setParameter("service", role.getService()).setParameter("role", role.getRole());
       List<Role> s = query.getResultList();
 
       if (s.size() > 0) {
