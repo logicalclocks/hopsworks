@@ -3,8 +3,10 @@ package se.kth.kthfsdashboard.role;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.kthfsdashboard.struct.StatusCount;
 
 /**
  *
@@ -18,8 +20,8 @@ public class RoleEJB {
 
    public RoleEJB() {
    }
-   
-   public Long countClusterMachines(String cluster) {
+
+   public Long clusterMachinesCount(String cluster) {
       TypedQuery<Long> query = em.createNamedQuery("Role.Count-hosts", Long.class)
               .setParameter("cluster", cluster);
       return query.getSingleResult();
@@ -36,11 +38,15 @@ public class RoleEJB {
       return query.getResultList();
    }
 
-   public Role find(String hostname, String cluster, String service, String role) {
+   public Role find(String hostname, String cluster, String service, String role) throws Exception{
       TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
               .setParameter("hostname", hostname).setParameter("cluster", cluster)
               .setParameter("service", service).setParameter("role", role);
-      return query.getSingleResult();
+      try {
+         return query.getSingleResult();
+      } catch (NoResultException ex) {
+         throw new Exception("NoResultException");
+      }
    }
 
    public List<Role> findRoles(String cluster) {
@@ -60,17 +66,17 @@ public class RoleEJB {
               .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role);
       return query.getResultList();
    }
+   
+   public Role findOneRole(String cluster, String service, String role) {
+      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group-Role", Role.class)
+              .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role);
+      return query.getSingleResult();
+   }   
 
    public List<Role> findRoles(String cluster, String service, String role, Status status) {
       TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group-Role-Status", Role.class)
               .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role)
               .setParameter("status", status);
-      return query.getResultList();
-   }
-
-   public List<Role> findByHostnameClusterRole(String host, String cluster, String role) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.findBy.Cluster.Role.Hostname", Role.class)
-              .setParameter("hostname", host).setParameter("role", role).setParameter("cluster", cluster);
       return query.getResultList();
    }
 
@@ -87,12 +93,19 @@ public class RoleEJB {
       return query.getSingleResult();
    }
 
-   public int countStatus(String cluster, String service, String role, Status status) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group-Role-Status", Role.class)
+   public Long countStatus(String cluster, String service, String role, Status status) {
+      TypedQuery<Long> query = em.createNamedQuery("Role.CountBy-Cluster-Service-Role-Status", Long.class)
               .setParameter("cluster", cluster).setParameter("service", service)
               .setParameter("role", role).setParameter("status", status);
-      return query.getResultList().size();
+      return query.getSingleResult();
    }
+   
+   public List<StatusCount> countStatus(String cluster, String service, String role) {
+      TypedQuery<StatusCount> query = em.createNamedQuery("Role.findStatusCountBy-Cluster-Group-Role", StatusCount.class)
+              .setParameter("cluster", cluster).setParameter("service", service)
+              .setParameter("role", role);
+      return query.getResultList();
+   }   
 
    public void persist(Role role) {
       em.persist(role);

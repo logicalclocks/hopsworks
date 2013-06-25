@@ -1,7 +1,6 @@
 package se.kth.kthfsdashboard.struct;
 
 import java.io.Serializable;
-import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.Status;
 
 /**

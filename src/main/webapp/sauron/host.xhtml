@@ -56,7 +56,6 @@
             <p:panel  header="Details">
                <p:dataTable id="host" var="host" value="#{hostController.host}">
                   <p:column headerText="IP"><h:outputText value="#{host.publicIp}"/></p:column>
-<!--                        <p:column headerText="Role(s)"><h:outputText value="#{host.role}"/></p:column>-->
                   <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
                   <p:column headerText="Last Heartbeat"><h:outputText value="#{host.lastHeartbeatFormatted} ago"/></p:column>
                   <p:column headerText="Number of Cores"><h:outputText value="#{host.cores}" /></p:column> 
@@ -138,7 +137,7 @@
                         <p:column  styleClass="LogOutput column">
                            Stdout<br/>
                            <div>
-                              <h:outputText escape="false" value="#{serviceController.getAgentLog(20)}"/>                       
+                              <h:outputText escape="false" value="#{communicationController.getAgentLog(20)}"/>                       
                            </div>
                         </p:column>
                      </p:row>

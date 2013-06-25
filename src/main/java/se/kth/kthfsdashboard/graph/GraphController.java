@@ -8,6 +8,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -35,6 +37,7 @@ public class GraphController implements Serializable {
    private String hostname;
    @ManagedProperty("#{param.service}")
    private String service;
+   @ManagedProperty("#{param.role}")
    private String role;
    private Date start;
    private Date end;
@@ -49,6 +52,7 @@ public class GraphController implements Serializable {
    private List<String> datanodeActivitiesGraphs;
    private List<String> mysqlclusterActivitiesGraphs;
    private static String URL_PATH = "/rest/collectd/graph?";
+   private static final Logger logger = Logger.getLogger(GraphController.class.getName());
 
    public GraphController() {
 
@@ -109,6 +113,11 @@ public class GraphController implements Serializable {
       end = new Date();
 
       period = "1h";
+   }
+   
+   @PostConstruct
+   public void init() {
+      logger.info("init GraphController");
    }
 
    public String getCluster() {
@@ -315,4 +324,28 @@ public class GraphController implements Serializable {
       }
       return UrlTools.addParams(URL_PATH, params);
    }
+   
+   public boolean showNamenodeGraphs() {
+      if (role.equals("namenode")) {
+         return true;
+      }
+      return false;
+   }
+
+   public boolean roleHasGraphs() {
+      if (role == null) {
+         return false;
+      }
+      if (role.equals("datanode") || role.equals("namenode")) {
+         return true;
+      }
+      return false;
+   }
+
+   public boolean showDatanodeGraphs() {
+      if (role.equals("datanode")) {
+         return true;
+      }
+      return false;
+   }   
 }

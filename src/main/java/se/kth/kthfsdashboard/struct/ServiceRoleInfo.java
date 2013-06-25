@@ -1,42 +1,40 @@
 package se.kth.kthfsdashboard.struct;
 
+import se.kth.kthfsdashboard.role.RoleType;
+
 /**
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
 public class ServiceRoleInfo {
 
-    private String name;
-    private String shortName;
+    private String fullName;
+    private String roleName;
     private String statusStarted;
     private String statusStopped;
     private String health;
 
 
-    public ServiceRoleInfo (String name, String shortName) {
-        this.name = name;
-        this.shortName = shortName;
+    public ServiceRoleInfo (String fullName, RoleType role) {
+        this.fullName = fullName;
+        this.roleName = role.toString();
     }
             
-    public ServiceRoleInfo (String name, String shortName, String statusStarted, String statusStopped, String health) {
-        this.name = name;
-        this.shortName = shortName;
-        this.statusStarted = statusStarted;
-        this.statusStopped = statusStopped;
-        this.health = health;
-                
+//    public ServiceRoleInfo (String name, String shortName, String statusStarted, String statusStopped, String health) {
+//        this.fullName = name;
+//        this.roleName = shortName;
+//        this.statusStarted = statusStarted;
+//        this.statusStopped = statusStopped;
+//        this.health = health;
+//                
+//    }
+//    
+    public String getFullName() {
+        return fullName;
     }
     
-    public String getName() {
-        return name;
-    }
-    
-    public String getShortName(){
-        return shortName;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public String getRoleName(){
+        return roleName;
     }
 
     public String getStatusStarted() {
@@ -62,6 +60,5 @@ public class ServiceRoleInfo {
     public void setHealth(String health) {
         this.health = health;
     }
-
 
 }

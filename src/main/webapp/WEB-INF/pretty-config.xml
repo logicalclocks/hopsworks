@@ -18,20 +18,20 @@
       <view-id value="/index.xhtml" />
    </url-mapping>
    
-   <url-mapping id="backup">
+<!--   <url-mapping id="backup">
       <pattern value="/sauron/backup" />
       <view-id value="/sauron/backup-restore.xhtml" />
-   </url-mapping> 
+   </url-mapping> -->
 
    <url-mapping id="setup">
       <pattern value="/sauron/setup" />
       <view-id value="/sauron/setup.xhtml" />
    </url-mapping> 
 
-   <url-mapping id="manageCluster">
+<!--   <url-mapping id="manageCluster">
       <pattern value="/sauron/managecluster" />
       <view-id value="/sauron/manageCluster.xhtml" />
-   </url-mapping> 
+   </url-mapping> -->
    
    <url-mapping id="hosts">
       <pattern value="/sauron/hosts" />

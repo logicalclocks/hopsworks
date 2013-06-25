@@ -21,7 +21,7 @@ import se.kth.kthfsdashboard.util.CookieTools;
  */
 @ManagedBean
 @RequestScoped
-public class ServiceInstanceController implements Serializable {
+public class ServiceInstancesController implements Serializable {
 
    @ManagedProperty("#{param.hostname}")
    private String hostname;
@@ -36,7 +36,7 @@ public class ServiceInstanceController implements Serializable {
    @EJB
    private RoleEJB roleEjb;
    List<InstanceInfo> instances = new ArrayList<InstanceInfo>();
-   private static Logger log = Logger.getLogger(ServiceInstanceController.class.getName());
+   private static Logger logger = Logger.getLogger(ServiceInstancesController.class.getName());
    private List<InstanceInfo> filteredInstances;
    private SelectItem[] statusOptions;
    private SelectItem[] hdfsRoleOptions;
@@ -62,7 +62,9 @@ public class ServiceInstanceController implements Serializable {
       healthStates = new String[]{"Good", "Bad"};
    }
 
-   public ServiceInstanceController() {
+   public ServiceInstancesController() {
+      
+      logger.info("ServiceInstancesController");
 
       statusOptions = createFilterOptions(statusStates);
       hdfsRoleOptions = createFilterOptions(hdfsRoles);
@@ -184,25 +186,5 @@ public class ServiceInstanceController implements Serializable {
       return healthOptions;
    }
 
-   public boolean getShowConfiguration() {
-      
-      if (service == null) {
-         return false;
-      }
-      if (service.equalsIgnoreCase(ServiceType.MySQLCluster.toString())) {
-         return true;
-      }
-      return false;
-   }
-   
-   public boolean getShowLog() {
-      
-      if (service == null) {
-         return false;
-      }
-      if (service.equalsIgnoreCase(ServiceType.MySQLCluster.toString())) {
-         return true;
-      }
-      return false;
-   }   
+     
 }

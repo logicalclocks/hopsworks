@@ -2,23 +2,15 @@ package se.kth.kthfsdashboard.mysql;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
-import javax.faces.event.ActionEvent;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
-import se.kth.kthfsdashboard.role.RoleEJB;
-import se.kth.kthfsdashboard.struct.NodesTableItem;
-import se.kth.kthfsdashboard.util.WebCommunication;
 
 /**
  *
@@ -28,48 +20,12 @@ import se.kth.kthfsdashboard.util.WebCommunication;
 @RequestScoped
 public class MySqlController implements Serializable {
 
-   @EJB
-   RoleEJB roleEjb;
-   @ManagedProperty("#{param.service}")
-   private String service;
-   @ManagedProperty("#{param.cluster}")
-   private String cluster;
-   private boolean flag;
-   private List<NodesTableItem> info;
+   private static final Logger logger = Logger.getLogger(MySqlController.class.getName());
    private UploadedFile file;
    MySQLAccess mysql = new MySQLAccess();
 
    public MySqlController() {
-   }
-
-   public String getService() {
-      return service;
-   }
-
-   public void setService(String service) {
-      this.service = service;
-   }
-
-   public void setCluster(String cluster) {
-      this.cluster = cluster;
-   }
-
-   public String getCluster() {
-      return cluster;
-   }
-
-   public List<NodesTableItem> getInfo() throws Exception {
-
-      info = loadItems();
-      return info;
-   }
-
-   public boolean getFlag() {
-      return flag;
-   }
-
-   public void setFlag(boolean flag) {
-      this.flag = flag;
+      logger.info("MysqlController");
    }
 
    public UploadedFile getFile() {
@@ -78,16 +34,6 @@ public class MySqlController implements Serializable {
 
    public void setFile(UploadedFile file) {
       this.file = file;
-   }
-
-   public void load(ActionEvent event) {
-
-      System.err.println("Loading...");
-      if (info != null) {
-         return;
-      }
-      info = loadItems();
-      setFlag(true);
    }
 
    public StreamedContent getBackup() throws IOException, InterruptedException {
@@ -116,22 +62,6 @@ public class MySqlController implements Serializable {
       }
 
       FacesContext.getCurrentInstance().addMessage(null, msg);
-   }
-
-   private List<NodesTableItem> loadItems() {
-      System.err.println("Load Items");      
-      // Finds hostname of mysqld
-      // Role=mysqld , Service=MySQLCluster, Cluster=cluster
-      final String ROLE = "mysqld";
-      List<NodesTableItem> results;
-      try {
-         String host = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostname();
-         WebCommunication wc = new WebCommunication();      
-         results = wc.getNdbinfoNodesTable(host);
-      } catch(Exception ex) {
-         results = new ArrayList<NodesTableItem>();
-      }
-      return results;
    }
 
    public void upload() {

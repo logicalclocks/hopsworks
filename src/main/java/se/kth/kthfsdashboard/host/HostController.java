@@ -3,13 +3,11 @@ package se.kth.kthfsdashboard.host;
 import com.sun.jersey.api.client.ClientResponse;
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
-import java.text.DecimalFormat;
-import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
@@ -19,18 +17,15 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.ws.rs.core.Response.Status.Family;
 import org.codehaus.jettison.json.JSONObject;
-import org.primefaces.context.RequestContext;
 import se.kth.kthfsdashboard.command.Command;
 import se.kth.kthfsdashboard.command.CommandEJB;
 import se.kth.kthfsdashboard.command.CommandMessageController;
-import se.kth.kthfsdashboard.log.Log;
-import se.kth.kthfsdashboard.log.LogEJB;
 import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
 import se.kth.kthfsdashboard.role.Status;
 import se.kth.kthfsdashboard.struct.DiskInfo;
 import se.kth.kthfsdashboard.util.CollectdTools;
-import se.kth.kthfsdashboard.util.WebCommunication;
+import se.kth.kthfsdashboard.communication.WebCommunication;
 
 
 /**
@@ -42,8 +37,6 @@ import se.kth.kthfsdashboard.util.WebCommunication;
 @RequestScoped
 public class HostController implements Serializable {
 
-   @EJB
-   private LogEJB logEJB;
    @EJB
    private HostEJB hostEJB;
    @EJB
@@ -75,11 +68,18 @@ public class HostController implements Serializable {
    private int cpuCount;
    private CollectdTools collectdTools = new CollectdTools();
    private HashMap<String, List<String>> commandsMap;
+   
+   private static final Logger logger = Logger.getLogger(HostController.class.getName());   
 
    public HostController() {
       commandsMap = new HashMap<String, List<String>>();
       commandsMap.put("all", Arrays.asList("install", "uninstall"));
    }
+   
+   @PostConstruct
+   public void init() {
+      logger.info("init HostController");
+   }   
 
    public String gotoHost() {
 //        FacesContext context = FacesContext.getCurrentInstance();
@@ -151,7 +151,11 @@ public class HostController implements Serializable {
    }
 
    public Host getHost() {
-      host = hostEJB.findHostByName(hostname);
+      try {
+         host = hostEJB.findHostByName(hostname);
+      } catch (Exception ex) {
+         logger.warning("Host ".concat(hostname).concat(" not found."));
+      }
       return host;
    }
 
@@ -159,98 +163,10 @@ public class HostController implements Serializable {
       return currentHostAvailable;
    }
 
-   public long getLastUpdate() {
-
-      Long time = logEJB.findLatestLogTime(hostname).longValue();
-      this.lastUpdate = (new Date()).getTime() / 1000 - time;
-      return lastUpdate;
-   }
-
-   public int getMemoryUsed() {
-
-      List<Log> logs = logEJB.findLatestLogForPlugin(hostname, "memory");
-
-      double total = 0, used = 0, free, cached, buffered;
-      DecimalFormat format = new DecimalFormat("#.##");
-
-      for (Log l : logs) {
-
-         String stringValue = l.getValues().substring(1, l.getValues().length() - 1);
-         double doubleValue;
-         try {
-            doubleValue = format.parse(stringValue).doubleValue();
-            total += doubleValue;
-            if (l.getTypeInstance().equals("used")) {
-               used = doubleValue;
-            }
-         } catch (Exception e) {
-            System.err.println("Exception:" + e);
-         }
-      }
-
-      this.memoryUsed = ((Long) (Math.round((used / total) * 100))).intValue();
-
-      return memoryUsed;
-   }
-
-   public int getSwapUsed() {
-
-      List<Log> logs = logEJB.findLatestLogForPlugin(hostname, "swap");
-
-      double total = 0, used = 0;
-      DecimalFormat format = new DecimalFormat("#.##");
-
-      for (Log l : logs) {
-
-         String stringValue = l.getValues().substring(1, l.getValues().length() - 1);
-         double doubleValue;
-         try {
-            doubleValue = format.parse(stringValue).doubleValue();
-
-            if (l.getType().equals("swap")) {
-               total += doubleValue;
-               if (l.getTypeInstance().equals("used")) {
-                  used = doubleValue;
-               }
-            }
-         } catch (Exception e) {
-            System.err.println("Exception:" + e);
-         }
-      }
-
-      this.swapUsed = ((Long) (Math.round((used / total) * 100))).intValue();
-      return swapUsed;
-   }
-
    public String getHealth() {
       return "Good!";
    }
 
-   public String getLoad() {
-
-      Log log = logEJB.findLatestLogForPluginAndType(hostname, "load", "load");
-
-      String loads = "";
-      for (String l : log.getValues().split("[\\[\\],]")) {
-         if (!loads.isEmpty()) {
-            loads += " ";
-         }
-         loads += l;
-      }
-      this.load = loads;
-
-      return load;
-   }
-
-   public List<DiskInfo> getDf() throws ParseException {
-
-      List<DiskInfo> diskInfoList = new ArrayList<DiskInfo>();
-      List<Log> logs = logEJB.findLatestLog(hostname, "df", "df");
-      for (Log log : logs) {
-         diskInfoList.add(new DiskInfo(log.getTypeInstance(), log.getValues()));
-      }
-      return diskInfoList;
-   }
 
    public String getInterfaces() {
 
