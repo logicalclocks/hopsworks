@@ -4,9 +4,11 @@
  */
 package se.kth.kthfsdashboard.virtualization;
 
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -19,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -60,7 +64,7 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-public final class ClusterVirtualizer {
+public final class ClusterProvision {
 
     private ComputeService service;
     private Provider provider;
@@ -70,7 +74,9 @@ public final class ClusterVirtualizer {
     private String publicKey;
     private String privateIP;
     private MessageController messages;
-    private Map<String, Set<? extends NodeMetadata>> nodes = new HashMap();
+    //private Map<String, Set<? extends NodeMetadata>> nodes = new HashMap();
+    private Map<String, Set<? extends NodeMetadata>> nodes =
+            new ConcurrentHashMap<String, Set<? extends NodeMetadata>>();
     private Map<NodeMetadata, List<String>> mgms = new HashMap();
     private Map<NodeMetadata, List<String>> ndbs = new HashMap();
     private Map<NodeMetadata, List<String>> mysqlds = new HashMap();
@@ -84,12 +90,12 @@ public final class ClusterVirtualizer {
     private CountDownLatch latch;
     private CopyOnWriteArraySet<NodeMetadata> pendingNodes;
     private int max = 0;
-    private int totalNodes=0;
+    private int totalNodes = 0;
     /*
-     * Constructor of a ClusterVirtualizer
+     * Constructor of a ClusterProvision
      */
 
-    public ClusterVirtualizer(VirtualizationController controller) {
+    public ClusterProvision(VirtualizationController controller) {
         this.provider = Provider.fromString(controller.getProvider());
         this.id = controller.getId();
         this.key = controller.getKey();
@@ -297,7 +303,7 @@ public final class ClusterVirtualizer {
                 //Identify the biggest group
                 max = max < group.getNumber() ? group.getNumber() : max;
                 //Fetch the total of nodes
-                totalNodes +=group.getNumber();
+                totalNodes += group.getNumber();
 
                 //Fetch the nodes info so we can launch first mgm before the rest!
                 //Supposing ideal approach that the users dont mix roles.
@@ -353,15 +359,70 @@ public final class ClusterVirtualizer {
         }
     }
 
+    public boolean parallelLaunchNodesBasicSetup(Cluster cluster) {
+        boolean status = true;
+
+        latch = new CountDownLatch(cluster.getNodes().size());
+        pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(cluster.getNodes().size()));
+        final TemplateBuilder kthfsTemplate = templateKTHFS(cluster, service.templateBuilder());
+        //Use better Our scriptbuilder abstraction
+        JHDFSScriptBuilder initScript = JHDFSScriptBuilder.builder()
+                .scriptType(JHDFSScriptBuilder.ScriptType.INIT)
+                .publicKey(publicKey)
+                .build();
+
+        selectProviderTemplateOptions(cluster, kthfsTemplate, initScript);
+
+        for (final NodeGroup group : cluster.getNodes()) {
+            messages.addMessage("Creating " + group.getNumber() + "  nodes in Security Group " + group.getSecurityGroup());
+            max = max < group.getNumber() ? group.getNumber() : max;
+            //Fetch the total of nodes
+            totalNodes += group.getNumber();
+            //Create async provision
+            //Generate function to store results when done
+            final StoreResults results = new StoreResults(group.getRoles(), latch);
+            //Generate listenable future that will store the results in the hashmap when done
+            ListenableFuture<Set<? extends NodeMetadata>> groupCreation =
+                    pool.submit(new Callable<Set<? extends NodeMetadata>>() {
+                @Override
+                public Set<? extends NodeMetadata> call() {
+                    Set<? extends NodeMetadata> ready = null;
+                    try {
+                        ready = service.createNodesInGroup(group.getSecurityGroup(), group.getNumber(), kthfsTemplate.build());
+
+                    } catch (RunNodesException e) {
+                        System.out.println("error adding nodes to group "
+                                + "ups something got wrong on the nodes");
+                    } finally {
+                        nodes.put(group.getSecurityGroup(), ready);
+                        messages.addMessage("Nodes created in Security Group " + group.getSecurityGroup() + " with "
+                                + "basic setup");
+                        return ready;
+                    }
+                }
+            });
+            Futures.transform(groupCreation, results);
+
+        }
+        try {
+            latch.await(totalNodes * 30, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            System.out.println("Failed to create the VMS");
+            status = false;
+        } finally {
+            return status;
+        }
+    }
     /*
      * Method for the install phase
      * 
      */
+
     public void installPhase() {
         //We specify a thread pool with the same number of nodes in the system and resources are
-        //Total Nodes*1.7
-        pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool((int)(totalNodes*1.7)));
-        JHDFSScriptBuilder.Builder scriptBuilder = 
+        //Total Nodes*2
+        pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool((int) (totalNodes * 2)));
+        JHDFSScriptBuilder.Builder scriptBuilder =
                 JHDFSScriptBuilder.builder().scriptType(JHDFSScriptBuilder.ScriptType.INSTALL);
         Set<NodeMetadata> groupLaunch = new HashSet<NodeMetadata>(mgms.keySet());
         groupLaunch.addAll(ndbs.keySet());
@@ -379,7 +440,7 @@ public final class ClusterVirtualizer {
      */
     public void deployingConfigurations(Cluster cluster) {
         //create pool of threads taking the biggest cluster
-        pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(max*2));
+        pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(max * 2));
         //latch = new CountDownLatch(mgmNodes.size());
         //First phase mgm configuration
         JHDFSScriptBuilder.Builder scriptBuilder = JHDFSScriptBuilder.builder()
@@ -446,360 +507,8 @@ public final class ClusterVirtualizer {
     }
 
     /*
-     * This is the code for the demo
-     * To be removed in a near future.
-     * Uses synchronous processes.
+     * Private methods for the virtualizer
      */
-    @Deprecated
-    public void demoOnly(Cluster cluster) {
-        messages.addMessage("Starting specific configuration of the nodes...");
-        //Fetch all the addresses we need.
-        List<String> ndbsDemo = new LinkedList();
-        List<String> mgmDemo = new LinkedList();
-        List<String> mysqlDemo = new LinkedList();
-        List<String> datanodesDemo = new LinkedList();
-        List<String> namenodesDemo = new LinkedList();
-
-        //Fetch the predefined group nodes in the demo cluster file
-        //I.E: ndb, mgm, mysql, datanodes,namenodes
-        //Once we find our group, get the node metadatas from our hashmap store and fetch their private IPs
-        //Add to the corresponding list
-        if (nodes.containsKey("ndb")) {
-            for (NodeMetadata node : nodes.get("ndb")) {
-                List<String> privateIPs = new LinkedList(node.getPrivateAddresses());
-                ndbsDemo.add(privateIPs.get(0));
-            }
-        }
-        if (nodes.containsKey("mgm")) {
-            for (NodeMetadata node : nodes.get("mgm")) {
-                List<String> privateIPs = new LinkedList(node.getPrivateAddresses());
-                mgmDemo.add(privateIPs.get(0));
-            }
-        }
-        if (nodes.containsKey("mysql")) {
-            for (NodeMetadata node : nodes.get("mysql")) {
-                List<String> privateIPs = new LinkedList(node.getPrivateAddresses());
-                mysqlDemo.add(privateIPs.get(0));
-            }
-        }
-        if (nodes.containsKey("namenodes")) {
-            for (NodeMetadata node : nodes.get("namenodes")) {
-                List<String> privateIPs = new LinkedList(node.getPrivateAddresses());
-                namenodesDemo.add(privateIPs.get(0));
-            }
-        }
-        if (nodes.containsKey("datanodes")) {
-            for (NodeMetadata node : nodes.get("datanodes")) {
-                List<String> privateIPs = new LinkedList(node.getPrivateAddresses());
-                datanodesDemo.add(privateIPs.get(0));
-            }
-        }
-
-        //Start the setup of the nodes
-        //First start with the MGM
-        //Shit code follows, done fast not proud of it, repeated as hell
-
-        JHDFSScriptBuilder.Builder jhdfsBuilder = JHDFSScriptBuilder.builder();
-        //All follow the same idea, we go over the security groups and fetch
-        messages.addMessage("Starting the MySQL Cluster....");
-        for (NodeGroup group : cluster.getNodes()) {
-            if (group.getSecurityGroup().equals("mgm")) {
-                messages.addMessage("Starting setup of mgm Node..");
-                //The nodes for that group from our hashmap store
-                Set<? extends NodeMetadata> elements = nodes.get(group.getSecurityGroup());
-                Iterator<? extends NodeMetadata> iter = elements.iterator();
-                //Iterate over
-                while (iter.hasNext()) {
-                    NodeMetadata data = iter.next();
-                    List<String> ips = new LinkedList<String>(data.getPrivateAddresses());
-
-
-                    //Prepare the script
-                    //ImmutableList.Builder<Statement> roleBuilder = ImmutableList.builder();
-                    //We build the json chef file
-                    messages.addMessage("Generating JSON chef file for node...");
-                    //createNodeConfiguration(roleBuilder, ndbsDemo, mgmDemo, mysqlDemo, namenodesDemo, data, group);
-                    //Append at the end of the script the need to launch the chef command and run the restart command
-                    //runChefSolo(roleBuilder);
-                    StatementList nodeConfig = new StatementList(
-                            jhdfsBuilder.scriptType(JHDFSScriptBuilder.ScriptType.JHDFS)
-                            .ndbs(ndbsDemo)
-                            .mgms(mgmDemo)
-                            .mysql(mysqlDemo)
-                            .namenodes(namenodesDemo)
-                            .roles(group.getRoles())
-                            .nodeIP(ips.get(0))
-                            .privateIP(privateIP)
-                            .clusterName(cluster.getName())
-                            .build());
-
-                    //We connect to the specific node using its metadata id and give him the json and the chef command to run
-                    messages.addMessage("Connecting by SSH to node, launch chef solo and run recipes...");
-                    service.runScriptOnNode(data.getId(), nodeConfig);
-                }
-            } else if (group.getSecurityGroup().equals("ndb")) {
-                messages.addMessage("Starting setup of ndb Node...");
-                Set<? extends NodeMetadata> elements = nodes.get(group.getSecurityGroup());
-                Iterator<? extends NodeMetadata> iter = elements.iterator();
-                while (iter.hasNext()) {
-                    NodeMetadata data = iter.next();
-                    List<String> ips = new LinkedList<String>(data.getPrivateAddresses());
-                    //Prepare the script
-                    //ImmutableList.Builder<Statement> roleBuilder = ImmutableList.builder();
-                    //We build the json chef file
-                    messages.addMessage("Generating JSON chef file for node...");
-                    //createNodeConfiguration(roleBuilder, ndbsDemo, mgmDemo, mysqlDemo, namenodesDemo, data, group);
-                    //Append at the end of the script the need to launch the chef command and run the restart command
-                    //runChefSolo(roleBuilder);
-                    StatementList nodeConfig = new StatementList(
-                            jhdfsBuilder.scriptType(JHDFSScriptBuilder.ScriptType.JHDFS)
-                            .ndbs(ndbsDemo)
-                            .mgms(mgmDemo)
-                            .mysql(mysqlDemo)
-                            .namenodes(namenodesDemo)
-                            .roles(group.getRoles())
-                            .nodeIP(ips.get(0))
-                            .privateIP(privateIP)
-                            .build());
-
-                    //We connect to the specific node using its metadata id and give him the json and the chef command to run
-                    messages.addMessage("Connecting by SSH to node, launch chef solo and run recipes...");
-                    service.runScriptOnNode(data.getId(), nodeConfig);
-                }
-            } else if (group.getSecurityGroup().equals("mysql")) {
-                messages.addMessage("Starting setup of MySQLd Node..");
-                Set<? extends NodeMetadata> elements = nodes.get(group.getSecurityGroup());
-                Iterator<? extends NodeMetadata> iter = elements.iterator();
-                while (iter.hasNext()) {
-                    NodeMetadata data = iter.next();
-                    List<String> ips = new LinkedList<String>(data.getPrivateAddresses());
-
-
-                    //Prepare the script
-                    //We build the json chef file
-                    messages.addMessage("Generating JSON chef file for node...");
-                    //Append at the end of the script the need to launch the chef command and run the restart command
-
-                    StatementList nodeConfig = new StatementList(
-                            jhdfsBuilder.scriptType(JHDFSScriptBuilder.ScriptType.JHDFS)
-                            .ndbs(ndbsDemo)
-                            .mgms(mgmDemo)
-                            .mysql(mysqlDemo)
-                            .namenodes(namenodesDemo)
-                            .roles(group.getRoles())
-                            .nodeIP(ips.get(0))
-                            .privateIP(privateIP)
-                            .build());
-
-                    //We connect to the specific node using its metadata id and give him the json and the chef command to run
-                    messages.addMessage("Connecting by SSH to node, launch chef solo and run recipes...");
-                    service.runScriptOnNode(data.getId(), nodeConfig);
-                }
-            } else if (group.getSecurityGroup().equals("namenodes")) {
-                messages.addMessage("Starting setup of Namenode");
-                Set<? extends NodeMetadata> elements = nodes.get(group.getSecurityGroup());
-                Iterator<? extends NodeMetadata> iter = elements.iterator();
-                while (iter.hasNext()) {
-                    NodeMetadata data = iter.next();
-                    List<String> ips = new LinkedList<String>(data.getPrivateAddresses());
-
-
-                    //Prepare the script
-                    //ImmutableList.Builder<Statement> roleBuilder = ImmutableList.builder();
-                    //We build the json chef file
-                    messages.addMessage("Generating JSON chef file for node...");
-                    //createNodeConfiguration(roleBuilder, ndbsDemo, mgmDemo, mysqlDemo, namenodesDemo, data, group);
-                    //Append at the end of the script the need to launch the chef command and run the restart command
-                    //runChefSolo(roleBuilder);
-                    StatementList nodeConfig = new StatementList(
-                            jhdfsBuilder.scriptType(JHDFSScriptBuilder.ScriptType.JHDFS)
-                            .ndbs(ndbsDemo)
-                            .mgms(mgmDemo)
-                            .mysql(mysqlDemo)
-                            .namenodes(namenodesDemo)
-                            .roles(group.getRoles())
-                            .nodeIP(ips.get(0))
-                            .privateIP(privateIP)
-                            .build());
-
-                    //We connect to the specific node using its metadata id and give him the json and the chef command to run
-                    messages.addMessage("Connecting by SSH to node, launch chef solo and run recipes...");
-                    service.runScriptOnNode(data.getId(), nodeConfig);
-                }
-            } else if (group.getSecurityGroup().equals("datanodes")) {
-                messages.addMessage("Starting setup of Datanode");
-                Set<? extends NodeMetadata> elements = nodes.get(group.getSecurityGroup());
-                Iterator<? extends NodeMetadata> iter = elements.iterator();
-                while (iter.hasNext()) {
-                    NodeMetadata data = iter.next();
-                    List<String> ips = new LinkedList<String>(data.getPrivateAddresses());
-
-
-                    //Prepare the script
-                    //ImmutableList.Builder<Statement> roleBuilder = ImmutableList.builder();
-                    //We build the json chef file
-                    messages.addMessage("Generating JSON chef file for node...");
-                    //createNodeConfiguration(roleBuilder, ndbsDemo, mgmDemo, mysqlDemo, namenodesDemo, data, group);
-                    //Append at the end of the script the need to launch the chef command and run the restart command
-                    //runChefSolo(roleBuilder);
-                    StatementList nodeConfig = new StatementList(
-                            jhdfsBuilder.scriptType(JHDFSScriptBuilder.ScriptType.JHDFS)
-                            .ndbs(ndbsDemo)
-                            .mgms(mgmDemo)
-                            .mysql(mysqlDemo)
-                            .namenodes(namenodesDemo)
-                            .roles(group.getRoles())
-                            .nodeIP(ips.get(0))
-                            .privateIP(privateIP)
-                            .build());
-
-                    //We connect to the specific node using its metadata id and give him the json and the chef command to run
-                    messages.addMessage("Connecting by SSH to node, launch chef solo and run recipes...");
-                    service.runScriptOnNode(data.getId(), nodeConfig);
-                }
-            }
-        }
-
-//
-//        //All follow the same description
-//        for (NodeGroup group : cluster.getNodes()) {
-//            if (group.getSecurityGroup().equals("ndb")) {
-//                messages.addMessage("Starting setup of ndb Node...");
-//                Set<? extends NodeMetadata> elements = nodes.get(group.getSecurityGroup());
-//                Iterator<? extends NodeMetadata> iter = elements.iterator();
-//                while (iter.hasNext()) {
-//                    NodeMetadata data = iter.next();
-//                    List<String> ips = new LinkedList<String>(data.getPrivateAddresses());
-//                    //Prepare the script
-//                    //ImmutableList.Builder<Statement> roleBuilder = ImmutableList.builder();
-//                    //We build the json chef file
-//                    messages.addMessage("Generating JSON chef file for node...");
-//                    //createNodeConfiguration(roleBuilder, ndbsDemo, mgmDemo, mysqlDemo, namenodesDemo, data, group);
-//                    //Append at the end of the script the need to launch the chef command and run the restart command
-//                    //runChefSolo(roleBuilder);
-//                    StatementList nodeConfig = new StatementList(
-//                            jhdfsBuilder.scriptType(JHDFSScriptBuilder.ScriptType.JHDFS)
-//                            .ndbs(ndbsDemo)
-//                            .mgms(mgmDemo)
-//                            .mysql(mysqlDemo)
-//                            .namenodes(namenodesDemo)
-//                            .roles(group.getRoles())
-//                            .nodeIP(ips.get(0))
-//                            .privateIP(privateIP)
-//                            .build());
-//
-//                    //We connect to the specific node using its metadata id and give him the json and the chef command to run
-//                    messages.addMessage("Connecting by SSH to node, launch chef solo and run recipes...");
-//                    service.runScriptOnNode(data.getId(), nodeConfig);
-//                }
-//            }
-//           
-//        }
-//
-//        for (NodeGroup group : cluster.getNodes()) {
-//            if (group.getSecurityGroup().equals("mysql")) {
-//                messages.addMessage("Starting setup of MySQLd Node..");
-//                Set<? extends NodeMetadata> elements = nodes.get(group.getSecurityGroup());
-//                Iterator<? extends NodeMetadata> iter = elements.iterator();
-//                while (iter.hasNext()) {
-//                    NodeMetadata data = iter.next();
-//                    List<String> ips = new LinkedList<String>(data.getPrivateAddresses());
-//
-//
-//                    //Prepare the script
-//                    //We build the json chef file
-//                    messages.addMessage("Generating JSON chef file for node...");
-//                    //Append at the end of the script the need to launch the chef command and run the restart command
-//
-//                    StatementList nodeConfig = new StatementList(
-//                            jhdfsBuilder.scriptType(JHDFSScriptBuilder.ScriptType.JHDFS)
-//                            .ndbs(ndbsDemo)
-//                            .mgms(mgmDemo)
-//                            .mysql(mysqlDemo)
-//                            .namenodes(namenodesDemo)
-//                            .roles(group.getRoles())
-//                            .nodeIP(ips.get(0))
-//                            .privateIP(privateIP)
-//                            .build());
-//
-//                    //We connect to the specific node using its metadata id and give him the json and the chef command to run
-//                    messages.addMessage("Connecting by SSH to node, launch chef solo and run recipes...");
-//                    service.runScriptOnNode(data.getId(), nodeConfig);
-//                }
-//            }
-//        }
-//
-//        messages.addMessage("Starting Hadoop nodes...");
-//        for (NodeGroup group : cluster.getNodes()) {
-//            if (group.getSecurityGroup().equals("namenodes")) {
-//                messages.addMessage("Starting setup of Namenode");
-//                Set<? extends NodeMetadata> elements = nodes.get(group.getSecurityGroup());
-//                Iterator<? extends NodeMetadata> iter = elements.iterator();
-//                while (iter.hasNext()) {
-//                    NodeMetadata data = iter.next();
-//                    List<String> ips = new LinkedList<String>(data.getPrivateAddresses());
-//
-//
-//                    //Prepare the script
-//                    //ImmutableList.Builder<Statement> roleBuilder = ImmutableList.builder();
-//                    //We build the json chef file
-//                    messages.addMessage("Generating JSON chef file for node...");
-//                    //createNodeConfiguration(roleBuilder, ndbsDemo, mgmDemo, mysqlDemo, namenodesDemo, data, group);
-//                    //Append at the end of the script the need to launch the chef command and run the restart command
-//                    //runChefSolo(roleBuilder);
-//                    StatementList nodeConfig = new StatementList(
-//                            jhdfsBuilder.scriptType(JHDFSScriptBuilder.ScriptType.JHDFS)
-//                            .ndbs(ndbsDemo)
-//                            .mgms(mgmDemo)
-//                            .mysql(mysqlDemo)
-//                            .namenodes(namenodesDemo)
-//                            .roles(group.getRoles())
-//                            .nodeIP(ips.get(0))
-//                            .privateIP(privateIP)
-//                            .build());
-//
-//                    //We connect to the specific node using its metadata id and give him the json and the chef command to run
-//                    messages.addMessage("Connecting by SSH to node, launch chef solo and run recipes...");
-//                    service.runScriptOnNode(data.getId(), nodeConfig);
-//                }
-//            }
-//        }
-//        for (NodeGroup group : cluster.getNodes()) {
-//            if (group.getSecurityGroup().equals("datanodes")) {
-//                messages.addMessage("Starting setup of Datanode");
-//                Set<? extends NodeMetadata> elements = nodes.get(group.getSecurityGroup());
-//                Iterator<? extends NodeMetadata> iter = elements.iterator();
-//                while (iter.hasNext()) {
-//                    NodeMetadata data = iter.next();
-//                    List<String> ips = new LinkedList<String>(data.getPrivateAddresses());
-//
-//
-//                    //Prepare the script
-//                    //ImmutableList.Builder<Statement> roleBuilder = ImmutableList.builder();
-//                    //We build the json chef file
-//                    messages.addMessage("Generating JSON chef file for node...");
-//                    //createNodeConfiguration(roleBuilder, ndbsDemo, mgmDemo, mysqlDemo, namenodesDemo, data, group);
-//                    //Append at the end of the script the need to launch the chef command and run the restart command
-//                    //runChefSolo(roleBuilder);
-//                    StatementList nodeConfig = new StatementList(
-//                            jhdfsBuilder.scriptType(JHDFSScriptBuilder.ScriptType.JHDFS)
-//                            .ndbs(ndbsDemo)
-//                            .mgms(mgmDemo)
-//                            .mysql(mysqlDemo)
-//                            .namenodes(namenodesDemo)
-//                            .roles(group.getRoles())
-//                            .nodeIP(ips.get(0))
-//                            .privateIP(privateIP)
-//                            .build());
-//
-//                    //We connect to the specific node using its metadata id and give him the json and the chef command to run
-//                    messages.addMessage("Connecting by SSH to node, launch chef solo and run recipes...");
-//                    service.runScriptOnNode(data.getId(), nodeConfig);
-//                }
-//            }
-//        }
-    }
-
     private ComputeService initContext() {
 
         //We define the properties of our service
@@ -949,7 +658,6 @@ public final class ClusterVirtualizer {
                 JHDFSScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node));
                 ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
                         RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
-//              
                 future.addListener(new nodeStatusTracker(node, latch, pendingNodes, future), pool);
             }
             try {
@@ -968,7 +676,7 @@ public final class ClusterVirtualizer {
             }
         }
     }
-    
+
     private void nodeInstall(Set<NodeMetadata> nodes, JHDFSScriptBuilder.Builder scriptBuilder) {
         if (!nodes.isEmpty()) {
             //Initialize countdown latch
@@ -999,6 +707,64 @@ public final class ClusterVirtualizer {
                 }
                 e.printStackTrace();
             }
+        }
+    }
+
+    /*
+     * Do better
+     */
+    private class StoreResults implements Function<Set<? extends NodeMetadata>, Void> {
+
+        CountDownLatch latch;
+        List<String> rolesList;
+
+        public StoreResults(List<String> roles, CountDownLatch latch) {
+            this.rolesList = roles;
+            this.latch = latch;
+        }
+
+        @Override
+        public Void apply(Set<? extends NodeMetadata> input) {
+
+            Set<String> roles = new HashSet(rolesList);
+            if (roles.contains("MySQLCluster-mgm")) {
+                Iterator<? extends NodeMetadata> iter = input.iterator();
+                while (iter.hasNext()) {
+                    //Add private ip to mgm
+                    NodeMetadata node = iter.next();
+                    mgmIP.addAll(node.getPrivateAddresses());
+                    mgms.put(node, rolesList);
+                }
+            } else if (roles.contains("MySQLCluster-ndb")) {
+                Iterator<? extends NodeMetadata> iter = input.iterator();
+                while (iter.hasNext()) {
+                    NodeMetadata node = iter.next();
+                    ndbsIP.addAll(node.getPrivateAddresses());
+                    ndbs.put(node, rolesList);
+                }
+            } else if (roles.contains("MySQLCluster-mysqld")) {
+                Iterator<? extends NodeMetadata> iter = input.iterator();
+                while (iter.hasNext()) {
+                    NodeMetadata node = iter.next();
+                    mySQLClientsIP.addAll(node.getPrivateAddresses());
+                    mysqlds.put(node, rolesList);
+                }
+            } else if (roles.contains("KTHFS-namenode")) {
+                Iterator<? extends NodeMetadata> iter = input.iterator();
+                while (iter.hasNext()) {
+                    NodeMetadata node = iter.next();
+                    namenodesIP.addAll(node.getPrivateAddresses());
+                    namenodes.put(node, rolesList);
+                }
+            } else if (roles.contains("KTHFS-datanode")) {
+                Iterator<? extends NodeMetadata> iter = input.iterator();
+                while (iter.hasNext()) {
+                    NodeMetadata node = iter.next();
+                    datanodes.put(node, rolesList);
+                }
+            }
+            latch.countDown();
+            return null;
         }
     }
 }
