@@ -49,6 +49,7 @@ public class CollectdResource {
            @QueryParam("n") int n) throws InterruptedException, IOException {
 
       CollectdTools collectdTools = new CollectdTools();
+      System.err.println(chartType);
       try {
          ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
          InputStream inputStream = collectdTools.getGraphStream(chartType, hostname, plugin, pluginInstance, type, typeInstance, ds, start, end, n);
@@ -57,7 +58,7 @@ public class CollectdResource {
          byte[] imageData = byteArrayOutputStream.toByteArray();
          return Response.ok(new ByteArrayInputStream(imageData)).build();
       } catch (Exception e) {
-         logger.log(Level.SEVERE, "Image == null");
+         logger.log(Level.SEVERE, "CollectdResource >> Image == null : check rrd file for {0}: {1}/{2} @ {3} " , new Object[] {chartType, plugin, pluginInstance, hostname});
          return Response.status(Response.Status.NOT_FOUND).build();
       }
    }

@@ -127,10 +127,11 @@
 
          <p:spacer width="1" height="25" />
 
-
+         
          <p:accordionPanel activeIndex="-1">
+         <!--<p:accordionPanel activeIndex="-1" dynamic="true" cache="true">-->
 
-            <p:tab title="Recent Log" rendered="#{serviceStatusController.renderLog()}">
+         <p:tab title="Recent Log" rendered="#{serviceStatusController.renderLog()}">
                <h:form id="logform">
                   <p:commandLink styleClass="AccordionPanelLink" value="Refresh Log" update="log"
                                  onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
@@ -188,7 +189,7 @@
            
          </p:accordionPanel>
 
-         <p:spacer width="1" height="25" />          
+         <p:spacer width="1" height="25" />
 
          <h:form id="formdate" style="text-align: center">  
             <h:panelGrid columns="10"> 
@@ -220,7 +221,8 @@
                <p:toolbar>
                   <p:toolbarGroup align="left"><p:outputLabel value="Name Node Info"/></p:toolbarGroup>
                </p:toolbar>
-               <p:dataGrid  var="g" value="#{graphController.namenodeServiceGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+               <p:dataGrid  var="g" value="#{graphController.namenodeServiceGraphs}" columns="#{settingsController.numOfGraphColumns}"  
+                            paginator="false" styleClass="ui-datagrid-no-border" >  
                   <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}" />  
                </p:dataGrid> 
 
@@ -238,12 +240,16 @@
                -->
             </p:outputPanel>
 
-            <p:outputPanel rendered="#{serviceStatusController.renderMySQLClusterGraphs()}">
+            <p:outputPanel rendered="#{serviceStatusController.renderMySQLClusterGraphs()}" >
                <p:toolbar>
                   <p:toolbarGroup align="left"><p:outputLabel value="MySQL Cluster NDB Info"/></p:toolbarGroup>
                </p:toolbar>
                <p:dataGrid  var="g" value="#{graphController.mysqlclusterActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                  <p:graphicImage value="#{graphController.mysqlclusterGraphUrl(g)}" />
+
+                  <p:graphicImage value="#{graphController.mysqlclusterGraphUrl(g)}" alt="Graph not available." rendered="false">
+                    
+                  </p:graphicImage>                      
+                
                </p:dataGrid>
             </p:outputPanel>
 

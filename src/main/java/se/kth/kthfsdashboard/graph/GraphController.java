@@ -312,6 +312,7 @@ public class GraphController implements Serializable {
       String host = roles.size() > 0 ? roles.get(0).getHostname() : "";
       HashMap<String, String> params = new HashMap<String, String>();
       params.put("chart_type", chartType);
+      params.put("plugin", "dbi-ndbinfo");      
       params.put("start", getStartTime().toString());
       params.put("end", getEndTime().toString());
       params.put("hostname", host);
