@@ -1,0 +1,144 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      >
+
+    <h:body>
+        <ui:composition>
+
+            <div id="createWizard" >
+                <h:form>
+
+                    <p:growl id="growl" sticky="true" showDetail="true"/>
+
+                    <p:wizard widgetVar="wiz"
+                              flowListener="#{clusterProvisionController.onFlowProcess}" >
+
+                        <p:tab id="clusterCommon" title="Common">
+
+                            <p:panel header="Common Parameters">
+
+                                <h:messages errorClass="error"/>
+
+                                <h:panelGrid columns="2" columnClasses="label, value" styleClass="grid">
+                                    <h:outputText value="Cluster name: *" />
+                                    <p:inputText required="false" label="name"
+                                                 value="#{clusterProvisionController.cluster.name}" />
+
+                                    <h:outputText value="Environment: *" />
+                                    <h:selectOneMenu id="environment" value="#{clusterProvisionController.cluster.environment}">
+                                        <f:selectItems value="#{clusterProvisionController.options.environment}" />
+
+                                    </h:selectOneMenu>
+                                    <h:outputText value="Global Services:" />
+                                    <p:inputText value="#{clusterProvisionController.cluster.globalServices}" />
+                                    <h:outputText value="Authorize Ports:" />
+                                    <p:inputText value="#{clusterProvisionController.cluster.authorizePorts}" />
+                                    <h:outputText value="Specific Extra Ports:" />
+                                    <p:inputText value="#{clusterProvisionController.cluster.authorizeSpecificPorts}" />
+
+                                </h:panelGrid>
+                            </p:panel>
+                        </p:tab>
+
+                        <p:tab id="provider" title="Provider">
+                            <p:panel header="Provider Details">
+
+                                <h:messages errorClass="error"/>
+
+                                <h:panelGrid columns="2" columnClasses="label, value">
+                                    <h:outputText value="Name: " />
+                                    <h:selectOneMenu id="providers" value="#{clusterProvisionController.cluster.provider.name}">
+                                        <f:selectItems value="#{clusterProvisionController.options.provider}" />
+                                        <p:ajax listener="#{partialProcessingController.handleProviderChange}"
+                                                event="change" process="@this"/>
+                                    </h:selectOneMenu>
+
+                                    <h:outputText value="Instance Type: " />
+                                    <h:selectOneMenu id="instances" value="#{clusterProvisionController.cluster.provider.instanceType}" rendered="true">
+                                        <f:selectItems value="#{clusterProvisionController.options.ec2Regions}" />
+                                        <p:ajax listener="#{partialProcessingController.handleProviderChange}"
+                                                event="change" process="@this"/>
+                                    </h:selectOneMenu>
+                                    <p:inputText value="#{clusterProvisionController.cluster.provider.image}" rendered="false"/>
+
+                                    <h:outputText value="Image: " />
+                                    <p:inputText value="#{clusterProvisionController.cluster.provider.image}" />
+
+                                    <h:outputText value="Override login user:" />
+                                    <p:inputText value="#{clusterProvisionController.cluster.provider.loginUser}" />
+
+                                    <h:outputText value="Region:" />
+                                    <p:inputText value="#{clusterProvisionController.cluster.provider.region}" />
+
+                                    <h:outputText value="Zones:" />
+                                    <p:inputText value="#{clusterProvisionController.cluster.provider.zones}" />
+                                </h:panelGrid>
+                            </p:panel>
+                        </p:tab>
+
+                        <p:tab id="nodeGroups" title="Groups">
+                            <p:panel header="Cluster Nodes">
+
+                                <h:messages errorClass="error"/>
+
+                                <h:panelGrid columns="2" columnClasses="label, value">
+                                    <h:outputText value="Email: " />
+                                    <p:inputText required="false" label="Email"
+                                                 value="test" />
+
+                                    <h:outputText value="Phone: " />
+                                    <p:inputText value="test"/>
+
+                                    <h:outputText value="Additional Info: " />
+                                    <p:inputText value="test"/>
+                                    <h:outputText value="Skip chef: " />
+                                    <h:selectBooleanCheckbox value="#{clusterProvisionController.skip}" />
+                                </h:panelGrid>
+                            </p:panel>
+                        </p:tab>
+
+                        <p:tab id="chefAttributes" title="Override Chef">
+                            <p:panel header="Override Chef">
+
+                                <h:messages errorClass="error"/>
+
+                                <h:panelGrid columns="2" columnClasses="label, value">
+                                    <h:outputText value="Email: " />
+                                    <p:inputText required="false" label="Email"
+                                                 value="test" />
+
+                                    <h:outputText value="Phone: " />
+                                    <p:inputText value="test"/>
+
+                                    <h:outputText value="Additional Info: " />
+                                    <p:inputText value="test"/>
+                                </h:panelGrid>
+                            </p:panel>
+                        </p:tab>
+                        <p:tab id="confirm" title="Confirmation">
+                            <p:panel header="Confirmation">
+
+                                <h:panelGrid id="confirmation" columns="6">
+
+                                </h:panelGrid>
+
+                                <p:commandButton value="Submit" update="growl" 
+                                                 action="proceedLaunchCluster"/>
+
+                            </p:panel>
+                        </p:tab>
+
+                    </p:wizard>
+
+                </h:form>
+            </div>
+        </ui:composition>
+    </h:body>
+</html>
+
