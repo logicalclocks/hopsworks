@@ -4,7 +4,6 @@ import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import se.kth.kthfsdashboard.role.*;
 
 /**
  *
@@ -14,8 +13,8 @@ import se.kth.kthfsdashboard.role.*;
 @RequestScoped
 public class UrlController {
 
-   @ManagedProperty("#{param.hostname}")
-   private String hostname;
+   @ManagedProperty("#{param.hostid}")
+   private String hostId;
    @ManagedProperty("#{param.role}")
    private String role;
    @ManagedProperty("#{param.service}")
@@ -47,12 +46,12 @@ public class UrlController {
       this.service = service;
    }
 
-   public String getHostname() {
-      return hostname;
+   public String getHostId() {
+      return hostId;
    }
 
-   public void setHostname(String hostname) {
-      this.hostname = hostname;
+   public void setHostId(String hostId) {
+      this.hostId = hostId;
    }
 
    public void setCluster(String cluster) {
@@ -72,7 +71,7 @@ public class UrlController {
    }   
 
    public String host() {
-      return "host?faces-redirect=true&hostname=" + hostname;
+      return "host?faces-redirect=true&hostid=" + hostId;
    }   
 
    public String clusterStatus() {
@@ -80,8 +79,8 @@ public class UrlController {
    }
 
    public String serviceInstance() {
-      return "services-instances-status?faces-redirect=true&hostname="
-              + hostname + "&cluster=" + cluster + "&role=" + role;
+      return "services-instances-status?faces-redirect=true&hostid="
+              + hostId + "&cluster=" + cluster + "&role=" + role;
    }
 
    public String clusterCommandHistory() {
@@ -94,8 +93,8 @@ public class UrlController {
 
    public String serviceInstances() {
       String url = "service-instances?faces-redirect=true";
-      if (hostname != null) {
-         url += "&hostname=" + hostname;
+      if (hostId != null) {
+         url += "&hostid=" + hostId;
       }
       if (cluster != null) {
          url += "&cluster=" + cluster;
@@ -117,7 +116,7 @@ public class UrlController {
    }
 
    public String role() {
-      return "role?faces-redirect=true&hostname=" + hostname + "&cluster=" + cluster
+      return "role?faces-redirect=true&hostid=" + hostId + "&cluster=" + cluster
               + "&service=" + service + "&role=" + role;
    }
    

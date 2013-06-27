@@ -14,29 +14,28 @@ import se.kth.kthfsdashboard.struct.Health;
 @NamedQueries({
    @NamedQuery(name = "Role.findClusters", query = "SELECT DISTINCT r.cluster FROM Role r"),
    @NamedQuery(name = "Role.findServices", query = "SELECT DISTINCT r.service FROM Role r WHERE r.cluster = :cluster"),
-   @NamedQuery(name = "Role.find", query = "SELECT r FROM Role r WHERE r.hostname = :hostname AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),
+   @NamedQuery(name = "Role.find", query = "SELECT r FROM Role r WHERE r.hostId = :hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),
    @NamedQuery(name = "Role.findBy.Cluster", query = "SELECT r FROM Role r WHERE r.cluster = :cluster"),
    @NamedQuery(name = "Role.findBy-Cluster-Group", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service"),
    @NamedQuery(name = "Role.findBy-Cluster-Group-Role", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
-   @NamedQuery(name = "Role.findBy-Cluster-Service-Role-Hostname", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.hostname = :hostname"),
+   @NamedQuery(name = "Role.findBy-Cluster-Service-Role-HostId", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.hostId = :hostId"),
    @NamedQuery(name = "Role.findBy-Cluster-Group-Role-Status", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
 
    
    // need this?   
-   @NamedQuery(name = "Role.findHostnameBy-Cluster-Group-Role", query = "SELECT r.hostname FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role ORDER BY r.hostname"),
+   @NamedQuery(name = "Role.findHostIdBy-Cluster-Group-Role", query = "SELECT r.hostId FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role ORDER BY r.hostId"),
    @NamedQuery(name = "Role.Count", query = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
    @NamedQuery(name = "Role.CountBy-Cluster-Service-Role-Status", query = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
    
-   @NamedQuery(name = "Role.Count-hosts", query = "SELECT count(DISTINCT r.hostname) FROM Role r WHERE r.cluster = :cluster")
+   @NamedQuery(name = "Role.Count-hosts", query = "SELECT count(DISTINCT r.hostId) FROM Role r WHERE r.cluster = :cluster")
 })
 
 public class Role implements Serializable {
-
    @Id
    @GeneratedValue(strategy = GenerationType.SEQUENCE)
    private Long id;
-   @Column(name = "HOSTNAME_", nullable = false, length = 128)
-   private String hostname;
+   @Column(nullable = false, length = 128)
+   private String hostId;
    @Column(nullable = false, length = 48)
    private String service;
    @Column(name = "ROLE_", nullable = false, length = 48)
@@ -52,8 +51,8 @@ public class Role implements Serializable {
    public Role() {
    }
 
-   public Role(String hostname, String cluster, String service, String role, Integer webPort, Status status) {
-      this.hostname = hostname;
+   public Role(String hostId, String cluster, String service, String role, Integer webPort, Status status) {
+      this.hostId = hostId;
       this.cluster = cluster;
       this.service = service;
       this.role = role;
@@ -61,16 +60,16 @@ public class Role implements Serializable {
       this.webPort = webPort;
    }
 
-   public Role(String hostname, String cluster, String service, String role, Integer webPort) {
-      this.hostname = hostname;
+   public Role(String hostId, String cluster, String service, String role, Integer webPort) {
+      this.hostId = hostId;
       this.cluster = cluster;
       this.service = service;
       this.role = role;
       this.webPort = webPort;
    }
 
-   public Role(String hostname, String cluster, String service, String role) {
-      this.hostname = hostname;
+   public Role(String hostId, String cluster, String service, String role) {
+      this.hostId = hostId;
       this.cluster = cluster;
       this.service = service;
       this.role = role;
@@ -92,12 +91,12 @@ public class Role implements Serializable {
       this.id = id;
    }
 
-   public String getHostname() {
-      return hostname;
+   public String getHostId() {
+      return hostId;
    }
 
-   public void setHostname(String hostname) {
-      this.hostname = hostname;
+   public void setHostId(String hostId) {
+      this.hostId = hostId;
    }
 
    public String getService() {

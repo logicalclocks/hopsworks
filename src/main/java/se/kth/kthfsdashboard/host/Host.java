@@ -15,22 +15,23 @@ import se.kth.kthfsdashboard.util.Formatter;
 @Table(name = "Hosts")
 @NamedQueries({
    @NamedQuery(name = "findAllHosts", query = "SELECT h FROM Host h"),
-   @NamedQuery(name = "findHostByName", query = "SELECT h FROM Host h WHERE h.hostname = :name"),
+   @NamedQuery(name = "findHostById", query = "SELECT h FROM Host h WHERE h.hostId = :id"),
+   @NamedQuery(name = "findHostByName", query = "SELECT h FROM Host h WHERE h.hostname = :hostname"),   
    @NamedQuery(name = "findHostByRole", query = "SELECT h FROM Host h ")
 })
 public class Host implements Serializable {
 
    private static final int HEARTBEAT_INTERVAL = 10;
-   
+
    public enum Health {
 
       Good, Bad
    }
    @Id
+   @Column(nullable = false, length = 128)
+   private String hostId;
    @Column(name = "HOSTNAME_", nullable = false, length = 128)
    private String hostname;
-   @Column(nullable = false, updatable = true)
-   private String rack;
    @Column(length = 15)
    private String publicIp;
    @Column(length = 15)
@@ -48,20 +49,20 @@ public class Host implements Serializable {
    public Host() {
    }
 
+   public String getHostId() {
+      return hostId;
+   }
+
+   public void setHostId(String hostId) {
+      this.hostId = hostId;
+   }
+
    public String getHostname() {
       return hostname;
    }
 
    public void setHostname(String hostname) {
       this.hostname = hostname;
-   }
-
-   public String getRack() {
-      return rack;
-   }
-
-   public void setRack(String rack) {
-      this.rack = rack;
    }
 
    public String getPublicIp() {
@@ -175,7 +176,7 @@ public class Host implements Serializable {
 
    public Health getHealth() {
 
-      int hostTimeout = HEARTBEAT_INTERVAL * 2 + 1;      
+      int hostTimeout = HEARTBEAT_INTERVAL * 2 + 1;
       long deltaInSec = ((new Date()).getTime() - lastHeartbeat) / 1000;
 
       if (deltaInSec < hostTimeout) {

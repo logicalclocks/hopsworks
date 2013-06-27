@@ -23,8 +23,8 @@ import se.kth.kthfsdashboard.util.CookieTools;
 @RequestScoped
 public class ServiceInstancesController implements Serializable {
 
-   @ManagedProperty("#{param.hostname}")
-   private String hostname;
+   @ManagedProperty("#{param.hostid}")
+   private String hostId;
    @ManagedProperty("#{param.role}")
    private String role;
    @ManagedProperty("#{param.service}")
@@ -89,12 +89,12 @@ public class ServiceInstancesController implements Serializable {
       this.service = service;
    }
 
-   public String getHostname() {
-      return hostname;
+   public String getHostId() {
+      return hostId;
    }
 
-   public void setHostname(String hostname) {
-      this.hostname = hostname;
+   public void setHostId(String hostId) {
+      this.hostId = hostId;
    }
 
    public void setCluster(String cluster) {
@@ -149,7 +149,7 @@ public class ServiceInstancesController implements Serializable {
          roles = roleEjb.findRoles(cookie.read("cluster"), cookie.read("service"));
       }
       for (Role r : roles) {                
-         instances.add(new InstanceInfo(r.getCluster(), r.getService(), r.getRole(), r.getHostname(), "-", r.getStatus(), r.getHealth().toString()));
+         instances.add(new InstanceInfo(r.getCluster(), r.getService(), r.getRole(), r.getHostId(), "-", r.getStatus(), r.getHealth().toString()));
       }
       return instances;
    }

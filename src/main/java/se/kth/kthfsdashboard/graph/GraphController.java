@@ -33,8 +33,8 @@ public class GraphController implements Serializable {
    private RoleEJB roleEjb;
    @ManagedProperty("#{param.cluster}")
    private String cluster;
-   @ManagedProperty("#{param.hostname}")
-   private String hostname;
+   @ManagedProperty("#{param.hostid}")
+   private String hostId;
    @ManagedProperty("#{param.service}")
    private String service;
    @ManagedProperty("#{param.role}")
@@ -128,12 +128,12 @@ public class GraphController implements Serializable {
       this.cluster = cluster;
    }
 
-   public String getHostname() {
-      return hostname;
+   public String getHostId() {
+      return hostId;
    }
 
-   public void setHostname(String hostname) {
-      this.hostname = hostname;
+   public void setHostId(String hostId) {
+      this.hostId = hostId;
    }
 
    public String getService() {
@@ -259,32 +259,27 @@ public class GraphController implements Serializable {
       params.put("chart_type", chartType);
       params.put("start", getStartTime().toString());
       params.put("end", getEndTime().toString());
-      params.put("hostname", host);
+      params.put("host", host);
       params.put("plugin", plugin);
       params.put("type", type);
       return UrlTools.addParams(URL_PATH, params);
    }
 
-   public String graphUrl(String host, String plugin, String type) throws MalformedURLException {
-//      TODO: host/hostname ?
-      return graphUrl(hostname, plugin, type, plugin + "all");
-   }
-
    public String hostGraphUrl(String plugin) throws MalformedURLException {
       String type = plugin.equals("interface") ? "if_octets" : plugin;
-      return graphUrl(hostname, plugin, type, plugin + "all");
+      return graphUrl(hostId, plugin, type, plugin + "all");
    }
 
    public String namenodesGraphUrl(String chartType) {
       HashMap<String, String> params = new HashMap<String, String>();
       if (chartType.startsWith("serv_nn_")) {
-         List<String> namenodes = roleEjb.findHostname(cluster,
+         List<String> namenodes = roleEjb.findHostId(cluster,
                  ServiceType.KTHFS.toString(), RoleType.namenode.toString());
          String namenodesString = "";
          for (String namenode : namenodes) {
             namenodesString += namenodesString.isEmpty() ? namenode : "," + namenode;
          }
-         params.put("hostname", namenodesString);
+         params.put("host", namenodesString);
       }
       params.put("chart_type", chartType);
       params.put("start", getStartTime().toString());
@@ -297,7 +292,7 @@ public class GraphController implements Serializable {
       params.put("chart_type", chartType);
       params.put("start", getStartTime().toString());
       params.put("end", getEndTime().toString());
-      params.put("hostname", hostname);
+      params.put("host", hostId);
       return UrlTools.addParams(URL_PATH, params);
    }
 
@@ -306,16 +301,16 @@ public class GraphController implements Serializable {
    }
 
    public String mysqlclusterGraphUrl(String chartType) {
-      // Finds hostname of mysqld
+      // Finds host of mysqld
       // Role=mysqld , Service=MySQLCluster, Clusters=cluster
       List<Role> roles = roleEjb.findRoles(cluster, service, "mysqld");
-      String host = roles.size() > 0 ? roles.get(0).getHostname() : "";
+      String host = roles.size() > 0 ? roles.get(0).getHostId() : "";
       HashMap<String, String> params = new HashMap<String, String>();
       params.put("chart_type", chartType);
       params.put("plugin", "dbi-ndbinfo");      
       params.put("start", getStartTime().toString());
       params.put("end", getEndTime().toString());
-      params.put("hostname", host);
+      params.put("host", host);
       if (chartType.equals("mysql_freeDataMemory")
               || chartType.equals("mysql_freeIndexMemory")
               || chartType.equals("mysql_totalDataMemory")

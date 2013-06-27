@@ -18,8 +18,8 @@ public class CommandController {
 
     @EJB
     private CommandEJB commandEJB;
-    @ManagedProperty("#{param.hostname}")
-    private String hostname;
+    @ManagedProperty("#{param.hostid}")
+    private String hostId;
     @ManagedProperty("#{param.role}")
     private String role;
     @ManagedProperty("#{param.service}")
@@ -52,12 +52,12 @@ public class CommandController {
         this.service = service;
     }
 
-    public String getHostname() {
-        return hostname;
+    public String getHostId() {
+        return hostId;
     }
 
-    public void setHostname(String hostname) {
-        this.hostname = hostname;
+    public void setHostId(String hostId) {
+        this.hostId = hostId;
     }
 
     public void setCluster(String cluster) {

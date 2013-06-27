@@ -26,20 +26,28 @@ public class HostEJB {
    }
 
    public Host findHostByName(String name) throws Exception{
-      TypedQuery<Host> query = em.createNamedQuery("findHostByName", Host.class).setParameter("name", name);
+      TypedQuery<Host> query = em.createNamedQuery("findHostByName", Host.class).setParameter("hostname", name);
       try {
          return query.getSingleResult();
       } catch (NoResultException ex) {
          throw new Exception("NoResultException");
       }
    }
+   
+   public Host findHostById(String id) throws Exception{
+      TypedQuery<Host> query = em.createNamedQuery("findHostById", Host.class).setParameter("id", id);
+      try {
+         return query.getSingleResult();
+      } catch (NoResultException ex) {
+         throw new Exception("NoResultException");
+      }
+   }   
 
    public Host storeHost(Host host, boolean register) {
       if (register) {
          em.merge(host);
       } else {
-         Host h = em.find(Host.class, host.getHostname());
-         host.setRack(h.getRack());
+         Host h = em.find(Host.class, host.getHostId());
          host.setPrivateIp(h.getPrivateIp());
          host.setPublicIp(h.getPublicIp());
          host.setCores(h.getCores());
@@ -48,9 +56,4 @@ public class HostEJB {
       return host;
    }
 
-   public Host storeHostRackId(Host host) {
-
-      this.em.merge(host);
-      return host;
-   }
 }

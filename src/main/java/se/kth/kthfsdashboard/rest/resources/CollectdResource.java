@@ -40,7 +40,7 @@ public class CollectdResource {
            @QueryParam("chart_type") String chartType,
            @QueryParam("start") int start,
            @QueryParam("end") int end,
-           @QueryParam("hostname") String hostname,
+           @QueryParam("host") String host,
            @QueryParam("plugin") String plugin,
            @QueryParam("plugin_instance") String pluginInstance,
            @QueryParam("type") String type,
@@ -52,13 +52,13 @@ public class CollectdResource {
       System.err.println(chartType);
       try {
          ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-         InputStream inputStream = collectdTools.getGraphStream(chartType, hostname, plugin, pluginInstance, type, typeInstance, ds, start, end, n);
+         InputStream inputStream = collectdTools.getGraphStream(chartType, host, plugin, pluginInstance, type, typeInstance, ds, start, end, n);
          BufferedImage image = ImageIO.read(inputStream);
          ImageIO.write(image, "png", byteArrayOutputStream);
          byte[] imageData = byteArrayOutputStream.toByteArray();
          return Response.ok(new ByteArrayInputStream(imageData)).build();
       } catch (Exception e) {
-         logger.log(Level.SEVERE, "CollectdResource >> Image == null : check rrd file for {0}: {1}/{2} @ {3} " , new Object[] {chartType, plugin, pluginInstance, hostname});
+         logger.log(Level.SEVERE, "CollectdResource >> Image == null : check rrd file for {0}: {1}/{2} @ {3} " , new Object[] {chartType, plugin, pluginInstance, host});
          return Response.status(Response.Status.NOT_FOUND).build();
       }
    }

@@ -223,14 +223,14 @@
                </p:toolbar>
                <p:dataGrid  var="g" value="#{graphController.namenodeServiceGraphs}" columns="#{settingsController.numOfGraphColumns}"  
                             paginator="false" styleClass="ui-datagrid-no-border" >  
-                  <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}" />  
+                  <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}" alt="Graph not available. Check RRD files."/>  
                </p:dataGrid> 
 
                <p:toolbar>
                   <p:toolbarGroup align="left"><p:outputLabel value="Aggregate Name Node Activity (Total Activity)"/></p:toolbarGroup>
                </p:toolbar>
                <p:dataGrid  var="g" value="#{graphController.namenodeServiceActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                  <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}"/>  
+                  <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}" alt="Graph not available. Check RRD files."/>  
                </p:dataGrid>             
 
                <!--
@@ -246,7 +246,7 @@
                </p:toolbar>
                <p:dataGrid  var="g" value="#{graphController.mysqlclusterActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
 
-                  <p:graphicImage value="#{graphController.mysqlclusterGraphUrl(g)}" alt="Graph not available." rendered="false">
+                  <p:graphicImage value="#{graphController.mysqlclusterGraphUrl(g)}" alt="Graph not available. Check RRD files." rendered="true">
                     
                   </p:graphicImage>                      
                 

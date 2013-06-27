@@ -20,12 +20,12 @@ import org.codehaus.jettison.json.JSONObject;
 import se.kth.kthfsdashboard.command.Command;
 import se.kth.kthfsdashboard.command.CommandEJB;
 import se.kth.kthfsdashboard.command.CommandMessageController;
+import se.kth.kthfsdashboard.communication.WebCommunication;
 import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
 import se.kth.kthfsdashboard.role.Status;
 import se.kth.kthfsdashboard.struct.DiskInfo;
 import se.kth.kthfsdashboard.util.CollectdTools;
-import se.kth.kthfsdashboard.communication.WebCommunication;
 
 
 /**
@@ -45,8 +45,8 @@ public class HostController implements Serializable {
    private CommandEJB commandEJB;
    @ManagedProperty("#{param.cluster}")
    private String cluster;
-   @ManagedProperty("#{param.hostname}")
-   private String hostname;
+   @ManagedProperty("#{param.hostid}")
+   private String hostId;
    @ManagedProperty("#{param.command}")
    private String command;
    @ManagedProperty("#{param.service}")
@@ -85,7 +85,7 @@ public class HostController implements Serializable {
 //        FacesContext context = FacesContext.getCurrentInstance();
 //        Host h = context.getApplication().evaluateExpressionGet(context, "#{host}", Host.class);
 
-      return "host?faces-redirect=true&hostname=" + hostname;
+      return "host?faces-redirect=true&hostid=" + hostId;
    }
    
     public CommandMessageController getMessages() {
@@ -95,11 +95,6 @@ public class HostController implements Serializable {
     public void setMessages(CommandMessageController messages) {
         this.messages = messages;
     }   
-
-   public void doSetRackId() {
-
-      hostEJB.storeHostRackId(host);
-   }
 
    public List<String> getCommands() {
 
@@ -122,8 +117,8 @@ public class HostController implements Serializable {
       return role;
    }
 
-   public void setHostname(String hostname) {
-      this.hostname = hostname;
+   public void setHostId(String hostId) {
+      this.hostId = hostId;
    }
 
    public void setService(String service) {
@@ -134,8 +129,8 @@ public class HostController implements Serializable {
       return service;
    }
 
-   public String getHostname() {
-      return hostname;
+   public String getHostId() {
+      return hostId;
    }
 
    public void setCluster(String cluster) {
@@ -152,9 +147,9 @@ public class HostController implements Serializable {
 
    public Host getHost() {
       try {
-         host = hostEJB.findHostByName(hostname);
+         host = hostEJB.findHostById(hostId);
       } catch (Exception ex) {
-         logger.warning("Host ".concat(hostname).concat(" not found."));
+         logger.warning("Host ".concat(hostId).concat(" not found."));
       }
       return host;
    }
@@ -170,18 +165,17 @@ public class HostController implements Serializable {
 
    public String getInterfaces() {
 
-      return collectdTools.typeInstances(hostname, "interface").toString();
+      return collectdTools.typeInstances(hostId, "interface").toString();
    }
    
    public void doCommand(ActionEvent actionEvent) throws NoSuchAlgorithmException, Exception {
      
       //  TODO: If the web application server craches, status will remain 'Running'.
-      Command c = new Command(command, hostname, service, role, cluster);
+      Command c = new Command(command, hostId, service, role, cluster);
       commandEJB.persistCommand(c);
       FacesMessage message;
 
-      //Todo: does not work with hostname. Only works with IP address.
-      Host h = hostEJB.findHostByName(hostname);      
+      Host h = hostEJB.findHostById(hostId);      
       String ip = h.getPublicIp();
       try {
          WebCommunication webComm = new WebCommunication();         
@@ -190,7 +184,7 @@ public class HostController implements Serializable {
          if (response.getClientResponseStatus().getFamily() == Family.SUCCESSFUL) {
             c.succeeded();
             String messageText = "";
-            Role s = roleEjb.find(hostname, cluster, service, role);
+            Role s = roleEjb.find(hostId, cluster, service, role);
             
             if (command.equalsIgnoreCase("init")) {
 //               Todo:

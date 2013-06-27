@@ -42,11 +42,11 @@ public class CollectdTools {
    public CollectdTools() {
    }
 
-   public Set<String> pluginInstances(String hostName, String plugin) {
+   public Set<String> pluginInstances(String hostId, String plugin) {
 
       final String p = plugin;
       Set<String> instances = new TreeSet<String>();
-      File dir = new File(COLLECTD_PATH + hostName);
+      File dir = new File(COLLECTD_PATH + hostId);
 
       File[] files = dir.listFiles(new FilenameFilter() {
          @Override
@@ -65,15 +65,15 @@ public class CollectdTools {
       return instances;
    }
 
-   public int pluginInstancesCount(String plugin, String hostName) {
+   public int pluginInstancesCount(String plugin, String hostId) {
 
-      return pluginInstances(plugin, hostName).size();
+      return pluginInstances(plugin, hostId).size();
    }
 
-   public Set<String> typeInstances(String hostName, String plugin) {
+   public Set<String> typeInstances(String hostId, String plugin) {
 
       SortedSet<String> instances = new TreeSet<String>();
-      File dir = new File(COLLECTD_PATH + hostName + "/" + plugin);
+      File dir = new File(COLLECTD_PATH + hostId + "/" + plugin);
 
       File[] files = dir.listFiles();
 
@@ -87,10 +87,10 @@ public class CollectdTools {
       return instances;
    }
 
-   public double[] getLastLoad(String hostname) {
+   public double[] getLastLoad(String hostId) {
 
       DecimalFormat format = new DecimalFormat("#.##");
-      String loads[] = readLastRrdValue(hostname, "load", "", "load", "").split(":")[1].trim().toUpperCase().split(" ");
+      String loads[] = readLastRrdValue(hostId, "load", "", "load", "").split(":")[1].trim().toUpperCase().split(" ");
       double load[] = new double[3];
       try {
          load[0] = format.parse(loads[0]).doubleValue();
@@ -102,13 +102,13 @@ public class CollectdTools {
       return load;
    }
 
-   public String getTest(String hostname, String type) {
-      return readLastRrdValue(hostname, "memory", "", "memory", type);
+   public String getTest(String hostId, String type) {
+      return readLastRrdValue(hostId, "memory", "", "memory", type);
    }
 
-   public Long getLatestMemoryStatus(String hostname, String type) {
+   public Long getLatestMemoryStatus(String hostId, String type) {
 
-      String res1 = readLastRrdValue(hostname, "memory", "", "memory", type);
+      String res1 = readLastRrdValue(hostId, "memory", "", "memory", type);
       String result;
       if (res1.lastIndexOf(":") < 1) { // ERROR
          logger.log(Level.SEVERE, null, "RRD: " + res1);
@@ -125,11 +125,11 @@ public class CollectdTools {
       return null;
    }
 
-   private String readLastRrdValue(String hostname, String plugin, String pluginInstance, String type, String typeInstance) {
+   private String readLastRrdValue(String hostId, String plugin, String pluginInstance, String type, String typeInstance) {
       try {
          String pluginURI = pluginInstance.isEmpty() ? plugin : plugin + "-" + pluginInstance;
          String typeURI = typeInstance.isEmpty() ? type : type + "-" + typeInstance;
-         RRDp rrd = new RRDp(COLLECTD_LINK + hostname + "/" + pluginURI + "/", "5555");
+         RRDp rrd = new RRDp(COLLECTD_LINK + hostId + "/" + pluginURI + "/", "5555");
 
          //get latest recoded time
          CommandResult result = rrd.command(new String[]{"last", typeURI + RRD_EXT, "MAX"});
@@ -174,7 +174,7 @@ public class CollectdTools {
       mysql_simpleReads, mysql_Reads, mysql_Writes, mysql_rangeScans, mysql_tableScans;
    }
 
-   public InputStream getGraphStream(String chartType, String hostname, String plugin, String pluginInstance, String type, String typeInstance, String ds, int start, int end, int n) throws IOException {
+   public InputStream getGraphStream(String chartType, String host, String plugin, String pluginInstance, String type, String typeInstance, String ds, int start, int end, int n) throws IOException {
 
       String RED = "CB4B4B";
       String BLUE = "AFD8F8";
@@ -194,13 +194,13 @@ public class CollectdTools {
          chartType = "plane";
       }
 
-      RrdtoolCommand cmd = new RrdtoolCommand(hostname, plugin, pluginInstance, start, end);
+      RrdtoolCommand cmd = new RrdtoolCommand(host, plugin, pluginInstance, start, end);
       cmd.setGraphSize(width, height);
 
       List<String> namenodes = new ArrayList<String>();
       String namenode = "";
       if (chartType.startsWith("serv_nn_")) {
-         namenodes = new ArrayList<String>(Arrays.asList(hostname.split(",")));
+         namenodes = new ArrayList<String>(Arrays.asList(host.split(",")));
          try {
             namenode = namenodes.get(0);
          } catch (Exception e) {
@@ -255,7 +255,7 @@ public class CollectdTools {
             cmd.setTitle("Namenode Capacity");
             cmd.setVerticalLabel("GB");
             cmd.setPlugin("GenericJMX-FSNamesystem", "");
-            cmd.setHostname(namenode);
+            cmd.setHostId(namenode);
             cmd.drawLine("memory-CapacityTotalGB", "", "value", "Total", BLUE, "%5.2lf %S");
             cmd.drawLine("memory-CapacityRemainingGB", "", "value", "Remaining", GREEN, "%5.2lf %S");
             cmd.drawLine("memory-CapacityUsedGB", "", "value", "Used", RED, "%5.2lf %S");
@@ -265,7 +265,7 @@ public class CollectdTools {
             cmd.setTitle("Files");
             cmd.setVerticalLabel(" ");
             cmd.setPlugin("GenericJMX-FSNamesystem", "");
-            cmd.setHostname(namenode);
+            cmd.setHostId(namenode);
             cmd.drawLine("gauge-FilesTotal", "", "value", "Total Files", GREEN, "%5.2lf %S");
             break;
 
@@ -273,7 +273,7 @@ public class CollectdTools {
             cmd.setTitle("Total Load");
             cmd.setVerticalLabel(" ");
             cmd.setPlugin("GenericJMX-FSNamesystem", "");
-            cmd.setHostname(namenode);
+            cmd.setHostId(namenode);
             cmd.drawLine("gauge-TotalLoad", "", "value", "Total Load", RED, "%5.2lf %S");
             break;
 
@@ -281,7 +281,7 @@ public class CollectdTools {
             cmd.setTitle("Heartbeats");
             cmd.setVerticalLabel("heartbeats/s");
             cmd.setPlugin("GenericJMX-FSNamesystem", "");
-            cmd.setHostname(namenode);
+            cmd.setHostId(namenode);
             cmd.drawLine("counter-ExpiredHeartbeats", "", "value", "Expired Heartbeats", RED, "%5.2lf %S");
             break;
 
@@ -289,7 +289,7 @@ public class CollectdTools {
             cmd.setTitle("Block Replication");
             cmd.setVerticalLabel(" ");
             cmd.setPlugin("GenericJMX-FSNamesystem", "");
-            cmd.setHostname(namenode);
+            cmd.setHostId(namenode);
             cmd.drawLine("counter-UnderReplicatedBlocks", "", "value", "Under-Replicated", GREEN, "%5.2lf %S");
             cmd.drawLine("counter-PendingReplicationBlocks", "", "value", "Pending", BLUE, "%5.2lf %S");
             cmd.drawLine("counter-ScheduledReplicationBlocks", "", "value", "Scheduled", YELLOW, "%5.2lf %S");
@@ -299,7 +299,7 @@ public class CollectdTools {
             cmd.setTitle("Blocks");
             cmd.setVerticalLabel(" ");
             cmd.setPlugin("GenericJMX-FSNamesystem", "");
-            cmd.setHostname(namenode);
+            cmd.setHostId(namenode);
             cmd.drawLine("counter-BlockCapacity", "", "value", "Blocks Total", GREEN, "%5.2lf %S");
             cmd.drawLine("counter-BlocksTotal", "", "value", "Block Capacity", BLUE, "%5.2lf %S");
             break;
@@ -308,7 +308,7 @@ public class CollectdTools {
             cmd.setTitle("Special Blocks");
             cmd.setVerticalLabel(" ");
             cmd.setPlugin("GenericJMX-FSNamesystem", "");
-            cmd.setHostname(namenode);
+            cmd.setHostId(namenode);
             cmd.drawLine("counter-CorruptBlocks", "", "value", "Corrupt", RED, "%5.2lf %S");
             cmd.drawLine("counter-ExcessBlocks", "", "value", "Excess", BLUE, "%5.2lf %S");
             cmd.drawLine("counter-MissingBlocks", "", "value", "Missing", YELLOW, "%5.2lf %S");
@@ -319,7 +319,7 @@ public class CollectdTools {
             cmd.setTitle("Number of Data Nodes");
             cmd.setVerticalLabel(" ");
             cmd.setPlugin("GenericJMX-FSNamesystemState", "");
-            cmd.setHostname(namenode);
+            cmd.setHostId(namenode);
             cmd.drawLine("gauge-NumDeadDataNodes", "", "value", "Dead", RED, "%5.2lf %S");
             cmd.drawLine("gauge-NumLiveDataNodes", "", "value", "Live", GREEN, "%5.2lf %S");
             break;
@@ -541,7 +541,7 @@ public class CollectdTools {
             cmd.setTitle("Blocks");
             cmd.setVerticalLabel(" ");
             cmd.setPlugin("GenericJMX-FSNamesystem", "");
-            cmd.setHostname(hostname);
+            cmd.setHostId(host);
             cmd.drawLine("counter-BlockCapacity", "", "value", "Blocks Total", GREEN, "%5.2lf %S");
             cmd.drawLine("counter-BlocksTotal", "", "value", "Block Capacity", BLUE, "%5.2lf %S");
             break;
@@ -550,7 +550,7 @@ public class CollectdTools {
             cmd.setTitle("Special Blocks");
             cmd.setVerticalLabel("blocks/s");
             cmd.setPlugin("GenericJMX-FSNamesystem", "");
-            cmd.setHostname(hostname);
+            cmd.setHostId(host);
             cmd.drawLine("counter-CorruptBlocks", "", "value", "Corrupt", RED, "%5.2lf %S");
             cmd.drawLine("counter-ExcessBlocks", "", "value", "Excess", BLUE, "%5.2lf %S");
             cmd.drawLine("counter-MissingBlocks", "", "value", "Missing", YELLOW, "%5.2lf %S");
