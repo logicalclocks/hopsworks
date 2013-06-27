@@ -38,9 +38,9 @@ public class RoleEJB {
       return query.getResultList();
    }
 
-   public Role find(String hostname, String cluster, String service, String role) throws Exception{
+   public Role find(String hostId, String cluster, String service, String role) throws Exception{
       TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
-              .setParameter("hostname", hostname).setParameter("cluster", cluster)
+              .setParameter("hostId", hostId).setParameter("cluster", cluster)
               .setParameter("service", service).setParameter("role", role);
       try {
          return query.getSingleResult();
@@ -80,8 +80,8 @@ public class RoleEJB {
       return query.getResultList();
    }
 
-   public List<String> findHostname(String cluster, String service, String role) {
-      TypedQuery<String> query = em.createNamedQuery("Role.findHostnameBy-Cluster-Group-Role", String.class)
+   public List<String> findHostId(String cluster, String service, String role) {
+      TypedQuery<String> query = em.createNamedQuery("Role.findHostIdBy-Cluster-Group-Role", String.class)
               .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role);
       return query.getResultList();
    }
@@ -112,8 +112,8 @@ public class RoleEJB {
    }
 
    public void store(Role role) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Service-Role-Hostname", Role.class)
-              .setParameter("hostname", role.getHostname()).setParameter("cluster", role.getCluster())
+      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Service-Role-HostId", Role.class)
+              .setParameter("hostId", role.getHostId()).setParameter("cluster", role.getCluster())
               .setParameter("service", role.getService()).setParameter("role", role.getRole());
       List<Role> s = query.getResultList();
 
@@ -125,12 +125,4 @@ public class RoleEJB {
       }
    }
 
-   // ???
-   public void delete(Role role) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.findBy.Cluster.Role.Hostname", Role.class)
-              .setParameter("hostname", role.getHostname()).setParameter("cluster", role.getCluster())
-              .setParameter("role", role.getRole());
-      Role s = query.getSingleResult();
-      em.remove(s);
-   }
 }

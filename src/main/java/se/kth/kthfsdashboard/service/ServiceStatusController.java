@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -58,7 +59,11 @@ public class ServiceStatusController {
    @PostConstruct
    public void init() {
       logger.info("init ServiceStatusController");
+      Long t1, t2;
+      t1 = System.currentTimeMillis();
       loadRoles();
+      t2 = System.currentTimeMillis();
+      logger.log(Level.INFO, "ServiceStatusController >> loadRoles() took {0} ms", t2 - t1);      
    }
 
    public String getService() {

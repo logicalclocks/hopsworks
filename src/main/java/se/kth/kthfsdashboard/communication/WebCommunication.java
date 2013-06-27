@@ -43,9 +43,9 @@ public class WebCommunication {
    public WebCommunication() {
    }
 
-   private String createUrl(String context, String hostname, String... args) {
+   private String createUrl(String context, String hostAddress, String... args) {
       String template = "%s://%s:%s/%s";
-      String url = String.format(template, PROTOCOL, hostname, PORT, context);
+      String url = String.format(template, PROTOCOL, hostAddress, PORT, context);
       for (int i = 0; i < args.length; i++) {
          url += "/" + args[i];
       }
@@ -71,30 +71,30 @@ public class WebCommunication {
       return log;
    }
 
-   public String getConfig(String hostname, String cluster, String service, String role) {
-      String url = createUrl("config", hostname, cluster, service, role);
+   public String getConfig(String hostAddress, String cluster, String service, String role) {
+      String url = createUrl("config", hostAddress, cluster, service, role);
       return fetchContent(url);
    }
 
-   public String getRoleLog(String hostname, String cluster, String service, String role, int lines) {
-      String url = createUrl("log", hostname, cluster, service, role, String.valueOf(lines));
+   public String getRoleLog(String hostAddress, String cluster, String service, String role, int lines) {
+      String url = createUrl("log", hostAddress, cluster, service, role, String.valueOf(lines));
       return fetchLog(url);
    }
 
-   public String getServiceLog(String hostname, String cluster, String service, int lines) {
-      String url = createUrl("log", hostname, cluster, service, String.valueOf(lines));
+   public String getServiceLog(String hostAddress, String cluster, String service, int lines) {
+      String url = createUrl("log", hostAddress, cluster, service, String.valueOf(lines));
       return fetchLog(url);
    }
 
-   public String getAgentLog(String hostname, int lines) {
-      String url = createUrl("agentlog", hostname, String.valueOf(lines));
+   public String getAgentLog(String hostAddress, int lines) {
+      String url = createUrl("agentlog", hostAddress, String.valueOf(lines));
       return fetchLog(url);
    }
 
-   public List<NodesTableItem> getNdbinfoNodesTable(String hostname) {
+   public List<NodesTableItem> getNdbinfoNodesTable(String hostAddress) {
       List<NodesTableItem> resultList = new ArrayList<NodesTableItem>();
 
-      String url = createUrl("mysql", hostname, "ndbinfo", "nodes");
+      String url = createUrl("mysql", hostAddress, "ndbinfo", "nodes");
       String jsonString = fetchContent(url);
       try {
          JSONArray json = new JSONArray(jsonString);
@@ -118,8 +118,8 @@ public class WebCommunication {
       return resultList;
    }
 
-   public ClientResponse doCommand(String hostname, String cluster, String service, String role, String command) throws Exception {
-      String url = createUrl("do", hostname, cluster, service, role, command);
+   public ClientResponse doCommand(String hostAddress, String cluster, String service, String role, String command) throws Exception {
+      String url = createUrl("do", hostAddress, cluster, service, role, command);
       return getWebResource(url);
    }
 
@@ -151,7 +151,7 @@ public class WebCommunication {
 
       // Ignore differences between given hostname and certificate hostname
       HostnameVerifier hv = new HostnameVerifier() {
-         public boolean verify(String hostname, SSLSession session) {
+         public boolean verify(String hostAddress, SSLSession session) {
             return true;
          }
       };

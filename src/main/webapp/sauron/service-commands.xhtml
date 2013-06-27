@@ -83,7 +83,7 @@
             <p:panel header="Running Commands">
                <p:dataTable var="command" value="#{commandController.runningCommandsByInstanceGroup}">
                <p:column headerText="Command"><h:outputText value="#{command.command}"/></p:column>
-                <p:column headerText="Hostname"><h:outputText value="#{command.hostname}"/></p:column>               
+                <p:column headerText="Host Id"><h:outputText value="#{command.hostId}"/></p:column>               
                <p:column headerText="Instance"><h:outputText value="#{command.cluster}"/></p:column>
                <p:column headerText="Group"><h:outputText value="#{command.service}"/></p:column>
                <p:column headerText="Role"><h:outputText value="#{command.role}"/></p:column>
@@ -99,7 +99,7 @@
                <p:dataTable var="command" value="#{commandController.recentCommandsByInstanceGroup}">
                   
                   <p:column headerText="Command"><h:outputText value="#{command.command}"/></p:column>
-                  <p:column headerText="Hostname"><h:outputText value="#{command.hostname}"/></p:column>
+                  <p:column headerText="Host Id"><h:outputText value="#{command.hostId}"/></p:column>
                   <p:column headerText="Instance"><h:outputText value="#{command.cluster}"/></p:column>
                   <p:column headerText="Group"><h:outputText value="#{command.service}"/></p:column>
                   <p:column headerText="Role"><h:outputText value="#{command.role}"/></p:column>

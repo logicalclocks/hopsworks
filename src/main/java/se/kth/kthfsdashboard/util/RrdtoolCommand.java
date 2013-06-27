@@ -20,12 +20,11 @@ public class RrdtoolCommand {
    private static final boolean SHOW_DETAILS = false;
    private static final String COLLECTD_PATH = "/var/lib/collectd/rrd/";
 // TODO This should not be static   
-   private static final String COLLECTD_LINK = "applications/KTHFSDashboard/jarmon/data/";
-//   private static final String COLLECTD_LINK = "domain1/applications/KTHFSDashboard/jarmon/data/";   
+//   private static final String COLLECTD_LINK = "applications/KTHFSDashboard/jarmon/data/";  
    private static final String RRD_EXT = ".rrd";
    private List<String> cmds;
    private List<String> graphCommands;
-   private String hostname;
+   private String hostId;
    private String plugin;
    private String pluginInstance;
    private int start;
@@ -42,9 +41,9 @@ public class RrdtoolCommand {
       LINE, AREA, AREA_STACK
    }
 
-   public RrdtoolCommand(String hostname, String plugin, String pluginInstance,
+   public RrdtoolCommand(String hostId, String plugin, String pluginInstance,
            int start, int end) {
-      this.hostname = hostname;
+      this.hostId = hostId;
       this.plugin = plugin;
       this.pluginInstance = pluginInstance;
       this.start = start;
@@ -56,8 +55,8 @@ public class RrdtoolCommand {
       graphCommands = new ArrayList<String>();
    }
 
-   public void setHostname(String hostname) {
-      this.hostname = hostname;
+   public void setHostId(String hostId) {
+      this.hostId = hostId;
    }
 
    public void setPlugin(String plugin, String pluginInstance) {
@@ -113,12 +112,12 @@ public class RrdtoolCommand {
       return cmds;
    }
 
-   public void drawSummedLines(List<String> hostnames, String type, String typeInstance, String ds, String label, String color, String detailsFormat) {
+   public void drawSummedLines(List<String> hosts, String type, String typeInstance, String ds, String label, String color, String detailsFormat) {
 
       List<String> vars = new ArrayList<String>();
       String cmd;
 
-      for (String h : hostnames) {
+      for (String h : hosts) {
          String var = h.replace(".", "-") + "-" + type + "-" + typeInstance + ds;
          String rrdFile = getRrdFileName(h, plugin, pluginInstance, type, typeInstance);
          graphCommands.add("DEF:" + var + "=" + rrdFile + ":" + ds + ":AVERAGE");
@@ -149,7 +148,7 @@ public class RrdtoolCommand {
    private void addGraph(ChartType chartType, String type, String typeInstance, String ds, String label, String color,
            String detailsFormat) {
       String var = type + "-" + typeInstance + ds;
-      String rrdFile = getRrdFileName(hostname, plugin, pluginInstance, type, typeInstance);
+      String rrdFile = getRrdFileName(hostId, plugin, pluginInstance, type, typeInstance);
 
       Color c = Color.decode("0x" + color).brighter().brighter();
       String brightColor = toHex(c);
@@ -178,7 +177,7 @@ public class RrdtoolCommand {
       }
    }
 
-   private String getRrdFileName(String hostname, String plugin, String pluginInstance, String type, String typeInstance) {
+   private String getRrdFileName(String hostId, String plugin, String pluginInstance, String type, String typeInstance) {
 
       String path = "";
       try {
@@ -190,7 +189,7 @@ public class RrdtoolCommand {
 
       String rrdFile = COLLECTD_PATH;
 //      String rrdFile = path + "/" + COLLECTD_LINK;      
-      rrdFile += hostname;
+      rrdFile += hostId;
       rrdFile += "/" + plugin;
       if (pluginInstance != null && !pluginInstance.equals("")) {
          rrdFile += "-" + pluginInstance;

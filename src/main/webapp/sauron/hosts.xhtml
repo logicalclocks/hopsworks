@@ -34,16 +34,18 @@
                 <h:form id="form">  
                     <p:dataTable id="hosts" var="host" value="#{hostController.hosts}">
 
-                        <p:column  headerText="Name">  
+                        <p:column  headerText="Host Id">  
                             <p:commandLink id="gotohost" action="#{hostController.gotoHost}" ajax="false">
-                                <h:outputText value="#{host.hostname}" />
-                                <f:param name="hostname" value="#{host.hostname}"/>
+                               <h:outputText value="#{host.hostId}" />
+                               <f:param name="hostid" value="#{host.hostId}"/>
                             </p:commandLink> 
-                        </p:column>  
-                        <p:column headerText="IP"><h:outputText value="#{host.publicIp}"/></p:column>  
+                        </p:column>
+                       <p:column headerText="Hostname"><h:outputText value="#{host.hostname}"/></p:column>
+                        <p:column headerText="Public IP"><h:outputText value="#{host.publicIp}"/></p:column>                        
+                        <p:column headerText="Private IP"><h:outputText value="#{host.privateIp}"/></p:column>  
                         <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
                         <p:column headerText="Last Heartbeat"><h:outputText value="#{host.lastHeartbeatFormatted} ago"/></p:column>  
-                        <p:column headerText="Number of Cores"><h:outputText value="#{host.cores}"/></p:column> 
+                        <p:column headerText="Cores"><h:outputText value="#{host.cores}"/></p:column> 
                         <p:column headerText="Load Average">
                             <p:dataTable styleClass="innerDataTable" var="host" value="#{host}">
                                 <p:column>#{host.load1}</p:column>

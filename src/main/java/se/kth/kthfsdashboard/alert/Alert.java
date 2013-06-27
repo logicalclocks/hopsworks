@@ -28,7 +28,7 @@ public class Alert implements Serializable {
    @Column(name = "message", nullable = false, length = 512)
    private String message;
    @Column(name = "host_name", length = 128)
-   private String hostname;
+   private String hostId;
    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
    private Date alertTime;
    private long agentTime;
@@ -60,8 +60,8 @@ public class Alert implements Serializable {
    public Alert() {
    }
 
-   public Alert(String hostname, String message, String plugin, String pluginInstance, String type, String typeInstance) {
-      this.hostname = hostname;
+   public Alert(String hostId, String message, String plugin, String pluginInstance, String type, String typeInstance) {
+      this.hostId = hostId;
       this.message = message;
       this.plugin = plugin;
       this.pluginInstance = pluginInstance;
@@ -81,12 +81,12 @@ public class Alert implements Serializable {
       this.message = message;
    }
 
-   public String getHostname() {
-      return hostname;
+   public String getHostId() {
+      return hostId;
    }
 
-   public void setHostname(String hostname) {
-      this.hostname = hostname;
+   public void setHostId(String hostId) {
+      this.hostId = hostId;
    }
 
    public Date getAlertTime() {

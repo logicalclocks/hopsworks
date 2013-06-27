@@ -106,12 +106,12 @@ public class AgentResource {
       try {
          json = new JSONObject(jsonStrig);
          host = new Host();
-         host.setLastHeartbeat((new Date()).getTime());
+         host.setLastHeartbeat((new Date()).getTime());    
+         host.setHostId(json.getString("id"));         
          host.setHostname(json.getString("hostname"));
          host.setPublicIp(json.getString("public-ip"));
          host.setPrivateIp(json.getString("private-ip"));
          host.setCores(json.getInt("cores"));
-         host.setRack(json.getString("rack"));
          hostEJB.storeHost(host, true);
       } catch (Exception ex) {
          logger.log(Level.SEVERE, "Exception: {0}", ex);
@@ -133,6 +133,7 @@ public class AgentResource {
          agentTime = json.getLong("agent-time");
          host = new Host();
          host.setLastHeartbeat((new Date()).getTime());
+         host.setHostId(json.getString("id"));         
          host.setHostname(json.getString("hostname"));
          host.setLoad1(json.getDouble("load1"));
          host.setLoad5(json.getDouble("load5"));
@@ -146,8 +147,8 @@ public class AgentResource {
          roles = json.getJSONArray("services");
          for (int i = 0; i < roles.length(); i++) {
             JSONObject s = roles.getJSONObject(i);
-            Role role = new Role();
-            role.setHostname(host.getHostname());
+            Role role = new Role();            
+            role.setHostId(host.getHostId());
             role.setCluster(s.getString("cluster"));
             role.setService(s.getString("service"));
             role.setRole(s.getString("role"));
@@ -182,7 +183,7 @@ public class AgentResource {
          
          alert.setAgentTime(json.getLong("Time"));
          alert.setMessage(json.getString("Message"));
-         alert.setHostname(json.getString("Host"));
+         alert.setHostId(json.getString("Host"));
          alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")));
          
          alert.setPlugin(json.getString("Plugin"));

@@ -103,7 +103,7 @@
                      
                      <p:commandLink action="#{urlController.role()}" ajax="false">
                         <h:outputText value="#{instance.name}"/>
-                        <f:param name="hostname" value="#{instance.host}"/>
+                        <f:param name="hostid" value="#{instance.host}"/>
                         <f:param name="cluster" value="#{instance.cluster}"/>
                         <f:param name="role" value="#{instance.role}"/>
                         <f:param name="service" value="#{instance.service}"/>
@@ -114,7 +114,7 @@
                   <p:column headerText="Host" filterBy="#{instance.host}" filterMatchMode="contains" filterPosition="top">
                      <p:commandLink action="#{hostController.gotoHost}" ajax="false">
                         <h:outputText value="#{instance.host}"/>
-                        <f:param name="hostname" value="#{instance.host}"/>
+                        <f:param name="hostid" value="#{instance.host}"/>
                      </p:commandLink> 
                   </p:column>
 

@@ -10,7 +10,7 @@
                   <h:panelGrid columns="10"> 
                      <p:selectOneButton id ="periods" value="#{graphController.period}">  
                         <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
-                        <f:param name="hostname" value="#{hostController.hostname}"/>
+                        <f:param name="hostid" value="#{hostController.hostId}"/>
                         <p:ajax event="change" process="@form" update=":panels:graphs, calstart, calend" listener="#{graphController.updateDates}"/>
                      </p:selectOneButton>
                      <h:outputText value="or from" />
@@ -23,7 +23,7 @@
                      </p:selectOneMenu>
                      <h:outputText value=" columns " />
                      <p:commandButton value="Go" update=":panels:graphs, periods"  actionListener="#{graphController.useCalendar()}" >
-                        <f:param name="hostname" value="#{hostController.hostname}"/>
+                        <f:param name="hostid" value="#{hostController.hostId}"/>
                      </p:commandButton> 
                   </h:panelGrid>
                </h:form>  

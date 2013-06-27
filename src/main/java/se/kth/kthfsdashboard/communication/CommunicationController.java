@@ -26,8 +26,8 @@ public class CommunicationController {
    private HostEJB hostEJB;
    @EJB
    private RoleEJB roleEjb;
-   @ManagedProperty("#{param.hostname}")
-   private String hostname;
+   @ManagedProperty("#{param.hostid}")
+   private String hostId;
    @ManagedProperty("#{param.role}")
    private String role;
    @ManagedProperty("#{param.service}")
@@ -68,12 +68,12 @@ public class CommunicationController {
       return cluster;
    }
 
-   public String getHostname() {
-      return hostname;
+   public String getHostId() {
+      return hostId;
    }
 
-   public void setHostname(String hostname) {
-      this.hostname = hostname;
+   public void setHostId(String hostId) {
+      this.hostId = hostId;
    }
 
    public String serviceLog(int lines) {
@@ -87,7 +87,7 @@ public class CommunicationController {
    }
 
    public String mySqlClusterConfig() throws Exception {
-      // Finds hostname of mgmserver
+      // Finds hostId of mgmserver
       // Role=mgmserver , Service=MySQLCluster, Cluster=cluster
       String mgmserverRole = "mgmserver";
       String ip = findIpByRole(cluster, service, mgmserverRole);
@@ -96,37 +96,37 @@ public class CommunicationController {
    }
 
    private String findIpByRole(String cluster, String service, String role) throws Exception {
-      String host = roleEjb.findRoles(cluster, service, role).get(0).getHostname();
-      return findIpByHostname(host);
+      String host = roleEjb.findRoles(cluster, service, role).get(0).getHostId();
+      return findIpByHostId(host);
    }
 
    public String getRoleLog(int lines) {
       try {
          WebCommunication webComm = new WebCommunication();
-         String ip = findIpByHostname(hostname);
+         String ip = findIpByHostId(hostId);
          return webComm.getRoleLog(ip, cluster, service, role, lines);
       } catch (Exception ex) {
          return ex.getMessage();
       }
    }
 
-   private String findIpByHostname(String hostname) throws Exception {
+   private String findIpByHostId(String hostId) throws Exception {
       try {
-         Host host = hostEJB.findHostByName(hostname);
+         Host host = hostEJB.findHostById(hostId);
          String privateIp = host.getPrivateIp();
          if (privateIp == null || privateIp.equals("")) {
             return host.getPublicIp();
          }
          return privateIp;
       } catch (Exception ex) {
-         throw new RuntimeException("Hostname " + hostname + " not found.");
+         throw new RuntimeException("HostId " + hostId + " not found.");
       }
    }
 
    public String getAgentLog(int lines) {
       try {
          WebCommunication webCom = new WebCommunication();
-         String ip = findIpByHostname(hostname);
+         String ip = findIpByHostId(hostId);
          return webCom.getAgentLog(ip, lines);
       } catch (Exception ex) {
          return ex.getMessage();
@@ -135,12 +135,12 @@ public class CommunicationController {
 
    public List<NodesTableItem> getNdbinfoNodesTable() throws Exception {
 
-      // Finds hostname of mysqld
+      // Finds host of mysqld
       // Role=mysqld , Service=MySQLCluster, Cluster=cluster
       final String ROLE = "mysqld";
       List<NodesTableItem> results;
       try {
-         String host = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostname();
+         String host = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostId();
          WebCommunication wc = new WebCommunication();
          results = wc.getNdbinfoNodesTable(host);
       } catch (Exception ex) {

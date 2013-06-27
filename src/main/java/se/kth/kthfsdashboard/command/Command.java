@@ -29,8 +29,8 @@ public class Command implements Serializable {
    private Long id;
    @Column(nullable = false, length = 256)
    private String command;
-   @Column(name = "HOSTNAME_", nullable = false, length = 128)
-   private String hostname;
+   @Column(nullable = false, length = 128)
+   private String hostId;
    @Column(nullable = false, length = 48)
    private String service;
    @Column(name = "ROLE_", nullable = false, length = 48)
@@ -48,9 +48,9 @@ public class Command implements Serializable {
    public Command() {
    }
 
-   public Command(String command, String hostname, String service, String role, String cluster) {
+   public Command(String command, String hostId, String service, String role, String cluster) {
       this.command = command;
-      this.hostname = hostname;
+      this.hostId = hostId;
       this.service = service;
       this.role = role;
       this.cluster = cluster;
@@ -67,8 +67,8 @@ public class Command implements Serializable {
       return command;
    }
 
-   public String getHostname() {
-      return hostname;
+   public String getHostId() {
+      return hostId;
    }
 
    public String getService() {

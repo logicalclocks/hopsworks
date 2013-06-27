@@ -39,7 +39,7 @@
    </url-mapping>
       
    <url-mapping id="host">
-      <pattern value="/sauron/host/#{ hostname : hostname }" />
+      <pattern value="/sauron/host/#{ hostid : hostid }" />
       <view-id value="/sauron/host.xhtml" />
    </url-mapping>     
 
@@ -84,7 +84,7 @@
    </url-mapping>      
 
    <url-mapping id="role">
-      <pattern value="/sauron/role/#{cluster : cluster}/#{service : service}/#{role : role}/#{hostname : hostname}" />
+      <pattern value="/sauron/role/#{cluster : cluster}/#{service : service}/#{role : role}/#{hostid : hostid}" />
       <view-id value="/sauron/role.xhtml" />
    </url-mapping>   
 

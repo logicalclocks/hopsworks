@@ -53,18 +53,18 @@
             <p:toolbar styleClass="SecondToolbar#{roleController.health}">  
                <p:toolbarGroup align="left">  
                   <p:commandLink  action="#{urlController.role}" ajax="false">
-                     <h:outputText value="#{roleController.role} (#{roleController.hostname})"/>
+                     <h:outputText value="#{roleController.role} (#{roleController.hostId})"/>
                      <f:param name="cluster" value="#{roleController.cluster}"/>
                      <f:param name="role" value="#{roleController.role}"/>
                      <f:param name="service" value="#{roleController.service}"/>                              
-                     <f:param name="hostname" value="#{roleController.hostname}"/>
+                     <f:param name="hostid" value="#{roleController.hostId}"/>
                   </p:commandLink>
 
                   <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{urlController.role}" ajax="false">
                      <f:param name="cluster" value="#{roleController.cluster}"/>
                      <f:param name="role" value="#{roleController.role}"/>
                      <f:param name="service" value="#{roleController.service}"/>                             
-                     <f:param name="hostname" value="#{roleController.hostname}"/>                          
+                     <f:param name="hostid" value="#{roleController.hostId}"/>                          
                   </p:commandButton>  
 
                </p:toolbarGroup>  
@@ -73,7 +73,7 @@
                   <p:menuButton value="Actions">  
                      <p:menuitem value="Start" actionListener="#{hostController.doCommand}" ajax ="true" update="@form :Instance"
                                  onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
-                        <f:param name="hostname" value="#{roleController.hostname}" />
+                        <f:param name="hostid" value="#{roleController.hostId}" />
                         <f:param name="cluster" value="#{roleController.cluster}" />
                         <f:param name="role" value="#{roleController.role}" />
                         <f:param name="service" value="#{roleController.service}"/>                                   
@@ -83,7 +83,7 @@
                                  ajax ="true" update="@form :Instance"
                                  onstart="dlgAction.show();pollCreate.start();" 
                                  oncomplete="dlgAction.hide();pollCreate.stop();">
-                        <f:param name="hostname" value="#{roleController.hostname}" />
+                        <f:param name="hostid" value="#{roleController.hostId}" />
                         <f:param name="cluster" value="#{roleController.cluster}" />
                         <f:param name="role" value="#{roleController.role}" />
                         <f:param name="service" value="#{roleController.service}"/>                                  
@@ -117,7 +117,7 @@
                   <p:column headerText="Host">
                      <p:commandLink id="gotohost" action="#{urlController.host}" ajax="false">
                         <h:outputText value="#{instance.host}" />
-                        <f:param name="hostname" value="#{host.hostname}"/>
+                        <f:param name="hostid" value="#{host.host}"/>
                      </p:commandLink>                      
                   </p:column>
                   <p:column headerText="Status"><h:outputText value="#{instance.status}"/></p:column>
@@ -144,7 +144,7 @@
                      <f:param name="cluster" value="#{roleController.cluster}"/>
                      <f:param name="service" value="#{roleController.service}"/>                       
                      <f:param name="role" value="#{roleController.role}"/>  
-                     <f:param name="hostname" value="#{roleController.hostname}"/>
+                     <f:param name="hostid" value="#{roleController.hostId}"/>
                   </p:commandLink>
                   <p:panelGrid id="log" styleClass="LogOutput">
                      <p:row>
@@ -168,7 +168,7 @@
                <h:panelGrid columns="10"> 
                   <p:selectOneButton id ="periods" value="#{graphController.period}">  
                      <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
-                     <f:param name="hostname" value="#{graphController.hostname}"/>
+                     <f:param name="hostid" value="#{graphController.hostId}"/>
                      <f:param name="role" value="#{graphController.role}"/>                  
                      <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
                   </p:selectOneButton>
@@ -182,7 +182,7 @@
                   </p:selectOneMenu>
                   <h:outputText value=" columns " />
                   <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
-                     <f:param name="hostname" value="#{graphController.hostname}"/>
+                     <f:param name="hostid" value="#{graphController.hostId}"/>
                      <f:param name="role" value="#{graphController.role}"/>                  
                   </p:commandButton> 
                </h:panelGrid>

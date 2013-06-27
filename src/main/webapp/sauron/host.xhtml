@@ -36,12 +36,12 @@
             <p:toolbar styleClass="SecondToolbar#{hostController.host.health}">  
                <p:toolbarGroup align="left">  
                   <p:commandLink action="#{hostController.gotoHost}" ajax="false">
-                     <h:outputText value="#{hostController.host.hostname}"/>
-                     <f:param name="hostname" value="#{serviceController.hostname}"/>   
+                     <h:outputText value="#{hostController.host.hostId} (#{hostController.host.hostname})"/>
+                     <f:param name="hostid" value="#{serviceController.hostId}"/>   
                   </p:commandLink>
 
                   <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{hostController.gotoHost}" ajax="false">
-                     <f:param name="hostname" value="#{serviceController.hostname}"/>                            
+                     <f:param name="hostid" value="#{serviceController.hostId}"/>                            
                   </p:commandButton>  
 
                </p:toolbarGroup>  
@@ -55,10 +55,13 @@
          <h:form styleClass="styleInfoPanel" id="form_host">
             <p:panel  header="Details">
                <p:dataTable id="host" var="host" value="#{hostController.host}">
-                  <p:column headerText="IP"><h:outputText value="#{host.publicIp}"/></p:column>
+                  <p:column headerText="Host Id"><h:outputText value="#{host.hostId}"/></p:column> 
+                  <p:column headerText="Hostname"><h:outputText value="#{host.hostname}"/></p:column>
+                  <p:column headerText="Public IP"><h:outputText value="#{host.publicIp}"/></p:column>
+                  <p:column headerText="Private IP"><h:outputText value="#{host.privateIp}"/></p:column>
                   <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
                   <p:column headerText="Last Heartbeat"><h:outputText value="#{host.lastHeartbeatFormatted} ago"/></p:column>
-                  <p:column headerText="Number of Cores"><h:outputText value="#{host.cores}" /></p:column> 
+                  <p:column headerText="Cores"><h:outputText value="#{host.cores}" /></p:column> 
                   <p:column headerText="Load Average">
                      <p:dataTable styleClass="innerDataTable" var="host" value="#{host}">
                         <p:column>#{host.load1}</p:column>
@@ -96,14 +99,14 @@
                            <h:outputText value="#{command}" />
                            <f:param name="cluster" value="#{serviceController.cluster}" />
                            <f:param name="role" value="namenode" />
-                           <f:param name="hostname" value="#{hostController.host.hostname}" />
+                           <f:param name="hostid" value="#{hostController.host.hostId}" />
                            <f:param name="command" value="#{command}" />
                         </p:commandLink> 
                      </p:column>   
                      <p:column headerText="datanode">
                         <p:commandLink id="cmd2" actionListener="#{hostController.doCommand}" ajax="true">
                            <h:outputText value="#{command}" />
-                           <f:param name="hostname" value="#{hostController.host.hostname}" />
+                           <f:param name="hostid" value="#{hostController.host.hostId}" />
                            <f:param name="cluster" value="#{serviceController.cluster}" />
                            <f:param name="role" value="datanode" />
                            <f:param name="command" value="#{command}" />
@@ -130,7 +133,7 @@
                   <p:commandLink styleClass="AccordionPanelLink" value="Refresh Log" update="log"
                                  onstart="dlgAction.show()" oncomplete="dlgAction.hide()">  
                      <f:param name="role" value="#{serviceController.role}"/> 
-                     <f:param name="hostname" value="#{serviceController.hostname}"/>
+                     <f:param name="hostid" value="#{serviceController.hostId}"/>
                   </p:commandLink>
                   <p:panelGrid id="log" styleClass="LogOutput">
                      <p:row>
@@ -153,7 +156,7 @@
             <h:panelGrid columns="10"> 
                <p:selectOneButton id ="periods" value="#{graphController.period}">  
                   <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
-                  <f:param name="hostname" value="#{hostController.hostname}"/>
+                  <f:param name="hostid" value="#{hostController.hostId}"/>
                   <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
                </p:selectOneButton>
                <h:outputText value="or from" />
@@ -166,7 +169,7 @@
                </p:selectOneMenu>
                <h:outputText value=" columns " />
                <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
-                  <f:param name="hostname" value="#{hostController.hostname}"/>
+                  <f:param name="hostid" value="#{hostController.hostId}"/>
                </p:commandButton> 
             </h:panelGrid>
          </h:form>   
@@ -176,7 +179,7 @@
                <p:toolbarGroup align="left"><p:outputLabel value="Host Info"/></p:toolbarGroup>
             </p:toolbar>
             <p:dataGrid  var="g" value="#{graphController.hostGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-               <p:graphicImage value="#{graphController.hostGraphUrl(g)}" />  
+               <p:graphicImage value="#{graphController.hostGraphUrl(g)}" alt="Graph not available. Check RRD files of this host." />
             </p:dataGrid> 
          </h:form>           
 

@@ -25,8 +25,8 @@ public class RoleController {
    private HostEJB hostEJB;
    @EJB
    private RoleEJB roleEjb;
-   @ManagedProperty("#{param.hostname}")
-   private String hostname;
+   @ManagedProperty("#{param.hostid}")
+   private String hostId;
    @ManagedProperty("#{param.role}")
    private String role;
    @ManagedProperty("#{param.service}")
@@ -46,11 +46,11 @@ public class RoleController {
       logger.info("init RoleController");
       instanceInfoList = new ArrayList<InstanceFullInfo>();
       try {
-         Role r = roleEjb.find(hostname, cluster, service, role);
-         Host h = hostEJB.findHostByName(hostname);
+         Role r = roleEjb.find(hostId, cluster, service, role);
+         Host h = hostEJB.findHostByName(hostId);
          String ip = h.getPublicIp();
          InstanceFullInfo info = new InstanceFullInfo(r.getCluster(), 
-                 r.getService(), r.getRole(), r.getHostname(), ip, 
+                 r.getService(), r.getRole(), r.getHostId(), ip, 
                  r.getWebPort(), r.getStatus(), r.getHealth().toString());
          info.setPid(r.getPid());
          info.setUptime(Formatter.time(r.getUptime() * 1000));
@@ -82,12 +82,12 @@ public class RoleController {
       this.service = service;
    }
 
-   public String getHostname() {
-      return hostname;
+   public String getHostId() {
+      return hostId;
    }
 
-   public void setHostname(String hostname) {
-      this.hostname = hostname;
+   public void setHostId(String hostId) {
+      this.hostId = hostId;
    }
 
    public void setCluster(String cluster) {
