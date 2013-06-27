@@ -2,6 +2,7 @@
 package se.kth.kthfsdashboard.virtualization.clusterparser;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.*;
 
@@ -21,16 +22,16 @@ public class Cluster implements Serializable{
     private Long id;
     @Column(name="CLUSTER_NAME")
     private String name;
-    private List<String> globalServices;
-    private List<String> authorizePorts;
-    private List<Integer> authorizeSpecificPorts;
+    private List<String> globalServices=new ArrayList<String>();
+    private List<String> authorizePorts=new ArrayList<String>();
+    private List<Integer> authorizeSpecificPorts=new ArrayList<Integer>();
     private String environment;
     @Embedded 
-    private Provider provider;
+    private Provider provider = new Provider();
     @OneToMany (cascade=CascadeType.PERSIST, mappedBy="cluster")
-    private List<NodeGroup> nodes;
+    private List<NodeGroup> nodes = new ArrayList<NodeGroup>();
     @OneToMany (cascade= CascadeType.PERSIST, mappedBy="cluster")
-    private List<ChefAttributes> chefAttributes;
+    private List<ChefAttributes> chefAttributes= new ArrayList<ChefAttributes>();
 
     public List<String> getGlobalServices() {
         return globalServices;

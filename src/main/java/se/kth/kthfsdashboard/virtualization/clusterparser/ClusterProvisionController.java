@@ -6,17 +6,22 @@ package se.kth.kthfsdashboard.virtualization.clusterparser;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ActionEvent;
 import org.primefaces.event.FileUploadEvent;
+import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 import org.primefaces.model.UploadedFile;
 import org.yaml.snakeyaml.Yaml;
+import se.kth.kthfsdashboard.virtualization.ClusterOptions;
 
 /**
  *
@@ -24,22 +29,25 @@ import org.yaml.snakeyaml.Yaml;
  */
 @ManagedBean
 @SessionScoped
-public class ClusterController implements Serializable {
+public class ClusterProvisionController implements Serializable {
 
     @EJB
     private ClusterFacade clusterEJB;
-    private Cluster cluster;
-    private boolean disableStart = true;
+    private Cluster cluster= new Cluster();
     private UploadedFile file;
     private Yaml yaml = new Yaml();
+    private int option;
+    private boolean skip;
+    private ClusterOptions options= new ClusterOptions();
     private TreeNode root;
     private TreeNode selectedItem;
     private TreeNode[] selectedItems;
+    private static Logger logger = Logger.getLogger(Cluster.class.getName());
 
     /**
-     * Creates a new instance of ClusterController
+     * Creates a new instance of ClusterProvisionController
      */
-    public ClusterController() {
+    public ClusterProvisionController() {
     }
 
     public Cluster getCluster() {
@@ -58,18 +66,40 @@ public class ClusterController implements Serializable {
         this.file = file;
     }
 
-    public void handleFileUpload(FileUploadEvent event) {
-        file = event.getFile();
-        parseYMLtoCluster();
-        generateTreeTable();
-        FacesMessage msg = new FacesMessage("Succesful", event.getFile().getFileName() + " is uploaded.");
-        FacesContext.getCurrentInstance().addMessage(null, msg);
+    public void handleFileUpload() {
+        if ((file != null) && (option == 3)) {
+            parseYMLtoCluster();
+            generateTreeTable();
+            FacesMessage msg = new FacesMessage("Successful", file.getFileName() + " is uploaded.");
+            FacesContext.getCurrentInstance().addMessage(null, msg);
+        }
     }
 
-    public boolean clusterLoaded() {
-        return disableStart;
+    public int getOption() {
+        return option;
     }
 
+    public void setOption(int option) {
+        this.option = option;
+    }
+
+    public boolean isSkip() {
+        return skip;
+    }
+
+    public void setSkip(boolean skip) {
+        this.skip = skip;
+    }
+
+    public ClusterOptions getOptions() {
+        return options;
+    }
+
+    public void setOptions(ClusterOptions options) {
+        this.options = options;
+    }
+
+    
     public TreeNode getRoot() {
         return root;
     }
@@ -95,19 +125,56 @@ public class ClusterController implements Serializable {
             Object document = yaml.load(file.getInputstream());
 
             if (document != null && document instanceof Cluster) {
-                disableStart = false;
+
                 cluster = (Cluster) document;
                 clusterEJB.persistCluster(cluster);
             } else {
-                disableStart = true;
+
                 cluster = null;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+    }
 
+    public String proceedOption() {
+        String result;
+        switch (option) {
+            case 1:
+                result = "createClusterWizard";
+                break;
+            case 2:
+                result = "welcome";
+                break;
+            case 3:
+                result = "proceedLaunchCluster";
+                break;
+            default:
+                result = "welcome";
+                break;
+        }
+        return result;
 
+    }
+
+    public String onFlowProcess(FlowEvent event) {
+        logger.info("Current wizard step:" + event.getOldStep());
+        logger.info("Next step:" + event.getNewStep());
+        if (skip) {
+            skip = false;	//reset in case user goes back
+            return "confirm";
+        } else {
+            return event.getNewStep();
+        }
+
+    }
+
+    public void save(ActionEvent actionEvent) {
+        //Persist user  
+
+        FacesMessage msg = new FacesMessage("Successful", "Welcome :" + cluster.getName());
+        FacesContext.getCurrentInstance().addMessage(null, msg);
     }
 
     private void generateTreeTable() {
@@ -153,7 +220,7 @@ public class ClusterController implements Serializable {
 
         if (mgmd != 0 || ndbd != 0 || mysql != 0) {
             TreeNode node2 = new DefaultTreeNode("node", new InstanceElement("MYSQL", mgmd + ndbd + mysql, ""), root);
-            if (mgmd != 0) {   
+            if (mgmd != 0) {
                 TreeNode node21 = new DefaultTreeNode("leaf", new InstanceElement("mgmd", mgmd, "pending"), node2);
             }
             if (ndbd != 0) {
