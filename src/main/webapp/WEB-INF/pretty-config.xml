@@ -54,37 +54,31 @@
    </url-mapping>   
 
    <url-mapping id="cluster-status">
-      <pattern value="/sauron/cluster/#{ cluster : cluster }" />
+      <pattern value="/sauron/cluster/#{cluster}" />
       <view-id value="/sauron/cluster-status.xhtml" />
    </url-mapping>  
    <url-mapping id="cluster-commands">
-      <pattern value="/sauron/cluster/#{cluster : cluster}/commands" />
+      <pattern value="/sauron/cluster/#{cluster}/commands" />
       <view-id value="/sauron/cluster-commands.xhtml" />
    </url-mapping>     
 
    <url-mapping id="service-status">
-      <pattern value="/sauron/service/#{cluster : cluster}/#{service : service}" />
+      <pattern value="/sauron/service/#{cluster}/#{service}" />
       <view-id value="/sauron/service-status.xhtml" />
    </url-mapping>
-   <url-mapping id="service-instances3">
-      <pattern value="/sauron/service/instances/#{cluster : cluster}/#{service : service}/#{role : role}/#{status : status}" />
-      <view-id value="/sauron/service-instances.xhtml" />
-   </url-mapping>   
-   <url-mapping id="service-instances2">
-      <pattern value="/sauron/service/instances/#{cluster : cluster}/#{service : service}/#{role : role}" />
-      <view-id value="/sauron/service-instances.xhtml" />
-   </url-mapping>
+
    <url-mapping id="service-instances">
-      <pattern value="/sauron/service/instances/#{cluster : cluster}/#{service : service}" />
+      <pattern value="/sauron/service/instances/#{cluster}/#{service}" />
       <view-id value="/sauron/service-instances.xhtml" />
    </url-mapping>   
+   
    <url-mapping id="service-commands">
-      <pattern value="/sauron/service/#{cluster : cluster}/#{service : service}/commands" />
+      <pattern value="/sauron/service/#{cluster}/#{service}/commands" />
       <view-id value="/sauron/service-commands.xhtml" />
    </url-mapping>      
 
    <url-mapping id="role">
-      <pattern value="/sauron/role/#{cluster : cluster}/#{service : service}/#{role : role}/#{hostid : hostid}" />
+      <pattern value="/sauron/role/#{cluster}/#{service}/#{role}/#{hostid}" />
       <view-id value="/sauron/role.xhtml" />
    </url-mapping>   
 

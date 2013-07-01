@@ -1,7 +1,6 @@
 package se.kth.kthfsdashboard.struct;
 
 import java.io.Serializable;
-import se.kth.kthfsdashboard.role.Status;
 
 /**
  *
@@ -14,18 +13,16 @@ public class InstanceInfo implements Serializable {
     private String cluster;
     private String role;
     private String service;
-    private String rack;
     private Status status;
     private String health;
 
-    public InstanceInfo(String cluster, String service, String role, String host, String rack, Status status, String health) {
+    public InstanceInfo(String cluster, String service, String role, String host, Status status, String health) {
 
-        this.name = role + " (" + host + ")";
+        this.name = role + " @" + host;
         this.host = host;
         this.cluster = cluster;
         this.service = service;
         this.role = role;
-        this.rack = rack;
         this.status = status;
         this.health = health;
     }
@@ -36,10 +33,6 @@ public class InstanceInfo implements Serializable {
 
     public String getHost() {
         return host;
-    }
-
-    public String getRack() {
-        return rack;
     }
 
     public Status getStatus() {

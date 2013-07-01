@@ -2,11 +2,13 @@ package se.kth.kthfsdashboard.service;
 
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
+import se.kth.kthfsdashboard.role.RoleEJB;
 
 /**
  *
@@ -16,6 +18,8 @@ import javax.faces.context.FacesContext;
 @RequestScoped
 public class ServiceController {
 
+   @EJB
+   private RoleEJB roleEjb;   
    @ManagedProperty("#{param.hostid}")
    private String hostId;
    @ManagedProperty("#{param.role}")
@@ -97,6 +101,16 @@ public class ServiceController {
 
    public void deleteService() {
       addMessage("Delete not implemented!");
+   }
+   
+   public void test () {
+//      for (RoleHostInfo i : roleEjb.findRoleHost("cluster1", "KTHFS", "namenode")) {
+//
+//         System.err.println( i.getRole() + " " + i.getHost().getHealth());
+//      }
+      
+      System.err.println(cluster);
+      
    }
 
 }

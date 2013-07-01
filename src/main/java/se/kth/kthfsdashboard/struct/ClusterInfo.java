@@ -1,12 +1,10 @@
 package se.kth.kthfsdashboard.struct;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import se.kth.kthfsdashboard.role.Role;
-import se.kth.kthfsdashboard.role.Status;
+import java.util.TreeMap;
 
 /**
  *
@@ -20,14 +18,14 @@ public class ClusterInfo {
    private Set<String> roles = new HashSet<String>();
    private Set<String> badServices = new HashSet<String>();
    private Set<String> badRoles = new HashSet<String>();
-   private Map<String, Integer> rolesCount = new HashMap<String, Integer>();
-   private Map<String, String> rolesServicesMap = new HashMap<String, String>();   
-   private Integer started;
-   private Integer stopped;
+   private Map<String, Integer> rolesCount = new TreeMap<String, Integer>();
+   private Map<String, String> rolesServicesMap = new TreeMap<String, String>();   
+   private Integer started, stopped, timedOut;
 
    public ClusterInfo(String name) {
       started = 0;
       stopped = 0;
+      timedOut = 0;
       this.name = name;
    }
 
@@ -70,33 +68,50 @@ public class ClusterInfo {
       if (badServices.contains(service)) {
          return Health.Bad;
       }
-      return Health.None;
+//      return Health.None;
+      return Health.Good;      
    }
 
    public Health roleHealth(String role) {
       if (badRoles.contains(role)) {
          return Health.Bad;
       }
-      return Health.None;
+//      return Health.None;
+      return Health.Good;
    }
 
-   public String getStatus() {
-      return String.format("%d Started, %d Stopped", started, stopped);
+   public Map getStatus() {
+      
+     Map<Status, Integer> statusMap = new TreeMap<Status, Integer>();
+     if (started > 0 ) {
+        statusMap.put(Status.Started, started);
+     }
+     if (stopped > 0 ) {
+        statusMap.put(Status.Stopped, stopped);
+     }     
+     if (timedOut > 0 ) {
+        statusMap.put(Status.TimedOut, timedOut);
+     }     
+     return statusMap;
    }
 
-   public void addRoles(List<Role> rolesList) {
-      for (Role role : rolesList) {
-         services.add(role.getService());
-         roles.add(role.getRole());
-         rolesServicesMap.put(role.getRole(), role.getService());
-         if (role.getStatus() == Status.Started) {
+   public void addRoles(List<RoleHostInfo> roleHostList) {
+      for (RoleHostInfo roleHost : roleHostList) {
+         services.add(roleHost.getRole().getService());
+         roles.add(roleHost.getRole().getRole());
+         rolesServicesMap.put(roleHost.getRole().getRole(), roleHost.getRole().getService());
+         if (roleHost.getStatus() == Status.Started) {
             started += 1;
          } else {
-            badServices.add(role.getService());
-            badRoles.add(role.getRole());
-            stopped += 1;
+            badServices.add(roleHost.getRole().getService());
+            badRoles.add(roleHost.getRole().getRole());
+            if (roleHost.getStatus() == Status.Stopped) {
+               stopped += 1;
+            } else if (roleHost.getStatus() == Status.TimedOut) {
+               timedOut += 1;
+            }            
          }
-         addRole(role.getRole());
+         addRole(roleHost.getRole().getRole());
       }
    }
 

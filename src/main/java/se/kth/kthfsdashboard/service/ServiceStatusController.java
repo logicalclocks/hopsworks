@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -13,9 +14,10 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import se.kth.kthfsdashboard.role.RoleEJB;
 import se.kth.kthfsdashboard.role.RoleType;
-import se.kth.kthfsdashboard.role.Status;
 import se.kth.kthfsdashboard.struct.Health;
+import se.kth.kthfsdashboard.struct.RoleHostInfo;
 import se.kth.kthfsdashboard.struct.ServiceRoleInfo;
+import se.kth.kthfsdashboard.struct.Status;
 
 /**
  *
@@ -40,8 +42,8 @@ public class ServiceStatusController {
       serviceRolesMap = new EnumMap<ServiceType, List<ServiceRoleInfo>>(ServiceType.class);
 
       List<ServiceRoleInfo> roles = new ArrayList<ServiceRoleInfo>();
-      roles.add(new ServiceRoleInfo("NameNode", RoleType.namenode));
-      roles.add(new ServiceRoleInfo("DataNode", RoleType.datanode));
+      roles.add(new ServiceRoleInfo("Name Node", RoleType.namenode));
+      roles.add(new ServiceRoleInfo("Data Node", RoleType.datanode));
       serviceRolesMap.put(ServiceType.KTHFS, roles);
 
       roles = new ArrayList<ServiceRoleInfo>();
@@ -63,7 +65,7 @@ public class ServiceStatusController {
       t1 = System.currentTimeMillis();
       loadRoles();
       t2 = System.currentTimeMillis();
-      logger.log(Level.INFO, "ServiceStatusController >> loadRoles() took {0} ms", t2 - t1);      
+      logger.log(Level.INFO, "ServiceStatusController >> loadRoles() took {0} ms", t2 - t1);
    }
 
    public String getService() {
@@ -119,16 +121,25 @@ public class ServiceStatusController {
 
    private ServiceRoleInfo setStatus(String cluster, String service, ServiceRoleInfo serviceRoleInfo) {
 
-      Long started, stopped, failed, good, bad;
-      started = roleEjb.countStatus(cluster, service, serviceRoleInfo.getRoleName(), Status.Started);
-      stopped = roleEjb.countStatus(cluster, service, serviceRoleInfo.getRoleName(), Status.Stopped);
-      failed = roleEjb.countStatus(cluster, service, serviceRoleInfo.getRoleName(), Status.Failed);
-      good = started;
-      bad = failed + stopped;
-      serviceRoleInfo.setStatusStarted(String.format("%d Started", started));
-      serviceRoleInfo.setStatusStopped(String.format("%d Stopped", stopped + failed));
-      serviceRoleInfo.setHealth(String.format("%d Good, %d Bad", good, bad));
-      if (bad > 0) {
+      TreeMap<Status, Integer> statusMap = new TreeMap<Status, Integer>();
+      TreeMap<Health, Integer> healthMap = new TreeMap<Health, Integer>();
+      for (RoleHostInfo roleHost : roleEjb.findRoleHost(cluster, service, serviceRoleInfo.getRoleName())) {
+         if (statusMap.containsKey(roleHost.getStatus())) {
+            statusMap.put(roleHost.getStatus(), statusMap.get(roleHost.getStatus()) + 1);
+         } else {
+            statusMap.put(roleHost.getStatus(), 1);
+         }
+
+         if (healthMap.containsKey(roleHost.getHealth())) {
+            Integer count = healthMap.get(roleHost.getHealth()) + 1;
+            healthMap.put(roleHost.getHealth(), count);
+         } else {
+            healthMap.put(roleHost.getHealth(), 1);
+         }
+      }
+      serviceRoleInfo.setStatusMap(statusMap);
+      serviceRoleInfo.setHealthMap(healthMap);
+      if (healthMap.containsKey(Health.Bad)) {
          serviceHealth = Health.Bad;
       }
       return serviceRoleInfo;

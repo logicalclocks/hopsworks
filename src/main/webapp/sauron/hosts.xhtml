@@ -6,7 +6,6 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:fn="http://java.sun.com/jsp/jstl/functions"
       >
 
     <ui:composition template="layout.xhtml">
@@ -28,19 +27,19 @@
             </h:form>
             <!--Navigation Bar - End-->
 
-            <div class="hosts-header">#{fn:length(hostController.hosts)} Host(s) Under Management:</div>
+            <div class="hosts-header">#{hostsController.hosts.size()} Host<h:outputText value ="s" rendered="#{hostsController.hosts.size()>1}"/> Under Management:</div>
 
             <p:panel header="Hosts">  
                 <h:form id="form">  
-                    <p:dataTable id="hosts" var="host" value="#{hostController.hosts}">
+                   <p:dataTable id="hosts" var="host" value="#{hostsController.hosts}">
 
                         <p:column  headerText="Host Id">  
-                            <p:commandLink id="gotohost" action="#{hostController.gotoHost}" ajax="false">
+                           <p:commandLink id="gotohost" styleClass="Health-#{host.health}" action="#{urlController.host()}" ajax="false">
                                <h:outputText value="#{host.hostId}" />
                                <f:param name="hostid" value="#{host.hostId}"/>
                             </p:commandLink> 
                         </p:column>
-                       <p:column headerText="Hostname"><h:outputText value="#{host.hostname}"/></p:column>
+                       <p:column headerText="Hostname" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostname}"/></p:column>
                         <p:column headerText="Public IP"><h:outputText value="#{host.publicIp}"/></p:column>                        
                         <p:column headerText="Private IP"><h:outputText value="#{host.privateIp}"/></p:column>  
                         <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 

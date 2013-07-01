@@ -58,7 +58,7 @@ public class ClusterStatusController {
       clusterHealth = Health.Good;
       for (String s : roleEjb.findServices(cluster)) {
          ServiceInfo serviceInfo = new ServiceInfo(s);
-         Health health = serviceInfo.addRoles(roleEjb.findRoles(cluster, s));
+         Health health = serviceInfo.addRoles(roleEjb.findRoleHost(cluster, s));
          if (health == Health.Bad) {
             clusterHealth = Health.Bad;
          }

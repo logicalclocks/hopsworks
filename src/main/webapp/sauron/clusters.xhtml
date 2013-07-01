@@ -28,7 +28,7 @@
          </h:form>
          <!--Navigation Bar - End-->
 
-         <div class="services-header">#{clustersController.clusters.size()} Cluster(s) Under Management:</div>
+         <div class="services-header">#{clustersController.clusters.size()} Cluster<h:outputText value ="s" rendered="#{clustersController.clusters.size()>1}"/> Under Management:</div>
 
          <p:panel header="Clusters">  
             <h:form id="formServices">  
@@ -68,11 +68,19 @@
                         </p:commandLink>
                         <p:spacer width="6" height="0" rendered="#{!status.last}"/>
                      </ui:repeat>
-                  </p:column>  
+                  </p:column>                                    
                   
-                  <p:column headerText="Roles Status"><h:outputText value="#{cluster.status}"/></p:column>                      
-                  <p:column headerText="Health"  styleClass="Health-#{cluster.clusterHealth}"><h:outputText value="#{cluster.clusterHealth}"/></p:column>                 
-
+                  <p:column headerText="Roles Status">
+                     <ui:repeat value="#{cluster.status.entrySet().toArray()}" var="item" varStatus="status">
+                        <h:outputText value="${item.value} ${item.key}" styleClass="Status-${item.key}"/>
+                           <h:outputText value=", " rendered="#{!status.last}"/>
+                     </ui:repeat>
+                  </p:column>
+                  
+                  <p:column headerText="Health"  styleClass="Health-#{cluster.clusterHealth}">
+                     <h:outputText value="#{cluster.clusterHealth}"/>
+                  </p:column>                    
+                                                      
                   <p:column headerText="Number of Machines"><h:outputText value="#{cluster.numberOfMachines}"/></p:column>                   
                   
                   <p:column headerText="Actions" style="width:10%">

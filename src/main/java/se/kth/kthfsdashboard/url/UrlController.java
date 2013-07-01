@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
+import se.kth.kthfsdashboard.util.CookieTools;
 
 /**
  *
@@ -22,8 +23,8 @@ public class UrlController {
    @ManagedProperty("#{param.cluster}")
    private String cluster;
    @ManagedProperty("#{param.status}")
-   private String status;   
-
+   private String status;
+   
    private static final Logger logger = Logger.getLogger(UrlController.class.getName());
 
    public UrlController() {
@@ -103,11 +104,11 @@ public class UrlController {
          url += "&service=" + service;
       }
       if (role != null) {
-         url += "&role=" + role;
+         url += "&r=" + role;
       }
       if (status != null) {
-         url += "&status=" + status;
-      }
+         url += "&s=" + status;
+      }      
       return url;
    }
 

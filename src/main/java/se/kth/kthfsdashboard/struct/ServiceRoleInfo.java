@@ -1,5 +1,7 @@
 package se.kth.kthfsdashboard.struct;
 
+import java.util.SortedMap;
+import java.util.TreeMap;
 import se.kth.kthfsdashboard.role.RoleType;
 
 /**
@@ -8,57 +10,52 @@ import se.kth.kthfsdashboard.role.RoleType;
  */
 public class ServiceRoleInfo {
 
-    private String fullName;
-    private String roleName;
-    private String statusStarted;
-    private String statusStopped;
-    private String health;
+   private String fullName;
+   private String roleName;
+   private SortedMap<Status, Integer> statusMap = new TreeMap<Status, Integer>();
+   private SortedMap<Health, Integer> healthMap = new TreeMap<Health, Integer>();
 
+   public ServiceRoleInfo(String fullName, RoleType role) {
+      this.fullName = fullName;
+      this.roleName = role.toString();
+   }
 
-    public ServiceRoleInfo (String fullName, RoleType role) {
-        this.fullName = fullName;
-        this.roleName = role.toString();
-    }
-            
-//    public ServiceRoleInfo (String name, String shortName, String statusStarted, String statusStopped, String health) {
-//        this.fullName = name;
-//        this.roleName = shortName;
-//        this.statusStarted = statusStarted;
-//        this.statusStopped = statusStopped;
-//        this.health = health;
-//                
-//    }
-//    
-    public String getFullName() {
-        return fullName;
-    }
-    
-    public String getRoleName(){
-        return roleName;
-    }
+   public String getFullName() {
+      return fullName;
+   }
 
-    public String getStatusStarted() {
-        return statusStarted;
-    }
+   public String getRoleName() {
+      return roleName;
+   }
 
-    public void setStatusStarted(String statusStarted) {
-        this.statusStarted = statusStarted;
-    }
+   public Health getRoleHealth() {
+      if (!healthMap.containsKey(Health.Bad)) {
+         return Health.Good;
+      }
+      return Health.Bad;
+   }
 
-    public String getStatusStopped() {
-        return statusStopped;
-    }
+   public String[] getStatusEntries() {
+      return statusMap.entrySet().toArray(new String[statusMap.size()]);
+   }
 
-    public void setStatusStopped(String statusStopped) {
-        this.statusStopped = statusStopped;
-    }
+   public Integer getStatusCount(Status status) {
+      return statusMap.get(status);
+   }
 
-    public String getHealth() {
-        return health;
-    }
+   public void setStatusMap(SortedMap<Status, Integer> statusMap) {
+      this.statusMap = statusMap;
+   }
 
-    public void setHealth(String health) {
-        this.health = health;
-    }
+   public SortedMap<Status, Integer> getStatusMap() {
+      return statusMap;
+   }
 
+   public SortedMap<Health, Integer> getHealthMap() {
+      return healthMap;
+   }
+
+   public void setHealthMap(SortedMap<Health, Integer> healthMap) {
+      this.healthMap = healthMap;
+   }
 }

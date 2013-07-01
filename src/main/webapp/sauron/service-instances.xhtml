@@ -14,14 +14,12 @@
       </ui:define>
 
         <ui:define name="scripts">
-
             <script>
                 jQuery(document).ready(function() {
                     jQuery('select[id*="Name"]').val('#{serviceInstancesController.role}');             
                     jQuery('select[id*="Status1"]').val('#{serviceInstancesController.status}');
                 });
             </script>
-
         </ui:define>
       
       <ui:define name="content">
@@ -50,7 +48,7 @@
             </p:panelGrid>
          </h:form>
          <!--Navigation Bar - End-->
-
+         
          <!-- Second Toolbar-->
          <h:form>  
             <p:toolbar styleClass="SecondToolbar#{serviceStatusController.health}">
@@ -88,17 +86,17 @@
             </p:toolbar>  
          </h:form>
 
-
-         <p:spacer width="1" height="10" />
+         
+         <p:spacer width="1" height="10" />       
 
          <h:form styleClass="styleInfoPanel" id="formInstances">
 
             <p:panel id="panelInstances" header="Role Instances">
 
-               <p:dataTable id="instances" var="instance" value="#{serviceInstancesController.instances}" 
-                            widgetVar="instancesTable" filteredValue="#{serviceInstancesController.filteredInstances}" >
+               <p:dataTable id="instances" var="instance" value="#{serviceInstancesController.instances}"
+                            filteredValue="#{serviceInstancesController.filteredInstances}" >
 
-                  <p:column id="Name" headerText="Name" filterBy="#{instance.name}" filterMatchMode="contains" 
+                  <p:column id="Name" headerText="Role" filterBy="#{instance.name}" filterMatchMode="contains" 
                             filterOptions="#{serviceInstancesController.roleOptions}" filterPosition="top">
                      
                      <p:commandLink action="#{urlController.role()}" ajax="false">
@@ -118,18 +116,21 @@
                      </p:commandLink> 
                   </p:column>
 
-                  <p:column id="Rack" headerText="Rack" filterBy="#{instance.rack}" filterMatchMode="contains" filterPosition="top">
-                     <h:outputText value="#{instance.rack}"/>
-                  </p:column>
-
                   <p:column id="Status1" headerText="Status" filterBy="#{instance.status}" 
                             filterMatchMode="exact" filterOptions="#{serviceInstancesController.statusOptions}" filterPosition="top">
-                     <h:outputText value="#{instance.status}"/>
+                   
+                     <div class="Status-#{instance.status}">
+                        <h:outputText id="status" value="#{instance.status}"/>
+                         <p:tooltip for="status" value="#{settingsController.tooltip(instance.status)}" 
+                                    showEffect="fade" hideEffect="fade" />
+                     </div>
                   </p:column>
 
                   <p:column id="Health" headerText="Health" filterBy="#{instance.health}"  
                             filterMatchMode="exact" filterOptions="#{serviceInstancesController.healthOptions}" filterPosition="top">
-                     <div class="Health-#{instance.health}"><h:outputText value="#{instance.health}"/></div>
+                     <div class="Health-#{instance.health}">
+                        <h:outputText value="#{instance.health}"/>
+                     </div>
                   </p:column>
 
                </p:dataTable> 

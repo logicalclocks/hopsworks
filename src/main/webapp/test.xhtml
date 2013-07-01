@@ -4,6 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"   
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://java.sun.com/jsf/core"      
       >
 
    <h:head>
@@ -12,11 +13,48 @@
 
    </h:head>
 
+   <script>
+      jQuery(document).ready(function() {
+         $('.Role-filter').val('#{testController.role}');                      
+         $('.Status-filter').val('#{testController.status}'); 
+      });
+   </script>
+
    <h:body>
-      <p>Test</p>
+      <p title="Test page">This is a test page</p>
+      
+      <h:form>
+         <p:commandButton actionListener="#{testController.test()}" ajax="true"/>         
+      </h:form>
 
+      
+      
 
+      <h:form styleClass="styleInfoPanel" id="formInstances">
+         <p:panel id="panelInstances" header="Roles">
+            <p:dataTable id="instances" var="instance" value="#{testController.roles}"
+                         filteredValue="#{testController.filteredInstances}" >
 
+               <p:column id="Name" headerText="Role" filterBy="#{instance.role}" filterMatchMode="contains" 
+                         filterOptions="#{testController.roleOptions}" filterPosition="top"
+                         filterStyleClass="Role-filter">
+
+                  <p:commandLink action="#{urlController.role()}" ajax="false">
+                     <h:outputText value="#{instance.role}"/>
+                     <f:param name="hostid" value="cloud1.sics.se"/>
+                     <f:param name="cluster" value="cluster1"/>
+                     <f:param name="role" value="namenode"/>
+                     <f:param name="service" value="KTHFS}"/>
+                  </p:commandLink>                     
+               </p:column>
+
+               <p:column id="Status1" headerText="Status" filterBy="#{instance.status}" 
+                         filterMatchMode="exact" filterOptions="#{testController.statusOptions}" filterPosition="top">
+                  <h:outputText id="status" value="#{instance.status}"/>
+               </p:column>                  
+            </p:dataTable> 
+         </p:panel>                    
+      </h:form>
 
    </h:body>
 

@@ -64,23 +64,19 @@
             <p:panel header="Services">
 
                <p:dataTable id="service" var="service" value="#{clusterStatusController.services}">
-
                   <p:column headerText="Service">
-                     <p:commandLink action="#{urlController.serviceStatus}" ajax="false">
+                     <p:commandLink action="#{urlController.serviceStatus}" ajax="false" styleClass="Health-#{service.health}">
                         <h:outputText value="#{service.name}"/>
                         <f:param name="cluster" value="#{clusterStatusController.cluster}"/>
                         <f:param name="service" value="#{service.name}"/>
                      </p:commandLink>                         
-                  </p:column>  
-
-                  <p:column headerText="Status"><h:outputText value="#{service.status}"/></p:column>  
-
-                  <p:column headerText="Health"  styleClass="Health-#{service.health}"><h:outputText value="#{service.health}"/></p:column> 
+                  </p:column>
                   
                   <p:column headerText="Roles">
-                     <ui:repeat value="#{service.roleCounts.entrySet().toArray()}" var="item" varStatus="status">
-                        <p:commandLink action="#{urlController.serviceInstances}" ajax="false">
-                           <h:outputText value="${item.value} ${item.key}"/>
+                     <ui:repeat value="#{service.roles}" var="role" varStatus="status">
+                        <p:commandLink styleClass="Health-#{service.roleHealth(role)}" 
+                                       action="#{urlController.serviceInstances}" ajax="false">
+                           <h:outputText value="${service.roleCount(role)} ${role}"/>
                            <f:param name="cluster" value="#{clusterStatusController.cluster}"/>
                            <f:param name="role" value="#{item.key}"/>
                            <f:param name="service" value="#{service.name}"/>
@@ -88,8 +84,19 @@
                         <p:spacer width="6" height="0" rendered="#{!status.last}"/>
                      </ui:repeat>
                   </p:column>                   
-               </p:dataTable> 
 
+                  <p:column headerText="Roles Status">
+                     <ui:repeat value="#{service.status.entrySet().toArray()}" var="item" varStatus="status">
+                        <h:outputText value="${item.value} ${item.key}" styleClass="Status-${item.key}"/>
+                        <h:outputText value=", " rendered="#{!status.last}"/>
+                     </ui:repeat>
+                  </p:column>                   
+
+                  <p:column headerText="Health" styleClass="Health-#{service.health}">
+                     <h:outputText value="#{service.health}"/>
+                  </p:column> 
+                  
+               </p:dataTable>  
             </p:panel>                    
          </h:form>
 

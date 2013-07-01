@@ -93,7 +93,7 @@
 
                   <p:column headerText="Role name">
 
-                     <p:commandLink action="#{urlController.serviceInstances}" ajax="false">
+                     <p:commandLink styleClass="Health-#{serviceRole.roleHealth}" action="#{urlController.serviceInstances}" ajax="false">
                         <h:outputText value="#{serviceRole.fullName}"/>
                         <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
                         <f:param name="service" value="#{serviceStatusController.service}"/>                        
@@ -102,24 +102,26 @@
                   </p:column>  
 
                   <p:column headerText="Status">
-                     <p:commandLink action="#{urlController.serviceInstances}" ajax="false">
-                        <h:outputText value="#{serviceRole.statusStarted}"/>
-                        <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                        <f:param name="service" value="#{serviceStatusController.service}"/>                       
-                        <f:param name="role" value="#{serviceRole.roleName}"/>
-                        <f:param name="status" value="Started"/>
-                     </p:commandLink> 
-                     <p:spacer width="10" height="0" />
-                     <p:commandLink action="#{urlController.serviceInstances}" ajax="false">
-                        <h:outputText value="#{serviceRole.statusStopped}"/>
-                        <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                        <f:param name="service" value="#{serviceStatusController.service}"/>                        
-                        <f:param name="role" value="#{serviceRole.roleName}"/>
-                        <f:param name="status" value="Stopped"/>
-                     </p:commandLink> 
-                  </p:column>  
+                     <ui:repeat value="#{serviceRole.statusMap.entrySet().toArray()}" var="item" varStatus="status">
+                        <p:commandLink action="#{urlController.serviceInstances}" ajax="false">
+                           <h:outputText id="statuslink" value="${item.value} ${item.key}" styleClass="Status-${item.key}"/>
+                           <p:tooltip for="statuslink" value="#{settingsController.tooltip(item.key, item.value)}" showEffect="fade" hideEffect="fade" />
+                           <f:param name="cluster" value="#{ServiceStatusController.cluster}"/>
+                           <f:param name="service" value="#{serviceStatusController.service}"/>
+                           <f:param name="role" value="#{serviceRole.roleName}"/>
+                           <f:param name="status" value="${item.key}"/>                           
+                        </p:commandLink>
+                        <p:spacer width="6" height="0" rendered="#{!status.last}"/>
+                     </ui:repeat>
+                  </p:column>
 
-                  <p:column headerText="Health"><h:outputText value="#{serviceRole.health}"/></p:column> 
+                  <p:column headerText="Health">
+                     <ui:repeat value="#{serviceRole.healthMap.entrySet().toArray()}" var="item" varStatus="status">
+                        <h:outputText value="${item.value} ${item.key}" styleClass="Health-${item.key}"/>
+                           <h:outputText value=", " rendered="#{!status.last}"/>
+                     </ui:repeat>
+                  </p:column>
+
                </p:dataTable> 
 
             </p:panel>                    
@@ -223,14 +225,14 @@
                </p:toolbar>
                <p:dataGrid  var="g" value="#{graphController.namenodeServiceGraphs}" columns="#{settingsController.numOfGraphColumns}"  
                             paginator="false" styleClass="ui-datagrid-no-border" >  
-                  <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}" alt="Graph not available. Check RRD files."/>  
+                  <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}" alt="Graph"/>  
                </p:dataGrid> 
 
                <p:toolbar>
                   <p:toolbarGroup align="left"><p:outputLabel value="Aggregate Name Node Activity (Total Activity)"/></p:toolbarGroup>
                </p:toolbar>
                <p:dataGrid  var="g" value="#{graphController.namenodeServiceActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                  <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}" alt="Graph not available. Check RRD files."/>  
+                  <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}" alt="Graph"/>  
                </p:dataGrid>             
 
                <!--
@@ -246,7 +248,7 @@
                </p:toolbar>
                <p:dataGrid  var="g" value="#{graphController.mysqlclusterActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
 
-                  <p:graphicImage value="#{graphController.mysqlclusterGraphUrl(g)}" alt="Graph not available. Check RRD files." rendered="true">
+                  <p:graphicImage value="#{graphController.mysqlclusterGraphUrl(g)}" alt="Graph" rendered="true">
                     
                   </p:graphicImage>                      
                 
