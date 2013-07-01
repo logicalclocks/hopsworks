@@ -3,9 +3,6 @@ package se.kth.kthfsdashboard.host;
 import com.sun.jersey.api.client.ClientResponse;
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -19,21 +16,16 @@ import javax.ws.rs.core.Response.Status.Family;
 import org.codehaus.jettison.json.JSONObject;
 import se.kth.kthfsdashboard.command.Command;
 import se.kth.kthfsdashboard.command.CommandEJB;
-import se.kth.kthfsdashboard.command.CommandMessageController;
 import se.kth.kthfsdashboard.communication.WebCommunication;
 import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
 import se.kth.kthfsdashboard.struct.Status;
-import se.kth.kthfsdashboard.struct.DiskInfo;
-import se.kth.kthfsdashboard.util.CollectdTools;
-
 
 /**
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
 @ManagedBean
-//@SessionScoped
 @RequestScoped
 public class HostController implements Serializable {
 
@@ -53,52 +45,16 @@ public class HostController implements Serializable {
    private String service;
    @ManagedProperty("#{param.role}")
    private String role;
-
-   @ManagedProperty(value = "#{commandMessageController}")   
-   private CommandMessageController messages;   
-   
    private Host host;
-   private boolean currentHostAvailable;
-   private long lastUpdate;
-   private int memoryUsed; //percentage
-   private int swapUsed; //percentage
-   private String load;
-   private String health;
-   private List<DiskInfo> df;
-   private int cpuCount;
-   private CollectdTools collectdTools = new CollectdTools();
-   private HashMap<String, List<String>> commandsMap;
-   
-   private static final Logger logger = Logger.getLogger(HostController.class.getName());   
+   private static final Logger logger = Logger.getLogger(HostController.class.getName());
 
    public HostController() {
-      commandsMap = new HashMap<String, List<String>>();
-      commandsMap.put("all", Arrays.asList("install", "uninstall"));
    }
-   
+
    @PostConstruct
    public void init() {
       logger.info("init HostController");
-   }   
-
-   public String gotoHost() {
-//        FacesContext context = FacesContext.getCurrentInstance();
-//        Host h = context.getApplication().evaluateExpressionGet(context, "#{host}", Host.class);
-
-      return "host?faces-redirect=true&hostid=" + hostId;
-   }
-   
-    public CommandMessageController getMessages() {
-        return messages;
-    }
-
-    public void setMessages(CommandMessageController messages) {
-        this.messages = messages;
-    }   
-
-   public List<String> getCommands() {
-
-      return commandsMap.get("all");
+      loadHost();
    }
 
    public void setCommand(String command) {
@@ -141,54 +97,38 @@ public class HostController implements Serializable {
       return cluster;
    }
 
-   public List<Host> getHosts() {
-      return hostEJB.findHosts();
+   public Host getHost() {
+      return host;
    }
 
-   public Host getHost() {
+   private void loadHost() {
       try {
          host = hostEJB.findHostById(hostId);
       } catch (Exception ex) {
          logger.warning("Host ".concat(hostId).concat(" not found."));
       }
-      return host;
    }
 
-   public boolean isCurrentHostAvailable() {
-      return currentHostAvailable;
-   }
-
-   public String getHealth() {
-      return "Good!";
-   }
-
-
-   public String getInterfaces() {
-
-      return collectdTools.typeInstances(hostId, "interface").toString();
-   }
-   
    public void doCommand(ActionEvent actionEvent) throws NoSuchAlgorithmException, Exception {
-     
+
       //  TODO: If the web application server craches, status will remain 'Running'.
       Command c = new Command(command, hostId, service, role, cluster);
       commandEJB.persistCommand(c);
       FacesMessage message;
 
-      Host h = hostEJB.findHostById(hostId);      
+      Host h = hostEJB.findHostById(hostId);
       String ip = h.getPublicIp();
       try {
-         WebCommunication webComm = new WebCommunication();         
+         WebCommunication webComm = new WebCommunication();
          ClientResponse response = webComm.doCommand(ip, cluster, service, role, command);
 
          if (response.getClientResponseStatus().getFamily() == Family.SUCCESSFUL) {
             c.succeeded();
             String messageText = "";
             Role s = roleEjb.find(hostId, cluster, service, role);
-            
+
             if (command.equalsIgnoreCase("init")) {
 //               Todo:
-               
             } else if (command.equalsIgnoreCase("start")) {
                JSONObject json = new JSONObject(response.getEntity(String.class));
                messageText = json.getString("msg");
@@ -216,5 +156,4 @@ public class HostController implements Serializable {
       commandEJB.updateCommand(c);
       FacesContext.getCurrentInstance().addMessage(null, message);
    }
-
 }

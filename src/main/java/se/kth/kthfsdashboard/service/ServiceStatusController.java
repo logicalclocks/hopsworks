@@ -37,7 +37,7 @@ public class ServiceStatusController {
    private List<ServiceRoleInfo> serviceRoles = new ArrayList<ServiceRoleInfo>();
    private Health serviceHealth;
    private static final Logger logger = Logger.getLogger(ServiceStatusController.class.getName());
-   
+
    public ServiceStatusController() {
       serviceRolesMap = new EnumMap<ServiceType, List<ServiceRoleInfo>>(ServiceType.class);
 
@@ -122,28 +122,24 @@ public class ServiceStatusController {
    private ServiceRoleInfo setStatus(String cluster, String service, ServiceRoleInfo serviceRoleInfo) {
 
       TreeMap<Status, Integer> statusMap = new TreeMap<Status, Integer>();
-      TreeMap<Health, Integer> healthMap = new TreeMap<Health, Integer>();      
-//      started = roleEjb.countStatus(cluster, service, serviceRoleInfo.getRoleName(), Status.Started);
-//      stopped = roleEjb.countStatus(cluster, service, serviceRoleInfo.getRoleName(), Status.Stopped);
-//      failed = roleEjb.countStatus(cluster, service, serviceRoleInfo.getRoleName(), Status.Failed);
-
+      TreeMap<Health, Integer> healthMap = new TreeMap<Health, Integer>();
       for (RoleHostInfo roleHost : roleEjb.findRoleHost(cluster, service, serviceRoleInfo.getRoleName())) {
          if (statusMap.containsKey(roleHost.getStatus())) {
             statusMap.put(roleHost.getStatus(), statusMap.get(roleHost.getStatus()) + 1);
          } else {
             statusMap.put(roleHost.getStatus(), 1);
          }
-         
+
          if (healthMap.containsKey(roleHost.getHealth())) {
             Integer count = healthMap.get(roleHost.getHealth()) + 1;
             healthMap.put(roleHost.getHealth(), count);
          } else {
-            healthMap.put(roleHost.getHealth(), 1);            
+            healthMap.put(roleHost.getHealth(), 1);
          }
       }
       serviceRoleInfo.setStatusMap(statusMap);
       serviceRoleInfo.setHealthMap(healthMap);
-      if(healthMap.containsKey(Health.Bad)){
+      if (healthMap.containsKey(Health.Bad)) {
          serviceHealth = Health.Bad;
       }
       return serviceRoleInfo;

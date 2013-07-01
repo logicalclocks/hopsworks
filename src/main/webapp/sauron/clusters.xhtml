@@ -28,7 +28,7 @@
          </h:form>
          <!--Navigation Bar - End-->
 
-         <div class="services-header">#{clustersController.clusters.size()} Cluster(s) Under Management:</div>
+         <div class="services-header">#{clustersController.clusters.size()} Cluster<h:outputText value ="s" rendered="#{clustersController.clusters.size()>1}"/> Under Management:</div>
 
          <p:panel header="Clusters">  
             <h:form id="formServices">  

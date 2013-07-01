@@ -35,13 +35,13 @@
          <h:form>  
             <p:toolbar styleClass="SecondToolbar#{hostController.host.health}">  
                <p:toolbarGroup align="left">  
-                  <p:commandLink action="#{hostController.gotoHost}" ajax="false">
+                  <p:commandLink action="#{urlController.host()}" ajax="false">
                      <h:outputText value="#{hostController.host.hostId} (#{hostController.host.hostname})"/>
-                     <f:param name="hostid" value="#{serviceController.hostId}"/>   
+                     <f:param name="hostid" value="#{hostController.hostId}"/>   
                   </p:commandLink>
 
                   <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{hostController.gotoHost}" ajax="false">
-                     <f:param name="hostid" value="#{serviceController.hostId}"/>                            
+                     <f:param name="hostid" value="#{hostController.hostId}"/>                            
                   </p:commandButton>  
 
                </p:toolbarGroup>  
@@ -97,7 +97,7 @@
                      <p:column headerText="namenode">
                         <p:commandLink id="cmd1" actionListener="#{hostController.doCommand}" ajax="true">
                            <h:outputText value="#{command}" />
-                           <f:param name="cluster" value="#{serviceController.cluster}" />
+                           <f:param name="cluster" value="#{hostController.cluster}" />
                            <f:param name="role" value="namenode" />
                            <f:param name="hostid" value="#{hostController.host.hostId}" />
                            <f:param name="command" value="#{command}" />
@@ -107,7 +107,7 @@
                         <p:commandLink id="cmd2" actionListener="#{hostController.doCommand}" ajax="true">
                            <h:outputText value="#{command}" />
                            <f:param name="hostid" value="#{hostController.host.hostId}" />
-                           <f:param name="cluster" value="#{serviceController.cluster}" />
+                           <f:param name="cluster" value="#{hostController.cluster}" />
                            <f:param name="role" value="datanode" />
                            <f:param name="command" value="#{command}" />
 
@@ -132,8 +132,8 @@
                <h:form id="logform">
                   <p:commandLink styleClass="AccordionPanelLink" value="Refresh Log" update="log"
                                  onstart="dlgAction.show()" oncomplete="dlgAction.hide()">  
-                     <f:param name="role" value="#{serviceController.role}"/> 
-                     <f:param name="hostid" value="#{serviceController.hostId}"/>
+                     <f:param name="role" value="#{hostController.role}"/> 
+                     <f:param name="hostid" value="#{hostController.hostId}"/>
                   </p:commandLink>
                   <p:panelGrid id="log" styleClass="LogOutput">
                      <p:row>

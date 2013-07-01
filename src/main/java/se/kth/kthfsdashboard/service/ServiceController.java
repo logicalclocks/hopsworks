@@ -9,7 +9,6 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
 import se.kth.kthfsdashboard.role.RoleEJB;
-import se.kth.kthfsdashboard.struct.RoleHostInfo;
 
 /**
  *
