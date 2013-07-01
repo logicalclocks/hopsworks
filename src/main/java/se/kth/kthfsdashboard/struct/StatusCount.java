@@ -1,7 +1,5 @@
 package se.kth.kthfsdashboard.struct;
 
-import se.kth.kthfsdashboard.role.Status;
-
 /**
  *
  * @author Hamidreza Afzali <afzali@kth.se>

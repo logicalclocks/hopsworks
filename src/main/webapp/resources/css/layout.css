@@ -300,12 +300,26 @@ body {
    font-size: 12px;
 }
 
-/*div host.health*/
+/*div health*/
 .ui-panel .Health-Good {
    color: green;
 }
 .ui-panel .Health-Bad {
    color: red;
+}
+
+/*div status*/
+.ui-panel .Status-Started {
+   color: green;
+      /*text-decoration: underline;*/
+}
+.ui-panel .Status-Stopped, .Status-Failed {
+   color: red;
+   /*text-decoration: underline;*/
+}
+.ui-panel .Status-TimedOut {
+   color: darkorange;
+   /*text-decoration: underline;*/
 }
 
 /*div hosts-header*/

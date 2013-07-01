@@ -1,6 +1,5 @@
 package se.kth.kthfsdashboard.service;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -11,8 +10,9 @@ import javax.faces.bean.RequestScoped;
 import javax.faces.model.SelectItem;
 import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
-import se.kth.kthfsdashboard.role.Status;
 import se.kth.kthfsdashboard.struct.InstanceInfo;
+import se.kth.kthfsdashboard.struct.RoleHostInfo;
+import se.kth.kthfsdashboard.struct.Status;
 import se.kth.kthfsdashboard.util.CookieTools;
 
 /**
@@ -21,23 +21,17 @@ import se.kth.kthfsdashboard.util.CookieTools;
  */
 @ManagedBean
 @RequestScoped
-public class ServiceInstancesController implements Serializable {
-
-   @ManagedProperty("#{param.hostid}")
-   private String hostId;
-   @ManagedProperty("#{param.role}")
+public class ServiceInstancesController {
+   @ManagedProperty("#{param.r}")
    private String role;
    @ManagedProperty("#{param.service}")
    private String service;
    @ManagedProperty("#{param.cluster}")
    private String cluster;
-   @ManagedProperty("#{param.status}")
+   @ManagedProperty("#{param.s}")
    private String status;
    @EJB
    private RoleEJB roleEjb;
-   List<InstanceInfo> instances = new ArrayList<InstanceInfo>();
-   private static Logger logger = Logger.getLogger(ServiceInstancesController.class.getName());
-   private List<InstanceInfo> filteredInstances;
    private SelectItem[] statusOptions;
    private SelectItem[] hdfsRoleOptions;
    private SelectItem[] healthOptions;
@@ -48,13 +42,16 @@ public class ServiceInstancesController implements Serializable {
    private final static String[] mysqlClusterRoles;
    private final static String[] yarnRoles;
    private final static String[] healthStates;
+   private List<InstanceInfo> filteredInstances;   
+   private static Logger logger = Logger.getLogger(ServiceInstancesController.class.getName());   
    private CookieTools cookie = new CookieTools();
 
    static {
-      statusStates = new String[3];
+      statusStates = new String[4];
       statusStates[0] = Status.Started.toString();
       statusStates[1] = Status.Stopped.toString();
       statusStates[2] = Status.Failed.toString();
+      statusStates[3] = Status.TimedOut.toString();      
 
       hdfsRoles = new String[]{"namenode", "datanode"};
       mysqlClusterRoles = new String[]{"ndb", "mgmserver", "mysqld"};
@@ -89,14 +86,6 @@ public class ServiceInstancesController implements Serializable {
       this.service = service;
    }
 
-   public String getHostId() {
-      return hostId;
-   }
-
-   public void setHostId(String hostId) {
-      this.hostId = hostId;
-   }
-
    public void setCluster(String cluster) {
       this.cluster = cluster;
    }
@@ -112,7 +101,7 @@ public class ServiceInstancesController implements Serializable {
    public void setStatus(String status) {
       this.status = status;
    }
-
+   
    public List<InstanceInfo> getFilteredInstances() {
       return filteredInstances;
    }
@@ -120,57 +109,16 @@ public class ServiceInstancesController implements Serializable {
    public void setFilteredInstances(List<InstanceInfo> filteredInstances) {
       this.filteredInstances = filteredInstances;
    }
-
-   public List<InstanceInfo> getInstances() {
-      List<InstanceInfo> instances = new ArrayList<InstanceInfo>();
-      List<Role> roles;
-      
-      if (cluster != null && role != null && service != null && status != null) {
-         roles = roleEjb.findRoles(cluster, service, role, Role.getRoleStatus(status));
-         cookie.write("cluster", cluster);
-         cookie.write("service", service);
-
-      } else if (cluster != null && service != null && role != null) {
-         roles = roleEjb.findRoles(cluster, service, role);
-         cookie.write("cluster", cluster);
-         cookie.write("service", service);
-
-      } else if (cluster != null && service != null) {
-         roles = roleEjb.findRoles(cluster, service);
-         cookie.write("cluster", cluster);
-         cookie.write("service", service);
-
-      } else if (cluster != null) {
-         roles = roleEjb.findRoles(cluster);
-         cookie.write("cluster", cluster);
-         cookie.write("service", service);
-
-      } else {
-         roles = roleEjb.findRoles(cookie.read("cluster"), cookie.read("service"));
-      }
-      for (Role r : roles) {                
-         instances.add(new InstanceInfo(r.getCluster(), r.getService(), r.getRole(), r.getHostId(), "-", r.getStatus(), r.getHealth().toString()));
-      }
-      return instances;
-   }
-
-   private SelectItem[] createFilterOptions(String[] data) {
-      SelectItem[] options = new SelectItem[data.length + 1];
-
-      options[0] = new SelectItem("", "Any");
-      for (int i = 0; i < data.length; i++) {
-         options[i + 1] = new SelectItem(data[i], data[i]);
-      }
-
-      return options;
-   }
-
+   
    public SelectItem[] getStatusOptions() {
       return statusOptions;
    }
+   
+   public SelectItem[] getHealthOptions() {
+      return healthOptions;
+   }   
 
    public SelectItem[] getRoleOptions() {
-
       if (service.equals(ServiceType.KTHFS.toString())) {
          return hdfsRoleOptions;
       } else if (service.equals(ServiceType.MySQLCluster.toString())) {
@@ -180,11 +128,53 @@ public class ServiceInstancesController implements Serializable {
       } else {
          return new SelectItem[]{};
       }
+   }   
+
+   private SelectItem[] createFilterOptions(String[] data) {
+      SelectItem[] options = new SelectItem[data.length + 1];
+
+      options[0] = new SelectItem("", "Any");
+      for (int i = 0; i < data.length; i++) {
+         options[i + 1] = new SelectItem(data[i], data[i]);
+      }
+      return options;
+   }
+   
+   public List<InstanceInfo> getInstances() {
+      List<InstanceInfo> instances = new ArrayList<InstanceInfo>();
+      List<RoleHostInfo> roleHostList = new ArrayList<RoleHostInfo>();
+      
+      if (cluster != null && role != null && service != null && status != null) {
+         for (RoleHostInfo roleHostInfo: roleEjb.findRoleHost(cluster, service, role)){
+            if (roleHostInfo.getStatus() == Role.getRoleStatus(status)) {
+               roleHostList.add(roleHostInfo);
+            }
+         }
+//         cookie.write("cluster", cluster);
+//         cookie.write("service", service);         
+      } else if (cluster != null && service != null && role != null) {
+         roleHostList = roleEjb.findRoleHost(cluster, service, role);     
+//         cookie.write("cluster", cluster);
+//         cookie.write("service", service);    
+      } else if (cluster != null && service != null) {
+         roleHostList = roleEjb.findRoleHost(cluster, service);
+//         cookie.write("cluster", cluster);
+//         cookie.write("service", service);          
+      } else if (cluster != null) {
+         roleHostList = roleEjb.findRoleHost(cluster);
+//         cookie.write("cluster", cluster);
+//         cookie.write("service", service);             
+      }           
+//      else {
+//         roleHostList = roleEjb.findRoleHost(cookie.read("cluster"), cookie.read("service"));
+//      }     
+      
+      for (RoleHostInfo r : roleHostList) {                
+         instances.add(new InstanceInfo(r.getRole().getCluster(), r.getRole().getService(), r.getRole().getRole(),
+                 r.getRole().getHostId(), r.getStatus(), r.getHealth().toString()));
+      }
+      return instances;
    }
 
-   public SelectItem[] getHealthOptions() {
-      return healthOptions;
-   }
 
-     
 }

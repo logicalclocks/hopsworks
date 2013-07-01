@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.Date;
 import javax.persistence.*;
+import se.kth.kthfsdashboard.struct.Health;
 import se.kth.kthfsdashboard.struct.MemoryInfo;
 import se.kth.kthfsdashboard.util.Formatter;
 
@@ -23,10 +24,6 @@ public class Host implements Serializable {
 
    private static final int HEARTBEAT_INTERVAL = 10;
 
-   public enum Health {
-
-      Good, Bad
-   }
    @Id
    @Column(nullable = false, length = 128)
    private String hostId;

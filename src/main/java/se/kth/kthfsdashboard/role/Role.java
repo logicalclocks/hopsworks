@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import javax.persistence.*;
 import se.kth.kthfsdashboard.struct.Health;
+import se.kth.kthfsdashboard.struct.Status;
 
 /**
  *
@@ -20,14 +21,18 @@ import se.kth.kthfsdashboard.struct.Health;
    @NamedQuery(name = "Role.findBy-Cluster-Group-Role", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
    @NamedQuery(name = "Role.findBy-Cluster-Service-Role-HostId", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.hostId = :hostId"),
    @NamedQuery(name = "Role.findBy-Cluster-Group-Role-Status", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
-
    
    // need this?   
    @NamedQuery(name = "Role.findHostIdBy-Cluster-Group-Role", query = "SELECT r.hostId FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role ORDER BY r.hostId"),
    @NamedQuery(name = "Role.Count", query = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
    @NamedQuery(name = "Role.CountBy-Cluster-Service-Role-Status", query = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
    
-   @NamedQuery(name = "Role.Count-hosts", query = "SELECT count(DISTINCT r.hostId) FROM Role r WHERE r.cluster = :cluster")
+   @NamedQuery(name = "Role.Count-hosts", query = "SELECT count(DISTINCT r.hostId) FROM Role r WHERE r.cluster = :cluster"),
+
+   @NamedQuery(name = "Role.findRoleHostBy-Cluster", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster"),
+   @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service"),
+   @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service-Role", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),
+        
 })
 
 public class Role implements Serializable {
@@ -49,30 +54,6 @@ public class Role implements Serializable {
    private Integer webPort;
 
    public Role() {
-   }
-
-   public Role(String hostId, String cluster, String service, String role, Integer webPort, Status status) {
-      this.hostId = hostId;
-      this.cluster = cluster;
-      this.service = service;
-      this.role = role;
-      this.status = status;
-      this.webPort = webPort;
-   }
-
-   public Role(String hostId, String cluster, String service, String role, Integer webPort) {
-      this.hostId = hostId;
-      this.cluster = cluster;
-      this.service = service;
-      this.role = role;
-      this.webPort = webPort;
-   }
-
-   public Role(String hostId, String cluster, String service, String role) {
-      this.hostId = hostId;
-      this.cluster = cluster;
-      this.service = service;
-      this.role = role;
    }
 
    public static Status getRoleStatus(String status) {
@@ -167,5 +148,10 @@ public class Role implements Serializable {
          return Health.Bad;
       }
       return Health.Good;
+   }
+   
+   @Override
+   public String toString() {
+      return String.format("%s/%s/%s@%s", cluster, service, role, hostId);
    }
 }

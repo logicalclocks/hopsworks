@@ -53,7 +53,7 @@
             <p:toolbar styleClass="SecondToolbar#{roleController.health}">  
                <p:toolbarGroup align="left">  
                   <p:commandLink  action="#{urlController.role}" ajax="false">
-                     <h:outputText value="#{roleController.role} (#{roleController.hostId})"/>
+                     <h:outputText value="#{roleController.role} @#{roleController.hostId}"/>
                      <f:param name="cluster" value="#{roleController.cluster}"/>
                      <f:param name="role" value="#{roleController.role}"/>
                      <f:param name="service" value="#{roleController.service}"/>                              
