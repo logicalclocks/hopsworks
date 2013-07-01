@@ -6,7 +6,6 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:fn="http://java.sun.com/jsp/jstl/functions"
       >
 
     <ui:composition template="layout.xhtml">
@@ -28,14 +27,14 @@
             </h:form>
             <!--Navigation Bar - End-->
 
-            <div class="hosts-header">#{fn:length(hostController.hosts)} Host(s) Under Management:</div>
+            <div class="hosts-header">#{hostsController.hosts.size()} Host<h:outputText value ="s" rendered="#{hostsController.hosts.size()>1}"/> Under Management:</div>
 
             <p:panel header="Hosts">  
                 <h:form id="form">  
-                    <p:dataTable id="hosts" var="host" value="#{hostController.hosts}">
+                   <p:dataTable id="hosts" var="host" value="#{hostsController.hosts}">
 
                         <p:column  headerText="Host Id">  
-                            <p:commandLink id="gotohost" action="#{hostController.gotoHost}" ajax="false">
+                           <p:commandLink id="gotohost" action="#{urlController.host()}" ajax="false">
                                <h:outputText value="#{host.hostId}" />
                                <f:param name="hostid" value="#{host.hostId}"/>
                             </p:commandLink> 
