@@ -23,7 +23,7 @@ import se.kth.kthfsdashboard.command.CommandMessageController;
 import se.kth.kthfsdashboard.communication.WebCommunication;
 import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
-import se.kth.kthfsdashboard.role.Status;
+import se.kth.kthfsdashboard.struct.Status;
 import se.kth.kthfsdashboard.struct.DiskInfo;
 import se.kth.kthfsdashboard.util.CollectdTools;
 

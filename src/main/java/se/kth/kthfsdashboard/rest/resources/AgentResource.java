@@ -20,7 +20,7 @@ import se.kth.kthfsdashboard.host.Host;
 import se.kth.kthfsdashboard.host.HostEJB;
 import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
-import se.kth.kthfsdashboard.role.Status;
+import se.kth.kthfsdashboard.struct.Status;
 
 /**
  * :

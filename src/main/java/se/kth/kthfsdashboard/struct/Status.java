@@ -4,7 +4,7 @@ package se.kth.kthfsdashboard.struct;
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
-public enum Health {
+public enum Status {
 
-   Good, Bad, Unknown, None
+   Started, Stopped, Failed, TimedOut, None
 }

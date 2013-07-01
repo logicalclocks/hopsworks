@@ -6,6 +6,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.kthfsdashboard.struct.RoleHostInfo;
+import se.kth.kthfsdashboard.struct.Status;
 import se.kth.kthfsdashboard.struct.StatusCount;
 
 /**
@@ -105,7 +107,25 @@ public class RoleEJB {
               .setParameter("cluster", cluster).setParameter("service", service)
               .setParameter("role", role);
       return query.getResultList();
+   }
+
+   public List<RoleHostInfo> findRoleHost(String cluster) {
+      TypedQuery<RoleHostInfo> query = em.createNamedQuery("Role.findRoleHostBy-Cluster", RoleHostInfo.class)
+              .setParameter("cluster", cluster);
+      return query.getResultList();
+   }
+   public List<RoleHostInfo> findRoleHost(String cluster, String service) {
+      TypedQuery<RoleHostInfo> query = em.createNamedQuery("Role.findRoleHostBy-Cluster-Service", RoleHostInfo.class)
+              .setParameter("cluster", cluster).setParameter("service", service);
+      return query.getResultList();
    }   
+   
+   public List<RoleHostInfo> findRoleHost(String cluster, String service, String role) {
+      TypedQuery<RoleHostInfo> query = em.createNamedQuery("Role.findRoleHostBy-Cluster-Service-Role", RoleHostInfo.class)
+              .setParameter("cluster", cluster).setParameter("service", service)
+              .setParameter("role", role);
+      return query.getResultList();
+   } 
 
    public void persist(Role role) {
       em.persist(role);
