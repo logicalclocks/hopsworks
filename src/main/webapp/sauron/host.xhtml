@@ -55,8 +55,8 @@
          <h:form styleClass="styleInfoPanel" id="form_host">
             <p:panel  header="Details">
                <p:dataTable id="host" var="host" value="#{hostController.host}">
-                  <p:column headerText="Host Id"><h:outputText value="#{host.hostId}"/></p:column> 
-                  <p:column headerText="Hostname"><h:outputText value="#{host.hostname}"/></p:column>
+                  <p:column headerText="Host Id" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostId}"/></p:column> 
+                  <p:column headerText="Hostname" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostname}"/></p:column>
                   <p:column headerText="Public IP"><h:outputText value="#{host.publicIp}"/></p:column>
                   <p:column headerText="Private IP"><h:outputText value="#{host.privateIp}"/></p:column>
                   <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
