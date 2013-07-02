@@ -18,8 +18,6 @@ import se.kth.kthfsdashboard.role.RoleEJB;
 @RequestScoped
 public class ServiceController {
 
-   @EJB
-   private RoleEJB roleEjb;   
    @ManagedProperty("#{param.hostid}")
    private String hostId;
    @ManagedProperty("#{param.role}")
@@ -101,16 +99,6 @@ public class ServiceController {
 
    public void deleteService() {
       addMessage("Delete not implemented!");
-   }
-   
-   public void test () {
-//      for (RoleHostInfo i : roleEjb.findRoleHost("cluster1", "KTHFS", "namenode")) {
-//
-//         System.err.println( i.getRole() + " " + i.getHost().getHealth());
-//      }
-      
-      System.err.println(cluster);
-      
    }
 
 }

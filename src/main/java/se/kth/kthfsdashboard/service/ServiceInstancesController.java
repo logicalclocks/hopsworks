@@ -54,7 +54,7 @@ public class ServiceInstancesController {
       statusStates[3] = Status.TimedOut.toString();      
 
       hdfsRoles = new String[]{"namenode", "datanode"};
-      mysqlClusterRoles = new String[]{"ndb", "mgmserver", "mysqld"};
+      mysqlClusterRoles = new String[]{"ndb", "mgmserver", "mysqld", "memcached"};
       yarnRoles = new String[]{"resourcemanager", "nodemanager"};
       healthStates = new String[]{"Good", "Bad"};
    }
@@ -141,6 +141,11 @@ public class ServiceInstancesController {
    }
    
    public List<InstanceInfo> getInstances() {
+      
+//      with prettyfaces, parameters (clusters, service, role) will not be null.
+//      Without prettyfaces, parameters will be null when filter in changed, so
+//      we need to store them in cookie
+      
       List<InstanceInfo> instances = new ArrayList<InstanceInfo>();
       List<RoleHostInfo> roleHostList = new ArrayList<RoleHostInfo>();
       
