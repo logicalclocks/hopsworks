@@ -103,8 +103,8 @@
 
                   <p:column headerText="Status">
                      <ui:repeat value="#{serviceRole.statusMap.entrySet().toArray()}" var="item" varStatus="status">
-                        <p:commandLink action="#{urlController.serviceInstances}" ajax="false">
-                           <h:outputText id="statuslink" value="${item.value} ${item.key}" styleClass="Status-${item.key}"/>
+                        <p:commandLink styleClass="Status-${item.key}" action="#{urlController.serviceInstances}" ajax="false">
+                           <h:outputText id="statuslink" value="${item.value} ${item.key}"/>
                            <p:tooltip for="statuslink" value="#{settingsController.tooltip(item.key, item.value)}" showEffect="fade" hideEffect="fade" />
                            <f:param name="cluster" value="#{ServiceStatusController.cluster}"/>
                            <f:param name="service" value="#{serviceStatusController.service}"/>
