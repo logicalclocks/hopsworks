@@ -126,6 +126,13 @@ public class RoleEJB {
               .setParameter("role", role);
       return query.getResultList();
    } 
+   
+   public RoleHostInfo findRoleHost(String cluster, String service, String role, String hostId) {
+      TypedQuery<RoleHostInfo> query = em.createNamedQuery("Role.findRoleHostBy-Cluster-Service-Role-Host", RoleHostInfo.class)
+              .setParameter("cluster", cluster).setParameter("service", service)
+              .setParameter("role", role).setParameter("hostid", hostId);
+      return query.getSingleResult();
+   }    
 
    public void persist(Role role) {
       em.persist(role);

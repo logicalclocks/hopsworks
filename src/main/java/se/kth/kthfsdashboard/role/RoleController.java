@@ -8,9 +8,9 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import se.kth.kthfsdashboard.host.Host;
-import se.kth.kthfsdashboard.host.HostEJB;
+import se.kth.kthfsdashboard.struct.Health;
 import se.kth.kthfsdashboard.struct.InstanceFullInfo;
+import se.kth.kthfsdashboard.struct.RoleHostInfo;
 import se.kth.kthfsdashboard.util.Formatter;
 
 /**
@@ -21,8 +21,6 @@ import se.kth.kthfsdashboard.util.Formatter;
 @RequestScoped
 public class RoleController {
 
-   @EJB
-   private HostEJB hostEJB;
    @EJB
    private RoleEJB roleEjb;
    @ManagedProperty("#{param.hostid}")
@@ -46,17 +44,18 @@ public class RoleController {
       logger.info("init RoleController");
       instanceInfoList = new ArrayList<InstanceFullInfo>();
       try {
-         Role r = roleEjb.find(hostId, cluster, service, role);
-         Host h = hostEJB.findHostById(hostId);
-         String ip = h.getPublicIp();
-         InstanceFullInfo info = new InstanceFullInfo(r.getCluster(), 
-                 r.getService(), r.getRole(), r.getHostId(), ip, 
-                 r.getWebPort(), r.getStatus(), r.getHealth().toString());
-         info.setPid(r.getPid());
-         info.setUptime(Formatter.time(r.getUptime() * 1000));
+         RoleHostInfo roleHost = roleEjb.findRoleHost(cluster, service, role, hostId);
+         String ip = roleHost.getHost().getPublicIp();
+         InstanceFullInfo info = new InstanceFullInfo(roleHost.getRole().getCluster(), 
+                 roleHost.getRole().getService(), roleHost.getRole().getRole(), 
+                 roleHost.getRole().getHostId(), ip, roleHost.getRole().getWebPort(), 
+                 roleHost.getStatus(), roleHost.getHealth().toString());
+         info.setPid(roleHost.getRole().getPid());
+         String upTime = roleHost.getHealth() == Health.Good ? Formatter.time(roleHost.getRole().getUptime() * 1000) : "";
+         info.setUptime(upTime);
          instanceInfoList.add(info);
-         renderWebUi = r.getWebPort() != null && r.getWebPort() != 0;
-         health = r.getHealth().toString();
+         renderWebUi = roleHost.getRole().getWebPort() != null && roleHost.getRole().getWebPort() != 0;
+         health = roleHost.getHealth().toString();
       } catch (Exception ex) {
          logger.warning("init: ".concat(ex.getMessage()));
       }

@@ -120,12 +120,12 @@
                         <f:param name="hostid" value="#{host.host}"/>
                      </p:commandLink>                      
                   </p:column>
-                  <p:column headerText="Status"><h:outputText value="#{instance.status}"/></p:column>
+                  <p:column headerText="Status" styleClass="Status-#{instance.status}"><h:outputText value="#{instance.status}"/></p:column>
                   <p:column headerText="Health">
                      <div class="Health-#{instance.health}"><h:outputText value="#{instance.health}"/></div>
                   </p:column>
+                  <p:column headerText="Uptime"><h:outputText value="#{instance.uptime}"/></p:column>                  
                   <p:column headerText="Pid"><h:outputText value="#{instance.pid}"/></p:column>
-                  <p:column headerText="Uptime"><h:outputText value="#{instance.uptime}"/></p:column>
                   <p:column headerText="Web UI" rendered="#{roleController.renderWebUi}">
                      <h:outputLink target="_blank" value="#{instance.webUiLink}">#{instance.webUiLabel}</h:outputLink>
                   </p:column>

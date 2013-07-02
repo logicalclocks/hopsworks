@@ -110,7 +110,7 @@
                   </p:column>
 
                   <p:column headerText="Host" filterBy="#{instance.host}" filterMatchMode="contains" filterPosition="top">
-                     <p:commandLink action="#{hostController.gotoHost}" ajax="false">
+                     <p:commandLink action="#{urlController.host()}" ajax="false">
                         <h:outputText value="#{instance.host}"/>
                         <f:param name="hostid" value="#{instance.host}"/>
                      </p:commandLink> 
