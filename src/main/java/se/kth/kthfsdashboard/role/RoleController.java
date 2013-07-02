@@ -8,8 +8,6 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import se.kth.kthfsdashboard.host.Host;
-import se.kth.kthfsdashboard.host.HostEJB;
 import se.kth.kthfsdashboard.struct.Health;
 import se.kth.kthfsdashboard.struct.InstanceFullInfo;
 import se.kth.kthfsdashboard.struct.RoleHostInfo;
@@ -23,8 +21,6 @@ import se.kth.kthfsdashboard.util.Formatter;
 @RequestScoped
 public class RoleController {
 
-   @EJB
-   private HostEJB hostEJB;
    @EJB
    private RoleEJB roleEjb;
    @ManagedProperty("#{param.hostid}")
@@ -48,8 +44,6 @@ public class RoleController {
       logger.info("init RoleController");
       instanceInfoList = new ArrayList<InstanceFullInfo>();
       try {
-//         Role r = roleEjb.find(hostId, cluster, service, role);
-//         Host h = hostEJB.findHostById(hostId);
          RoleHostInfo roleHost = roleEjb.findRoleHost(cluster, service, role, hostId);
          String ip = roleHost.getHost().getPublicIp();
          InstanceFullInfo info = new InstanceFullInfo(roleHost.getRole().getCluster(), 

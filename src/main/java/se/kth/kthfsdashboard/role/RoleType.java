@@ -7,6 +7,6 @@ package se.kth.kthfsdashboard.role;
 public enum RoleType {
 
    namenode, datanode,
-   mgmserver, mysqld, ndb,
+   mgmserver, mysqld, ndb, memcached,
    resourcemanager, nodemanager
 }

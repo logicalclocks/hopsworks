@@ -112,7 +112,8 @@
                            <f:param name="status" value="${item.key}"/>                           
                         </p:commandLink>
                         <p:spacer width="6" height="0" rendered="#{!status.last}"/>
-                     </ui:repeat>
+                     </ui:repeat> 
+                     <p:outputLabel rendered="#{empty serviceRole.statusMap.entrySet()}">No role instance available</p:outputLabel>
                   </p:column>
 
                   <p:column headerText="Health">

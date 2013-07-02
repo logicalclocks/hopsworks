@@ -50,6 +50,7 @@ public class ServiceStatusController {
       roles.add(new ServiceRoleInfo("MySQL Cluster NDBD (ndb)", RoleType.ndb));
       roles.add(new ServiceRoleInfo("MySQL Server (mysqld)", RoleType.mysqld));
       roles.add(new ServiceRoleInfo("MGM Server (mgmserver)", RoleType.mgmserver));
+      roles.add(new ServiceRoleInfo("Memcached (memcached)", RoleType.memcached));      
       serviceRolesMap.put(ServiceType.MySQLCluster, roles);
 
       roles = new ArrayList<ServiceRoleInfo>();
@@ -129,7 +130,6 @@ public class ServiceStatusController {
          } else {
             statusMap.put(roleHost.getStatus(), 1);
          }
-
          if (healthMap.containsKey(roleHost.getHealth())) {
             Integer count = healthMap.get(roleHost.getHealth()) + 1;
             healthMap.put(roleHost.getHealth(), count);

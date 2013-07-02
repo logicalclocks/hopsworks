@@ -29,6 +29,9 @@ public class ServiceRoleInfo {
    }
 
    public Health getRoleHealth() {
+      if (healthMap.isEmpty()) {
+         return Health.None;
+      }
       if (!healthMap.containsKey(Health.Bad)) {
          return Health.Good;
       }
