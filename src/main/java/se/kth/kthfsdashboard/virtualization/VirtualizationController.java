@@ -28,7 +28,7 @@ import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
 import org.jclouds.scriptbuilder.domain.StatementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterController;
+import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterProvisionController;
 
 /**
  *
@@ -42,8 +42,8 @@ public class VirtualizationController implements Serializable {
     private MessageController messages;
     @ManagedProperty(value = "#{computeCredentialsMB}")
     private ComputeCredentialsMB computeCredentialsMB;
-    @ManagedProperty(value = "#{clusterController}")
-    private ClusterController clusterController;
+    @ManagedProperty(value = "#{clusterProvisionController}")
+    private ClusterProvisionController clusterController;
     private ClusterProvision virtualizer;
     private String provider;
     private String id;
@@ -75,11 +75,11 @@ public class VirtualizationController implements Serializable {
         this.computeCredentialsMB = computeCredentialsMB;
     }
 
-    public ClusterController getClusterController() {
+    public ClusterProvisionController getClusterController() {
         return clusterController;
     }
 
-    public void setClusterController(ClusterController clusterController) {
+    public void setClusterController(ClusterProvisionController clusterController) {
         this.clusterController = clusterController;
     }
 
@@ -125,8 +125,8 @@ public class VirtualizationController implements Serializable {
         //service = initContexts();
         virtualizer = new ClusterProvision(this);
         virtualizer.createSecurityGroups(clusterController.getCluster());
-//        if(virtualizer.launchNodesBasicSetup(clusterController.getCluster())){
-        if(virtualizer.parallelLaunchNodesBasicSetup(clusterController.getCluster())){
+        if(virtualizer.launchNodesBasicSetup(clusterController.getCluster())){
+//        if(virtualizer.parallelLaunchNodesBasicSetup(clusterController.getCluster())){
             messages.addMessage("All nodes launched");
             virtualizer.installPhase();
             virtualizer.deployingConfigurations(clusterController.getCluster());

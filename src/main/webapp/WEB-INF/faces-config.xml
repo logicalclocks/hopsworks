@@ -81,6 +81,11 @@
             <to-view-id>/sauron/clusterLauncher.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+        <navigation-case>
+            <from-outcome>createClusterWizard</from-outcome>
+            <to-view-id>/sauron/createClusterWizard.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
     </navigation-rule>    
 
    

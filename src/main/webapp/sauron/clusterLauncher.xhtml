@@ -38,59 +38,7 @@
                     <p:layout  id="launch" fullPage="false">
                         <p:layoutUnit id="launcher" position="west" size="350" header="Cluster Details" resizable="false" closable="false" collapsible="false" >
                             <h:form id="launchForm">
-                                <p:accordionPanel dynamic="true" cache="true">
-                                    <p:tab title="General Cluster Details:">
-                                        <h:panelGrid columns="2" cellpadding="5">
-                                            <h:outputLabel value="Name:"/>
-                                            <h:outputText value="#{clusterController.cluster.name}" />
-                                            <h:outputLabel value="Global Services:"/>
-                                            <h:outputText value="#{clusterController.cluster.globalServices}" />
-                                            <h:outputLabel value="Authorize Ports:"/>
-                                            <h:outputText value="#{clusterController.cluster.authorizePorts}" />
-                                            <h:outputLabel value="Authorize Specific Ports:"/>
-                                            <h:outputText value="#{clusterController.cluster.authorizeSpecificPorts}" />
-                                        </h:panelGrid>
-                                    </p:tab>
-                                    <p:tab title="Provider Details:">
-                                        <h:panelGrid columns="2" cellpadding="5">
-                                            <h:outputLabel value="Name:"/>
-                                            <h:outputText value="#{clusterController.cluster.provider.name}" />
-                                            <h:outputLabel value="Instance Type:"/>
-                                            <h:outputText value="#{clusterController.cluster.provider.instanceType}" />
-                                            <h:outputLabel value="Image Details:"/>
-                                            <h:outputText value="#{clusterController.cluster.provider.image}" />
-                                            <h:outputLabel value="Region:"/>
-                                            <h:outputText value="#{clusterController.cluster.provider.region}" />
-                                            <h:outputLabel value="Zones:"/>
-                                            <h:outputText value="#{clusterController.cluster.provider.zones}" />
-                                        </h:panelGrid>
-                                    </p:tab>
-                                    <p:tab title="Nodes:" >
-                                        <p:accordionPanel value="#{clusterController.cluster.nodes}" var="node">
-                                            <p:tab title="Security Group: #{node.securityGroup}">
-                                                <h:panelGrid columns="2" cellpadding="5">
-                                                    <h:outputLabel value="Number:"/>
-                                                    <h:outputText value="#{node.number}" />
-                                                    <h:outputLabel value="Roles:"/>
-                                                    <h:outputText value="#{node.roles}" />
-                                                    <h:outputLabel value="Authorize Ports:"/>
-                                                    <h:outputText value="#{node.authorizePorts}" />
-                                                </h:panelGrid>
-                                            </p:tab>
-                                        </p:accordionPanel>
-                                    </p:tab>
-                                    <p:tab title="Chef Attributes:" >
-                                        <p:accordionPanel value="#{clusterController.cluster.chefAttributes}" var="chef">
-                                            <p:tab title="Role: #{chef.role}">
-                                                <h:panelGrid columns="2" cellpadding="5">
-                                                    <h:outputLabel value="Json:"/>
-                                                    <h:outputText value="#{chef.chefJson}" />
-
-                                                </h:panelGrid>
-                                            </p:tab>
-                                        </p:accordionPanel>
-                                    </p:tab>
-                                </p:accordionPanel>
+                                <ui:include src="/sauron/template/clusterDescription.xhtml"/>
                                 <br/>
                                 
                                 <p:commandButton id="startCluster" value="startCluster" 

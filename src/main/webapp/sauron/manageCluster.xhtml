@@ -9,7 +9,7 @@
       xmlns:fn="http://java.sun.com/jsp/jstl/functions" 
       xmlns:c="http://java.sun.com/jsp/jstl/core"
       >
-
+  
     <ui:composition template="layout.xhtml">
 
         <ui:define name="title">
@@ -30,24 +30,45 @@
             </h:form>
             <!--Navigation Bar - End-->
 
-
-            <div id="content" align="center">
-                <div class="services-header">Add Cluster:</div>
-
-
+ 
+            <div id="content" align="left">
+                <div class="services-header">Select Option:</div>
                 <p:spacer width="1" height="8" />
-                <div id="clusterForm" >
+                <div id="optionsForm" >
                     <h:form id="clusterUpload" enctype="multipart/form-data">  
+                        <p:outputPanel id="optionsPanel">
+                            <p:selectOneRadio id="customRadio" value="#{clusterProvisionController.option}" 
+                                              layout="custom">
+                                <f:selectItem itemLabel="Option 1" itemValue="1" />
+                                <f:selectItem itemLabel="Option 2" itemValue="2" />
+                                <f:selectItem itemLabel="Option 3" itemValue="3" />
+                            </p:selectOneRadio>
 
-                        <p:fileUpload fileUploadListener="#{clusterController.handleFileUpload}"  
-                                      mode="advanced"   showButtons="false"
-                                      update="messages next"  
-                                      sizeLimit="5000"   
-                                      allowTypes="/(\.|\/)(yml)$/"/>  
+                            <h:panelGrid columns="2">
+                                <p:radioButton id="opt1" for="customRadio" itemIndex="0"/>
+                                <h:outputLabel for="opt1" value="create a new cluster" />
 
-                        <p:growl id="messages" showDetail="true"/>
-                        <br/>            
-                        <p:commandButton id="next" value="Next" action="proceedLaunchCluster" ajax="false" disabled="#{clusterController.clusterLoaded()}" />
+                                <p:radioButton id="opt2" for="customRadio" itemIndex="1"/>
+                                <h:outputLabel for="opt2" value="select a stored cluster" />
+
+                                <p:radioButton id="opt3" for="customRadio" itemIndex="2"/>
+
+                                <p:fileUpload value="#{clusterProvisionController.file}"  
+                                              mode="simple"   showButtons="false"
+                                              update="messages next"  
+                                              sizeLimit="5000"   
+                                              allowTypes="/(\.|\/)(yml)$/"
+                                              ><h:outputLabel for="opt3" value="load from a cluster definition file" />
+                                </p:fileUpload>  
+
+                                <p:growl id="messages" showDetail="true"/>
+                            </h:panelGrid>
+                        </p:outputPanel>
+
+                        <p:commandButton id="next" value="Next" 
+                                         actionListener="#{clusterProvisionController.handleFileUpload}" 
+                                         action="#{clusterProvisionController.proceedOption()}" 
+                                         ajax="false" disabled="false" />
 
                     </h:form>  
                 </div>

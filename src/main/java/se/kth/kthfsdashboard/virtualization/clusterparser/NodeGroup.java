@@ -30,6 +30,14 @@ public class NodeGroup implements Serializable{
     @JoinColumn(name="CLUSTER_ID")
     private Cluster cluster;
 
+    public NodeGroup(){
+        
+    }
+    
+    public NodeGroup(String name){
+        this.securityGroup=name;
+        
+    }
     public Long getId() {
         return id;
     }

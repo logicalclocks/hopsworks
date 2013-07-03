@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jsp/jstl/core">
+    <h:body>
+        <ui:composition>
+            <p:accordionPanel dynamic="true" cache="true">
+                <p:tab title="General Details:">
+                    <h:panelGrid columns="2" cellpadding="5">
+                        <h:outputLabel value="Name:"/>
+                        <h:outputText value="#{clusterProvisionController.cluster.name}" />
+                        <h:outputLabel value="Environment:"/>
+                        <h:outputText value="#{clusterProvisionController.cluster.environment}" />
+                        <h:outputLabel value="Global Services:"/>
+                        <h:outputText value="#{clusterProvisionController.cluster.globalServices}" />
+                        <h:outputLabel value="Authorize Ports:"/>
+                        <h:outputText value="#{clusterProvisionController.cluster.authorizePorts}" />
+                        <h:outputLabel value="Authorize Specific Ports:"/>
+                        <h:outputText value="#{clusterProvisionController.cluster.authorizeSpecificPorts}" />
+                    </h:panelGrid>
+                </p:tab>
+                <p:tab title="Provider Details:">
+                    <h:panelGrid columns="2" cellpadding="5">
+                        <h:outputLabel value="Name:"/>
+                        <h:outputText value="#{clusterProvisionController.cluster.provider.name}" />
+                        <h:outputLabel value="Instance Type:"/>
+                        <h:outputText value="#{clusterProvisionController.cluster.provider.instanceType}" />
+                        <h:outputLabel value="Image Details:"/>
+                        <h:outputText value="#{clusterProvisionController.cluster.provider.image}" />
+                        <h:outputLabel value="Region:"/>
+                        <h:outputText value="#{clusterProvisionController.cluster.provider.region}" />
+                        <h:outputLabel value="Zones:"/>
+                        <h:outputText value="#{clusterProvisionController.cluster.provider.zones}" />
+                    </h:panelGrid>
+                </p:tab>
+                <p:tab title="Nodes:" >
+                    <p:accordionPanel value="#{clusterProvisionController.cluster.nodes}" var="node">
+                        <p:tab title="Security Group: #{node.securityGroup}">
+                            <h:panelGrid columns="2" cellpadding="5">
+                                <h:outputLabel value="Number:"/>
+                                <h:outputText value="#{node.number}" />
+                                <h:outputLabel value="Roles:"/>
+                                <h:outputText value="#{node.roles}" />
+                                <h:outputLabel value="Authorize Ports:"/>
+                                <h:outputText value="#{node.authorizePorts}" />
+                            </h:panelGrid>
+                        </p:tab>
+                    </p:accordionPanel>
+                </p:tab>
+                <p:tab title="Chef Attributes:" >
+                    <p:accordionPanel value="#{clusterProvisionController.cluster.chefAttributes}" var="chef">
+                        <p:tab title="Role: #{chef.role}">
+                            <h:panelGrid columns="2" cellpadding="5">
+                                <h:outputLabel value="Json:"/>
+                                <h:outputText value="#{chef.chefJson}" />
+
+                            </h:panelGrid>
+                        </p:tab>
+                    </p:accordionPanel>
+                </p:tab>
+            </p:accordionPanel>
+            <br/>
+        </ui:composition>
+
+    </h:body>
+</html>
+

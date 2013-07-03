@@ -1,0 +1,408 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      >
+    <script type="text/javascript">
+        function editLastDatatableRow(){
+
+            jQuery('.ui-datatable-data tr').last().find('span.ui-icon-pencil').each(function(){
+                jQuery(this).click()
+            });
+        }
+
+    </script>
+    <h:body>
+        <ui:composition>
+
+            <div id="createWizard" >
+                <p:log/>
+                <h:form id="mainForm">
+
+                    <p:growl id="growl" sticky="true" showDetail="true"/>
+
+                    <p:wizard widgetVar="wiz"
+                              flowListener="#{clusterProvisionController.onFlowProcess}" >
+
+                        <p:tab id="clusterCommon" title="Common">
+
+                            <p:panel header="Common Parameters">
+
+                                <h:messages errorClass="error"/>
+
+                                <h:panelGrid columns="2" columnClasses="label, value" styleClass="grid">
+                                    <h:outputText value="Cluster name: *" />
+                                    <p:inputText required="false" label="name"
+                                                 value="#{clusterProvisionController.cluster.name}" />
+
+                                    <h:outputText value="Provider: " />
+                                    <p:selectOneMenu id="providers" 
+                                                     value="#{clusterProvisionController.cluster.provider.name}">
+                                        <f:selectItem itemLabel="Select One" itemValue="" /> 
+                                        <f:selectItems value="#{clusterProvisionController.options.provider}" />
+                                        <p:ajax listener="#{clusterProvisionController.handleProviderChange}"
+                                                event="change" update="instancesEC2 instanceRest" process="@form"/>
+                                    </p:selectOneMenu>
+                                    <h:outputText value="Environment: *" />
+                                    <p:selectOneMenu id="environment" value="#{clusterProvisionController.cluster.environment}">
+                                        <f:selectItem itemLabel="Select One" itemValue="" /> 
+                                        <f:selectItems value="#{clusterProvisionController.options.environment}" />
+
+                                    </p:selectOneMenu>
+                                    <h:outputText value="Global Services:" />
+                                    <p:selectManyCheckbox id="scroll" value="#{clusterProvisionController.cluster.globalServices}" >  
+                                        <f:selectItems value="#{clusterProvisionController.options.services}"  />  
+
+                                    </p:selectManyCheckbox>  
+                                    <h:outputText value="Authorize Ports:" />
+                                    <p:selectManyCheckbox id="scrollPorts" value="#{clusterProvisionController.cluster.authorizePorts}" >  
+                                        <f:selectItems value="#{clusterProvisionController.options.services}"  />  
+
+                                    </p:selectManyCheckbox>  
+
+
+                                </h:panelGrid>
+                                <h:panelGrid columns="2" columnClasses="label, value">
+                                    <p:dataTable id="portList" var="port" 
+                                                 value="#{clusterProvisionController.ports}"
+                                                 rowKey="#{port}"
+                                                 selection="#{clusterProvisionController.selectedPorts}"
+                                                 selectionMode="multiple"
+                                                 editable="true">
+
+                                        <f:facet name="header">
+                                            Click delete selection after selecting multiple instances to delete, use shift-click to select multiples
+                                        </f:facet>
+                                        <p:column headerText="Port Number">
+                                            <p:cellEditor>
+                                                <f:facet name="output">
+                                                    <h:outputText value="#{port}" />
+                                                </f:facet>
+                                                <f:facet name="input">
+                                                    <p:inputText value="#{port}" />
+                                                </f:facet>
+                                            </p:cellEditor>
+                                        </p:column>
+                                        <p:column headerText="Actions">
+                                            <p:rowEditor />
+                                        </p:column>
+                                    </p:dataTable>
+                                </h:panelGrid>
+                                <p:dialog header="Remove Port" widgetVar="removePortDialog" resizable="false"
+                                          id="addPortDig"  
+                                          showEffect="fade" hideEffect="explode" modal="true">  
+                                    <h:outputText id="deletePort" value="Are you sure you want to delete?" />
+                                    <p:commandButton  value="Confirm" update="portList" 
+                                                      action="#{clusterProvisionController.removePorts}" 
+                                                      oncomplete="editLastDataTableRow removePortDialog.close()"
+                                                      />
+                                </p:dialog>  
+                                <p:dialog header="Add Port" widgetVar="addPortDialog" resizable="false"
+                                          id="removePortDig"
+                                          showEffect="fade" hideEffect="explode" modal="true">
+                                    <h:outputText id="addPort" value="Port Number:" />
+                                    <p:inputText id="portNumber"
+                                                 value="#{clusterProvisionController.options.portNumber}"/>
+                                    <p:commandButton id="acceptPort" value="Confirm" update="portList" 
+                                                     action="#{clusterProvisionController.addPort}"
+                                                     oncomplete="editLastDataTableRow addPortDialog.close()"
+                                                     />
+
+                                </p:dialog>
+                                <p:commandButton id="addPortButton" value="New Port" 
+                                                 icon="ui-icon-plusthick"
+                                                 update="mainForm:addPort" 
+                                                 oncomplete="addPortDialog.show()" title="VIew"
+                                                 />
+                                <p:commandButton id="deletePortButton" value="Delete Selection" 
+                                                 update="mainForm:deletePort" 
+                                                 oncomplete="removePortDialog.show()" icon="ui-icon-minusthick" title="View"/>
+                            </p:panel>
+                        </p:tab>
+
+                        <p:tab id="provider" title="Provider">
+                            <p:panel header="Provider Details">
+
+                                <h:messages errorClass="error"/>
+
+                                <h:panelGrid columns="2" columnClasses="label, value">
+
+
+                                    <h:outputText value="Instance Type: " />
+                                    <p:selectOneMenu id="instancesEC2" 
+                                                     value="#{clusterProvisionController.cluster.provider.instanceType}" 
+                                                     rendered="#{clusterProvisionController.renderEC2}">
+                                        <f:selectItem itemLabel="Select One" itemValue="" /> 
+                                        <f:selectItems value="#{clusterProvisionController.options.ec2InstanceTypes}" />
+
+                                    </p:selectOneMenu>
+                                    <p:inputText id="instanceRest"
+                                                 value="#{clusterProvisionController.cluster.provider.instanceType}"
+                                                 rendered="#{!clusterProvisionController.renderEC2}"/>
+
+                                    <h:outputText value="Image: " />
+                                    <p:inputText  value="#{clusterProvisionController.cluster.provider.image}" />
+
+                                    <h:outputText value="Override login user:" 
+                                                  rendered="#{!clusterProvisionController.renderEC2}"/>
+                                    <p:inputText value="#{clusterProvisionController.cluster.provider.loginUser}" 
+                                                 rendered="#{!clusterProvisionController.renderEC2}"/>
+
+                                    <h:outputText value="Region:" />
+                                    <p:selectOneMenu id="regions" 
+                                                     value="#{clusterProvisionController.cluster.provider.region}" 
+                                                     rendered="#{clusterProvisionController.renderEC2}" >
+                                        <f:selectItem itemLabel="Select One" itemValue="" /> 
+                                        <f:selectItems value="#{clusterProvisionController.options.ec2Regions}" 
+                                                       var="region"/>
+                                        <p:ajax listener="#{clusterProvisionController.handleRegionChange}"
+                                                event="change" update="zones" process="@this"/>
+
+                                    </p:selectOneMenu>
+                                    <p:inputText value="#{clusterProvisionController.cluster.provider.region}" 
+                                                 rendered="#{!clusterProvisionController.renderEC2}"/>
+                                    <h:outputText value="Zones:" 
+                                                  rendered="#{clusterProvisionController.renderEC2}"/>
+
+                                    <p:selectManyCheckbox id="zones" 
+                                                          value="#{clusterProvisionController.cluster.provider.zones}" 
+                                                          rendered="#{clusterProvisionController.renderEC2}">
+
+                                        <f:selectItems value="#{clusterProvisionController.zones}" />
+                                    </p:selectManyCheckbox>
+                                </h:panelGrid>
+
+                            </p:panel>
+
+                        </p:tab>
+
+                        <p:tab id="nodeGroups" title="Groups">
+                            <p:panel header="Cluster Nodes">
+                                <!--<h:form id="groupTableForm">-->
+                                <h:panelGrid columns="2">
+                                    <h:outputText value="Skip Chef override configuration:"/>
+                                    <h:selectBooleanCheckbox value="#{clusterProvisionController.skipChef}"/>
+                                </h:panelGrid>
+                                <h:panelGrid columns="5" columnClasses="label, value" >
+
+
+                                    <p:dataTable id="groupList" var="group" 
+                                                 value="#{clusterProvisionController.groupsModel}"
+                                                 rowKey="#{group.securityGroup}"
+                                                 selection="#{clusterProvisionController.selectedGroup}"
+                                                 selectionMode="multiple"
+                                                 editable="true">
+
+                                        <f:facet name="header">
+                                            Click delete selection after selecting multiple instances to delete, use shift-click to select multiples
+                                        </f:facet>
+                                        <p:column headerText="Group Name">
+                                            <p:cellEditor>
+                                                <f:facet name="output">
+                                                    <h:outputText value="#{group.securityGroup}" />
+                                                </f:facet>
+                                                <f:facet name="input">
+                                                    <p:inputText value="#{group.securityGroup}" />
+                                                </f:facet>
+                                            </p:cellEditor>
+                                        </p:column>
+                                        <p:column headerText="Number of Nodes">
+                                            <p:cellEditor>
+                                                <f:facet name="output">
+                                                    <h:outputText value="#{group.number}" />
+                                                </f:facet>
+                                                <f:facet name="input">
+                                                    <p:inputText value="#{group.number}" />
+                                                </f:facet>
+                                            </p:cellEditor>
+                                        </p:column>
+                                        <p:column headerText="Roles and Ports">
+                                            <p:cellEditor>
+                                                <f:facet name="output">
+                                                    <h:outputText value="#{group.roles}" />
+                                                </f:facet>
+                                                <f:facet name="input">
+                                                    <h:outputText value="Roles:"/>
+                                                    <p:selectManyCheckbox id="roles" value="#{group.roles}" >  
+                                                        <f:selectItems value="#{clusterProvisionController.options.roles}"  />  
+
+                                                    </p:selectManyCheckbox>  
+                                                </f:facet>
+
+                                                <f:facet name="input">
+                                                    <h:outputText value="Ports:"/>
+                                                    <p:selectManyCheckbox id="rolePorts" value="#{group.authorizePorts}" >  
+                                                        <f:selectItems value="#{clusterProvisionController.options.roles}"  />  
+                                                    </p:selectManyCheckbox>
+                                                </f:facet>
+                                            </p:cellEditor>
+                                        </p:column>
+
+                                        <p:column headerText="Actions">
+                                            <p:rowEditor />
+                                        </p:column>
+
+                                    </p:dataTable>
+
+                                </h:panelGrid>
+                                <p:dialog header="Remove Group" widgetVar="removeDialog" resizable="false"
+                                          id="groupDig"  
+                                          showEffect="fade" hideEffect="explode" modal="true">  
+                                    <h:outputText id="deletemsg" value="Are you sure you want to delete?" />
+                                    <p:commandButton id="acceptDelete" value="Confirm" update="groupList" 
+                                                     action="#{clusterProvisionController.removeGroup}" 
+                                                     oncomplete="editLastDataTableRow removeDialog.close()"
+                                                     />
+                                </p:dialog>  
+                                <p:dialog header="Add Group" widgetVar="addGroup" resizable="false"
+                                          id="addDig"
+                                          showEffect="fade" hideEffect="explode" modal="true">
+                                    <h:panelGrid columns="2" >
+                                        <h:outputText id="addGroup" value="Group name:" />
+                                        <p:inputText id="groupName" 
+                                                     value="#{clusterProvisionController.options.addGroupName.securityGroup}"
+                                                     />
+                                        <h:outputText value="Number of Nodes:"/>
+                                        <p:inputText value="#{clusterProvisionController.options.addGroupName.number}"/>
+                                        <h:outputText value="Roles:"/>
+                                        <p:selectManyCheckbox value="#{clusterProvisionController.options.addGroupName.roles}" >  
+                                            <f:selectItems value="#{clusterProvisionController.options.roles}"  />  
+                                        </p:selectManyCheckbox>  
+                                        <h:outputText value="Ports:"/>
+                                        <p:selectManyCheckbox value="#{clusterProvisionController.options.addGroupName.authorizePorts}" >  
+                                            <f:selectItems value="#{clusterProvisionController.options.roles}"  />  
+                                        </p:selectManyCheckbox>  
+
+                                    </h:panelGrid>
+                                    <p:commandButton id="acceptName" value="Confirm" update="groupList" 
+                                                     action="#{clusterProvisionController.addGroup}"
+                                                     oncomplete="editLastDataTableRow addGroup.close()"
+                                                     />
+
+                                </p:dialog>
+                                <p:commandButton id="addGroupButton" value="New Group" 
+                                                 icon="ui-icon-plusthick"
+                                                 update="mainForm:addGroup" 
+                                                 oncomplete="addGroup.show()" title="VIew"
+                                                 />
+                                <p:commandButton id="deleteButton" value="Delete Selection" 
+                                                 update="mainForm:deletemsg" 
+                                                 oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
+                                <!--</h:form>-->
+                            </p:panel>
+
+                        </p:tab>
+
+                        <p:tab id="chefAttributes" title="Override Chef">
+                            <p:panel header="Override Chef">
+
+                                <h:messages errorClass="error"/>
+
+                                <h:panelGrid columns="3" columnClasses="label, value">
+                                    <p:dataTable id="roleList" var="chef"
+                                                 value="#{clusterProvisionController.chefAttributesModel}"
+                                                 rowKey="#{chef.role}"
+                                                 selection="#{clusterProvisionController.selectedAttributes}"
+                                                 selectionMode="multiple"
+                                                 editable="true">
+
+                                        <f:facet name="header">
+                                            Click delete selection after selecting multiple instances to delete, use shift-click to select multiples
+                                        </f:facet>
+                                        <p:column headerText="Role">
+                                            <p:cellEditor>
+                                                <f:facet name="output">
+                                                    <h:outputText value="#{chef.role}" />
+                                                </f:facet>
+                                                <f:facet name="input">
+                                                    <p:selectOneMenu 
+                                                        value="#{clusterProvisionController.options.addRole.servicerole}" >
+                                                        <f:selectItem itemLabel="Select One" itemValue="" /> 
+                                                        <f:selectItems value="#{clusterProvisionController.options.roles}" />
+                                                    </p:selectOneMenu>
+                                                </f:facet>
+                                            </p:cellEditor>
+                                        </p:column>
+                                        <p:column headerText="Chef JSON">
+                                            <p:cellEditor>
+                                                <f:facet name="output">
+                                                    <h:outputText value="" />
+                                                </f:facet>
+                                                <f:facet name="input">
+                                                    <p:inputTextarea autoResize="true" value="#{chef.chefJson}"  />
+                                                </f:facet>
+                                            </p:cellEditor>
+                                        </p:column>
+                                        <p:column headerText="Actions">
+                                            <p:rowEditor />
+                                        </p:column>
+
+                                    </p:dataTable>
+                                </h:panelGrid>
+                                <p:dialog header="Remove Json" widgetVar="removeChefJSONDialog" resizable="false"
+                                          id="removeJSONDig"  
+                                          showEffect="fade" hideEffect="explode" modal="true">  
+                                    <h:outputText id="deleteJSON" value="Are you sure you want to delete?" />
+                                    <p:commandButton  value="Confirm" update="roleList" 
+                                                      action="#{clusterProvisionController.removeChefJson}" 
+                                                      oncomplete="editLastDataTableRow removeChefJSONDialog.close()"
+                                                      />
+                                </p:dialog>  
+                                <p:dialog header="Add Json" widgetVar="addChefJSONDialog" resizable="false"
+                                          id="addJSONDig"
+                                          showEffect="fade" hideEffect="explode" modal="true">
+                                    <h:panelGrid columns="2">
+                                        <h:outputText id="addJSON" value="Role:" />
+                                        <p:selectOneMenu id="chefRoles" 
+                                                         value="#{clusterProvisionController.options.addRole.servicerole}" >
+                                            <f:selectItem itemLabel="Select One" itemValue="" /> 
+                                            <f:selectItems value="#{clusterProvisionController.options.roles}" />
+                                        </p:selectOneMenu>
+                                        <h:outputText value="Chef JSON:"/>
+                                        <p:inputTextarea  autoResize="true" 
+                                                          value="#{clusterProvisionController.options.addRole.chefJson}"/>
+                                    </h:panelGrid>
+
+
+                                    <p:commandButton  value="Confirm" update="groupList" 
+                                                      action="#{clusterProvisionController.addChefJson}"
+                                                      oncomplete="editLastDataTableRow addChefJSONDialog.close()"
+                                                      />
+
+                                </p:dialog>
+                                <p:commandButton id="addChefButton" value="New Chef" 
+                                                 icon="ui-icon-plusthick"
+                                                 update="mainForm:addJSON" 
+                                                 oncomplete="addChefJSONDialog.show()" title="VIew"
+                                                 />
+                                <p:commandButton id="deleteChefButton" value="Delete Selection" 
+                                                 update="mainForm:deleteJSON" 
+                                                 oncomplete="removeChefJSONDialog.show()" icon="ui-icon-minusthick" 
+                                                 title="View"/>
+                            </p:panel>
+                        </p:tab>
+                        <p:tab id="confirm" title="Confirmation">
+                            <p:panel header="Confirmation">
+
+                                <ui:include src="/sauron/template/clusterDescription.xhtml"/>
+
+
+
+                            </p:panel>
+                            <p:commandButton value="Submit" update="growl"
+                                             actionListener="#{clusterProvisionController.generateTable}"
+                                             action="proceedLaunchCluster"/>
+                        </p:tab>
+
+                    </p:wizard>
+
+                </h:form>
+            </div>
+        </ui:composition>
+    </h:body>
+</html>
+
