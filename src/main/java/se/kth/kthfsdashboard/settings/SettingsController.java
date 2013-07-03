@@ -21,7 +21,7 @@ public class SettingsController implements Serializable{
 
    public SettingsController() {
       logger.info("SettingsController");      
-      name = "Jumbo Hadoop Dashboard";
+      name = "Hadoop Open PaaS Dashboard";
       logLines = 2;
       numOfGraphColumns = 3;
    }
