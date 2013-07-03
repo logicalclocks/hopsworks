@@ -177,23 +177,19 @@ public class AgentResource {
 //       TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
       try {
          JSONObject json = new JSONObject(jsonString);
-         
          Alert alert = new Alert();
          alert.setAlertTime(new Date());
-         
+         alert.setProvider(Alert.Provider.valueOf(json.getString("Provider")));
+         alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")));         
          alert.setAgentTime(json.getLong("Time"));
          alert.setMessage(json.getString("Message"));
          alert.setHostId(json.getString("Host"));
-         alert.setSeverity(Alert.Severity.valueOf(json.getString("Severity")));
-         
          alert.setPlugin(json.getString("Plugin"));
          if (json.has("PluginInstance")) {
             alert.setPluginInstance(json.getString("PluginInstance"));
          }
-         
          alert.setType(json.getString("Type"));
          alert.setTypeInstance(json.getString("TypeInstance"));
-         
          alert.setDataSource(json.getString("DataSource"));
          alert.setCurrentValue(json.getString("CurrentValue"));
          if (json.has("WarningMin")) {

@@ -1,5 +1,6 @@
 package se.kth.kthfsdashboard.alert;
 
+import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -19,9 +20,10 @@ public class AlertEJB {
     public AlertEJB() {
     }
 
-    public List<Alert> findAll() {
+    public List<Alert> findAll(Date fromDate, Date toDate) {
 
-        TypedQuery<Alert> query = em.createNamedQuery("Alerts.findAll", Alert.class);
+        TypedQuery<Alert> query = em.createNamedQuery("Alerts.findAll", Alert.class)
+                .setParameter("fromdate", fromDate).setParameter("todate", toDate) ;
         return query.getResultList();
     }
     
