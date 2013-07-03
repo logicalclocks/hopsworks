@@ -28,6 +28,9 @@ public class ChefAttributes implements Serializable{
     @JoinColumn(name="CLUSTER_ID")
     private Cluster cluster;
 
+    public ChefAttributes() {
+    }
+           
     public Long getId() {
         return id;
     }

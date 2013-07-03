@@ -42,7 +42,7 @@ public class VirtualizationController implements Serializable {
     private MessageController messages;
     @ManagedProperty(value = "#{computeCredentialsMB}")
     private ComputeCredentialsMB computeCredentialsMB;
-    @ManagedProperty(value = "#{clusterController}")
+    @ManagedProperty(value = "#{clusterProvisionController}")
     private ClusterProvisionController clusterController;
     private ClusterProvision virtualizer;
     private String provider;
@@ -125,8 +125,8 @@ public class VirtualizationController implements Serializable {
         //service = initContexts();
         virtualizer = new ClusterProvision(this);
         virtualizer.createSecurityGroups(clusterController.getCluster());
-//        if(virtualizer.launchNodesBasicSetup(clusterController.getCluster())){
-        if(virtualizer.parallelLaunchNodesBasicSetup(clusterController.getCluster())){
+        if(virtualizer.launchNodesBasicSetup(clusterController.getCluster())){
+//        if(virtualizer.parallelLaunchNodesBasicSetup(clusterController.getCluster())){
             messages.addMessage("All nodes launched");
             virtualizer.installPhase();
             virtualizer.deployingConfigurations(clusterController.getCluster());
