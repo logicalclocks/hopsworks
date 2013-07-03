@@ -13,7 +13,7 @@ import java.util.TreeMap;
 public class ClusterInfo {
 
    private String name;
-   private Long numberOfMachines;
+   private Long numberOfHosts;
    private Set<String> services = new HashSet<String>();
    private Set<String> roles = new HashSet<String>();
    private Set<String> badServices = new HashSet<String>();
@@ -29,12 +29,12 @@ public class ClusterInfo {
       this.name = name;
    }
 
-   public void setNumberOfMachines(Long numberOfMachines) {
-      this.numberOfMachines = numberOfMachines;
+   public void setNumberOfHost(Long numberOfHosts) {
+      this.numberOfHosts = numberOfHosts;
    }
 
    public Long getNumberOfMachines() {
-      return numberOfMachines;
+      return numberOfHosts;
    }
 
    public String getName() {

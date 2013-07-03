@@ -8,7 +8,6 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.struct.RoleHostInfo;
 import se.kth.kthfsdashboard.struct.Status;
-import se.kth.kthfsdashboard.struct.StatusCount;
 
 /**
  *
@@ -21,12 +20,6 @@ public class RoleEJB {
    private EntityManager em;
 
    public RoleEJB() {
-   }
-
-   public Long clusterMachinesCount(String cluster) {
-      TypedQuery<Long> query = em.createNamedQuery("Role.Count-hosts", Long.class)
-              .setParameter("cluster", cluster);
-      return query.getSingleResult();
    }
 
    public List<String> findClusters() {
@@ -83,7 +76,7 @@ public class RoleEJB {
    }
 
    public List<String> findHostId(String cluster, String service, String role) {
-      TypedQuery<String> query = em.createNamedQuery("Role.findHostIdBy-Cluster-Group-Role", String.class)
+      TypedQuery<String> query = em.createNamedQuery("Role.findHostIdBy-Cluster-Service-Role", String.class)
               .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role);
       return query.getResultList();
    }
@@ -94,20 +87,26 @@ public class RoleEJB {
               .setParameter("role", role);
       return query.getSingleResult();
    }
-
-   public Long countStatus(String cluster, String service, String role, Status status) {
-      TypedQuery<Long> query = em.createNamedQuery("Role.CountBy-Cluster-Service-Role-Status", Long.class)
-              .setParameter("cluster", cluster).setParameter("service", service)
-              .setParameter("role", role).setParameter("status", status);
-      return query.getSingleResult();
-   }
    
-   public List<StatusCount> countStatus(String cluster, String service, String role) {
-      TypedQuery<StatusCount> query = em.createNamedQuery("Role.findStatusCountBy-Cluster-Group-Role", StatusCount.class)
-              .setParameter("cluster", cluster).setParameter("service", service)
-              .setParameter("role", role);
-      return query.getResultList();
-   }
+   public Long countHosts(String cluster) {
+      TypedQuery<Long> query = em.createNamedQuery("Role.Count-hosts", Long.class)
+              .setParameter("cluster", cluster);
+      return query.getSingleResult();
+   }   
+
+//   public Long countStatus(String cluster, String service, String role, Status status) {
+//      TypedQuery<Long> query = em.createNamedQuery("Role.CountBy-Cluster-Service-Role-Status", Long.class)
+//              .setParameter("cluster", cluster).setParameter("service", service)
+//              .setParameter("role", role).setParameter("status", status);
+//      return query.getSingleResult();
+//   }
+   
+//   public List<StatusCount> countStatus(String cluster, String service, String role) {
+//      TypedQuery<StatusCount> query = em.createNamedQuery("Role.findStatusCountBy-Cluster-Group-Role", StatusCount.class)
+//              .setParameter("cluster", cluster).setParameter("service", service)
+//              .setParameter("role", role);
+//      return query.getResultList();
+//   }
 
    public List<RoleHostInfo> findRoleHost(String cluster) {
       TypedQuery<RoleHostInfo> query = em.createNamedQuery("Role.findRoleHostBy-Cluster", RoleHostInfo.class)

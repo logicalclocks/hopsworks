@@ -151,7 +151,7 @@ public class ServiceInstancesController {
       
       if (cluster != null && role != null && service != null && status != null) {
          for (RoleHostInfo roleHostInfo: roleEjb.findRoleHost(cluster, service, role)){
-            if (roleHostInfo.getStatus() == Role.getRoleStatus(status)) {
+            if (roleHostInfo.getStatus() == Status.valueOf(status)) {
                roleHostList.add(roleHostInfo);
             }
          }

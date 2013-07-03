@@ -23,9 +23,9 @@ import se.kth.kthfsdashboard.struct.Status;
    @NamedQuery(name = "Role.findBy-Cluster-Group-Role-Status", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
    
    // need this?   
-   @NamedQuery(name = "Role.findHostIdBy-Cluster-Group-Role", query = "SELECT r.hostId FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role ORDER BY r.hostId"),
+   @NamedQuery(name = "Role.findHostIdBy-Cluster-Service-Role", query = "SELECT r.hostId FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role ORDER BY r.hostId"),
    @NamedQuery(name = "Role.Count", query = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
-   @NamedQuery(name = "Role.CountBy-Cluster-Service-Role-Status", query = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
+//   @NamedQuery(name = "Role.CountBy-Cluster-Service-Role-Status", query = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
    
    @NamedQuery(name = "Role.Count-hosts", query = "SELECT count(DISTINCT r.hostId) FROM Role r WHERE r.cluster = :cluster"),
 
@@ -33,7 +33,6 @@ import se.kth.kthfsdashboard.struct.Status;
    @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service"),
    @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service-Role", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),
    @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service-Role-Host", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.hostId = :hostid"),
-
         
 })
 
@@ -56,14 +55,6 @@ public class Role implements Serializable {
    private Integer webPort;
 
    public Role() {
-   }
-
-   public static Status getRoleStatus(String status) {
-      try {
-         return Status.valueOf(status);
-      } catch (Exception ex) {
-         return Status.None;
-      }
    }
 
    public Long getId() {
@@ -137,19 +128,18 @@ public class Role implements Serializable {
    public void setWebPort(Integer webPort) {
       this.webPort = webPort;
    }
-
-   public String getUptimeInSeconds() {
-
-      DecimalFormat df = new DecimalFormat("#,###,##0.0");
-      return df.format(uptime / 1000);
-   }
-
+   
    public Health getHealth() {
-
       if (status == Status.Failed || status == Status.Stopped) {
          return Health.Bad;
       }
       return Health.Good;
+   }   
+
+   public String uptimeInSeconds() {
+
+      DecimalFormat df = new DecimalFormat("#,###,##0.0");
+      return df.format(uptime / 1000);
    }
    
    @Override

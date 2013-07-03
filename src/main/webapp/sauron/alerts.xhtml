@@ -30,7 +30,7 @@
 
          <div class="hosts-header">
             <p:outputLabel id="title">
-               #{fn:length(alertController.alerts)} Alert(s):
+               #{fn:length(alertController.alerts)} Alert<h:outputText value ="s" rendered="#{fn:length(alertController.alerts)>1}"/>:
             </p:outputLabel>
          </div>
 
@@ -84,7 +84,7 @@
                   </f:facet>                    
                </p:dataTable>  
             </p:panel>
-         </h:form> 
+         </h:form>          
 
       </ui:define>
 
