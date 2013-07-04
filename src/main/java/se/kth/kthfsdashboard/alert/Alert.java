@@ -5,7 +5,6 @@ import java.util.Date;
 import javax.persistence.*;
 import se.kth.kthfsdashboard.util.Formatter;
 
-
 /**
  *
  * @author Hamidreza Afzali <afzali@kth.se>
@@ -13,7 +12,12 @@ import se.kth.kthfsdashboard.util.Formatter;
 @Entity
 @Table(name = "Alerts")
 @NamedQueries({
-   @NamedQuery(name = "Alerts.findAll", query = "SELECT a FROM Alert a ORDER BY a.alertTime DESC"),
+   @NamedQuery(name = "Alerts.findAll", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate ORDER BY a.alertTime DESC"),
+   @NamedQuery(name = "Alerts.findBy-Severity", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate AND a.severity = :severity ORDER BY a.alertTime DESC"),
+   @NamedQuery(name = "Alerts.findBy-Provider", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate AND a.provider = :provider ORDER BY a.alertTime DESC"),
+   @NamedQuery(name = "Alerts.findBy-Provider-Severity", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate AND a.severity = :severity AND a.provider = :provider ORDER BY a.alertTime DESC"),
+
+   
    @NamedQuery(name = "Alerts.removeAll", query = "DELETE FROM Alert a")   
 })
 public class Alert implements Serializable {
@@ -22,26 +26,31 @@ public class Alert implements Serializable {
       FAILURE, WARNING, OKAY
    }
    
+   public enum Provider {
+      Collectd, Agent
+   }   
+   
    @Id
    @GeneratedValue(strategy = GenerationType.SEQUENCE)
    private Long id;
-   @Column(name = "message", nullable = false, length = 512)
+   @Column(nullable = false, length = 512)
    private String message;
-   @Column(name = "host_name", length = 128)
+   @Column(length = 128)
    private String hostId;
    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
    private Date alertTime;
    private long agentTime;
-   @Column(name = "plugin", length = 32)
+   private Provider provider;   
+   @Column(length = 32)
    private String plugin;
-   @Column(name = "plugin_instance", length = 32)
+   @Column(length = 32)
    private String pluginInstance;
-   @Column(name = "type", length = 32)
+   @Column(length = 32)
    private String type;
-   @Column(name = "type_instance", length = 32)
+   @Column(length = 32)
    private String typeInstance;
 
-   @Column(name = "data_source", length = 32)
+   @Column(length = 32)
    private String dataSource;   
    
    @Column(length = 16)
@@ -72,7 +81,15 @@ public class Alert implements Serializable {
    public Long getId() {
       return id;
    }
+   
+   public Provider getProvider() {
+      return provider;
+   }
 
+   public void setProvider(Provider provider) {
+      this.provider = provider;
+   }
+   
    public String getMessage() {
       return message;
    }

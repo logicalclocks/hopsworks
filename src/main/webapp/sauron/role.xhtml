@@ -115,9 +115,9 @@
                <p:dataTable id="instances" var="instance" value="#{roleController.instanceFullInfo}">
                   <p:column headerText="Name"><h:outputText value="#{instance.name}"/></p:column>
                   <p:column headerText="Host">
-                     <p:commandLink id="gotohost" action="#{urlController.host}" ajax="false">
+                     <p:commandLink id="gotohost" action="#{urlController.host()}" ajax="false">
                         <h:outputText value="#{instance.host}" />
-                        <f:param name="hostid" value="#{host.host}"/>
+                        <f:param name="hostid" value="#{instance.host}"/>
                      </p:commandLink>                      
                   </p:column>
                   <p:column headerText="Status" styleClass="Status-#{instance.status}"><h:outputText value="#{instance.status}"/></p:column>

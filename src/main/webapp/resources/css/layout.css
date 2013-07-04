@@ -148,6 +148,10 @@ body {
    font-size: 10px;
 }
 
+.ui-datatable tbody td {
+    white-space: normal;
+}
+
 .ui-datatable-data, .ui-datatable-data-empty {}
 
 .ui-datatable .ui-datatable-data td,

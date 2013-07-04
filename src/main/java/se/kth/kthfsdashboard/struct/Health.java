@@ -6,5 +6,5 @@ package se.kth.kthfsdashboard.struct;
  */
 public enum Health {
 
-   Good, Bad, Unknown, None
+   Good, Bad, None
 }

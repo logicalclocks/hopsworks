@@ -8,12 +8,11 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.model.SelectItem;
-import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
 import se.kth.kthfsdashboard.struct.InstanceInfo;
 import se.kth.kthfsdashboard.struct.RoleHostInfo;
 import se.kth.kthfsdashboard.struct.Status;
-import se.kth.kthfsdashboard.util.CookieTools;
+import se.kth.kthfsdashboard.util.FilterUtil;
 
 /**
  *
@@ -43,8 +42,8 @@ public class ServiceInstancesController {
    private final static String[] yarnRoles;
    private final static String[] healthStates;
    private List<InstanceInfo> filteredInstances;   
-   private static Logger logger = Logger.getLogger(ServiceInstancesController.class.getName());   
-   private CookieTools cookie = new CookieTools();
+   private static final Logger logger = Logger.getLogger(ServiceInstancesController.class.getName());   
+//   private CookieTools cookie = new CookieTools();
 
    static {
       statusStates = new String[4];
@@ -63,11 +62,11 @@ public class ServiceInstancesController {
       
       logger.info("ServiceInstancesController");
 
-      statusOptions = createFilterOptions(statusStates);
-      hdfsRoleOptions = createFilterOptions(hdfsRoles);
-      mysqlclusterRoleOptions = createFilterOptions(mysqlClusterRoles);
-      yarnRoleOptions = createFilterOptions(yarnRoles);
-      healthOptions = createFilterOptions(healthStates);
+      statusOptions = FilterUtil.createFilterOptions(statusStates);
+      hdfsRoleOptions = FilterUtil.createFilterOptions(hdfsRoles);
+      mysqlclusterRoleOptions = FilterUtil.createFilterOptions(mysqlClusterRoles);
+      yarnRoleOptions = FilterUtil.createFilterOptions(yarnRoles);
+      healthOptions = FilterUtil.createFilterOptions(healthStates);
    }
 
    public String getRole() {
@@ -129,16 +128,6 @@ public class ServiceInstancesController {
          return new SelectItem[]{};
       }
    }   
-
-   private SelectItem[] createFilterOptions(String[] data) {
-      SelectItem[] options = new SelectItem[data.length + 1];
-
-      options[0] = new SelectItem("", "Any");
-      for (int i = 0; i < data.length; i++) {
-         options[i + 1] = new SelectItem(data[i], data[i]);
-      }
-      return options;
-   }
    
    public List<InstanceInfo> getInstances() {
       
@@ -151,7 +140,7 @@ public class ServiceInstancesController {
       
       if (cluster != null && role != null && service != null && status != null) {
          for (RoleHostInfo roleHostInfo: roleEjb.findRoleHost(cluster, service, role)){
-            if (roleHostInfo.getStatus() == Role.getRoleStatus(status)) {
+            if (roleHostInfo.getStatus() == Status.valueOf(status)) {
                roleHostList.add(roleHostInfo);
             }
          }

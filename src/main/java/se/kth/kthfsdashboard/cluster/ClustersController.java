@@ -40,7 +40,7 @@ public class ClustersController {
    private void loadClusters() {
       for (String cluster : roleEjb.findClusters()) {  
          ClusterInfo clusterInfo = new ClusterInfo(cluster);
-         clusterInfo.setNumberOfMachines(roleEjb.clusterMachinesCount(cluster));
+         clusterInfo.setNumberOfHost(roleEjb.countHosts(cluster));
          clusterInfo.addRoles(roleEjb.findRoleHost(cluster));
          clusters.add(clusterInfo);
       }
