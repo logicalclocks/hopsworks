@@ -37,7 +37,15 @@
                 </p:panelGrid>
             </h:form>
             <!--Navigation Bar - End-->
+            
+         <p:outputPanel rendered="#{not clusterStatusController.found}">
+            <p:spacer width="1" height="50" />             
+            <p:panel header="Error" style="width: 300px; margin: 0 auto;">
+               <p align="center"> Cluster not found!</p>   
+            </p:panel>
+         </p:outputPanel>            
 
+         <p:outputPanel rendered="#{clusterStatusController.found}">
             <!-- Second Toolbar-->
             <h:form>  
             <p:toolbar styleClass="SecondToolbar#{clusterStatusController.clusterHealth}"> 
@@ -82,10 +90,8 @@
            
             <p:spacer width="1" height="10" />
             
-            <p:panel header="Recent Commands">
-               
-               <p:dataTable var="command" value="#{commandController.recentCommandsByInstance}">
-                  
+            <p:panel header="Recent Commands">               
+               <p:dataTable var="command" value="#{commandController.recentCommandsByInstance}">                  
                   <p:column headerText="Command"><h:outputText value="#{command.command}"/></p:column>
                   <p:column headerText="Host Id"><h:outputText value="#{command.hostId}"/></p:column>
                   <p:column headerText="Instance"><h:outputText value="#{command.cluster}"/></p:column>
@@ -95,11 +101,10 @@
                   <p:column headerText="Status">
                      <h:outputText styleClass="CommandStatus_#{command.status}" value="#{command.status}, #{command.endTimeShort}"/>
                   </p:column>
-               </p:dataTable>             
-               
+               </p:dataTable>                            
             </p:panel>
 
-
+         </p:outputPanel>   
 
         </ui:define>
 

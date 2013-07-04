@@ -36,6 +36,7 @@ public class ServiceStatusController {
    public static Map<ServiceType, List<ServiceRoleInfo>> serviceRolesMap;
    private List<ServiceRoleInfo> serviceRoles = new ArrayList<ServiceRoleInfo>();
    private Health serviceHealth;
+   private boolean found;
    private static final Logger logger = Logger.getLogger(ServiceStatusController.class.getName());
 
    public ServiceStatusController() {
@@ -50,7 +51,7 @@ public class ServiceStatusController {
       roles.add(new ServiceRoleInfo("MySQL Cluster NDBD (ndb)", RoleType.ndb));
       roles.add(new ServiceRoleInfo("MySQL Server (mysqld)", RoleType.mysqld));
       roles.add(new ServiceRoleInfo("MGM Server (mgmserver)", RoleType.mgmserver));
-      roles.add(new ServiceRoleInfo("Memcached (memcached)", RoleType.memcached));      
+      roles.add(new ServiceRoleInfo("Memcached (memcached)", RoleType.memcached));
       serviceRolesMap.put(ServiceType.MySQLCluster, roles);
 
       roles = new ArrayList<ServiceRoleInfo>();
@@ -85,6 +86,14 @@ public class ServiceStatusController {
       return cluster;
    }
 
+   public boolean isFound() {
+      return found;
+   }
+
+   public void setFound(boolean found) {
+      this.found = found;
+   }
+
    public Health getHealth() {
       return serviceHealth;
    }
@@ -115,8 +124,13 @@ public class ServiceStatusController {
 
    private void loadRoles() {
       serviceHealth = Health.Good;
-      for (ServiceRoleInfo serviceRoleInfo : serviceRolesMap.get(ServiceType.valueOf(service))) {
-         serviceRoles.add(setStatus(cluster, service, serviceRoleInfo));
+      try {
+         ServiceType serviceType = ServiceType.valueOf(service);
+         for (ServiceRoleInfo serviceRoleInfo : serviceRolesMap.get(serviceType)) {
+            serviceRoles.add(setStatus(cluster, service, serviceRoleInfo));
+         }
+      } catch (Exception ex) {
+         logger.log(Level.SEVERE, "Invalid service type: {0}", service);
       }
    }
 
@@ -124,7 +138,11 @@ public class ServiceStatusController {
 
       TreeMap<Status, Integer> statusMap = new TreeMap<Status, Integer>();
       TreeMap<Health, Integer> healthMap = new TreeMap<Health, Integer>();
-      for (RoleHostInfo roleHost : roleEjb.findRoleHost(cluster, service, serviceRoleInfo.getRoleName())) {
+      List<RoleHostInfo> roleHosts = roleEjb.findRoleHost(cluster, service, serviceRoleInfo.getRoleName());
+      if (!roleHosts.isEmpty()) {
+         found = true;
+      }
+      for (RoleHostInfo roleHost : roleHosts) {
          if (statusMap.containsKey(roleHost.getStatus())) {
             statusMap.put(roleHost.getStatus(), statusMap.get(roleHost.getStatus()) + 1);
          } else {

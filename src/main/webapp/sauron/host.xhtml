@@ -32,13 +32,11 @@
          <!--Navigation Bar - End-->
 
          <p:outputPanel rendered="#{not hostController.found}">
-
             <p:spacer width="1" height="50" />             
             <p:panel header="Error" style="width: 300px; margin: 0 auto;">
                <p align="center"> Host not found!</p>   
             </p:panel>
-         </p:outputPanel>  
-
+         </p:outputPanel>
 
          <p:outputPanel rendered="#{hostController.found}">         
             <!-- Host Toolbar -->

@@ -41,222 +41,232 @@
          </h:form>
          <!--Navigation Bar - End-->
 
-         <!-- Second Toolbar-->
-         <h:form>  
-            <p:toolbar styleClass="SecondToolbar#{serviceStatusController.health}">  
-               <p:toolbarGroup align="left">  
-                  <p:commandLink  action="#{urlController.serviceStatus}" ajax="false">
-                     <h:outputText value="#{serviceStatusController.service}"/>
-                     <f:param name="cluster" value="#{serviceStatusController.cluster}"/>                            
-                     <f:param name="service" value="#{serviceStatusController.service}"/>                      
-                  </p:commandLink>
+         <p:outputPanel rendered="#{not serviceStatusController.found}">
+            <p:spacer width="1" height="50" />             
+            <p:panel header="Error" style="width: 300px; margin: 0 auto;">
+               <p align="center">Service not found!</p>   
+            </p:panel>
+         </p:outputPanel>         
 
-                  <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" 
-                                   action="#{urlController.serviceStatus}" ajax="false">
-                     <f:param name="cluster" value="#{serviceStatusController.cluster}"/>                            
-                     <f:param name="service" value="#{serviceStatusController.service}"/> 
-                  </p:commandButton>  
-                  <p:commandButton value="Instances" icon="ui-icon-note" 
-                                   action="#{urlController.serviceInstances}">
-                     <f:param name="cluster" value="#{serviceStatusController.cluster}"/>   
-                     <f:param name="service" value="#{serviceStatusController.service}"/>
-                  </p:commandButton>  
-                  <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" 
-                                   action="#{urlController.serviceCommandHistory}">
-                     <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                     <f:param name="service" value="#{serviceStatusController.service}"/>                      
-                  </p:commandButton>  
-               </p:toolbarGroup>  
+         <p:outputPanel rendered="#{serviceStatusController.found}">         
+            <!-- Second Toolbar-->
+            <h:form>  
+               <p:toolbar styleClass="SecondToolbar#{serviceStatusController.health}">  
+                  <p:toolbarGroup align="left">  
+                     <p:commandLink  action="#{urlController.serviceStatus}" ajax="false">
+                        <h:outputText value="#{serviceStatusController.service}"/>
+                        <f:param name="cluster" value="#{serviceStatusController.cluster}"/>                            
+                        <f:param name="service" value="#{serviceStatusController.service}"/>                      
+                     </p:commandLink>
 
-               <p:toolbarGroup align="right">  
-                  <p:menuButton value="Actions" disabled="true">  
-                     <p:menuitem value="Start..." url="???" /> 
-                     <p:menuitem value="Stop..." url="???" /> 
-                  </p:menuButton>  
-               </p:toolbarGroup>  
-
-            </p:toolbar>  
-         </h:form>
-         
-         <!-- Second Toolbar - End -->         
-         
-         <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
-            <p:graphicImage library="images" name="ajaxloadingbar.gif" />  
-         </p:dialog>             
-         
-         <p:spacer width="1" height="10" />
-
-         <h:form styleClass="styleInfoPanel">
-            <p:panel header="Roles Status and Health Summary">
-
-               <p:dataTable id="serviceRole" var="serviceRole" value="#{serviceStatusController.roles}">
-
-                  <p:column headerText="Role name">
-
-                     <p:commandLink styleClass="Health-#{serviceRole.roleHealth}" action="#{urlController.serviceInstances}" ajax="false">
-                        <h:outputText value="#{serviceRole.fullName}"/>
+                     <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" 
+                                      action="#{urlController.serviceStatus}" ajax="false">
+                        <f:param name="cluster" value="#{serviceStatusController.cluster}"/>                            
+                        <f:param name="service" value="#{serviceStatusController.service}"/> 
+                     </p:commandButton>  
+                     <p:commandButton value="Instances" icon="ui-icon-note" 
+                                      action="#{urlController.serviceInstances}">
+                        <f:param name="cluster" value="#{serviceStatusController.cluster}"/>   
+                        <f:param name="service" value="#{serviceStatusController.service}"/>
+                     </p:commandButton>  
+                     <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" 
+                                      action="#{urlController.serviceCommandHistory}">
                         <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                        <f:param name="service" value="#{serviceStatusController.service}"/>                        
-                        <f:param name="role" value="#{serviceRole.roleName}"/>
-                     </p:commandLink>                         
-                  </p:column>  
+                        <f:param name="service" value="#{serviceStatusController.service}"/>                      
+                     </p:commandButton>  
+                  </p:toolbarGroup>  
 
-                  <p:column headerText="Status">
-                     <ui:repeat value="#{serviceRole.statusMap.entrySet().toArray()}" var="item" varStatus="status">
-                        <p:commandLink styleClass="Status-${item.key}" action="#{urlController.serviceInstances}" ajax="false">
-                           <h:outputText id="statuslink" value="${item.value} ${item.key}"/>
-                           <p:tooltip for="statuslink" value="#{settingsController.tooltip(item.key, item.value)}" showEffect="fade" hideEffect="fade" />
-                           <f:param name="cluster" value="#{ServiceStatusController.cluster}"/>
-                           <f:param name="service" value="#{serviceStatusController.service}"/>
+                  <p:toolbarGroup align="right">  
+                     <p:menuButton value="Actions" disabled="true">  
+                        <p:menuitem value="Start..." url="???" /> 
+                        <p:menuitem value="Stop..." url="???" /> 
+                     </p:menuButton>  
+                  </p:toolbarGroup>  
+
+               </p:toolbar>  
+            </h:form>
+
+            <!-- Second Toolbar - End -->         
+
+            <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
+               <p:graphicImage library="images" name="ajaxloadingbar.gif" />  
+            </p:dialog>             
+
+            <p:spacer width="1" height="10" />
+
+            <h:form styleClass="styleInfoPanel">
+               <p:panel header="Roles Status and Health Summary">
+
+                  <p:dataTable id="serviceRole" var="serviceRole" value="#{serviceStatusController.roles}">
+
+                     <p:column headerText="Role name">
+
+                        <p:commandLink styleClass="Health-#{serviceRole.roleHealth}" action="#{urlController.serviceInstances}" ajax="false">
+                           <h:outputText value="#{serviceRole.fullName}"/>
+                           <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
+                           <f:param name="service" value="#{serviceStatusController.service}"/>                        
                            <f:param name="role" value="#{serviceRole.roleName}"/>
-                           <f:param name="status" value="${item.key}"/>                           
-                        </p:commandLink>
-                        <p:spacer width="6" height="0" rendered="#{!status.last}"/>
-                     </ui:repeat> 
-                     <p:outputLabel rendered="#{empty serviceRole.statusMap.entrySet()}">No role instance available</p:outputLabel>
-                  </p:column>
+                        </p:commandLink>                         
+                     </p:column>  
 
-                  <p:column headerText="Health">
-                     <ui:repeat value="#{serviceRole.healthMap.entrySet().toArray()}" var="item" varStatus="status">
-                        <h:outputText value="${item.value} ${item.key}" styleClass="Health-${item.key}"/>
+                     <p:column headerText="Status">
+                        <ui:repeat value="#{serviceRole.statusMap.entrySet().toArray()}" var="item" varStatus="status">
+                           <p:commandLink styleClass="Status-${item.key}" action="#{urlController.serviceInstances}" ajax="false">
+                              <h:outputText id="statuslink" value="${item.value} ${item.key}"/>
+                              <p:tooltip for="statuslink" value="#{settingsController.tooltip(item.key, item.value)}" showEffect="fade" hideEffect="fade" />
+                              <f:param name="cluster" value="#{ServiceStatusController.cluster}"/>
+                              <f:param name="service" value="#{serviceStatusController.service}"/>
+                              <f:param name="role" value="#{serviceRole.roleName}"/>
+                              <f:param name="status" value="${item.key}"/>                           
+                           </p:commandLink>
+                           <p:spacer width="6" height="0" rendered="#{!status.last}"/>
+                        </ui:repeat> 
+                        <p:outputLabel rendered="#{empty serviceRole.statusMap.entrySet()}">No role instance available</p:outputLabel>
+                     </p:column>
+
+                     <p:column headerText="Health">
+                        <ui:repeat value="#{serviceRole.healthMap.entrySet().toArray()}" var="item" varStatus="status">
+                           <h:outputText value="${item.value} ${item.key}" styleClass="Health-${item.key}"/>
                            <h:outputText value=", " rendered="#{!status.last}"/>
-                     </ui:repeat>
-                  </p:column>
+                        </ui:repeat>
+                     </p:column>
 
-               </p:dataTable> 
+                  </p:dataTable> 
 
-            </p:panel>                    
-         </h:form>
+               </p:panel>                    
+            </h:form>
 
-         <p:spacer width="1" height="25" />
+            <p:spacer width="1" height="25" />
 
-         
-         <p:accordionPanel activeIndex="-1">
-         <!--<p:accordionPanel activeIndex="-1" dynamic="true" cache="true">-->
 
-         <p:tab title="Recent Log" rendered="#{serviceStatusController.renderLog()}">
-               <h:form id="logform">
-                  <p:commandLink styleClass="AccordionPanelLink" value="Refresh Log" update="log"
-                                 onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
+            <p:accordionPanel activeIndex="-1">
+               <!--<p:accordionPanel activeIndex="-1" dynamic="true" cache="true">-->
+
+               <p:tab title="Recent Log" rendered="#{serviceStatusController.renderLog()}">
+                  <h:form id="logform">
+                     <p:commandLink styleClass="AccordionPanelLink" value="Refresh Log" update="log"
+                                    onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
+                        <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
+                        <f:param name="service" value="#{serviceStatusController.service}"/>
+                     </p:commandLink>
+                     <p:panelGrid id="log" styleClass="LogOutput">
+                        <p:row>
+                           <p:column  styleClass="LogOutput column">
+                              Stdout<br/>
+                              <div>
+                                 <h:outputText escape="false" value="#{communicationController.serviceLog(20)}"/>
+                              </div>
+                           </p:column>
+                        </p:row>
+                     </p:panelGrid>
+                  </h:form>
+               </p:tab>
+
+               <p:tab title="Configuration File" rendered="#{serviceStatusController.renderConfiguration()}">
+                  <h:form id="configform">
+                     Configuration:<br/>
+                     <!-- TODO : CSS-->
+                     <p:inputTextarea id ="config" readonly="true" style="width:100%" rows="25" 
+                                      value="#{communicationController.mySqlClusterConfig()}" autoResize="false"/>
+                  </h:form>
+               </p:tab>
+
+               <p:tab id="nodes" title="NDB Info (Nodes)" rendered="#{serviceStatusController.renderNdbInfoTable()}">
+                  <h:form id ="frm_nodes" >
+                     <p:outputPanel id="nodes_table" autoUpdate="true" rendered="true">
+
+                        <p:dataTable id="nodestable" var="item" value="#{communicationController.ndbinfoNodesTable}">  
+                           <p:column headerText="Node id">  
+                              <h:outputText value="#{item.nodeId}" />  
+                           </p:column>  
+
+                           <p:column headerText="Status">  
+                              <h:outputText value="#{item.status}" />  
+                           </p:column>  
+                           <p:column headerText="Uptime">  
+                              <h:outputText value="#{item.upTime}" />  
+                           </p:column>
+
+                           <p:column headerText="Start phase">  
+                              <h:outputText value="#{item.startPhase}" />  
+                           </p:column>
+                           <p:column headerText="Config generation">  
+                              <h:outputText value="#{item.configGeneration}" />  
+                           </p:column>
+                        </p:dataTable>
+                     </p:outputPanel>
+                  </h:form>
+               </p:tab> 
+
+            </p:accordionPanel>
+
+            <p:spacer width="1" height="25" />
+
+            <h:form id="formdate" style="text-align: center">  
+               <h:panelGrid columns="10"> 
+                  <p:selectOneButton id ="periods" value="#{graphController.period}">  
+                     <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
                      <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
                      <f:param name="service" value="#{serviceStatusController.service}"/>
-                  </p:commandLink>
-                  <p:panelGrid id="log" styleClass="LogOutput">
-                     <p:row>
-                        <p:column  styleClass="LogOutput column">
-                           Stdout<br/>
-                           <div>
-                              <h:outputText escape="false" value="#{communicationController.serviceLog(20)}"/>
-                           </div>
-                        </p:column>
-                     </p:row>
-                  </p:panelGrid>
-               </h:form>
-            </p:tab>
-            
-            <p:tab title="Configuration File" rendered="#{serviceStatusController.renderConfiguration()}">
-               <h:form id="configform">
-                  Configuration:<br/>
-                  <!-- TODO : CSS-->
-                  <p:inputTextarea id ="config" readonly="true" style="width:100%" rows="25" 
-                                   value="#{communicationController.mySqlClusterConfig()}" autoResize="false"/>
-               </h:form>
-            </p:tab>
+                     <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
+                  </p:selectOneButton>
+                  <h:outputText value="or from" />
+                  <p:calendar title="from" value="#{graphController.start}" id="calstart" showOn="button" pattern="dd/MM/yyyy HH:mm"/>  
+                  <h:outputText value=" to " />
+                  <p:calendar title="to" value="#{graphController.end}" id="calend" showOn="button" pattern="dd/MM/yyyy HH:mm"/>
+                  <h:outputText value=" in " />
+                  <p:selectOneMenu id="cols" value="#{settingsController.numOfGraphColumns}" >  
+                     <f:selectItems var="n" value="#{graphController.columns}" />  
+                  </p:selectOneMenu>
+                  <h:outputText value=" columns " />
+                  <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
+                     <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
+                     <f:param name="service" value="#{serviceStatusController.service}"/>                   
+                  </p:commandButton> 
+               </h:panelGrid>
+            </h:form> 
 
-            <p:tab id="nodes" title="NDB Info (Nodes)" rendered="#{serviceStatusController.renderNdbInfoTable()}">
-               <h:form id ="frm_nodes" >
-                  <p:outputPanel id="nodes_table" autoUpdate="true" rendered="true">
+            <h:form id="graphs">
 
-                     <p:dataTable id="nodestable" var="item" value="#{communicationController.ndbinfoNodesTable}">  
-                        <p:column headerText="Node id">  
-                           <h:outputText value="#{item.nodeId}" />  
-                        </p:column>  
-
-                        <p:column headerText="Status">  
-                           <h:outputText value="#{item.status}" />  
-                        </p:column>  
-                        <p:column headerText="Uptime">  
-                           <h:outputText value="#{item.upTime}" />  
-                        </p:column>
-
-                        <p:column headerText="Start phase">  
-                           <h:outputText value="#{item.startPhase}" />  
-                        </p:column>
-                        <p:column headerText="Config generation">  
-                           <h:outputText value="#{item.configGeneration}" />  
-                        </p:column>
-                     </p:dataTable>
-                  </p:outputPanel>
-               </h:form>
-            </p:tab> 
-           
-         </p:accordionPanel>
-
-         <p:spacer width="1" height="25" />
-
-         <h:form id="formdate" style="text-align: center">  
-            <h:panelGrid columns="10"> 
-               <p:selectOneButton id ="periods" value="#{graphController.period}">  
-                  <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
-                  <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                  <f:param name="service" value="#{serviceStatusController.service}"/>
-                  <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
-               </p:selectOneButton>
-               <h:outputText value="or from" />
-               <p:calendar title="from" value="#{graphController.start}" id="calstart" showOn="button" pattern="dd/MM/yyyy HH:mm"/>  
-               <h:outputText value=" to " />
-               <p:calendar title="to" value="#{graphController.end}" id="calend" showOn="button" pattern="dd/MM/yyyy HH:mm"/>
-               <h:outputText value=" in " />
-               <p:selectOneMenu id="cols" value="#{settingsController.numOfGraphColumns}" >  
-                  <f:selectItems var="n" value="#{graphController.columns}" />  
-               </p:selectOneMenu>
-               <h:outputText value=" columns " />
-               <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
-                  <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                  <f:param name="service" value="#{serviceStatusController.service}"/>                   
-               </p:commandButton> 
-            </h:panelGrid>
-         </h:form> 
-
-         <h:form id="graphs">
-
-            <p:outputPanel rendered="#{serviceStatusController.renderKTHFSGraphs()}">
-               <p:toolbar>
-                  <p:toolbarGroup align="left"><p:outputLabel value="Name Node Info"/></p:toolbarGroup>
-               </p:toolbar>
-               <p:dataGrid  var="g" value="#{graphController.namenodeServiceGraphs}" columns="#{settingsController.numOfGraphColumns}"  
-                            paginator="false" styleClass="ui-datagrid-no-border" >  
-                  <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}"/>  
-               </p:dataGrid> 
-
-               <p:toolbar>
-                  <p:toolbarGroup align="left"><p:outputLabel value="Aggregate Name Node Activity (Total Activity)"/></p:toolbarGroup>
-               </p:toolbar>
-               <p:dataGrid  var="g" value="#{graphController.namenodeServiceActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                  <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}"/>  
-               </p:dataGrid>             
-
-               <!--
+               <p:outputPanel rendered="#{serviceStatusController.renderKTHFSGraphs()}">
                   <p:toolbar>
-                          <p:toolbarGroup align="left"><p:outputLabel value="Data Node Info"/></p:toolbarGroup>
+                     <p:toolbarGroup align="left"><p:outputLabel value="Name Node Info"/></p:toolbarGroup>
                   </p:toolbar>
-               -->
-            </p:outputPanel>
+                  <p:dataGrid  var="g" value="#{graphController.namenodeServiceGraphs}" columns="#{settingsController.numOfGraphColumns}"  
+                               paginator="false" styleClass="ui-datagrid-no-border" >  
+                     <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}"/>  
+                  </p:dataGrid> 
 
-            <p:outputPanel rendered="#{serviceStatusController.renderMySQLClusterGraphs()}" >
-               <p:toolbar>
-                  <p:toolbarGroup align="left"><p:outputLabel value="MySQL Cluster NDB Info"/></p:toolbarGroup>
-               </p:toolbar>
-               <p:dataGrid  var="g" value="#{graphController.mysqlclusterActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                  <p:toolbar>
+                     <p:toolbarGroup align="left"><p:outputLabel value="Aggregate Name Node Activity (Total Activity)"/></p:toolbarGroup>
+                  </p:toolbar>
+                  <p:dataGrid  var="g" value="#{graphController.namenodeServiceActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                     <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}"/>  
+                  </p:dataGrid>             
 
-                  <p:graphicImage value="#{graphController.mysqlclusterGraphUrl(g)}" alt="Graph" rendered="true">
-                    
-                  </p:graphicImage>                      
-                
-               </p:dataGrid>
-            </p:outputPanel>
+                  <!--
+                     <p:toolbar>
+                             <p:toolbarGroup align="left"><p:outputLabel value="Data Node Info"/></p:toolbarGroup>
+                     </p:toolbar>
+                  -->
+               </p:outputPanel>
 
-         </h:form>
+               <p:outputPanel rendered="#{serviceStatusController.renderMySQLClusterGraphs()}" >
+                  <p:toolbar>
+                     <p:toolbarGroup align="left"><p:outputLabel value="MySQL Cluster NDB Info"/></p:toolbarGroup>
+                  </p:toolbar>
+                  <p:dataGrid  var="g" value="#{graphController.mysqlclusterActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+
+                     <p:graphicImage value="#{graphController.mysqlclusterGraphUrl(g)}" alt="Graph" rendered="true">
+
+                     </p:graphicImage>                      
+
+                  </p:dataGrid>
+               </p:outputPanel>
+
+            </h:form>
+
+         </p:outputPanel> 
 
       </ui:define>
 

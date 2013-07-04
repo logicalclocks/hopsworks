@@ -27,6 +27,7 @@ public class ClusterStatusController {
    private static final Logger logger = Logger.getLogger(ClusterStatusController.class.getName());
    private List<ServiceInfo> services;
    private Health clusterHealth;
+   private boolean found;
    
    public ClusterStatusController() {
    }
@@ -44,6 +45,14 @@ public class ClusterStatusController {
 
    public String getCluster() {
       return cluster;
+   }
+   
+   public boolean isFound() {
+      return found;
+   }
+
+   public void setFound(boolean found) {
+      this.found = found;
    }   
 
    public List<ServiceInfo> getServices() {
@@ -56,7 +65,11 @@ public class ClusterStatusController {
 
    public void loadServices() {
       clusterHealth = Health.Good;
-      for (String s : roleEjb.findServices(cluster)) {
+      List <String> servicesList = roleEjb.findServices(cluster);
+      if (!servicesList.isEmpty()) {
+         found = true;
+      }
+      for (String s : servicesList ) {
          ServiceInfo serviceInfo = new ServiceInfo(s);
          Health health = serviceInfo.addRoles(roleEjb.findRoleHost(cluster, s));
          if (health == Health.Bad) {

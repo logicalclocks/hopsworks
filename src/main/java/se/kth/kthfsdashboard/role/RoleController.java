@@ -34,6 +34,7 @@ public class RoleController {
    private List<InstanceFullInfo> instanceInfoList;
    private String health;
    private boolean renderWebUi;
+   private boolean found;
    private static final Logger logger = Logger.getLogger(RoleController.class.getName());
 
    public RoleController() {
@@ -56,6 +57,7 @@ public class RoleController {
          instanceInfoList.add(info);
          renderWebUi = roleHost.getRole().getWebPort() != null && roleHost.getRole().getWebPort() != 0;
          health = roleHost.getHealth().toString();
+         found = true;
       } catch (Exception ex) {
          logger.warning("init: ".concat(ex.getMessage()));
       }
@@ -96,6 +98,14 @@ public class RoleController {
    public String getCluster() {
       return cluster;
    }
+   
+   public boolean isFound() {
+      return found;
+   }
+
+   public void setFound(boolean found) {
+      this.found = found;
+   }   
    
    public boolean getRenderWebUi(){
       return renderWebUi;

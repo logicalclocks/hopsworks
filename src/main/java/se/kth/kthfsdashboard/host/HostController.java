@@ -3,6 +3,7 @@ package se.kth.kthfsdashboard.host;
 import com.sun.jersey.api.client.ClientResponse;
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -97,6 +98,14 @@ public class HostController implements Serializable {
    public String getCluster() {
       return cluster;
    }
+   
+   public boolean isFound() {
+      return found;
+   }
+
+   public void setFound(boolean found) {
+      this.found = found;
+   }   
 
    public Host getHost() {
       return host;
@@ -109,7 +118,7 @@ public class HostController implements Serializable {
             found = true;
          }
       } catch (Exception ex) {
-         logger.warning("Host ".concat(hostId).concat(" not found."));
+         logger.log(Level.WARNING, "Host {0} not found.", hostId);
       }
    }
 
@@ -161,11 +170,4 @@ public class HostController implements Serializable {
       FacesContext.getCurrentInstance().addMessage(null, message);
    }
 
-   public boolean isFound() {
-      return found;
-   }
-
-   public void setFound(boolean found) {
-      this.found = found;
-   }
 }
