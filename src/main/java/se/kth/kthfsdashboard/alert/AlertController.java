@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -14,10 +15,9 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
-import se.kth.kthfsdashboard.host.Host;
-import se.kth.kthfsdashboard.host.HostEJB;
+import se.kth.kthfsdashboard.alert.Alert.Provider;
+import se.kth.kthfsdashboard.alert.Alert.Severity;
 import se.kth.kthfsdashboard.struct.DatePeriod;
-import se.kth.kthfsdashboard.struct.Status;
 import se.kth.kthfsdashboard.util.FilterUtil;
 
 /**
@@ -30,28 +30,19 @@ public class AlertController implements Serializable {
 
    @EJB
    private AlertEJB alertEJB;
-   @EJB
-   private HostEJB hostEJB;
-   @ManagedProperty("#{param.hostid}")
-   private String hostId;
-   @ManagedProperty("#{param.role}")
-   private String role;
-   @ManagedProperty("#{param.service}")
-   private String service;
-   @ManagedProperty("#{param.cluster}")
-   private String cluster;
    private final static String[] severities;
    private final static String[] providers;
    private SelectItem[] severityOptions;
    private SelectItem[] providerOptions;
    private Alert[] selectedAlerts;
    private List<Alert> alerts;
-   private List<Alert> filteredAlerts;
    private static final Logger logger = Logger.getLogger(AlertController.class.getName());
    private Date start;
    private Date end;
    private String period;
    private List<DatePeriod> datePeriods = new ArrayList<DatePeriod>();
+   private String severity;
+   private String provider;
 
    static {
       severities = new String[3];
@@ -67,7 +58,6 @@ public class AlertController implements Serializable {
    public AlertController() {
       severityOptions = FilterUtil.createFilterOptions(severities);
       providerOptions = FilterUtil.createFilterOptions(providers);
-
 
       datePeriods.add(new DatePeriod("hour", "1h"));
       datePeriods.add(new DatePeriod("2hr", "2h"));
@@ -92,36 +82,12 @@ public class AlertController implements Serializable {
       loadAlerts();
    }
 
-   public String getRole() {
-      return role;
+   public String[] getSeverities() {
+      return severities;
    }
 
-   public void setRole(String role) {
-      this.role = role;
-   }
-
-   public String getService() {
-      return service;
-   }
-
-   public void setService(String service) {
-      this.service = service;
-   }
-
-   public String getHostId() {
-      return hostId;
-   }
-
-   public void setHostId(String hostId) {
-      this.hostId = hostId;
-   }
-
-   public void setCluster(String cluster) {
-      this.cluster = cluster;
-   }
-
-   public String getCluster() {
-      return cluster;
+   public String[] getProviders() {
+      return providers;
    }
 
    public List<Alert> getAlerts() {
@@ -149,7 +115,6 @@ public class AlertController implements Serializable {
    }
 
    public void setStart(Date start) {
-      System.err.println("<<<<<<<<<<>>>>>>>>>>>>");
       this.start = start;
    }
 
@@ -173,12 +138,20 @@ public class AlertController implements Serializable {
       return datePeriods;
    }
    
-   public List<Alert> getFilteredAlerts() {
-      return filteredAlerts;
+   public String getSeverity() {
+      return severity;
    }
 
-   public void setFilteredAlerts(List<Alert> filteredAlerts) {
-      this.filteredAlerts = filteredAlerts;
+   public void setSeverity(String severity) {
+      this.severity = severity;
+   }
+
+   public String getProvider() {
+      return provider;
+   }
+
+   public void setProvider(String provider) {
+      this.provider = provider;
    }   
 
    public void updateDates() {
@@ -202,7 +175,6 @@ public class AlertController implements Serializable {
       start = c.getTime();
       end = new Date();
       loadAlerts();
-      System.err.println("Update: " + start + " >> " + end);
    }
 
    public void useCalendar() {
@@ -211,25 +183,41 @@ public class AlertController implements Serializable {
    }
 
    public void loadAlerts() {
-      
-      System.err.println("Load: " + start + " >> " + end);
-      alerts = alertEJB.findAll(start, end);
+      logger.log(Level.INFO, "Loading alerts from {0} to {1}, severity={2}, provider={3}", new Object[]{start, end, severity, provider});
+      if (severity != null && provider != null) {
+         Provider p = Provider.valueOf(provider);
+         Severity s = Severity.valueOf(severity);
+         alerts = alertEJB.find(start, end, p, s);
+      } else if (severity != null) {
+         alerts = alertEJB.find(start, end, Severity.valueOf(severity));
+      } else if (provider != null) {
+         alerts = alertEJB.find(start, end, Provider.valueOf(provider));
+      } else {
+         alerts = alertEJB.find(start, end);
+      }
    }
 
    public void deleteSelectedAlerts() {
       for (Alert alert : selectedAlerts) {
          alertEJB.removeAlert(alert);
       }
-      informAlertsDeleted(selectedAlerts.length + " alert(s) deleted.");
+      loadAlerts();
+      String msg = selectedAlerts.length + " ";
+      msg += selectedAlerts.length > 1 ? "alerts deleted." : "alert deleted.";
+      informAlertsDeleted(msg);
    }
 
    public void deleteAllAlerts() {
       alertEJB.removeAllAlerts();
+      loadAlerts();            
       informAlertsDeleted("All alerts deleted.");
    }
 
    private void informAlertsDeleted(String msg) {
       FacesContext context = FacesContext.getCurrentInstance();
       context.addMessage(null, new FacesMessage("Successful", msg));
+      System.err.println(msg);
    }
+
+
 }

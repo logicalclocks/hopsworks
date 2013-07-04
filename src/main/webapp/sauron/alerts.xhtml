@@ -32,74 +32,73 @@
                #{alertController.alerts.size()} Alert<h:outputText value ="s" rendered="#{alertController.alerts.size()>1}"/>:
             </p:outputLabel>
          </div>
+         
+         <h:form id="msg">
+            <p:growl id="msgGrowl" showDetail="true"/>  
+         </h:form>         
+
+         <h:form id="form_filters" >
+            <h:panelGrid id="panel_filters" columns="12"> 
+               <p:selectOneButton id ="periods" value="#{alertController.period}">  
+                  <f:selectItems var="d" value="#{alertController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
+                  <p:ajax event="change" process="panel_filters" update=":title, :form_alerts:alerts, calstart, calend" listener="#{alertController.updateDates}"/>
+               </p:selectOneButton>
+               <h:outputText value="or from" />
+               <p:calendar title="from" value="#{alertController.start}" id="calstart" showOn="button" pattern="dd/MM/yyyy HH:mm"/>  
+               <h:outputText value=" to " />
+               <p:calendar title="to" value="#{alertController.end}" id="calend" showOn="button" pattern="dd/MM/yyyy HH:mm"/>
+               <h:outputText value=" by " />
+               <p:selectOneMenu id="provider" value="#{alertController.provider}" >  
+                  <f:selectItems var="provider" value="#{alertController.providerOptions}" />  
+               </p:selectOneMenu>
+               <h:outputText value=" severity " />
+               <p:selectOneMenu id="severity" value="#{alertController.severity}" >  
+                  <f:selectItems var="severity" value="#{alertController.severityOptions}" />  
+               </p:selectOneMenu>                  
+               <p:commandButton value="Go" update=":title, :form_alerts:alerts, periods"  actionListener="#{alertController.useCalendar()}" />
+            </h:panelGrid>   
+         </h:form>
+
+         <p:spacer width="1" height="5" />         
 
          <h:form id="form_alerts">
-            <p:growl id="msgGrowl" showDetail="true"/>  
 
             <p:confirmDialog id="confirmAllDialog" message="Are you sure about deleting all the alerts?"  
                              header="Delete confirmation" severity="alert" widgetVar="confirmAll">  
-               <p:commandButton id="confirm1" value="Yes" update="alerts, :title" oncomplete="confirmAll.hide()"  
+               <p:commandButton id="confirm1" value="Yes" update="alerts, :title, :msg" oncomplete="confirmAll.hide()"  
                                 actionListener="#{alertController.deleteAllAlerts()}" />  
                <p:commandButton id="decline1" value="No" onclick="confirmAll.hide()" type="button" />   
             </p:confirmDialog>             
 
             <p:confirmDialog id="confirmDelectedDialog" message="Are you sure about deleting the selected alerts?"  
                              header="Delete confirmation" severity="alert" widgetVar="confirmSelected">  
-               <p:commandButton id="confirm2" value="Yes" update="alerts, :title" onclick="confirmSelected.hide()"  
+               <p:commandButton id="confirm2" value="Yes" update="alerts, :title, :msg" onclick="confirmSelected.hide()"  
                                 actionListener="#{alertController.deleteSelectedAlerts()}" />  
                <p:commandButton id="decline2" value="No" onclick="confirmSelected.hide()" type="button" />   
-            </p:confirmDialog>
+            </p:confirmDialog>             
 
-            <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
-               <p:graphicImage library="images" name="ajaxloadingbar.gif" />  
-            </p:dialog> 
-
-            <p:commandLink styleClass="PanelLink" value="Refresh Alerts" update="alerts, :title"
-                           onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
-            </p:commandLink>
 
             <p:panel header="Alerts">  
-
-               <h:panelGrid columns="10"> 
-                  <p:selectOneButton id ="periods" value="#{alertController.period}">  
-                     <f:selectItems var="d" value="#{alertController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
-                     <p:ajax event="change" process="@this" update=":title, alerts, calstart, calend" listener="#{alertController.updateDates}"/>
-                  </p:selectOneButton>
-                  <h:outputText value="or from" />
-                  <p:calendar title="from" value="#{alertController.start}" id="calstart" showOn="button" pattern="dd/MM/yyyy HH:mm"/>  
-                  <h:outputText value=" to " />
-                  <p:calendar title="to" value="#{alertController.end}" id="calend" showOn="button" pattern="dd/MM/yyyy HH:mm"/>
-                  <p:commandButton value="Go" update=":title, alerts, periods"  actionListener="#{alertController.useCalendar()}" />
-               </h:panelGrid>
                <p:dataTable id="alerts" var="alert" value="#{alertController.alerts}" 
-                            filteredValue="#{alertController.filteredAlerts}"
                             selection="#{alertController.selectedAlerts}"
                             rowKey="#{alert.id}"
                             paginator="true" paginatorPosition="bottom"
-                            rows="25" rowsPerPageTemplate="25,50,100"  
+                            rows="10" rowsPerPageTemplate="10, 25,50,100"
                             styleClass="AlertsTable">
-                                    
                   <p:column selectionMode="multiple" style="width:2%" />
                   <p:column headerText="Date"><h:outputText value="#{alert.alertTimeShort}"/></p:column>
-                  <p:column headerText="Severity" filterBy="#{alert.severity}" filterMatchMode="contains" 
-                            filterOptions="#{alertController.severityOptions}" filterPosition="top" >
-                     <h:outputText value="#{alert.severity}" styleClass="AlertSeverity_#{alert.severity}"/>
-                  </p:column>  
-                  <p:column headerText="Provider" filterBy="#{alert.provider}" filterMatchMode="contains" 
-                            filterOptions="#{alertController.providerOptions}" filterPosition="top">
-                     <h:outputText value="#{alert.provider}"/>
-                  </p:column>                  
+                  <p:column headerText="Severity"><h:outputText value="#{alert.severity}" styleClass="AlertSeverity_#{alert.severity}"/></p:column>  
+                  <p:column headerText="Provider"><h:outputText value="#{alert.provider}"/></p:column>                  
                   <p:column headerText="Plugin"><h:outputText value="#{alert.plugin}" /></p:column>  
                   <p:column headerText="Type"><h:outputText value="#{alert.type}" /></p:column>  
                   <p:column headerText="Type Instance"><h:outputText value="#{alert.typeInstance}" /></p:column>
-                  <p:column headerText="Host Id" filterBy="#{alert.hostId}" filterMatchMode="contains" filterPosition="top">
-                     <p:commandLink action="#{urlController.host()}" ajax="false">
-                        <h:outputText value="#{alert.hostId}"/>
-                        <f:param name="hostid" value="#{alert.hostId}"/>
-                     </p:commandLink> 
+                  <p:column headerText="Host Id">
+<!--                     <p:commandLink id="gotohost" action="#{urlController.host()}" ajax="false">-->
+                     <h:outputText value="#{alert.hostId}"/>
+                     <!--<f:param name="hostid" value="#{alert.hostId}"/>-->
+                     <!--</p:commandLink>--> 
                   </p:column>                  
                   <p:column headerText="Message"><h:outputText value="#{alert.message}" /></p:column>  
-
                   <f:facet name="footer" >   
                      <p:commandButton id="deleteSelectedAlerts" value="Delete Selected Alerts" icon="ui-icon-trash"  
                                       onclick="confirmSelected.show()"/>
@@ -109,7 +108,9 @@
                </p:dataTable>  
 
             </p:panel>
-         </h:form>          
+
+         </h:form>   
+
 
       </ui:define>
 

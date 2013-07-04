@@ -13,6 +13,11 @@ import se.kth.kthfsdashboard.util.Formatter;
 @Table(name = "Alerts")
 @NamedQueries({
    @NamedQuery(name = "Alerts.findAll", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate ORDER BY a.alertTime DESC"),
+   @NamedQuery(name = "Alerts.findBy-Severity", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate AND a.severity = :severity ORDER BY a.alertTime DESC"),
+   @NamedQuery(name = "Alerts.findBy-Provider", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate AND a.provider = :provider ORDER BY a.alertTime DESC"),
+   @NamedQuery(name = "Alerts.findBy-Provider-Severity", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate AND a.severity = :severity AND a.provider = :provider ORDER BY a.alertTime DESC"),
+
+   
    @NamedQuery(name = "Alerts.removeAll", query = "DELETE FROM Alert a")   
 })
 public class Alert implements Serializable {
