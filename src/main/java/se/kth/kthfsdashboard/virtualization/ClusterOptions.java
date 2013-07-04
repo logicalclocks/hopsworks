@@ -4,7 +4,6 @@
  */
 package se.kth.kthfsdashboard.virtualization;
 
-import com.sun.xml.internal.ws.api.ha.StickyFeature;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
