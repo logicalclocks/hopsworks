@@ -33,9 +33,8 @@
                         <h:outputText value="Clusters" />
                      </p:commandLink> 
                      <h:outputText value=" &raquo; "/>
-                     <p:commandLink action="#{urlController.clusterStatus}" ajax="false">  
+                     <p:commandLink action="#{urlController.clusterStatus(serviceInstancesController.cluster)}" ajax="false">  
                         <h:outputText value="#{serviceInstancesController.cluster}" />
-                        <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>    
                      </p:commandLink> 
                      <h:outputText value=" &raquo; "/>
                      <p:commandLink action="#{urlController.serviceStatus}" ajax="false">  

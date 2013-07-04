@@ -39,9 +39,8 @@
 
                   <p:column  headerText="Cluster name">  
                      <p:commandLink styleClass="Health-#{cluster.clusterHealth}" id="id#{cluster.name}" 
-                                    action="#{urlController.clusterStatus}" ajax="false">  
+                                    action="#{urlController.clusterStatus(cluster.name)}" ajax="false">  
                         <h:outputText value="#{cluster.name}" />
-                        <f:param name="cluster" value="#{cluster.name}"/>
                      </p:commandLink> 
                   </p:column> 
                   

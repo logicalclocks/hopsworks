@@ -44,14 +44,11 @@
             <h:form>  
                <p:toolbar styleClass="SecondToolbar#{clusterStatusController.clusterHealth}">  
                   <p:toolbarGroup align="left">  
-                     <p:commandLink  action="#{urlController.clusterStatus}" ajax="false">
+                     <p:commandLink  action="#{urlController.clusterStatus(clusterStatusController.cluster)}" ajax="false">
                         <h:outputText value="#{clusterStatusController.cluster}"/>
-                        <f:param name="cluster" value="#{clusterStatusController.cluster}"/>                         
                      </p:commandLink>
 
-                     <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{urlController.clusterStatus}" ajax="false">
-                        <f:param name="cluster" value="#{clusterStatusController.cluster}"/>                            
-                     </p:commandButton> 
+                     <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{urlController.clusterStatus(clusterStatusController.cluster)}" ajax="false"/>
                      <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" action="#{urlController.clusterCommandHistory}">
                         <f:param name="cluster" value="#{clusterStatusController.cluster}"/>                            
                      </p:commandButton>  
