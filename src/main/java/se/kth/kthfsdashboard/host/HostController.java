@@ -46,6 +46,7 @@ public class HostController implements Serializable {
    @ManagedProperty("#{param.role}")
    private String role;
    private Host host;
+   private boolean found;
    private static final Logger logger = Logger.getLogger(HostController.class.getName());
 
    public HostController() {
@@ -104,6 +105,9 @@ public class HostController implements Serializable {
    private void loadHost() {
       try {
          host = hostEJB.findHostById(hostId);
+         if (host != null) {
+            found = true;
+         }
       } catch (Exception ex) {
          logger.warning("Host ".concat(hostId).concat(" not found."));
       }
@@ -155,5 +159,13 @@ public class HostController implements Serializable {
       }
       commandEJB.updateCommand(c);
       FacesContext.getCurrentInstance().addMessage(null, message);
+   }
+
+   public boolean isFound() {
+      return found;
+   }
+
+   public void setFound(boolean found) {
+      this.found = found;
    }
 }

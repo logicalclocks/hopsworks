@@ -31,158 +31,167 @@
          </h:form>
          <!--Navigation Bar - End-->
 
-         <!-- Host Toolbar -->
-         <h:form>  
-            <p:toolbar styleClass="SecondToolbar#{hostController.host.health}">  
-               <p:toolbarGroup align="left">  
-                  <p:commandLink action="#{urlController.host()}" ajax="false">
-                     <h:outputText value="#{hostController.host.hostId} (#{hostController.host.hostname})"/>
-                     <f:param name="hostid" value="#{hostController.hostId}"/>   
-                  </p:commandLink>
+         <p:outputPanel rendered="#{not hostController.found}">
 
-                  <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{hostController.gotoHost}" ajax="false">
-                     <f:param name="hostid" value="#{hostController.hostId}"/>                            
-                  </p:commandButton>  
-
-               </p:toolbarGroup>  
-
-            </p:toolbar>  
-         </h:form>
-
-         <p:spacer width="1" height="8" />    
+            <p:spacer width="1" height="50" />             
+            <p:panel header="Error" style="width: 300px; margin: 0 auto;">
+               <p align="center"> Host not found!</p>   
+            </p:panel>
+         </p:outputPanel>  
 
 
-         <h:form styleClass="styleInfoPanel" id="form_host">
-            <p:panel  header="Details">
-               <p:dataTable id="host" var="host" value="#{hostController.host}">
-                  <p:column headerText="Host Id" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostId}"/></p:column> 
-                  <p:column headerText="Hostname" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostname}"/></p:column>
-                  <p:column headerText="Public IP"><h:outputText value="#{host.publicIp}"/></p:column>
-                  <p:column headerText="Private IP"><h:outputText value="#{host.privateIp}"/></p:column>
-                  <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
-                  <p:column headerText="Last Heartbeat"><h:outputText value="#{host.lastHeartbeatFormatted} ago"/></p:column>
-                  <p:column headerText="Cores"><h:outputText value="#{host.cores}" /></p:column> 
-                  <p:column headerText="Load Average">
-                     <p:dataTable styleClass="innerDataTable" var="host" value="#{host}">
-                        <p:column>#{host.load1}</p:column>
-                        <p:column>#{host.load5}</p:column>
-                        <p:column>#{host.load15}</p:column>
+         <p:outputPanel rendered="#{hostController.found}">         
+            <!-- Host Toolbar -->
+            <h:form>  
+               <p:toolbar styleClass="SecondToolbar#{hostController.host.health}">  
+                  <p:toolbarGroup align="left">  
+                     <p:commandLink action="#{urlController.host()}" ajax="false">
+                        <h:outputText value="#{hostController.host.hostId} (#{hostController.host.hostname})"/>
+                        <f:param name="hostid" value="#{hostController.hostId}"/>   
+                     </p:commandLink>
+
+                     <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{hostController.gotoHost}" ajax="false">
+                        <f:param name="hostid" value="#{hostController.hostId}"/>                            
+                     </p:commandButton>  
+
+                  </p:toolbarGroup>  
+
+               </p:toolbar>  
+            </h:form>
+
+            <p:spacer width="1" height="8" />    
+
+            <h:form styleClass="styleInfoPanel" id="form_host">
+               <p:panel  header="Details">
+                  <p:dataTable id="host" var="host" value="#{hostController.host}">
+                     <p:column headerText="Host Id" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostId}"/></p:column> 
+                     <p:column headerText="Hostname" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostname}"/></p:column>
+                     <p:column headerText="Public IP"><h:outputText value="#{host.publicIp}"/></p:column>
+                     <p:column headerText="Private IP"><h:outputText value="#{host.privateIp}"/></p:column>
+                     <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
+                     <p:column headerText="Last Heartbeat"><h:outputText value="#{host.lastHeartbeatFormatted} ago"/></p:column>
+                     <p:column headerText="Cores"><h:outputText value="#{host.cores}" /></p:column> 
+                     <p:column headerText="Load Average">
+                        <p:dataTable styleClass="innerDataTable" var="host" value="#{host}">
+                           <p:column>#{host.load1}</p:column>
+                           <p:column>#{host.load5}</p:column>
+                           <p:column>#{host.load15}</p:column>
+                        </p:dataTable>
+                     </p:column>
+                     <p:column headerText="Disk Usage">
+                        <div class="CapacityUsage #{host.diskInfo.priority}">
+                           <span class="reading">#{host.diskInfo.usageInfo}</span>
+                           <span class="bar" style="width: #{host.diskInfo.usagePercentageString};"></span>
+                        </div>
+                     </p:column> 
+                     <p:column headerText="Physical Memory">
+                        <div class="CapacityUsage #{host.memoryInfo.priority}">
+                           <span class="reading">#{host.memoryInfo.usageInfo}</span>
+                           <span class="bar" style="width: #{host.memoryInfo.usagePercentageString};"></span>
+                        </div>
+                     </p:column> 
+                  </p:dataTable> 
+
+               </p:panel> 
+            </h:form>
+
+            <p:spacer width="1" height="8" />                                   
+
+            <p:panel header="Control commands" rendered="false">  
+               <div class="commands">
+
+                  <h:form id="form_commands">
+
+                     <p:dataTable id="hosts" var="command" value="#{hostController.commands}">
+                        <p:column headerText="namenode">
+                           <p:commandLink id="cmd1" actionListener="#{hostController.doCommand}" ajax="true">
+                              <h:outputText value="#{command}" />
+                              <f:param name="cluster" value="#{hostController.cluster}" />
+                              <f:param name="role" value="namenode" />
+                              <f:param name="hostid" value="#{hostController.host.hostId}" />
+                              <f:param name="command" value="#{command}" />
+                           </p:commandLink> 
+                        </p:column>   
+                        <p:column headerText="datanode">
+                           <p:commandLink id="cmd2" actionListener="#{hostController.doCommand}" ajax="true">
+                              <h:outputText value="#{command}" />
+                              <f:param name="hostid" value="#{hostController.host.hostId}" />
+                              <f:param name="cluster" value="#{hostController.cluster}" />
+                              <f:param name="role" value="datanode" />
+                              <f:param name="command" value="#{command}" />
+
+                           </p:commandLink> 
+                        </p:column>  
                      </p:dataTable>
-                  </p:column>
-                  <p:column headerText="Disk Usage">
-                     <div class="CapacityUsage #{host.diskInfo.priority}">
-                        <span class="reading">#{host.diskInfo.usageInfo}</span>
-                        <span class="bar" style="width: #{host.diskInfo.usagePercentageString};"></span>
-                     </div>
-                  </p:column> 
-                  <p:column headerText="Physical Memory">
-                     <div class="CapacityUsage #{host.memoryInfo.priority}">
-                        <span class="reading">#{host.memoryInfo.usageInfo}</span>
-                        <span class="bar" style="width: #{host.memoryInfo.usagePercentageString};"></span>
-                     </div>
-                  </p:column> 
-               </p:dataTable> 
 
-            </p:panel> 
-         </h:form>
+                     <p:messages id="messages" showDetail="true" autoUpdate="true"/>  
+                  </h:form>
+               </div>
+            </p:panel>
 
-         <p:spacer width="1" height="8" />                                   
+            <p:spacer width="1" height="40" />
 
-         <p:panel header="Control commands" rendered="false">  
-            <div class="commands">
+            <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
+               <p:graphicImage library="images" name="ajaxloadingbar.gif" />  
+            </p:dialog>
 
-               <h:form id="form_commands">
+            <p:accordionPanel id="panels" activeIndex="2">         
 
-                  <p:dataTable id="hosts" var="command" value="#{hostController.commands}">
-                     <p:column headerText="namenode">
-                        <p:commandLink id="cmd1" actionListener="#{hostController.doCommand}" ajax="true">
-                           <h:outputText value="#{command}" />
-                           <f:param name="cluster" value="#{hostController.cluster}" />
-                           <f:param name="role" value="namenode" />
-                           <f:param name="hostid" value="#{hostController.host.hostId}" />
-                           <f:param name="command" value="#{command}" />
-                        </p:commandLink> 
-                     </p:column>   
-                     <p:column headerText="datanode">
-                        <p:commandLink id="cmd2" actionListener="#{hostController.doCommand}" ajax="true">
-                           <h:outputText value="#{command}" />
-                           <f:param name="hostid" value="#{hostController.host.hostId}" />
-                           <f:param name="cluster" value="#{hostController.cluster}" />
-                           <f:param name="role" value="datanode" />
-                           <f:param name="command" value="#{command}" />
+               <p:tab title ="Recent Agent Log">
+                  <h:form id="logform">
+                     <p:commandLink styleClass="AccordionPanelLink" value="Refresh Log" update="log"
+                                    onstart="dlgAction.show()" oncomplete="dlgAction.hide()">  
+                        <f:param name="role" value="#{hostController.role}"/> 
+                        <f:param name="hostid" value="#{hostController.hostId}"/>
+                     </p:commandLink>
+                     <p:panelGrid id="log" styleClass="LogOutput">
+                        <p:row>
+                           <p:column  styleClass="LogOutput column">
+                              Stdout<br/>
+                              <div>
+                                 <h:outputText escape="false" value="#{communicationController.getAgentLog(20)}"/>                       
+                              </div>
+                           </p:column>
+                        </p:row>
+                     </p:panelGrid>
+                  </h:form>
+               </p:tab>           
+            </p:accordionPanel>         
 
-                        </p:commandLink> 
-                     </p:column>  
-                  </p:dataTable>
 
-                  <p:messages id="messages" showDetail="true" autoUpdate="true"/>  
-               </h:form>
-            </div>
-         </p:panel>
+            <p:spacer width="1" height="20" />
 
-         <p:spacer width="1" height="40" />
-
-         <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
-            <p:graphicImage library="images" name="ajaxloadingbar.gif" />  
-         </p:dialog>
-
-         <p:accordionPanel id="panels" activeIndex="2">         
-
-            <p:tab title ="Recent Agent Log">
-               <h:form id="logform">
-                  <p:commandLink styleClass="AccordionPanelLink" value="Refresh Log" update="log"
-                                 onstart="dlgAction.show()" oncomplete="dlgAction.hide()">  
-                     <f:param name="role" value="#{hostController.role}"/> 
+            <h:form id="formdate" style="text-align: center">  
+               <h:panelGrid columns="10"> 
+                  <p:selectOneButton id ="periods" value="#{graphController.period}">  
+                     <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
                      <f:param name="hostid" value="#{hostController.hostId}"/>
-                  </p:commandLink>
-                  <p:panelGrid id="log" styleClass="LogOutput">
-                     <p:row>
-                        <p:column  styleClass="LogOutput column">
-                           Stdout<br/>
-                           <div>
-                              <h:outputText escape="false" value="#{communicationController.getAgentLog(20)}"/>                       
-                           </div>
-                        </p:column>
-                     </p:row>
-                  </p:panelGrid>
-               </h:form>
-            </p:tab>           
-         </p:accordionPanel>         
+                     <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
+                  </p:selectOneButton>
+                  <h:outputText value="or from" />
+                  <p:calendar title="from" value="#{graphController.start}" id="calstart" showOn="button" pattern="dd/MM/yyyy HH:mm"/>  
+                  <h:outputText value=" to " />
+                  <p:calendar title="to" value="#{graphController.end}" id="calend" showOn="button" pattern="dd/MM/yyyy HH:mm"/>
+                  <h:outputText value=" in " />
+                  <p:selectOneMenu id="cols" value="#{settingsController.numOfGraphColumns}" >  
+                     <f:selectItems var="n" value="#{graphController.columns}" />  
+                  </p:selectOneMenu>
+                  <h:outputText value=" columns " />
+                  <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
+                     <f:param name="hostid" value="#{hostController.hostId}"/>
+                  </p:commandButton> 
+               </h:panelGrid>
+            </h:form>   
 
-
-         <p:spacer width="1" height="20" />
-
-         <h:form id="formdate" style="text-align: center">  
-            <h:panelGrid columns="10"> 
-               <p:selectOneButton id ="periods" value="#{graphController.period}">  
-                  <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
-                  <f:param name="hostid" value="#{hostController.hostId}"/>
-                  <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
-               </p:selectOneButton>
-               <h:outputText value="or from" />
-               <p:calendar title="from" value="#{graphController.start}" id="calstart" showOn="button" pattern="dd/MM/yyyy HH:mm"/>  
-               <h:outputText value=" to " />
-               <p:calendar title="to" value="#{graphController.end}" id="calend" showOn="button" pattern="dd/MM/yyyy HH:mm"/>
-               <h:outputText value=" in " />
-               <p:selectOneMenu id="cols" value="#{settingsController.numOfGraphColumns}" >  
-                  <f:selectItems var="n" value="#{graphController.columns}" />  
-               </p:selectOneMenu>
-               <h:outputText value=" columns " />
-               <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
-                  <f:param name="hostid" value="#{hostController.hostId}"/>
-               </p:commandButton> 
-            </h:panelGrid>
-         </h:form>   
-
-         <h:form id="graphs">
-            <p:toolbar>
-               <p:toolbarGroup align="left"><p:outputLabel value="Host Info"/></p:toolbarGroup>
-            </p:toolbar>
-            <p:dataGrid  var="g" value="#{graphController.hostGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-               <p:graphicImage value="#{graphController.hostGraphUrl(g)}"/>
-            </p:dataGrid> 
-         </h:form>           
-
+            <h:form id="graphs">
+               <p:toolbar>
+                  <p:toolbarGroup align="left"><p:outputLabel value="Host Info"/></p:toolbarGroup>
+               </p:toolbar>
+               <p:dataGrid  var="g" value="#{graphController.hostGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                  <p:graphicImage value="#{graphController.hostGraphUrl(g)}"/>
+               </p:dataGrid> 
+            </h:form>           
+         </p:outputPanel>    
       </ui:define>
 
    </ui:composition>
