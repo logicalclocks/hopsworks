@@ -126,11 +126,15 @@ public class RoleEJB {
       return query.getResultList();
    } 
    
-   public RoleHostInfo findRoleHost(String cluster, String service, String role, String hostId) {
+   public RoleHostInfo findRoleHost(String cluster, String service, String role, String hostId) throws Exception{
       TypedQuery<RoleHostInfo> query = em.createNamedQuery("Role.findRoleHostBy-Cluster-Service-Role-Host", RoleHostInfo.class)
               .setParameter("cluster", cluster).setParameter("service", service)
               .setParameter("role", role).setParameter("hostid", hostId);
-      return query.getSingleResult();
+      try {
+         return query.getSingleResult();
+      } catch (NoResultException ex) {
+         throw new Exception("NoResultException");
+      }
    }    
 
    public void persist(Role role) {

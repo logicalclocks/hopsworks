@@ -31,76 +31,82 @@
          </h:form>
          <!--Navigation Bar - End-->
 
-         <!-- Second Toolbar-->
-         <h:form>  
-            <p:toolbar styleClass="SecondToolbar#{clusterStatusController.clusterHealth}">  
-               <p:toolbarGroup align="left">  
-                  <p:commandLink  action="#{urlController.clusterStatus}" ajax="false">
-                     <h:outputText value="#{clusterStatusController.cluster}"/>
-                     <f:param name="cluster" value="#{clusterStatusController.cluster}"/>                         
-                  </p:commandLink>
+         <p:outputPanel rendered="#{not clusterStatusController.found}">
+            <p:spacer width="1" height="50" />             
+            <p:panel header="Error" style="width: 300px; margin: 0 auto;">
+               <p align="center"> Cluster not found!</p>   
+            </p:panel>
+         </p:outputPanel>
 
-                  <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{urlController.clusterStatus}" ajax="false">
-                     <f:param name="cluster" value="#{clusterStatusController.cluster}"/>                            
-                  </p:commandButton> 
-                  <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" action="#{urlController.clusterCommandHistory}">
-                     <f:param name="cluster" value="#{clusterStatusController.cluster}"/>                            
-                  </p:commandButton>  
-               </p:toolbarGroup>  
+         <p:outputPanel rendered="#{clusterStatusController.found}">         
 
-               <p:toolbarGroup align="right">  
-                  <p:menuButton value="Actions" disabled="true">  
-                     <p:menuitem value="Start..." url="???" /> 
-                     <p:menuitem value="Stop..." url="???" /> 
-                  </p:menuButton>  
-               </p:toolbarGroup>  
+            <!-- Second Toolbar-->
+            <h:form>  
+               <p:toolbar styleClass="SecondToolbar#{clusterStatusController.clusterHealth}">  
+                  <p:toolbarGroup align="left">  
+                     <p:commandLink  action="#{urlController.clusterStatus(clusterStatusController.cluster)}" ajax="false">
+                        <h:outputText value="#{clusterStatusController.cluster}"/>
+                     </p:commandLink>
 
-            </p:toolbar>  
-         </h:form>
+                     <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{urlController.clusterStatus(clusterStatusController.cluster)}" ajax="false"/>
+                     <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" action="#{urlController.clusterCommandHistory}">
+                        <f:param name="cluster" value="#{clusterStatusController.cluster}"/>                            
+                     </p:commandButton>  
+                  </p:toolbarGroup>  
 
-         <p:spacer width="1" height="10" />
+                  <p:toolbarGroup align="right">  
+                     <p:menuButton value="Actions" disabled="true">  
+                        <p:menuitem value="Start..." url="???" /> 
+                        <p:menuitem value="Stop..." url="???" /> 
+                     </p:menuButton>  
+                  </p:toolbarGroup>  
 
-         <h:form styleClass="styleInfoPanel">
-            <p:panel header="Services">
+               </p:toolbar>  
+            </h:form>
 
-               <p:dataTable id="service" var="service" value="#{clusterStatusController.services}">
-                  <p:column headerText="Service">
-                     <p:commandLink action="#{urlController.serviceStatus}" ajax="false" styleClass="Health-#{service.health}">
-                        <h:outputText value="#{service.name}"/>
-                        <f:param name="cluster" value="#{clusterStatusController.cluster}"/>
-                        <f:param name="service" value="#{service.name}"/>
-                     </p:commandLink>                         
-                  </p:column>
-                  
-                  <p:column headerText="Roles">
-                     <ui:repeat value="#{service.roles}" var="role" varStatus="status">
-                        <p:commandLink styleClass="Health-#{service.roleHealth(role)}" 
-                                       action="#{urlController.serviceInstances}" ajax="false">
-                           <h:outputText value="${service.roleCount(role)} ${role}"/>
+            <p:spacer width="1" height="10" />
+
+            <h:form styleClass="styleInfoPanel">
+               <p:panel header="Services">
+
+                  <p:dataTable id="service" var="service" value="#{clusterStatusController.services}">
+                     <p:column headerText="Service">
+                        <p:commandLink action="#{urlController.serviceStatus}" ajax="false" styleClass="Health-#{service.health}">
+                           <h:outputText value="#{service.name}"/>
                            <f:param name="cluster" value="#{clusterStatusController.cluster}"/>
-                           <f:param name="role" value="#{role}"/>
                            <f:param name="service" value="#{service.name}"/>
-                        </p:commandLink>
-                        <p:spacer width="6" height="0" rendered="#{!status.last}"/>
-                     </ui:repeat>
-                  </p:column>                   
+                        </p:commandLink>                         
+                     </p:column>
 
-                  <p:column headerText="Roles Status">
-                     <ui:repeat value="#{service.status.entrySet().toArray()}" var="item" varStatus="status">
-                        <h:outputText value="${item.value} ${item.key}" styleClass="Status-${item.key}"/>
-                        <h:outputText value=", " rendered="#{!status.last}"/>
-                     </ui:repeat>
-                  </p:column>                   
+                     <p:column headerText="Roles">
+                        <ui:repeat value="#{service.roles}" var="role" varStatus="status">
+                           <p:commandLink styleClass="Health-#{service.roleHealth(role)}" 
+                                          action="#{urlController.serviceInstances}" ajax="false">
+                              <h:outputText value="${service.roleCount(role)} ${role}"/>
+                              <f:param name="cluster" value="#{clusterStatusController.cluster}"/>
+                              <f:param name="role" value="#{role}"/>
+                              <f:param name="service" value="#{service.name}"/>
+                           </p:commandLink>
+                           <p:spacer width="6" height="0" rendered="#{!status.last}"/>
+                        </ui:repeat>
+                     </p:column>                   
 
-                  <p:column headerText="Health" styleClass="Health-#{service.health}">
-                     <h:outputText value="#{service.health}"/>
-                  </p:column> 
-                  
-               </p:dataTable>  
-            </p:panel>                    
-         </h:form>
+                     <p:column headerText="Roles Status">
+                        <ui:repeat value="#{service.status.entrySet().toArray()}" var="item" varStatus="status">
+                           <h:outputText value="${item.value} ${item.key}" styleClass="Status-${item.key}"/>
+                           <h:outputText value=", " rendered="#{!status.last}"/>
+                        </ui:repeat>
+                     </p:column>                   
 
-         <p:spacer width="1" height="50" />
+                     <p:column headerText="Health" styleClass="Health-#{service.health}">
+                        <h:outputText value="#{service.health}"/>
+                     </p:column> 
+
+                  </p:dataTable>  
+               </p:panel>                    
+            </h:form>
+
+         </p:outputPanel>
 
       </ui:define>
 

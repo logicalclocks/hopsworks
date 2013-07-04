@@ -1,6 +1,5 @@
 package se.kth.kthfsdashboard.cluster;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -28,7 +27,6 @@ public class ClustersLayoutController {
    @PostConstruct
    public void init() {
       logger.info("init ClustersLayoutController");
-      clusters = new ArrayList<String>();
       loadClusters();
    }
 
@@ -37,6 +35,6 @@ public class ClustersLayoutController {
    }
 
    private void loadClusters() {
-      clusters.addAll(roleEjb.findClusters());
+      clusters = roleEjb.findClusters();      
    }
 }
