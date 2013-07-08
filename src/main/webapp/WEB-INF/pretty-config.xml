@@ -57,9 +57,9 @@
       <pattern value="/sauron/cluster/#{cluster}" />
       <view-id value="/sauron/cluster-status.xhtml" />
    </url-mapping>  
-   <url-mapping id="cluster-commands">
-      <pattern value="/sauron/cluster/#{cluster}/commands" />
-      <view-id value="/sauron/cluster-commands.xhtml" />
+   <url-mapping id="cluster-actionhistory">
+      <pattern value="/sauron/cluster/#{cluster}/action_history" />
+      <view-id value="/sauron/cluster-actionhistory.xhtml" />
    </url-mapping>     
 
    <url-mapping id="service-status">
@@ -68,18 +68,23 @@
    </url-mapping>
 
    <url-mapping id="service-instances">
-      <pattern value="/sauron/service/instances/#{cluster}/#{service}" />
+      <pattern value="/sauron/service/#{cluster}/#{service}/instances" />
       <view-id value="/sauron/service-instances.xhtml" />
    </url-mapping>   
    
-   <url-mapping id="service-commands">
-      <pattern value="/sauron/service/#{cluster}/#{service}/commands" />
-      <view-id value="/sauron/service-commands.xhtml" />
+   <url-mapping id="service-actionhistory">
+      <pattern value="/sauron/service/#{cluster}/#{service}/action_history" />
+      <view-id value="/sauron/service-actionhistory.xhtml" />
    </url-mapping>      
 
-   <url-mapping id="role">
+   <url-mapping id="role-status">
       <pattern value="/sauron/role/#{cluster}/#{service}/#{role}/#{hostid}" />
-      <view-id value="/sauron/role.xhtml" />
+      <view-id value="/sauron/role-status.xhtml" />
    </url-mapping>   
+
+   <url-mapping id="role-actionhistory">
+      <pattern value="/sauron/role/#{cluster}/#{service}/#{role}/#{hostid}/action_history" />
+      <view-id value="/sauron/role-actionhistory.xhtml" />
+   </url-mapping>  
 
 </pretty-config>

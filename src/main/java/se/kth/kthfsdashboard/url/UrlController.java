@@ -83,8 +83,8 @@ public class UrlController {
               + hostId + "&cluster=" + cluster + "&role=" + role;
    }
 
-   public String clusterCommandHistory() {
-      return "cluster-commands?faces-redirect=true&cluster=" + cluster;
+   public String clusterActionHistory() {
+      return "cluster-actionhistory?faces-redirect=true&cluster=" + cluster;
    }
 
    public String serviceStatus() {
@@ -111,13 +111,18 @@ public class UrlController {
       return url;
    }
 
-   public String serviceCommandHistory() {
-      return "service-commands?faces-redirect=true&cluster=" + cluster + "&service=" + service;
+   public String serviceActionHistory() {
+      return "service-actionhistory?faces-redirect=true&cluster=" + cluster + "&service=" + service;
    }
 
-   public String role() {
-      return "role?faces-redirect=true&hostid=" + hostId + "&cluster=" + cluster
+   public String roleStatus() {
+      return "role-status?faces-redirect=true&hostid=" + hostId + "&cluster=" + cluster
               + "&service=" + service + "&role=" + role;
    }
+   
+   public String roleActionHistory() {
+      return "role-actionhistory?faces-redirect=true&hostid=" + hostId + "&cluster=" + cluster
+              + "&service=" + service + "&role=" + role;
+   }   
    
 }

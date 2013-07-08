@@ -13,10 +13,13 @@ import se.kth.kthfsdashboard.util.Formatter;
 @Table(name = "Commands")
 @NamedQueries({
    @NamedQuery(name = "Commands.find", query = "SELECT c FROM Command c"),
-   @NamedQuery(name = "Commands.findRecentByCluster", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND (NOT c.status = :status)  ORDER BY c.startTime DESC"),
-   @NamedQuery(name = "Commands.findRunningByCluster", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.status = :status  ORDER BY c.startTime DESC"),
-   @NamedQuery(name = "Commands.findRecentByCluster-Group", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :group AND (NOT c.status = :status)  ORDER BY c.startTime DESC"),
-   @NamedQuery(name = "Commands.findRunningByCluster-Group", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :group AND c.status = :status  ORDER BY c.startTime DESC")   
+   @NamedQuery(name = "Commands.findRecentByCluster", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND (NOT c.status = :status) ORDER BY c.startTime DESC"),
+   @NamedQuery(name = "Commands.findRunningByCluster", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.status = :status ORDER BY c.startTime DESC"),
+   @NamedQuery(name = "Commands.findRecentByCluster-Service", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service AND (NOT c.status = :status) ORDER BY c.startTime DESC"),
+   @NamedQuery(name = "Commands.findRunningByCluster-Service", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service AND c.status = :status ORDER BY c.startTime DESC"),
+   @NamedQuery(name = "Commands.findRecentByCluster-Service-Role-HostId", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service AND c.role = :role AND c.hostId = :hostId AND (NOT c.status = :status) ORDER BY c.startTime DESC"),
+   @NamedQuery(name = "Commands.findRunningByCluster-Service-Role-HostId", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service AND c.role = :role AND c.hostId = :hostId AND c.status = :status ORDER BY c.startTime DESC"),
+
 })
 public class Command implements Serializable {
 

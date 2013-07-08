@@ -33,7 +33,12 @@
                      <p:commandLink action="#{urlController.clusterStatus(serviceStatusController.cluster)}" ajax="false">  
                         <h:outputText value="#{serviceStatusController.cluster}" />
                      </p:commandLink> 
-                     <h:outputText value=" &raquo;"/>
+                     <h:outputText value=" &raquo; "/>
+                     <p:commandLink action="#{urlController.serviceStatus}" ajax="false">  
+                        <h:outputText value="#{serviceInstancesController.service}" />
+                        <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                        <f:param name="service" value="#{serviceInstancesController.service}"/>                          
+                     </p:commandLink>                       
                   </p:column>
                </p:row>
             </p:panelGrid>
@@ -68,8 +73,8 @@
                         <f:param name="cluster" value="#{serviceStatusController.cluster}"/>   
                         <f:param name="service" value="#{serviceStatusController.service}"/>
                      </p:commandButton>  
-                     <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" 
-                                      action="#{urlController.serviceCommandHistory}">
+                     <p:commandButton value="Actions History" icon="ui-icon-circle-triangle-e" 
+                                      action="#{urlController.serviceActionHistory}">
                         <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
                         <f:param name="service" value="#{serviceStatusController.service}"/>                      
                      </p:commandButton>  

@@ -10,7 +10,7 @@
    <ui:composition template="layout.xhtml">
 
       <ui:define name="title">
-         #{settingsController.name} - Service Command History
+         #{settingsController.name} - Service Action History
       </ui:define>
 
       <ui:define name="content">
@@ -25,14 +25,21 @@
                      </p:commandLink> 
                      <h:outputText value=" &raquo; "/>
                      <p:commandLink action="#{urlController.clusterStatus(serviceStatusController.cluster)}" ajax="false">  
-                        <h:outputText value="#{serviceStatusController.cluster}" />
+                        <h:outputText value="#{roleController.cluster}" />
                      </p:commandLink> 
                      <h:outputText value=" &raquo; "/>
                      <p:commandLink action="#{urlController.serviceStatus}" ajax="false">  
-                        <h:outputText value="#{serviceStatusController.service}" />
-                        <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                        <f:param name="service" value="#{serviceStatusController.service}"/>                          
-                     </p:commandLink>                      
+                        <h:outputText value="#{roleController.service}" />
+                        <f:param name="cluster" value="#{roleController.cluster}"/>
+                        <f:param name="service" value="#{roleController.service}"/>                          
+                     </p:commandLink>
+                     <h:outputText value=" &raquo; "/>
+                     <p:commandLink action="#{urlController.serviceInstances()}" ajax="false">  
+                        <h:outputText value="#{roleController.role}" />
+                        <f:param name="cluster" value="#{roleController.cluster}"/>
+                        <f:param name="service" value="#{roleController.service}"/>
+                        <f:param name="role" value="#{roleController.role}"/>                         
+                     </p:commandLink>                        
                   </p:column>
                </p:row>
             </p:panelGrid>
@@ -52,27 +59,29 @@
             <h:form>  
                <p:toolbar styleClass="SecondToolbar#{serviceStatusController.health}">
                   <p:toolbarGroup align="left">  
-                     <p:commandLink  action="#{urlController.serviceStatus}" ajax="false">
-                        <h:outputText value="#{serviceStatusController.service}"/>
-                        <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                        <f:param name="service" value="#{serviceStatusController.service}"/>                      
+                     <p:commandLink  action="#{urlController.roleStatus}" ajax="false">
+                        <h:outputText value="#{roleController.roleLongName()}"/>
+                        <f:param name="cluster" value="#{roleController.cluster}"/>
+                        <f:param name="role" value="#{roleController.role}"/>
+                        <f:param name="service" value="#{roleController.service}"/>                              
+                        <f:param name="hostid" value="#{roleController.hostId}"/>
                      </p:commandLink>
 
-                     <p:commandButton value="Status" icon="ui-icon-home" 
-                                      action="#{urlController.serviceStatus}" ajax="false">
-                        <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                        <f:param name="service" value="#{serviceStatusController.service}"/>
+                     <p:commandButton value="Status" icon="ui-icon-home" action="#{urlController.roleStatus}" ajax="false">
+                        <f:param name="cluster" value="#{roleController.cluster}"/>
+                        <f:param name="role" value="#{roleController.role}"/>
+                        <f:param name="service" value="#{roleController.service}"/>                             
+                        <f:param name="hostid" value="#{roleController.hostId}"/>                          
                      </p:commandButton>  
-                     <p:commandButton  value="Instances" icon="ui-icon-note" 
-                                       action="#{urlController.serviceInstances}">
-                        <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                        <f:param name="service" value="#{serviceStatusController.service}"/>
-                     </p:commandButton>  
-                     <p:commandButton styleClass="Selected" value="Command History" icon="ui-icon-circle-triangle-e" 
-                                      action="#{urlController.serviceCommandHistory}">
-                        <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                        <f:param name="service" value="#{serviceStatusController.service}"/>                      
-                     </p:commandButton>  
+
+                     <p:commandButton styleClass="Selected"  value="Action History" icon="ui-icon-circle-triangle-e"
+                                      action="#{urlController.roleActionHistory}" ajax="false">
+                        <f:param name="cluster" value="#{roleController.cluster}"/>
+                        <f:param name="role" value="#{roleController.role}"/>
+                        <f:param name="service" value="#{roleController.service}"/>                             
+                        <f:param name="hostid" value="#{roleController.hostId}"/>                          
+                     </p:commandButton>                       
+                     
                   </p:toolbarGroup>  
 
                   <p:toolbarGroup align="right">  
@@ -89,7 +98,7 @@
 
 
             <p:panel header="Running Commands">
-               <p:dataTable var="command" value="#{commandController.runningCommandsByInstanceGroup}">
+               <p:dataTable var="command" value="#{commandController.runningCommandsByClusterService}">
                   <p:column headerText="Command"><h:outputText value="#{command.command}"/></p:column>
                   <p:column headerText="Host Id"><h:outputText value="#{command.hostId}"/></p:column>               
                   <p:column headerText="Instance"><h:outputText value="#{command.cluster}"/></p:column>
@@ -104,7 +113,7 @@
 
             <p:panel header="Recent Commands">
 
-               <p:dataTable var="command" value="#{commandController.recentCommandsByInstanceGroup}">
+               <p:dataTable var="command" value="#{commandController.recentCommandsByClusterService}">
 
                   <p:column headerText="Command"><h:outputText value="#{command.command}"/></p:column>
                   <p:column headerText="Host Id"><h:outputText value="#{command.hostId}"/></p:column>

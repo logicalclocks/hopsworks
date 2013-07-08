@@ -43,23 +43,33 @@ public class CommandEJB {
         return query.getResultList();
     }
     
-    public List<Command> findRecentByClusterGroup(String cluster, String group) {
+    public List<Command> findRecentByClusterService(String cluster, String service) {
 
         TypedQuery<Command> query = 
-                em.createNamedQuery("Commands.findRecentByCluster-Group", Command.class)
-                .setParameter("cluster", cluster).setParameter("group", group)                
+                em.createNamedQuery("Commands.findRecentByCluster-Service", Command.class)
+                .setParameter("cluster", cluster).setParameter("service", service)                
                 .setParameter("status", Command.commandStatus.Running);
         return query.getResultList();
     }
 
-    public List<Command> findRunningByClusterGroup(String cluster, String group) {
+    public List<Command> findRunningByClusterService(String cluster, String service) {
 
         TypedQuery<Command> query = 
-                em.createNamedQuery("Commands.findRunningByCluster-Group", Command.class)
-                .setParameter("cluster", cluster).setParameter("group", group)
+                em.createNamedQuery("Commands.findRunningByCluster-Service", Command.class)
+                .setParameter("cluster", cluster).setParameter("service", service)
                 .setParameter("status", Command.commandStatus.Running);
         return query.getResultList();
     }    
+    
+    public List<Command> findRecentByClusterServiceRoleHostId(String cluster, String service, String role, String hostId) {
+
+        TypedQuery<Command> query = 
+                em.createNamedQuery("Commands.findRecentByCluster-Service-Role-HostId", Command.class)
+                .setParameter("cluster", cluster).setParameter("service", service)
+                .setParameter("role", role).setParameter("hostId", hostId)                
+                .setParameter("status", Command.commandStatus.Running);
+        return query.getResultList();
+    }     
 
     public void persistCommand(Command command) {
         em.persist(command);

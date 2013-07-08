@@ -115,4 +115,8 @@ public class RoleController {
       return instanceInfoList;
    }
    
+   public String roleLongName() {
+      return role + " @" + hostId;
+   }
+   
 }

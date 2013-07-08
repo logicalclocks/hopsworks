@@ -39,7 +39,7 @@
                          filterOptions="#{testController.roleOptions}" filterPosition="top"
                          filterStyleClass="Role-filter">
 
-                  <p:commandLink action="#{urlController.role()}" ajax="false">
+                  <p:commandLink action="#{urlController.roleStatus}" ajax="false">
                      <h:outputText value="#{instance.role}"/>
                      <f:param name="hostid" value="cloud1.sics.se"/>
                      <f:param name="cluster" value="cluster1"/>

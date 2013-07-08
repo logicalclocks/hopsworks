@@ -13,7 +13,7 @@
     <ui:composition template="layout.xhtml">
 
         <ui:define name="title">
-            #{settingsController.name} - Cluster Command History
+            #{settingsController.name} - Cluster Action History
         </ui:define>
 
         <ui:define name="content">
@@ -30,7 +30,6 @@
                             <p:commandLink action="#{urlController.clusterStatus(commandController.cluster)}" ajax="false">  
                                 <h:outputText value="#{commandController.cluster}" />  
                             </p:commandLink> 
-                            <h:outputText value=" &raquo;"/>
                         </p:column>
                     </p:row>
                 </p:panelGrid>
@@ -54,8 +53,8 @@
                         </p:commandLink>
 
                         <p:commandButton value="Status" icon="ui-icon-home" action="#{urlController.clusterStatus(commandController.cluster)}" ajax="false"/>
-                        <p:commandButton styleClass="Selected" value="Command History" icon="ui-icon-circle-triangle-e" 
-                                         action="#{urlController.clusterCommandHistory}">
+                        <p:commandButton styleClass="Selected" value="Action History" icon="ui-icon-circle-triangle-e" 
+                                         action="#{urlController.clusterActionHistory}">
                             <f:param name="cluster" value="#{commandController.cluster}"/>                            
                         </p:commandButton>  
                     </p:toolbarGroup>  
@@ -73,7 +72,7 @@
             <p:spacer width="1" height="10" />
             
             <p:panel header="Running Commands">
-               <p:dataTable var="command" value="#{commandController.runningCommandsByInstance}">
+               <p:dataTable var="command" value="#{commandController.runningCommandsByCluster}">
                <p:column headerText="Command"><h:outputText value="#{command.command}"/></p:column>
                 <p:column headerText="Host Id"><h:outputText value="#{command.hostId}"/></p:column>               
                <p:column headerText="Instance"><h:outputText value="#{command.cluster}"/></p:column>
@@ -87,7 +86,7 @@
             <p:spacer width="1" height="10" />
             
             <p:panel header="Recent Commands">               
-               <p:dataTable var="command" value="#{commandController.recentCommandsByInstance}">                  
+               <p:dataTable var="command" value="#{commandController.recentCommandsByCluster}">                  
                   <p:column headerText="Command"><h:outputText value="#{command.command}"/></p:column>
                   <p:column headerText="Host Id"><h:outputText value="#{command.hostId}"/></p:column>
                   <p:column headerText="Instance"><h:outputText value="#{command.cluster}"/></p:column>

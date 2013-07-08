@@ -24,7 +24,10 @@
                      <p:commandLink id="services" action="clusters" ajax="false">  
                         <h:outputText value="Clusters" />
                      </p:commandLink> 
-                     <h:outputText value=" &raquo;"/>
+                     <h:outputText value=" &raquo; "/>
+                     <p:commandLink action="#{urlController.clusterStatus(commandController.cluster)}" ajax="false">  
+                        <h:outputText value="#{commandController.cluster}" />  
+                     </p:commandLink>                   
                   </p:column>
                </p:row>
             </p:panelGrid>
@@ -49,7 +52,7 @@
                      </p:commandLink>
 
                      <p:commandButton styleClass="Selected" value="Status" icon="ui-icon-home" action="#{urlController.clusterStatus(clusterStatusController.cluster)}" ajax="false"/>
-                     <p:commandButton value="Command History" icon="ui-icon-circle-triangle-e" action="#{urlController.clusterCommandHistory}">
+                     <p:commandButton value="Action History" icon="ui-icon-circle-triangle-e" action="#{urlController.clusterActionHistory}">
                         <f:param name="cluster" value="#{clusterStatusController.cluster}"/>                            
                      </p:commandButton>  
                   </p:toolbarGroup>  

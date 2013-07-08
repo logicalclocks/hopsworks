@@ -69,23 +69,28 @@ public class CommandController {
     }
 
 
-    public List<Command> getRecentCommandsByInstance() {
+    public List<Command> getRecentCommandsByCluster() {
         List<Command> commands = commandEJB.findRecentByCluster(cluster);
         return commands;
     }
 
-    public List<Command> getRunningCommandsByInstance() {
+    public List<Command> getRunningCommandsByCluster() {
         List<Command> commands = commandEJB.findRunningByCluster(cluster);
         return commands;
     }
 
-    public List<Command> getRecentCommandsByInstanceGroup() {
-        List<Command> commands = commandEJB.findRecentByClusterGroup(cluster, service);
+    public List<Command> getRecentCommandsByClusterService() {
+        List<Command> commands = commandEJB.findRecentByClusterService(cluster, service);
         return commands;
     }
 
-    public List<Command> getRunningCommandsByInstanceGroup() {
-        List<Command> commands = commandEJB.findRunningByClusterGroup(cluster, service);
+    public List<Command> getRunningCommandsByClusterService() {
+        List<Command> commands = commandEJB.findRunningByClusterService(cluster, service);
+        return commands;
+    }    
+    
+    public List<Command> getRecentCommandsByInstance() {
+        List<Command> commands = commandEJB.findRecentByClusterService(cluster, service);
         return commands;
     }    
 }
