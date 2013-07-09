@@ -118,9 +118,7 @@ public class ClusterOptions {
     public void setPortNumber(int portNumber) {
         this.portNumber = portNumber;
     }
-
-    
-
+   
     public Map<String, List<String>> getEc2availabilityZones() {
         return ec2availabilityZones;
     }

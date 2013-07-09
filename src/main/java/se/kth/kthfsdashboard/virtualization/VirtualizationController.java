@@ -28,7 +28,7 @@ import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
 import org.jclouds.scriptbuilder.domain.StatementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterProvisionController;
+import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterManagementController;
 
 /**
  *
@@ -42,8 +42,8 @@ public class VirtualizationController implements Serializable {
     private MessageController messages;
     @ManagedProperty(value = "#{computeCredentialsMB}")
     private ComputeCredentialsMB computeCredentialsMB;
-    @ManagedProperty(value = "#{clusterProvisionController}")
-    private ClusterProvisionController clusterController;
+    @ManagedProperty(value = "#{clusterManagementController}")
+    private ClusterManagementController clusterController;
     private ClusterProvision virtualizer;
     private String provider;
     private String id;
@@ -75,11 +75,11 @@ public class VirtualizationController implements Serializable {
         this.computeCredentialsMB = computeCredentialsMB;
     }
 
-    public ClusterProvisionController getClusterController() {
+    public ClusterManagementController getClusterController() {
         return clusterController;
     }
 
-    public void setClusterController(ClusterProvisionController clusterController) {
+    public void setClusterController(ClusterManagementController clusterController) {
         this.clusterController = clusterController;
     }
 

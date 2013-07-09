@@ -40,10 +40,15 @@ body {
 }
 
 /*Credentials Form*/
-#computeCredentialsForm,#clusterForm{
+#computeCredentialsForm{
    width: 500px;
 }
-
+#clusterForm{
+    width: 800px;
+}
+ .launcherCenter{
+    position:absolute;
+}
 #launch{
    height: 500px;
 }

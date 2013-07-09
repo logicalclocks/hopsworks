@@ -12,33 +12,33 @@
                 <p:tab title="General Details:">
                     <h:panelGrid columns="2" cellpadding="5">
                         <h:outputLabel value="Name:"/>
-                        <h:outputText value="#{clusterProvisionController.cluster.name}" />
+                        <h:outputText value="#{clusterManagementController.cluster.name}" />
                         <h:outputLabel value="Environment:"/>
-                        <h:outputText value="#{clusterProvisionController.cluster.environment}" />
+                        <h:outputText value="#{clusterManagementController.cluster.environment}" />
                         <h:outputLabel value="Global Services:"/>
-                        <h:outputText value="#{clusterProvisionController.cluster.globalServices}" />
+                        <h:outputText value="#{clusterManagementController.cluster.globalServices}" />
                         <h:outputLabel value="Authorize Ports:"/>
-                        <h:outputText value="#{clusterProvisionController.cluster.authorizePorts}" />
+                        <h:outputText value="#{clusterManagementController.cluster.authorizePorts}" />
                         <h:outputLabel value="Authorize Specific Ports:"/>
-                        <h:outputText value="#{clusterProvisionController.cluster.authorizeSpecificPorts}" />
+                        <h:outputText value="#{clusterManagementController.cluster.authorizeSpecificPorts}" />
                     </h:panelGrid>
                 </p:tab>
                 <p:tab title="Provider Details:">
                     <h:panelGrid columns="2" cellpadding="5">
                         <h:outputLabel value="Name:"/>
-                        <h:outputText value="#{clusterProvisionController.cluster.provider.name}" />
+                        <h:outputText value="#{clusterManagementController.cluster.provider.name}" />
                         <h:outputLabel value="Instance Type:"/>
-                        <h:outputText value="#{clusterProvisionController.cluster.provider.instanceType}" />
+                        <h:outputText value="#{clusterManagementController.cluster.provider.instanceType}" />
                         <h:outputLabel value="Image Details:"/>
-                        <h:outputText value="#{clusterProvisionController.cluster.provider.image}" />
+                        <h:outputText value="#{clusterManagementController.cluster.provider.image}" />
                         <h:outputLabel value="Region:"/>
-                        <h:outputText value="#{clusterProvisionController.cluster.provider.region}" />
+                        <h:outputText value="#{clusterManagementController.cluster.provider.region}" />
                         <h:outputLabel value="Zones:"/>
-                        <h:outputText value="#{clusterProvisionController.cluster.provider.zones}" />
+                        <h:outputText value="#{clusterManagementController.cluster.provider.zones}" />
                     </h:panelGrid>
                 </p:tab>
                 <p:tab title="Nodes:" >
-                    <p:accordionPanel value="#{clusterProvisionController.cluster.nodes}" var="node">
+                    <p:accordionPanel value="#{clusterManagementController.cluster.nodes}" var="node">
                         <p:tab title="Security Group: #{node.securityGroup}">
                             <h:panelGrid columns="2" cellpadding="5">
                                 <h:outputLabel value="Number:"/>
@@ -52,7 +52,7 @@
                     </p:accordionPanel>
                 </p:tab>
                 <p:tab title="Chef Attributes:" >
-                    <p:accordionPanel value="#{clusterProvisionController.cluster.chefAttributes}" var="chef">
+                    <p:accordionPanel value="#{clusterManagementController.cluster.chefAttributes}" var="chef">
                         <p:tab title="Role: #{chef.role}">
                             <h:panelGrid columns="2" cellpadding="5">
                                 <h:outputLabel value="Json:"/>
