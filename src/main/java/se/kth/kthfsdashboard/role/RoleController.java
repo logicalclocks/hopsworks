@@ -1,5 +1,6 @@
 package se.kth.kthfsdashboard.role;
 
+import com.sun.org.apache.xml.internal.utils.StopParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -11,6 +12,7 @@ import javax.faces.bean.RequestScoped;
 import se.kth.kthfsdashboard.struct.Health;
 import se.kth.kthfsdashboard.struct.InstanceFullInfo;
 import se.kth.kthfsdashboard.struct.RoleHostInfo;
+import se.kth.kthfsdashboard.struct.Status;
 import se.kth.kthfsdashboard.util.Formatter;
 
 /**
@@ -118,5 +120,19 @@ public class RoleController {
    public String roleLongName() {
       return role + " @" + hostId;
    }
+   
+   public boolean disableStart() {
+      if (!instanceInfoList.isEmpty() && instanceInfoList.get(0).getStatus() != Status.Started) {
+         return false;
+      }
+      return true;
+   }
+   
+   public boolean disableStop() {
+      if (!instanceInfoList.isEmpty() && instanceInfoList.get(0).getStatus() != Status.Stopped) {
+         return false;
+      }
+      return true;
+   }   
    
 }

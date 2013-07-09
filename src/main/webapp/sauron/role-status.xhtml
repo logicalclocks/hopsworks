@@ -81,12 +81,13 @@
                         <f:param name="service" value="#{roleController.service}"/>                             
                         <f:param name="hostid" value="#{roleController.hostId}"/>                          
                      </p:commandButton>                       
-                     
+
                   </p:toolbarGroup>  
 
                   <p:toolbarGroup align="right">  
                      <p:menuButton value="Actions">  
-                        <p:menuitem value="Start" actionListener="#{hostController.doCommand}" ajax ="true" update="@form :Instance"
+                        <p:menuitem id="start_role" value="Start" actionListener="#{hostController.doCommand}" 
+                                    disabled="#{roleController.disableStart()}" ajax ="true" update="@form :Instance"
                                     onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
                            <f:param name="hostid" value="#{roleController.hostId}" />
                            <f:param name="cluster" value="#{roleController.cluster}" />
@@ -95,7 +96,7 @@
                            <f:param name="command" value="start" />
                         </p:menuitem>
                         <p:menuitem id="stop_role" value="Stop" actionListener="#{hostController.doCommand}" 
-                                    ajax ="true" update="@form :Instance"
+                                    disabled="#{roleController.disableStop()}" ajax ="true" update="@form :Instance"
                                     onstart="dlgAction.show();pollCreate.start();" 
                                     oncomplete="dlgAction.hide();pollCreate.stop();">
                            <f:param name="hostid" value="#{roleController.hostId}" />
@@ -104,7 +105,11 @@
                            <f:param name="service" value="#{roleController.service}"/>                                  
                            <f:param name="command" value="stop" />
                         </p:menuitem>
-                     </p:menuButton>  
+                     </p:menuButton> 
+                     <p:tooltip for="start_role" rendered="#{roleController.disableStart()}" 
+                                value="#{settingsController.tooltipDisabledAction('start')}"/>                     
+                     <p:tooltip for="stop_role" rendered="#{roleController.disableStop()}" 
+                                value="#{settingsController.tooltipDisabledAction('stop')}"/>                      
                   </p:toolbarGroup>  
                </p:toolbar>  
             </h:form>
@@ -135,7 +140,10 @@
                            <f:param name="hostid" value="#{instance.host}"/>
                         </p:commandLink>                      
                      </p:column>
-                     <p:column headerText="Status" styleClass="Status-#{instance.status}"><h:outputText value="#{instance.status}"/></p:column>
+                     <p:column headerText="Status" styleClass="Status-#{instance.status}">
+                           <h:outputText id="status" value="#{instance.status}"/>
+                           <p:tooltip for="status" value="#{settingsController.tooltip(instance.status)}"/>
+                     </p:column>
                      <p:column headerText="Health">
                         <div class="Health-#{instance.health}"><h:outputText value="#{instance.health}"/></div>
                      </p:column>

@@ -130,14 +130,10 @@
                         </p:commandLink> 
                      </p:column>
 
-                     <p:column id="Status1" headerText="Status" filterBy="#{instance.status}" 
+                     <p:column id="Status1" styleClass="Status-#{instance.status}" headerText="Status" filterBy="#{instance.status}" 
                                filterMatchMode="exact" filterOptions="#{serviceInstancesController.statusOptions}" filterPosition="top">
-
-                        <div class="Status-#{instance.status}">
                            <h:outputText id="status" value="#{instance.status}"/>
-                           <p:tooltip for="status" value="#{settingsController.tooltip(instance.status)}" 
-                                      showEffect="fade" hideEffect="fade" />
-                        </div>
+                           <p:tooltip for="status" value="#{settingsController.tooltip(instance.status)}"/>
                      </p:column>
 
                      <p:column id="Health" headerText="Health" filterBy="#{instance.health}"  
