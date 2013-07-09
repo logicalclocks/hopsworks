@@ -17,52 +17,45 @@ import javax.persistence.ManyToOne;
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-@Entity
+//@Entity
 public class ChefAttributes implements Serializable{
-    @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    private Long id;
-    private String servicerole;
+//    @Id
+//    @GeneratedValue(strategy= GenerationType.AUTO)
+//    private Long id;
+    private String role;
     private String chefJson;
-    @ManyToOne
-    @JoinColumn(name="CLUSTER_ID")
-    private Cluster cluster;
+//    @ManyToOne
+//    @JoinColumn(name="CLUSTER_ID")
+//    private Cluster cluster;
 
     public ChefAttributes() {
     }
            
-    public Long getId() {
-        return id;
-    }
+//    public Long getId() {
+//        return id;
+//    }
+//
+//    public void setId(Long id) {
+//        this.id = id;
+//    }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getServicerole() {
-        return servicerole;
-    }
-
-    public void setServicerole(String servicerole) {
-        this.servicerole = servicerole;
-    }
-
-    public Cluster getCluster() {
-        return cluster;
-    }
-
-    public void setCluster(Cluster cluster) {
-        this.cluster = cluster;
-    }
+    
+//    public Cluster getCluster() {
+//        return cluster;
+//    }
+//
+//    public void setCluster(Cluster cluster) {
+//        this.cluster = cluster;
+//    }
     
     
 
     public String getRole() {
-        return servicerole;
+        return role;
     }
 
     public void setRole(String role) {
-        this.servicerole = role;
+        this.role = role;
     }
 
     public String getChefJson() {
@@ -75,7 +68,7 @@ public class ChefAttributes implements Serializable{
 
     @Override
     public String toString() {
-        return "ChefAttributes{" + "role=" + servicerole + ", chefJson=" + chefJson + '}';
+        return "ChefAttributes{" + "role=" + role + ", chefJson=" + chefJson + '}';
     }
        
     

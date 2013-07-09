@@ -4,27 +4,29 @@
  */
 package se.kth.kthfsdashboard.virtualization.clusterparser;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.FlowEvent;
-import org.primefaces.event.RowEditEvent;
+import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.DefaultTreeNode;
+import org.primefaces.model.StreamedContent;
 import org.primefaces.model.TreeNode;
 import org.primefaces.model.UploadedFile;
 import org.yaml.snakeyaml.Yaml;
@@ -36,14 +38,13 @@ import se.kth.kthfsdashboard.virtualization.ClusterOptions;
  */
 @ManagedBean
 @SessionScoped
-public class ClusterProvisionController implements Serializable {
+public class ClusterManagementController implements Serializable {
 
     @EJB
     private ClusterFacade clusterEJB;
     private Cluster cluster = new Cluster();
     private UploadedFile file;
     private Yaml yaml = new Yaml();
-    private int option;
     private boolean skipChef;
     private boolean renderEC2;
     private ClusterOptions options = new ClusterOptions();
@@ -51,6 +52,10 @@ public class ClusterProvisionController implements Serializable {
     private TreeNode selectedItem;
     private TreeNode[] selectedItems;
     private static Logger logger = Logger.getLogger(Cluster.class.getName());
+    /**
+     * Variables for defining options of the cluster during the editing process
+     * in the tables
+     */
     private List<String> zones;
     private NodeGroup[] selectedGroup;
     private ChefAttributes[] selectedAttributes;
@@ -60,16 +65,18 @@ public class ClusterProvisionController implements Serializable {
     private NodeGroupDataModel groupsModel;
     private ChefAttributeDataModel chefAttributesModel;
     private List<ChefAttributes> chefAttributes;
+    private ClusterEntity[] selectedClusters;
+    private ClusterEntity edit;
 
     /**
-     * Creates a new instance of ClusterProvisionController
+     * Creates a new instance of ClusterManagementController
      */
-    public ClusterProvisionController() {
-        groups= new ArrayList<NodeGroup>();
+    public ClusterManagementController() {
+        groups = new ArrayList<NodeGroup>();
         groupsModel = new NodeGroupDataModel(groups);
-        ports=new ArrayList<Integer>();
+        ports = new ArrayList<Integer>();
         chefAttributes = new ArrayList<ChefAttributes>();
-        chefAttributesModel= new ChefAttributeDataModel(chefAttributes);
+        chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
     }
 
     public Cluster getCluster() {
@@ -89,7 +96,7 @@ public class ClusterProvisionController implements Serializable {
     }
 
     public void handleFileUpload() {
-        if ((file != null) && (option == 3)) {
+        if ((file != null)) {
             parseYMLtoCluster();
             generateTreeTable();
             FacesMessage msg = new FacesMessage("Successful", file.getFileName() + " is uploaded.");
@@ -103,14 +110,6 @@ public class ClusterProvisionController implements Serializable {
 
     public void setZones(List<String> zones) {
         this.zones = zones;
-    }
-    
-    public int getOption() {
-        return option;
-    }
-
-    public void setOption(int option) {
-        this.option = option;
     }
 
     public boolean isSkipChef() {
@@ -176,7 +175,7 @@ public class ClusterProvisionController implements Serializable {
     public void setPorts(List<Integer> ports) {
         this.ports = ports;
     }
-    
+
     public ChefAttributes[] getSelectedAttributes() {
         return selectedAttributes;
     }
@@ -193,7 +192,14 @@ public class ClusterProvisionController implements Serializable {
         this.chefAttributesModel = chefAttributesModel;
     }
 
-    
+    public ClusterEntity[] getSelectedClusters() {
+        return selectedClusters;
+    }
+
+    public void setSelectedClusters(ClusterEntity[] selectedClusters) {
+        this.selectedClusters = selectedClusters;
+    }
+
     private void parseYMLtoCluster() {
         try {
             Object document = yaml.load(file.getInputstream());
@@ -201,7 +207,11 @@ public class ClusterProvisionController implements Serializable {
             if (document != null && document instanceof Cluster) {
 
                 cluster = (Cluster) document;
-                clusterEJB.persistCluster(cluster);
+                String yamlContent = yaml.dump(cluster);
+                ClusterEntity entity = new ClusterEntity();
+                entity.setClusterName(cluster.getName());
+                entity.setYamlContent(yamlContent);
+                clusterEJB.persistCluster(entity);
             } else {
 
                 cluster = null;
@@ -212,26 +222,25 @@ public class ClusterProvisionController implements Serializable {
 
     }
 
-    public String proceedOption() {
-        String result;
-        switch (option) {
-            case 1:
-                result = "createClusterWizard";
-                cluster=new Cluster();
-                cluster.getProvider().setImage("eu-west-1/ami-ffcdce8b");
-                break;
-            case 2:
-                result = "welcome";
-                break;
-            case 3:
-                result = "proceedLaunchCluster";
-                break;
-            default:
-                result = "welcome";
-                break;
-        }
-        return result;
+    public List<ClusterEntity> listAvailableClusters() {
+        return clusterEJB.findAll();
+    }
 
+    public void removeClusters() {
+        Collection<ClusterEntity> selection = Arrays.asList(selectedClusters);
+        for (ClusterEntity cluster : selection) {
+            clusterEJB.removeCluster(cluster);
+        }
+    }
+
+    public String proceedCreateWizard() {
+        cluster = new Cluster();
+        cluster.getProvider().setImage("eu-west-1/ami-ffcdce8b");
+        return "createClusterWizard";
+    }
+
+    public String proceedLauncher() {
+        return "proceedLaunchCluster";
     }
 
     public String onFlowProcess(FlowEvent event) {
@@ -242,13 +251,13 @@ public class ClusterProvisionController implements Serializable {
             persistNodes();
             return "confirm";
         } else {
-            if(event.getNewStep().toLowerCase().indexOf("provider")>=0){
+            if (event.getNewStep().toLowerCase().indexOf("provider") >= 0) {
                 persistPorts();
             }
-            if(event.getNewStep().toLowerCase().indexOf("chef")>=0){
+            if (event.getNewStep().toLowerCase().indexOf("chef") >= 0) {
                 persistNodes();
             }
-            if(event.getNewStep().toLowerCase().indexOf("confirm")>=0){
+            if (event.getNewStep().toLowerCase().indexOf("confirm") >= 0) {
                 persistChef();
             }
             return event.getNewStep();
@@ -264,78 +273,148 @@ public class ClusterProvisionController implements Serializable {
         }
 
     }
-    
+
     public void handleRegionChange() {
-        
+
         if (cluster.getProvider().getName().equals("aws-ec2")
                 && !cluster.getProvider().getRegion().equals("")) {
-            zones= new ArrayList<String>();
+            zones = new ArrayList<String>();
             zones = options.getEc2availabilityZones().get(cluster.getProvider().getRegion());
- 
+
         } else {
-            zones= new ArrayList<String>();
+            zones = new ArrayList<String>();
         }
 
     }
-    
-    public void addChefJson(){
+
+    public void addChefJson() {
         chefAttributes.add(options.getAddRole());
         options.setAddRole(new ChefAttributes());
     }
-    
-    public void removeChefJson(){
+
+    public void removeChefJson() {
         Collection<ChefAttributes> selection = Arrays.asList(selectedAttributes);
         chefAttributes.removeAll(selection);
     }
-    public void addGroup(){
+
+    public void addGroup() {
         groups.add(options.getAddGroupName());
         options.setAddGroupName(new NodeGroup());
     }
-    
-    public void removeGroup(){
-        Collection<NodeGroup> selection= Arrays.asList(selectedGroup);
+
+    public void removeGroup() {
+        Collection<NodeGroup> selection = Arrays.asList(selectedGroup);
         groups.removeAll(selection);
     }
 
-    public void addPort(){
+    public void addPort() {
         ports.add(options.getPortNumber());
         Collections.sort(ports);
     }
-    
-    public void removePorts(){
+
+    public void removePorts() {
         Collection<Integer> selection = Arrays.asList(selectedPorts);
         ports.removeAll(selection);
     }
-    
-    public NodeGroup [] getSelectedGroup() {
+
+    public NodeGroup[] getSelectedGroup() {
         return selectedGroup;
     }
 
     public void setSelectedGroup(NodeGroup[] selectedGroup) {
         this.selectedGroup = selectedGroup;
     }
-     
-    private void persistNodes(){
+
+    private void persistNodes() {
         cluster.getNodes().clear();
         cluster.getNodes().addAll(groups);
-        
+
     }
-    
-    private void persistPorts(){
+
+    private void persistPorts() {
         cluster.getAuthorizeSpecificPorts().clear();
         cluster.getAuthorizeSpecificPorts().addAll(ports);
     }
-    
-    private void persistChef(){
+
+    private void persistChef() {
         cluster.getChefAttributes().clear();
         cluster.getChefAttributes().addAll(chefAttributes);
     }
-    public void generateTable(ActionEvent event){
+
+    public void generateTable(ActionEvent event) {
+        if (edit != null) {
+            edit.setClusterName(cluster.getName());
+            edit.setYamlContent(yaml.dump(cluster));
+            clusterEJB.updateCluster(edit);
+        } else {
+            ClusterEntity entity = new ClusterEntity();
+            entity.setClusterName(cluster.getName());
+            entity.setYamlContent(yaml.dump(cluster));
+            clusterEJB.persistCluster(entity);
+        }
         generateTreeTable();
+
     }
-    
+
+    public String editSelection() {
+        if (selectedClusters.length != 0) {
+            edit = selectedClusters[0];
+            String content = edit.getYamlContent();
+            Object document = yaml.load(edit.getYamlContent());
+            if (document != null && document instanceof Cluster) {
+                cluster = (Cluster) document;
+                ports = new ArrayList<Integer>(cluster.getAuthorizeSpecificPorts());
+                chefAttributes = new ArrayList<ChefAttributes>(cluster.getChefAttributes());
+                groups = new ArrayList<NodeGroup>(cluster.getNodes());
+                groupsModel = new NodeGroupDataModel(groups);
+                chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
+                 zones = options.getEc2availabilityZones().get(cluster.getProvider().getRegion());
+                if (cluster.getProvider().getName().equals("aws-ec2")) {
+                    renderEC2 = true;
+                }
+            } else {
+                cluster = null;
+            }
+        }
+        return "createClusterWizard";
+    }
+
+    public String loadSelection() {
+        if (selectedClusters.length != 0) {
+            ClusterEntity selection = selectedClusters[0];
+            String content = selection.getYamlContent();
+            System.out.println(content);
+            Object document = yaml.load(selection.getYamlContent());
+            if (document != null && document instanceof Cluster) {
+                cluster = (Cluster) document;
+                generateTreeTable();
+            } else {
+                cluster = null;
+            }
+        }
+        return "proceedLaunchCluster";
+    }
+
+    public StreamedContent exportCluster() {
+        DefaultStreamedContent export = null;
+        if (selectedClusters.length != 0) {
+            ClusterEntity selection = selectedClusters[0];
+            String content = selection.getYamlContent();
+
+            if (selection != null) {
+                try {
+                    InputStream stream = new ByteArrayInputStream(content.getBytes("UTF-8"));
+                    export = new DefaultStreamedContent(stream, "text/yml", selection.getClusterName() + ".yml");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return export;
+    }
+
     private void generateTreeTable() {
-        //System.out.println(clusterEJB.findAll());
+
         root = new DefaultTreeNode("root", null);
 
 
