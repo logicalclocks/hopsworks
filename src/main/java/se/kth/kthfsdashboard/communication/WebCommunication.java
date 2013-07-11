@@ -19,7 +19,6 @@ import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONObject;
 import se.kth.kthfsdashboard.struct.NodesTableItem;
 
 /**
@@ -131,7 +130,9 @@ public class WebCommunication {
       MultivaluedMap params = new MultivaluedMapImpl();
       params.add("username", USERNAME);
       params.add("password", PASSWORD);
-      return webResource.queryParams(params).get(ClientResponse.class);
+      logger.log(Level.INFO, "WebCommunication: Requesting url: {0}", url);      
+      ClientResponse response = webResource.queryParams(params).get(ClientResponse.class);
+      return response;
    }
 
    private static void disableCertificateValidation() {

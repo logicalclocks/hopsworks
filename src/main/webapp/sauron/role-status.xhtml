@@ -54,7 +54,7 @@
             </p:panel>
          </p:outputPanel>      
 
-         <p:outputPanel rendered="#{roleController.found}">         
+         <!--<p:outputPanel rendered="#{roleController.found}">-->         
             <!-- Second Toolbar-->
             <h:form>  
                <p:toolbar styleClass="SecondToolbar#{roleController.health}">  
@@ -81,7 +81,7 @@
                         <f:param name="service" value="#{roleController.service}"/>                             
                         <f:param name="hostid" value="#{roleController.hostId}"/>                          
                      </p:commandButton>                       
-
+                                    
                   </p:toolbarGroup>  
 
                   <p:toolbarGroup align="right">  
@@ -97,8 +97,7 @@
                         </p:menuitem>
                         <p:menuitem id="stop_role" value="Stop" actionListener="#{hostController.doCommand}" 
                                     disabled="#{roleController.disableStop()}" ajax ="true" update="@form :Instance"
-                                    onstart="dlgAction.show();pollCreate.start();" 
-                                    oncomplete="dlgAction.hide();pollCreate.stop();">
+                                    onstart="dlgAction.show()" oncomplete="dlgAction.hide()">
                            <f:param name="hostid" value="#{roleController.hostId}" />
                            <f:param name="cluster" value="#{roleController.cluster}" />
                            <f:param name="role" value="#{roleController.role}" />
@@ -115,7 +114,7 @@
             </h:form>
 
             <!-- Second Toolbar - End -->
-
+           
             <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
                <p:graphicImage library="images" name="ajaxloadingbar.gif" /> 
                <!--            <h:form>               
@@ -241,7 +240,7 @@
                </h:form>         
             </p:outputPanel>     
 
-         </p:outputPanel>          
+         <!--</p:outputPanel>-->          
 
       </ui:define>
 

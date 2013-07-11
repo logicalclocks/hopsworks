@@ -122,14 +122,14 @@ public class RoleController {
    }
    
    public boolean disableStart() {
-      if (!instanceInfoList.isEmpty() && instanceInfoList.get(0).getStatus() != Status.Started) {
+      if (!instanceInfoList.isEmpty() && instanceInfoList.get(0).getStatus() == Status.Stopped) {
          return false;
       }
       return true;
    }
    
    public boolean disableStop() {
-      if (!instanceInfoList.isEmpty() && instanceInfoList.get(0).getStatus() != Status.Stopped) {
+      if (!instanceInfoList.isEmpty() && instanceInfoList.get(0).getStatus() == Status.Started) {
          return false;
       }
       return true;

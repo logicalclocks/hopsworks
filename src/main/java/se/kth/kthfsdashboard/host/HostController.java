@@ -123,6 +123,8 @@ public class HostController implements Serializable {
    }
 
    public void doCommand(ActionEvent actionEvent) throws NoSuchAlgorithmException, Exception {
+      
+      System.err.println("HERE");
 
       //  TODO: If the web application server craches, status will remain 'Running'.
       Command c = new Command(command, hostId, service, role, cluster);
