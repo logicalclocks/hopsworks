@@ -67,17 +67,17 @@ public class AuthBackingBean {
               .getExternalContext().getRequest();
 
       if (username.isEmpty()) {
-          FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "Enter your username.");
+         FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "Enter your username.");
          context.addMessage(null, msg);
-         return null;        
+         return null;
       }
-      
+
       if (password.isEmpty()) {
-          FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "Enter your password.");
+         FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "Enter your password.");
          context.addMessage(null, msg);
-         return null;        
-      }      
-      
+         return null;
+      }
+
       try {
          if (request.getRemoteUser() != null) {
             request.logout();
@@ -102,10 +102,10 @@ public class AuthBackingBean {
    }
 
    public String logout() {
+//      TODO does not work correctly
       String result = "logout";
-
       FacesContext context = FacesContext.getCurrentInstance();
-      if (context.getExternalContext().getRequest() == null) {https://localhost:8181/kthfs-dashboard/sauron/
+      if (context.getExternalContext().getRequest() == null) {
          return "/loginError.xml";
       }
       HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
@@ -114,8 +114,8 @@ public class AuthBackingBean {
       log.log(Level.INFO, "Logging OUT Authenticated user: {0}", principal.getName());
 
       if (s != null) {
-//            s.invalidate();
          try {
+            s.invalidate();
             request.logout();
          } catch (ServletException e) {
             log.log(Level.SEVERE, "Failed to logout user!", e);
@@ -124,8 +124,6 @@ public class AuthBackingBean {
             log.log(Level.SEVERE, "Throwable Exception when calling logout user! ", e.toString());
          }
       }
-
-
       return result;
    }
 
