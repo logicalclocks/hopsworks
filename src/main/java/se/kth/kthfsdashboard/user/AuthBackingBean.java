@@ -65,6 +65,19 @@ public class AuthBackingBean {
       FacesContext context = FacesContext.getCurrentInstance();
       HttpServletRequest request = (HttpServletRequest) context
               .getExternalContext().getRequest();
+
+      if (username.isEmpty()) {
+          FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "Enter your username.");
+         context.addMessage(null, msg);
+         return null;        
+      }
+      
+      if (password.isEmpty()) {
+          FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "Enter your password.");
+         context.addMessage(null, msg);
+         return null;        
+      }      
+      
       try {
          if (request.getRemoteUser() != null) {
             request.logout();
@@ -72,8 +85,9 @@ public class AuthBackingBean {
          request.login(username, password);
          user = userService.findByEmail(username);
       } catch (ServletException e) {
-         context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN, "Login failed!", null));
-         return "login";
+         FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "The username or password is incorrect.");
+         context.addMessage(null, msg);
+         return null;
       }
 
       //you can fetch user from database for authenticated principal and do some action  
@@ -91,7 +105,7 @@ public class AuthBackingBean {
       String result = "logout";
 
       FacesContext context = FacesContext.getCurrentInstance();
-      if (context.getExternalContext().getRequest() == null) {
+      if (context.getExternalContext().getRequest() == null) {https://localhost:8181/kthfs-dashboard/sauron/
          return "/loginError.xml";
       }
       HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();

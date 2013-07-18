@@ -122,10 +122,8 @@ public class HostController implements Serializable {
       }
    }
 
-   public void doCommand(ActionEvent actionEvent) throws NoSuchAlgorithmException, Exception {
-      
-      System.err.println("HERE");
-
+//   public void doCommand(ActionEvent actionEvent) throws NoSuchAlgorithmException, Exception {
+   public void doCommand() throws Exception {      
       //  TODO: If the web application server craches, status will remain 'Running'.
       Command c = new Command(command, hostId, service, role, cluster);
       commandEJB.persistCommand(c);
@@ -140,20 +138,20 @@ public class HostController implements Serializable {
          if (response.getClientResponseStatus().getFamily() == Family.SUCCESSFUL) {
             c.succeeded();
             String messageText = "";
-            Role s = roleEjb.find(hostId, cluster, service, role);
+            Role r = roleEjb.find(hostId, cluster, service, role);
 
             if (command.equalsIgnoreCase("init")) {
 //               Todo:
             } else if (command.equalsIgnoreCase("start")) {
                JSONObject json = new JSONObject(response.getEntity(String.class));
                messageText = json.getString("msg");
-               s.setStatus(Status.Started);
+               r.setStatus(Status.Started);
 
             } else if (command.equalsIgnoreCase("stop")) {
                messageText = command + ": " + response.getEntity(String.class);
-               s.setStatus(Status.Stopped);
+               r.setStatus(Status.Stopped);
             }
-            roleEjb.store(s);
+            roleEjb.store(r);
             message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", messageText);
 
          } else {
@@ -168,6 +166,9 @@ public class HostController implements Serializable {
          c.failed();
          message = new FacesMessage(FacesMessage.SEVERITY_FATAL, "Communication Error", e.toString());
       }
+      Thread.sleep(1000);
+      Role rr = roleEjb.find(hostId, cluster, service, role);
+      System.err.println("Status = " + rr.getStatus());
       commandEJB.updateCommand(c);
       FacesContext.getCurrentInstance().addMessage(null, message);
    }

@@ -46,9 +46,9 @@ public class RoleHostInfo {
 // /////////////////////////////////////////////     
       
       
-      if(host.getHealth() == Health.Good) {
+//      if(host.getHealth() == Health.Good) {
          return role.getStatus();
-      }
-      return Status.TimedOut;
+//      }
+//      return Status.TimedOut;
    }
 }

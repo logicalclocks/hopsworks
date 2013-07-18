@@ -75,8 +75,8 @@
                <p:dataTable var="command" value="#{commandController.runningCommandsByCluster}">
                <p:column headerText="Command"><h:outputText value="#{command.command}"/></p:column>
                 <p:column headerText="Host Id"><h:outputText value="#{command.hostId}"/></p:column>               
-               <p:column headerText="Instance"><h:outputText value="#{command.cluster}"/></p:column>
-               <p:column headerText="Group"><h:outputText value="#{command.service}"/></p:column>
+               <p:column headerText="Cluster"><h:outputText value="#{command.cluster}"/></p:column>
+               <p:column headerText="Service"><h:outputText value="#{command.service}"/></p:column>
                <p:column headerText="Role"><h:outputText value="#{command.role}"/></p:column>
                <p:column headerText="Started at"><h:outputText value="#{command.startTimeShort}"/></p:column>
                <p:column headerText="Status"><h:outputText value="#{command.status}"/></p:column>
@@ -89,8 +89,8 @@
                <p:dataTable var="command" value="#{commandController.recentCommandsByCluster}">                  
                   <p:column headerText="Command"><h:outputText value="#{command.command}"/></p:column>
                   <p:column headerText="Host Id"><h:outputText value="#{command.hostId}"/></p:column>
-                  <p:column headerText="Instance"><h:outputText value="#{command.cluster}"/></p:column>
-                  <p:column headerText="Group"><h:outputText value="#{command.service}"/></p:column>
+                  <p:column headerText="Cluster"><h:outputText value="#{command.cluster}"/></p:column>
+                  <p:column headerText="Service"><h:outputText value="#{command.service}"/></p:column>
                   <p:column headerText="Role"><h:outputText value="#{command.role}"/></p:column>
                   <p:column headerText="Started at"><h:outputText value="#{command.startTimeShort}"/></p:column>
                   <p:column headerText="Status">

@@ -2,6 +2,7 @@ package se.kth.kthfsdashboard.service;
 
 import com.ocpsoft.pretty.faces.annotation.URLQueryParameter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -144,7 +145,10 @@ public class TestController {
       this.filteredInstances = filteredInstances;
    }
    
-   public void test() {
-       System.err.println(">>>>>> " + cluster + " " + role);
+   public String test() {
+       
+       Date d = new Date();
+       System.err.println(">>>>>> " + d.toString());
+       return d.toString();
    }
 }

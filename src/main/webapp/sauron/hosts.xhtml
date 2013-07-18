@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"   
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -8,70 +8,100 @@
       xmlns:p="http://primefaces.org/ui"
       >
 
-    <ui:composition template="layout.xhtml">
+   <ui:composition template="layout.xhtml">
 
-        <ui:define name="title">
-            #{settingsController.name} - Hosts
-        </ui:define>
-        <ui:define name="content">
+      <ui:define name="title">
+         #{settingsController.name} - Hosts
+      </ui:define>
+      <ui:define name="content">
 
-            <!--Navigation Bar - Begin -->
-            <h:form styleClass="styleNav">
-                <p:panelGrid>  
-                    <p:row>  
-                        <p:column>
-                            <h:outputText value="Hosts"/>
-                        </p:column>
-                    </p:row>
-                </p:panelGrid>
-            </h:form>
-            <!--Navigation Bar - End-->
+         <!--Navigation Bar - Begin -->
+         <h:form styleClass="styleNav">
+            <p:panelGrid>  
+               <p:row>  
+                  <p:column>
+                     <h:outputText value="Hosts"/>
+                  </p:column>
+               </p:row>
+            </p:panelGrid>
+         </h:form>
+         <!--Navigation Bar - End-->
 
-            <div class="hosts-header">#{hostsController.hosts.size()} Host<h:outputText value ="s" rendered="#{hostsController.hosts.size()>1}"/> Under Management:</div>
-
-            <p:panel header="Hosts">  
-                <h:form id="form">  
-                   <p:dataTable id="hosts" var="host" value="#{hostsController.hosts}">
-
-                        <p:column  headerText="Host Id">  
-                           <p:commandLink id="gotohost" styleClass="Health-#{host.health}" action="#{urlController.host()}" ajax="false">
-                               <h:outputText value="#{host.hostId}" />
-                               <f:param name="hostid" value="#{host.hostId}"/>
-                            </p:commandLink> 
-                        </p:column>
-                       <p:column headerText="Hostname" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostname}"/></p:column>
-                        <p:column headerText="Public IP"><h:outputText value="#{host.publicIp}"/></p:column>                        
-                        <p:column headerText="Private IP"><h:outputText value="#{host.privateIp}"/></p:column>  
-                        <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
-                        <p:column headerText="Last Heartbeat"><h:outputText value="#{host.lastHeartbeatFormatted} ago"/></p:column>  
-                        <p:column headerText="Cores"><h:outputText value="#{host.cores}"/></p:column> 
-                        <p:column headerText="Load Average">
-                            <p:dataTable styleClass="innerDataTable" var="host" value="#{host}">
-                                <p:column>#{host.load1}</p:column>
-                                <p:column>#{host.load5}</p:column>
-                                <p:column>#{host.load15}</p:column>
-                            </p:dataTable>
-                        </p:column>
-                        <p:column headerText="Disk Usage">
-                            <div class="CapacityUsage #{host.diskInfo.priority}">
-                                <span class="reading">#{host.diskInfo.usageInfo}</span>
-                                <span class="bar" style="width: #{host.diskInfo.usagePercentageString};"></span>
-                            </div>
-                        </p:column> 
-                        <p:column headerText="Physical Memory">
-                            <div class="CapacityUsage #{host.memoryInfo.priority}">
-                                <span class="reading">#{host.memoryInfo.usageInfo}</span>
-                                <span class="bar" style="width: #{host.memoryInfo.usagePercentageString};"></span>
-                            </div>
-                        </p:column> 
-                    </p:dataTable>  
-                </h:form> 
-            </p:panel>
+         <div class="hosts-header">#{hostsController.hosts.size()} Host<h:outputText value ="s" rendered="#{hostsController.hosts.size()>1}"/> Under Management:</div>
 
 
-        </ui:define>
+         <h:form id="form_add_host_cmd">
+            <p:commandLink value="Add Host" onclick="dlgAddHost.show()">Add Host</p:commandLink>
 
-    </ui:composition>
+            
+                        
+         </h:form>
+
+         <p:dialog modal="true" widgetVar="dlgAddHost" header="New Host" draggable="false" closable="true" resizable="false">  
+            <h:form id="form_add_host">
+               
+               <p:panelGrid columns="2" style="border: none">  
+                  <h:outputLabel for="hostid" value="Host Id" />  
+                  <p:inputText id="hostid" value="" required="true" label="HostId" />  
+
+                  <h:outputLabel for="hostname" value="Hostname" />  
+                  <p:inputText id="hostname" value="" required="true" label="Hostname"/> 
+
+                  <h:outputLabel for="privateip" value="Private IP" />  
+                  <p:inputText id="privateip" value="" required="true" label="Private IP"/> 
+
+                  <h:outputLabel for="publicip" value="Public IP" />  
+                  <p:inputText id="publicip" value="" required="true" label="Public IP"/>                  
+               </p:panelGrid>
+               
+               <p:commandButton type="button" value="Add"  style="float: right" actionListener="#{addHostController.addHost(event)}" />                   
+            </h:form>      
+         </p:dialog> 
+
+
+         <p:panel header="Hosts">  
+            <h:form id="form">  
+               <p:dataTable id="hosts" var="host" value="#{hostsController.hosts}">
+
+                  <p:column  headerText="Host Id">  
+                     <p:commandLink id="gotohost" styleClass="Health-#{host.health}" action="#{urlController.host()}" ajax="false">
+                        <h:outputText value="#{host.hostId}" />
+                        <f:param name="hostid" value="#{host.hostId}"/>
+                     </p:commandLink> 
+                  </p:column>
+                  <p:column headerText="Hostname" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostname}"/></p:column>
+                  <p:column headerText="Public IP"><h:outputText value="#{host.publicIp}"/></p:column>                        
+                  <p:column headerText="Private IP"><h:outputText value="#{host.privateIp}"/></p:column>  
+                  <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
+                  <p:column headerText="Last Heartbeat"><h:outputText value="#{host.lastHeartbeatFormatted} ago"/></p:column>  
+                  <p:column headerText="Cores"><h:outputText value="#{host.cores}"/></p:column> 
+                  <p:column headerText="Load Average">
+                     <p:dataTable styleClass="innerDataTable" var="host" value="#{host}">
+                        <p:column>#{host.load1}</p:column>
+                        <p:column>#{host.load5}</p:column>
+                        <p:column>#{host.load15}</p:column>
+                     </p:dataTable>
+                  </p:column>
+                  <p:column headerText="Disk Usage">
+                     <div class="CapacityUsage #{host.diskInfo.priority}">
+                        <span class="reading">#{host.diskInfo.usageInfo}</span>
+                        <span class="bar" style="width: #{host.diskInfo.usagePercentageString};"></span>
+                     </div>
+                  </p:column> 
+                  <p:column headerText="Physical Memory">
+                     <div class="CapacityUsage #{host.memoryInfo.priority}">
+                        <span class="reading">#{host.memoryInfo.usageInfo}</span>
+                        <span class="bar" style="width: #{host.memoryInfo.usagePercentageString};"></span>
+                     </div>
+                  </p:column> 
+               </p:dataTable>  
+            </h:form> 
+         </p:panel>
+
+
+      </ui:define>
+
+   </ui:composition>
 
 
 

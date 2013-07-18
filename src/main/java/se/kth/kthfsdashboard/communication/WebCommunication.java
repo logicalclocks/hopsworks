@@ -5,6 +5,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import java.security.SecureRandom;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.logging.Logger;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -31,6 +33,7 @@ public class WebCommunication {
 
       STDOUT, STDERR, DO
    }
+   private static boolean DISABLE_CERTIFICATE_VALIDATION = true;
    private static String USERNAME = "kthfsagent@sics.se";
    private static String PASSWORD = "kthfsagent";
    private static String PROTOCOL = "https";
@@ -97,14 +100,14 @@ public class WebCommunication {
       String jsonString = fetchContent(url);
       try {
          JSONArray json = new JSONArray(jsonString);
-         if (json.get(0).equals( "Error")) {
+         if (json.get(0).equals("Error")) {
             resultList.add(new NodesTableItem(null, json.getString(1), null, null, null));
             return resultList;
          }
          for (int i = 0; i < json.length(); i++) {
             JSONArray node = json.getJSONArray(i);
             Integer nodeId = node.getInt(0);
-            Long uptime = node.getLong(1);            
+            Long uptime = node.getLong(1);
             String status = node.getString(2);
             Integer startPhase = node.getInt(3);
             Integer configGeneration = node.getInt(4);
@@ -112,7 +115,7 @@ public class WebCommunication {
          }
       } catch (Exception ex) {
          logger.log(Level.SEVERE, "Exception: {0}", ex);
-         resultList.add(new NodesTableItem(null, "Error", null, null, null));         
+         resultList.add(new NodesTableItem(null, "Error", null, null, null));
       }
       return resultList;
    }
@@ -124,13 +127,15 @@ public class WebCommunication {
 
    private ClientResponse getWebResource(String url) throws Exception {
 
-      disableCertificateValidation();
+      if (DISABLE_CERTIFICATE_VALIDATION) {
+         disableCertificateValidation();
+      }
       Client client = Client.create();
       WebResource webResource = client.resource(url);
       MultivaluedMap params = new MultivaluedMapImpl();
       params.add("username", USERNAME);
       params.add("password", PASSWORD);
-      logger.log(Level.INFO, "WebCommunication: Requesting url: {0}", url);      
+      logger.log(Level.INFO, "WebCommunication: Requesting url: {0}", url);
       ClientResponse response = webResource.queryParams(params).get(ClientResponse.class);
       return response;
    }
@@ -143,7 +148,7 @@ public class WebCommunication {
                return new X509Certificate[0];
             }
 
-            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {                            
             }
 
             public void checkServerTrusted(X509Certificate[] certs, String authType) {

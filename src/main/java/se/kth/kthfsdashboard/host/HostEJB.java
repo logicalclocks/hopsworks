@@ -25,7 +25,7 @@ public class HostEJB {
       return query.getResultList();
    }
 
-   public Host findHostByName(String name) throws Exception{
+   public Host findHostByName(String name) throws Exception {
       TypedQuery<Host> query = em.createNamedQuery("findHostByName", Host.class).setParameter("hostname", name);
       try {
          return query.getSingleResult();
@@ -33,14 +33,25 @@ public class HostEJB {
          throw new Exception("NoResultException");
       }
    }
-   
-   public Host findHostById(String id) throws Exception{
+
+   public Host findHostById(String id) throws Exception {
       TypedQuery<Host> query = em.createNamedQuery("findHostById", Host.class).setParameter("id", id);
-      try {
-         return query.getSingleResult();
-      } catch (NoResultException ex) {
-         throw new Exception("NoResultException");
+      List<Host> result = query.getResultList();
+      if (result.isEmpty()) {
+          throw new Exception("NoResultException");
+      } else if (result.size() == 1) {
+         return result.get(0);
+      } else {
+         throw new Exception("MultipHostsFoundException");
       }
+   }
+   
+   public boolean hostExists(String id) {
+      TypedQuery<Host> query = em.createNamedQuery("findHostById", Host.class).setParameter("id", id);
+      if (query.getResultList().isEmpty()){
+         return false;
+      }
+      return true;
    }   
 
    public Host storeHost(Host host, boolean register) {
@@ -55,5 +66,4 @@ public class HostEJB {
       }
       return host;
    }
-
 }
