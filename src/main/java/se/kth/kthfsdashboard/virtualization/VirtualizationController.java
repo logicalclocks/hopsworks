@@ -114,7 +114,7 @@ public class VirtualizationController implements Serializable {
     public String getKeystoneEndpoint() {
         return keystoneEndpoint;
     }
-    
+
 
     /*
      * Command to launch the instance
@@ -125,17 +125,18 @@ public class VirtualizationController implements Serializable {
         //service = initContexts();
         virtualizer = new ClusterProvision(this);
         virtualizer.createSecurityGroups(clusterController.getCluster());
-        if(virtualizer.launchNodesBasicSetup(clusterController.getCluster())){
+        if (virtualizer.launchNodesBasicSetup(clusterController.getCluster())) {
 //        if(virtualizer.parallelLaunchNodesBasicSetup(clusterController.getCluster())){
             messages.addMessage("All nodes launched");
-            virtualizer.installPhase();
+            if (clusterController.getCluster().isInstallPhase()) {
+                virtualizer.installPhase();
+            }
             virtualizer.deployingConfigurations(clusterController.getCluster());
             messages.addSuccessMessage("Cluster launched");
-        }
-        else{
+        } else {
             messages.addSuccessMessage("Deployment failure");
         }
-        
+
         messages.clearMessages();
 
     }
@@ -165,7 +166,7 @@ public class VirtualizationController implements Serializable {
             key = computeCredentialsMB.getOpenstackKey();
             keystoneEndpoint = computeCredentialsMB.getOpenstackKeystone();
         }
-        
+
         //Setup the private IP for the nodes to know where is the dashboard
         //Add public key for managing nodes using ssh.
         privateIP = computeCredentialsMB.getPrivateIP();

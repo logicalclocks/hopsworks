@@ -2,13 +2,15 @@
 !!se.kth.kthfsdashboard.virtualization.clusterparser.Cluster
   name: test2
   environment: dev
+  installPhase: false
   globalServices: [ssh, chefClient]
   authorizePorts: [ssh, chefClient, chefServer, http&https, webserver]
   authorizeSpecificPorts: [3306, 4343, 3321]
   provider:
     name: aws-ec2
     instanceType: m1.large
-    image: eu-west-1/ami-ffcdce8b
+    loginUser: ubuntu
+    image: eu-west-1/ami-35667941
     region: eu-west-1
     zones: [eu-west-1a]
   ##lists of groups, with the roles the nodes will have and open ports 

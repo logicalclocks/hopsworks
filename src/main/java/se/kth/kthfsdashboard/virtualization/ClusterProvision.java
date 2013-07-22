@@ -65,7 +65,8 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public final class ClusterProvision {
-    private static final int RETRIES=2;
+
+    private static final int RETRIES = 2;
     private ComputeService service;
     private Provider provider;
     private String id;
@@ -104,7 +105,7 @@ public final class ClusterProvision {
         this.privateIP = controller.getPrivateIP();
         this.publicKey = controller.getPublicKey();
         this.messages = controller.getMessages();
-        this.debug=controller.getClusterController().isRenderConsole();
+        this.debug = controller.getClusterController().isRenderConsole();
         this.service = initContext();
     }
 
@@ -433,7 +434,7 @@ public final class ClusterProvision {
         groupLaunch.addAll(datanodes.keySet());
         messages.addMessage("Configuring installation phase in all nodes");
         messages.addMessage("Running install process of software");
-        nodeInstall(groupLaunch, scriptBuilder,RETRIES);
+        nodeInstall(groupLaunch, scriptBuilder, RETRIES);
 
     }
 
@@ -459,23 +460,23 @@ public final class ClusterProvision {
         //launch mgms
         Set<NodeMetadata> groupLaunch = mgms.keySet();
         messages.addMessage("Configuring mgm nodes");
-        nodePhase(groupLaunch, mgms, scriptBuilder,RETRIES);
+        nodePhase(groupLaunch, mgms, scriptBuilder, RETRIES);
         //launch ndbs
         groupLaunch = ndbs.keySet();
         messages.addMessage("Configuring ndb nodes");
-        nodePhase(groupLaunch, ndbs, scriptBuilder,RETRIES);
+        nodePhase(groupLaunch, ndbs, scriptBuilder, RETRIES);
         //launch mysqlds
         groupLaunch = mysqlds.keySet();
         messages.addMessage("Configuring mysqld nodes");
-        nodePhase(groupLaunch, mysqlds, scriptBuilder,RETRIES);
+        nodePhase(groupLaunch, mysqlds, scriptBuilder, RETRIES);
         //launch namenodes
         groupLaunch = namenodes.keySet();
         messages.addMessage("Configuring namenodes");
-        nodePhase(groupLaunch, namenodes, scriptBuilder,RETRIES);
+        nodePhase(groupLaunch, namenodes, scriptBuilder, RETRIES);
         //launch datanodes
         groupLaunch = datanodes.keySet();
         messages.addMessage("Configuring datanodes");
-        nodePhase(groupLaunch, datanodes, scriptBuilder,RETRIES);
+        nodePhase(groupLaunch, datanodes, scriptBuilder, RETRIES);
 //        Iterator<NodeMetadata> iter = mgmNodes.iterator();
 //        while(iter.hasNext()){
 //            NodeMetadata node= iter.next();
@@ -601,8 +602,13 @@ public final class ClusterProvision {
         StatementList bootstrap = new StatementList(script);
         switch (provider) {
             case AWS_EC2:
-                kthfsTemplate.options(EC2TemplateOptions.Builder
-                        .runScript(bootstrap));
+                if (cluster.getProvider().getLoginUser() != "") {
+                    kthfsTemplate.options(EC2TemplateOptions.Builder
+                            .runScript(bootstrap).overrideLoginUser(cluster.getProvider().getLoginUser()));
+                } else {
+                    kthfsTemplate.options(EC2TemplateOptions.Builder
+                            .runScript(bootstrap));
+                }
                 break;
             case OPENSTACK:
                 kthfsTemplate.options(NovaTemplateOptions.Builder
@@ -648,7 +654,7 @@ public final class ClusterProvision {
     }
 
     private void nodePhase(Set<NodeMetadata> nodes, Map<NodeMetadata, List<String>> map, JHDFSScriptBuilder.Builder scriptBuilder, int retries) {
-        if (!nodes.isEmpty()&&retries!=0) {
+        if (!nodes.isEmpty() && retries != 0) {
             //Initialize countdown latch
             latch = new CountDownLatch(nodes.size());
             pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
@@ -660,8 +666,8 @@ public final class ClusterProvision {
                 JHDFSScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node));
                 ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
                         RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
-                future.addListener(new nodeStatusTracker(node, latch, pendingNodes, 
-                        future,messages,debug), pool);
+                future.addListener(new nodeStatusTracker(node, latch, pendingNodes,
+                        future, messages, debug), pool);
             }
             try {
                 //wait for all the works to finish, 45 min estimated for each node +60 min extra margin to give
@@ -669,19 +675,19 @@ public final class ClusterProvision {
                 latch.await(25 * nodes.size() + 60, TimeUnit.MINUTES);
                 messages.addMessage("Launch phase complete...");
             } catch (InterruptedException e) {
-               
+
                 if (!pendingNodes.isEmpty()) {
 
                     Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-                    nodePhase(remain, map, scriptBuilder,--retries);
+                    nodePhase(remain, map, scriptBuilder, --retries);
                 }
                 e.printStackTrace();
             }
         }
     }
 
-    private void nodeInstall(Set<NodeMetadata> nodes, JHDFSScriptBuilder.Builder scriptBuilder,int retries) {
-        if (!nodes.isEmpty()&&retries!=0) {
+    private void nodeInstall(Set<NodeMetadata> nodes, JHDFSScriptBuilder.Builder scriptBuilder, int retries) {
+        if (!nodes.isEmpty() && retries != 0) {
             //Initialize countdown latch
             latch = new CountDownLatch(nodes.size());
             pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
@@ -694,8 +700,8 @@ public final class ClusterProvision {
                 ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
                         RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
 //              
-                future.addListener(new nodeStatusTracker(node, latch, pendingNodes, 
-                        future,messages,debug), pool);
+                future.addListener(new nodeStatusTracker(node, latch, pendingNodes,
+                        future, messages, debug), pool);
             }
             try {
                 //wait for all the works to finish, 25 min estimated for each node +30 min extra margin to give
@@ -703,11 +709,11 @@ public final class ClusterProvision {
                 latch.await(25 * nodes.size() + 60, TimeUnit.MINUTES);
                 messages.addMessage("Install phase complete...");
             } catch (InterruptedException e) {
-                
+
                 if (!pendingNodes.isEmpty()) {
 
                     Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-                    nodeInstall(remain, scriptBuilder,--retries);
+                    nodeInstall(remain, scriptBuilder, --retries);
                 }
                 e.printStackTrace();
             }

@@ -53,6 +53,8 @@
                                         <f:selectItems value="#{clusterManagementController.options.environment}" />
 
                                     </p:selectOneMenu>
+                                    <h:outputText value="Install Phase: "/>
+                                    <p:selectCheckboxMenu label="Jump?" value="#{clusterManagementController.cluster.installPhase}"/>
                                     <h:outputText value="Global Services:" />
                                     <p:selectManyCheckbox id="scroll" value="#{clusterManagementController.cluster.globalServices}" >  
                                         <f:selectItems value="#{clusterManagementController.options.services}"  />  

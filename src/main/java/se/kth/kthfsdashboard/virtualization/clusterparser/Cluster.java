@@ -23,6 +23,7 @@ public class Cluster implements Serializable{
 //    @Column(name="CLUSTER_NAME")
     private String name;
     private String environment;
+    private boolean installPhase;
     private List<String> globalServices=new ArrayList<String>();
     private List<String> authorizePorts=new ArrayList<String>();
     private List<Integer> authorizeSpecificPorts=new ArrayList<Integer>();
@@ -44,6 +45,14 @@ public class Cluster implements Serializable{
 
     public List<String> getAuthorizePorts() {
         return authorizePorts;
+    }
+
+    public boolean isInstallPhase() {
+        return installPhase;
+    }
+
+    public void setInstallPhase(boolean installPhase) {
+        this.installPhase = installPhase;
     }
 
     public void setAuthorizePorts(List<String> authorizePorts) {
