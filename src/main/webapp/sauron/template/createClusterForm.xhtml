@@ -53,6 +53,8 @@
                                         <f:selectItems value="#{clusterManagementController.options.environment}" />
 
                                     </p:selectOneMenu>
+                                    <h:outputText value="Install Phase: "/>
+                                    <p:selectCheckboxMenu label="Jump?" value="#{clusterManagementController.cluster.installPhase}"/>
                                     <h:outputText value="Global Services:" />
                                     <p:selectManyCheckbox id="scroll" value="#{clusterManagementController.cluster.globalServices}" >  
                                         <f:selectItems value="#{clusterManagementController.options.services}"  />  
@@ -223,7 +225,11 @@
                                         <p:column headerText="Roles and Ports">
                                             <p:cellEditor>
                                                 <f:facet name="output">
-                                                    <h:outputText value="#{group.roles}" />
+                                                    <h:outputText value="Roles: #{group.roles}" />
+                                                </f:facet>
+                                                
+                                                <f:facet name="output">
+                                                    <h:outputText value="Ports: #{group.authorizePorts}"/>
                                                 </f:facet>
                                                 <f:facet name="input">
                                                     <h:outputText value="Roles:"/>

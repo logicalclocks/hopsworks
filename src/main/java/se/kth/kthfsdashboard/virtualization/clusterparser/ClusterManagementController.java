@@ -200,6 +200,10 @@ public class ClusterManagementController implements Serializable {
         this.selectedClusters = selectedClusters;
     }
 
+    public boolean isRenderConsole() {
+        return cluster.getEnvironment().equals("dev");
+    }
+    
     private void parseYMLtoCluster() {
         try {
             Object document = yaml.load(file.getInputstream());
