@@ -17,18 +17,13 @@ import javax.persistence.ManyToOne;
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-//@Entity
+
 public class NodeGroup implements Serializable{
-//    @Id
-//    @GeneratedValue(strategy= GenerationType.AUTO)
-//    private Long id;
+
     private String securityGroup;
     private int number;
     private List<String> roles;
     private List<String> authorizePorts;
-//    @ManyToOne
-//    @JoinColumn(name="CLUSTER_ID")
-//    private Cluster cluster;
 
     public NodeGroup(){
         
@@ -38,24 +33,7 @@ public class NodeGroup implements Serializable{
         this.securityGroup=name;
         
     }
-//    public Long getId() {
-//        return id;
-//    }
-//
-//    public void setId(Long id) {
-//        this.id = id;
-//    }
-//
-//    public Cluster getCluster() {
-//        return cluster;
-//    }
-
-//    public void setCluster(Cluster cluster) {
-//        this.cluster = cluster;
-//    }
-    
-    
-
+       
     public String getSecurityGroup() {
         return securityGroup;
     }

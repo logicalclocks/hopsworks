@@ -12,10 +12,9 @@ import javax.persistence.*;
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-//@Embeddable
-//@Access(AccessType.FIELD)
+
 public class Provider implements Serializable{
-//    @Column(name="PROVIDER_NAME")
+
     private String name;
     private String instanceType;
     private String loginUser;

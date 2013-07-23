@@ -27,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import javax.ejb.EJB;
 import static org.jclouds.Constants.PROPERTY_CONNECTION_TIMEOUT;
 import org.jclouds.ContextBuilder;
 import static org.jclouds.aws.ec2.reference.AWSEC2Constants.PROPERTY_EC2_AMI_QUERY;
@@ -56,6 +57,8 @@ import static org.jclouds.openstack.nova.v2_0.predicates.SecurityGroupPredicates
 import org.jclouds.rest.RestContext;
 import org.jclouds.scriptbuilder.domain.StatementList;
 import org.jclouds.sshj.config.SshjSshClientModule;
+import se.kth.kthfsdashboard.host.Host;
+import se.kth.kthfsdashboard.host.HostEJB;
 import se.kth.kthfsdashboard.virtualization.clusterparser.Cluster;
 import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
 
@@ -66,6 +69,8 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
  */
 public final class ClusterProvision {
 
+    @EJB
+    private HostEJB hostEJB;
     private static final int RETRIES = 2;
     private ComputeService service;
     private Provider provider;
@@ -284,7 +289,7 @@ public final class ClusterProvision {
      * It launches in parallel all the number of nodes specified in the group of the cluster file using the 
      * compute service abstraction from jclouds
      * 
-     * If succesful, returns true;
+     * If successful, returns true;
      */
     public boolean launchNodesBasicSetup(Cluster cluster) {
         boolean status = false;
@@ -313,42 +318,50 @@ public final class ClusterProvision {
                 //Think if it is possible to optimize
 
                 Set<String> roles = new HashSet(group.getRoles());
-                if (roles.contains("MySQLCluster-mgm")) {
-                    Iterator<? extends NodeMetadata> iter = ready.iterator();
-                    while (iter.hasNext()) {
+                Iterator<? extends NodeMetadata> iter = ready.iterator();
+                Host host = new Host();
+
+                while (iter.hasNext()) {
+                    NodeMetadata node = iter.next();
+                    host.setHostname(node.getHostname());
+                    host.setPrivateIp(node.getPrivateAddresses().iterator().next());
+                    host.setPublicIp(node.getPublicAddresses().iterator().next());
+                    host.setCores((int)node.getHardware().getProcessors().get(0).getCores());
+                    
+                    //heartbeat??
+                    
+                    
+                    if (roles.contains("MySQLCluster-mgm")) {
                         //Add private ip to mgm
-                        NodeMetadata node = iter.next();
                         mgmIP.addAll(node.getPrivateAddresses());
                         mgms.put(node, group.getRoles());
                     }
-                } else if (roles.contains("MySQLCluster-ndb")) {
-                    Iterator<? extends NodeMetadata> iter = ready.iterator();
-                    while (iter.hasNext()) {
-                        NodeMetadata node = iter.next();
+                    if (roles.contains("MySQLCluster-ndb")) {
+
                         ndbsIP.addAll(node.getPrivateAddresses());
                         ndbs.put(node, group.getRoles());
+
                     }
-                } else if (roles.contains("MySQLCluster-mysqld")) {
-                    Iterator<? extends NodeMetadata> iter = ready.iterator();
-                    while (iter.hasNext()) {
-                        NodeMetadata node = iter.next();
+                    if (roles.contains("MySQLCluster-mysqld")) {
+
                         mySQLClientsIP.addAll(node.getPrivateAddresses());
                         mysqlds.put(node, group.getRoles());
+
                     }
-                } else if (roles.contains("KTHFS-namenode")) {
-                    Iterator<? extends NodeMetadata> iter = ready.iterator();
-                    while (iter.hasNext()) {
-                        NodeMetadata node = iter.next();
+                    if (roles.contains("KTHFS-namenode")) {
+
+
                         namenodesIP.addAll(node.getPrivateAddresses());
                         namenodes.put(node, group.getRoles());
                     }
-                } else if (roles.contains("KTHFS-datanode")) {
-                    Iterator<? extends NodeMetadata> iter = ready.iterator();
-                    while (iter.hasNext()) {
-                        NodeMetadata node = iter.next();
+
+                    if (roles.contains("KTHFS-datanode")) {
+
                         datanodes.put(node, group.getRoles());
+
                     }
                 }
+
 
             }
             status = true;
@@ -553,13 +566,19 @@ public final class ClusterProvision {
 
         if (build == null) {
             throw new NullPointerException("Not selected supported provider");
+
+
+
+
         }
 
         ComputeServiceContext context = build.buildView(ComputeServiceContext.class);
 
         //From minecraft example, how to include your own event handlers
-        context.utils().eventBus().register(VirtualizationController.ScriptLogger.INSTANCE);
-        messages.addMessage("Virtualization context initialized, start opening security groups");
+        context.utils()
+                .eventBus().register(VirtualizationController.ScriptLogger.INSTANCE);
+        messages.addMessage(
+                "Virtualization context initialized, start opening security groups");
         return context.getComputeService();
     }
 
@@ -716,6 +735,10 @@ public final class ClusterProvision {
                     nodeInstall(remain, scriptBuilder, --retries);
                 }
                 e.printStackTrace();
+
+
+
+
             }
         }
     }

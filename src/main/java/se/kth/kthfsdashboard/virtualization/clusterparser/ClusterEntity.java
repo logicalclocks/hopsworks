@@ -60,12 +60,13 @@ public class ClusterEntity implements Serializable {
     }
 
     public String showTrimContent() {
+        System.out.println(yamlContent);
         StringBuilder builder = new StringBuilder();
         Pattern environment = Pattern.compile("environment: [a-zA-Z]+", Pattern.DOTALL);
         Pattern providerOptions =
                 Pattern.compile("provider:[\\r\\n]+([\\s]+[a-zA-Z]+: ([a-zA-Z\\.0-9\\-\\_\\/\\']*||[\\s]+))*",
                 Pattern.DOTALL);
-        Pattern providerName = Pattern.compile("name: (aws-ec2||openstack-nova)", Pattern.DOTALL);
+        Pattern providerName = Pattern.compile("name: [a-zA-Z]+\\-[a-zA-Z]+[2]?", Pattern.DOTALL);
         Pattern providerRegion = Pattern.compile("region: [a-zA-Z\\.0-9\\-\\_\\/\\']*", Pattern.DOTALL);
         Matcher providerMatch = providerOptions.matcher(yamlContent);
         Matcher envMatch = environment.matcher(yamlContent);
@@ -78,6 +79,7 @@ public class ClusterEntity implements Serializable {
             Matcher region = providerRegion.matcher(providerMatch.group());
             while (name.find()) {
                 String option = name.group();
+                System.out.println(option);
                 builder.append(option.replaceAll("name: ", ""));
             }
             builder.append(",");
