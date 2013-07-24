@@ -180,7 +180,8 @@ public class VirtualizationController implements Serializable {
      * For openstack we override the need to generate a key pair and the user used by the image to login
      * EC2 jclouds detects the login by default
      */
-    private void selectProviderTemplateOptions(String provider, TemplateBuilder kthfsTemplate, JHDFSScriptBuilder script) {
+    private void selectProviderTemplateOptions(String provider, TemplateBuilder kthfsTemplate, 
+            JHDFSScriptBuilder script) {
         Provider check = Provider.fromString(provider);
         StatementList bootstrap = new StatementList(script);
         switch (check) {

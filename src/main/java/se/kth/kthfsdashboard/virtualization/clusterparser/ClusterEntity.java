@@ -14,12 +14,14 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.Table;
 
 /**
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @Entity
+@Table(name="ClusterEntities")
 @NamedQueries({
     @NamedQuery(name = "ClustersEntity.findAll", query = "SELECT c FROM ClusterEntity c")
 })

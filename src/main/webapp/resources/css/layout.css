@@ -90,6 +90,16 @@ body {
    margin-bottom: -3px; /* -6? -8?*/
 }
 
+.complete{
+    background: #7ac527
+}
+.pending{
+    background: #f2b548
+}
+.error{
+    background: #fe574f
+}
+
 
 /*panelgrid*/
 

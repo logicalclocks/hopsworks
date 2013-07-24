@@ -15,7 +15,7 @@ import org.jclouds.compute.domain.NodeMetadata;
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-public class nodeStatusTracker implements Runnable {
+public class NodeStatusTracker implements Runnable {
 
     private final NodeMetadata launchingNode;
     private final CountDownLatch latch;
@@ -24,7 +24,7 @@ public class nodeStatusTracker implements Runnable {
     private MessageController debug;
     private boolean debugger;
 
-    public nodeStatusTracker(NodeMetadata launchingNode, CountDownLatch latch,
+    public NodeStatusTracker(NodeMetadata launchingNode, CountDownLatch latch,
             CopyOnWriteArraySet<NodeMetadata> pendingNodes, ListenableFuture<ExecResponse> future
             ,MessageController debug, boolean debugger) {
         this.launchingNode = launchingNode;

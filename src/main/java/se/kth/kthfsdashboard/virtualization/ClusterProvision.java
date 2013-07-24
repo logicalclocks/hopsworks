@@ -329,7 +329,7 @@ public final class ClusterProvision {
                     host.setCores((int)node.getHardware().getProcessors().get(0).getCores());
                     
                     //heartbeat??
-                    
+                    //hostEJB.storeHost(host, true);
                     
                     if (roles.contains("MySQLCluster-mgm")) {
                         //Add private ip to mgm
@@ -685,7 +685,7 @@ public final class ClusterProvision {
                 JHDFSScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node));
                 ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
                         RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
-                future.addListener(new nodeStatusTracker(node, latch, pendingNodes,
+                future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
                         future, messages, debug), pool);
             }
             try {
@@ -719,7 +719,7 @@ public final class ClusterProvision {
                 ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
                         RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
 //              
-                future.addListener(new nodeStatusTracker(node, latch, pendingNodes,
+                future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
                         future, messages, debug), pool);
             }
             try {

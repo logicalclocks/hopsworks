@@ -31,28 +31,54 @@
                 <h:form id="clusterProgressForm">  
 
                     <p:growl id="messages"/>  
-
-                    <p:treeTable id="deploymentTable" >
+                    <p:poll id="tableUpdate" update="deploymentTable" autoStart="true" 
+                            process="deploymentTable" interval="15"/>
+                    <p:dataTable id="deploymentTable" var="node" value="#{nodeProgressionController.nodes}" 
+                                 rowStyleClass="#{node.phase=='Complete' ? 'complete' : 
+                                                  node.phase=='Error'? 'error':
+                                                  node.phase=='Waiting'?'pending':null}">
 
                         <p:column>  
                             <f:facet name="header">
-                                Name
+                                Cluster Name
                             </f:facet> 
+                            <h:outputText value="#{node.cluster}"/>
                         </p:column> 
 
                         <p:column>
                             <f:facet name="header">
-                                Status
+                                NodeID
                             </f:facet>
+                            <h:outputText value="#{node.nodeId}"/>
                         </p:column>
 
                         <p:column>
                             <f:facet name="header">
-                                Phase
+                                Roles
+                            </f:facet>
+                            <h:outputText value="#{node.role}"/>
+                        </p:column>   
+                        <p:column>
+                            <f:facet name="header">
+                                Progress
                             </f:facet>
 
-                        </p:column>                                    
-                    </p:treeTable>  
+                            <p:progressBar id="progressBarClient" widgetVar="pbClient" style="width:300px"
+                                           value="#{nodeProgressionController.progress(node)}"
+                                           labelTemplate="{value}%" styleClass="animated"
+                                           />
+
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                Phase
+                            </f:facet>
+                            <h:outputText value="#{node.phase}"/>
+                        </p:column>
+                        <f:facet name="footer">
+                            In total there are #{fn:length(nodeProgressionController.nodes)} nodes deploying.
+                        </f:facet>
+                    </p:dataTable>  
                 </h:form> 
             </p:panel>
             <p:spacer width="1" height="8" />
