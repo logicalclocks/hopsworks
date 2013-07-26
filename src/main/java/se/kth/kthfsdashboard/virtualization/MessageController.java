@@ -23,25 +23,12 @@ public class MessageController implements Serializable {
 
     private ArrayList<String> messageStatus = new ArrayList();
     private String lastMessage = "Preparing to submit operation";
-    private List<String> debugChef = Collections.synchronizedList(new ArrayList<String>());
+   
 
     public void addMessage(String message) {
         messageStatus.add(message);
     }
-
-    public void addDebugMessage(String message) {
-        debugChef.add(message);
-    }
-
-    public String showDebugMessage() {
-        if (debugChef.isEmpty()) {
-            return "";
-        }
-        else{
-            return debugChef.remove(0);
-        }
-    }
-
+   
     public void clearMessages() {
         messageStatus.clear();
         messageStatus.add("Preparing to submit operation");

@@ -12,6 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.ejb.Asynchronous;
+import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
@@ -37,7 +39,8 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterManagementContr
 @ManagedBean
 @SessionScoped
 public class VirtualizationController implements Serializable {
-
+    @EJB
+    private DeploymentProgressFacade deploymentFacade;
     @ManagedProperty(value = "#{messageController}")
     private MessageController messages;
     @ManagedProperty(value = "#{computeCredentialsMB}")
@@ -115,30 +118,34 @@ public class VirtualizationController implements Serializable {
         return keystoneEndpoint;
     }
 
+    public DeploymentProgressFacade getDeploymentProgressFacade(){
+        return deploymentFacade;
+    }
 
     /*
      * Command to launch the instance
      */
-    public void launchCluster() {
+    @Asynchronous
+    public String launchCluster() {
         setCredentials();
-        messages.addMessage("Setting up credentials and initializing virtualization context...");
+        //messages.addMessage("Setting up credentials and initializing virtualization context...");
         //service = initContexts();
         virtualizer = new ClusterProvision(this);
         virtualizer.createSecurityGroups(clusterController.getCluster());
         if (virtualizer.launchNodesBasicSetup(clusterController.getCluster())) {
 //        if(virtualizer.parallelLaunchNodesBasicSetup(clusterController.getCluster())){
-            messages.addMessage("All nodes launched");
+            //messages.addMessage("All nodes launched");
             if (clusterController.getCluster().isInstallPhase()) {
                 virtualizer.installPhase();
             }
             virtualizer.deployingConfigurations(clusterController.getCluster());
-            messages.addSuccessMessage("Cluster launched");
+            //messages.addSuccessMessage("Cluster launched");
         } else {
-            messages.addSuccessMessage("Deployment failure");
+            //messages.addSuccessMessage("Deployment failure");
         }
 
-        messages.clearMessages();
-
+        //messages.clearMessages();
+        return "progress";
     }
 
     /*
@@ -180,7 +187,7 @@ public class VirtualizationController implements Serializable {
      * For openstack we override the need to generate a key pair and the user used by the image to login
      * EC2 jclouds detects the login by default
      */
-    private void selectProviderTemplateOptions(String provider, TemplateBuilder kthfsTemplate, 
+    private void selectProviderTemplateOptions(String provider, TemplateBuilder kthfsTemplate,
             JHDFSScriptBuilder script) {
         Provider check = Provider.fromString(provider);
         StatementList bootstrap = new StatementList(script);

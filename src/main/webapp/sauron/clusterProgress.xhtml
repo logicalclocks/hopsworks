@@ -31,8 +31,8 @@
                 <h:form id="clusterProgressForm">  
 
                     <p:growl id="messages"/>  
-                    <p:poll id="tableUpdate" update="deploymentTable" autoStart="true" 
-                            process="deploymentTable" interval="15"/>
+                    <p:poll id="tableUpdate" async="true" update="deploymentTable" autoStart="true" 
+                            process="@this" interval="15"/>
                     <p:dataTable id="deploymentTable" var="node" value="#{nodeProgressionController.nodes}" 
                                  rowStyleClass="#{node.phase=='Complete' ? 'complete' : 
                                                   node.phase=='Error'? 'error':

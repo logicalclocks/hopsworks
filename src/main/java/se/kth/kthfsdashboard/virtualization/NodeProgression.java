@@ -20,7 +20,12 @@ import javax.persistence.Table;
 @Entity
 @Table(name="NodeProgress")
 @NamedQueries({
-    @NamedQuery(name = "NodeProgression.findAll", query = "SELECT c FROM NodeProgression c")
+    @NamedQuery(name = "NodeProgression.findAll", query = "SELECT c FROM NodeProgression c"),
+    @NamedQuery(name ="NodeProgression.findAllInGroup", query = "SELECT c FROM NodeProgression"
+        + " c WHERE c.nodeId = :nodeIdREGEX"),
+        @NamedQuery(name="NodeProgression.findNodeByNodeID", query= 
+        "SELECT c FROM NodeProgression c WHERE c.nodeId = :id")
+       
 })
 public class NodeProgression implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -31,6 +36,9 @@ public class NodeProgression implements Serializable {
     private String nodeId;
     private String nodeRole;
     private String phase;
+    private String previousPhase;
+    
+    
     public Long getId() {
         return id;
     }
@@ -66,6 +74,16 @@ public class NodeProgression implements Serializable {
     public String getPhase() {
         return phase;
     }
+
+    public String getPreviousPhase() {
+        return previousPhase;
+    }
+
+    public void setPreviousPhase(String previousPhase) {
+        this.previousPhase = previousPhase;
+    }
+    
+     
 
     public void setPhase(String phase) {
         this.phase = phase;

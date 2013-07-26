@@ -71,6 +71,8 @@ public final class ClusterProvision {
 
     @EJB
     private HostEJB hostEJB;
+    @EJB
+    private DeploymentProgressFacade progressEJB;
     private static final int RETRIES = 2;
     private ComputeService service;
     private Provider provider;
@@ -97,7 +99,7 @@ public final class ClusterProvision {
     private CopyOnWriteArraySet<NodeMetadata> pendingNodes;
     private int max = 0;
     private int totalNodes = 0;
-    private boolean debug;
+    //private boolean debug;
     /*
      * Constructor of a ClusterProvision
      */
@@ -110,8 +112,10 @@ public final class ClusterProvision {
         this.privateIP = controller.getPrivateIP();
         this.publicKey = controller.getPublicKey();
         this.messages = controller.getMessages();
-        this.debug = controller.getClusterController().isRenderConsole();
+        //this.debug = controller.getClusterController().isRenderConsole();
         this.service = initContext();
+        this.progressEJB=controller.getDeploymentProgressFacade();
+
     }
 
     /*
@@ -120,6 +124,7 @@ public final class ClusterProvision {
      */
     public void createSecurityGroups(Cluster cluster) {
         //Data structures which contains all the mappings of the ports that the roles need to be opened
+        progressEJB.createProgress(cluster);
         RoleMapPorts commonTCP = new RoleMapPorts(RoleMapPorts.PortType.COMMON);
         RoleMapPorts portsTCP = new RoleMapPorts(RoleMapPorts.PortType.TCP);
         RoleMapPorts portsUDP = new RoleMapPorts(RoleMapPorts.PortType.UDP);
@@ -301,7 +306,12 @@ public final class ClusterProvision {
                     .publicKey(publicKey)
                     .build();
             selectProviderTemplateOptions(cluster, kthfsTemplate, initScript);
+
             for (NodeGroup group : cluster.getNodes()) {
+
+                progressEJB.initializeCreateGroup(group.getSecurityGroup(), group.getNumber());
+
+
                 messages.addMessage("Creating " + group.getNumber() + "  nodes in Security Group " + group.getSecurityGroup());
                 Set<? extends NodeMetadata> ready = service.createNodesInGroup(group.getSecurityGroup(), group.getNumber(), kthfsTemplate.build());
                 //For the demo, we keep track of the returned set of node Metadata launched and which group 
@@ -320,17 +330,19 @@ public final class ClusterProvision {
                 Set<String> roles = new HashSet(group.getRoles());
                 Iterator<? extends NodeMetadata> iter = ready.iterator();
                 Host host = new Host();
-
+                int i= 0;
                 while (iter.hasNext()) {
                     NodeMetadata node = iter.next();
-                    host.setHostname(node.getHostname());
-                    host.setPrivateIp(node.getPrivateAddresses().iterator().next());
-                    host.setPublicIp(node.getPublicAddresses().iterator().next());
-                    host.setCores((int)node.getHardware().getProcessors().get(0).getCores());
-                    
+//                    host.setHostname(node.getHostname());
+//                    host.setPrivateIp(node.getPrivateAddresses().iterator().next());
+//                    host.setPublicIp(node.getPublicAddresses().iterator().next());
+//                    host.setCores((int) node.getHardware().getProcessors().get(0).getCores());
+
+                    progressEJB.updateCreateProgress(group.getSecurityGroup(), node.getId(),i++);
+
                     //heartbeat??
                     //hostEJB.storeHost(host, true);
-                    
+
                     if (roles.contains("MySQLCluster-mgm")) {
                         //Add private ip to mgm
                         mgmIP.addAll(node.getPrivateAddresses());
@@ -447,6 +459,12 @@ public final class ClusterProvision {
         groupLaunch.addAll(datanodes.keySet());
         messages.addMessage("Configuring installation phase in all nodes");
         messages.addMessage("Running install process of software");
+        try {
+            progressEJB.updatePhaseProgress(groupLaunch, DeploymentPhase.INSTALL);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error updating in the DataBase");
+        }
         nodeInstall(groupLaunch, scriptBuilder, RETRIES);
 
     }
@@ -473,53 +491,54 @@ public final class ClusterProvision {
         //launch mgms
         Set<NodeMetadata> groupLaunch = mgms.keySet();
         messages.addMessage("Configuring mgm nodes");
+        try {
+            progressEJB.updatePhaseProgress(groupLaunch, DeploymentPhase.CONFIGURE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error Updating Database");
+        }
         nodePhase(groupLaunch, mgms, scriptBuilder, RETRIES);
         //launch ndbs
         groupLaunch = ndbs.keySet();
         messages.addMessage("Configuring ndb nodes");
+        try {
+            progressEJB.updatePhaseProgress(groupLaunch, DeploymentPhase.CONFIGURE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error Updating Database");
+        }
         nodePhase(groupLaunch, ndbs, scriptBuilder, RETRIES);
         //launch mysqlds
         groupLaunch = mysqlds.keySet();
         messages.addMessage("Configuring mysqld nodes");
+        try {
+            progressEJB.updatePhaseProgress(groupLaunch, DeploymentPhase.CONFIGURE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error Updating Database");
+        }
         nodePhase(groupLaunch, mysqlds, scriptBuilder, RETRIES);
         //launch namenodes
         groupLaunch = namenodes.keySet();
         messages.addMessage("Configuring namenodes");
+        try {
+            progressEJB.updatePhaseProgress(groupLaunch, DeploymentPhase.CONFIGURE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error Updating Database");
+        }
         nodePhase(groupLaunch, namenodes, scriptBuilder, RETRIES);
         //launch datanodes
         groupLaunch = datanodes.keySet();
         messages.addMessage("Configuring datanodes");
+        try {
+            progressEJB.updatePhaseProgress(groupLaunch, DeploymentPhase.CONFIGURE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error Updating Database");
+        }
         nodePhase(groupLaunch, datanodes, scriptBuilder, RETRIES);
-//        Iterator<NodeMetadata> iter = mgmNodes.iterator();
-//        while(iter.hasNext()){
-//            NodeMetadata node= iter.next();
-//            List<String> ips = new LinkedList(node.getPrivateAddresses());
-//            //Listenable Future
-//            final ListenableFuture<ExecResponse> future=service.submitScriptOnNode(node.getId(), scriptBuilder.build(ips.get(0), mgms.get(node)), 
-//                    RunScriptOptions.NONE);
-//             future.addListener(new Runnable() {
-//                @Override
-//                public void run() {
-//                    try {
-//                        final ExecResponse contents = future.get();
-//                        latch.countDown();
-//                        //...process 
-//                    } catch (InterruptedException e) {
-//                        System.out.println("Interrupted" + e);
-//                    } catch (ExecutionException e) {
-//                        System.out.println("Interrupted" + e.getCause());
-//                    }
-//                }
-//            }, pool);
-//        }
-//        try{
-//            latch.await();
-//        }
-//        catch(InterruptedException e){
-//            e.printStackTrace();
-//        }
-
-        //Rest of the phases TODO
+     
     }
 
     /*
@@ -621,7 +640,7 @@ public final class ClusterProvision {
         StatementList bootstrap = new StatementList(script);
         switch (provider) {
             case AWS_EC2:
-                if (cluster.getProvider().getLoginUser() != "") {
+                if (!cluster.getProvider().getLoginUser().equals("")) {
                     kthfsTemplate.options(EC2TemplateOptions.Builder
                             .runScript(bootstrap).overrideLoginUser(cluster.getProvider().getLoginUser()));
                 } else {
@@ -686,7 +705,7 @@ public final class ClusterProvision {
                 ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
                         RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
                 future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
-                        future, messages, debug), pool);
+                        future), pool);
             }
             try {
                 //wait for all the works to finish, 45 min estimated for each node +60 min extra margin to give
@@ -698,10 +717,27 @@ public final class ClusterProvision {
                 if (!pendingNodes.isEmpty()) {
 
                     Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+                    //Mark the nodes that are been reprovisioned
+                    try {
+                        progressEJB.updatePhaseProgress(remain, DeploymentPhase.RETRYING);
+                    } catch (Exception y) {
+                        y.printStackTrace();
+                        System.out.println("Error updating Database");
+                    }
                     nodePhase(remain, map, scriptBuilder, --retries);
                 }
                 e.printStackTrace();
+            } finally {
+                //Mark the completed nodes in the view
+                try {
+                    nodes.removeAll(pendingNodes);
+                    progressEJB.updatePhaseProgress(nodes, DeploymentPhase.COMPLETE);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("Error updating Database");
+                }
             }
+
         }
     }
 
@@ -720,8 +756,9 @@ public final class ClusterProvision {
                         RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
 //              
                 future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
-                        future, messages, debug), pool);
+                        future), pool);
             }
+
             try {
                 //wait for all the works to finish, 25 min estimated for each node +30 min extra margin to give
                 //some extra time.
@@ -732,13 +769,25 @@ public final class ClusterProvision {
                 if (!pendingNodes.isEmpty()) {
 
                     Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+                    //Mark the nodes that are been reinstalled
+                    try {
+                        progressEJB.updatePhaseProgress(remain, DeploymentPhase.RETRYING);
+                    } catch (Exception y) {
+                        y.printStackTrace();
+                        System.out.println("Error updating Database");
+                    }
                     nodeInstall(remain, scriptBuilder, --retries);
                 }
                 e.printStackTrace();
-
-
-
-
+            } finally {
+                //Update the nodes that have finished the install phase
+                try {
+                    nodes.removeAll(pendingNodes);
+                    progressEJB.updatePhaseProgress(nodes, DeploymentPhase.WAITING);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("Error updating Database");
+                }
             }
         }
     }

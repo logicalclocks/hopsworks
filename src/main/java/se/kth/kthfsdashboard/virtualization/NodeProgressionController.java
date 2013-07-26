@@ -4,11 +4,13 @@
  */
 package se.kth.kthfsdashboard.virtualization;
 
+import java.io.Serializable;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 import org.ocpsoft.rewrite.faces.annotation.Phase;
 
 /**
@@ -17,53 +19,53 @@ import org.ocpsoft.rewrite.faces.annotation.Phase;
  */
 @ManagedBean
 @RequestScoped
-public class NodeProgressionController {
+public class NodeProgressionController implements Serializable {
 
     @EJB
     private DeploymentProgressFacade deploymentFacade;
-    private List<NodeProgression> nodes; 
+    private List<NodeProgression> nodes;
 
     /**
      * Creates a new instance of NodeProgressionController
      */
     public NodeProgressionController() {
-    
     }
-    
+
     @PostConstruct
-    public void init(){
+    public void init() {
         loadNodes();
     }
-    
-    public List<NodeProgression> getNodes(){
-        if(nodes!=null){
-            loadNodes();
-        }
+
+    public List<NodeProgression> getNodes() {
+
+        loadNodes();
+
         return nodes;
     }
-    
-    public Integer progress(NodeProgression progress){
+
+    public Integer progress(NodeProgression progress) {
         DeploymentPhase currentPhase = DeploymentPhase.fromString(progress.getPhase());
-        if(currentPhase.equals(DeploymentPhase.CREATION)){
+        DeploymentPhase previousPhase = DeploymentPhase.fromString(progress.getPreviousPhase());
+        if (currentPhase.equals(DeploymentPhase.CREATION)) {
             return 0;
-        }
-        else if (currentPhase.equals(DeploymentPhase.INSTALL)){
+        } else if (currentPhase.equals(DeploymentPhase.INSTALL)
+                || currentPhase.equals(DeploymentPhase.CREATED)) {
             return 33;
-        }
-        else if(currentPhase.equals(DeploymentPhase.CONFIGURE)){
+        } else if (currentPhase.equals(DeploymentPhase.CONFIGURE)) {
             return 66;
-        }
-        else if(currentPhase.equals(DeploymentPhase.COMPLETE)){
+        } else if (currentPhase.equals(DeploymentPhase.COMPLETE)) {
             return 100;
-        }
-        else{
+        } else if (currentPhase.equals(DeploymentPhase.WAITING)) {
+            if (previousPhase != null &&( previousPhase.equals(DeploymentPhase.INSTALL)
+                    ||previousPhase.equals(DeploymentPhase.CREATED))) {
+                return 33;
+            }
             return 0;
         }
+        return 0;
     }
-    
-    
-    private void loadNodes(){
+
+    private void loadNodes() {
         nodes = deploymentFacade.findAll();
     }
-    
 }

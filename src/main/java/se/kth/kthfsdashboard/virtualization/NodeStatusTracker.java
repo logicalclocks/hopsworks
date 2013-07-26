@@ -21,18 +21,16 @@ public class NodeStatusTracker implements Runnable {
     private final CountDownLatch latch;
     private final CopyOnWriteArraySet<NodeMetadata> pendingNodes;
     private ListenableFuture<ExecResponse> future;
-    private MessageController debug;
-    private boolean debugger;
+   
 
     public NodeStatusTracker(NodeMetadata launchingNode, CountDownLatch latch,
             CopyOnWriteArraySet<NodeMetadata> pendingNodes, ListenableFuture<ExecResponse> future
-            ,MessageController debug, boolean debugger) {
+            ) {
         this.launchingNode = launchingNode;
         this.latch = latch;
         this.pendingNodes = pendingNodes;
         this.future = future;
-        this.debug=debug;
-        this.debugger=debugger;
+        
     }
 
     @Override
@@ -41,9 +39,7 @@ public class NodeStatusTracker implements Runnable {
             ExecResponse contents = future.get();
             latch.countDown();
             //...process 
-            if(debugger){
-                debug.addDebugMessage(contents.getOutput());
-            }
+            
             pendingNodes.remove(launchingNode);
         } catch (InterruptedException e) {
             System.out.println("Interrupted" + e);

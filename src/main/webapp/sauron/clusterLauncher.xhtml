@@ -64,7 +64,7 @@
 
                 <div id="launchLayout">
                     <h:form id="launchForm">
-                        <p:layout  id="launch" fullPage="false" style="height: 800px;">
+                        <p:layout  id="launch" fullPage="false" style="height: 500px;">
                             <p:layoutUnit id="launcher" position="west" size="300"  header="Cluster Details" resizable="false" closable="false" collapsible="false" >
 
                                 <ui:include src="/sauron/template/clusterDescription.xhtml"/>
@@ -86,15 +86,7 @@
                                 <ui:include src="/sauron/template/clusterTreeTable.xhtml"/>
                             </p:layoutUnit>
                             <!--</div>-->
-                            <!--                            <div class="launcherCenter">-->
-                            <p:layoutUnit id="debugConsole" position="south" rendered="#{clusterManagementController.renderConsole}" size="200">
-                                <p:focus for="debugTerminal"/>
-                                <p:terminal id="debugTerminal" widgetVar="term" prompt="debug$"
-                                            welcomeMessage="Welcome, this is debug mode. Here you can debug the
-                                            provisioning process"
-                                            />
-                            </p:layoutUnit>
-                            <!--</div>-->
+                           
 
 
                         </p:layout>

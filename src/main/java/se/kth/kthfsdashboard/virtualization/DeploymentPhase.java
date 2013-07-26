@@ -10,6 +10,7 @@ package se.kth.kthfsdashboard.virtualization;
  */
 public enum DeploymentPhase {
     CREATION("Creation"),
+    CREATED("Created"),
     INSTALL("Install"),
     CONFIGURE("Configure"),
     WAITING("Waiting"),
