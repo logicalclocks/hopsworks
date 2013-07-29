@@ -1,11 +1,9 @@
 package se.kth.kthfsdashboard.rest.resources;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.awt.font.FontRenderContext;
 import java.awt.font.LineBreakMeasurer;
 import java.awt.font.TextAttribute;
@@ -25,7 +23,6 @@ import javax.imageio.ImageIO;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.jclouds.ec2.domain.Image;
 import se.kth.kthfsdashboard.util.CollectdTools;
 
 /**
@@ -76,7 +73,6 @@ public class CollectdResource {
          ImageIO.write(image, "png", byteArrayOutputStream);
          byte[] imageData = byteArrayOutputStream.toByteArray();
          return Response.ok(new ByteArrayInputStream(imageData)).build();
-//         return Response.status(Response.Status.NOT_FOUND).build();
       }
    }
 

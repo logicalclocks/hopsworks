@@ -7,11 +7,11 @@ import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+import javax.faces.component.UIInput;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import org.primefaces.context.RequestContext;
 import se.kth.kthfsdashboard.command.CommandEJB;
-import se.kth.kthfsdashboard.role.RoleEJB;
 
 /**
  *
@@ -24,8 +24,6 @@ public class AddHostController implements Serializable {
    @EJB
    private HostEJB hostEJB;
    @EJB
-   private RoleEJB roleEjb;
-   @EJB
    private CommandEJB commandEJB;
    private String hostId;
    private String privateIp;
@@ -37,26 +35,33 @@ public class AddHostController implements Serializable {
    }
 
    public void addHost(ActionEvent actionEvent) {
-
-      System.err.println("HERE");
-      if (hostEJB.hostExists(hostId)) {
-
-         System.err.println("Exists");
-         RequestContext reqInstace = RequestContext.getCurrentInstance();
-         reqInstace.addCallbackParam("exists", true);
-
-
          FacesContext context = FacesContext.getCurrentInstance();
-         FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                 "Host Exists", "A host with id " + hostId + " already exists.");
-         context.addMessage(null, msg);
-
-
-
+         FacesMessage msg;
+      if (hostEJB.hostExists(hostId)) {
+         logger.log(Level.INFO, "Host with id {0} already exists.", hostId);
+         msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Host Exists", 
+                 "A host with id " + hostId + " already exists.");
+         context.addMessage(null, msg);    
       } else {
+         Host host = new Host();
+         host.setHostId(hostId);
+         host.setPrivateIp(privateIp);
+         host.setPublicIp(publicIp);
+         host.setHostname("");
+         hostEJB.storeHost(host, true);
+         RequestContext reqInstace = RequestContext.getCurrentInstance();
+         reqInstace.addCallbackParam("hostadded", true);
+         msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "Host Added", 
+                 "Host " + hostId + " added successfully.");
+         context.addMessage(null, msg);
+         resetValues();
       }
-
-
+   }
+   
+   private void resetValues() {
+      hostId = "";
+      privateIp = "";
+      publicIp = "";
    }
 
    public String getHostId() {

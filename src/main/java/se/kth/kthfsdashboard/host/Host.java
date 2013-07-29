@@ -33,15 +33,15 @@ public class Host implements Serializable {
    private String publicIp;
    @Column(length = 15)
    private String privateIp;
-   private int cores;
-   private long lastHeartbeat;
-   private double load1;
-   private double load5;
-   private double load15;
-   private long diskCapacity;
-   private long diskUsed;
-   private long memoryCapacity;
-   private long memoryUsed;
+   private Integer cores;
+   private Long lastHeartbeat;
+   private Double load1;
+   private Double load5;
+   private Double load15;
+   private Long diskCapacity;
+   private Long diskUsed;
+   private Long memoryCapacity;
+   private Long memoryUsed;
 
    public Host() {
    }
@@ -78,7 +78,7 @@ public class Host implements Serializable {
       this.privateIp = privateIp;
    }
 
-   public long getLastHeartbeat() {
+   public Long getLastHeartbeat() {
       return lastHeartbeat;
    }
 
@@ -86,7 +86,7 @@ public class Host implements Serializable {
       this.lastHeartbeat = lastHeartbeat;
    }
 
-   public int getCores() {
+   public Integer getCores() {
       return cores;
    }
 
@@ -94,59 +94,59 @@ public class Host implements Serializable {
       this.cores = cores;
    }
 
-   public double getLoad1() {
+   public Double getLoad1() {
       return load1;
    }
 
-   public void setLoad1(double load1) {
+   public void setLoad1(Double load1) {
       this.load1 = load1;
    }
 
-   public double getLoad5() {
+   public Double getLoad5() {
       return load5;
    }
 
-   public void setLoad5(double load5) {
+   public void setLoad5(Double load5) {
       this.load5 = load5;
    }
 
-   public double getLoad15() {
+   public Double getLoad15() {
       return load15;
    }
 
-   public void setLoad15(double load15) {
+   public void setLoad15(Double load15) {
       this.load15 = load15;
    }
 
-   public long getDiskCapacity() {
+   public Long getDiskCapacity() {
       return diskCapacity;
    }
 
-   public void setDiskCapacity(long diskCapacity) {
+   public void setDiskCapacity(Long diskCapacity) {
       this.diskCapacity = diskCapacity;
    }
 
-   public long getDiskUsed() {
+   public Long getDiskUsed() {
       return diskUsed;
    }
 
-   public void setDiskUsed(long diskUsed) {
+   public void setDiskUsed(Long diskUsed) {
       this.diskUsed = diskUsed;
    }
 
-   public long getMemoryCapacity() {
+   public Long getMemoryCapacity() {
       return memoryCapacity;
    }
 
-   public void setMemoryCapacity(long memoryCapacity) {
+   public void setMemoryCapacity(Long memoryCapacity) {
       this.memoryCapacity = memoryCapacity;
    }
 
-   public long getMemoryUsed() {
+   public Long getMemoryUsed() {
       return memoryUsed;
    }
 
-   public void setMemoryUsed(long memoryUsed) {
+   public void setMemoryUsed(Long memoryUsed) {
       this.memoryUsed = memoryUsed;
    }
 
@@ -157,8 +157,10 @@ public class Host implements Serializable {
    }
 
    public String getLastHeartbeatFormatted() {
-
-      return Formatter.time(((new Date()).getTime() - getLastHeartbeat()));
+      if (lastHeartbeat == null) {
+         return "";
+      }
+      return Formatter.time(((new Date()).getTime() - lastHeartbeat));
    }
 
    public MemoryInfo getDiskInfo() {
@@ -174,8 +176,10 @@ public class Host implements Serializable {
    public Health getHealth() {
 
       int hostTimeout = HEARTBEAT_INTERVAL * 2 + 1;
+      if (lastHeartbeat == null) {
+         return Health.Bad;
+      }
       long deltaInSec = ((new Date()).getTime() - lastHeartbeat) / 1000;
-
       if (deltaInSec < hostTimeout) {
          return Health.Good;
       }

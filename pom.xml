@@ -19,7 +19,7 @@
       <glassfish.admin>admin</glassfish.admin>
       <glassfish.passwd>admin</glassfish.passwd>-->
             
-      <glassfish.hostname>lucan.sics.se</glassfish.hostname>
+      <glassfish.hostname>cloud5.sics.se</glassfish.hostname>
       <glassfish.admin>admin</glassfish.admin>
       <glassfish.passwd>dight12</glassfish.passwd>  
            

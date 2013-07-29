@@ -8,47 +8,48 @@ import se.kth.kthfsdashboard.util.Formatter;
  */
 public class MemoryInfo {
 
-    private Long used;
-    private Long capacity;
+   private Long used;
+   private Long capacity;
 
+   public MemoryInfo(Long capacity, Long used) {
+      this.used = used;
+      this.capacity = capacity;
+   }
 
-    public MemoryInfo(Long capacity, Long used) {
-        this.used = used;
-        this.capacity = capacity;
-                
-    }
+   public long getUsed() {
+      return used;
+   }
 
-    public long getUsed() {
-        return used;
-    }
+   public long getCapacity() {
+      return capacity;
+   }
 
-    public long getCapacity() {
-        return capacity;
-    }
+   private double usagePercentage() {
+      if (used == null || capacity == null) {
+         return 0;
+      }
+      return ((double) used) / capacity * 100d;
+   }
 
-    private double getUsagePercentage() {
+   public String getUsagePercentageString() {
+      
+      return String.format("%1.1f", usagePercentage()) + "%";
+   }
 
-        return ((double) used) / capacity * 100d;
-    }
+   public String getUsageInfo() {
+      Formatter f = new Formatter();
+      if (used == null || capacity == null) {
+         return "N/A";
+      }
+      return f.storage(used) + " / " + f.storage(capacity);
+   }
 
-    public String getUsagePercentageString() {
-
-        return String.format("%1.1f", getUsagePercentage()) + "%";
-    }
-
-    public String getUsageInfo() {
-        Formatter f = new Formatter();
-
-        return f.storage(used) + " / " + f.storage(capacity);
-    }
-
-    public String getPriority() {
-
-        if (getUsagePercentage() > 75) {
-            return "priorityHigh";
-        } else if (getUsagePercentage() > 25) {
-            return "priorityMed";
-        }
-        return "priorityLow";
-    }
+   public String getPriority() {
+      if (usagePercentage() > 75) {
+         return "priorityHigh";
+      } else if (usagePercentage() > 25) {
+         return "priorityMed";
+      }
+      return "priorityLow";
+   }
 }

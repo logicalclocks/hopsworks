@@ -29,7 +29,7 @@
             <p:toolbarGroup align="left">              
                <p:menuButton value="Clusters">
                   <p:menuitem value="All Clusters" action="clusters"/>
-                  <p:separator />  
+                  <p:separator rendered="#{not empty clustersLayoutController.clusters}"/>  
                   <c:forEach var="cluster" items="#{clustersLayoutController.clusters}">                          
                      <p:menuitem value="#{cluster}" action='#{urlController.clusterStatus(cluster)}'/>
                   </c:forEach>
