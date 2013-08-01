@@ -270,7 +270,7 @@ public class GraphController implements Serializable {
       return graphUrl(hostId, plugin, type, plugin + "all");
    }
 
-   public String namenodesGraphUrl(String chartType) {
+   public String namenodesGraphUrl(String chartType, String cluster) {
       HashMap<String, String> params = new HashMap<String, String>();
       if (chartType.startsWith("serv_nn_")) {
          List<String> namenodes = roleEjb.findHostId(cluster,
