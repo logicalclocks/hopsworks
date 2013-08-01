@@ -238,14 +238,14 @@
                   </p:toolbar>
                   <p:dataGrid  var="g" value="#{graphController.namenodeServiceGraphs}" columns="#{settingsController.numOfGraphColumns}"  
                                paginator="false" styleClass="ui-datagrid-no-border" >  
-                     <p:graphicImage value="#{graphController.namenodesGraphUrl(g, graphController.cluster)}"/>  
+                     <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}"/>  
                   </p:dataGrid> 
 
                   <p:toolbar>
                      <p:toolbarGroup align="left"><p:outputLabel value="Aggregate Name Node Activity (Total Activity)"/></p:toolbarGroup>
                   </p:toolbar>
                   <p:dataGrid  var="g" value="#{graphController.namenodeServiceActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                     <p:graphicImage value="#{graphController.namenodesGraphUrl(g, graphController.cluster)}"/>
+                     <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}"/>  
                   </p:dataGrid>             
 
                   <!--
