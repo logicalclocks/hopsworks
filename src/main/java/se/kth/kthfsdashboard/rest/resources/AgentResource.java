@@ -106,7 +106,7 @@ public class AgentResource {
             String hostId = json.getString("host-id");
             Host host = hostEJB.findHostById(hostId);
             if (host == null) {
-                logger.log(Level.INFO, "Host with id {0} not found.", hostId);
+                logger.log(Level.INFO, "Could not register host with id {0}: unknown host id.", hostId);
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
             host.setRegistered(true);            
@@ -117,7 +117,8 @@ public class AgentResource {
             host.setCores(json.getInt("cores"));
             
             hostEJB.storeHost(host, false);            
-            roleEjb.deleteRolesByHostId(hostId);            
+            roleEjb.deleteRolesByHostId(hostId);  
+            logger.log(Level.INFO, "Host with id + {0} registered successfully.", hostId);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Exception: {0}", ex);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
