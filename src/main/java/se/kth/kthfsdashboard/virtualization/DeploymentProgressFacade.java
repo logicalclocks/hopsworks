@@ -93,7 +93,7 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
         
         TypedQuery<NodeProgression> query = em.createNamedQuery("NodeProgression.findNodeByNodeID"
                 , NodeProgression.class)
-                .setParameter("id", group+i);
+                .setParameter("nodeId", group+i);
         try {
             
             NodeProgression node =  query.getSingleResult();
@@ -112,13 +112,13 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
     public void updatePhaseProgress(Set<NodeMetadata> nodes,DeploymentPhase phase) throws Exception{
         for (NodeMetadata node : nodes) {
             TypedQuery<NodeProgression> query = em.createNamedQuery("NodeProgression.findNodeByNodeID", NodeProgression.class)
-                    .setParameter("id", node.getId());
+                    .setParameter("nodeId", node.getId());
             try {
 
                 NodeProgression temp = query.getSingleResult();
                 temp.setPreviousPhase(temp.getPhase());
                 temp.setPhase(phase.toString());
-
+                System.out.println(temp);
                 updateProgress(temp);
 
             } catch (NoResultException ex) {

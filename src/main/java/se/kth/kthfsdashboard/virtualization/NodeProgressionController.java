@@ -10,8 +10,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
-import javax.faces.bean.SessionScoped;
-import org.ocpsoft.rewrite.faces.annotation.Phase;
+
 
 /**
  *
@@ -59,6 +58,9 @@ public class NodeProgressionController implements Serializable {
             if (previousPhase != null &&( previousPhase.equals(DeploymentPhase.INSTALL)
                     ||previousPhase.equals(DeploymentPhase.CREATED))) {
                 return 33;
+            }
+            else if(previousPhase != null && previousPhase.equals(DeploymentPhase.CONFIGURE)){
+                return 66;
             }
             return 0;
         }

@@ -30,6 +30,7 @@ import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
 import org.jclouds.scriptbuilder.domain.StatementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.kth.kthfsdashboard.host.HostEJB;
 import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterManagementController;
 
 /**
@@ -41,6 +42,8 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterManagementContr
 public class VirtualizationController implements Serializable {
     @EJB
     private DeploymentProgressFacade deploymentFacade;
+    @EJB
+    private HostEJB hostEJB;
     @ManagedProperty(value = "#{messageController}")
     private MessageController messages;
     @ManagedProperty(value = "#{computeCredentialsMB}")
@@ -57,12 +60,7 @@ public class VirtualizationController implements Serializable {
     private String keystoneEndpoint;
     private ComputeService service;
     private ComputeServiceContext context;
-    private Map<String, Set<? extends NodeMetadata>> nodes = new HashMap();
-    private Map<NodeMetadata, List<String>> first = new HashMap();
-    private Map<NodeMetadata, List<String>> rest = new HashMap();
-    private List<String> ndbs = new LinkedList();
-    private List<String> mgm = new LinkedList();
-    private List<String> mySQLClients = new LinkedList();
+    
 
     /**
      * Creates a new instance of VirtualizationController
@@ -122,11 +120,16 @@ public class VirtualizationController implements Serializable {
         return deploymentFacade;
     }
 
+    public HostEJB getHostEJB() {
+        return hostEJB;
+    }
+    
+
     /*
      * Command to launch the instance
      */
     @Asynchronous
-    public String launchCluster() {
+    public void launchCluster() {
         setCredentials();
         //messages.addMessage("Setting up credentials and initializing virtualization context...");
         //service = initContexts();
@@ -145,7 +148,7 @@ public class VirtualizationController implements Serializable {
         }
 
         //messages.clearMessages();
-        return "progress";
+//        return "progress";
     }
 
     /*

@@ -21,26 +21,30 @@ public class NodeStatusTracker implements Runnable {
     private final CountDownLatch latch;
     private final CopyOnWriteArraySet<NodeMetadata> pendingNodes;
     private ListenableFuture<ExecResponse> future;
-   
 
     public NodeStatusTracker(NodeMetadata launchingNode, CountDownLatch latch,
-            CopyOnWriteArraySet<NodeMetadata> pendingNodes, ListenableFuture<ExecResponse> future
-            ) {
+            CopyOnWriteArraySet<NodeMetadata> pendingNodes, ListenableFuture<ExecResponse> future) {
         this.launchingNode = launchingNode;
         this.latch = latch;
         this.pendingNodes = pendingNodes;
         this.future = future;
-        
+
     }
 
     @Override
     public void run() {
         try {
             ExecResponse contents = future.get();
+            System.out.println(contents.getExitStatus());
+            if (contents.getExitStatus() <110) {
+                pendingNodes.remove(launchingNode);
+                System.out.println("Removing Node, script executed succesfully");
+            }
             latch.countDown();
-            //...process 
-            
-            pendingNodes.remove(launchingNode);
+
+            //...process ssh module apache ambari
+
+
         } catch (InterruptedException e) {
             System.out.println("Interrupted" + e);
         } catch (ExecutionException e) {

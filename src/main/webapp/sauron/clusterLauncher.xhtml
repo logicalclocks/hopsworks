@@ -71,7 +71,8 @@
                                 <br/>
 
                                 <p:commandButton id="startCluster" value="startCluster" 
-                                                 action="#{virtualizationController.launchCluster()}"
+                                                 actionListener="#{virtualizationController.launchCluster()}"
+                                                 action="progress"
                                                  update="success"
                                                  onclick="pollCreate.start();"
                                                  onerror="pollCreate.stop();"

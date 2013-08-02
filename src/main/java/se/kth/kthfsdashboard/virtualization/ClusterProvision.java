@@ -114,7 +114,8 @@ public final class ClusterProvision {
         this.messages = controller.getMessages();
         //this.debug = controller.getClusterController().isRenderConsole();
         this.service = initContext();
-        this.progressEJB=controller.getDeploymentProgressFacade();
+        this.progressEJB = controller.getDeploymentProgressFacade();
+        this.hostEJB = controller.getHostEJB();
 
     }
 
@@ -311,7 +312,6 @@ public final class ClusterProvision {
 
                 progressEJB.initializeCreateGroup(group.getSecurityGroup(), group.getNumber());
 
-
                 messages.addMessage("Creating " + group.getNumber() + "  nodes in Security Group " + group.getSecurityGroup());
                 Set<? extends NodeMetadata> ready = service.createNodesInGroup(group.getSecurityGroup(), group.getNumber(), kthfsTemplate.build());
                 //For the demo, we keep track of the returned set of node Metadata launched and which group 
@@ -329,19 +329,10 @@ public final class ClusterProvision {
 
                 Set<String> roles = new HashSet(group.getRoles());
                 Iterator<? extends NodeMetadata> iter = ready.iterator();
-                Host host = new Host();
-                int i= 0;
+
+                int i = 0;
                 while (iter.hasNext()) {
                     NodeMetadata node = iter.next();
-//                    host.setHostname(node.getHostname());
-//                    host.setPrivateIp(node.getPrivateAddresses().iterator().next());
-//                    host.setPublicIp(node.getPublicAddresses().iterator().next());
-//                    host.setCores((int) node.getHardware().getProcessors().get(0).getCores());
-
-                    progressEJB.updateCreateProgress(group.getSecurityGroup(), node.getId(),i++);
-
-                    //heartbeat??
-                    //hostEJB.storeHost(host, true);
 
                     if (roles.contains("MySQLCluster-mgm")) {
                         //Add private ip to mgm
@@ -372,8 +363,22 @@ public final class ClusterProvision {
                         datanodes.put(node, group.getRoles());
 
                     }
-                }
+                    Host host = new Host();
+                    if (node != null) {
+                        host.setHostname(node.getHostname());
+                        if (node.getPrivateAddresses().iterator().hasNext()) {
+                            host.setPrivateIp(node.getPrivateAddresses().iterator().next());
+                        }
+                        if (node.getPublicAddresses().iterator().hasNext()) {
+                            host.setPublicIp(node.getPublicAddresses().iterator().next());
+                        }
+                        String nodeId = node.getId();
+                        host.setHostId(nodeId.replaceFirst("/", "-"));
 
+                        hostEJB.storeHost(host, true);
+                    }
+                    progressEJB.updateCreateProgress(group.getSecurityGroup(), node.getId(), i++);
+                }
 
             }
             status = true;
@@ -387,6 +392,10 @@ public final class ClusterProvision {
         }
     }
 
+    /*
+     * In EC2 seems to work, Openstack seems to have issues
+     *  @beta version
+     */
     public boolean parallelLaunchNodesBasicSetup(Cluster cluster) {
         boolean status = true;
 
@@ -441,11 +450,11 @@ public final class ClusterProvision {
             return status;
         }
     }
+
     /*
      * Method for the install phase
      * 
      */
-
     public void installPhase() {
         //We specify a thread pool with the same number of nodes in the system and resources are
         //Total Nodes*2
@@ -491,54 +500,43 @@ public final class ClusterProvision {
         //launch mgms
         Set<NodeMetadata> groupLaunch = mgms.keySet();
         messages.addMessage("Configuring mgm nodes");
-        try {
-            progressEJB.updatePhaseProgress(groupLaunch, DeploymentPhase.CONFIGURE);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error Updating Database");
-        }
+
+        //Update view state to configure
+        persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, mgms, scriptBuilder, RETRIES);
+        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+
         //launch ndbs
         groupLaunch = ndbs.keySet();
         messages.addMessage("Configuring ndb nodes");
-        try {
-            progressEJB.updatePhaseProgress(groupLaunch, DeploymentPhase.CONFIGURE);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error Updating Database");
-        }
+
+        persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, ndbs, scriptBuilder, RETRIES);
+        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+
         //launch mysqlds
         groupLaunch = mysqlds.keySet();
         messages.addMessage("Configuring mysqld nodes");
-        try {
-            progressEJB.updatePhaseProgress(groupLaunch, DeploymentPhase.CONFIGURE);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error Updating Database");
-        }
+
+        persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, mysqlds, scriptBuilder, RETRIES);
+        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+
         //launch namenodes
         groupLaunch = namenodes.keySet();
         messages.addMessage("Configuring namenodes");
-        try {
-            progressEJB.updatePhaseProgress(groupLaunch, DeploymentPhase.CONFIGURE);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error Updating Database");
-        }
+
+        persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, namenodes, scriptBuilder, RETRIES);
+        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+
         //launch datanodes
         groupLaunch = datanodes.keySet();
         messages.addMessage("Configuring datanodes");
-        try {
-            progressEJB.updatePhaseProgress(groupLaunch, DeploymentPhase.CONFIGURE);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error Updating Database");
-        }
+
+        persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, datanodes, scriptBuilder, RETRIES);
-     
+        persistState(groupLaunch, DeploymentPhase.COMPLETE);
     }
 
     /*
@@ -635,7 +633,8 @@ public final class ClusterProvision {
      * For openstack we override the need to generate a key pair and the user used by the image to login
      * EC2 jclouds detects the login by default
      */
-    private void selectProviderTemplateOptions(Cluster cluster, TemplateBuilder kthfsTemplate, JHDFSScriptBuilder script) {
+    private void selectProviderTemplateOptions(Cluster cluster, TemplateBuilder kthfsTemplate,
+            JHDFSScriptBuilder script) {
 
         StatementList bootstrap = new StatementList(script);
         switch (provider) {
@@ -691,65 +690,126 @@ public final class ClusterProvision {
         return template;
     }
 
-    private void nodePhase(Set<NodeMetadata> nodes, Map<NodeMetadata, List<String>> map, JHDFSScriptBuilder.Builder scriptBuilder, int retries) {
-        if (!nodes.isEmpty() && retries != 0) {
-            //Initialize countdown latch
-            latch = new CountDownLatch(nodes.size());
-            pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
-            Iterator<NodeMetadata> iter = nodes.iterator();
+    private void nodePhase(Set<NodeMetadata> nodes, Map<NodeMetadata, List<String>> map,
+            JHDFSScriptBuilder.Builder scriptBuilder, int retries) {
+        //Iterative Approach
+        pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
+        while (!pendingNodes.isEmpty() && retries != 0) {
+            latch = new CountDownLatch(pendingNodes.size());
+            Iterator<NodeMetadata> iter = pendingNodes.iterator();
             while (iter.hasNext()) {
                 final NodeMetadata node = iter.next();
                 List<String> ips = new LinkedList(node.getPrivateAddresses());
                 //Listenable Future
-                JHDFSScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node));
+                String nodeId = node.getId();
+                JHDFSScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node), nodeId.replaceFirst("/", "-"));
                 ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
                         RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
                 future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
                         future), pool);
             }
             try {
-                //wait for all the works to finish, 45 min estimated for each node +60 min extra margin to give
+                //wait for all the works to finish, 25 min estimated for each node +30 min extra margin to give
                 //some extra time.
                 latch.await(25 * nodes.size() + 60, TimeUnit.MINUTES);
                 messages.addMessage("Launch phase complete...");
+                //error 129 openstack
+//                    if (!pendingNodes.isEmpty()) {
+//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+//                        //Mark the nodes that are been reinstalled
+//                        persistState(remain, DeploymentPhase.RETRYING);
+//                        --retries;
+//                    }
             } catch (InterruptedException e) {
 
-                if (!pendingNodes.isEmpty()) {
-
-                    Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-                    //Mark the nodes that are been reprovisioned
-                    try {
-                        progressEJB.updatePhaseProgress(remain, DeploymentPhase.RETRYING);
-                    } catch (Exception y) {
-                        y.printStackTrace();
-                        System.out.println("Error updating Database");
-                    }
-                    nodePhase(remain, map, scriptBuilder, --retries);
-                }
+//                    if (!pendingNodes.isEmpty()) {
+//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+//                        //Mark the nodes that are been reinstalled
+//                        persistState(remain, DeploymentPhase.RETRYING);
+//                        --retries;
+//                    }
                 e.printStackTrace();
             } finally {
-                //Mark the completed nodes in the view
+                //Update the nodes that have finished the install phase
+                if (!pendingNodes.isEmpty()) {
+                    Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+                    //Mark the nodes that are been reinstalled
+                    persistState(remain, DeploymentPhase.RETRYING);
+                    System.out.println("Retrying");
+                    --retries;
+                }
                 try {
                     nodes.removeAll(pendingNodes);
-                    progressEJB.updatePhaseProgress(nodes, DeploymentPhase.COMPLETE);
+                    persistState(nodes, DeploymentPhase.WAITING);
                 } catch (Exception e) {
                     e.printStackTrace();
                     System.out.println("Error updating Database");
                 }
             }
 
+//        if (!nodes.isEmpty() && retries != 0) {
+//            //Initialize countdown latch
+//            latch = new CountDownLatch(nodes.size());
+//            pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
+//            Iterator<NodeMetadata> iter = nodes.iterator();
+//            while (iter.hasNext()) {
+//                final NodeMetadata node = iter.next();
+//                List<String> ips = new LinkedList(node.getPrivateAddresses());
+//                //Listenable Future
+//                String nodeId = node.getId();
+//                JHDFSScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node), nodeId.replaceFirst("/", "-"));
+//                ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
+//                        RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
+//                future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
+//                        future), pool);
+//            }
+//            try {
+//                //wait for all the works to finish, 45 min estimated for each node +60 min extra margin to give
+//                //some extra time.
+//                latch.await(25 * nodes.size() + 60, TimeUnit.MINUTES);
+//                messages.addMessage("Launch phase complete...");
+//                //error openstack 126
+//                if (!pendingNodes.isEmpty()) {
+//
+//                    Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+//                    //Mark the nodes that are been reprovisioned
+//                    persistState(remain, DeploymentPhase.RETRYING);
+//                    nodePhase(remain, map, scriptBuilder, --retries);
+//                }
+//            } catch (InterruptedException e) {
+//
+//                if (!pendingNodes.isEmpty()) {
+//
+//                    Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+//                    //Mark the nodes that are been reprovisioned
+//                    persistState(remain, DeploymentPhase.RETRYING);
+//                    nodePhase(remain, map, scriptBuilder, --retries);
+//                }
+//                e.printStackTrace();
+//            } finally {
+//                //Mark the completed nodes in the view
+//                try {
+//                    nodes.removeAll(pendingNodes);
+//                    progressEJB.updatePhaseProgress(nodes, DeploymentPhase.WAITING);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    System.out.println("Error updating Database");
+//                }
+//            }
+//
+//        }
         }
     }
 
     private void nodeInstall(Set<NodeMetadata> nodes, JHDFSScriptBuilder.Builder scriptBuilder, int retries) {
-        if (!nodes.isEmpty() && retries != 0) {
+        //Iterative Approach
+        pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
+        while (retries != 0 && !pendingNodes.isEmpty()) {
             //Initialize countdown latch
-            latch = new CountDownLatch(nodes.size());
-            pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
-            Iterator<NodeMetadata> iter = nodes.iterator();
+            latch = new CountDownLatch(pendingNodes.size());
+            Iterator<NodeMetadata> iter = pendingNodes.iterator();
             while (iter.hasNext()) {
                 final NodeMetadata node = iter.next();
-//                List<String> ips = new LinkedList(node.getPrivateAddresses());
                 //Listenable Future
                 JHDFSScriptBuilder script = scriptBuilder.build();
                 ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
@@ -758,29 +818,35 @@ public final class ClusterProvision {
                 future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
                         future), pool);
             }
-
             try {
                 //wait for all the works to finish, 25 min estimated for each node +30 min extra margin to give
                 //some extra time.
                 latch.await(25 * nodes.size() + 60, TimeUnit.MINUTES);
                 messages.addMessage("Install phase complete...");
+                //error 129 openstack
+//                    if (!pendingNodes.isEmpty()) {
+//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+//                        //Mark the nodes that are been reinstalled
+//                        persistState(remain, DeploymentPhase.RETRYING);
+//                        --retries;
+//                    }
             } catch (InterruptedException e) {
 
-                if (!pendingNodes.isEmpty()) {
-
-                    Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-                    //Mark the nodes that are been reinstalled
-                    try {
-                        progressEJB.updatePhaseProgress(remain, DeploymentPhase.RETRYING);
-                    } catch (Exception y) {
-                        y.printStackTrace();
-                        System.out.println("Error updating Database");
-                    }
-                    nodeInstall(remain, scriptBuilder, --retries);
-                }
+//                    if (!pendingNodes.isEmpty()) {
+//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+//                        //Mark the nodes that are been reinstalled
+//                        persistState(remain, DeploymentPhase.RETRYING);
+//                        --retries;
+//                    }
                 e.printStackTrace();
             } finally {
                 //Update the nodes that have finished the install phase
+                if (!pendingNodes.isEmpty()) {
+                    Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+                    //Mark the nodes that are been reinstalled
+                    persistState(remain, DeploymentPhase.RETRYING);
+                    --retries;
+                }
                 try {
                     nodes.removeAll(pendingNodes);
                     progressEJB.updatePhaseProgress(nodes, DeploymentPhase.WAITING);
@@ -789,6 +855,74 @@ public final class ClusterProvision {
                     System.out.println("Error updating Database");
                 }
             }
+
+        }
+
+
+
+//            if (!nodes.isEmpty() && retries != 0) {
+//                //Initialize countdown latch
+//                latch = new CountDownLatch(nodes.size());
+//                pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
+//                Iterator<NodeMetadata> iter = nodes.iterator();
+//                while (iter.hasNext()) {
+//                    final NodeMetadata node = iter.next();
+////                List<String> ips = new LinkedList(node.getPrivateAddresses());
+//                    //Listenable Future
+//                    JHDFSScriptBuilder script = scriptBuilder.build();
+//                    ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
+//                            RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
+////              
+//                    future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
+//                            future), pool);
+//                }
+//
+//                try {
+//                    //wait for all the works to finish, 25 min estimated for each node +30 min extra margin to give
+//                    //some extra time.
+//                    latch.await(25 * nodes.size() + 60, TimeUnit.MINUTES);
+//                    messages.addMessage("Install phase complete...");
+//                    //error 126 openstack
+//                    if (!pendingNodes.isEmpty()) {
+//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+//                        //Mark the nodes that are been reinstalled
+//                        persistState(remain, DeploymentPhase.RETRYING);
+//
+//                        nodeInstall(remain, scriptBuilder, --retries);
+//                    }
+//                } catch (InterruptedException e) {
+//
+//                    if (!pendingNodes.isEmpty()) {
+//
+//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+//                        //Mark the nodes that are been reinstalled
+//                        persistState(remain, DeploymentPhase.RETRYING);
+//
+//                        nodeInstall(remain, scriptBuilder, --retries);
+//                    }
+//                    e.printStackTrace();
+//                } finally {
+//                    //Update the nodes that have finished the install phase
+//                    try {
+//                        nodes.removeAll(pendingNodes);
+//                        progressEJB.updatePhaseProgress(nodes, DeploymentPhase.WAITING);
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                        System.out.println("Error updating Database");
+//                    }
+//                }
+//            }
+    }
+
+    /*
+     * Persist state
+     */
+    private void persistState(Set<NodeMetadata> groupLaunch, DeploymentPhase phase) {
+        try {
+            progressEJB.updatePhaseProgress(groupLaunch, phase);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error Updating Database");
         }
     }
 

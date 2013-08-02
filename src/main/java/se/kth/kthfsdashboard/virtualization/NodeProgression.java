@@ -18,16 +18,16 @@ import javax.persistence.Table;
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @Entity
-@Table(name="NodeProgress")
+@Table(name = "NodeProgress")
 @NamedQueries({
     @NamedQuery(name = "NodeProgression.findAll", query = "SELECT c FROM NodeProgression c"),
-    @NamedQuery(name ="NodeProgression.findAllInGroup", query = "SELECT c FROM NodeProgression"
-        + " c WHERE c.nodeId = :nodeIdREGEX"),
-        @NamedQuery(name="NodeProgression.findNodeByNodeID", query= 
-        "SELECT c FROM NodeProgression c WHERE c.nodeId = :id")
-       
+    @NamedQuery(name = "NodeProgression.findAllInGroup", query = "SELECT c FROM NodeProgression"
+    + " c WHERE c.nodeId = :nodeIdREGEX"),
+    @NamedQuery(name = "NodeProgression.findNodeByNodeID", query =
+    "SELECT c FROM NodeProgression c WHERE c.nodeId = :nodeId")
 })
 public class NodeProgression implements Serializable {
+
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -37,8 +37,7 @@ public class NodeProgression implements Serializable {
     private String nodeRole;
     private String phase;
     private String previousPhase;
-    
-    
+
     public Long getId() {
         return id;
     }
@@ -82,12 +81,10 @@ public class NodeProgression implements Serializable {
     public void setPreviousPhase(String previousPhase) {
         this.previousPhase = previousPhase;
     }
-    
-     
 
     public void setPhase(String phase) {
         this.phase = phase;
-    }   
+    }
 
     @Override
     public int hashCode() {
@@ -96,6 +93,7 @@ public class NodeProgression implements Serializable {
         hash += (cluster != null ? cluster.hashCode() : 0);
         hash += (nodeRole != null ? nodeRole.hashCode() : 0);
         hash += (phase != null ? phase.hashCode() : 0);
+        hash += (previousPhase != null ? previousPhase.hashCode() : 0);
         hash += (nodeId != null ? nodeId.hashCode() : 0);
         return hash;
     }
@@ -110,12 +108,32 @@ public class NodeProgression implements Serializable {
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
+        if ((this.cluster == null && other.cluster != null)
+                || (this.cluster != null && !this.cluster.equals(other.cluster))) {
+            return false;
+        }
+        if ((this.nodeRole == null && other.nodeRole != null)
+                || (this.nodeRole != null && !this.nodeRole.equals(other.nodeRole))) {
+            return false;
+        }
+        if ((this.phase == null && other.phase != null)
+                || (this.phase != null && !this.phase.equals(other.phase))) {
+            return false;
+        }
+        if ((this.previousPhase == null && other.previousPhase != null)
+                || (this.previousPhase != null && !this.previousPhase.equals(other.previousPhase))) {
+            return false;
+        }
+         if ((this.nodeId == null && other.nodeId != null) || 
+                 (this.nodeId != null && !this.nodeId.equals(other.nodeId))) {
+            return false;
+        }
         return true;
     }
 
     @Override
     public String toString() {
-        return "se.kth.kthfsdashboard.virtualization.nodeProgression[ id=" + id + " ]";
+        return "NodeProgression{" + "id=" + id + ", cluster=" + cluster + ", nodeId=" + nodeId
+                + ", nodeRole=" + nodeRole + ", phase=" + phase + ", previousPhase=" + previousPhase + '}';
     }
-    
 }
