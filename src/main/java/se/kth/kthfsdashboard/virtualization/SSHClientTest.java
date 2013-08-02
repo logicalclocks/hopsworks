@@ -16,22 +16,23 @@ import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
 import static com.google.common.base.Charsets.UTF_8;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
+import org.jclouds.scriptbuilder.domain.OsFamily;
 
 /**
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class SSHClientTest {
-    
+
     private SSHClient client;
     private KeyProvider keys;
-    
+
     public static void main(String[] args) throws IOException {
         SSHClientTest test = new SSHClientTest();
         test.init();
-        test.startRunSSHCommand("193.10.64.126", "ubuntu");
+        test.startRunSSHCommand("193.10.64.127", "ubuntu");
     }
-    
+
     public void init() {
         client = new SSHClient();
 //        String publicKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDJwbktwUvTf1pKAL6TaGqZhD"
@@ -57,32 +58,50 @@ public class SSHClientTest {
 //                + "Ol6Nod4yjHi+dvcOuaFLBnl3eX2m8TXbkEnOEaYan3O56Q=="
 //                + "-----END RSA PRIVATE KEY-----";
 
-        
+
         try {
             client.loadKnownHosts(new File(System.getProperty("user.home") + "/.ssh/known_hosts"));
-          client.addHostKeyVerifier(new PromiscuousVerifier());
+            client.addHostKeyVerifier(new PromiscuousVerifier());
 //            String publicKey = Files.toString(
 //                    new File(System.getProperty("user.home") + "/.ssh/gitkey.pub"), UTF_8);
             String privateKey = Files.toString(
                     new File(System.getProperty("user.home") + "/Downloads/hortonnodes.pem"), UTF_8);
-            keys = client.loadKeys(privateKey,null, null);
-            
-            
+            keys = client.loadKeys(privateKey, null, null);
+
+
         } catch (IOException e) {
             System.out.println("Dafuq!!!!!");
         }
     }
-    
+
     public void startRunSSHCommand(String host, String user) throws IOException {
+        String publicKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDJwbktwUvTf1pKAL6TaGqZhD"
+                + "9sMQ0irG+9XHaKVVmg1Z970GYaojtgm/a56zQd1OCfoijVaVTLNJjNXAjbFSR8sg89+hSbf0S"
+                + "qhzWF5Xb99UbIDe48ZdhrKDqbCNIadUUMgbvbG7mziCtWUsDYP7rwskih4mVO09lK6ecXY"
+                + "c/RMsp09bnLf6TrM9JNJErQR0w8XsqI/TxMovjiBsOQH1TopdbrLRymVoBT/GGjgjy6Yy/yAJwqG"
+                + "c66ZsM1kIN0F32l5w8fiflesASGQyGxUutoCAgkpYY3DYlt7hdJXhTP/wuWCoI6zHWNCkYT8FG"
+                + "CPTVn650WZY9hR1Zn3Ycn4rlH a.lorenteleal@gmail.com";
         client.connect(host);
-        
+
         client.authPublickey(user, keys);
         try {
             final Session session = client.startSession();
             try {
-                final Command cmd = session.exec("ping -c 1 google.com");
+                JHDFSScriptBuilder initScript = JHDFSScriptBuilder.builder()
+                        .scriptType(JHDFSScriptBuilder.ScriptType.INIT)
+                        .publicKey(publicKey)
+                        .build();
+                System.out.println(initScript.render(OsFamily.UNIX));
+//                Command cmd = session.exec("sudo echo " +"'"+"#!/bin/bash\n"+initScript.render(OsFamily.UNIX)+
+//                "'"+" >> " +" ~/initScript.sh");
+                final Command cmd = session.exec(initScript.render(OsFamily.UNIX));
                 System.out.println(IOUtils.readFully(cmd.getInputStream()).toString());
-                cmd.join(5, TimeUnit.SECONDS);
+//                cmd.join(36000, TimeUnit.SECONDS);
+//                cmd=session.exec("chmod u+x initScript.sh");
+//                System.out.println(IOUtils.readFully(cmd.getInputStream()).toString());
+//                cmd.join(36000, TimeUnit.SECONDS);
+//                cmd=session.exec("./initScript.sh");
+//                cmd.join(36000, TimeUnit.SECONDS);
                 System.out.println("\n** exit status: " + cmd.getExitStatus());
             } finally {
                 session.close();

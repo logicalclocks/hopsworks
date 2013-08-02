@@ -198,15 +198,15 @@ public class JHDFSScriptBuilder implements Statement {
         ImmutableList.Builder<Statement> statements = ImmutableList.builder();
         switch (scriptType) {
             case INIT:
-                statements.add(exec("sudo apt-key update -qq;"));
+                statements.add(exec("sudo dpkg --configure -a"));
                 statements.add(exec("sudo apt-get update;"));
                 List<String> keys = new ArrayList();
                 keys.add(key);
                 statements.add(new AuthorizeRSAPublicKeys(keys));
-                statements.add(exec("sudo apt-get update;"));
-                statements.add(exec("sudo apt-get install make;"));
+//                statements.add(exec("sudo apt-get update;"));
+                statements.add(exec("sudo apt-get install -f -y --force-yes make;"));
                 statements.add(exec("sudo apt-get install -f -y -qq --force-yes ruby1.9.1-full;"));
-                statements.add(exec("sudo apt-get install git;"));
+                statements.add(exec("sudo apt-get install -f -y --force-yes git;"));
                 statements.add(InstallRubyGems.builder()
                         .version("1.8.10")
                         .build());
@@ -216,8 +216,8 @@ public class JHDFSScriptBuilder implements Statement {
                 
                
                 
-                statements.add(exec("sudo apt-get update;"));
-                statements.add(exec("sudo apt-get install -y git;"));
+//                statements.add(exec("sudo apt-get update;"));
+//                statements.add(exec("sudo apt-get install -y git;"));
                 statements.add(exec("sudo mkdir /etc/chef;"));
                 statements.add(exec("cd /etc/chef;"));
                 statements.add(exec("sudo wget http://lucan.sics.se/kthfs/solo.rb;"));
