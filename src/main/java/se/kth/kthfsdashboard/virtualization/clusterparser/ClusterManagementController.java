@@ -240,6 +240,7 @@ public class ClusterManagementController implements Serializable {
     public String proceedCreateWizard() {
         cluster = new Cluster();
         cluster.getProvider().setImage("eu-west-1/ami-ffcdce8b");
+        cluster.setInstallPhase(false);
         return "createClusterWizard";
     }
 

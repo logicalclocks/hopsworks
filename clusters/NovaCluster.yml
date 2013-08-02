@@ -16,8 +16,7 @@
     loginUser: ubuntu
     image: 0190f9c4-d64e-4412-ab88-4f9fd1d7c2e3
     region: RegionSICS
-
-  ##lists of service, we define a service with the number of instances and roles?  
+    zones: []
   nodes:
   - securityGroup: ndb
     number: 2

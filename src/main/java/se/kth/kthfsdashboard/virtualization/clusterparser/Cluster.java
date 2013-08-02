@@ -10,17 +10,9 @@ import javax.persistence.*;
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-//@Entity
-//@Table(name= "Clusters")
-//@NamedQueries({
-//   @NamedQuery(name = "Clusters.findAll", query = "SELECT c FROM Cluster c")   
-//})
+
 public class Cluster implements Serializable{
-//    @Id
-//    @GeneratedValue(strategy= GenerationType.AUTO)
-//    @Column(name="CLUSTER_ID")
-//    private Long id;
-//    @Column(name="CLUSTER_NAME")
+
     private String name;
     private String environment;
     private boolean installPhase;
@@ -28,11 +20,11 @@ public class Cluster implements Serializable{
     private List<String> authorizePorts=new ArrayList<String>();
     private List<Integer> authorizeSpecificPorts=new ArrayList<Integer>();
     
-//    @Embedded 
+
     private Provider provider = new Provider();
-//    @OneToMany (cascade=CascadeType.PERSIST, mappedBy="cluster")
+
     private List<NodeGroup> nodes = new ArrayList<NodeGroup>();
-//    @OneToMany (cascade= CascadeType.PERSIST, mappedBy="cluster")
+
     private List<ChefAttributes> chefAttributes= new ArrayList<ChefAttributes>();
 
     public List<String> getGlobalServices() {

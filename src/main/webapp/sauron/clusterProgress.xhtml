@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:fn="http://java.sun.com/jsp/jstl/functions" 
+      xmlns:c="http://java.sun.com/jsp/jstl/core" >
+    <ui:composition template="layout.xhtml">
+
+        <ui:define name="title">
+            #{settingsController.name} - Cluster Setup
+        </ui:define>
+        <ui:define name="css"/>
+        <ui:define name="scripts"/>
+        <ui:define name="content">
+            <!--Navigation Bar - Begin -->
+            <h:form styleClass="styleNav">
+                <p:panelGrid>  
+                    <p:row>  
+                        <p:column>
+                            <h:outputText value="Deployment"/>
+                        </p:column>
+                    </p:row>
+                </p:panelGrid>
+            </h:form>
+
+            <div class="services-header">Deployment Progress:</div>
+            <p:panel header="Ongoing Deployments">  
+                <h:form id="clusterProgressForm">  
+
+                    <p:growl id="messages"/>  
+                    <p:poll id="tableUpdate" async="true" update="deploymentTable" autoStart="true" 
+                            process="@this" interval="15"/>
+                    <p:dataTable id="deploymentTable" var="node" value="#{nodeProgressionController.nodes}" 
+                                 rowStyleClass="#{node.phase=='Complete' ? 'complete' : 
+                                                  node.phase=='Error'? 'error':
+                                                  node.phase=='Waiting'?'pending':null}">
+
+                        <p:column>  
+                            <f:facet name="header">
+                                Cluster Name
+                            </f:facet> 
+                            <h:outputText value="#{node.cluster}"/>
+                        </p:column> 
+
+                        <p:column>
+                            <f:facet name="header">
+                                NodeID
+                            </f:facet>
+                            <h:outputText value="#{node.nodeId}"/>
+                        </p:column>
+
+                        <p:column>
+                            <f:facet name="header">
+                                Roles
+                            </f:facet>
+                            <h:outputText value="#{node.role}"/>
+                        </p:column>   
+                        <p:column>
+                            <f:facet name="header">
+                                Progress
+                            </f:facet>
+
+                            <p:progressBar id="progressBarClient" widgetVar="pbClient" style="width:300px"
+                                           value="#{nodeProgressionController.progress(node)}"
+                                           labelTemplate="{value}%" styleClass="animated"
+                                           />
+
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                Phase
+                            </f:facet>
+                            <h:outputText value="#{node.phase}"/>
+                        </p:column>
+                        <f:facet name="footer">
+                            In total there are #{fn:length(nodeProgressionController.nodes)} nodes deploying.
+                        </f:facet>
+                    </p:dataTable>  
+                </h:form> 
+            </p:panel>
+            <p:spacer width="1" height="8" />
+        </ui:define>
+    </ui:composition>
+</html>
+

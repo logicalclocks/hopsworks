@@ -15,36 +15,36 @@ import org.jclouds.compute.domain.NodeMetadata;
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-public class nodeStatusTracker implements Runnable {
+public class NodeStatusTracker implements Runnable {
 
     private final NodeMetadata launchingNode;
     private final CountDownLatch latch;
     private final CopyOnWriteArraySet<NodeMetadata> pendingNodes;
     private ListenableFuture<ExecResponse> future;
-    private MessageController debug;
-    private boolean debugger;
 
-    public nodeStatusTracker(NodeMetadata launchingNode, CountDownLatch latch,
-            CopyOnWriteArraySet<NodeMetadata> pendingNodes, ListenableFuture<ExecResponse> future
-            ,MessageController debug, boolean debugger) {
+    public NodeStatusTracker(NodeMetadata launchingNode, CountDownLatch latch,
+            CopyOnWriteArraySet<NodeMetadata> pendingNodes, ListenableFuture<ExecResponse> future) {
         this.launchingNode = launchingNode;
         this.latch = latch;
         this.pendingNodes = pendingNodes;
         this.future = future;
-        this.debug=debug;
-        this.debugger=debugger;
+
     }
 
     @Override
     public void run() {
         try {
             ExecResponse contents = future.get();
-            latch.countDown();
-            //...process 
-            if(debugger){
-                debug.addDebugMessage(contents.getOutput());
+            System.out.println(contents.getExitStatus());
+            if (contents.getExitStatus() <110) {
+                pendingNodes.remove(launchingNode);
+                System.out.println("Removing Node, script executed succesfully");
             }
-            pendingNodes.remove(launchingNode);
+            latch.countDown();
+
+            //...process ssh module apache ambari
+
+
         } catch (InterruptedException e) {
             System.out.println("Interrupted" + e);
         } catch (ExecutionException e) {

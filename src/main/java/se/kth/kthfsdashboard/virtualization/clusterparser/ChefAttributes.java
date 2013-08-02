@@ -12,43 +12,17 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
-
 /**
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-//@Entity
-public class ChefAttributes implements Serializable{
-//    @Id
-//    @GeneratedValue(strategy= GenerationType.AUTO)
-//    private Long id;
+public class ChefAttributes implements Serializable {
+
     private String role;
     private String chefJson;
-//    @ManyToOne
-//    @JoinColumn(name="CLUSTER_ID")
-//    private Cluster cluster;
 
     public ChefAttributes() {
     }
-           
-//    public Long getId() {
-//        return id;
-//    }
-//
-//    public void setId(Long id) {
-//        this.id = id;
-//    }
-
-    
-//    public Cluster getCluster() {
-//        return cluster;
-//    }
-//
-//    public void setCluster(Cluster cluster) {
-//        this.cluster = cluster;
-//    }
-    
-    
 
     public String getRole() {
         return role;
@@ -70,6 +44,4 @@ public class ChefAttributes implements Serializable{
     public String toString() {
         return "ChefAttributes{" + "role=" + role + ", chefJson=" + chefJson + '}';
     }
-       
-    
 }
