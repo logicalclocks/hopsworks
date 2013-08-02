@@ -3,8 +3,10 @@ package se.kth.kthfsdashboard.role;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NamedQuery;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.struct.RoleHostInfo;
 import se.kth.kthfsdashboard.struct.Status;
@@ -94,20 +96,6 @@ public class RoleEJB {
       return query.getSingleResult();
    }   
 
-//   public Long countStatus(String cluster, String service, String role, Status status) {
-//      TypedQuery<Long> query = em.createNamedQuery("Role.CountBy-Cluster-Service-Role-Status", Long.class)
-//              .setParameter("cluster", cluster).setParameter("service", service)
-//              .setParameter("role", role).setParameter("status", status);
-//      return query.getSingleResult();
-//   }
-   
-//   public List<StatusCount> countStatus(String cluster, String service, String role) {
-//      TypedQuery<StatusCount> query = em.createNamedQuery("Role.findStatusCountBy-Cluster-Group-Role", StatusCount.class)
-//              .setParameter("cluster", cluster).setParameter("service", service)
-//              .setParameter("role", role);
-//      return query.getResultList();
-//   }
-
    public List<RoleHostInfo> findRoleHost(String cluster) {
       TypedQuery<RoleHostInfo> query = em.createNamedQuery("Role.findRoleHostBy-Cluster", RoleHostInfo.class)
               .setParameter("cluster", cluster);
@@ -153,6 +141,10 @@ public class RoleEJB {
       } else {
          em.persist(role);
       }
+   }
+   
+   public void deleteRolesByHostId(String hostId) {
+       em.createNamedQuery("Role.DeleteBy-HostId").setParameter("hostId", hostId).executeUpdate();
    }
 
 }

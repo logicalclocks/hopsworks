@@ -33,7 +33,9 @@ import se.kth.kthfsdashboard.struct.Status;
    @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service"),
    @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service-Role", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),
    @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service-Role-Host", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.hostId = :hostid"),
-        
+
+   @NamedQuery(name = "Role.DeleteBy-HostId", query = "DELETE FROM Role r WHERE r.hostId = :hostId"),
+
 })
 
 public class Role implements Serializable {

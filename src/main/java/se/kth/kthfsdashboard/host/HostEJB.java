@@ -38,7 +38,7 @@ public class HostEJB {
       TypedQuery<Host> query = em.createNamedQuery("findHostById", Host.class).setParameter("id", id);
       List<Host> result = query.getResultList();
       if (result.isEmpty()) {
-          throw new Exception("NoResultException");
+          return null;
       } else if (result.size() == 1) {
          return result.get(0);
       } else {
