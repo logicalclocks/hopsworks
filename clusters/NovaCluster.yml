@@ -3,6 +3,7 @@
 !!se.kth.kthfsdashboard.virtualization.clusterparser.Cluster
   name: test
   environment: dev
+  installPhase: false
   globalServices: 
     [ssh, chefClient]
   authorizePorts:
@@ -11,12 +12,11 @@
     [3306, 4343, 3321]
   provider:
     name: openstack-nova
-    instanceType: 4
+    instanceType: 7
     loginUser: ubuntu
-    image: 281956fa-198e-4da9-9404-cd5c958318df
+    image: 0190f9c4-d64e-4412-ab88-4f9fd1d7c2e3
     region: RegionSICS
-
-  ##lists of service, we define a service with the number of instances and roles?  
+    zones: []
   nodes:
   - securityGroup: ndb
     number: 2

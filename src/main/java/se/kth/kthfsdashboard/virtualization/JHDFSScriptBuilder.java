@@ -51,6 +51,7 @@ public class JHDFSScriptBuilder implements Statement {
         private String key;
         private String privateIP;
         private String clusterName;
+        private String nodeId;
 
         /*
          * Define the type of script we are going to prepare
@@ -132,21 +133,26 @@ public class JHDFSScriptBuilder implements Statement {
             this.clusterName=name;
             return this;
         }
+        
+        public Builder nodeId(String id){
+            this.nodeId=id;
+            return this;
+        }
         /*
          * Default script build, use when defined all the other building options
          */
 
         public JHDFSScriptBuilder build() {
             return new JHDFSScriptBuilder(scriptType, ndbs, mgms, mysql, 
-                    namenodes, roles, nodeIP, key, privateIP,clusterName);
+                    namenodes, roles, nodeIP, nodeId, key, privateIP,clusterName);
         }
         /*
          * Same as default but in this case we include the ip during the build and the roles.
          */
 
-        public JHDFSScriptBuilder build(String ip, List<String> roles) {
+        public JHDFSScriptBuilder build(String ip, List<String> roles, String nodeId) {
             return new JHDFSScriptBuilder(scriptType, ndbs, mgms, mysql, 
-                    namenodes, roles, ip, key,privateIP,clusterName);
+                    namenodes, roles, ip, nodeId, key,privateIP,clusterName);
         }
     }
     
@@ -160,9 +166,10 @@ public class JHDFSScriptBuilder implements Statement {
     private String ip;
     private String privateIP;
     private String clusterName;
+    private String nodeId;
 
     protected JHDFSScriptBuilder(ScriptType scriptType, List<String> ndbs, List<String> mgms,
-            List<String> mysql, List<String> namenodes, List<String> roles, String ip, String key, 
+            List<String> mysql, List<String> namenodes, List<String> roles, String ip, String nodeId, String key, 
             String privateIP, String clusterName) {
         this.scriptType = scriptType;
         this.ndbs = ndbs;
@@ -174,6 +181,7 @@ public class JHDFSScriptBuilder implements Statement {
         this.key = key;
         this.privateIP= privateIP;
         this.clusterName=clusterName;
+        this.nodeId=nodeId;
     }
 
     @Override
@@ -341,6 +349,7 @@ public class JHDFSScriptBuilder implements Statement {
         //namenodes ips
         
         json.append("\"cluster\":\"").append(clusterName).append("\",");
+        json.append("\"hostid\":\"").append(nodeId).append("\",");
         
         if(roleSet.contains("KTHFS-datanode")||roleSet.contains("KTHFS-namenode")){
             json.append("\"service\":\"").append("KTHFS").append("\",");

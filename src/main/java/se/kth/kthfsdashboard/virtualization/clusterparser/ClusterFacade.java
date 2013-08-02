@@ -14,13 +14,13 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @Stateless
-public class ClusterFacade extends AbstractFacade<Cluster> {
+public class ClusterFacade extends AbstractFacade<ClusterEntity> {
     
     @PersistenceContext(unitName="kthfsPU")
     private EntityManager em;
     
     public ClusterFacade(){
-        super(Cluster.class);
+        super(ClusterEntity.class);
         
     }
     
@@ -29,18 +29,21 @@ public class ClusterFacade extends AbstractFacade<Cluster> {
         return em;
     }
     
-    public void persistCluster(Cluster cluster){
+    public void persistCluster(ClusterEntity cluster){
         em.persist(cluster);
     }
     
-    public void removeCluster(Cluster cluster){
+    public void removeCluster(ClusterEntity cluster){
         em.remove(em.merge(cluster));
     }
     
     @Override
-     public List<Cluster> findAll() {
+     public List<ClusterEntity> findAll() {
 
-        TypedQuery<Cluster> query = em.createNamedQuery("Clusters.findAll", Cluster.class);
+        TypedQuery<ClusterEntity> query = em.createNamedQuery("ClustersEntity.findAll", ClusterEntity.class);
         return query.getResultList();
+    }
+    public void updateCluster(ClusterEntity cluster){
+        em.merge(cluster);
     }
 }

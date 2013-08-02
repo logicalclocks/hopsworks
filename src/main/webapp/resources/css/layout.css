@@ -40,10 +40,15 @@ body {
 }
 
 /*Credentials Form*/
-#computeCredentialsForm,#clusterForm{
+#computeCredentialsForm{
    width: 500px;
 }
-
+#clusterForm{
+    width: 800px;
+}
+ .launcherCenter{
+    position:absolute;
+}
 #launch{
    height: 500px;
 }
@@ -83,6 +88,16 @@ body {
    margin-left: -4px;
    margin-right: -4px;
    margin-bottom: -3px; /* -6? -8?*/
+}
+
+.complete{
+    background: #7ac527
+}
+.pending{
+    background: #f2b548
+}
+.error{
+    background: #fe574f
 }
 
 

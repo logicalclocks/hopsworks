@@ -12,6 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.ejb.Asynchronous;
+import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
@@ -28,7 +30,8 @@ import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
 import org.jclouds.scriptbuilder.domain.StatementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterProvisionController;
+import se.kth.kthfsdashboard.host.HostEJB;
+import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterManagementController;
 
 /**
  *
@@ -37,13 +40,16 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterProvisionContro
 @ManagedBean
 @SessionScoped
 public class VirtualizationController implements Serializable {
-
+    @EJB
+    private DeploymentProgressFacade deploymentFacade;
+    @EJB
+    private HostEJB hostEJB;
     @ManagedProperty(value = "#{messageController}")
     private MessageController messages;
     @ManagedProperty(value = "#{computeCredentialsMB}")
     private ComputeCredentialsMB computeCredentialsMB;
-    @ManagedProperty(value = "#{clusterProvisionController}")
-    private ClusterProvisionController clusterController;
+    @ManagedProperty(value = "#{clusterManagementController}")
+    private ClusterManagementController clusterController;
     private ClusterProvision virtualizer;
     private String provider;
     private String id;
@@ -54,12 +60,7 @@ public class VirtualizationController implements Serializable {
     private String keystoneEndpoint;
     private ComputeService service;
     private ComputeServiceContext context;
-    private Map<String, Set<? extends NodeMetadata>> nodes = new HashMap();
-    private Map<NodeMetadata, List<String>> first = new HashMap();
-    private Map<NodeMetadata, List<String>> rest = new HashMap();
-    private List<String> ndbs = new LinkedList();
-    private List<String> mgm = new LinkedList();
-    private List<String> mySQLClients = new LinkedList();
+    
 
     /**
      * Creates a new instance of VirtualizationController
@@ -75,11 +76,11 @@ public class VirtualizationController implements Serializable {
         this.computeCredentialsMB = computeCredentialsMB;
     }
 
-    public ClusterProvisionController getClusterController() {
+    public ClusterManagementController getClusterController() {
         return clusterController;
     }
 
-    public void setClusterController(ClusterProvisionController clusterController) {
+    public void setClusterController(ClusterManagementController clusterController) {
         this.clusterController = clusterController;
     }
 
@@ -114,30 +115,40 @@ public class VirtualizationController implements Serializable {
     public String getKeystoneEndpoint() {
         return keystoneEndpoint;
     }
+
+    public DeploymentProgressFacade getDeploymentProgressFacade(){
+        return deploymentFacade;
+    }
+
+    public HostEJB getHostEJB() {
+        return hostEJB;
+    }
     
 
     /*
      * Command to launch the instance
      */
+    @Asynchronous
     public void launchCluster() {
         setCredentials();
-        messages.addMessage("Setting up credentials and initializing virtualization context...");
+        //messages.addMessage("Setting up credentials and initializing virtualization context...");
         //service = initContexts();
         virtualizer = new ClusterProvision(this);
         virtualizer.createSecurityGroups(clusterController.getCluster());
-        if(virtualizer.launchNodesBasicSetup(clusterController.getCluster())){
+        if (virtualizer.launchNodesBasicSetup(clusterController.getCluster())) {
 //        if(virtualizer.parallelLaunchNodesBasicSetup(clusterController.getCluster())){
-            messages.addMessage("All nodes launched");
-            virtualizer.installPhase();
+            //messages.addMessage("All nodes launched");
+            if (clusterController.getCluster().isInstallPhase()) {
+                virtualizer.installPhase();
+            }
             virtualizer.deployingConfigurations(clusterController.getCluster());
-            messages.addSuccessMessage("Cluster launched");
+            //messages.addSuccessMessage("Cluster launched");
+        } else {
+            //messages.addSuccessMessage("Deployment failure");
         }
-        else{
-            messages.addSuccessMessage("Deployment failure");
-        }
-        
-        messages.clearMessages();
 
+        //messages.clearMessages();
+//        return "progress";
     }
 
     /*
@@ -165,7 +176,7 @@ public class VirtualizationController implements Serializable {
             key = computeCredentialsMB.getOpenstackKey();
             keystoneEndpoint = computeCredentialsMB.getOpenstackKeystone();
         }
-        
+
         //Setup the private IP for the nodes to know where is the dashboard
         //Add public key for managing nodes using ssh.
         privateIP = computeCredentialsMB.getPrivateIP();
@@ -179,7 +190,8 @@ public class VirtualizationController implements Serializable {
      * For openstack we override the need to generate a key pair and the user used by the image to login
      * EC2 jclouds detects the login by default
      */
-    private void selectProviderTemplateOptions(String provider, TemplateBuilder kthfsTemplate, JHDFSScriptBuilder script) {
+    private void selectProviderTemplateOptions(String provider, TemplateBuilder kthfsTemplate,
+            JHDFSScriptBuilder script) {
         Provider check = Provider.fromString(provider);
         StatementList bootstrap = new StatementList(script);
         switch (check) {

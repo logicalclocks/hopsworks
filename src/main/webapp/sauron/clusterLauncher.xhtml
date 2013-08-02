@@ -29,69 +29,75 @@
                 </p:panelGrid>
             </h:form>
             <!--Navigation Bar - End-->
+            <p:blockUI block=":launchForm:centerStatus" trigger=":launchForm:startCluster">
+                <h:panelGrid id="blockContent" columns="2" >
+                    <div class="windows8" >
+                        <div class="wBall" id="wBall_1">
+                            <div class="wInnerBall">
+                            </div>
+                        </div>
+                        <div class="wBall" id="wBall_2">
+                            <div class="wInnerBall">
+                            </div>
+                        </div>
+                        <div class="wBall" id="wBall_3">
+                            <div class="wInnerBall">
+                            </div>
+                        </div>
+                        <div class="wBall" id="wBall_4">
+                            <div class="wInnerBall">
+                            </div>
+                        </div>
+                        <div class="wBall" id="wBall_5">
+                            <div class="wInnerBall">
+                            </div>
+                        </div>
+                    </div>
+                    <h:outputLabel id="statusCreate" value="#{virtualizationController.messages.showMessage()}" 
+                                   />
 
+                </h:panelGrid>
+            </p:blockUI>
 
             <div id="content" align="center">
                 <div class="services-header">Cluster Launcher:</div>
 
                 <div id="launchLayout">
-                    <p:layout  id="launch" fullPage="false">
-                        <p:layoutUnit id="launcher" position="west" size="350" header="Cluster Details" resizable="false" closable="false" collapsible="false" >
-                            <h:form id="launchForm">
+                    <h:form id="launchForm">
+                        <p:layout  id="launch" fullPage="false" style="height: 500px;">
+                            <p:layoutUnit id="launcher" position="west" size="300"  header="Cluster Details" resizable="false" closable="false" collapsible="false" >
+
                                 <ui:include src="/sauron/template/clusterDescription.xhtml"/>
                                 <br/>
-                                
+
                                 <p:commandButton id="startCluster" value="startCluster" 
-                                                 action="#{virtualizationController.launchCluster()}"
+                                                 actionListener="#{virtualizationController.launchCluster()}"
+                                                 action="progress"
                                                  update="success"
                                                  onclick="pollCreate.start();"
                                                  onerror="pollCreate.stop();"
                                                  oncomplete="pollCreate.stop();"/>
-                                
-                                
+
+
                                 <p:growl id="success" showDetail="true" sticky="true" />
 
-                                <p:blockUI block=":centerStatus" trigger=":launchForm:startCluster">
-                                    <h:panelGrid id="blockContent" columns="2" >
-                                        <div class="windows8" >
-                                            <div class="wBall" id="wBall_1">
-                                                <div class="wInnerBall">
-                                                </div>
-                                            </div>
-                                            <div class="wBall" id="wBall_2">
-                                                <div class="wInnerBall">
-                                                </div>
-                                            </div>
-                                            <div class="wBall" id="wBall_3">
-                                                <div class="wInnerBall">
-                                                </div>
-                                            </div>
-                                            <div class="wBall" id="wBall_4">
-                                                <div class="wInnerBall">
-                                                </div>
-                                            </div>
-                                            <div class="wBall" id="wBall_5">
-                                                <div class="wInnerBall">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <h:outputLabel id="statusCreate" value="#{virtualizationController.messages.showMessage()}" 
-                                                       />
-                                        
-                                        <p:poll widgetVar="pollCreate" interval="2" autoStart="false" update="statusCreate" async="true" partialSubmit="true" process="@this"/>
-                                    </h:panelGrid>
-                                </p:blockUI>
-                            </h:form>
+                            </p:layoutUnit>
+                            <!--<div class="launcherCenter">-->
+                            <p:layoutUnit id="centerStatus" position="center" header="Launch Status:" >
+                                <ui:include src="/sauron/template/clusterTreeTable.xhtml"/>
+                            </p:layoutUnit>
+                            <!--</div>-->
+                           
 
-                        </p:layoutUnit>
-                        <p:layoutUnit id="centerStatus" position="center" header="Launch Status:" >
-                            <ui:include src="/sauron/template/clusterTreeTable.xhtml"/>
-                        </p:layoutUnit>
-                        
-                    </p:layout>
-                    
+
+                        </p:layout>
+
+                        <p:poll widgetVar="pollCreate" interval="2" autoStart="false" update=":statusCreate" async="true" partialSubmit="true" process="@this"/>
+                    </h:form>
                 </div>
             </div>
+
+
         </ui:define>
 
     </ui:composition>
