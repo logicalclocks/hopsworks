@@ -699,6 +699,7 @@ public final class ClusterProvision {
             Iterator<NodeMetadata> iter = pendingNodes.iterator();
             while (iter.hasNext()) {
                 final NodeMetadata node = iter.next();
+                System.out.println(node.toString());
                 List<String> ips = new LinkedList(node.getPrivateAddresses());
                 //Listenable Future
                 String nodeId = node.getId();
@@ -738,13 +739,13 @@ public final class ClusterProvision {
                     System.out.println("Retrying");
                     --retries;
                 }
-                try {
-                    nodes.removeAll(pendingNodes);
-                    persistState(nodes, DeploymentPhase.WAITING);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.out.println("Error updating Database");
-                }
+//                try {
+//                    nodes.removeAll(pendingNodes);
+//                    persistState(nodes, DeploymentPhase.WAITING);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    System.out.println("Error updating Database");
+//                }
             }
 
 //        if (!nodes.isEmpty() && retries != 0) {
