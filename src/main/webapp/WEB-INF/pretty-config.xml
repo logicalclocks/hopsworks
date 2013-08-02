@@ -49,38 +49,38 @@
    </url-mapping>     
    
    <url-mapping id="clusters">
-      <pattern value="/sauron/" />
+      <pattern value="/sauron/clusters" />
       <view-id value="/sauron/clusters.xhtml" />
    </url-mapping>   
 
    <url-mapping id="cluster-status">
-      <pattern value="/sauron/#{cluster}" />
+      <pattern value="/sauron/clusters/#{cluster}" />
       <view-id value="/sauron/cluster-status.xhtml" />
    </url-mapping>  
    <url-mapping id="cluster-actionhistory">
-      <pattern value="/sauron/#{cluster}/action_history" />
+      <pattern value="/sauron/clusters/#{cluster}/action_history" />
       <view-id value="/sauron/cluster-actionhistory.xhtml" />
    </url-mapping>     
 
    <url-mapping id="service-status">
-      <pattern value="/sauron/#{cluster}/#{service}" />
+      <pattern value="/sauron/clusters/#{cluster}/#{service}" />
       <view-id value="/sauron/service-status.xhtml" />
    </url-mapping>
    <url-mapping id="service-instances">
-      <pattern value="/sauron/#{cluster}/#{service}/instances" />
+      <pattern value="/sauron/clusters/#{cluster}/#{service}/instances" />
       <view-id value="/sauron/service-instances.xhtml" />
    </url-mapping>   
    <url-mapping id="service-actionhistory">
-      <pattern value="/sauron/#{cluster}/#{service}/action_history" />
+      <pattern value="/sauron/clusters/#{cluster}/#{service}/action_history" />
       <view-id value="/sauron/service-actionhistory.xhtml" />
    </url-mapping>      
 
    <url-mapping id="role-status">
-      <pattern value="/sauron/#{cluster}/#{service}/#{role}/#{hostid}" />
+      <pattern value="/sauron/clusters/#{cluster}/#{service}/#{role}/#{hostid}" />
       <view-id value="/sauron/role-status.xhtml" />
    </url-mapping>   
    <url-mapping id="role-actionhistory">
-      <pattern value="/sauron/#{cluster}/#{service}/#{role}/#{hostid}/action_history" />
+      <pattern value="/sauron/clusters/#{cluster}/#{service}/#{role}/#{hostid}/action_history" />
       <view-id value="/sauron/role-actionhistory.xhtml" />
    </url-mapping>  
 
