@@ -23,10 +23,10 @@
       <view-id value="/sauron/backup-restore.xhtml" />
    </url-mapping> -->
 
-   <url-mapping id="setup">
+<!--   <url-mapping id="setup">
       <pattern value="/sauron/setup" />
       <view-id value="/sauron/setup.xhtml" />
-   </url-mapping> 
+   </url-mapping> -->
 
 <!--   <url-mapping id="manageCluster">
       <pattern value="/sauron/managecluster" />
