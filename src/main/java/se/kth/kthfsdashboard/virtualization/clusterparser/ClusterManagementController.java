@@ -43,6 +43,7 @@ public class ClusterManagementController implements Serializable {
     @EJB
     private ClusterFacade clusterEJB;
     private Cluster cluster = new Cluster();
+    private Baremetal baremetalCluster =new Baremetal();
     private UploadedFile file;
     private Yaml yaml = new Yaml();
     private boolean skipChef;
@@ -176,6 +177,15 @@ public class ClusterManagementController implements Serializable {
         this.ports = ports;
     }
 
+    public Baremetal getBaremetalCluster() {
+        return baremetalCluster;
+    }
+
+    public void setBaremetalCluster(Baremetal baremetalCluster) {
+        this.baremetalCluster = baremetalCluster;
+    }
+    
+    
     public ChefAttributes[] getSelectedAttributes() {
         return selectedAttributes;
     }

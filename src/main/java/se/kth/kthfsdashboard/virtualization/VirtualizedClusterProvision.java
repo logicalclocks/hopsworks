@@ -67,7 +67,7 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-public final class ClusterProvision {
+public final class VirtualizedClusterProvision implements Provision{
 
     @EJB
     private HostEJB hostEJB;
@@ -99,12 +99,13 @@ public final class ClusterProvision {
     private CopyOnWriteArraySet<NodeMetadata> pendingNodes;
     private int max = 0;
     private int totalNodes = 0;
+    private Cluster cluster;
     //private boolean debug;
     /*
-     * Constructor of a ClusterProvision
+     * Constructor of a VirtualizedClusterProvision
      */
 
-    public ClusterProvision(VirtualizationController controller) {
+    public VirtualizedClusterProvision(VirtualizationController controller) {
         this.provider = Provider.fromString(controller.getProvider());
         this.id = controller.getId();
         this.key = controller.getKey();
@@ -116,6 +117,7 @@ public final class ClusterProvision {
         this.service = initContext();
         this.progressEJB = controller.getDeploymentProgressFacade();
         this.hostEJB = controller.getHostEJB();
+        this.cluster=controller.getCluster();
 
     }
 
@@ -123,7 +125,8 @@ public final class ClusterProvision {
      * Method which creates the securitygroups for the cluster 
      * through the rest client implementations in jclouds.
      */
-    public void createSecurityGroups(Cluster cluster) {
+    @Override
+    public void initializeCluster() {
         //Data structures which contains all the mappings of the ports that the roles need to be opened
         progressEJB.createProgress(cluster);
         RoleMapPorts commonTCP = new RoleMapPorts(RoleMapPorts.PortType.COMMON);
@@ -297,7 +300,8 @@ public final class ClusterProvision {
      * 
      * If successful, returns true;
      */
-    public boolean launchNodesBasicSetup(Cluster cluster) {
+    @Override
+    public boolean launchNodesBasicSetup() {
         boolean status = false;
         try {
             TemplateBuilder kthfsTemplate = templateKTHFS(cluster, service.templateBuilder());
@@ -396,7 +400,7 @@ public final class ClusterProvision {
      * In EC2 seems to work, Openstack seems to have issues
      *  @beta version
      */
-    public boolean parallelLaunchNodesBasicSetup(Cluster cluster) {
+    public boolean parallelLaunchNodesBasicSetup() {
         boolean status = true;
 
         latch = new CountDownLatch(cluster.getNodes().size());
@@ -455,6 +459,7 @@ public final class ClusterProvision {
      * Method for the install phase
      * 
      */
+    @Override
     public void installPhase() {
         //We specify a thread pool with the same number of nodes in the system and resources are
         //Total Nodes*2
@@ -481,7 +486,7 @@ public final class ClusterProvision {
     /*
      * Method to setup the nodes in the correct order for our platform in the first run
      */
-    public void deployingConfigurations(Cluster cluster) {
+    public void deployingConfigurations() {
         //create pool of threads taking the biggest cluster
         pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(max * 2));
         //latch = new CountDownLatch(mgmNodes.size());
