@@ -1,0 +1,34 @@
+## YAML Template.
+---
+!!se.kth.kthfsdashboard.virtualization.clusterparser.Baremetal
+  name: baremetal
+  environment: dev
+  loginUser: ubuntu
+  
+  ##lists of service, we define a service with the number of instances and roles?  
+  nodes:
+  - securityGroup: ndb
+    number: 2
+    hosts: []
+    roles:
+     [MySQLCluster*ndb]
+    authorizePorts:
+     [MySQLCluster*ndb]
+  - securityGroup: mgm
+    number: 1
+    hosts: []
+    roles:
+     [MySQLCluster*mgm]
+    authorizePorts:
+     [MySQLCluster*mgm]
+  - securityGroup: mysql
+    number: 1
+    hosts: []
+    roles:
+     [MySQLCluster*mysqld]
+    authorizePorts:
+     [MySQLCluster*mysqld]
+  ##Override chef attributes for roles:
+  chefAttributes:
+
+...

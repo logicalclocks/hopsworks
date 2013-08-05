@@ -14,6 +14,8 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import org.jclouds.compute.domain.NodeMetadata;
 import se.kth.kthfsdashboard.user.AbstractFacade;
+import se.kth.kthfsdashboard.virtualization.clusterparser.Baremetal;
+import se.kth.kthfsdashboard.virtualization.clusterparser.BaremetalGroup;
 import se.kth.kthfsdashboard.virtualization.clusterparser.Cluster;
 import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
 
@@ -59,6 +61,21 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
 
         NodeProgression progress;
         for (NodeGroup group : cluster.getNodes()) {
+            for (int i = 0; i < group.getNumber(); i++) {
+                progress = new NodeProgression();
+                progress.setCluster(cluster.getName());
+                progress.setNodeId(group.getSecurityGroup() + i);
+                progress.setPhase(DeploymentPhase.WAITING.toString());
+                progress.setRole(group.getRoles().toString());
+                persistNodeProgress(progress);
+            }
+        }
+    }
+    
+    public void createProgress(Baremetal cluster) {
+
+        NodeProgression progress;
+        for (BaremetalGroup group : cluster.getNodes()) {
             for (int i = 0; i < group.getNumber(); i++) {
                 progress = new NodeProgression();
                 progress.setCluster(cluster.getName());

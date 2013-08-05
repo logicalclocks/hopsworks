@@ -26,18 +26,21 @@ public class ClusterParserTest extends TestCase {
 
         try {
             Object document = yaml.load(new BufferedReader(new FileReader(new File(dir + separator + 
-                    "clusters"+separator+"BigEC2Cluster.yml"))));
+                    "clusters"+separator+"Baremetal.yml"))));
             assertNotNull(document);
-            assertTrue(document.getClass().toString(), document instanceof Cluster);
-            Cluster cluster =(Cluster) document;
+            assertTrue(document.getClass().toString(), document instanceof Baremetal);
+            Baremetal cluster =(Baremetal) document;
+            
             System.out.println("Cluster Name: "+cluster.getName());
             System.out.println("Cluster environment: "+cluster.getEnvironment());
-            System.out.println("Global services:" +cluster.getGlobalServices());
-            System.out.println("Authorize ports:"+cluster.getAuthorizePorts());
-            System.out.println("Authorize specific ports:" +cluster.getAuthorizeSpecificPorts());
-            System.out.println(cluster.getProvider().toString());
+            System.out.println("Cluster user:" +cluster.getLoginUser());
+            //System.out.println("Global services:" +cluster.getGlobalServices());
+            //System.out.println("Authorize ports:"+cluster.getAuthorizePorts());
+           // System.out.println("Authorize specific ports:" +cluster.getAuthorizeSpecificPorts());
+            //System.out.println(cluster.getProvider().toString());
             System.out.println(cluster.getNodes());
-            System.out.println(cluster.getChefAttributes().toString());
+            //System.out.println(cluster.getChefAttributes().toString());
+            System.out.println(yaml.dump(cluster));
             
         } catch (FileNotFoundException e) {
             e.printStackTrace();

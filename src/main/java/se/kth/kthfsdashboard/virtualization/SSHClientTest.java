@@ -60,7 +60,7 @@ public class SSHClientTest {
 
 
         try {
-            client.loadKnownHosts(new File(System.getProperty("user.home") + "/.ssh/known_hosts"));
+            //client.loadKnownHosts(new File(System.getProperty("user.home") + "/.ssh/known_hosts"));
             client.addHostKeyVerifier(new PromiscuousVerifier());
 //            String publicKey = Files.toString(
 //                    new File(System.getProperty("user.home") + "/.ssh/gitkey.pub"), UTF_8);
