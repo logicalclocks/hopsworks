@@ -486,6 +486,7 @@ public final class VirtualizedClusterProvision implements Provision{
     /*
      * Method to setup the nodes in the correct order for our platform in the first run
      */
+    @Override
     public void deployingConfigurations() {
         //create pool of threads taking the biggest cluster
         pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(max * 2));

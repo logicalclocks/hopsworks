@@ -17,7 +17,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
@@ -25,21 +24,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.ejb.EJB;
 import net.schmizz.sshj.SSHClient;
-import net.schmizz.sshj.common.IOUtils;
-import net.schmizz.sshj.connection.channel.direct.Session;
-import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
-import org.jclouds.compute.RunNodesException;
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
-import org.jclouds.compute.domain.NodeMetadataBuilder;
-import org.jclouds.compute.options.RunScriptOptions;
-import org.jclouds.domain.Location;
-import org.jclouds.domain.LocationBuilder;
-import org.jclouds.domain.LocationScope;
-import org.jclouds.domain.LoginCredentials;
-import org.jclouds.scriptbuilder.domain.OsFamily;
-import org.jclouds.scriptbuilder.domain.StatementList;
 import se.kth.kthfsdashboard.host.HostEJB;
 import se.kth.kthfsdashboard.virtualization.clusterparser.Baremetal;
 import se.kth.kthfsdashboard.virtualization.clusterparser.BaremetalGroup;
@@ -204,7 +191,113 @@ public class BaremetalClusterProvision implements Provision {
 
     @Override
     public void deployingConfigurations() {
-        throw new UnsupportedOperationException("Not supported yet.");
+         //create pool of threads taking the biggest cluster
+        pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(max * 2));
+        //latch = new CountDownLatch(mgmNodes.size());
+        //First phase mgm configuration
+        JHDFSScriptBuilder.Builder scriptBuilder = JHDFSScriptBuilder.builder()
+                .mgms(mgmIP)
+                .mysql(mySQLClientsIP)
+                .namenodes(namenodesIP)
+                .ndbs(ndbsIP)
+                .privateIP(privateIP)
+                .publicKey(publicKey)
+                .clusterName(cluster.getName())
+                .scriptType(JHDFSScriptBuilder.ScriptType.JHDFS);
+        
+        //Asynchronous node launch
+        //launch mgms
+        Set<NodeMetadata> groupLaunch = mgms.keySet();
+        messages.addMessage("Configuring mgm nodes");
+
+        //Update view state to configure
+        persistState(groupLaunch, DeploymentPhase.CONFIGURE);
+        nodePhase(groupLaunch, mgms, scriptBuilder, RETRIES);
+        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+
+        //launch ndbs
+        groupLaunch = ndbs.keySet();
+        messages.addMessage("Configuring ndb nodes");
+
+        persistState(groupLaunch, DeploymentPhase.CONFIGURE);
+        nodePhase(groupLaunch, ndbs, scriptBuilder, RETRIES);
+        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+
+        //launch mysqlds
+        groupLaunch = mysqlds.keySet();
+        messages.addMessage("Configuring mysqld nodes");
+
+        persistState(groupLaunch, DeploymentPhase.CONFIGURE);
+        nodePhase(groupLaunch, mysqlds, scriptBuilder, RETRIES);
+        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+
+        //launch namenodes
+        groupLaunch = namenodes.keySet();
+        messages.addMessage("Configuring namenodes");
+
+        persistState(groupLaunch, DeploymentPhase.CONFIGURE);
+        nodePhase(groupLaunch, namenodes, scriptBuilder, RETRIES);
+        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+
+        //launch datanodes
+        groupLaunch = datanodes.keySet();
+        messages.addMessage("Configuring datanodes");
+
+        persistState(groupLaunch, DeploymentPhase.CONFIGURE);
+        nodePhase(groupLaunch, datanodes, scriptBuilder, RETRIES);
+        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+    }
+    
+    private void nodePhase(Set<NodeMetadata> nodes, Map<NodeMetadata, List<String>> map,
+            JHDFSScriptBuilder.Builder scriptBuilder, int retries){
+        //Iterative Approach
+        pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
+        while (!pendingNodes.isEmpty() && retries != 0) {
+            latch = new CountDownLatch(pendingNodes.size());
+            Iterator<NodeMetadata> iter = pendingNodes.iterator();
+            while (iter.hasNext()) {
+                final NodeMetadata node = iter.next();
+                System.out.println(node.toString());
+                List<String> ips = new LinkedList(node.getPrivateAddresses());
+                //Listenable Future
+                String nodeId = node.getId();
+                JHDFSScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node), 
+                        nodeId.replaceFirst("/", "-"));
+                ListenableFuture<ExecResponse> future = pool.submit(
+                        new SubmitScriptBaremetalCallable(node, script));
+                        
+                future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
+                        future), pool);
+            }
+            try {
+                //wait for all the works to finish, 25 min estimated for each node +30 min extra margin to give
+                //some extra time.
+                latch.await(25 * nodes.size() + 60, TimeUnit.MINUTES);
+                messages.addMessage("Launch phase complete...");
+  
+            } catch (InterruptedException e) {
+
+
+                e.printStackTrace();
+            } finally {
+                //Update the nodes that have finished the install phase
+                if (!pendingNodes.isEmpty()) {
+                    Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+                    //Mark the nodes that are been reinstalled
+                    persistState(remain, DeploymentPhase.RETRYING);
+                    System.out.println("Retrying");
+                    --retries;
+                }
+//                try {
+//                    nodes.removeAll(pendingNodes);
+//                    persistState(nodes, DeploymentPhase.WAITING);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    System.out.println("Error updating Database");
+//                }
+            }
+
+        }
     }
 
     private void nodeInstall(Set<NodeMetadata> nodes, JHDFSScriptBuilder.Builder scriptBuilder, int retries) {
@@ -218,7 +311,8 @@ public class BaremetalClusterProvision implements Provision {
                 final NodeMetadata node = iter.next();
                 //Listenable Future our own for baremetal
                 final JHDFSScriptBuilder script = scriptBuilder.build();
-                ListenableFuture<ExecResponse> future = pool.submit(new InstallBaremetalCallable(node, script));
+                ListenableFuture<ExecResponse> future = pool.submit(
+                        new SubmitScriptBaremetalCallable(node, script));
 
 //                service.submitScriptOnNode(node.getId(), new StatementList(script),
 //                        RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
