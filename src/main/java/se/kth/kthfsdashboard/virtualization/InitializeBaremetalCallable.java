@@ -4,7 +4,6 @@
  */
 package se.kth.kthfsdashboard.virtualization;
 
-import com.sun.jersey.api.client.Client;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
@@ -13,6 +12,7 @@ import java.util.concurrent.Callable;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
+import net.schmizz.sshj.connection.channel.direct.Session.Command;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -64,7 +64,7 @@ public class InitializeBaremetalCallable implements Callable<Set<NodeMetadata>>{
                             client.connect(host);
                             client.authPublickey(loginUser, keys);
                             final Session session = client.startSession();
-                            final Session.Command cmd = session.exec(initScript.render(OsFamily.UNIX));
+                            final Command cmd = session.exec(initScript.render(OsFamily.UNIX));
                             System.out.println(IOUtils.readFully(cmd.getInputStream()).toString());
                             System.out.println("\n** exit status: " + cmd.getExitStatus());
                             NodeMetadataBuilder builder = new NodeMetadataBuilder();
@@ -74,7 +74,7 @@ public class InitializeBaremetalCallable implements Callable<Set<NodeMetadata>>{
                                     .privateKey(privateKey).noPassword().build();
                             Location location = new LocationBuilder().id("KTHFS")
                                     .description("RandomRegion").scope(LocationScope.HOST).build();
-                            NodeMetadata node = builder.hostname("193.10.64.127").id("KTHFS").location(location)
+                            NodeMetadata node = builder.hostname(host).id("KTHFS-"+host).location(location)
                                     .loginPort(22)
                                     .name("BareMetalNode").credentials(credentials).ids("KTHFS").providerId("Physical")
                                     .status(NodeMetadata.Status.RUNNING)
