@@ -1,4 +1,4 @@
-package se.kth.kthfsdashboard.util;
+package se.kth.kthfsdashboard.utils;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -8,23 +8,19 @@ import java.util.Date;
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
-public class Formatter {
+public class FormatUtils {
 
-    final double K = 1024d;
-    final double M = K * K;
-    final double G = M * K;
-    final double T = G * K;
-    
+    final static double K = 1024d;
+    final static double M = K * K;
+    final static double G = M * K;
+    final static double T = G * K;
     final static double m = 60d;
     final static double h = m * 60d;
     final static double d = h * 24d;
 
-    public String storage(Long s) {
-
+    public static String storage(Long s) {
         DecimalFormat format = new DecimalFormat("#.#");
         Double size = (double) s;
-
-
         if (size < K) {
             return format.format(size) + " B";
         }
@@ -39,13 +35,11 @@ public class Formatter {
         }
         return format.format(size / T) + " TB";
     }
-    
+
     public static String time(Long t) {
-        
         DecimalFormat format = new DecimalFormat("#.#");
-        Double time = (double) t / 1000d;        
-        
-        if(time < m) {
+        Double time = (double) t / 1000d;
+        if (time < m) {
             return format.format(time) + "s";
         }
         if (time < h) {
@@ -58,16 +52,12 @@ public class Formatter {
     }
 
     public static String timeInSec(Long t) {
-        
         DecimalFormat format = new DecimalFormat("#.#");
-        
         if (t == null) {
-           return "";
+            return "";
         }
-        
-        Double time = (double) t;        
-        
-        if(time < m) {
+        Double time = (double) t;
+        if (time < m) {
             return format.format(time) + "s";
         }
         if (time < h) {
@@ -77,14 +67,13 @@ public class Formatter {
             return format.format(time / h) + "h";
         }
         return format.format(time / d) + "d";
-    }    
-    
+    }
+
     public static String date(Date d) {
-       
-      SimpleDateFormat df = new SimpleDateFormat("MMM dd, yyyy h:mm:ss a");
-      if (d == null) {
-         return "";
-      }
-      return df.format(d);
+        SimpleDateFormat df = new SimpleDateFormat("MMM dd, yyyy h:mm:ss a");
+        if (d == null) {
+            return "";
+        }
+        return df.format(d);
     }
 }

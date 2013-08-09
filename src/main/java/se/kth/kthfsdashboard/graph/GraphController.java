@@ -19,7 +19,7 @@ import se.kth.kthfsdashboard.role.RoleEJB;
 import se.kth.kthfsdashboard.role.RoleType;
 import se.kth.kthfsdashboard.service.ServiceType;
 import se.kth.kthfsdashboard.struct.DatePeriod;
-import se.kth.kthfsdashboard.util.UrlTools;
+import se.kth.kthfsdashboard.utils.UrlUtils;
 
 /**
  *
@@ -262,7 +262,7 @@ public class GraphController implements Serializable {
       params.put("host", host);
       params.put("plugin", plugin);
       params.put("type", type);
-      return UrlTools.addParams(URL_PATH, params);
+      return UrlUtils.addParams(URL_PATH, params);
    }
 
    public String hostGraphUrl(String plugin) throws MalformedURLException {
@@ -284,7 +284,7 @@ public class GraphController implements Serializable {
       params.put("chart_type", chartType);
       params.put("start", getStartTime().toString());
       params.put("end", getEndTime().toString());
-      return UrlTools.addParams(URL_PATH, params);
+      return UrlUtils.addParams(URL_PATH, params);
    }
 
    public String namenodeGraphUrl(String chartType) {
@@ -293,7 +293,7 @@ public class GraphController implements Serializable {
       params.put("start", getStartTime().toString());
       params.put("end", getEndTime().toString());
       params.put("host", hostId);
-      return UrlTools.addParams(URL_PATH, params);
+      return UrlUtils.addParams(URL_PATH, params);
    }
 
    public String datanodeGraphUrl(String chartType) {
@@ -318,7 +318,7 @@ public class GraphController implements Serializable {
          Long n = roleEjb.count(cluster, service, "ndb");
          params.put("n", n.toString());
       }
-      return UrlTools.addParams(URL_PATH, params);
+      return UrlUtils.addParams(URL_PATH, params);
    }
    
    public boolean showNamenodeGraphs() {

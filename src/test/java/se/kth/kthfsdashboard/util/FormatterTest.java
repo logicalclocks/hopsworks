@@ -1,6 +1,6 @@
 package se.kth.kthfsdashboard.util;
 
-import java.text.DecimalFormat;
+import se.kth.kthfsdashboard.utils.FormatUtils;
 import junit.framework.TestCase;
 
 /**
@@ -9,7 +9,6 @@ import junit.framework.TestCase;
  */
 public class FormatterTest extends TestCase {
 
-    Formatter f = new Formatter();
     final Long K = 1024L;
     final Long M = K * K;
     final Long G = M * K;
@@ -20,9 +19,7 @@ public class FormatterTest extends TestCase {
     }
 
     public void testParseDouble() throws Exception {
-
-        assertEquals("1 TB", f.storage(T));
-        assertEquals("1.1 TB", f.storage(T + 99*G));
-
+        assertEquals("1 TB", FormatUtils.storage(T));
+        assertEquals("1.1 TB", FormatUtils.storage(T + 99*G));
     }
 }

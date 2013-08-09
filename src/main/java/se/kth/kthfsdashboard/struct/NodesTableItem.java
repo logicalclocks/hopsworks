@@ -1,7 +1,7 @@
 package se.kth.kthfsdashboard.struct;
 
 import java.io.Serializable;
-import se.kth.kthfsdashboard.util.Formatter;
+import se.kth.kthfsdashboard.utils.FormatUtils;
 
 /**
  *
@@ -43,7 +43,7 @@ public class NodesTableItem implements Serializable {
    }
 
    public String getUpTime() {
-      return Formatter.timeInSec(upTime);
+      return FormatUtils.timeInSec(upTime);
    }
 
    public void setUpTime(Long upTime) {

@@ -12,7 +12,7 @@ import javax.faces.bean.RequestScoped;
 import se.kth.kthfsdashboard.struct.Health;
 import se.kth.kthfsdashboard.struct.InstanceFullInfo;
 import se.kth.kthfsdashboard.struct.RoleHostInfo;
-import se.kth.kthfsdashboard.util.Formatter;
+import se.kth.kthfsdashboard.utils.FormatUtils;
 
 /**
  *
@@ -53,7 +53,7 @@ public class RoleController {
                  roleHost.getRole().getHostId(), ip, roleHost.getRole().getWebPort(), 
                  roleHost.getStatus(), roleHost.getHealth().toString());
          info.setPid(roleHost.getRole().getPid());
-         String upTime = roleHost.getHealth() == Health.Good ? Formatter.time(roleHost.getRole().getUptime() * 1000) : "";
+         String upTime = roleHost.getHealth() == Health.Good ? FormatUtils.time(roleHost.getRole().getUptime() * 1000) : "";
          info.setUptime(upTime);
          instanceInfoList.add(info);
          renderWebUi = roleHost.getRole().getWebPort() != null && roleHost.getRole().getWebPort() != 0;

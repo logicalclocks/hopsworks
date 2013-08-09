@@ -1,6 +1,6 @@
 package se.kth.kthfsdashboard.struct;
 
-import se.kth.kthfsdashboard.util.Formatter;
+import se.kth.kthfsdashboard.utils.FormatUtils;
 
 /**
  *
@@ -37,7 +37,7 @@ public class MemoryInfo {
    }
 
    public String getUsageInfo() {
-      Formatter f = new Formatter();
+      FormatUtils f = new FormatUtils();
       if (used == null || capacity == null) {
          return "N/A";
       }

@@ -23,7 +23,7 @@ import javax.imageio.ImageIO;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import se.kth.kthfsdashboard.util.CollectdTools;
+import se.kth.kthfsdashboard.utils.CollectdUtils;
 
 /**
  *
@@ -58,10 +58,9 @@ public class CollectdResource {
            @QueryParam("ds") String ds,
            @QueryParam("n") int n) throws InterruptedException, IOException {
 
-      CollectdTools collectdTools = new CollectdTools();
       ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
       try {
-         InputStream inputStream = collectdTools.getGraphStream(chartType, host, plugin, pluginInstance, type, typeInstance, ds, start, end, n);
+         InputStream inputStream = CollectdUtils.getGraphStream(chartType, host, plugin, pluginInstance, type, typeInstance, ds, start, end, n);
          BufferedImage image = ImageIO.read(inputStream);
          ImageIO.write(image, "png", byteArrayOutputStream);
          byte[] imageData = byteArrayOutputStream.toByteArray();

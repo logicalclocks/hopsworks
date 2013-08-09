@@ -1,8 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package se.kth.kthfsdashboard.util;
+package se.kth.kthfsdashboard.utils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,7 +7,7 @@ import java.util.Map;
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
-public class UrlTools {
+public class UrlUtils {
 
    public static String addParams(String url, HashMap<String, String> params) {
       for (Map.Entry<String, String> entry : params.entrySet()) {

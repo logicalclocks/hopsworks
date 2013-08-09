@@ -18,7 +18,7 @@ import javax.faces.model.SelectItem;
 import se.kth.kthfsdashboard.alert.Alert.Provider;
 import se.kth.kthfsdashboard.alert.Alert.Severity;
 import se.kth.kthfsdashboard.struct.DatePeriod;
-import se.kth.kthfsdashboard.util.FilterUtil;
+import se.kth.kthfsdashboard.utils.FilterUtils;
 
 /**
  *
@@ -56,8 +56,8 @@ public class AlertController implements Serializable {
    }
 
    public AlertController() {
-      severityOptions = FilterUtil.createFilterOptions(severities);
-      providerOptions = FilterUtil.createFilterOptions(providers);
+      severityOptions = FilterUtils.createFilterOptions(severities);
+      providerOptions = FilterUtils.createFilterOptions(providers);
 
       datePeriods.add(new DatePeriod("hour", "1h"));
       datePeriods.add(new DatePeriod("2hr", "2h"));

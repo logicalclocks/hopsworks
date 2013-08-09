@@ -12,7 +12,7 @@ import se.kth.kthfsdashboard.role.RoleEJB;
 import se.kth.kthfsdashboard.struct.InstanceInfo;
 import se.kth.kthfsdashboard.struct.RoleHostInfo;
 import se.kth.kthfsdashboard.struct.Status;
-import se.kth.kthfsdashboard.util.FilterUtil;
+import se.kth.kthfsdashboard.utils.FilterUtils;
 
 /**
  *
@@ -62,11 +62,11 @@ public class ServiceInstancesController {
       
       logger.info("ServiceInstancesController");
 
-      statusOptions = FilterUtil.createFilterOptions(statusStates);
-      hdfsRoleOptions = FilterUtil.createFilterOptions(hdfsRoles);
-      mysqlclusterRoleOptions = FilterUtil.createFilterOptions(mysqlClusterRoles);
-      yarnRoleOptions = FilterUtil.createFilterOptions(yarnRoles);
-      healthOptions = FilterUtil.createFilterOptions(healthStates);
+      statusOptions = FilterUtils.createFilterOptions(statusStates);
+      hdfsRoleOptions = FilterUtils.createFilterOptions(hdfsRoles);
+      mysqlclusterRoleOptions = FilterUtils.createFilterOptions(mysqlClusterRoles);
+      yarnRoleOptions = FilterUtils.createFilterOptions(yarnRoles);
+      healthOptions = FilterUtils.createFilterOptions(healthStates);
    }
 
    public String getRole() {
