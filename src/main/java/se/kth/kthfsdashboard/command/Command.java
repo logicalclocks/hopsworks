@@ -3,7 +3,7 @@ package se.kth.kthfsdashboard.command;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.*;
-import se.kth.kthfsdashboard.util.Formatter;
+import se.kth.kthfsdashboard.utils.FormatUtils;
 
 /**
  *
@@ -91,7 +91,7 @@ public class Command implements Serializable {
    }
 
    public String getStartTimeShort() {
-      return Formatter.date(startTime);
+      return FormatUtils.date(startTime);
    }
 
    public Date getEndTime() {
@@ -99,7 +99,7 @@ public class Command implements Serializable {
    }
 
    public String getEndTimeShort() {
-      return Formatter.date(endTime);
+      return FormatUtils.date(endTime);
    }
 
    public commandStatus getStatus() {

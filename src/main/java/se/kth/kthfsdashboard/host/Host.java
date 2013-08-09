@@ -6,7 +6,7 @@ import java.util.Date;
 import javax.persistence.*;
 import se.kth.kthfsdashboard.struct.Health;
 import se.kth.kthfsdashboard.struct.MemoryInfo;
-import se.kth.kthfsdashboard.util.Formatter;
+import se.kth.kthfsdashboard.utils.FormatUtils;
 
 /**
  *
@@ -168,7 +168,7 @@ public class Host implements Serializable {
         if (lastHeartbeat == null) {
             return "";
         }
-        return Formatter.time(((new Date()).getTime() - lastHeartbeat));
+        return FormatUtils.time(((new Date()).getTime() - lastHeartbeat));
     }
 
     public MemoryInfo getDiskInfo() {

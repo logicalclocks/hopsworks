@@ -1,4 +1,4 @@
-package se.kth.kthfsdashboard.util;
+package se.kth.kthfsdashboard.utils;
 
 import java.util.Map;
 import javax.faces.context.FacesContext;
@@ -8,9 +8,9 @@ import javax.servlet.http.Cookie;
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
-public class CookieTools {
+public class CookieUtils {
 
-    public String read(String name) {
+    public static String read(String name) {
         Map<String, Object> requestCookieMap  =  FacesContext.
                 getCurrentInstance().getExternalContext().getRequestCookieMap();
         
@@ -22,7 +22,7 @@ public class CookieTools {
         return c.getValue();
     }
     
-    public void write(String name, String value) {
+    public static void write(String name, String value) {
         FacesContext.getCurrentInstance().getExternalContext()
                 .addResponseCookie(name, value, null);
     }

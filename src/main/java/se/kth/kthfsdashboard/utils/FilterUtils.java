@@ -1,4 +1,4 @@
-package se.kth.kthfsdashboard.util;
+package se.kth.kthfsdashboard.utils;
 
 import javax.faces.model.SelectItem;
 
@@ -6,7 +6,7 @@ import javax.faces.model.SelectItem;
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
-public class FilterUtil {
+public class FilterUtils {
    
       public static SelectItem[] createFilterOptions(String[] data) {
       SelectItem[] options = new SelectItem[data.length + 1];

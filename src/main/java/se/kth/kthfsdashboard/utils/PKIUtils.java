@@ -1,4 +1,4 @@
-package se.kth.kthfsdashboard.util;
+package se.kth.kthfsdashboard.utils;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -3,7 +3,7 @@ package se.kth.kthfsdashboard.alert;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.*;
-import se.kth.kthfsdashboard.util.Formatter;
+import se.kth.kthfsdashboard.utils.FormatUtils;
 
 /**
  *
@@ -211,7 +211,7 @@ public class Alert implements Serializable {
    }
    
    public String getAlertTimeShort() {
-      return Formatter.date(alertTime);
+      return FormatUtils.date(alertTime);
    }
 
 
