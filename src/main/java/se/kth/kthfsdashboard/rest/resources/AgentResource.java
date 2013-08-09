@@ -122,6 +122,8 @@ public class AgentResource {
             host.setHostname(json.getString("hostname"));
             host.setPublicIp(json.getString("public-ip"));
             host.setPrivateIp(json.getString("private-ip"));
+            host.setDiskCapacity(json.getLong("disk-capacity"));
+            host.setMemoryCapacity(json.getLong("memory-capacity"));
             host.setCores(json.getInt("cores"));
             hostEJB.storeHost(host, false);
             roleEjb.deleteRolesByHostId(hostId);
