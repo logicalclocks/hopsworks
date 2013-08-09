@@ -1,5 +1,6 @@
 package se.kth.kthfsdashboard.utils;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -30,10 +31,10 @@ public class GraphicsUtils {
         BufferedImage image = createImageWithText(w, h, msg);
         return convertBufferedImageToByteArray(image);
     }
-    
-    public static byte[] convertImageInputStreamToByteArray(InputStream imageInputStream) throws IOException { 
+
+    public static byte[] convertImageInputStreamToByteArray(InputStream imageInputStream) throws IOException {
         BufferedImage bufferedImage = ImageIO.read(imageInputStream);
-        return convertBufferedImageToByteArray(bufferedImage);        
+        return convertBufferedImageToByteArray(bufferedImage);
     }
 
     private static byte[] convertBufferedImageToByteArray(BufferedImage image) throws IOException {
@@ -44,18 +45,24 @@ public class GraphicsUtils {
 
     private static BufferedImage createImageWithText(int w, int h, String text) {
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = img.createGraphics();
-        g2d.setPaint(Color.black);
-        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
-        FontMetrics fm = g2d.getFontMetrics();
-        int x = 5;
-        int y = fm.getHeight();
-        GraphicsUtils.drawText(g2d, x, y, w, h, text);
-        g2d.dispose();
+        Graphics2D g = img.createGraphics();
+        int fontHeight = g.getFontMetrics().getHeight();
+        g.setPaint(new Color(240, 240, 240)); // Light Gray
+        g.fillRect(0, 0, w, h);
+        g.setPaint(Color.GRAY);
+        g.draw3DRect(0, 0, w - 1, h - 1, true);
+        g.setPaint(Color.RED);
+        g.drawString("Error", fontHeight, fontHeight * 2);
+        g.setPaint(Color.BLACK);
+        g.setFont(new Font("Arial", Font.PLAIN, 12));
+        int x = fontHeight;
+        int y = fontHeight * 3;
+        GraphicsUtils.drawTextInBoundedArea(g, x, y, w - x, h, text);
+        g.dispose();
         return img;
     }
 
-    private static void drawText(Graphics2D g2d, int x1, int y1, int x2, int y2, String text) {
+    private static void drawTextInBoundedArea(Graphics2D g2d, int x1, int y1, int x2, int y2, String text) {
         float interline = 1;
         float width = x2 - x1;
         AttributedString as = new AttributedString(text);
