@@ -1,6 +1,5 @@
 package se.kth.kthfsdashboard.rest.resources;
 
-import java.security.Security;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -9,7 +8,13 @@ import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -52,10 +57,9 @@ public class AgentResource {
     @Path("load/{name}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getLoadAvg(@PathParam("name") String name) {
-        Host host;
         JSONObject json = new JSONObject();
         try {
-            host = hostEJB.findHostByName(name);
+            Host host = hostEJB.findHostByName(name);
             json.put("hostname", host.getHostname());
             json.put("cores", host.getCores());
             json.put("load1", host.getLoad1());
@@ -77,14 +81,10 @@ public class AgentResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getLoads() {
         JSONArray jsonArray = new JSONArray();
-        JSONObject json;
         List<Host> hosts = hostEJB.findHosts();
-        if (hosts == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
         for (Host host : hosts) {
             try {
-                json = new JSONObject();
+                JSONObject json = new JSONObject();
                 json.put("hostname", host.getHostname());
                 json.put("cores", host.getCores());
                 json.put("load1", host.getLoad1());
@@ -111,26 +111,22 @@ public class AgentResource {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
             if (host.isRegistered()) {
-                logger.log(Level.INFO, "Could not register host with id {0}: already registered.", hostId);
+                logger.log(Level.INFO, "Did not register host with id {0}: already registered.", hostId);
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
-            
             String csr = json.getString("csr");
             String certificate = PKIUtils.signWithServerCertificate(csr);
-            
+
             host.setRegistered(true);
             host.setLastHeartbeat((new Date()).getTime());
             host.setHostname(json.getString("hostname"));
             host.setPublicIp(json.getString("public-ip"));
             host.setPrivateIp(json.getString("private-ip"));
             host.setCores(json.getInt("cores"));
-
             hostEJB.storeHost(host, false);
             roleEjb.deleteRolesByHostId(hostId);
-            
             logger.log(Level.INFO, "Host with id {0} registered successfully.", hostId);
             return Response.ok(certificate).build();
-            
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Exception: {0}", ex);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
@@ -141,7 +137,6 @@ public class AgentResource {
     @Path("/heartbeat")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response heartbeat(@Context HttpServletRequest req, String jsonStrig) {
-        JSONArray roles;
         try {
             JSONObject json = new JSONObject(jsonStrig);
             long agentTime = json.getLong("agent-time");
@@ -163,7 +158,7 @@ public class AgentResource {
             host.setMemoryUsed(json.getLong("memory-used"));
             hostEJB.storeHost(host, false);
 
-            roles = json.getJSONArray("services");
+            JSONArray roles = json.getJSONArray("services");
             for (int i = 0; i < roles.length(); i++) {
                 JSONObject s = roles.getJSONObject(i);
                 Role role = new Role();
@@ -193,7 +188,7 @@ public class AgentResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response alert(@Context HttpServletRequest req, String jsonString) {
 
-//       TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
+        // TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
         try {
             JSONObject json = new JSONObject(jsonString);
             Alert alert = new Alert();
