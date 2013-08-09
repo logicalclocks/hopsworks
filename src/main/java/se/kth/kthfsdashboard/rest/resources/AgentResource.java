@@ -1,5 +1,6 @@
 package se.kth.kthfsdashboard.rest.resources;
 
+import java.security.Security;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -21,9 +22,9 @@ import se.kth.kthfsdashboard.host.HostEJB;
 import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
 import se.kth.kthfsdashboard.struct.Status;
+import se.kth.kthfsdashboard.util.PKIUtils;
 
 /**
- * :
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
@@ -109,21 +110,31 @@ public class AgentResource {
                 logger.log(Level.INFO, "Could not register host with id {0}: unknown host id.", hostId);
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
-            host.setRegistered(true);            
+            if (host.isRegistered()) {
+                logger.log(Level.INFO, "Could not register host with id {0}: already registered.", hostId);
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
+            
+            String csr = json.getString("csr");
+            String certificate = PKIUtils.signWithServerCertificate(csr);
+            
+            host.setRegistered(true);
             host.setLastHeartbeat((new Date()).getTime());
             host.setHostname(json.getString("hostname"));
             host.setPublicIp(json.getString("public-ip"));
             host.setPrivateIp(json.getString("private-ip"));
             host.setCores(json.getInt("cores"));
+
+            hostEJB.storeHost(host, false);
+            roleEjb.deleteRolesByHostId(hostId);
             
-            hostEJB.storeHost(host, false);            
-            roleEjb.deleteRolesByHostId(hostId);  
-            logger.log(Level.INFO, "Host with id + {0} registered successfully.", hostId);
+            logger.log(Level.INFO, "Host with id {0} registered successfully.", hostId);
+            return Response.ok(certificate).build();
+            
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Exception: {0}", ex);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
-        return Response.ok().build();
     }
 
     @PUT
@@ -133,17 +144,17 @@ public class AgentResource {
         JSONArray roles;
         try {
             JSONObject json = new JSONObject(jsonStrig);
-            long agentTime = json.getLong("agent-time");            
-            String hostId = json.getString("host-id");            
+            long agentTime = json.getLong("agent-time");
+            String hostId = json.getString("host-id");
             Host host = hostEJB.findHostById(hostId);
             if (host == null) {
                 logger.log(Level.INFO, "Host with id {0} not found.", hostId);
                 return Response.status(Response.Status.NOT_FOUND).build();
-            }            
+            }
             if (!host.isRegistered()) {
                 logger.log(Level.INFO, "Host with id {0} is not registered.", hostId);
                 return Response.status(Response.Status.NOT_ACCEPTABLE).build();
-            }  
+            }
             host.setLastHeartbeat((new Date()).getTime());
             host.setLoad1(json.getDouble("load1"));
             host.setLoad5(json.getDouble("load5"));
