@@ -187,7 +187,6 @@ public class AgentResource {
     @Path("/alert")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response alert(@Context HttpServletRequest req, String jsonString) {
-
         // TODO: Alerts are stored in the database. Later, we should define reactions (Email, SMS, ...).
         try {
             JSONObject json = new JSONObject(jsonString);
