@@ -178,6 +178,7 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk16</artifactId>
             <version>1.46</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.jclouds.driver</groupId>
