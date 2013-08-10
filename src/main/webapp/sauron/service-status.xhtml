@@ -92,7 +92,8 @@
 
                 <!-- Second Toolbar - End -->        
 
-<!--                <h:form id="form_test">
+                <!--Test-->
+                <h:form id="form_test" rendered="false">
                     <p:commandButton value="Test Stop" action="#{hostController.doCommand()}" update="" ajax="true" process="@form" 
                                      oncomplete="dlgAction.show();"  >
                         <f:param name="hostid" value="#{roleController.hostId}" />
@@ -101,7 +102,7 @@
                         <f:param name="service" value="#{roleController.service}"/>                                  
                         <f:param name="command" value="stop" />              
                     </p:commandButton> 
-                </h:form>            -->
+                </h:form>            
 
                 <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
                     <p:graphicImage library="images" name="ajaxloadingbar.gif" />  
