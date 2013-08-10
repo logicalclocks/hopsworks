@@ -27,9 +27,12 @@ public class RoleHostInfo {
    }
    
    public Health getHealth() {
-      if (host.getHealth() == Health.Good && role.getHealth() == Health.Good) {
+//      if (host.getHealth() == Health.Good && role.getHealth() == Health.Good) {
+//         return Health.Good;
+//      }
+      if (role.getHealth() == Health.Good) {
          return Health.Good;
-      }
+      }      
       return Health.Bad;
    }
    

@@ -14,7 +14,7 @@ import javax.faces.bean.RequestScoped;
  */
 @ManagedBean
 @RequestScoped
-public class CommandController {
+public class ProgressController {
 
     @EJB
     private CommandEJB commandEJB;
@@ -26,14 +26,16 @@ public class CommandController {
     private String service;
     @ManagedProperty("#{param.cluster}")
     private String cluster;
-    private static final Logger logger = Logger.getLogger(CommandController.class.getName());
+    private static final Logger logger = Logger.getLogger(ProgressController.class.getName());
+    private List<Command> commands;
 
-    public CommandController() {
+    public ProgressController() {
     }
 
     @PostConstruct
     public void init() {
-        logger.info("init CommandController");
+        logger.info("init CommandProgressController");
+        setCommands(getLatestCommandByClusterServiceInstanceHost());
     }
 
     public String getRole() {
@@ -68,29 +70,17 @@ public class CommandController {
         return cluster;
     }
 
-    public List<Command> getRecentCommandsByCluster() {
-        List<Command> commands = commandEJB.findRecentByCluster(cluster);
+    public List<Command> getLatestCommandByClusterServiceInstanceHost() {
+        return commandEJB.findLatestByClusterServiceRoleHostId(cluster, service, role, hostId);
+    }
+
+    public List<Command> getCommands() {
         return commands;
     }
 
-    public List<Command> getRunningCommandsByCluster() {
-        List<Command> commands = commandEJB.findRunningByCluster(cluster);
-        return commands;
+    public void setCommands(List<Command> commands) {
+        this.commands = commands;
     }
 
-    public List<Command> getRecentCommandsByClusterService() {
-        List<Command> commands = commandEJB.findRecentByClusterService(cluster, service);
-        return commands;
-    }
 
-    public List<Command> getRunningCommandsByClusterService() {
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        List<Command> commands = commandEJB.findRunningByClusterService(cluster, service);
-        return commands;
-    }
-
-    public List<Command> getRecentCommandsByInstance() {
-        List<Command> commands = commandEJB.findRecentByClusterService(cluster, service);
-        return commands;
-    }
 }

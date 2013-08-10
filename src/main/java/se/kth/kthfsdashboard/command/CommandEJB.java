@@ -69,8 +69,17 @@ public class CommandEJB {
                 .setParameter("role", role).setParameter("hostId", hostId)                
                 .setParameter("status", Command.commandStatus.Running);
         return query.getResultList();
-    }     
+    }
+    
+    public List<Command> findLatestByClusterServiceRoleHostId(String cluster, String service, String role, String hostId) {
 
+        TypedQuery<Command> query = 
+                em.createNamedQuery("Commands.findByCluster-Service-Role-HostId", Command.class)
+                .setParameter("cluster", cluster).setParameter("service", service)
+                .setParameter("role", role).setParameter("hostId", hostId);
+        return query.setMaxResults(1).getResultList();
+    }    
+    
     public void persistCommand(Command command) {
         em.persist(command);
     }
