@@ -1,0 +1,271 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+       xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+    <script type="text/javascript">
+        function editLastDatatableRow(){
+
+            jQuery('.ui-datatable-data tr').last().find('span.ui-icon-pencil').each(function(){
+                jQuery(this).click()
+            });
+        }
+
+    </script>
+    <h:body>
+        <ui:composition>
+            <div id="createWizard" >
+
+                <h:form id="mainForm">
+
+                    <p:growl id="growl" sticky="true" showDetail="true"/>
+
+                    <p:wizard widgetVar="wiz"
+                              flowListener="#{clusterManagementController.onFlowProcess}">
+                        <p:tab id="clusterCommon" title="Common">
+                            <p:panel header="Common Parameters">
+                                <h:messages errorClass="error"/>
+                                <h:panelGrid columns="2" columnClasses="label,value" styleClass="grid">
+                                    <h:outputText value="Cluster name: *" />
+                                    <p:inputText required="false" label="name"
+                                                 value="#{clusterManagementController.baremetalCluster.name}" />
+                                    <h:outputText value="Environment: *" />
+                                    <p:selectOneMenu id="environment" 
+                                                     value="#{clusterManagementController.baremetalCluster.environment}">
+                                        <f:selectItem itemLabel="Select One" itemValue="" /> 
+                                        <f:selectItems value="#{clusterManagementController.options.environment}" />
+                                    </p:selectOneMenu>
+                                    <h:outputText value="Install Phase: "/>
+                                    <p:selectBooleanCheckbox label="Jump?" 
+                                                             value="#{clusterManagementController.baremetalCluster.installPhase}"/>
+                                    <h:outputText value="Login user:"/>
+                                    <p:inputText value="#{clusterManagementController.baremetalCluster.loginUser}" 
+                                                />
+                                     <h:outputText value="Total number of Hosts:"/>
+                                     <p:inputText value="#{clusterManagementController.baremetalCluster.totalHosts}" 
+                                                />
+                                </h:panelGrid>
+                            </p:panel>
+                        </p:tab>
+                        <p:tab  id="nodeGroups" title="Groups">
+                            <p:panel header="Cluster Nodes">
+                                <h:panelGrid columns="2">
+                                    <h:outputText value="Skip Chef override configuration:"/>
+                                    <h:selectBooleanCheckbox value="#{clusterManagementController.skipChef}"/>
+                                    <!--TODO BaremetalGroupModel-->
+                                </h:panelGrid>
+                                <h:panelGrid columns="4" columnClasses="label, value">
+                                    <p:dataTable id="groupList" var="group"
+                                                 value="#{clusterManagementController.baremetalGroupsModel}"
+                                                 rowKey="#{group.securityGroup}"
+                                                 selection="#{clusterManagementController.selectedBaremetalGroup}"
+                                                 selectionMode="multiple"
+                                                 editable="false">
+                                        <f:facet name="header">
+                                            Click delete selection after selecting multiple instances to delete, use shift-click to select multiples
+                                        </f:facet>
+                                        <p:column headerText="Group Name">
+                                            <p:cellEditor>
+                                                <f:facet name="output">
+                                                    <h:outputText value="#{group.securityGroup}" />
+                                                </f:facet>
+                                                <f:facet name="input">
+                                                    <p:inputText value="#{group.securityGroup}" />
+                                                </f:facet>
+                                            </p:cellEditor>
+                                        </p:column>
+                                        <p:column headerText="Number of Nodes">
+                                            <p:cellEditor>
+                                                <f:facet name="output">
+                                                    <h:outputText value="#{group.number}" />
+                                                </f:facet>
+                                                <f:facet name="input">
+                                                    <p:inputText value="#{group.number}" />
+                                                </f:facet>
+                                            </p:cellEditor>
+                                        </p:column>
+                                        <p:column headerText="Hosts:">
+                                            <p:cellEditor>
+                                                <f:facet name="output">
+                                                    <h:outputText value="#{group.hosts}" />
+                                                </f:facet>
+                                                <f:facet name="input">
+                                                    <p:inputText value="#{group.hosts}" />
+                                                </f:facet>
+                                            </p:cellEditor>
+                                        </p:column>
+                                        <p:column headerText="Roles">
+                                            <p:cellEditor>
+                                                <f:facet name="output">
+                                                    <h:outputText value="#{group.roles}" />
+                                                </f:facet>
+                                                                                             
+                                                <f:facet name="input">
+                                                    <h:outputText value="Roles:"/>
+                                                    <p:selectManyCheckbox id="roles" value="#{group.roles}" >  
+                                                        <f:selectItems value="#{clusterManagementController.options.roles}"  />  
+
+                                                    </p:selectManyCheckbox>  
+                                                </f:facet>
+                                               
+                                            </p:cellEditor>
+                                        </p:column>
+
+                                        
+                                    </p:dataTable>
+                                    
+                                </h:panelGrid>
+                                <p:dialog header="Remove Group" widgetVar="removeDialog" resizable="false"
+                                          id="groupDig"  
+                                          showEffect="fade" hideEffect="explode" modal="true">  
+                                    <h:outputText id="deletemsg" value="Are you sure you want to delete?" />
+                                    <p:commandButton id="acceptDelete" value="Confirm" update="groupList" 
+                                                     action="#{clusterManagementController.removeGroup}" 
+                                                     oncomplete="editLastDataTableRow removeDialog.close()"
+                                                     />
+                                </p:dialog>  
+                                <p:dialog header="Add Group" widgetVar="addGroup" resizable="false"
+                                          id="addDig"
+                                          showEffect="fade" hideEffect="explode" modal="true">
+                                    <h:panelGrid columns="2" >
+                                        <h:outputText id="addGroup" value="Group name:" />
+                                        <p:inputText id="groupName" 
+                                                     value="#{clusterManagementController.options.addBaremetalGroupName.securityGroup}"
+                                                     />
+                                        <h:outputText value="Number of Nodes:"/>
+                                        <p:inputText value="#{clusterManagementController.options.addBaremetalGroupName.number}"/>
+                                        <h:outputText value="Hosts:"/>
+                                        <p:inputTextarea value="#{clusterManagementController.options.inputHosts}" autoResize="true"/>
+                                        <h:outputText value="Roles:"/>
+                                        <p:selectManyCheckbox value="#{clusterManagementController.options.addBaremetalGroupName.roles}" >  
+                                            <f:selectItems value="#{clusterManagementController.options.roles}"  />  
+                                        </p:selectManyCheckbox>  
+                                        
+
+                                    </h:panelGrid>
+                                    <p:commandButton id="acceptName" value="Confirm" update="groupList" 
+                                                     action="#{clusterManagementController.addGroup}"
+                                                     oncomplete="editLastDataTableRow addGroup.close()"
+                                                     />
+
+                                </p:dialog>
+                                <p:commandButton id="addGroupButton" value="New Group" 
+                                                 icon="ui-icon-plusthick"
+                                                 update="mainForm:addGroup" 
+                                                 oncomplete="addGroup.show()" title="VIew"
+                                                 />
+                                <p:commandButton id="deleteButton" value="Delete Selection" 
+                                                 update="mainForm:deletemsg" 
+                                                 oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
+                            </p:panel>
+                        </p:tab>
+                        
+                          <p:tab id="chefAttributes" title="Override Chef">
+                            <p:panel header="Override Chef">
+
+                                <h:messages errorClass="error"/>
+
+                                <h:panelGrid columns="3" columnClasses="label, value">
+                                    <p:dataTable id="roleList" var="chef"
+                                                 value="#{clusterManagementController.chefAttributesModel}"
+                                                 rowKey="#{chef.role}"
+                                                 selection="#{clusterManagementController.selectedAttributes}"
+                                                 selectionMode="multiple"
+                                                 editable="true">
+
+                                        <f:facet name="header">
+                                            Click delete selection after selecting multiple instances to delete, use shift-click to select multiples
+                                        </f:facet>
+                                        <p:column headerText="Role">
+                                            <p:cellEditor>
+                                                <f:facet name="output">
+                                                    <h:outputText value="#{chef.role}" />
+                                                </f:facet>
+                                                <f:facet name="input">
+                                                    <p:selectOneMenu 
+                                                        value="#{clusterManagementController.options.addRole.role}" >
+                                                        <f:selectItem itemLabel="Select One" itemValue="" /> 
+                                                        <f:selectItems value="#{clusterManagementController.options.roles}" />
+                                                    </p:selectOneMenu>
+                                                </f:facet>
+                                            </p:cellEditor>
+                                        </p:column>
+                                        <p:column headerText="Chef JSON">
+                                            <p:cellEditor>
+                                                <f:facet name="output">
+                                                    <h:outputText value="" />
+                                                </f:facet>
+                                                <f:facet name="input">
+                                                    <p:inputTextarea autoResize="true" value="#{chef.chefJson}"  />
+                                                </f:facet>
+                                            </p:cellEditor>
+                                        </p:column>
+                                        <p:column headerText="Actions">
+                                            <p:rowEditor />
+                                        </p:column>
+
+                                    </p:dataTable>
+                                </h:panelGrid>
+                                <p:dialog header="Remove Json" widgetVar="removeChefJSONDialog" resizable="false"
+                                          id="removeJSONDig"  
+                                          showEffect="fade" hideEffect="explode" modal="true">  
+                                    <h:outputText id="deleteJSON" value="Are you sure you want to delete?" />
+                                    <p:commandButton  value="Confirm" update="roleList" 
+                                                      action="#{clusterManagementController.removeChefJson}" 
+                                                      oncomplete="editLastDataTableRow removeChefJSONDialog.close()"
+                                                      />
+                                </p:dialog>  
+                                <p:dialog header="Add Json" widgetVar="addChefJSONDialog" resizable="false"
+                                          id="addJSONDig"
+                                          showEffect="fade" hideEffect="explode" modal="true">
+                                    <h:panelGrid columns="2">
+                                        <h:outputText id="addJSON" value="Role:" />
+                                        <p:selectOneMenu id="chefRoles" 
+                                                         value="#{clusterManagementController.options.addRole.role}" >
+                                            <f:selectItem itemLabel="Select One" itemValue="" /> 
+                                            <f:selectItems value="#{clusterManagementController.options.roles}" />
+                                        </p:selectOneMenu>
+                                        <h:outputText value="Chef JSON:"/>
+                                        <p:inputTextarea  autoResize="true" 
+                                                          value="#{clusterManagementController.options.addRole.chefJson}"/>
+                                    </h:panelGrid>
+
+
+                                    <p:commandButton  value="Confirm" update="groupList" 
+                                                      action="#{clusterManagementController.addChefJson}"
+                                                      oncomplete="editLastDataTableRow addChefJSONDialog.close()"
+                                                      />
+
+                                </p:dialog>
+                                <p:commandButton id="addChefButton" value="New Chef" 
+                                                 icon="ui-icon-plusthick"
+                                                 update="mainForm:addJSON" 
+                                                 oncomplete="addChefJSONDialog.show()" title="VIew"
+                                                 />
+                                <p:commandButton id="deleteChefButton" value="Delete Selection" 
+                                                 update="mainForm:deleteJSON" 
+                                                 oncomplete="removeChefJSONDialog.show()" icon="ui-icon-minusthick" 
+                                                 title="View"/>
+                            </p:panel>
+                        </p:tab>
+                        <p:tab id="confirm" title="Confirmation">
+                            <p:panel header="Confirmation">
+
+                                <ui:include src="/sauron/template/baremetalDescription.xhtml"/>
+
+
+
+                            </p:panel>
+                            <p:commandButton value="Submit" update="growl"
+                                             actionListener="#{clusterManagementController.generateTable}"
+                                             action="proceedLaunchCluster"/>
+                        </p:tab>
+                    </p:wizard>
+                </h:form>
+            </div>
+        </ui:composition>
+    </h:body>
+</html>
+
