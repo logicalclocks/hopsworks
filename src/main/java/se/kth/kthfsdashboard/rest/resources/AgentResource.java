@@ -110,10 +110,10 @@ public class AgentResource {
                 logger.log(Level.INFO, "Could not register host with id {0}: unknown host id.", hostId);
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
-            if (host.isRegistered()) {
-                logger.log(Level.INFO, "Did not register host with id {0}: already registered.", hostId);
-                return Response.status(Response.Status.NOT_FOUND).build();
-            }
+//            if (host.isRegistered()) {
+//                logger.log(Level.INFO, "Did not register host with id {0}: already registered.", hostId);
+//                return Response.status(Response.Status.NOT_FOUND).build();
+//            }
             String csr = json.getString("csr");
             String certificate = PKIUtils.signWithServerCertificate(csr);
 

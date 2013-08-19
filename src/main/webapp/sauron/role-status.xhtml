@@ -226,7 +226,7 @@
                             </p:commandButton> 
                         </h:panelGrid>
                     </h:form> 
-
+                    
                     <h:form id="graphs">
 
                         <p:outputPanel rendered="#{graphController.showNamenodeGraphs()}">
@@ -253,6 +253,15 @@
                                 <p:graphicImage value="#{graphController.datanodeGraphUrl(g)}" />   
                             </p:dataGrid>                 
                         </p:outputPanel>   
+                        
+                        <p:outputPanel rendered="#{graphController.showResourceManagerGraphs()}">
+                            <p:toolbar>
+                                <p:toolbarGroup align="left"><p:outputLabel value="Resource Manager Queue Metrics"/></p:toolbarGroup>
+                            </p:toolbar>
+                            <p:dataGrid  var="g" value="#{graphController.resourceManagerGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                                <p:graphicImage value="#{graphController.resourceManagerUrl(g)}" />   
+                            </p:dataGrid>                 
+                        </p:outputPanel>                          
 
                     </h:form>         
                 </p:outputPanel>     
