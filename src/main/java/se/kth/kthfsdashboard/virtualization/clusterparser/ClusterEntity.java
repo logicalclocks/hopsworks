@@ -31,6 +31,9 @@ public class ClusterEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String clusterName;
+    
+    private String clusterType;
+    
     @Column(columnDefinition = "text")
     private String yamlContent;
 
@@ -51,6 +54,14 @@ public class ClusterEntity implements Serializable {
 
     public void setClusterName(String clusterName) {
         this.clusterName = clusterName;
+    }
+
+    public String getClusterType() {
+        return clusterType;
+    }
+
+    public void setClusterType(String clusterType) {
+        this.clusterType = clusterType;
     }
 
     public String getYamlContent() {

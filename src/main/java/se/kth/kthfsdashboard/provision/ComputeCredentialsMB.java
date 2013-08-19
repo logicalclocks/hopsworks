@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.kthfsdashboard.virtualization;
+package se.kth.kthfsdashboard.provision;
 
 import java.io.Serializable;
 import javax.faces.application.FacesMessage;
@@ -30,6 +30,8 @@ public class ComputeCredentialsMB implements Serializable {
     private String rackspaceKey;
     private String privateIP;
     private String publicKey;
+    private boolean baremetal = false;
+    private String privateKey;
 
     public String getPrivateIP() {
         return privateIP;
@@ -46,6 +48,24 @@ public class ComputeCredentialsMB implements Serializable {
     public void setPrivateIP(String privateIP) {
         this.privateIP = privateIP;
     }
+
+    public boolean isBaremetal() {
+        return baremetal;
+    }
+
+    public void setBaremetal(boolean baremetal) {
+        this.baremetal = baremetal;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+    }
+    
+    
 
     /**
      * Creates a new instance of ComputeCredentialsMB

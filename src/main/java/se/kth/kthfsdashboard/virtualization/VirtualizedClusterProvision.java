@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
@@ -59,6 +58,15 @@ import org.jclouds.scriptbuilder.domain.StatementList;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import se.kth.kthfsdashboard.host.Host;
 import se.kth.kthfsdashboard.host.HostEJB;
+import se.kth.kthfsdashboard.provision.DeploymentPhase;
+import se.kth.kthfsdashboard.provision.DeploymentProgressFacade;
+import se.kth.kthfsdashboard.provision.MessageController;
+import se.kth.kthfsdashboard.provision.NodeStatusTracker;
+import se.kth.kthfsdashboard.provision.Provider;
+import se.kth.kthfsdashboard.provision.Provision;
+import se.kth.kthfsdashboard.provision.ProvisionController;
+import se.kth.kthfsdashboard.provision.RoleMapPorts;
+import se.kth.kthfsdashboard.provision.ScriptBuilder;
 import se.kth.kthfsdashboard.virtualization.clusterparser.Cluster;
 import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
 
@@ -105,7 +113,7 @@ public final class VirtualizedClusterProvision implements Provision{
      * Constructor of a VirtualizedClusterProvision
      */
 
-    public VirtualizedClusterProvision(VirtualizationController controller) {
+    public VirtualizedClusterProvision(ProvisionController controller) {
         this.provider = Provider.fromString(controller.getProvider());
         this.id = controller.getId();
         this.key = controller.getKey();
@@ -306,8 +314,8 @@ public final class VirtualizedClusterProvision implements Provision{
         try {
             TemplateBuilder kthfsTemplate = templateKTHFS(cluster, service.templateBuilder());
             //Use better Our scriptbuilder abstraction
-            JHDFSScriptBuilder initScript = JHDFSScriptBuilder.builder()
-                    .scriptType(JHDFSScriptBuilder.ScriptType.INIT)
+            ScriptBuilder initScript = ScriptBuilder.builder()
+                    .scriptType(ScriptBuilder.ScriptType.INIT)
                     .publicKey(publicKey)
                     .build();
             selectProviderTemplateOptions(cluster, kthfsTemplate, initScript);
@@ -398,6 +406,7 @@ public final class VirtualizedClusterProvision implements Provision{
 
     /*
      * In EC2 seems to work, Openstack seems to have issues
+     * This is the procedure we do for baremetal but without the jclouds API
      *  @beta version
      */
     public boolean parallelLaunchNodesBasicSetup() {
@@ -407,8 +416,8 @@ public final class VirtualizedClusterProvision implements Provision{
         pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(cluster.getNodes().size()));
         final TemplateBuilder kthfsTemplate = templateKTHFS(cluster, service.templateBuilder());
         //Use better Our scriptbuilder abstraction
-        JHDFSScriptBuilder initScript = JHDFSScriptBuilder.builder()
-                .scriptType(JHDFSScriptBuilder.ScriptType.INIT)
+        ScriptBuilder initScript = ScriptBuilder.builder()
+                .scriptType(ScriptBuilder.ScriptType.INIT)
                 .publicKey(publicKey)
                 .build();
 
@@ -424,24 +433,26 @@ public final class VirtualizedClusterProvision implements Provision{
             final StoreResults results = new StoreResults(group.getRoles(), latch);
             //Generate listenable future that will store the results in the hashmap when done
             ListenableFuture<Set<? extends NodeMetadata>> groupCreation =
-                    pool.submit(new Callable<Set<? extends NodeMetadata>>() {
-                @Override
-                public Set<? extends NodeMetadata> call() {
-                    Set<? extends NodeMetadata> ready = null;
-                    try {
-                        ready = service.createNodesInGroup(group.getSecurityGroup(), group.getNumber(), kthfsTemplate.build());
-
-                    } catch (RunNodesException e) {
-                        System.out.println("error adding nodes to group "
-                                + "ups something got wrong on the nodes");
-                    } finally {
-                        nodes.put(group.getSecurityGroup(), ready);
-                        messages.addMessage("Nodes created in Security Group " + group.getSecurityGroup() + " with "
-                                + "basic setup");
-                        return ready;
-                    }
-                }
-            });
+                    pool.submit(new CreateGroupCallable(service, group, kthfsTemplate, nodes, messages));
+                    
+//                    new Callable<Set<? extends NodeMetadata>>() {
+//                @Override
+//                public Set<? extends NodeMetadata> call() {
+//                    Set<? extends NodeMetadata> ready = null;
+//                    try {
+//                        ready = service.createNodesInGroup(group.getSecurityGroup(), group.getNumber(), kthfsTemplate.build());
+//
+//                    } catch (RunNodesException e) {
+//                        System.out.println("error adding nodes to group "
+//                                + "ups something got wrong on the nodes");
+//                    } finally {
+//                        nodes.put(group.getSecurityGroup(), ready);
+//                        messages.addMessage("Nodes created in Security Group " + group.getSecurityGroup() + " with "
+//                                + "basic setup");
+//                        return ready;
+//                    }
+//                }
+//            });
             Futures.transform(groupCreation, results);
 
         }
@@ -464,8 +475,8 @@ public final class VirtualizedClusterProvision implements Provision{
         //We specify a thread pool with the same number of nodes in the system and resources are
         //Total Nodes*2
         pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool((int) (totalNodes * 2)));
-        JHDFSScriptBuilder.Builder scriptBuilder =
-                JHDFSScriptBuilder.builder().scriptType(JHDFSScriptBuilder.ScriptType.INSTALL);
+        ScriptBuilder.Builder scriptBuilder =
+                ScriptBuilder.builder().scriptType(ScriptBuilder.ScriptType.INSTALL);
         Set<NodeMetadata> groupLaunch = new HashSet<NodeMetadata>(mgms.keySet());
         groupLaunch.addAll(ndbs.keySet());
         groupLaunch.addAll(mysqlds.keySet());
@@ -492,7 +503,7 @@ public final class VirtualizedClusterProvision implements Provision{
         pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(max * 2));
         //latch = new CountDownLatch(mgmNodes.size());
         //First phase mgm configuration
-        JHDFSScriptBuilder.Builder scriptBuilder = JHDFSScriptBuilder.builder()
+        ScriptBuilder.Builder scriptBuilder = ScriptBuilder.builder()
                 .mgms(mgmIP)
                 .mysql(mySQLClientsIP)
                 .namenodes(namenodesIP)
@@ -500,7 +511,7 @@ public final class VirtualizedClusterProvision implements Provision{
                 .privateIP(privateIP)
                 .publicKey(publicKey)
                 .clusterName(cluster.getName())
-                .scriptType(JHDFSScriptBuilder.ScriptType.JHDFS);
+                .scriptType(ScriptBuilder.ScriptType.JHDFS);
 
         //Asynchronous node launch
         //launch mgms
@@ -599,7 +610,7 @@ public final class VirtualizedClusterProvision implements Provision{
 
         //From minecraft example, how to include your own event handlers
         context.utils()
-                .eventBus().register(VirtualizationController.ScriptLogger.INSTANCE);
+                .eventBus().register(ProvisionController.ScriptLogger.INSTANCE);
         messages.addMessage(
                 "Virtualization context initialized, start opening security groups");
         return context.getComputeService();
@@ -640,7 +651,7 @@ public final class VirtualizedClusterProvision implements Provision{
      * EC2 jclouds detects the login by default
      */
     private void selectProviderTemplateOptions(Cluster cluster, TemplateBuilder kthfsTemplate,
-            JHDFSScriptBuilder script) {
+            ScriptBuilder script) {
 
         StatementList bootstrap = new StatementList(script);
         switch (provider) {
@@ -697,7 +708,7 @@ public final class VirtualizedClusterProvision implements Provision{
     }
 
     private void nodePhase(Set<NodeMetadata> nodes, Map<NodeMetadata, List<String>> map,
-            JHDFSScriptBuilder.Builder scriptBuilder, int retries) {
+            ScriptBuilder.Builder scriptBuilder, int retries) {
         //Iterative Approach
         pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
         while (!pendingNodes.isEmpty() && retries != 0) {
@@ -709,7 +720,7 @@ public final class VirtualizedClusterProvision implements Provision{
                 List<String> ips = new LinkedList(node.getPrivateAddresses());
                 //Listenable Future
                 String nodeId = node.getId();
-                JHDFSScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node), nodeId.replaceFirst("/", "-"));
+                ScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node), nodeId.replaceFirst("/", "-"));
                 ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
                         RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
                 future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
@@ -764,7 +775,7 @@ public final class VirtualizedClusterProvision implements Provision{
 //                List<String> ips = new LinkedList(node.getPrivateAddresses());
 //                //Listenable Future
 //                String nodeId = node.getId();
-//                JHDFSScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node), nodeId.replaceFirst("/", "-"));
+//                ScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node), nodeId.replaceFirst("/", "-"));
 //                ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
 //                        RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
 //                future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
@@ -808,7 +819,7 @@ public final class VirtualizedClusterProvision implements Provision{
         }
     }
 
-    private void nodeInstall(Set<NodeMetadata> nodes, JHDFSScriptBuilder.Builder scriptBuilder, int retries) {
+    private void nodeInstall(Set<NodeMetadata> nodes, ScriptBuilder.Builder scriptBuilder, int retries) {
         //Iterative Approach
         pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
         while (retries != 0 && !pendingNodes.isEmpty()) {
@@ -818,7 +829,7 @@ public final class VirtualizedClusterProvision implements Provision{
             while (iter.hasNext()) {
                 final NodeMetadata node = iter.next();
                 //Listenable Future
-                JHDFSScriptBuilder script = scriptBuilder.build();
+                ScriptBuilder script = scriptBuilder.build();
                 ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
                         RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
 //              
@@ -876,7 +887,7 @@ public final class VirtualizedClusterProvision implements Provision{
 //                    final NodeMetadata node = iter.next();
 ////                List<String> ips = new LinkedList(node.getPrivateAddresses());
 //                    //Listenable Future
-//                    JHDFSScriptBuilder script = scriptBuilder.build();
+//                    ScriptBuilder script = scriptBuilder.build();
 //                    ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
 //                            RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
 ////              

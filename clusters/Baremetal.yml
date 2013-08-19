@@ -3,32 +3,41 @@
 !!se.kth.kthfsdashboard.virtualization.clusterparser.Baremetal
   name: baremetal
   environment: dev
+  installPhase: true
   loginUser: ubuntu
-  
+  totalHosts: 8
   ##lists of service, we define a service with the number of instances and roles?  
   nodes:
   - securityGroup: ndb
     number: 2
-    hosts: []
+    hosts: [10.20.0.2, 10.20.0.7]
     roles:
-     [MySQLCluster*ndb]
-    authorizePorts:
-     [MySQLCluster*ndb]
+     [MySQLCluster-ndb]
+   
   - securityGroup: mgm
     number: 1
-    hosts: []
+    hosts: [10.20.0.8]
     roles:
-     [MySQLCluster*mgm]
-    authorizePorts:
-     [MySQLCluster*mgm]
+     [MySQLCluster-mgm]
+    
   - securityGroup: mysql
     number: 1
-    hosts: []
+    hosts: [10.20.0.11]
     roles:
-     [MySQLCluster*mysqld]
-    authorizePorts:
-     [MySQLCluster*mysqld]
+     [MySQLCluster-mysqld]
+    
+  - securityGroup: namenodes
+    number: 2
+    hosts: [10.20.0.12, 10.20.0.14]
+    roles:
+     [KTHFS-namenode]
+     
+  - securityGroup: datanodes
+    number: 2
+    hosts: [10.20.0.15, 10.20.0.16]
+    roles:
+     [KTHFS-datanode]
   ##Override chef attributes for roles:
-  chefAttributes:
+  chefAttributes: []
 
 ...

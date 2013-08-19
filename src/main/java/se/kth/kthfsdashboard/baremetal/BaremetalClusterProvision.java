@@ -2,14 +2,13 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.kthfsdashboard.virtualization;
+package se.kth.kthfsdashboard.baremetal;
 
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -23,11 +22,17 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.ejb.EJB;
-import net.schmizz.sshj.SSHClient;
-import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
+import se.kth.kthfsdashboard.host.Host;
 import se.kth.kthfsdashboard.host.HostEJB;
+import se.kth.kthfsdashboard.provision.DeploymentPhase;
+import se.kth.kthfsdashboard.provision.DeploymentProgressFacade;
+import se.kth.kthfsdashboard.provision.MessageController;
+import se.kth.kthfsdashboard.provision.NodeStatusTracker;
+import se.kth.kthfsdashboard.provision.Provision;
+import se.kth.kthfsdashboard.provision.ProvisionController;
+import se.kth.kthfsdashboard.provision.ScriptBuilder;
 import se.kth.kthfsdashboard.virtualization.clusterparser.Baremetal;
 import se.kth.kthfsdashboard.virtualization.clusterparser.BaremetalGroup;
 
@@ -63,14 +68,14 @@ public class BaremetalClusterProvision implements Provision {
     private CountDownLatch latch;
     private CopyOnWriteArraySet<NodeMetadata> pendingNodes;
     private int max = 0;
-    private SSHClient client;
-    private KeyProvider keys;
+//    private SSHClient client;
+//    private KeyProvider keys;
 
-    public BaremetalClusterProvision(VirtualizationController controller) {
+    public BaremetalClusterProvision(ProvisionController controller) {
         this.privateIP = controller.getPrivateIP();
         this.publicKey = controller.getPublicKey();
         this.messages = controller.getMessages();
-
+        this.privateKey = controller.getPrivateKey();
         this.progressEJB = controller.getDeploymentProgressFacade();
         this.hostEJB = controller.getHostEJB();
         this.cluster = controller.getBaremetalCluster();
@@ -79,84 +84,61 @@ public class BaremetalClusterProvision implements Provision {
     @Override
     public void initializeCluster() {
         progressEJB.createProgress(cluster);
-        try {
-            keys = client.loadKeys(privateKey, null, null);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Error loading the private Key");
-        }
+        
+//        try {
+//            keys = client.loadKeys(privateKey, null, null);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            System.out.println("Error loading the private Key");
+//        }
     }
 
     @Override
     public boolean launchNodesBasicSetup() {
         boolean status = false;
+        System.out.println("Starting the creation phase");
         latch = new CountDownLatch(cluster.getTotalHosts());
         pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(cluster.getTotalHosts()));
-        final JHDFSScriptBuilder initScript = JHDFSScriptBuilder.builder()
-                .scriptType(JHDFSScriptBuilder.ScriptType.INIT)
+        final ScriptBuilder initScript = ScriptBuilder.builder()
+                .scriptType(ScriptBuilder.ScriptType.INIT)
                 .publicKey(publicKey)
                 .build();
 
         for (final BaremetalGroup group : cluster.getNodes()) {
+
             messages.addMessage("Creating " + group.getNumber()
                     + "  nodes in Security Group " + group.getSecurityGroup());
             //Identify the biggest group
             max = max < group.getNumber() ? group.getNumber() : max;
             //iterate over the hosts
             for (final String host : group.getHosts()) {
+                try {
+                    progressEJB.initializeHostProgress(host);
+                    //baremetal we set all the values to the ip of the node
+                    Host newHost = new Host();
+                    newHost.setHostname(host);
+                    newHost.setHostId(host);
+                    newHost.setPublicIp(host);
+                    newHost.setPrivateIp(host);
+                    hostEJB.storeHost(newHost, true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("Error updating the DataBase");
+                }
                 //Generate function to store results when done
                 final StoreResults results = new StoreResults(group.getRoles(), latch);
                 ListenableFuture<Set<NodeMetadata>> groupCreation =
-                        pool.submit(new InitializeBaremetalCallable(privateKey, host, cluster.getLoginUser(), 
+                        pool.submit(new InitializeBaremetalCallable(privateKey, host, cluster.getLoginUser(),
                         initScript, nodes, group, messages));
-                        
-//                        new Callable<Set<NodeMetadata>>() {
-//                    @Override
-//                    public Set<NodeMetadata> call() {
-//                        Set<NodeMetadata> ready = new HashSet<NodeMetadata>();
-//                        client = new SSHClient();
-//                        client.addHostKeyVerifier(new PromiscuousVerifier());
-//                        try {
-//                            keys = client.loadKeys(privateKey, null, null);
-//
-//                            client.connect(host);
-//                            client.authPublickey(cluster.getLoginUser(), keys);
-//                            final Session session = client.startSession();
-//                            final Session.Command cmd = session.exec(initScript.render(OsFamily.UNIX));
-//                            System.out.println(IOUtils.readFully(cmd.getInputStream()).toString());
-//                            System.out.println("\n** exit status: " + cmd.getExitStatus());
-//                            NodeMetadataBuilder builder = new NodeMetadataBuilder();
-//                            Set<String> publicIP = new HashSet<String>();
-//                            publicIP.add(host);
-//                            LoginCredentials credentials = LoginCredentials.builder().user(cluster.getLoginUser())
-//                                    .privateKey(privateKey).noPassword().build();
-//                            Location location = new LocationBuilder().id("KTHFS")
-//                                    .description("RandomRegion").scope(LocationScope.HOST).build();
-//                            NodeMetadata node = builder.hostname("193.10.64.127").id("KTHFS").location(location)
-//                                    .loginPort(22)
-//                                    .name("BareMetalNode").credentials(credentials).ids("KTHFS").providerId("Physical")
-//                                    .status(NodeMetadata.Status.RUNNING)
-//                                    .publicAddresses(publicIP).privateAddresses(publicIP).build();
-//                            ready.add(node);
-//
-//
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                            System.out.println("Error loading the private Key");
-//                        } finally {
-//                            nodes.put(group.getSecurityGroup(), ready);
-//                            messages.addMessage("Nodes created in Security Group " + group.getSecurityGroup() + " with "
-//                                    + "basic setup");
-//                            return ready;
-//                        }
-//                    }
-//                });
+
                 Futures.transform(groupCreation, results);
             }
 
         }
         try {
             latch.await(cluster.getTotalHosts() * 30, TimeUnit.MINUTES);
+            progressEJB.updateCreationCluster(cluster.getName());
+            status = true;
         } catch (InterruptedException e) {
             System.out.println("Failed to launch init script in some machines");
             status = false;
@@ -171,8 +153,8 @@ public class BaremetalClusterProvision implements Provision {
         //Total Nodes*2
         pool = MoreExecutors.listeningDecorator(
                 Executors.newFixedThreadPool((int) (cluster.getTotalHosts() * 2)));
-        JHDFSScriptBuilder.Builder scriptBuilder =
-                JHDFSScriptBuilder.builder().scriptType(JHDFSScriptBuilder.ScriptType.INSTALL);
+        ScriptBuilder.Builder scriptBuilder =
+                ScriptBuilder.builder().scriptType(ScriptBuilder.ScriptType.INSTALLBAREMETAL);
         Set<NodeMetadata> groupLaunch = new HashSet<NodeMetadata>(mgms.keySet());
         groupLaunch.addAll(ndbs.keySet());
         groupLaunch.addAll(mysqlds.keySet());
@@ -186,16 +168,18 @@ public class BaremetalClusterProvision implements Provision {
             e.printStackTrace();
             System.out.println("Error updating in the DataBase");
         }
+        System.out.println("Starting Install phase on the machines");
         nodeInstall(groupLaunch, scriptBuilder, RETRIES);
     }
 
     @Override
     public void deployingConfigurations() {
-         //create pool of threads taking the biggest cluster
+        //create pool of threads taking the biggest cluster
+        System.out.println("Starting Configuration script on the machines.");
         pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(max * 2));
         //latch = new CountDownLatch(mgmNodes.size());
         //First phase mgm configuration
-        JHDFSScriptBuilder.Builder scriptBuilder = JHDFSScriptBuilder.builder()
+        ScriptBuilder.Builder scriptBuilder = ScriptBuilder.builder()
                 .mgms(mgmIP)
                 .mysql(mySQLClientsIP)
                 .namenodes(namenodesIP)
@@ -203,8 +187,8 @@ public class BaremetalClusterProvision implements Provision {
                 .privateIP(privateIP)
                 .publicKey(publicKey)
                 .clusterName(cluster.getName())
-                .scriptType(JHDFSScriptBuilder.ScriptType.JHDFS);
-        
+                .scriptType(ScriptBuilder.ScriptType.CONFIGBAREMETAL);
+
         //Asynchronous node launch
         //launch mgms
         Set<NodeMetadata> groupLaunch = mgms.keySet();
@@ -247,9 +231,9 @@ public class BaremetalClusterProvision implements Provision {
         nodePhase(groupLaunch, datanodes, scriptBuilder, RETRIES);
         persistState(groupLaunch, DeploymentPhase.COMPLETE);
     }
-    
+
     private void nodePhase(Set<NodeMetadata> nodes, Map<NodeMetadata, List<String>> map,
-            JHDFSScriptBuilder.Builder scriptBuilder, int retries){
+            ScriptBuilder.Builder scriptBuilder, int retries) {
         //Iterative Approach
         pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
         while (!pendingNodes.isEmpty() && retries != 0) {
@@ -261,11 +245,11 @@ public class BaremetalClusterProvision implements Provision {
                 List<String> ips = new LinkedList(node.getPrivateAddresses());
                 //Listenable Future
                 String nodeId = node.getId();
-                JHDFSScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node), 
-                        nodeId.replaceFirst("/", "-"));
+                ScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node),
+                        nodeId);
                 ListenableFuture<ExecResponse> future = pool.submit(
                         new SubmitScriptBaremetalCallable(node, script));
-                        
+
                 future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
                         future), pool);
             }
@@ -274,33 +258,27 @@ public class BaremetalClusterProvision implements Provision {
                 //some extra time.
                 latch.await(25 * nodes.size() + 60, TimeUnit.MINUTES);
                 messages.addMessage("Launch phase complete...");
-  
             } catch (InterruptedException e) {
-
-
                 e.printStackTrace();
             } finally {
                 //Update the nodes that have finished the install phase
                 if (!pendingNodes.isEmpty()) {
-                    Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+                    Set<NodeMetadata> remain =pendingNodes;
                     //Mark the nodes that are been reinstalled
                     persistState(remain, DeploymentPhase.RETRYING);
-                    System.out.println("Retrying");
+                    System.out.println("Retrying Nodes in configuration phase");
                     --retries;
                 }
-//                try {
-//                    nodes.removeAll(pendingNodes);
-//                    persistState(nodes, DeploymentPhase.WAITING);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    System.out.println("Error updating Database");
-//                }
+
             }
 
         }
+        if(retries==0&&!pendingNodes.isEmpty()){
+            persistState(pendingNodes, DeploymentPhase.ERROR);
+        }
     }
 
-    private void nodeInstall(Set<NodeMetadata> nodes, JHDFSScriptBuilder.Builder scriptBuilder, int retries) {
+    private void nodeInstall(Set<NodeMetadata> nodes, ScriptBuilder.Builder scriptBuilder, int retries) {
         //Iterative Approach
         pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
         while (retries != 0 && !pendingNodes.isEmpty()) {
@@ -310,13 +288,10 @@ public class BaremetalClusterProvision implements Provision {
             while (iter.hasNext()) {
                 final NodeMetadata node = iter.next();
                 //Listenable Future our own for baremetal
-                final JHDFSScriptBuilder script = scriptBuilder.build();
+                final ScriptBuilder script = scriptBuilder.build();
                 ListenableFuture<ExecResponse> future = pool.submit(
                         new SubmitScriptBaremetalCallable(node, script));
 
-//                service.submitScriptOnNode(node.getId(), new StatementList(script),
-//                        RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
-//              
                 future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
                         future), pool);
             }
@@ -325,29 +300,18 @@ public class BaremetalClusterProvision implements Provision {
                 //some extra time.
                 latch.await(25 * nodes.size() + 60, TimeUnit.MINUTES);
                 messages.addMessage("Install phase complete...");
-                //error 129 openstack
-//                    if (!pendingNodes.isEmpty()) {
-//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-//                        //Mark the nodes that are been reinstalled
-//                        persistState(remain, DeploymentPhase.RETRYING);
-//                        --retries;
-//                    }
+                
             } catch (InterruptedException e) {
 
-//                    if (!pendingNodes.isEmpty()) {
-//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-//                        //Mark the nodes that are been reinstalled
-//                        persistState(remain, DeploymentPhase.RETRYING);
-//                        --retries;
-//                    }
                 e.printStackTrace();
             } finally {
                 //Update the nodes that have finished the install phase
                 if (!pendingNodes.isEmpty()) {
-                    Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
+                    Set<NodeMetadata> remain = pendingNodes;
                     //Mark the nodes that are been reinstalled
                     persistState(remain, DeploymentPhase.RETRYING);
                     --retries;
+                    System.out.println("Retrying Nodes in Install phase");
                 }
                 try {
                     nodes.removeAll(pendingNodes);
@@ -358,6 +322,9 @@ public class BaremetalClusterProvision implements Provision {
                 }
             }
 
+        }
+        if(retries==0&&!pendingNodes.isEmpty()){
+            persistState(pendingNodes, DeploymentPhase.ERROR);
         }
     }
 

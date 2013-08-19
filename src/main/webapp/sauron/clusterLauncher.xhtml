@@ -53,7 +53,7 @@
                             </div>
                         </div>
                     </div>
-                    <h:outputLabel id="statusCreate" value="#{virtualizationController.messages.showMessage()}" 
+                    <h:outputLabel id="statusCreate" value="#{provisionController.messages.showMessage()}" 
                                    />
 
                 </h:panelGrid>
@@ -67,11 +67,13 @@
                         <p:layout  id="launch" fullPage="false" style="height: 500px;">
                             <p:layoutUnit id="launcher" position="west" size="300"  header="Cluster Details" resizable="false" closable="false" collapsible="false" >
 
-                                <ui:include src="/sauron/template/clusterDescription.xhtml"/>
+                                <ui:include src="#{clusterManagementController.baremetal
+                                   ?'/sauron/template/baremetalDescription.xhtml'
+                                   :'/sauron/template/clusterDescription.xhtml'}"/>
                                 <br/>
 
                                 <p:commandButton id="startCluster" value="startCluster" 
-                                                 actionListener="#{virtualizationController.launchCluster()}"
+                                                 actionListener="#{provisionController.launchCluster()}"
                                                  action="progress"
                                                  update="success"
                                                  onclick="pollCreate.start();"

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.kthfsdashboard.virtualization;
+package se.kth.kthfsdashboard.provision;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
@@ -20,7 +20,9 @@ import org.jclouds.compute.events.StatementOnNodeFailure;
 import org.jclouds.compute.events.StatementOnNodeSubmission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.kth.kthfsdashboard.baremetal.BaremetalClusterProvision;
 import se.kth.kthfsdashboard.host.HostEJB;
+import se.kth.kthfsdashboard.virtualization.VirtualizedClusterProvision;
 import se.kth.kthfsdashboard.virtualization.clusterparser.Baremetal;
 import se.kth.kthfsdashboard.virtualization.clusterparser.Cluster;
 import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterManagementController;
@@ -31,7 +33,8 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterManagementContr
  */
 @ManagedBean
 @SessionScoped
-public class VirtualizationController implements Serializable {
+public class ProvisionController implements Serializable {
+
     @EJB
     private DeploymentProgressFacade deploymentFacade;
     @EJB
@@ -42,22 +45,22 @@ public class VirtualizationController implements Serializable {
     private ComputeCredentialsMB computeCredentialsMB;
     @ManagedProperty(value = "#{clusterManagementController}")
     private ClusterManagementController clusterController;
-    private VirtualizedClusterProvision virtualizer;
+    private Provision provisioner;
     private String provider;
     private String id;
     private String key;
     private String privateIP;
     private String publicKey;
+    private String privateKey;
     //If Openstack selected, endpoint for keystone API
     private String keystoneEndpoint;
     private ComputeService service;
     private ComputeServiceContext context;
-    
 
     /**
-     * Creates a new instance of VirtualizationController
+     * Creates a new instance of ProvisionController
      */
-    public VirtualizationController() {
+    public ProvisionController() {
     }
 
     public ComputeCredentialsMB getComputeCredentialsMB() {
@@ -108,42 +111,58 @@ public class VirtualizationController implements Serializable {
         return keystoneEndpoint;
     }
 
-    public DeploymentProgressFacade getDeploymentProgressFacade(){
+    public DeploymentProgressFacade getDeploymentProgressFacade() {
         return deploymentFacade;
     }
 
     public HostEJB getHostEJB() {
         return hostEJB;
     }
-    
-    public Cluster getCluster(){
+
+    public Cluster getCluster() {
         return clusterController.getCluster();
     }
-    
-    public Baremetal getBaremetalCluster(){
+
+    public Baremetal getBaremetalCluster() {
         return clusterController.getBaremetalCluster();
     }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+    
+    
     /*
      * Command to launch the instance
      */
+
     @Asynchronous
     public void launchCluster() {
         setCredentials();
         //messages.addMessage("Setting up credentials and initializing virtualization context...");
         //service = initContexts();
-        virtualizer = new VirtualizedClusterProvision(this);
-        virtualizer.initializeCluster();
-        if (virtualizer.launchNodesBasicSetup()) {
+        boolean installPhase;
+        if (!computeCredentialsMB.isBaremetal()) {
+            provisioner = new BaremetalClusterProvision(this);
+            installPhase=clusterController.getBaremetalCluster().isInstallPhase();
+        } else {
+            provisioner = new VirtualizedClusterProvision(this);
+            installPhase= clusterController.getCluster().isInstallPhase();
+        }
+        
+        provisioner.initializeCluster();
+        if (provisioner.launchNodesBasicSetup()) {
 //        if(virtualizer.parallelLaunchNodesBasicSetup(clusterController.getCluster())){
             //messages.addMessage("All nodes launched");
-            if (clusterController.getCluster().isInstallPhase()) {
-                virtualizer.installPhase();
+            if (installPhase) {
+                provisioner.installPhase();
             }
-            virtualizer.deployingConfigurations();
+            provisioner.deployingConfigurations();
             //messages.addSuccessMessage("Cluster launched");
         } else {
             //messages.addSuccessMessage("Deployment failure");
         }
+
 
         //messages.clearMessages();
 //        return "progress";
@@ -164,15 +183,15 @@ public class VirtualizationController implements Serializable {
             provider = Provider.AWS_EC2.toString();
             id = computeCredentialsMB.getAwsec2Id();
             key = computeCredentialsMB.getAwsec2Key();
-        }
-
-        if (!computeCredentialsMB.isOpenstack()
+        } else if (!computeCredentialsMB.isOpenstack()
                 && Provider.OPENSTACK
                 .equals(check)) {
             provider = Provider.OPENSTACK.toString();
             id = computeCredentialsMB.getOpenstackId();
             key = computeCredentialsMB.getOpenstackKey();
             keystoneEndpoint = computeCredentialsMB.getOpenstackKeystone();
+        } else if (!computeCredentialsMB.isBaremetal()) {
+            privateKey = computeCredentialsMB.getPrivateKey();
         }
 
         //Setup the private IP for the nodes to know where is the dashboard
@@ -210,11 +229,10 @@ public class VirtualizationController implements Serializable {
 //                throw new AssertionError();
 //        }
 //    }
-
-    static enum ScriptLogger {
+    public static enum ScriptLogger {
 
         INSTANCE;
-        Logger logger = LoggerFactory.getLogger(VirtualizationController.class);
+        Logger logger = LoggerFactory.getLogger(ProvisionController.class);
 
         @Subscribe
         @AllowConcurrentEvents

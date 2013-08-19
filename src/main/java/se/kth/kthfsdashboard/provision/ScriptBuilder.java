@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.kthfsdashboard.virtualization;
+package se.kth.kthfsdashboard.provision;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -17,22 +17,20 @@ import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.StatementList;
 import static org.jclouds.scriptbuilder.domain.Statements.createOrOverwriteFile;
 import static org.jclouds.scriptbuilder.domain.Statements.exec;
-import org.jclouds.scriptbuilder.statements.chef.InstallChefGems;
-import org.jclouds.scriptbuilder.statements.git.InstallGit;
 import org.jclouds.scriptbuilder.statements.ruby.InstallRubyGems;
 import org.jclouds.scriptbuilder.statements.ssh.AuthorizeRSAPublicKeys;
 
 /**
- * Setups the script to run on the VM node. For now
- * it has the init script and the generic script for the nodes.
+ * Setups the script to run on the VM node. For now it has the init script and
+ * the generic script for the nodes.
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-public class JHDFSScriptBuilder implements Statement {
+public class ScriptBuilder implements Statement {
 
     public static enum ScriptType {
 
-        INIT, INSTALL,JHDFS
+        INIT, INSTALL, JHDFS, INSTALLBAREMETAL,CONFIGBAREMETAL
     }
 
     public static Builder builder() {
@@ -123,39 +121,38 @@ public class JHDFSScriptBuilder implements Statement {
             this.key = key;
             return this;
         }
-        
-        public Builder privateIP(String ip){
-            this.privateIP= ip;
+
+        public Builder privateIP(String ip) {
+            this.privateIP = ip;
             return this;
         }
-        
-        public Builder clusterName(String name){
-            this.clusterName=name;
+
+        public Builder clusterName(String name) {
+            this.clusterName = name;
             return this;
         }
-        
-        public Builder nodeId(String id){
-            this.nodeId=id;
+
+        public Builder nodeId(String id) {
+            this.nodeId = id;
             return this;
         }
         /*
          * Default script build, use when defined all the other building options
          */
 
-        public JHDFSScriptBuilder build() {
-            return new JHDFSScriptBuilder(scriptType, ndbs, mgms, mysql, 
-                    namenodes, roles, nodeIP, nodeId, key, privateIP,clusterName);
+        public ScriptBuilder build() {
+            return new ScriptBuilder(scriptType, ndbs, mgms, mysql,
+                    namenodes, roles, nodeIP, nodeId, key, privateIP, clusterName);
         }
         /*
          * Same as default but in this case we include the ip during the build and the roles.
          */
 
-        public JHDFSScriptBuilder build(String ip, List<String> roles, String nodeId) {
-            return new JHDFSScriptBuilder(scriptType, ndbs, mgms, mysql, 
-                    namenodes, roles, ip, nodeId, key,privateIP,clusterName);
+        public ScriptBuilder build(String ip, List<String> roles, String nodeId) {
+            return new ScriptBuilder(scriptType, ndbs, mgms, mysql,
+                    namenodes, roles, ip, nodeId, key, privateIP, clusterName);
         }
     }
-    
     private ScriptType scriptType;
     private List<String> ndbs;
     private List<String> mgms;
@@ -168,8 +165,8 @@ public class JHDFSScriptBuilder implements Statement {
     private String clusterName;
     private String nodeId;
 
-    protected JHDFSScriptBuilder(ScriptType scriptType, List<String> ndbs, List<String> mgms,
-            List<String> mysql, List<String> namenodes, List<String> roles, String ip, String nodeId, String key, 
+    protected ScriptBuilder(ScriptType scriptType, List<String> ndbs, List<String> mgms,
+            List<String> mysql, List<String> namenodes, List<String> roles, String ip, String nodeId, String key,
             String privateIP, String clusterName) {
         this.scriptType = scriptType;
         this.ndbs = ndbs;
@@ -179,9 +176,9 @@ public class JHDFSScriptBuilder implements Statement {
         this.roles = roles;
         this.ip = ip;
         this.key = key;
-        this.privateIP= privateIP;
-        this.clusterName=clusterName;
-        this.nodeId=nodeId;
+        this.privateIP = privateIP;
+        this.clusterName = clusterName;
+        this.nodeId = nodeId;
     }
 
     @Override
@@ -203,21 +200,17 @@ public class JHDFSScriptBuilder implements Statement {
                 List<String> keys = new ArrayList();
                 keys.add(key);
                 statements.add(new AuthorizeRSAPublicKeys(keys));
-//                statements.add(exec("sudo apt-get update;"));
                 statements.add(exec("sudo apt-get install -f -y --force-yes make;"));
                 statements.add(exec("sudo apt-get install -f -y -qq --force-yes ruby1.9.1-full;"));
                 statements.add(exec("sudo apt-get install -f -y --force-yes git;"));
                 statements.add(InstallRubyGems.builder()
                         .version("1.8.10")
                         .build());
-                statements.add(
-                        InstallChefGems.builder()
-                        .version("10.20.0").build());
-                
-               
-                
-//                statements.add(exec("sudo apt-get update;"));
-//                statements.add(exec("sudo apt-get install -y git;"));
+//                statements.add(
+//                        InstallChefGems.builder()
+//                        .version("10.20.0").build());
+                statements.add(exec("sudo gem install chef -v '10.20.0' --no-rdoc"));
+
                 statements.add(exec("sudo mkdir /etc/chef;"));
                 statements.add(exec("cd /etc/chef;"));
                 statements.add(exec("sudo wget http://lucan.sics.se/kthfs/solo.rb;"));
@@ -239,8 +232,7 @@ public class JHDFSScriptBuilder implements Statement {
                 statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
                 statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
                 statements.add(exec("sudo apt-get install -f -q -y libmysqlclient-dev;"));
-//                createNodeInstall(statements);
-//                statements.add(exec("sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
+
                 break;
 
             case INSTALL:
@@ -251,7 +243,14 @@ public class JHDFSScriptBuilder implements Statement {
                 createNodeConfiguration(statements);
                 statements.add(exec("sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
                 break;
-
+            case INSTALLBAREMETAL:
+                createBaremetalInstall(statements);
+                statements.add(exec("sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
+                break;
+            case CONFIGBAREMETAL:
+                createBaremetalConfig(statements);
+                statements.add(exec("sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
+                break;
 
         }
 
@@ -264,10 +263,69 @@ public class JHDFSScriptBuilder implements Statement {
      * We need the ndbs, mgms, mysqlds and namenodes ips.
      * Also we need to know the security group to generate the runlist of recipes for that group based on 
      * the roles and the node metadata to get its ips.
-     */    
+     */
     private void createNodeConfiguration(ImmutableList.Builder<Statement> statements) {
         //First we generate the recipe runlist based on the roles defined in the security group of the cluster
         List<String> runlist = createRunList();
+        //Start json
+        StringBuilder json = generateConfigJSON(runlist);
+        //Create the file in this directory in the node
+        statements.add(createOrOverwriteFile("/etc/chef/chef.json", ImmutableSet.of(json.toString())));
+    }
+
+    private void createNodeInstall(ImmutableList.Builder<Statement> statements) {
+        List<String> installList = createInstallList();
+        //Start json
+        StringBuilder json = generateInstallJSON(installList);
+
+        statements.add(createOrOverwriteFile("/etc/chef/chef.json", ImmutableSet.of(json.toString())));
+    }
+
+    /*
+     * Baremetal scripts
+     */
+    private void createBaremetalInstall(ImmutableList.Builder<Statement> statements) {
+        List<String> installList = createInstallList();
+        //Start json
+        StringBuilder json = generateInstallJSON(installList);
+        statements.add(exec("sudo bash -c 'cat > /etc/chef/chef.json <<-'END_OF_FILE'\n"
+                + json.toString() + "\nEND_OF_FILE';"));
+    }
+
+    private void createBaremetalConfig(ImmutableList.Builder<Statement> statements) {
+        //First we generate the recipe runlist based on the roles defined in the security group of the cluster
+        List<String> runlist = createRunList();
+        //Start json
+        StringBuilder json = generateConfigJSON(runlist);
+        //Create the file in this directory in the node
+        statements.add(exec("sudo bash -c 'cat > /etc/chef/chef.json <<-'END_OF_FILE'\n"
+                + json.toString() + "\nEND_OF_FILE'"));
+    }
+    
+    /*
+     * JSON generators for install list and config lists
+     */
+
+    private StringBuilder generateInstallJSON(List<String> installList) {
+        //Start json
+        StringBuilder json = new StringBuilder();
+        //Open json bracket
+        json.append("{");
+        //Recipe runlist append in the json
+        json.append("\"run_list\":[");
+        for (int i = 0; i < installList.size(); i++) {
+            if (i == installList.size() - 1) {
+                json.append("\"").append(installList.get(i)).append("\"");
+            } else {
+                json.append("\"").append(installList.get(i)).append("\",");
+            }
+        }
+        //close the json
+        json.append("]}");
+        return json;
+    }
+
+    private StringBuilder generateConfigJSON(List<String> runlist) {
         //Start json
         StringBuilder json = new StringBuilder();
         //Open json bracket
@@ -315,11 +373,11 @@ public class JHDFSScriptBuilder implements Statement {
         json.append("\"ip\":\"").append(ip).append("\",");
         //***
         json.append("\"data_memory\":\"120\",");
-        
+
         //Generate name of cluster and service for MYSQL
         json.append("\"cluster\":\"").append(clusterName).append("\",");
-        
-        json.append("\"num_ndb_slots_per_client\":\"2\"},");               
+
+        json.append("\"num_ndb_slots_per_client\":\"2\"},");
         json.append("\"memcached\":{\"mem_size\":\"128\"},");
         //***
         //Generate collectd fragment
@@ -347,17 +405,17 @@ public class JHDFSScriptBuilder implements Statement {
         //TODO ADD SUPPORT FOR MULTIPLE MGMS
         json.append("\"ndb_connectstring\":\"").append(mgms.get(0)).append("\",");
         //namenodes ips
-        
+
         json.append("\"cluster\":\"").append(clusterName).append("\",");
         json.append("\"hostid\":\"").append(nodeId).append("\",");
-        
-        if(roleSet.contains("KTHFS-datanode")||roleSet.contains("KTHFS-namenode")){
+
+        if (roleSet.contains("KTHFS-datanode") || roleSet.contains("KTHFS-namenode")) {
             json.append("\"service\":\"").append("KTHFS").append("\",");
         }
 //        else{
 //            json.append("\"service\":\"").append("MySQLCluster").append("\",");
 //        }
-        
+
         json.append("\"namenode\":{\"addrs\":[");
 
         for (int i = 0; i < namenodes.size(); i++) {
@@ -382,40 +440,23 @@ public class JHDFSScriptBuilder implements Statement {
         }
         //close the json
         json.append("]}");
-        //Create the file in this directory in the node
-        statements.add(createOrOverwriteFile("/etc/chef/chef.json", ImmutableSet.of(json.toString())));
+        return json;
     }
 
-    private void createNodeInstall(ImmutableList.Builder<Statement> statements){
-        List<String> installList = createInstallList();
-        //Start json
-        StringBuilder json = new StringBuilder();
-        //Open json bracket
-        json.append("{");
-        //Recipe runlist append in the json
-        json.append("\"run_list\":[");
-        for (int i = 0; i < installList.size(); i++) {
-            if (i == installList.size() - 1) {
-                json.append("\"").append(installList.get(i)).append("\"");
-            } else {
-                json.append("\"").append(installList.get(i)).append("\",");
-            }
-        }
-        //close the json
-        json.append("]}");
-        statements.add(createOrOverwriteFile("/etc/chef/chef.json", ImmutableSet.of(json.toString())));
-    }
-    
-    private List<String> createInstallList(){
+    /*
+     * Chef runlist generation
+     */
+    private List<String> createInstallList() {
         RunListBuilder builder = new RunListBuilder();
         builder.addRecipe("ndb::install");
         builder.addRecipe("java");
         builder.addRecipe("kthfs::install");
         return builder.build();
     }
+
     private List<String> createRunList() {
         RunListBuilder builder = new RunListBuilder();
-       // builder.addRecipe("kthfsagent");
+        // builder.addRecipe("kthfsagent");
         builder.addRecipe("kthfsagent");
         boolean collectdAdded = false;
         //Look at the roles, if it matches add the recipes for that role
@@ -435,7 +476,6 @@ public class JHDFSScriptBuilder implements Statement {
             if (role.equals("MySQLCluster-mgm")) {
 
                 builder.addRecipe("ndb::mgmd");
-
                 builder.addRecipe("ndb::mgmd-kthfs");
                 collectdAdded = true;
             }
