@@ -2,14 +2,16 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.kthfsdashboard.virtualization;
+package se.kth.kthfsdashboard.provision;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import static org.jclouds.aws.domain.Region.DEFAULT_REGIONS;
 import org.jclouds.ec2.domain.InstanceType;
+import se.kth.kthfsdashboard.virtualization.clusterparser.BaremetalGroup;
 import se.kth.kthfsdashboard.virtualization.clusterparser.ChefAttributes;
 import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
 
@@ -28,6 +30,8 @@ public class ClusterOptions {
     private final Map<String, List<String>> ec2availabilityZones = new HashMap<String, List<String>>();
     
     private int portNumber;
+    private String hosts="";
+    private BaremetalGroup addBaremetalGroupName;
     private NodeGroup addGroupName;
     private ChefAttributes addRole;
 
@@ -84,6 +88,7 @@ public class ClusterOptions {
         }
         
         addGroupName=new NodeGroup();
+        addBaremetalGroupName=new BaremetalGroup();
         addRole=new ChefAttributes();
     }
 
@@ -138,5 +143,24 @@ public class ClusterOptions {
     public void setAddGroupName(NodeGroup addGroupName) {
         this.addGroupName = addGroupName;
     }
+
+    public BaremetalGroup getAddBaremetalGroupName() {
+        return addBaremetalGroupName;
+    }
+
+    public void setAddBaremetalGroupName(BaremetalGroup addBaremetalGroupName) {
+        this.addBaremetalGroupName = addBaremetalGroupName;
+    }
+    
+    public String getInputHosts(){
+        return hosts;
+    }
+    public void setInputHosts(String hosts){
+        this.hosts=hosts;
+//       this.addBaremetalGroupName.setHosts(Arrays.asList(splittedHosts));
+    }
+//    public String getInputHosts(){
+//        return hosts;
+//    }
     
 }

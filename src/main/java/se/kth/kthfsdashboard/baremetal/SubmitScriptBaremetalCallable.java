@@ -2,8 +2,9 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.kthfsdashboard.virtualization;
+package se.kth.kthfsdashboard.baremetal;
 
+import se.kth.kthfsdashboard.provision.ScriptBuilder;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 import net.schmizz.sshj.SSHClient;
@@ -15,6 +16,7 @@ import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.scriptbuilder.domain.OsFamily;
+import se.kth.kthfsdashboard.host.Host;
 
 /**
  *
@@ -23,11 +25,11 @@ import org.jclouds.scriptbuilder.domain.OsFamily;
 public class SubmitScriptBaremetalCallable implements Callable<ExecResponse> {
 
     private NodeMetadata node;
-    private JHDFSScriptBuilder script;
+    private ScriptBuilder script;
     private SSHClient client;
     private KeyProvider keys;
 
-    public SubmitScriptBaremetalCallable(NodeMetadata node, JHDFSScriptBuilder script) {
+    public SubmitScriptBaremetalCallable(NodeMetadata node, ScriptBuilder script) {
         this.node = node;
         this.script = script;
     }
@@ -38,17 +40,23 @@ public class SubmitScriptBaremetalCallable implements Callable<ExecResponse> {
         client.addHostKeyVerifier(new PromiscuousVerifier());
         try {
             keys = client.loadKeys(node.getCredentials().getPrivateKey(), null, null);
-            client.connect(node.getPrivateAddresses().iterator().next());
+            String host= node.getPrivateAddresses().iterator().next();
+            client.connect(host);
             client.authPublickey(node.getCredentials().getUser(), keys);
             final Session session = client.startSession();
+            
+            System.out.println("Running Script on Host: "+host);
             final Command cmd = session.exec(script.render(OsFamily.UNIX));
 
             String output = IOUtils.readFully(cmd.getInputStream()).toString();
             String error = cmd.getExitErrorMessage();
             int exitStatus = cmd.getExitStatus();
+            
             System.out.println(output);
+            System.out.println(error);
             System.out.println("\n** exit status: " + exitStatus);
-
+            session.close();
+            client.disconnect();
             ExecResponse response = new ExecResponse(output, error, exitStatus);
             return response;
         } catch (IOException e) {

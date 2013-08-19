@@ -4,6 +4,7 @@
  */
 package se.kth.kthfsdashboard.virtualization;
 
+import se.kth.kthfsdashboard.provision.ScriptBuilder;
 import com.google.common.base.Function;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;
@@ -108,8 +109,8 @@ public class SSHClientTestJclouds {
     }
 
     public void simpleTest() {
-        JHDFSScriptBuilder initScript = JHDFSScriptBuilder.builder()
-                .scriptType(JHDFSScriptBuilder.ScriptType.INIT)
+        ScriptBuilder initScript = ScriptBuilder.builder()
+                .scriptType(ScriptBuilder.ScriptType.INIT)
                 .publicKey(publicKey)
                 .build();
 

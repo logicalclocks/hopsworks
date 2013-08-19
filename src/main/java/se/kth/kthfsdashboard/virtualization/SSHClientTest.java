@@ -4,6 +4,7 @@
  */
 package se.kth.kthfsdashboard.virtualization;
 
+import se.kth.kthfsdashboard.provision.ScriptBuilder;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -87,16 +88,17 @@ public class SSHClientTest {
         try {
             final Session session = client.startSession();
             try {
-                JHDFSScriptBuilder initScript = JHDFSScriptBuilder.builder()
-                        .scriptType(JHDFSScriptBuilder.ScriptType.INIT)
+                ScriptBuilder initScript = ScriptBuilder.builder()
+                        .scriptType(ScriptBuilder.ScriptType.INSTALLBAREMETAL)
                         .publicKey(publicKey)
                         .build();
                 System.out.println(initScript.render(OsFamily.UNIX));
 //                Command cmd = session.exec("sudo echo " +"'"+"#!/bin/bash\n"+initScript.render(OsFamily.UNIX)+
 //                "'"+" >> " +" ~/initScript.sh");
                 final Command cmd = session.exec(initScript.render(OsFamily.UNIX));
+                cmd.join(30, TimeUnit.MINUTES);
                 System.out.println(IOUtils.readFully(cmd.getInputStream()).toString());
-//                cmd.join(36000, TimeUnit.SECONDS);
+                
 //                cmd=session.exec("chmod u+x initScript.sh");
 //                System.out.println(IOUtils.readFully(cmd.getInputStream()).toString());
 //                cmd.join(36000, TimeUnit.SECONDS);

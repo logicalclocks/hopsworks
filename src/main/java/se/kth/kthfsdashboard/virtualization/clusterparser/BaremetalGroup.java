@@ -16,7 +16,7 @@ public class BaremetalGroup implements Serializable{
     private int number;
     private List<String> hosts;
     private List<String> roles;
-    private List<String> authorizePorts;
+    
 
     public BaremetalGroup() {
     }
@@ -52,20 +52,12 @@ public class BaremetalGroup implements Serializable{
     public void setRoles(List<String> roles) {
         this.roles = roles;
     }
-
-    public List<String> getAuthorizePorts() {
-        return authorizePorts;
-    }
-
-    public void setAuthorizePorts(List<String> authorizePorts) {
-        this.authorizePorts = authorizePorts;
-    }
-
+    
     @Override
     public String toString() {
         return "BaremetalGroup{" + "securityGroup=" + securityGroup + ", number=" 
                 + number + ", hosts=" + hosts + ", roles=" + roles + 
-                ", authorizePorts=" + authorizePorts + '}';
+                 '}';
     }
     
     

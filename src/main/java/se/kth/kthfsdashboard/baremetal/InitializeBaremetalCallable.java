@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.kthfsdashboard.virtualization;
+package se.kth.kthfsdashboard.baremetal;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -22,6 +22,8 @@ import org.jclouds.domain.LocationBuilder;
 import org.jclouds.domain.LocationScope;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.OsFamily;
+import se.kth.kthfsdashboard.provision.MessageController;
+import se.kth.kthfsdashboard.provision.ScriptBuilder;
 import se.kth.kthfsdashboard.virtualization.clusterparser.BaremetalGroup;
 
 /**
@@ -34,13 +36,13 @@ public class InitializeBaremetalCallable implements Callable<Set<NodeMetadata>>{
     private String privateKey;
     private String host;
     private String loginUser;
-    private JHDFSScriptBuilder initScript;
+    private ScriptBuilder initScript;
     private Map<String, Set<? extends NodeMetadata>> nodes;
     private BaremetalGroup group;
     private MessageController messages;
 
     public InitializeBaremetalCallable(String privateKey, String host, String loginUser, 
-            JHDFSScriptBuilder initScript, Map<String, Set<? extends NodeMetadata>> nodes, 
+            ScriptBuilder initScript, Map<String, Set<? extends NodeMetadata>> nodes, 
             BaremetalGroup group, MessageController messages) {
         this.privateKey = privateKey;
         this.host = host;
@@ -64,9 +66,12 @@ public class InitializeBaremetalCallable implements Callable<Set<NodeMetadata>>{
                             client.connect(host);
                             client.authPublickey(loginUser, keys);
                             final Session session = client.startSession();
+                            System.out.println("Starting SSH session on Host: "+host);
                             final Command cmd = session.exec(initScript.render(OsFamily.UNIX));
                             System.out.println(IOUtils.readFully(cmd.getInputStream()).toString());
                             System.out.println("\n** exit status: " + cmd.getExitStatus());
+                            session.close();
+                            client.disconnect();
                             NodeMetadataBuilder builder = new NodeMetadataBuilder();
                             Set<String> publicIP = new HashSet<String>();
                             publicIP.add(host);
@@ -74,9 +79,9 @@ public class InitializeBaremetalCallable implements Callable<Set<NodeMetadata>>{
                                     .privateKey(privateKey).noPassword().build();
                             Location location = new LocationBuilder().id("KTHFS")
                                     .description("RandomRegion").scope(LocationScope.HOST).build();
-                            NodeMetadata node = builder.hostname(host).id("KTHFS-"+host).location(location)
+                            NodeMetadata node = builder.hostname(host).id(host).location(location)
                                     .loginPort(22)
-                                    .name("BareMetalNode").credentials(credentials).ids("KTHFS").providerId("Physical")
+                                    .name("BareMetalNode").credentials(credentials).ids(host).providerId("Physical")
                                     .status(NodeMetadata.Status.RUNNING)
                                     .publicAddresses(publicIP).privateAddresses(publicIP).build();
                             ready.add(node);

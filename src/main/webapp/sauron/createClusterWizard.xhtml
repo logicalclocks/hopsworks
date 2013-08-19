@@ -34,7 +34,11 @@
             <div id="content" align="left">
                 <div class="services-header">Create Cluster Wizard:</div>
                 <p:spacer width="1" height="8" />
- <ui:include src="/sauron/template/createClusterForm.xhtml"/>
+                <ui:include src="#{clusterManagementController.baremetal
+                                   ?'/sauron/template/createBaremetalClusterForm.xhtml'
+                                    :'/sauron/template/createVirtualClusterForm.xhtml'}" 
+                            />
+                
             </div>
         </ui:define>
 
