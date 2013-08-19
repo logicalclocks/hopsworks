@@ -263,6 +263,14 @@
                             </p:dataGrid>                 
                         </p:outputPanel>                          
 
+                        <p:outputPanel rendered="#{graphController.showNodeManagerGraphs()}">
+                            <p:toolbar>
+                                <p:toolbarGroup align="left"><p:outputLabel value="Node Manager Metrics"/></p:toolbarGroup>
+                            </p:toolbar>
+                            <p:dataGrid  var="g" value="#{graphController.nodeManagerGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                                <p:graphicImage value="#{graphController.nodeManagerUrl(g)}" />   
+                            </p:dataGrid>                 
+                        </p:outputPanel>                         
                     </h:form>         
                 </p:outputPanel>     
 

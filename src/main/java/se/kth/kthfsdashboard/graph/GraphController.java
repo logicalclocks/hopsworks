@@ -52,6 +52,7 @@ public class GraphController implements Serializable {
     private List<String> datanodeActivitiesGraphs;
     private List<String> mysqlclusterActivitiesGraphs;
     private List<String> resourceManagerGraphs;
+    private List<String> nodeManagerGraphs;
     private static String URL_PATH = "/rest/collectd/graph?";
     private static final Logger logger = Logger.getLogger(GraphController.class.getName());
 
@@ -93,6 +94,8 @@ public class GraphController implements Serializable {
 
         resourceManagerGraphs = new ArrayList<String>(Arrays.asList("rm_Apps1", "rm_Apps2", "rm_Memory",
                 "rm_AggregateContainers", "rm_Containers"));
+
+        nodeManagerGraphs = new ArrayList<String>(Arrays.asList("nm_Containers1", "nm_Containers2", "nm_Memory"));
 
         mysqlclusterActivitiesGraphs = new ArrayList<String>(Arrays.asList("mysql_freeDataMemory", "mysql_totalDataMemory",
                 "mysql_freeIndexMemory", "mysql_totalIndexMemory", "mysql_simpleReads", "mysql_Reads", "mysql_Writes",
@@ -228,6 +231,10 @@ public class GraphController implements Serializable {
         return resourceManagerGraphs;
     }
 
+    public List<String> getNodeManagerGraphs() {
+        return nodeManagerGraphs;
+    }
+
     public Long getEndTime() {
         return longTime(getEnd());
     }
@@ -311,6 +318,10 @@ public class GraphController implements Serializable {
     public String resourceManagerUrl(String chartType) {
         return namenodeGraphUrl(chartType);
     }
+    
+    public String nodeManagerUrl(String chartType) {
+        return namenodeGraphUrl(chartType);
+    }    
 
     public String mysqlclusterGraphUrl(String chartType) {
         // Finds host of mysqld
@@ -344,7 +355,8 @@ public class GraphController implements Serializable {
         if (role == null) {
             return false;
         }
-        if (role.equals("datanode") || role.equals("namenode") || role.equalsIgnoreCase("ResourceManager")) {
+        if (role.equals("datanode") || role.equals("namenode") || role.equalsIgnoreCase("ResourceManager")
+                || role.equalsIgnoreCase("NodeManager")) {
             return true;
         }
         return false;
@@ -359,6 +371,13 @@ public class GraphController implements Serializable {
 
     public boolean showResourceManagerGraphs() {
         if (role.equalsIgnoreCase("ResourceManager")) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean showNodeManagerGraphs() {
+        if (role.equalsIgnoreCase("NodeManager")) {
             return true;
         }
         return false;

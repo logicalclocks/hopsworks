@@ -58,7 +58,8 @@ public class CollectdUtils {
         dd_blockVerificationFailures, dd_volumeFailures,
         mysql_freeDataMemory, mysql_totalDataMemory, mysql_freeIndexMemory, mysql_totalIndexMemory,
         mysql_simpleReads, mysql_Reads, mysql_Writes, mysql_rangeScans, mysql_tableScans,
-        rm_AggregateContainers, rm_Containers, rm_Apps1, rm_Apps2, rm_Memory;
+        rm_AggregateContainers, rm_Containers, rm_Apps1, rm_Apps2, rm_Memory,
+        nm_Containers1, nm_Containers2, nm_Memory;
     }
 
     public static Set<String> pluginInstances(String hostId, String plugin) {
@@ -997,6 +998,33 @@ public class CollectdUtils {
                 cmd.drawLine("gauge-AvailableMB", "", "value", "Available", GREEN, "%5.2lf %S");
                 cmd.drawLine("gauge-PendingMB", "", "value", "Pending", YELLOW, "%5.2lf %S");
                 cmd.drawLine("gauge-ReservedMB", "", "value", "Reserved", RED, "%5.2lf %S");
+                break;
+                
+//- ResourceManager ---------------------------------------------------------------
+
+            case nm_Containers1:
+                cmd.setTitle("Containers");
+                cmd.setVerticalLabel("");
+                cmd.setPlugin("GenericJMX-NodeManager", "");
+                cmd.drawLine("gauge-ContainersLaunched", "", "value", "Launched", YELLOW, "%5.2lf %S");
+                cmd.drawLine("gauge-ContainersCompleted", "", "value", "Completed", GREEN, "%5.2lf %S");
+                cmd.drawLine("gauge-ContainersFailed", "", "value", "Failed", RED, "%5.2lf %S");
+                cmd.drawLine("gauge-ContainersKilled", "", "value", "Killed", BLUE, "%5.2lf %S");                
+                break;
+            case nm_Containers2:
+                cmd.setTitle("Containers");
+                cmd.setVerticalLabel("");
+                cmd.setPlugin("GenericJMX-NodeManager", "");
+                cmd.drawLine("gauge-AllocatedContainers", "", "value", "Allocated", YELLOW, "%5.2lf %S");
+                cmd.drawLine("gauge-ContainersIniting", "", "value", "Initing", GREEN, "%5.2lf %S");
+                cmd.drawLine("gauge-ContainersRunning", "", "value", "Running", BLUE, "%5.2lf %S");
+                break;
+            case nm_Memory:
+                cmd.setTitle("Memory");
+                cmd.setVerticalLabel("MB");
+                cmd.setPlugin("GenericJMX-NodeManager", "");
+                cmd.drawLine("gauge-AvailableGB", "", "value", "Available", GREEN, "%5.2lf %S");
+                cmd.drawLine("gauge-AllocatedGB", "", "value", "Allocated", BLUE, "%5.2lf %S");
                 break;
                 
                 
