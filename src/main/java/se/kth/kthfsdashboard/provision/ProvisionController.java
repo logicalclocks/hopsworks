@@ -9,9 +9,12 @@ import com.google.common.eventbus.Subscribe;
 import java.io.Serializable;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateless;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
+import javax.inject.Inject;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.domain.ExecResponse;
@@ -31,6 +34,7 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterManagementContr
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
+@Stateless
 @ManagedBean
 @SessionScoped
 public class ProvisionController implements Serializable {
@@ -56,6 +60,7 @@ public class ProvisionController implements Serializable {
     private String keystoneEndpoint;
     private ComputeService service;
     private ComputeServiceContext context;
+
 
     /**
      * Creates a new instance of ProvisionController
@@ -130,42 +135,37 @@ public class ProvisionController implements Serializable {
     public String getPrivateKey() {
         return privateKey;
     }
-    
-    
+
     /*
      * Command to launch the instance
      */
-
-    @Asynchronous
     public void launchCluster() {
         setCredentials();
-        //messages.addMessage("Setting up credentials and initializing virtualization context...");
-        //service = initContexts();
+        launchProvisioner();
+
+    }
+
+    @Asynchronous
+    public void launchProvisioner() {
         boolean installPhase;
         if (!computeCredentialsMB.isBaremetal()) {
             provisioner = new BaremetalClusterProvision(this);
-            installPhase=clusterController.getBaremetalCluster().isInstallPhase();
+            installPhase = clusterController.getBaremetalCluster().isInstallPhase();
         } else {
             provisioner = new VirtualizedClusterProvision(this);
-            installPhase= clusterController.getCluster().isInstallPhase();
+            installPhase = clusterController.getCluster().isInstallPhase();
         }
-        
+
         provisioner.initializeCluster();
         if (provisioner.launchNodesBasicSetup()) {
-//        if(virtualizer.parallelLaunchNodesBasicSetup(clusterController.getCluster())){
-            //messages.addMessage("All nodes launched");
+
             if (installPhase) {
                 provisioner.installPhase();
             }
             provisioner.deployingConfigurations();
-            //messages.addSuccessMessage("Cluster launched");
-        } else {
-            //messages.addSuccessMessage("Deployment failure");
+
         }
 
-
-        //messages.clearMessages();
-//        return "progress";
     }
 
     /*

@@ -56,6 +56,11 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
     public void updateProgress(NodeProgression progress) {
         em.merge(progress);
     }
+    
+    public void deleteAllProgress(){
+        Query query = em.createQuery("DELETE FROM NodeProgression node");
+        int deleteRecords = query.executeUpdate();
+    }
 
     public void createProgress(Cluster cluster) {
 

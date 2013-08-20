@@ -42,7 +42,7 @@ public class NodeStatusTracker implements Runnable {
             }
             latch.countDown();
 
-            //...process ssh module apache ambari
+            //...process ssh
 
 
         } catch (InterruptedException e) {

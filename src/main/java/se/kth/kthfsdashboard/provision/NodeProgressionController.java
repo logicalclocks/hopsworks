@@ -38,8 +38,11 @@ public class NodeProgressionController implements Serializable {
     public List<NodeProgression> getNodes() {
 
         loadNodes();
-
         return nodes;
+    }
+    
+    public void deleteNodes(){
+        deploymentFacade.deleteAllProgress();
     }
 
     public Integer progress(NodeProgression progress) {

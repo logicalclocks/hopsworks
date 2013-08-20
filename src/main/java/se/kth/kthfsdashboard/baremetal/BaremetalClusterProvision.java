@@ -84,13 +84,6 @@ public class BaremetalClusterProvision implements Provision {
     @Override
     public void initializeCluster() {
         progressEJB.createProgress(cluster);
-        
-//        try {
-//            keys = client.loadKeys(privateKey, null, null);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            System.out.println("Error loading the private Key");
-//        }
     }
 
     @Override

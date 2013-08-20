@@ -10,31 +10,31 @@
   nodes:
   - securityGroup: ndb
     number: 2
-    hosts: [10.32.15.169, 10.34.228.222]
+    hosts: [10.34.133.121, 10.34.244.144]
     roles:
      [MySQLCluster-ndb]
    
   - securityGroup: mgm
     number: 1
-    hosts: [10.34.147.39]
+    hosts: [10.34.197.101]
     roles:
      [MySQLCluster-mgm]
     
   - securityGroup: mysql
     number: 1
-    hosts: [10.34.145.185]
+    hosts: [10.34.243.134]
     roles:
      [MySQLCluster-mysqld]
     
   - securityGroup: namenodes
     number: 2
-    hosts: [10.35.132.141, 10.34.230.136]
+    hosts: [10.34.138.81, 10.34.138.153]
     roles:
      [KTHFS-namenode]
      
   - securityGroup: datanodes
     number: 2
-    hosts: [10.35.133.11, 10.34.230.42]
+    hosts: [10.33.163.130, 10.34.244.66]
     roles:
      [KTHFS-datanode]
   ##Override chef attributes for roles:
