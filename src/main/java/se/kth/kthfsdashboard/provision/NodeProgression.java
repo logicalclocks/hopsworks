@@ -24,7 +24,9 @@ import javax.persistence.Table;
     @NamedQuery(name = "NodeProgression.findNodeByNodeID", query =
     "SELECT c FROM NodeProgression c WHERE c.nodeId = :nodeId"),
         @NamedQuery(name = "NodeProgression.AllNodeByClusterName",  
-        query = "SELECT c FROM NodeProgression c where c.cluster = :clusterName")
+        query = "SELECT c FROM NodeProgression c where c.cluster = :clusterName"),
+        @NamedQuery(name = "NodeProgression.clearComplete", query = 
+        "SELECT c FROM NodeProgression c WHERE c.phase = :phase")
 })
 public class NodeProgression implements Serializable {
 

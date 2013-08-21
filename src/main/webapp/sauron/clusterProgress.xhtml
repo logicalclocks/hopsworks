@@ -43,8 +43,9 @@
             </h:form>
 
             <div class="services-header">Deployment Progress:</div>
-            <p:panel header="Ongoing Deployments">  
-                <h:form id="clusterProgressForm">  
+            <h:form id="clusterProgressForm">
+                <p:panel header="Ongoing Deployments">  
+
 
                     <p:growl id="messages"/>  
                     <p:poll id="tableUpdate" async="true" update="deploymentTable" autoStart="true" 
@@ -95,20 +96,22 @@
                             In total there are #{fn:length(nodeProgressionController.nodes)} nodes deploying.
                         </f:facet>
                     </p:dataTable>
-                    <p:dialog header="Remove Clusters" widgetVar="removeDialog" resizable="false"
-                                  id="nodesRemoveDig"  
-                                  showEffect="fade" hideEffect="explode" modal="true">  
-                            <h:outputText id="deletemsg" value="Are you sure you want to clear?" />
-                            <p:commandButton id="acceptDelete" value="Confirm"  
-                                             action="#{nodeProgressionController.deleteNodes()}"
-                                             oncomplete="removeDialog.close()"
-                                             />
-                        </p:dialog>
-                    <p:commandButton id="deleteNodesButton" value="Delete Nodes" 
-                                         update="clusterProgressForm:deletemsg" 
-                                         oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
-                </h:form> 
-            </p:panel>
+
+
+                </p:panel>
+                <p:dialog header="Remove Clusters" widgetVar="removeDialog" resizable="false"
+                          id="nodesRemoveDig"  
+                          showEffect="fade" hideEffect="explode" modal="true">  
+                    <h:outputText id="deletemsg" value="Are you sure you want to clear?" />
+                    <p:commandButton id="acceptDelete" value="Confirm"  
+                                     action="#{nodeProgressionController.deleteNodes()}"
+                                     oncomplete="removeDialog.hide()"
+                                     />
+                </p:dialog>
+                <p:commandButton id="deleteNodesButton" value="Delete Nodes" 
+                                 update="clusterProgressForm:deletemsg" 
+                                 oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
+            </h:form> 
             <p:spacer width="1" height="8" />
         </ui:define>
     </ui:composition>

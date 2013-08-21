@@ -817,6 +817,9 @@ public final class VirtualizedClusterProvision implements Provision{
 //
 //        }
         }
+        if(retries==0&&!pendingNodes.isEmpty()){
+            persistState(pendingNodes, DeploymentPhase.ERROR);
+        }
     }
 
     private void nodeInstall(Set<NodeMetadata> nodes, ScriptBuilder.Builder scriptBuilder, int retries) {
@@ -864,6 +867,7 @@ public final class VirtualizedClusterProvision implements Provision{
                     //Mark the nodes that are been reinstalled
                     persistState(remain, DeploymentPhase.RETRYING);
                     --retries;
+                    System.out.println("Retrying Nodes in Install phase");
                 }
                 try {
                     nodes.removeAll(pendingNodes);
@@ -874,6 +878,9 @@ public final class VirtualizedClusterProvision implements Provision{
                 }
             }
 
+        }
+        if(retries==0&&!pendingNodes.isEmpty()){
+            persistState(pendingNodes, DeploymentPhase.ERROR);
         }
 
 

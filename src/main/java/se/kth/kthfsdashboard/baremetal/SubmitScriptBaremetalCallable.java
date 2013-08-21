@@ -4,7 +4,6 @@
  */
 package se.kth.kthfsdashboard.baremetal;
 
-import se.kth.kthfsdashboard.provision.ScriptBuilder;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 import net.schmizz.sshj.SSHClient;
@@ -16,7 +15,7 @@ import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.scriptbuilder.domain.OsFamily;
-import se.kth.kthfsdashboard.host.Host;
+import se.kth.kthfsdashboard.provision.ScriptBuilder;
 
 /**
  *

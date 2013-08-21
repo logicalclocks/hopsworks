@@ -41,7 +41,8 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
 
     @Override
     public List<NodeProgression> findAll() {
-        TypedQuery<NodeProgression> query = em.createNamedQuery("NodeProgression.findAll", NodeProgression.class);
+        TypedQuery<NodeProgression> query =
+                em.createNamedQuery("NodeProgression.findAll", NodeProgression.class);
         return query.getResultList();
     }
 
@@ -60,6 +61,12 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
     public void deleteAllProgress(){
         Query query = em.createQuery("DELETE FROM NodeProgression node");
         int deleteRecords = query.executeUpdate();
+    }
+    public void deleteCompleteProgress(){
+        TypedQuery<NodeProgression> query = 
+                em.createNamedQuery("NodeProgression.clearComplete", NodeProgression.class)
+                .setParameter("phase", "Complete");
+        query.executeUpdate();
     }
 
     public void createProgress(Cluster cluster) {
