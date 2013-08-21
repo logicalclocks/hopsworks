@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.kthfsdashboard.virtualization;
+package se.kth.kthfsdashboard.provision;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -36,13 +36,16 @@ public class NodeStatusTracker implements Runnable {
         try {
             ExecResponse contents = future.get();
             System.out.println(contents.getExitStatus());
-            if (contents.getExitStatus() <110) {
+
+            Integer exitStatus = contents.getExitStatus();
+            if (exitStatus==null||exitStatus<1) {
+
                 pendingNodes.remove(launchingNode);
                 System.out.println("Removing Node, script executed succesfully");
             }
             latch.countDown();
 
-            //...process ssh module apache ambari
+            //...process ssh
 
 
         } catch (InterruptedException e) {

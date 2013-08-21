@@ -2,44 +2,43 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.kthfsdashboard.virtualization;
+package se.kth.kthfsdashboard.provision;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateless;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
+import javax.inject.Inject;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.ComputeServiceContext;
 import org.jclouds.compute.domain.ExecResponse;
-import org.jclouds.compute.domain.NodeMetadata;
-import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.events.StatementOnNodeCompletion;
 import org.jclouds.compute.events.StatementOnNodeFailure;
 import org.jclouds.compute.events.StatementOnNodeSubmission;
-import org.jclouds.ec2.compute.options.EC2TemplateOptions;
-import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
-import org.jclouds.scriptbuilder.domain.StatementList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.kth.kthfsdashboard.baremetal.BaremetalClusterProvision;
 import se.kth.kthfsdashboard.host.HostEJB;
+import se.kth.kthfsdashboard.virtualization.VirtualizedClusterProvision;
+import se.kth.kthfsdashboard.virtualization.clusterparser.Baremetal;
+import se.kth.kthfsdashboard.virtualization.clusterparser.Cluster;
 import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterManagementController;
 
 /**
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
+@Stateless
 @ManagedBean
 @SessionScoped
-public class VirtualizationController implements Serializable {
+public class ProvisionController implements Serializable {
+
     @EJB
     private DeploymentProgressFacade deploymentFacade;
     @EJB
@@ -50,22 +49,22 @@ public class VirtualizationController implements Serializable {
     private ComputeCredentialsMB computeCredentialsMB;
     @ManagedProperty(value = "#{clusterManagementController}")
     private ClusterManagementController clusterController;
-    private ClusterProvision virtualizer;
+    private Provision provisioner;
     private String provider;
     private String id;
     private String key;
     private String privateIP;
     private String publicKey;
+    private String privateKey;
     //If Openstack selected, endpoint for keystone API
     private String keystoneEndpoint;
     private ComputeService service;
     private ComputeServiceContext context;
-    
 
     /**
-     * Creates a new instance of VirtualizationController
+     * Creates a new instance of ProvisionController
      */
-    public VirtualizationController() {
+    public ProvisionController() {
     }
 
     public ComputeCredentialsMB getComputeCredentialsMB() {
@@ -116,39 +115,60 @@ public class VirtualizationController implements Serializable {
         return keystoneEndpoint;
     }
 
-    public DeploymentProgressFacade getDeploymentProgressFacade(){
+    public DeploymentProgressFacade getDeploymentProgressFacade() {
         return deploymentFacade;
     }
 
     public HostEJB getHostEJB() {
         return hostEJB;
     }
-    
 
+    public Cluster getCluster() {
+        return clusterController.getCluster();
+    }
+
+    public Baremetal getBaremetalCluster() {
+        return clusterController.getBaremetalCluster();
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+    
+    
     /*
      * Command to launch the instance
      */
-    @Asynchronous
+
     public void launchCluster() {
         setCredentials();
-        //messages.addMessage("Setting up credentials and initializing virtualization context...");
-        //service = initContexts();
-        virtualizer = new ClusterProvision(this);
-        virtualizer.createSecurityGroups(clusterController.getCluster());
-        if (virtualizer.launchNodesBasicSetup(clusterController.getCluster())) {
-//        if(virtualizer.parallelLaunchNodesBasicSetup(clusterController.getCluster())){
-            //messages.addMessage("All nodes launched");
-            if (clusterController.getCluster().isInstallPhase()) {
-                virtualizer.installPhase();
-            }
-            virtualizer.deployingConfigurations(clusterController.getCluster());
-            //messages.addSuccessMessage("Cluster launched");
+        launchProvisioner();
+
+    }
+
+    @Asynchronous
+    public void launchProvisioner() {
+        boolean installPhase;
+        if (!computeCredentialsMB.isBaremetal()) {
+            provisioner = new BaremetalClusterProvision(this);
+            installPhase = clusterController.getBaremetalCluster().isInstallPhase();
+
         } else {
-            //messages.addSuccessMessage("Deployment failure");
+            provisioner = new VirtualizedClusterProvision(this);
+            installPhase = clusterController.getCluster().isInstallPhase();
         }
 
-        //messages.clearMessages();
-//        return "progress";
+        provisioner.initializeCluster();
+        if (provisioner.launchNodesBasicSetup()) {
+
+            if (installPhase) {
+                provisioner.installPhase();
+            }
+            provisioner.deployingConfigurations();
+
+        }
+
+
     }
 
     /*
@@ -166,15 +186,15 @@ public class VirtualizationController implements Serializable {
             provider = Provider.AWS_EC2.toString();
             id = computeCredentialsMB.getAwsec2Id();
             key = computeCredentialsMB.getAwsec2Key();
-        }
-
-        if (!computeCredentialsMB.isOpenstack()
+        } else if (!computeCredentialsMB.isOpenstack()
                 && Provider.OPENSTACK
                 .equals(check)) {
             provider = Provider.OPENSTACK.toString();
             id = computeCredentialsMB.getOpenstackId();
             key = computeCredentialsMB.getOpenstackKey();
             keystoneEndpoint = computeCredentialsMB.getOpenstackKeystone();
+        } else if (!computeCredentialsMB.isBaremetal()) {
+            privateKey = computeCredentialsMB.getPrivateKey();
         }
 
         //Setup the private IP for the nodes to know where is the dashboard
@@ -184,39 +204,38 @@ public class VirtualizationController implements Serializable {
 
     }
 
-    /*
-     * Select extra options depending of the provider we selected
-     * For example we include the bootstrap script to download and do basic setup the first time
-     * For openstack we override the need to generate a key pair and the user used by the image to login
-     * EC2 jclouds detects the login by default
-     */
-    private void selectProviderTemplateOptions(String provider, TemplateBuilder kthfsTemplate,
-            JHDFSScriptBuilder script) {
-        Provider check = Provider.fromString(provider);
-        StatementList bootstrap = new StatementList(script);
-        switch (check) {
-            case AWS_EC2:
-                kthfsTemplate.options(EC2TemplateOptions.Builder
-                        .runScript(bootstrap));
-                break;
-            case OPENSTACK:
-                kthfsTemplate.options(NovaTemplateOptions.Builder
-                        .overrideLoginUser(clusterController.getCluster().getProvider().getLoginUser())
-                        .generateKeyPair(true)
-                        .runScript(bootstrap));
-                break;
-            case RACKSPACE:
-
-                break;
-            default:
-                throw new AssertionError();
-        }
-    }
-
-    static enum ScriptLogger {
+//    /*
+//     * Select extra options depending of the provider we selected
+//     * For example we include the bootstrap script to download and do basic setup the first time
+//     * For openstack we override the need to generate a key pair and the user used by the image to login
+//     * EC2 jclouds detects the login by default
+//     */
+//    private void selectProviderTemplateOptions(String provider, TemplateBuilder kthfsTemplate,
+//            JHDFSScriptBuilder script) {
+//        Provider check = Provider.fromString(provider);
+//        StatementList bootstrap = new StatementList(script);
+//        switch (check) {
+//            case AWS_EC2:
+//                kthfsTemplate.options(EC2TemplateOptions.Builder
+//                        .runScript(bootstrap));
+//                break;
+//            case OPENSTACK:
+//                kthfsTemplate.options(NovaTemplateOptions.Builder
+//                        .overrideLoginUser(clusterController.getCluster().getProvider().getLoginUser())
+//                        .generateKeyPair(true)
+//                        .runScript(bootstrap));
+//                break;
+//            case RACKSPACE:
+//
+//                break;
+//            default:
+//                throw new AssertionError();
+//        }
+//    }
+    public static enum ScriptLogger {
 
         INSTANCE;
-        Logger logger = LoggerFactory.getLogger(VirtualizationController.class);
+        Logger logger = LoggerFactory.getLogger(ProvisionController.class);
 
         @Subscribe
         @AllowConcurrentEvents

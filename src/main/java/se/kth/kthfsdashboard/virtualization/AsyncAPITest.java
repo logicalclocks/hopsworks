@@ -4,6 +4,7 @@
  */
 package se.kth.kthfsdashboard.virtualization;
 
+import se.kth.kthfsdashboard.provision.ScriptBuilder;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -125,8 +126,8 @@ public class AsyncAPITest {
             kthfsOpenstack.imageNameMatches("Ubuntu_12.04");
 
             kthfsOpenstack.hardwareId("RegionSICS/" + 4);
-            JHDFSScriptBuilder initScript = JHDFSScriptBuilder.builder()
-                    .scriptType(JHDFSScriptBuilder.ScriptType.INIT)
+            ScriptBuilder initScript = ScriptBuilder.builder()
+                    .scriptType(ScriptBuilder.ScriptType.INIT)
                     .publicKey(key)
                     .build();
 

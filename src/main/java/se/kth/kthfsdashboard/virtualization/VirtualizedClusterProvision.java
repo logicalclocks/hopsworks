@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
@@ -59,6 +58,15 @@ import org.jclouds.scriptbuilder.domain.StatementList;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import se.kth.kthfsdashboard.host.Host;
 import se.kth.kthfsdashboard.host.HostEJB;
+import se.kth.kthfsdashboard.provision.DeploymentPhase;
+import se.kth.kthfsdashboard.provision.DeploymentProgressFacade;
+import se.kth.kthfsdashboard.provision.MessageController;
+import se.kth.kthfsdashboard.provision.NodeStatusTracker;
+import se.kth.kthfsdashboard.provision.Provider;
+import se.kth.kthfsdashboard.provision.Provision;
+import se.kth.kthfsdashboard.provision.ProvisionController;
+import se.kth.kthfsdashboard.provision.RoleMapPorts;
+import se.kth.kthfsdashboard.provision.ScriptBuilder;
 import se.kth.kthfsdashboard.virtualization.clusterparser.Cluster;
 import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
 
@@ -67,7 +75,7 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-public final class ClusterProvision {
+public final class VirtualizedClusterProvision implements Provision{
 
     @EJB
     private HostEJB hostEJB;
@@ -99,12 +107,13 @@ public final class ClusterProvision {
     private CopyOnWriteArraySet<NodeMetadata> pendingNodes;
     private int max = 0;
     private int totalNodes = 0;
+    private Cluster cluster;
     //private boolean debug;
     /*
-     * Constructor of a ClusterProvision
+     * Constructor of a VirtualizedClusterProvision
      */
 
-    public ClusterProvision(VirtualizationController controller) {
+    public VirtualizedClusterProvision(ProvisionController controller) {
         this.provider = Provider.fromString(controller.getProvider());
         this.id = controller.getId();
         this.key = controller.getKey();
@@ -116,6 +125,7 @@ public final class ClusterProvision {
         this.service = initContext();
         this.progressEJB = controller.getDeploymentProgressFacade();
         this.hostEJB = controller.getHostEJB();
+        this.cluster=controller.getCluster();
 
     }
 
@@ -123,7 +133,8 @@ public final class ClusterProvision {
      * Method which creates the securitygroups for the cluster 
      * through the rest client implementations in jclouds.
      */
-    public void createSecurityGroups(Cluster cluster) {
+    @Override
+    public void initializeCluster() {
         //Data structures which contains all the mappings of the ports that the roles need to be opened
         progressEJB.createProgress(cluster);
         RoleMapPorts commonTCP = new RoleMapPorts(RoleMapPorts.PortType.COMMON);
@@ -297,13 +308,14 @@ public final class ClusterProvision {
      * 
      * If successful, returns true;
      */
-    public boolean launchNodesBasicSetup(Cluster cluster) {
+    @Override
+    public boolean launchNodesBasicSetup() {
         boolean status = false;
         try {
             TemplateBuilder kthfsTemplate = templateKTHFS(cluster, service.templateBuilder());
             //Use better Our scriptbuilder abstraction
-            JHDFSScriptBuilder initScript = JHDFSScriptBuilder.builder()
-                    .scriptType(JHDFSScriptBuilder.ScriptType.INIT)
+            ScriptBuilder initScript = ScriptBuilder.builder()
+                    .scriptType(ScriptBuilder.ScriptType.INIT)
                     .publicKey(publicKey)
                     .build();
             selectProviderTemplateOptions(cluster, kthfsTemplate, initScript);
@@ -394,17 +406,18 @@ public final class ClusterProvision {
 
     /*
      * In EC2 seems to work, Openstack seems to have issues
+     * This is the procedure we do for baremetal but without the jclouds API
      *  @beta version
      */
-    public boolean parallelLaunchNodesBasicSetup(Cluster cluster) {
+    public boolean parallelLaunchNodesBasicSetup() {
         boolean status = true;
 
         latch = new CountDownLatch(cluster.getNodes().size());
         pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(cluster.getNodes().size()));
         final TemplateBuilder kthfsTemplate = templateKTHFS(cluster, service.templateBuilder());
         //Use better Our scriptbuilder abstraction
-        JHDFSScriptBuilder initScript = JHDFSScriptBuilder.builder()
-                .scriptType(JHDFSScriptBuilder.ScriptType.INIT)
+        ScriptBuilder initScript = ScriptBuilder.builder()
+                .scriptType(ScriptBuilder.ScriptType.INIT)
                 .publicKey(publicKey)
                 .build();
 
@@ -420,24 +433,26 @@ public final class ClusterProvision {
             final StoreResults results = new StoreResults(group.getRoles(), latch);
             //Generate listenable future that will store the results in the hashmap when done
             ListenableFuture<Set<? extends NodeMetadata>> groupCreation =
-                    pool.submit(new Callable<Set<? extends NodeMetadata>>() {
-                @Override
-                public Set<? extends NodeMetadata> call() {
-                    Set<? extends NodeMetadata> ready = null;
-                    try {
-                        ready = service.createNodesInGroup(group.getSecurityGroup(), group.getNumber(), kthfsTemplate.build());
-
-                    } catch (RunNodesException e) {
-                        System.out.println("error adding nodes to group "
-                                + "ups something got wrong on the nodes");
-                    } finally {
-                        nodes.put(group.getSecurityGroup(), ready);
-                        messages.addMessage("Nodes created in Security Group " + group.getSecurityGroup() + " with "
-                                + "basic setup");
-                        return ready;
-                    }
-                }
-            });
+                    pool.submit(new CreateGroupCallable(service, group, kthfsTemplate, nodes, messages));
+                    
+//                    new Callable<Set<? extends NodeMetadata>>() {
+//                @Override
+//                public Set<? extends NodeMetadata> call() {
+//                    Set<? extends NodeMetadata> ready = null;
+//                    try {
+//                        ready = service.createNodesInGroup(group.getSecurityGroup(), group.getNumber(), kthfsTemplate.build());
+//
+//                    } catch (RunNodesException e) {
+//                        System.out.println("error adding nodes to group "
+//                                + "ups something got wrong on the nodes");
+//                    } finally {
+//                        nodes.put(group.getSecurityGroup(), ready);
+//                        messages.addMessage("Nodes created in Security Group " + group.getSecurityGroup() + " with "
+//                                + "basic setup");
+//                        return ready;
+//                    }
+//                }
+//            });
             Futures.transform(groupCreation, results);
 
         }
@@ -455,12 +470,13 @@ public final class ClusterProvision {
      * Method for the install phase
      * 
      */
+    @Override
     public void installPhase() {
         //We specify a thread pool with the same number of nodes in the system and resources are
         //Total Nodes*2
         pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool((int) (totalNodes * 2)));
-        JHDFSScriptBuilder.Builder scriptBuilder =
-                JHDFSScriptBuilder.builder().scriptType(JHDFSScriptBuilder.ScriptType.INSTALL);
+        ScriptBuilder.Builder scriptBuilder =
+                ScriptBuilder.builder().scriptType(ScriptBuilder.ScriptType.INSTALL);
         Set<NodeMetadata> groupLaunch = new HashSet<NodeMetadata>(mgms.keySet());
         groupLaunch.addAll(ndbs.keySet());
         groupLaunch.addAll(mysqlds.keySet());
@@ -481,12 +497,13 @@ public final class ClusterProvision {
     /*
      * Method to setup the nodes in the correct order for our platform in the first run
      */
-    public void deployingConfigurations(Cluster cluster) {
+    @Override
+    public void deployingConfigurations() {
         //create pool of threads taking the biggest cluster
         pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(max * 2));
         //latch = new CountDownLatch(mgmNodes.size());
         //First phase mgm configuration
-        JHDFSScriptBuilder.Builder scriptBuilder = JHDFSScriptBuilder.builder()
+        ScriptBuilder.Builder scriptBuilder = ScriptBuilder.builder()
                 .mgms(mgmIP)
                 .mysql(mySQLClientsIP)
                 .namenodes(namenodesIP)
@@ -494,7 +511,7 @@ public final class ClusterProvision {
                 .privateIP(privateIP)
                 .publicKey(publicKey)
                 .clusterName(cluster.getName())
-                .scriptType(JHDFSScriptBuilder.ScriptType.JHDFS);
+                .scriptType(ScriptBuilder.ScriptType.JHDFS);
 
         //Asynchronous node launch
         //launch mgms
@@ -593,7 +610,7 @@ public final class ClusterProvision {
 
         //From minecraft example, how to include your own event handlers
         context.utils()
-                .eventBus().register(VirtualizationController.ScriptLogger.INSTANCE);
+                .eventBus().register(ProvisionController.ScriptLogger.INSTANCE);
         messages.addMessage(
                 "Virtualization context initialized, start opening security groups");
         return context.getComputeService();
@@ -634,7 +651,7 @@ public final class ClusterProvision {
      * EC2 jclouds detects the login by default
      */
     private void selectProviderTemplateOptions(Cluster cluster, TemplateBuilder kthfsTemplate,
-            JHDFSScriptBuilder script) {
+            ScriptBuilder script) {
 
         StatementList bootstrap = new StatementList(script);
         switch (provider) {
@@ -691,7 +708,7 @@ public final class ClusterProvision {
     }
 
     private void nodePhase(Set<NodeMetadata> nodes, Map<NodeMetadata, List<String>> map,
-            JHDFSScriptBuilder.Builder scriptBuilder, int retries) {
+            ScriptBuilder.Builder scriptBuilder, int retries) {
         //Iterative Approach
         pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
         while (!pendingNodes.isEmpty() && retries != 0) {
@@ -699,10 +716,11 @@ public final class ClusterProvision {
             Iterator<NodeMetadata> iter = pendingNodes.iterator();
             while (iter.hasNext()) {
                 final NodeMetadata node = iter.next();
+                System.out.println(node.toString());
                 List<String> ips = new LinkedList(node.getPrivateAddresses());
                 //Listenable Future
                 String nodeId = node.getId();
-                JHDFSScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node), nodeId.replaceFirst("/", "-"));
+                ScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node), nodeId.replaceFirst("/", "-"));
                 ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
                         RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
                 future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
@@ -738,13 +756,13 @@ public final class ClusterProvision {
                     System.out.println("Retrying");
                     --retries;
                 }
-                try {
-                    nodes.removeAll(pendingNodes);
-                    persistState(nodes, DeploymentPhase.WAITING);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.out.println("Error updating Database");
-                }
+//                try {
+//                    nodes.removeAll(pendingNodes);
+//                    persistState(nodes, DeploymentPhase.WAITING);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    System.out.println("Error updating Database");
+//                }
             }
 
 //        if (!nodes.isEmpty() && retries != 0) {
@@ -757,7 +775,7 @@ public final class ClusterProvision {
 //                List<String> ips = new LinkedList(node.getPrivateAddresses());
 //                //Listenable Future
 //                String nodeId = node.getId();
-//                JHDFSScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node), nodeId.replaceFirst("/", "-"));
+//                ScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node), nodeId.replaceFirst("/", "-"));
 //                ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
 //                        RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
 //                future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
@@ -799,9 +817,12 @@ public final class ClusterProvision {
 //
 //        }
         }
+        if(retries==0&&!pendingNodes.isEmpty()){
+            persistState(pendingNodes, DeploymentPhase.ERROR);
+        }
     }
 
-    private void nodeInstall(Set<NodeMetadata> nodes, JHDFSScriptBuilder.Builder scriptBuilder, int retries) {
+    private void nodeInstall(Set<NodeMetadata> nodes, ScriptBuilder.Builder scriptBuilder, int retries) {
         //Iterative Approach
         pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
         while (retries != 0 && !pendingNodes.isEmpty()) {
@@ -811,7 +832,7 @@ public final class ClusterProvision {
             while (iter.hasNext()) {
                 final NodeMetadata node = iter.next();
                 //Listenable Future
-                JHDFSScriptBuilder script = scriptBuilder.build();
+                ScriptBuilder script = scriptBuilder.build();
                 ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
                         RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
 //              
@@ -846,6 +867,7 @@ public final class ClusterProvision {
                     //Mark the nodes that are been reinstalled
                     persistState(remain, DeploymentPhase.RETRYING);
                     --retries;
+                    System.out.println("Retrying Nodes in Install phase");
                 }
                 try {
                     nodes.removeAll(pendingNodes);
@@ -856,6 +878,9 @@ public final class ClusterProvision {
                 }
             }
 
+        }
+        if(retries==0&&!pendingNodes.isEmpty()){
+            persistState(pendingNodes, DeploymentPhase.ERROR);
         }
 
 
@@ -869,7 +894,7 @@ public final class ClusterProvision {
 //                    final NodeMetadata node = iter.next();
 ////                List<String> ips = new LinkedList(node.getPrivateAddresses());
 //                    //Listenable Future
-//                    JHDFSScriptBuilder script = scriptBuilder.build();
+//                    ScriptBuilder script = scriptBuilder.build();
 //                    ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
 //                            RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
 ////              

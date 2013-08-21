@@ -1,0 +1,63 @@
+## YAML Template.
+---
+!!se.kth.kthfsdashboard.virtualization.clusterparser.Baremetal
+  name: ec2Baremetal
+  environment: dev
+  installPhase: true
+  loginUser: ubuntu
+  totalHosts: 8
+  ##lists of service, we define a service with the number of instances and roles?  
+  nodes:
+  - securityGroup: ndb
+    number: 2
+<<<<<<< HEAD
+    hosts: [10.34.133.121, 10.34.244.144]
+=======
+    hosts: [10.32.15.169, 10.34.228.222]
+>>>>>>> 731db54af6393302e044c4f2079f6237eda17bd4
+    roles:
+     [MySQLCluster-ndb]
+   
+  - securityGroup: mgm
+    number: 1
+<<<<<<< HEAD
+    hosts: [10.34.197.101]
+=======
+    hosts: [10.34.147.39]
+>>>>>>> 731db54af6393302e044c4f2079f6237eda17bd4
+    roles:
+     [MySQLCluster-mgm]
+    
+  - securityGroup: mysql
+    number: 1
+<<<<<<< HEAD
+    hosts: [10.34.243.134]
+=======
+    hosts: [10.34.145.185]
+>>>>>>> 731db54af6393302e044c4f2079f6237eda17bd4
+    roles:
+     [MySQLCluster-mysqld]
+    
+  - securityGroup: namenodes
+    number: 2
+<<<<<<< HEAD
+    hosts: [10.34.138.81, 10.34.138.153]
+=======
+    hosts: [10.35.132.141, 10.34.230.136]
+>>>>>>> 731db54af6393302e044c4f2079f6237eda17bd4
+    roles:
+     [KTHFS-namenode]
+     
+  - securityGroup: datanodes
+    number: 2
+<<<<<<< HEAD
+    hosts: [10.33.163.130, 10.34.244.66]
+=======
+    hosts: [10.35.133.11, 10.34.230.42]
+>>>>>>> 731db54af6393302e044c4f2079f6237eda17bd4
+    roles:
+     [KTHFS-datanode]
+  ##Override chef attributes for roles:
+  chefAttributes: []
+
+...

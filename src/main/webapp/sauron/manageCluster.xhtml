@@ -83,6 +83,9 @@
                             <p:column headerText="Cluster Name">
                                 <h:outputText value="#{cluster.clusterName}"/>
                             </p:column>
+                            <p:column headerText="Cluster Type">
+                                <h:outputText value="#{cluster.clusterType}"/>
+                            </p:column>
                             <p:column headerText="Content">
                                 <h:outputText value="#{cluster.showTrimContent()}"/>
                             </p:column>
@@ -97,10 +100,23 @@
                                              oncomplete="editLastDataTableRow removeDialog.close()"
                                              />
                         </p:dialog>
+                        <p:dialog header="Select Cluster Type" widgetVar="selectType" resizable="false"
+                                  id="clusterTypeDig"
+                                  showEffect="fade" modal="true">
+                            <h:outputText id="typeMsg" value="Select the type of cluster to configure:"/>
+                            <p:selectOneRadio id="clusterType" 
+                                              value="#{clusterManagementController.clusterType}">
+                                <f:selectItem itemLabel="Cloud Provider" itemValue="virtualized"/>
+                                <f:selectItem itemLabel="Baremetal" itemValue="baremetal"/>
+                            </p:selectOneRadio>
+                            <p:commandButton id="selectedType" value="Proceed"
+                                             action="#{clusterManagementController.proceedCreateWizard()}"/>
+                        </p:dialog>
 
                         <p:commandButton id="createButton" value="Create Cluster" 
                                          icon="ui-icon-plusthick"
-                                         action="#{clusterManagementController.proceedCreateWizard()}"
+                                         update="clusterForm:typeMsg"
+                                         oncomplete="selectType.show()"
                                          title="View"/>                        
                         <p:commandButton id="deleteClusterButton" value="Delete clusters" 
                                          update="clusterForm:deletemsg" 

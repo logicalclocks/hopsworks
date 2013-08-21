@@ -4,11 +4,9 @@
  */
 package se.kth.kthfsdashboard.virtualization.clusterparser;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -30,7 +28,7 @@ import org.primefaces.model.StreamedContent;
 import org.primefaces.model.TreeNode;
 import org.primefaces.model.UploadedFile;
 import org.yaml.snakeyaml.Yaml;
-import se.kth.kthfsdashboard.virtualization.ClusterOptions;
+import se.kth.kthfsdashboard.provision.ClusterOptions;
 
 /**
  *
@@ -43,6 +41,7 @@ public class ClusterManagementController implements Serializable {
     @EJB
     private ClusterFacade clusterEJB;
     private Cluster cluster = new Cluster();
+    private Baremetal baremetalCluster = new Baremetal();
     private UploadedFile file;
     private Yaml yaml = new Yaml();
     private boolean skipChef;
@@ -52,17 +51,21 @@ public class ClusterManagementController implements Serializable {
     private TreeNode selectedItem;
     private TreeNode[] selectedItems;
     private static Logger logger = Logger.getLogger(Cluster.class.getName());
+    private String clusterType;
     /**
      * Variables for defining options of the cluster during the editing process
      * in the tables
      */
     private List<String> zones;
     private NodeGroup[] selectedGroup;
+    private BaremetalGroup[] selectedBaremetalGroup;
     private ChefAttributes[] selectedAttributes;
     private List<NodeGroup> groups;
     private List<Integer> ports;
     private Integer[] selectedPorts;
     private NodeGroupDataModel groupsModel;
+    private BaremetalGroupDataModel baremetalGroupsModel;
+    private List<BaremetalGroup> baremetalGroups;
     private ChefAttributeDataModel chefAttributesModel;
     private List<ChefAttributes> chefAttributes;
     private ClusterEntity[] selectedClusters;
@@ -72,8 +75,13 @@ public class ClusterManagementController implements Serializable {
      * Creates a new instance of ClusterManagementController
      */
     public ClusterManagementController() {
+
+        baremetalGroups = new ArrayList<BaremetalGroup>();
+        baremetalGroupsModel = new BaremetalGroupDataModel(baremetalGroups);
+
         groups = new ArrayList<NodeGroup>();
         groupsModel = new NodeGroupDataModel(groups);
+
         ports = new ArrayList<Integer>();
         chefAttributes = new ArrayList<ChefAttributes>();
         chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
@@ -93,6 +101,14 @@ public class ClusterManagementController implements Serializable {
 
     public void setFile(UploadedFile file) {
         this.file = file;
+    }
+
+    public String getClusterType() {
+        return clusterType;
+    }
+
+    public void setClusterType(String clusterType) {
+        this.clusterType = clusterType;
     }
 
     public void handleFileUpload() {
@@ -160,6 +176,10 @@ public class ClusterManagementController implements Serializable {
         return groupsModel;
     }
 
+    public BaremetalGroupDataModel getBaremetalGroupsModel() {
+        return baremetalGroupsModel;
+    }
+
     public Integer[] getSelectedPorts() {
         return selectedPorts;
     }
@@ -174,6 +194,22 @@ public class ClusterManagementController implements Serializable {
 
     public void setPorts(List<Integer> ports) {
         this.ports = ports;
+    }
+
+    public Baremetal getBaremetalCluster() {
+        return baremetalCluster;
+    }
+
+    public void setBaremetalCluster(Baremetal baremetalCluster) {
+        this.baremetalCluster = baremetalCluster;
+    }
+
+    public BaremetalGroup[] getSelectedBaremetalGroup() {
+        return selectedBaremetalGroup;
+    }
+
+    public void setSelectedBaremetalGroup(BaremetalGroup[] selectedBaremetalGroup) {
+        this.selectedBaremetalGroup = selectedBaremetalGroup;
     }
 
     public ChefAttributes[] getSelectedAttributes() {
@@ -203,22 +239,35 @@ public class ClusterManagementController implements Serializable {
     public boolean isRenderConsole() {
         return cluster.getEnvironment().equals("dev");
     }
-    
+
     private void parseYMLtoCluster() {
         try {
             Object document = yaml.load(file.getInputstream());
 
-            if (document != null && document instanceof Cluster) {
-
-                cluster = (Cluster) document;
-                String yamlContent = yaml.dump(cluster);
+            if (document != null) {
                 ClusterEntity entity = new ClusterEntity();
-                entity.setClusterName(cluster.getName());
-                entity.setYamlContent(yamlContent);
-                clusterEJB.persistCluster(entity);
-            } else {
 
-                cluster = null;
+                if (document instanceof Cluster) {
+
+                    cluster = (Cluster) document;
+                    String yamlContent = yaml.dump(cluster);
+                    clusterType="virtualized";
+                    entity.setClusterType("virtualized");
+                    entity.setClusterName(cluster.getName());
+                    entity.setYamlContent(yamlContent);
+                    clusterEJB.persistCluster(entity);
+                } else if (document instanceof Baremetal) {
+                    baremetalCluster = (Baremetal) document;
+                    String yamlContent = yaml.dump(baremetalCluster);
+                    clusterType="baremetal";
+                    entity.setClusterType("baremetal");
+                    entity.setClusterName(baremetalCluster.getName());
+                    entity.setYamlContent(yamlContent);
+                    clusterEJB.persistCluster(entity);
+                } else {
+
+                    cluster = null;
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -238,14 +287,24 @@ public class ClusterManagementController implements Serializable {
     }
 
     public String proceedCreateWizard() {
-        cluster = new Cluster();
-        cluster.getProvider().setImage("eu-west-1/ami-ffcdce8b");
-        cluster.setInstallPhase(false);
+        if (!isBaremetal()) {
+            cluster = new Cluster();
+            cluster.getProvider().setImage("eu-west-1/ami-ffcdce8b");
+            cluster.setInstallPhase(false);
+            baremetalCluster = null;
+        } else {
+            baremetalCluster = new Baremetal();
+        }
+
         return "createClusterWizard";
     }
 
     public String proceedLauncher() {
         return "proceedLaunchCluster";
+    }
+
+    public boolean isBaremetal() {
+        return clusterType.equals("baremetal");
     }
 
     public String onFlowProcess(FlowEvent event) {
@@ -303,13 +362,28 @@ public class ClusterManagementController implements Serializable {
     }
 
     public void addGroup() {
-        groups.add(options.getAddGroupName());
-        options.setAddGroupName(new NodeGroup());
+        if (isBaremetal()) {
+            BaremetalGroup temp = options.getAddBaremetalGroupName();
+            String[] hosts = options.getInputHosts().split(",");
+
+            temp.setHosts(Arrays.asList(hosts));
+            baremetalGroups.add(temp);
+            options.setAddBaremetalGroupName(new BaremetalGroup());
+            options.setInputHosts("");
+        } else {
+            groups.add(options.getAddGroupName());
+            options.setAddGroupName(new NodeGroup());
+        }
     }
 
     public void removeGroup() {
-        Collection<NodeGroup> selection = Arrays.asList(selectedGroup);
-        groups.removeAll(selection);
+        if (isBaremetal()) {
+            Collection<BaremetalGroup> selection = Arrays.asList(selectedBaremetalGroup);
+            baremetalGroups.removeAll(selection);
+        } else {
+            Collection<NodeGroup> selection = Arrays.asList(selectedGroup);
+            groups.removeAll(selection);
+        }
     }
 
     public void addPort() {
@@ -331,30 +405,57 @@ public class ClusterManagementController implements Serializable {
     }
 
     private void persistNodes() {
-        cluster.getNodes().clear();
-        cluster.getNodes().addAll(groups);
+        if (isBaremetal()) {
+            baremetalCluster.getNodes().clear();
+            baremetalCluster.getNodes().addAll(baremetalGroups);
+        } else {
+            cluster.getNodes().clear();
+            cluster.getNodes().addAll(groups);
+        }
 
     }
 
     private void persistPorts() {
-        cluster.getAuthorizeSpecificPorts().clear();
-        cluster.getAuthorizeSpecificPorts().addAll(ports);
+        if (!isBaremetal()) {
+            cluster.getAuthorizeSpecificPorts().clear();
+            cluster.getAuthorizeSpecificPorts().addAll(ports);
+        }
     }
 
     private void persistChef() {
-        cluster.getChefAttributes().clear();
-        cluster.getChefAttributes().addAll(chefAttributes);
+        if (isBaremetal()) {
+            baremetalCluster.getChefAttributes().clear();
+            baremetalCluster.getChefAttributes().addAll(chefAttributes);
+        } else {
+            if (cluster.getChefAttributes() != null) {
+                cluster.getChefAttributes().clear();
+                cluster.getChefAttributes().addAll(chefAttributes);
+            }
+        }
     }
 
     public void generateTable(ActionEvent event) {
         if (edit != null) {
-            edit.setClusterName(cluster.getName());
-            edit.setYamlContent(yaml.dump(cluster));
+            edit.setClusterType(clusterType);
+
+            if (clusterType.equals("baremetal")) {
+                edit.setClusterName(baremetalCluster.getName());
+                edit.setYamlContent(yaml.dump(baremetalCluster));
+            } else {
+                edit.setClusterName(cluster.getName());
+                edit.setYamlContent(yaml.dump(cluster));
+            }
             clusterEJB.updateCluster(edit);
         } else {
             ClusterEntity entity = new ClusterEntity();
-            entity.setClusterName(cluster.getName());
-            entity.setYamlContent(yaml.dump(cluster));
+            entity.setClusterType(clusterType);
+            if (clusterType.equals("baremetal")) {
+                entity.setClusterName(baremetalCluster.getName());
+                entity.setYamlContent(yaml.dump(baremetalCluster));
+            } else {
+                entity.setClusterName(cluster.getName());
+                entity.setYamlContent(yaml.dump(cluster));
+            }
             clusterEJB.persistCluster(entity);
         }
         generateTreeTable();
@@ -365,22 +466,50 @@ public class ClusterManagementController implements Serializable {
         if (selectedClusters.length != 0) {
             edit = selectedClusters[0];
             String content = edit.getYamlContent();
+            clusterType = edit.getClusterType();
             Object document = yaml.load(edit.getYamlContent());
             if (document != null && document instanceof Cluster) {
+
                 cluster = (Cluster) document;
                 ports = new ArrayList<Integer>(cluster.getAuthorizeSpecificPorts());
-                chefAttributes = new ArrayList<ChefAttributes>(cluster.getChefAttributes());
+
+                if (cluster.getChefAttributes() != null) {
+
+                    chefAttributes = new ArrayList<ChefAttributes>(cluster.getChefAttributes());
+                    chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
+                } else {
+                    chefAttributes = new ArrayList<ChefAttributes>();
+                    cluster.setChefAttributes(chefAttributes);
+                    chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
+                }
                 groups = new ArrayList<NodeGroup>(cluster.getNodes());
                 groupsModel = new NodeGroupDataModel(groups);
-                chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
-                 zones = options.getEc2availabilityZones().get(cluster.getProvider().getRegion());
+
+                zones = options.getEc2availabilityZones().get(cluster.getProvider().getRegion());
                 if (cluster.getProvider().getName().equals("aws-ec2")) {
                     renderEC2 = true;
                 }
+            } else if (document != null && document instanceof Baremetal) {
+                //probably need to check references like in the cluster case
+                baremetalCluster = (Baremetal) document;
+                 if (baremetalCluster.getChefAttributes() != null) {
+
+                    chefAttributes = new ArrayList<ChefAttributes>(baremetalCluster.getChefAttributes());
+                    chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
+                } else {
+                    chefAttributes = new ArrayList<ChefAttributes>();
+                    baremetalCluster.setChefAttributes(chefAttributes);
+                    chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
+                }
+               
+                baremetalGroups = new ArrayList<BaremetalGroup>(baremetalCluster.getNodes());
+                baremetalGroupsModel = new BaremetalGroupDataModel(baremetalGroups);
+                
             } else {
                 cluster = null;
             }
         }
+
         return "createClusterWizard";
     }
 
@@ -388,10 +517,14 @@ public class ClusterManagementController implements Serializable {
         if (selectedClusters.length != 0) {
             ClusterEntity selection = selectedClusters[0];
             String content = selection.getYamlContent();
+            clusterType = selection.getClusterType();
             System.out.println(content);
             Object document = yaml.load(selection.getYamlContent());
             if (document != null && document instanceof Cluster) {
                 cluster = (Cluster) document;
+                generateTreeTable();
+            } else if (document != null && document instanceof Baremetal) {
+                baremetalCluster = (Baremetal) document;
                 generateTreeTable();
             } else {
                 cluster = null;

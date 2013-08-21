@@ -7,6 +7,22 @@
       xmlns:p="http://primefaces.org/ui"
       xmlns:fn="http://java.sun.com/jsp/jstl/functions" 
       xmlns:c="http://java.sun.com/jsp/jstl/core" >
+    <script type="text/javascript">
+        function editLastDatatableRow(){
+
+            jQuery('.ui-datatable-data tr').last().find('span.ui-icon-pencil').each(function(){
+                jQuery(this).click()
+            });
+        }
+        function start() {
+            statusDialog.show();
+        }
+
+        function stop() {
+            statusDialog.hide();
+        }
+
+    </script>
     <ui:composition template="layout.xhtml">
 
         <ui:define name="title">
@@ -27,8 +43,9 @@
             </h:form>
 
             <div class="services-header">Deployment Progress:</div>
-            <p:panel header="Ongoing Deployments">  
-                <h:form id="clusterProgressForm">  
+            <h:form id="clusterProgressForm">
+                <p:panel header="Ongoing Deployments">  
+
 
                     <p:growl id="messages"/>  
                     <p:poll id="tableUpdate" async="true" update="deploymentTable" autoStart="true" 
@@ -78,9 +95,23 @@
                         <f:facet name="footer">
                             In total there are #{fn:length(nodeProgressionController.nodes)} nodes deploying.
                         </f:facet>
-                    </p:dataTable>  
-                </h:form> 
-            </p:panel>
+                    </p:dataTable>
+
+
+                </p:panel>
+                <p:dialog header="Remove Clusters" widgetVar="removeDialog" resizable="false"
+                          id="nodesRemoveDig"  
+                          showEffect="fade" hideEffect="explode" modal="true">  
+                    <h:outputText id="deletemsg" value="Are you sure you want to clear?" />
+                    <p:commandButton id="acceptDelete" value="Confirm"  
+                                     action="#{nodeProgressionController.deleteNodes()}"
+                                     oncomplete="removeDialog.hide()"
+                                     />
+                </p:dialog>
+                <p:commandButton id="deleteNodesButton" value="Delete Nodes" 
+                                 update="clusterProgressForm:deletemsg" 
+                                 oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
+            </h:form> 
             <p:spacer width="1" height="8" />
         </ui:define>
     </ui:composition>
