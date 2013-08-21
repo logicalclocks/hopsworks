@@ -29,319 +29,357 @@ import se.kth.kthfsdashboard.utils.UrlUtils;
 @RequestScoped
 public class GraphController implements Serializable {
 
-   @EJB
-   private RoleEJB roleEjb;
-   @ManagedProperty("#{param.cluster}")
-   private String cluster;
-   @ManagedProperty("#{param.hostid}")
-   private String hostId;
-   @ManagedProperty("#{param.service}")
-   private String service;
-   @ManagedProperty("#{param.role}")
-   private String role;
-   private Date start;
-   private Date end;
-   private String period;
-   private List<DatePeriod> datePeriods = new ArrayList<DatePeriod>();
-   private List<Integer> columns;
-   private List<String> hostGraphs;
-   private List<String> namenodeServiceGraphs;
-   private List<String> namenodeGraphs;
-   private List<String> namenodeServiceActivitiesGraphs;
-   private List<String> namenodeActivitiesGraphs;
-   private List<String> datanodeActivitiesGraphs;
-   private List<String> mysqlclusterActivitiesGraphs;
-   private static String URL_PATH = "/rest/collectd/graph?";
-   private static final Logger logger = Logger.getLogger(GraphController.class.getName());
+    @EJB
+    private RoleEJB roleEjb;
+    @ManagedProperty("#{param.cluster}")
+    private String cluster;
+    @ManagedProperty("#{param.hostid}")
+    private String hostId;
+    @ManagedProperty("#{param.service}")
+    private String service;
+    @ManagedProperty("#{param.role}")
+    private String role;
+    private Date start;
+    private Date end;
+    private String period;
+    private List<DatePeriod> datePeriods = new ArrayList<DatePeriod>();
+    private List<Integer> columns;
+    private List<String> hostGraphs;
+    private List<String> namenodeServiceGraphs;
+    private List<String> namenodeGraphs;
+    private List<String> namenodeServiceActivitiesGraphs;
+    private List<String> namenodeActivitiesGraphs;
+    private List<String> datanodeActivitiesGraphs;
+    private List<String> mysqlclusterActivitiesGraphs;
+    private List<String> resourceManagerGraphs;
+    private List<String> nodeManagerGraphs;
+    private static String URL_PATH = "/rest/collectd/graph?";
+    private static final Logger logger = Logger.getLogger(GraphController.class.getName());
 
-   public GraphController() {
+    public GraphController() {
 
-      namenodeServiceGraphs = new ArrayList<String>(Arrays.asList(
-              "serv_nn_capacity", "serv_nn_files", "serv_nn_load",
-              "serv_nn_heartbeats", "serv_nn_blockreplication",
-              "serv_nn_blocks", "serv_nn_specialblocks", "serv_nn_datanodes"));
+        namenodeServiceGraphs = new ArrayList<String>(Arrays.asList(
+                "serv_nn_capacity", "serv_nn_files", "serv_nn_load",
+                "serv_nn_heartbeats", "serv_nn_blockreplication",
+                "serv_nn_blocks", "serv_nn_specialblocks", "serv_nn_datanodes"));
 
-      namenodeServiceActivitiesGraphs = new ArrayList<String>(Arrays.asList(
-              "serv_nn_r_fileinfo", "serv_nn_r_getblocklocations", "serv_nn_r_getlisting",
-              "serv_nn_r_getlinktarget", "serv_nn_r_filesingetlisting",
-              "serv_nn_w_createfile_all", "serv_nn_w_filesappended", "serv_nn_w_filesrenamed",
-              "serv_nn_w_deletefile_all", "serv_nn_w_addblock", "serv_nn_w_createsymlink",
-              "serv_nn_o_getadditionaldatanode", "serv_nn_o_transactions", "serv_nn_o_transactionsbatchedinsync",
-              "serv_nn_o_blockreport", "serv_nn_o_syncs",
-              "serv_nn_t_safemodetime", "serv_nn_t_transactionsavgtime", "serv_nn_t_syncsavgtime",
-              "serv_nn_t_blockreportavgtime"));
+        namenodeServiceActivitiesGraphs = new ArrayList<String>(Arrays.asList(
+                "serv_nn_r_fileinfo", "serv_nn_r_getblocklocations", "serv_nn_r_getlisting",
+                "serv_nn_r_getlinktarget", "serv_nn_r_filesingetlisting",
+                "serv_nn_w_createfile_all", "serv_nn_w_filesappended", "serv_nn_w_filesrenamed",
+                "serv_nn_w_deletefile_all", "serv_nn_w_addblock", "serv_nn_w_createsymlink",
+                "serv_nn_o_getadditionaldatanode", "serv_nn_o_transactions", "serv_nn_o_transactionsbatchedinsync",
+                "serv_nn_o_blockreport", "serv_nn_o_syncs",
+                "serv_nn_t_safemodetime", "serv_nn_t_transactionsavgtime", "serv_nn_t_syncsavgtime",
+                "serv_nn_t_blockreportavgtime"));
 
 
-      namenodeGraphs = new ArrayList<String>(Arrays.asList("nn_capacity", "nn_files", "nn_load",
-              "nn_heartbeats", "nn_blockreplication", "nn_blocks", "nn_specialblocks", "nn_datanodes"));
+        namenodeGraphs = new ArrayList<String>(Arrays.asList("nn_capacity", "nn_files", "nn_load",
+                "nn_heartbeats", "nn_blockreplication", "nn_blocks", "nn_specialblocks", "nn_datanodes"));
 
-      namenodeActivitiesGraphs = new ArrayList<String>(Arrays.asList("nn_r_fileinfo", "nn_r_getblocklocations",
-              "nn_r_getlisting", "nn_r_getlinktarget", "nn_r_filesingetlisting", "nn_w_createfile_all",
-              "nn_w_filesappended", "nn_w_filesrenamed", "nn_w_deletefile_all", "nn_w_addblock", "nn_w_createsymlink",
-              "nn_o_getadditionaldatanode", "nn_o_transactions", "nn_o_transactionsbatchedinsync", "nn_o_blockreport",
-              "nn_o_syncs", "nn_t_safemodetime", "nn_t_transactionsavgtime",
-              "nn_t_syncsavgtime", "nn_t_blockreportavgtime"));
+        namenodeActivitiesGraphs = new ArrayList<String>(Arrays.asList("nn_r_fileinfo", "nn_r_getblocklocations",
+                "nn_r_getlisting", "nn_r_getlinktarget", "nn_r_filesingetlisting", "nn_w_createfile_all",
+                "nn_w_filesappended", "nn_w_filesrenamed", "nn_w_deletefile_all", "nn_w_addblock", "nn_w_createsymlink",
+                "nn_o_getadditionaldatanode", "nn_o_transactions", "nn_o_transactionsbatchedinsync", "nn_o_blockreport",
+                "nn_o_syncs", "nn_t_safemodetime", "nn_t_transactionsavgtime",
+                "nn_t_syncsavgtime", "nn_t_blockreportavgtime"));
 
-      datanodeActivitiesGraphs = new ArrayList<String>(Arrays.asList("dd_heartbeats", "dd_avgTimeHeartbeats",
-              "dd_bytes", "dd_opsReads", "dd_opsWrites", "dd_blocksRead", "dd_blocksWritten",
-              "dd_blocksRemoved", "dd_blocksReplicated", "dd_blocksVerified",
-              "dd_opsReadBlock", "dd_opsWriteBlock", "dd_opsCopyBlock", "dd_opsReplaceBlock",
-              "dd_avgTimeReadBlock", "dd_avgTimeWriteBlock", "dd_avgTimeCopyBlock", "dd_avgTimeReplaceBlock",
-              "dd_opsBlockChecksum", "dd_opsBlockReports", "dd_avgTimeBlockChecksum", "dd_avgTimeBlockReports",
-              "dd_blockVerificationFailures", "dd_volumeFailures"));
+        datanodeActivitiesGraphs = new ArrayList<String>(Arrays.asList("dd_heartbeats", "dd_avgTimeHeartbeats",
+                "dd_bytes", "dd_opsReads", "dd_opsWrites", "dd_blocksRead", "dd_blocksWritten",
+                "dd_blocksRemoved", "dd_blocksReplicated", "dd_blocksVerified",
+                "dd_opsReadBlock", "dd_opsWriteBlock", "dd_opsCopyBlock", "dd_opsReplaceBlock",
+                "dd_avgTimeReadBlock", "dd_avgTimeWriteBlock", "dd_avgTimeCopyBlock", "dd_avgTimeReplaceBlock",
+                "dd_opsBlockChecksum", "dd_opsBlockReports", "dd_avgTimeBlockChecksum", "dd_avgTimeBlockReports",
+                "dd_blockVerificationFailures", "dd_volumeFailures"));
 
-      mysqlclusterActivitiesGraphs = new ArrayList<String>(Arrays.asList("mysql_freeDataMemory", "mysql_totalDataMemory",
-              "mysql_freeIndexMemory", "mysql_totalIndexMemory", "mysql_simpleReads", "mysql_Reads", "mysql_Writes",
-              "mysql_rangeScans", "mysql_tableScans"));
+        resourceManagerGraphs = new ArrayList<String>(Arrays.asList("rm_Apps1", "rm_Apps2", "rm_Memory",
+                "rm_AggregateContainers", "rm_Containers"));
 
-      hostGraphs = new ArrayList<String>(Arrays.asList("load", "memory", "df", "interface", "swap"));
+        nodeManagerGraphs = new ArrayList<String>(Arrays.asList("nm_Containers1", "nm_Containers2", "nm_Memory"));
 
-      columns = new ArrayList<Integer>(Arrays.asList(2, 3, 4, 5));
+        mysqlclusterActivitiesGraphs = new ArrayList<String>(Arrays.asList("mysql_freeDataMemory", "mysql_totalDataMemory",
+                "mysql_freeIndexMemory", "mysql_totalIndexMemory", "mysql_simpleReads", "mysql_Reads", "mysql_Writes",
+                "mysql_rangeScans", "mysql_tableScans"));
 
-      datePeriods.add(new DatePeriod("hour", "1h"));
-      datePeriods.add(new DatePeriod("2hr", "2h"));
-      datePeriods.add(new DatePeriod("4hr", "4h"));
-      datePeriods.add(new DatePeriod("day", "1d"));
-      datePeriods.add(new DatePeriod("week", "7d"));
-      datePeriods.add(new DatePeriod("month", "1m"));
-      datePeriods.add(new DatePeriod("year", "1y"));
+        hostGraphs = new ArrayList<String>(Arrays.asList("load", "memory", "df", "interface", "swap"));
 
-      Calendar c = Calendar.getInstance();
-      c.setTime(new Date());
-      c.add(Calendar.HOUR_OF_DAY, -1);
-      start = c.getTime();
-      end = new Date();
+        columns = new ArrayList<Integer>(Arrays.asList(2, 3, 4, 5));
 
-      period = "1h";
-   }
-   
-   @PostConstruct
-   public void init() {
-      logger.info("init GraphController");
-   }
+        datePeriods.add(new DatePeriod("hour", "1h"));
+        datePeriods.add(new DatePeriod("2hr", "2h"));
+        datePeriods.add(new DatePeriod("4hr", "4h"));
+        datePeriods.add(new DatePeriod("day", "1d"));
+        datePeriods.add(new DatePeriod("week", "7d"));
+        datePeriods.add(new DatePeriod("month", "1m"));
+        datePeriods.add(new DatePeriod("year", "1y"));
 
-   public String getCluster() {
-      return cluster;
-   }
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date());
+        c.add(Calendar.HOUR_OF_DAY, -1);
+        start = c.getTime();
+        end = new Date();
 
-   public void setCluster(String cluster) {
-      this.cluster = cluster;
-   }
+        period = "1h";
+    }
 
-   public String getHostId() {
-      return hostId;
-   }
+    @PostConstruct
+    public void init() {
+        logger.info("init GraphController");
+    }
 
-   public void setHostId(String hostId) {
-      this.hostId = hostId;
-   }
+    public String getCluster() {
+        return cluster;
+    }
 
-   public String getService() {
-      return service;
-   }
+    public void setCluster(String cluster) {
+        this.cluster = cluster;
+    }
 
-   public void setService(String service) {
-      this.service = service;
-   }
+    public String getHostId() {
+        return hostId;
+    }
 
-   public String getRole() {
-      return role;
-   }
+    public void setHostId(String hostId) {
+        this.hostId = hostId;
+    }
 
-   public void setRole(String role) {
-      this.role = role;
-   }
+    public String getService() {
+        return service;
+    }
 
-   public Date getStart() {
-      return start;
-   }
+    public void setService(String service) {
+        this.service = service;
+    }
 
-   public void setStart(Date start) {
-      this.start = start;
-   }
+    public String getRole() {
+        return role;
+    }
 
-   public Long getStartTime() {
-      return longTime(getStart());
-   }
+    public void setRole(String role) {
+        this.role = role;
+    }
 
-   public Date getEnd() {
-      return end;
-   }
+    public Date getStart() {
+        return start;
+    }
 
-   public void setEnd(Date end) {
-      this.end = end;
-   }
+    public void setStart(Date start) {
+        this.start = start;
+    }
 
-   public String getPeriod() {
-      return period;
-   }
+    public Long getStartTime() {
+        return longTime(getStart());
+    }
 
-   public void setPeriod(String period) {
-      this.period = period;
-   }
+    public Date getEnd() {
+        return end;
+    }
 
-   public List<DatePeriod> getDatePeriods() {
-      return datePeriods;
-   }
+    public void setEnd(Date end) {
+        this.end = end;
+    }
 
-   public List<String> getNamenodeServiceGraphs() {
-      return namenodeServiceGraphs;
-   }
+    public String getPeriod() {
+        return period;
+    }
 
-   public List<Integer> getColumns() {
-      return columns;
-   }
+    public void setPeriod(String period) {
+        this.period = period;
+    }
 
-   public void setColumns(List<Integer> columns) {
-      this.columns = columns;
-   }
+    public List<DatePeriod> getDatePeriods() {
+        return datePeriods;
+    }
 
-   public List<String> getNamenodeServiceActivitiesGraphs() {
-      return namenodeServiceActivitiesGraphs;
-   }
+    public List<String> getNamenodeServiceGraphs() {
+        return namenodeServiceGraphs;
+    }
 
-   public List<String> getHostGraphs() {
-      return hostGraphs;
-   }
+    public List<Integer> getColumns() {
+        return columns;
+    }
 
-   public List<String> getNamenodeGraphs() {
-      return namenodeGraphs;
-   }
+    public void setColumns(List<Integer> columns) {
+        this.columns = columns;
+    }
 
-   public List<String> getNamenodeActivitiesGraphs() {
-      return namenodeActivitiesGraphs;
-   }
+    public List<String> getNamenodeServiceActivitiesGraphs() {
+        return namenodeServiceActivitiesGraphs;
+    }
 
-   public List<String> getDatanodeActivitiesGraphs() {
-      return datanodeActivitiesGraphs;
-   }
+    public List<String> getHostGraphs() {
+        return hostGraphs;
+    }
 
-   public List<String> getMysqlclusterActivitiesGraphs() {
-      return mysqlclusterActivitiesGraphs;
-   }
+    public List<String> getNamenodeGraphs() {
+        return namenodeGraphs;
+    }
 
-   public Long getEndTime() {
-      return longTime(getEnd());
-   }
+    public List<String> getNamenodeActivitiesGraphs() {
+        return namenodeActivitiesGraphs;
+    }
 
-   public void updateDates() {
+    public List<String> getDatanodeActivitiesGraphs() {
+        return datanodeActivitiesGraphs;
+    }
 
-      Calendar c = Calendar.getInstance();
-      c.setTime(new Date());
-      String unit = period.substring(period.length() - 1);
-      int delta = Integer.parseInt(period.substring(0, period.length() - 1));
+    public List<String> getMysqlclusterActivitiesGraphs() {
+        return mysqlclusterActivitiesGraphs;
+    }
 
-      if (unit.equals("h")) {
-         c.add(Calendar.HOUR_OF_DAY, -delta);
-      } else if (unit.equals("d")) {
-         c.add(Calendar.DAY_OF_MONTH, -delta);
-      } else if (unit.equals("m")) {
-         c.add(Calendar.MONTH, -delta);
-      } else if (unit.equals("y")) {
-         c.add(Calendar.YEAR, -delta);
-      } else {
-         return;
-      }
-      start = c.getTime();
-      end = new Date();
-   }
+    public List<String> getResourceManagerGraphs() {
+        return resourceManagerGraphs;
+    }
 
-   public void useCalendar() {
-      period = null;
-   }
+    public List<String> getNodeManagerGraphs() {
+        return nodeManagerGraphs;
+    }
 
-   private Long longTime(Date d) {
-      return d.getTime() / 1000;
-   }
+    public Long getEndTime() {
+        return longTime(getEnd());
+    }
 
-   public String graphUrl(String host, String plugin, String type, String chartType) throws MalformedURLException {
-      HashMap<String, String> params = new HashMap<String, String>();
-      params.put("chart_type", chartType);
-      params.put("start", getStartTime().toString());
-      params.put("end", getEndTime().toString());
-      params.put("host", host);
-      params.put("plugin", plugin);
-      params.put("type", type);
-      return UrlUtils.addParams(URL_PATH, params);
-   }
+    public void updateDates() {
 
-   public String hostGraphUrl(String plugin) throws MalformedURLException {
-      String type = plugin.equals("interface") ? "if_octets" : plugin;
-      return graphUrl(hostId, plugin, type, plugin + "all");
-   }
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date());
+        String unit = period.substring(period.length() - 1);
+        int delta = Integer.parseInt(period.substring(0, period.length() - 1));
 
-   public String namenodesGraphUrl(String chartType) {
-      HashMap<String, String> params = new HashMap<String, String>();
-      if (chartType.startsWith("serv_nn_")) {
-         List<String> namenodes = roleEjb.findHostId(cluster,
-                 ServiceType.KTHFS.toString(), RoleType.namenode.toString());
-         String namenodesString = "";
-         for (String namenode : namenodes) {
-            namenodesString += namenodesString.isEmpty() ? namenode : "," + namenode;
-         }
-         params.put("host", namenodesString);
-      }
-      params.put("chart_type", chartType);
-      params.put("start", getStartTime().toString());
-      params.put("end", getEndTime().toString());
-      return UrlUtils.addParams(URL_PATH, params);
-   }
+        if (unit.equals("h")) {
+            c.add(Calendar.HOUR_OF_DAY, -delta);
+        } else if (unit.equals("d")) {
+            c.add(Calendar.DAY_OF_MONTH, -delta);
+        } else if (unit.equals("m")) {
+            c.add(Calendar.MONTH, -delta);
+        } else if (unit.equals("y")) {
+            c.add(Calendar.YEAR, -delta);
+        } else {
+            return;
+        }
+        start = c.getTime();
+        end = new Date();
+    }
 
-   public String namenodeGraphUrl(String chartType) {
-      HashMap<String, String> params = new HashMap<String, String>();
-      params.put("chart_type", chartType);
-      params.put("start", getStartTime().toString());
-      params.put("end", getEndTime().toString());
-      params.put("host", hostId);
-      return UrlUtils.addParams(URL_PATH, params);
-   }
+    public void useCalendar() {
+        period = null;
+    }
 
-   public String datanodeGraphUrl(String chartType) {
-      return namenodeGraphUrl(chartType);
-   }
+    private Long longTime(Date d) {
+        return d.getTime() / 1000;
+    }
 
-   public String mysqlclusterGraphUrl(String chartType) {
-      // Finds host of mysqld
-      // Role=mysqld , Service=MySQLCluster, Clusters=cluster
-      List<Role> roles = roleEjb.findRoles(cluster, service, "mysqld");
-      String host = roles.size() > 0 ? roles.get(0).getHostId() : "";
-      HashMap<String, String> params = new HashMap<String, String>();
-      params.put("chart_type", chartType);
-      params.put("plugin", "dbi-ndbinfo");      
-      params.put("start", getStartTime().toString());
-      params.put("end", getEndTime().toString());
-      params.put("host", host);
-      if (chartType.equals("mysql_freeDataMemory")
-              || chartType.equals("mysql_freeIndexMemory")
-              || chartType.equals("mysql_totalDataMemory")
-              || chartType.equals("mysql_totalIndexMemory")) {
-         Long n = roleEjb.count(cluster, service, "ndb");
-         params.put("n", n.toString());
-      }
-      return UrlUtils.addParams(URL_PATH, params);
-   }
-   
-   public boolean showNamenodeGraphs() {
-      if (role.equals("namenode")) {
-         return true;
-      }
-      return false;
-   }
+    public String graphUrl(String host, String plugin, String type, String chartType) throws MalformedURLException {
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("chart_type", chartType);
+        params.put("start", getStartTime().toString());
+        params.put("end", getEndTime().toString());
+        params.put("host", host);
+        params.put("plugin", plugin);
+        params.put("type", type);
+        return UrlUtils.addParams(URL_PATH, params);
+    }
 
-   public boolean roleHasGraphs() {
-      if (role == null) {
-         return false;
-      }
-      if (role.equals("datanode") || role.equals("namenode")) {
-         return true;
-      }
-      return false;
-   }
+    public String hostGraphUrl(String plugin) throws MalformedURLException {
+        String type = plugin.equals("interface") ? "if_octets" : plugin;
+        return graphUrl(hostId, plugin, type, plugin + "all");
+    }
 
-   public boolean showDatanodeGraphs() {
-      if (role.equals("datanode")) {
-         return true;
-      }
-      return false;
-   }   
+    public String namenodesGraphUrl(String chartType) {
+        HashMap<String, String> params = new HashMap<String, String>();
+        if (chartType.startsWith("serv_nn_")) {
+            List<String> namenodes = roleEjb.findHostId(cluster,
+                    ServiceType.KTHFS.toString(), RoleType.namenode.toString());
+            String namenodesString = "";
+            for (String namenode : namenodes) {
+                namenodesString += namenodesString.isEmpty() ? namenode : "," + namenode;
+            }
+            params.put("host", namenodesString);
+        }
+        params.put("chart_type", chartType);
+        params.put("start", getStartTime().toString());
+        params.put("end", getEndTime().toString());
+        return UrlUtils.addParams(URL_PATH, params);
+    }
+
+    public String namenodeGraphUrl(String chartType) {
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("chart_type", chartType);
+        params.put("start", getStartTime().toString());
+        params.put("end", getEndTime().toString());
+        params.put("host", hostId);
+        return UrlUtils.addParams(URL_PATH, params);
+    }
+
+    public String datanodeGraphUrl(String chartType) {
+        return namenodeGraphUrl(chartType);
+    }
+
+    public String resourceManagerUrl(String chartType) {
+        return namenodeGraphUrl(chartType);
+    }
+    
+    public String nodeManagerUrl(String chartType) {
+        return namenodeGraphUrl(chartType);
+    }    
+
+    public String mysqlclusterGraphUrl(String chartType) {
+        // Finds host of mysqld
+        // Role=mysqld , Service=MySQLCluster, Clusters=cluster
+        List<Role> roles = roleEjb.findRoles(cluster, service, "mysqld");
+        String host = roles.size() > 0 ? roles.get(0).getHostId() : "";
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("chart_type", chartType);
+        params.put("plugin", "dbi-ndbinfo");
+        params.put("start", getStartTime().toString());
+        params.put("end", getEndTime().toString());
+        params.put("host", host);
+        if (chartType.equals("mysql_freeDataMemory")
+                || chartType.equals("mysql_freeIndexMemory")
+                || chartType.equals("mysql_totalDataMemory")
+                || chartType.equals("mysql_totalIndexMemory")) {
+            Long n = roleEjb.count(cluster, service, "ndb");
+            params.put("n", n.toString());
+        }
+        return UrlUtils.addParams(URL_PATH, params);
+    }
+
+    public boolean showNamenodeGraphs() {
+        if (role.equals("namenode")) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean roleHasGraphs() {
+        if (role == null) {
+            return false;
+        }
+        if (role.equals("datanode") || role.equals("namenode") || role.equalsIgnoreCase("ResourceManager")
+                || role.equalsIgnoreCase("NodeManager")) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean showDatanodeGraphs() {
+        if (role.equals("datanode")) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean showResourceManagerGraphs() {
+        if (role.equalsIgnoreCase("ResourceManager")) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean showNodeManagerGraphs() {
+        if (role.equalsIgnoreCase("NodeManager")) {
+            return true;
+        }
+        return false;
+    }
 }

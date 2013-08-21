@@ -19,6 +19,7 @@ import se.kth.kthfsdashboard.utils.FormatUtils;
    @NamedQuery(name = "Commands.findRunningByCluster-Service", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service AND c.status = :status ORDER BY c.startTime DESC"),
    @NamedQuery(name = "Commands.findRecentByCluster-Service-Role-HostId", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service AND c.role = :role AND c.hostId = :hostId AND (NOT c.status = :status) ORDER BY c.startTime DESC"),
    @NamedQuery(name = "Commands.findRunningByCluster-Service-Role-HostId", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service AND c.role = :role AND c.hostId = :hostId AND c.status = :status ORDER BY c.startTime DESC"),
+   @NamedQuery(name = "Commands.findByCluster-Service-Role-HostId", query = "SELECT c FROM Command c WHERE c.cluster = :cluster AND c.service = :service AND c.role = :role AND c.hostId = :hostId ORDER BY c.startTime DESC"),
 
 })
 public class Command implements Serializable {
@@ -117,4 +118,15 @@ public class Command implements Serializable {
       this.endTime = new Date();
       this.status = commandStatus.Failed;
    }
+   
+   public String getCommandInfo() {
+       return command + " " + cluster + "/" + service + "/" + role + " @ " + hostId;
+   }
+   
+    public int getProgress() {
+        if (status == Command.commandStatus.Running) {
+            return 50;
+        }
+        return 100;
+    }   
 }

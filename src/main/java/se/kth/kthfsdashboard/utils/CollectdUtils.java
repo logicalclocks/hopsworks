@@ -57,7 +57,9 @@ public class CollectdUtils {
         dd_opsBlockChecksum, dd_opsBlockReports, dd_avgTimeBlockChecksum, dd_avgTimeBlockReports,
         dd_blockVerificationFailures, dd_volumeFailures,
         mysql_freeDataMemory, mysql_totalDataMemory, mysql_freeIndexMemory, mysql_totalIndexMemory,
-        mysql_simpleReads, mysql_Reads, mysql_Writes, mysql_rangeScans, mysql_tableScans;
+        mysql_simpleReads, mysql_Reads, mysql_Writes, mysql_rangeScans, mysql_tableScans,
+        rm_AggregateContainers, rm_Containers, rm_Apps1, rm_Apps2, rm_Memory,
+        nm_Containers1, nm_Containers2, nm_Memory;
     }
 
     public static Set<String> pluginInstances(String hostId, String plugin) {
@@ -900,7 +902,6 @@ public class CollectdUtils {
                     cmd.drawLine("gauge-free_data_memory-" + i, "", "value", "Node " + i, col.get(i - 1), "%5.2lf %S");
                 }
                 break;
-
             case mysql_totalDataMemory:
                 cmd.setTitle("Total Data Memory");
                 cmd.setVerticalLabel("bytes");
@@ -909,7 +910,6 @@ public class CollectdUtils {
                     cmd.drawLine("gauge-total_data_memory-" + i, "", "value", "Node " + i, col.get(i - 1), "%5.2lf %S");
                 }
                 break;
-
             case mysql_freeIndexMemory:
                 cmd.setTitle("Free Index Memory");
                 cmd.setVerticalLabel("bytes");
@@ -918,7 +918,6 @@ public class CollectdUtils {
                     cmd.drawLine("gauge-free_index_memory-" + i, "", "value", "Node " + i, col.get(i - 1), "%5.2lf %S");
                 }
                 break;
-
             case mysql_totalIndexMemory:
                 cmd.setTitle("Total Index Memory");
                 cmd.setVerticalLabel("bytes");
@@ -927,35 +926,30 @@ public class CollectdUtils {
                     cmd.drawLine("gauge-total_index_memory-" + i, "", "value", "Node " + i, col.get(i - 1), "%5.2lf %S");
                 }
                 break;
-
             case mysql_simpleReads:
                 cmd.setTitle("Simple Reads");
                 cmd.setVerticalLabel("reads/s");
                 cmd.setPlugin("dbi-ndbinfo", "");
                 cmd.drawLine("derive-rate_counters_sum-SIMPLE_READS", "", "value", "Simple Reads", GREEN, "%5.2lf %S");
                 break;
-
             case mysql_Reads:
                 cmd.setTitle("Reads");
                 cmd.setVerticalLabel("reads/s ");
                 cmd.setPlugin("dbi-ndbinfo", "");
                 cmd.drawLine("derive-rate_counters_sum-READS", "", "value", "Reads", GREEN, "%5.2lf %S");
                 break;
-
             case mysql_Writes:
                 cmd.setTitle("Writes");
                 cmd.setVerticalLabel("writes/s");
                 cmd.setPlugin("dbi-ndbinfo", "");
                 cmd.drawLine("derive-rate_counters_sum-WRITES", "", "value", "Writes", GREEN, "%5.2lf %S");
                 break;
-
             case mysql_rangeScans:
                 cmd.setTitle("Range Scans");
                 cmd.setVerticalLabel("scans/s");
                 cmd.setPlugin("dbi-ndbinfo", "");
                 cmd.drawLine("derive-rate_counters_sum-RANGE_SCANS", "", "value", "Range Scans", GREEN, "%5.2lf %S");
                 break;
-
             case mysql_tableScans:
                 cmd.setTitle("Table Scans");
                 cmd.setVerticalLabel("scans/s");
@@ -963,6 +957,77 @@ public class CollectdUtils {
                 cmd.drawLine("derive-rate_counters_sum-TABLE_SCANS", "", "value", "Table Scans", GREEN, "%5.2lf %S");
                 break;
 
+//- ResourceManager ---------------------------------------------------------------
+
+            case rm_AggregateContainers:
+                cmd.setTitle("Aggregate Containers");
+                cmd.setVerticalLabel("");
+                cmd.setPlugin("GenericJMX-ReourceManager", "");
+                cmd.drawLine("gauge-AggregateContainersAllocated", "", "value", "Allocated", RED, "%5.2lf %S");
+                cmd.drawLine("gauge-AggregateContainersReleased", "", "value", "Released", GREEN, "%5.2lf %S");
+                break;
+            case rm_Containers:
+                cmd.setTitle("Containers");
+                cmd.setVerticalLabel("");
+                cmd.setPlugin("GenericJMX-ReourceManager", "");
+                cmd.drawLine("gauge-AllocatedContainers", "", "value", "Allocated", RED, "%5.2lf %S");
+                cmd.drawLine("gauge-PendingContainers", "", "value", "Pending", YELLOW, "%5.2lf %S");
+                cmd.drawLine("gauge-ReservedContainers", "", "value", "Reserved", BLUE, "%5.2lf %S");
+                break;
+            case rm_Apps1:
+                cmd.setTitle("Apps");
+                cmd.setVerticalLabel("");
+                cmd.setPlugin("GenericJMX-ReourceManager", "");
+                cmd.drawLine("gauge-AppsSubmitted", "", "value", "Submitted", BLUE, "%5.2lf %S");
+                cmd.drawLine("gauge-AppsCompleted", "", "value", "Completed", GREEN, "%5.2lf %S");
+                cmd.drawLine("gauge-AppsRunning", "", "value", "Running", RED, "%5.2lf %S");
+                cmd.drawLine("gauge-AppsPending", "", "value", "Pending", YELLOW, "%5.2lf %S");
+                break;
+            case rm_Apps2:
+                cmd.setTitle("Apps");
+                cmd.setVerticalLabel("");
+                cmd.setPlugin("GenericJMX-ReourceManager", "");
+                cmd.drawLine("gauge-AppsFailed", "", "value", "Failed", RED, "%5.2lf %S");
+                cmd.drawLine("gauge-AppsKilled", "", "value", "Killed", BLUE, "%5.2lf %S");
+                break;
+            case rm_Memory:
+                cmd.setTitle("Memory");
+                cmd.setVerticalLabel("MB");
+                cmd.setPlugin("GenericJMX-ReourceManager", "");
+                cmd.drawLine("gauge-AllocatedMB", "", "value", "Allocated", BLUE, "%5.2lf %S");
+                cmd.drawLine("gauge-AvailableMB", "", "value", "Available", GREEN, "%5.2lf %S");
+                cmd.drawLine("gauge-PendingMB", "", "value", "Pending", YELLOW, "%5.2lf %S");
+                cmd.drawLine("gauge-ReservedMB", "", "value", "Reserved", RED, "%5.2lf %S");
+                break;
+                
+//- ResourceManager ---------------------------------------------------------------
+
+            case nm_Containers1:
+                cmd.setTitle("Containers");
+                cmd.setVerticalLabel("");
+                cmd.setPlugin("GenericJMX-NodeManager", "");
+                cmd.drawLine("gauge-ContainersLaunched", "", "value", "Launched", YELLOW, "%5.2lf %S");
+                cmd.drawLine("gauge-ContainersCompleted", "", "value", "Completed", GREEN, "%5.2lf %S");
+                cmd.drawLine("gauge-ContainersFailed", "", "value", "Failed", RED, "%5.2lf %S");
+                cmd.drawLine("gauge-ContainersKilled", "", "value", "Killed", BLUE, "%5.2lf %S");                
+                break;
+            case nm_Containers2:
+                cmd.setTitle("Containers");
+                cmd.setVerticalLabel("");
+                cmd.setPlugin("GenericJMX-NodeManager", "");
+                cmd.drawLine("gauge-AllocatedContainers", "", "value", "Allocated", YELLOW, "%5.2lf %S");
+                cmd.drawLine("gauge-ContainersIniting", "", "value", "Initing", GREEN, "%5.2lf %S");
+                cmd.drawLine("gauge-ContainersRunning", "", "value", "Running", BLUE, "%5.2lf %S");
+                break;
+            case nm_Memory:
+                cmd.setTitle("Memory");
+                cmd.setVerticalLabel("MB");
+                cmd.setPlugin("GenericJMX-NodeManager", "");
+                cmd.drawLine("gauge-AvailableGB", "", "value", "Available", GREEN, "%5.2lf %S");
+                cmd.drawLine("gauge-AllocatedGB", "", "value", "Allocated", BLUE, "%5.2lf %S");
+                break;
+                
+                
             default:
                 cmd.setTitle(plugin);
                 cmd.setVerticalLabel(plugin);
