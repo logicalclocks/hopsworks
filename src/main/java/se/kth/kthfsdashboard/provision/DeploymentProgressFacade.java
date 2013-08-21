@@ -41,8 +41,7 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
 
     @Override
     public List<NodeProgression> findAll() {
-        TypedQuery<NodeProgression> query =
-                em.createNamedQuery("NodeProgression.findAll", NodeProgression.class);
+        TypedQuery<NodeProgression> query = em.createNamedQuery("NodeProgression.findAll", NodeProgression.class);
         return query.getResultList();
     }
 
@@ -56,17 +55,6 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
 
     public void updateProgress(NodeProgression progress) {
         em.merge(progress);
-    }
-    
-    public void deleteAllProgress(){
-        Query query = em.createQuery("DELETE FROM NodeProgression node");
-        int deleteRecords = query.executeUpdate();
-    }
-    public void deleteCompleteProgress(){
-        TypedQuery<NodeProgression> query = 
-                em.createNamedQuery("NodeProgression.clearComplete", NodeProgression.class)
-                .setParameter("phase", "Complete");
-        query.executeUpdate();
     }
 
     public void createProgress(Cluster cluster) {
@@ -102,7 +90,7 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
     public void initializeCreateGroup(String group, int number) throws Exception {
 
         for (int i = 0; i < number; i++) {
-            TypedQuery<NodeProgression> query = 
+            TypedQuery<NodeProgression> query =
                     em.createNamedQuery("NodeProgression.findNodeByNodeID", NodeProgression.class)
                     .setParameter("nodeId", group + i);
             try {
@@ -120,7 +108,7 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
     }
 
     public void initializeHostProgress(String hostIP) throws Exception {
-        TypedQuery<NodeProgression> query = 
+        TypedQuery<NodeProgression> query =
                 em.createNamedQuery("NodeProgression.findNodeByNodeID", NodeProgression.class)
                 .setParameter("nodeId", hostIP);
         try {
@@ -152,7 +140,7 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
 
     public void updateCreateProgress(String group, String nodeID, int i) throws Exception {
 
-        TypedQuery<NodeProgression> query = 
+        TypedQuery<NodeProgression> query =
                 em.createNamedQuery("NodeProgression.findNodeByNodeID", NodeProgression.class)
                 .setParameter("nodeId", group + i);
         try {
@@ -170,11 +158,11 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
 
     }
 
-    public void updatePhaseProgress(Set<NodeMetadata> nodes, DeploymentPhase phase) 
+    public void updatePhaseProgress(Set<NodeMetadata> nodes, DeploymentPhase phase)
             throws Exception {
         for (NodeMetadata node : nodes) {
-            System.out.println("Updating the node with node id: "+node.getId());
-            TypedQuery<NodeProgression> query = 
+            System.out.println("Updating the node with node id: " + node.getId());
+            TypedQuery<NodeProgression> query =
                     em.createNamedQuery("NodeProgression.findNodeByNodeID", NodeProgression.class)
                     .setParameter("nodeId", node.getId());
             try {
@@ -192,5 +180,11 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
 
 
 
+
+    }
+
+    public void deleteAllProgress() {
+        Query query = em.createQuery("DELETE c FROM NodeProgression");
+        int result = query.executeUpdate();
     }
 }

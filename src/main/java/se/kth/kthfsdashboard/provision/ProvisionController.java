@@ -61,7 +61,6 @@ public class ProvisionController implements Serializable {
     private ComputeService service;
     private ComputeServiceContext context;
 
-
     /**
      * Creates a new instance of ProvisionController
      */
@@ -135,10 +134,12 @@ public class ProvisionController implements Serializable {
     public String getPrivateKey() {
         return privateKey;
     }
-
+    
+    
     /*
      * Command to launch the instance
      */
+
     public void launchCluster() {
         setCredentials();
         launchProvisioner();
@@ -151,6 +152,7 @@ public class ProvisionController implements Serializable {
         if (!computeCredentialsMB.isBaremetal()) {
             provisioner = new BaremetalClusterProvision(this);
             installPhase = clusterController.getBaremetalCluster().isInstallPhase();
+
         } else {
             provisioner = new VirtualizedClusterProvision(this);
             installPhase = clusterController.getCluster().isInstallPhase();
@@ -165,6 +167,7 @@ public class ProvisionController implements Serializable {
             provisioner.deployingConfigurations();
 
         }
+
 
     }
 

@@ -36,8 +36,10 @@ public class NodeStatusTracker implements Runnable {
         try {
             ExecResponse contents = future.get();
             System.out.println(contents.getExitStatus());
+
             Integer exitStatus = contents.getExitStatus();
             if (exitStatus==null||exitStatus<1) {
+
                 pendingNodes.remove(launchingNode);
                 System.out.println("Removing Node, script executed succesfully");
             }
