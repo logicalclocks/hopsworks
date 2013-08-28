@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+
+    <ui:composition template="layout.xhtml">
+
+        <ui:define name="title">Edit Graphs</ui:define>
+
+        <ui:define name="content">
+
+            <p:spacer width="1" height="10" />
+
+            <h:form id="msg">
+                <p:growl id="msgGrowl" showDetail="true"/>  
+            </h:form>   
+
+            <div class="hosts-header">
+                <p:outputLabel id="title">
+                    Edit Graphs:
+                </p:outputLabel>
+            </div>
+
+
+            <p:dialog modal="true" widgetVar="dlgProgress" header="Importing graphs..." draggable="false" closable="true" resizable="false">  
+                <p:graphicImage library="images" name="ajaxloadingbar.gif" />  
+            </p:dialog> 
+
+            <p:dialog modal="true" widgetVar="dlgImport" header="Import Graphs" draggable="false" closable="true" resizable="false" width="500" height="200">  
+
+                <h:panelGrid columns="1" >
+                    <p:outputLabel value="Choose a graph description file to import:"/>               
+                    <h:form enctype="multipart/form-data">  
+                        <p:fileUpload fileUploadListener="#{importGraphController.handleUpload}" 
+                                      oncomplete="dlgProgress.hide(); dlgImport.hide()" onstart="dlgImport.hide(); dlgProgress.show()"
+                                      mode="advanced"  
+                                      update=":msg :form1"  
+                                      auto="true"  
+                                      sizeLimit="1000000000"   
+                                      allowTypes="/(\.|\/)(json)$/"
+                                      label="Choose" 
+                                      styleClass="FileUpload"/>
+                    </h:form>    
+                </h:panelGrid>
+            </p:dialog>             
+
+
+            <h:form id="form1">
+                <h:panelGrid columns="5"> 
+                    <p:selectOneMenu value="#{urlController.target}" widgetVar="target">
+                        <f:selectItem itemLabel="Select Target" itemValue="" />  
+                        <f:selectItems value="#{editGraphsController.targets}" var="target" itemLabel="#{target}" itemValue="#{target}"/>  
+                    </p:selectOneMenu> 
+                    <p:commandButton value="Go"  action="#{urlController.editGraphsUrl()}">                            
+                        <f:param name="target" value="#{target}"/>
+                    </p:commandButton>
+                    <p:commandButton value="Save" actionListener="#{editGraphsController.save()}" update=":msg" 
+                                     widgetVar="save" />
+
+                    <p:commandButton value="Import Graphs" onclick="dlgImport.show()"/>   
+
+                    <p:outputLabel style="color:red; font-size: small">#{editGraphsController.message}</p:outputLabel>
+                </h:panelGrid>
+
+                <p:dataTable id="graphs" var="graph" value="#{editGraphsController.graphs}"
+                             selection="#{editGraphsController.selectedGraphs}" 
+                             rowKey="#{graph.graphId}" styleClass="GraphsTable">    
+
+                    <f:facet name="header">Graphs</f:facet>  
+                    <p:column selectionMode="multiple" style="width:2%" /> 
+                    <p:column headerText="Id">  
+                        <h:outputText value="#{graph.graphId}" />  
+                    </p:column>                           
+                    <p:column headerText="Target">  
+                        <h:outputText value="#{graph.target}" />  
+                    </p:column>                        
+                    <p:column headerText="Group">  
+                        <h:outputText value="#{graph.group}" />  
+                    </p:column>                      
+                    <p:column headerText="Plugin">  
+                        <h:outputText value="#{graph.plugin}" />  
+                    </p:column>  
+                    <p:column headerText="Plugin Instance">  
+                        <h:outputText value="#{graph.pluginInstance}" />  
+                    </p:column>  
+                    <p:column headerText="Title">
+                        <h:outputText value="#{graph.title}" />  
+                    </p:column>  
+                    <p:column headerText="Vertical Label">
+                        <h:outputText value="#{graph.verticalLabel}" />  
+                    </p:column>  
+                    <p:column headerText="Var">
+                        <h:outputText value="#{graph.var}" />  
+                    </p:column>                          
+                    <p:column style="width:4%">  
+                        <p:commandButton id="selectButton" oncomplete="dialog1.show()" update=":form1:graphDlg" icon="ui-icon-search" title="Detail">  
+                            <f:setPropertyActionListener value="#{graph}" target="#{editGraphsController.selectedGraph}" />  
+                        </p:commandButton>  
+                    </p:column> 
+                    <f:facet name="footer" >  
+                        <p:commandButton value="Save" actionListener="#{editGraphsController.save()}" update=":msg" 
+                                         disabled="#{empty editGraphsController.graphs}"/>
+                    </f:facet>       
+                </p:dataTable>
+
+                <p:dialog header="Graph Detail" widgetVar="dialog1" resizable="false" id="graphDlg" modal="true">  
+                    <p:spacer width="1" height="10" />
+                    <p:dataTable var="graph" value="#{editGraphsController.selectedGraph}" id="graph">  
+                        <f:facet name="header">Graph</f:facet>                            
+                        <p:column headerText="Id">  
+                            <h:outputText value="#{graph.id}" />  
+                        </p:column>  
+                        <p:column headerText="Target">  
+                            <h:outputText value="#{graph.target}" />  
+                        </p:column>                        
+                        <p:column headerText="Group">  
+                            <h:outputText value="#{graph.group}" />  
+                        </p:column>                          
+                        <p:column headerText="Plugin">  
+                            <h:outputText value="#{graph.plugin}" />  
+                        </p:column>  
+                        <p:column headerText="Plugin Instance">  
+                            <h:outputText value="#{graph.pluginInstance}" />  
+                        </p:column>  
+                        <p:column headerText="Title">
+                            <h:outputText value="#{graph.title}" />  
+                        </p:column>  
+                        <p:column headerText="Vertical Label">
+                            <h:outputText value="#{graph.verticalLabel}" />  
+                        </p:column>                  
+                    </p:dataTable>
+
+                    <p:spacer width="1" height="20" />
+
+                    <p:dataTable var="chart" value="#{editGraphsController.selectedGraph.charts}" id="charts">  
+                        <f:facet name="header">Chart Detail</f:facet>                          
+                        <p:column headerText="Model">  
+                            <h:outputText value="#{chart.model}" />  
+                        </p:column>  
+                        <p:column headerText="Type">  
+                            <h:outputText value="#{chart.type}" />  
+                        </p:column>                  
+                        <p:column headerText="Type Instance">  
+                            <h:outputText value="#{chart.typeInstance}" />  
+                        </p:column>                        
+                        <p:column headerText="Data Set">  
+                            <h:outputText value="#{chart.ds}" />  
+                        </p:column>                        
+                        <p:column headerText="Label">  
+                            <h:outputText value="#{chart.label}" />  
+                        </p:column>                        
+                        <p:column headerText="Color">  
+                            <h:outputText value="#{chart.color}" />  
+                        </p:column>                        
+                        <p:column headerText="Format">  
+                            <h:outputText value="#{chart.format}" />  
+                        </p:column>                        
+                        <p:column headerText="RRD File">  
+                            <h:outputText value="#{chart.rrdFileName}" />  
+                        </p:column> 
+                    </p:dataTable>                    
+                    <p:spacer width="1" height="10" />
+                </p:dialog>  
+            </h:form>
+
+        </ui:define>
+
+    </ui:composition>
+
+</html>

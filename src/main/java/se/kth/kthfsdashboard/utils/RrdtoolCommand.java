@@ -16,9 +16,6 @@ public class RrdtoolCommand {
     private static final int DEFAULT_HEIGHT = 150;
     private static final int DEFAULT_LOWERLIMIT = 0;
     private static final boolean SHOW_DETAILS = false;
-    // TODO This should not be static      
-    private static final String COLLECTD_PATH = "/var/lib/collectd/rrd/";
-    private static final String RRD_EXT = ".rrd";
     private List<String> cmds;
     private List<String> graphCommands;
     private String hostId;
@@ -32,14 +29,18 @@ public class RrdtoolCommand {
     private String watermark;
     private String title;
     private String verticalLabel;
+    private String filePath;
+    private String fileExtension;
 
     public enum ChartType {
 
-        LINE, AREA, AREA_STACK
+        LINE, AREA, AREA_STACK, LINES, SUM_LINE, AVG_LINE
     }
 
-    public RrdtoolCommand(String hostId, String plugin, String pluginInstance,
+    public RrdtoolCommand(String filePath, String fileExtension, String hostId, String plugin, String pluginInstance,
             int start, int end) {
+        this.filePath = filePath;
+        this.fileExtension = fileExtension;
         this.hostId = hostId;
         this.plugin = plugin;
         this.pluginInstance = pluginInstance;
@@ -109,7 +110,7 @@ public class RrdtoolCommand {
         return cmds;
     }
 
-    public void drawSummedLines(List<String> hosts, String type, String typeInstance, String ds, String label, String color, String detailsFormat) {
+    public void drawSumLine(List<String> hosts, String type, String typeInstance, String ds, String label, String color, String detailsFormat) {
         List<String> vars = new ArrayList<String>();
         String cmd;
         for (String h : hosts) {
@@ -126,6 +127,25 @@ public class RrdtoolCommand {
         graphCommands.add(cmd);
         graphCommands.add("LINE1:" + sumVar + "#" + color + ":" + label);
     }
+    
+    public void drawAverageLine(List<String> hosts, String type, String typeInstance, String ds, String label, String color, String detailsFormat) {
+        List<String> vars = new ArrayList<String>();
+        String cmd;
+        for (String h : hosts) {
+            String var = h.replace(".", "-") + "-" + type + "-" + typeInstance + ds;
+            String rrdFile = getRrdFileName(h, plugin, pluginInstance, type, typeInstance);
+            graphCommands.add("DEF:" + var + "=" + rrdFile + ":" + ds + ":AVERAGE");
+            vars.add(var);
+        }
+        String sumVar = "sum" + type + "-" + typeInstance + ds;
+        cmd = "CDEF:" + sumVar + "=" + vars.get(0);
+        for (String v : vars.subList(1, vars.size())) {
+            cmd += "," + v + ",+";
+        }
+        cmd += "," + hosts.size() + ",/"; // Average
+        graphCommands.add(cmd);
+        graphCommands.add("LINE1:" + sumVar + "#" + color + ":" + label);
+    }    
 
     public void drawLine(String type, String typeInstance, String ds, String label, String color, String detailsFormat) {
         addGraph(ChartType.LINE, type, typeInstance, ds, label, color, detailsFormat);
@@ -170,7 +190,7 @@ public class RrdtoolCommand {
 
     private String getRrdFileName(String hostId, String plugin, String pluginInstance, String type, String typeInstance) {
 
-        String rrdFile = COLLECTD_PATH + hostId + "/" + plugin;
+        String rrdFile = filePath + hostId + "/" + plugin;
         if (pluginInstance != null && !pluginInstance.equals("")) {
             rrdFile += "-" + pluginInstance;
         }
@@ -178,7 +198,7 @@ public class RrdtoolCommand {
         if (typeInstance != null && !typeInstance.equals("")) {
             rrdFile += "-" + typeInstance;
         }
-        rrdFile += RRD_EXT;
+        rrdFile += fileExtension;
         return rrdFile;
     }
 

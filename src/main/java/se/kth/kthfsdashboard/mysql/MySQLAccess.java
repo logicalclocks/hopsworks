@@ -16,54 +16,56 @@ import org.primefaces.model.UploadedFile;
  */
 public class MySQLAccess implements Serializable {
 
-   final static String USERNAME = "kthfs";
-   final static String PASSWORD = "kthfs";
-   final static String DATABASE = "kthfs";
+    final static String USERNAME = "kthfs";
+    final static String PASSWORD = "kthfs";
+    final static String DATABASE = "kthfs";
+    final static String BACKUP_FILENAME = "dashboard.sql";
 
-   public StreamedContent getBackup() {
-      List<String> command = new ArrayList<String>();
-      command.add("mysqldump");
-      command.add("--single-transaction");
-      command.add("-u" + USERNAME);
-      command.add("-p" + PASSWORD);
-      command.add(DATABASE);
-      try {
-         Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
-         process.waitFor();
-         InputStream inputStream = process.getInputStream();
-         StreamedContent backupContent = new DefaultStreamedContent(inputStream, "application/sql", "dashboard.sql");
-         return backupContent;
-      } catch (Exception ex) {
-         Logger.getLogger(MySQLAccess.class.getName()).log(Level.SEVERE, null, ex);
-         return null;
-      }
-   }
+    public StreamedContent getBackup() {
+        List<String> command = new ArrayList<String>();
+        command.add("mysqldump");
+        command.add("--single-transaction");
+        command.add("-u" + USERNAME);
+        command.add("-p" + PASSWORD);
+        command.add(DATABASE);
+        try {
+            ProcessBuilder builder = new ProcessBuilder(command).redirectErrorStream(true);
+            Process process = builder.start();
+//            process.waitFor();
+            InputStream inputStream = process.getInputStream();
+            StreamedContent backupContent = new DefaultStreamedContent(inputStream, "application/sql", BACKUP_FILENAME);
+            return backupContent;
+        } catch (Exception ex) {
+            Logger.getLogger(MySQLAccess.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
 
-   public boolean restore(UploadedFile file) {
-      List<String> command = new ArrayList<String>();
-      command.add("mysql");
-      command.add("-u" + USERNAME);
-      command.add("-p" + PASSWORD);
-      command.add(DATABASE);
-      try {
-         InputStream inputStream = file.getInputstream();
-         Process process = new ProcessBuilder(command).start();
-         byte[] bytes = new byte[1024];
-         int read;
-         while ((read = inputStream.read(bytes)) != -1) {
-            process.getOutputStream().write(bytes, 0, read);
-         }
-         inputStream.close();
-         process.getOutputStream().flush();
-         process.getOutputStream().close();
-         process.waitFor();
-         if (process.exitValue() == 0) {
-            return true;
-         }
-         return false;
-      } catch (Exception ex) {
-         Logger.getLogger(MySQLAccess.class.getName()).log(Level.SEVERE, null, ex);
-         return false;
-      }
-   }
+    public boolean restore(UploadedFile file) {
+        List<String> command = new ArrayList<String>();
+        command.add("mysql");
+        command.add("-u" + USERNAME);
+        command.add("-p" + PASSWORD);
+        command.add(DATABASE);
+        try {
+            InputStream inputStream = file.getInputstream();
+            Process process = new ProcessBuilder(command).start();
+            byte[] bytes = new byte[1024];
+            int read;
+            while ((read = inputStream.read(bytes)) != -1) {
+                process.getOutputStream().write(bytes, 0, read);
+            }
+            inputStream.close();
+            process.getOutputStream().flush();
+            process.getOutputStream().close();
+            process.waitFor();
+            if (process.exitValue() == 0) {
+                return true;
+            }
+            return false;
+        } catch (Exception ex) {
+            Logger.getLogger(MySQLAccess.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
+    }
 }

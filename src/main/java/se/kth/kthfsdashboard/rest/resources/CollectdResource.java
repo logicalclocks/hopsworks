@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -13,6 +14,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import se.kth.kthfsdashboard.graph.Graph;
+import se.kth.kthfsdashboard.graph.GraphEJB;
 import se.kth.kthfsdashboard.utils.CollectdUtils;
 import se.kth.kthfsdashboard.utils.GraphicsUtils;
 
@@ -26,6 +29,8 @@ import se.kth.kthfsdashboard.utils.GraphicsUtils;
 public class CollectdResource {
 
     final static Logger logger = Logger.getLogger(CollectdResource.class.getName());
+    @EJB
+    private GraphEJB graphEjb;
 
     @GET
     @Path("ping")
@@ -38,6 +43,8 @@ public class CollectdResource {
     @Path("graph")
     @Produces("image/png")
     public Response getGraph(
+            @QueryParam("id") String id,
+            @QueryParam("target") String target,
             @QueryParam("chart_type") String chartType,
             @QueryParam("start") int start,
             @QueryParam("end") int end,
@@ -47,14 +54,18 @@ public class CollectdResource {
             @QueryParam("type") String type,
             @QueryParam("type_instance") String typeInstance,
             @QueryParam("ds") String ds,
-            @QueryParam("n") int n) throws InterruptedException, IOException {
+            @QueryParam("n") String n) throws InterruptedException, IOException {
 
         byte[] imageByteArray;
+        Graph graph = null;
         try {
-            InputStream inputStream = CollectdUtils.getGraphStream(chartType, host, plugin, pluginInstance, type, typeInstance, ds, start, end, n);
+            InputStream inputStream;
+            graph = graphEjb.find(target, id);
+            inputStream = CollectdUtils.getGraphStream(graph, host, n, start, end);
             imageByteArray = GraphicsUtils.convertImageInputStreamToByteArray(inputStream);
         } catch (Exception e) {
-            String msg = String.format("Graph not available. Check RRD files for %s: %s / %s @ %s ", chartType, plugin, type, host);
+            String chartsInfo = graph != null ? graph.getChartSet() : "";
+            String msg = String.format("Graph not available. Check RRD files %s for:  %s  /  %s  @  %s.", chartsInfo, id, target, host);
             logger.log(Level.SEVERE, "CollectdResource: Image == null :{0}", msg);
             imageByteArray = GraphicsUtils.errorImage(msg);
         }

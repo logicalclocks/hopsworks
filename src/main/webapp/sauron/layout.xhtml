@@ -47,9 +47,8 @@
                <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
                <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
                   <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" />  
-                  <p:separator/>
-                  <p:menuitem value="Backup / Restore" action="backuprestore" />                      
-                  <p:separator/>
+                  <p:menuitem value="Edit Graphs" action="editgraphs" />                      
+                  <p:menuitem value="Backup / Restore" action="backuprestore" /> 
                   <p:menuitem value="Setup Credentials" action="setupCredentials" />
                   <p:separator/>
                   <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 

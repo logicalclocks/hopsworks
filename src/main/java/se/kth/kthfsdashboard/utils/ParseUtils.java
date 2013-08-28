@@ -18,5 +18,13 @@ public class ParseUtils {
         DecimalFormat format = new DecimalFormat("#.##");
         return format.parse(d.toUpperCase().replace("+", "")).longValue();
     }
-    
+
+    public static boolean isInteger(String s) {
+        try {
+            Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return true;
+    }
 }
