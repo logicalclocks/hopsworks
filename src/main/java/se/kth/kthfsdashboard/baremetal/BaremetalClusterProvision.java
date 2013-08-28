@@ -190,7 +190,7 @@ public class BaremetalClusterProvision implements Provision {
         //Update view state to configure
         persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, mgms, scriptBuilder, RETRIES);
-        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+        
 
         //launch ndbs
         groupLaunch = ndbs.keySet();
@@ -198,7 +198,7 @@ public class BaremetalClusterProvision implements Provision {
 
         persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, ndbs, scriptBuilder, RETRIES);
-        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+        
 
         //launch mysqlds
         groupLaunch = mysqlds.keySet();
@@ -206,7 +206,7 @@ public class BaremetalClusterProvision implements Provision {
 
         persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, mysqlds, scriptBuilder, RETRIES);
-        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+        
 
         //launch namenodes
         groupLaunch = namenodes.keySet();
@@ -214,7 +214,7 @@ public class BaremetalClusterProvision implements Provision {
 
         persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, namenodes, scriptBuilder, RETRIES);
-        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+        
 
         //launch datanodes
         groupLaunch = datanodes.keySet();
@@ -222,7 +222,7 @@ public class BaremetalClusterProvision implements Provision {
 
         persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, datanodes, scriptBuilder, RETRIES);
-        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+        
     }
 
     private void nodePhase(Set<NodeMetadata> nodes, Map<NodeMetadata, List<String>> map,
@@ -255,12 +255,19 @@ public class BaremetalClusterProvision implements Provision {
                 e.printStackTrace();
             } finally {
                 //Update the nodes that have finished the install phase
+                Set<NodeMetadata> complete = new HashSet<NodeMetadata>(nodes);
                 if (!pendingNodes.isEmpty()) {
+                    
                     Set<NodeMetadata> remain =pendingNodes;
-                    //Mark the nodes that are been reinstalled
+                    //Mark the nodes that are been reinstalled and completed
+                    complete.removeAll(remain);
+                    persistState(complete, DeploymentPhase.COMPLETE);
                     persistState(remain, DeploymentPhase.RETRYING);
                     System.out.println("Retrying Nodes in configuration phase");
                     --retries;
+                }
+                else{
+                    persistState(complete, DeploymentPhase.COMPLETE);
                 }
 
             }
@@ -299,20 +306,27 @@ public class BaremetalClusterProvision implements Provision {
                 e.printStackTrace();
             } finally {
                 //Update the nodes that have finished the install phase
+                Set<NodeMetadata> complete = new HashSet<NodeMetadata>(nodes);
+                
                 if (!pendingNodes.isEmpty()) {
                     Set<NodeMetadata> remain = pendingNodes;
-                    //Mark the nodes that are been reinstalled
+                    //Mark the nodes that are been reinstalled and completed
+                    complete.removeAll(remain);
+                    persistState(complete, DeploymentPhase.WAITING);
                     persistState(remain, DeploymentPhase.RETRYING);
                     --retries;
                     System.out.println("Retrying Nodes in Install phase");
                 }
-                try {
-                    nodes.removeAll(pendingNodes);
-                    progressEJB.updatePhaseProgress(nodes, DeploymentPhase.WAITING);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.out.println("Error updating Database");
+                else{
+                    persistState(complete, DeploymentPhase.WAITING);
                 }
+//                try {
+//                    nodes.removeAll(pendingNodes);
+//                    progressEJB.updatePhaseProgress(nodes, DeploymentPhase.WAITING);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    System.out.println("Error updating Database");
+//                }
             }
 
         }

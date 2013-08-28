@@ -81,7 +81,7 @@ public final class VirtualizedClusterProvision implements Provision{
     private HostEJB hostEJB;
     @EJB
     private DeploymentProgressFacade progressEJB;
-    private static final int RETRIES = 2;
+    private static final int RETRIES = 3;
     private ComputeService service;
     private Provider provider;
     private String id;
@@ -228,7 +228,9 @@ public final class VirtualizedClusterProvision implements Provision{
             //+++++++++++++++++
             //This stuff below is weird, founded in a code snippet in a workshop on jclouds. Still it works
             //Code not from documentation
-            Optional<? extends SecurityGroupApi> securityGroupExt = temp.getApi().getSecurityGroupExtensionForZone(region);
+            Optional<? extends SecurityGroupApi> securityGroupExt = temp
+                    .getApi()
+                    .getSecurityGroupExtensionForZone(region);
             System.out.println("  Security Group Support: " + securityGroupExt.isPresent());
             if (securityGroupExt.isPresent()) {
                 SecurityGroupApi client = securityGroupExt.get();
@@ -324,8 +326,10 @@ public final class VirtualizedClusterProvision implements Provision{
 
                 progressEJB.initializeCreateGroup(group.getSecurityGroup(), group.getNumber());
 
-                messages.addMessage("Creating " + group.getNumber() + "  nodes in Security Group " + group.getSecurityGroup());
-                Set<? extends NodeMetadata> ready = service.createNodesInGroup(group.getSecurityGroup(), group.getNumber(), kthfsTemplate.build());
+                messages.addMessage("Creating " + group.getNumber() + 
+                        "  nodes in Security Group " + group.getSecurityGroup());
+                Set<? extends NodeMetadata> ready = service.createNodesInGroup(
+                        group.getSecurityGroup(), group.getNumber(), kthfsTemplate.build());
                 //For the demo, we keep track of the returned set of node Metadata launched and which group 
                 messages.addMessage("Nodes created in Security Group " + group.getSecurityGroup() + " with "
                         + "basic setup");
@@ -364,7 +368,6 @@ public final class VirtualizedClusterProvision implements Provision{
 
                     }
                     if (roles.contains("KTHFS-namenode")) {
-
 
                         namenodesIP.addAll(node.getPrivateAddresses());
                         namenodes.put(node, group.getRoles());
@@ -521,7 +524,7 @@ public final class VirtualizedClusterProvision implements Provision{
         //Update view state to configure
         persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, mgms, scriptBuilder, RETRIES);
-        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+        
 
         //launch ndbs
         groupLaunch = ndbs.keySet();
@@ -529,7 +532,7 @@ public final class VirtualizedClusterProvision implements Provision{
 
         persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, ndbs, scriptBuilder, RETRIES);
-        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+       
 
         //launch mysqlds
         groupLaunch = mysqlds.keySet();
@@ -537,7 +540,7 @@ public final class VirtualizedClusterProvision implements Provision{
 
         persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, mysqlds, scriptBuilder, RETRIES);
-        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+       
 
         //launch namenodes
         groupLaunch = namenodes.keySet();
@@ -545,7 +548,7 @@ public final class VirtualizedClusterProvision implements Provision{
 
         persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, namenodes, scriptBuilder, RETRIES);
-        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+        
 
         //launch datanodes
         groupLaunch = datanodes.keySet();
@@ -553,7 +556,7 @@ public final class VirtualizedClusterProvision implements Provision{
 
         persistState(groupLaunch, DeploymentPhase.CONFIGURE);
         nodePhase(groupLaunch, datanodes, scriptBuilder, RETRIES);
-        persistState(groupLaunch, DeploymentPhase.COMPLETE);
+        
     }
 
     /*
@@ -731,13 +734,7 @@ public final class VirtualizedClusterProvision implements Provision{
                 //some extra time.
                 latch.await(25 * nodes.size() + 60, TimeUnit.MINUTES);
                 messages.addMessage("Launch phase complete...");
-                //error 129 openstack
-//                    if (!pendingNodes.isEmpty()) {
-//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-//                        //Mark the nodes that are been reinstalled
-//                        persistState(remain, DeploymentPhase.RETRYING);
-//                        --retries;
-//                    }
+
             } catch (InterruptedException e) {
 
 //                    if (!pendingNodes.isEmpty()) {
@@ -749,12 +746,19 @@ public final class VirtualizedClusterProvision implements Provision{
                 e.printStackTrace();
             } finally {
                 //Update the nodes that have finished the install phase
+                Set<NodeMetadata> complete = new HashSet<NodeMetadata>(nodes);
                 if (!pendingNodes.isEmpty()) {
+                    
                     Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-                    //Mark the nodes that are been reinstalled
+                    //Mark the nodes that are been reinstalled and completed
+                    complete.removeAll(remain);
+                    persistState(complete, DeploymentPhase.COMPLETE);
                     persistState(remain, DeploymentPhase.RETRYING);
                     System.out.println("Retrying");
                     --retries;
+                }
+                else{
+                    persistState(complete, DeploymentPhase.COMPLETE);
                 }
 //                try {
 //                    nodes.removeAll(pendingNodes);
@@ -833,8 +837,11 @@ public final class VirtualizedClusterProvision implements Provision{
                 final NodeMetadata node = iter.next();
                 //Listenable Future
                 ScriptBuilder script = scriptBuilder.build();
-                ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
-                        RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
+                ListenableFuture<ExecResponse> future = service.submitScriptOnNode(
+                        node.getId(), 
+                        new StatementList(script),
+                        RunScriptOptions.Builder.overrideAuthenticateSudo(true)
+                        .overrideLoginCredentials(node.getCredentials()));
 //              
                 future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
                         future), pool);
@@ -862,20 +869,27 @@ public final class VirtualizedClusterProvision implements Provision{
                 e.printStackTrace();
             } finally {
                 //Update the nodes that have finished the install phase
+                Set<NodeMetadata> complete = new HashSet<NodeMetadata>(nodes);
+                
                 if (!pendingNodes.isEmpty()) {
                     Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-                    //Mark the nodes that are been reinstalled
+                    //Mark the nodes that are been reinstalled and completed
+                    complete.removeAll(remain);
+                    persistState(complete, DeploymentPhase.WAITING);
                     persistState(remain, DeploymentPhase.RETRYING);
                     --retries;
                     System.out.println("Retrying Nodes in Install phase");
                 }
-                try {
-                    nodes.removeAll(pendingNodes);
-                    progressEJB.updatePhaseProgress(nodes, DeploymentPhase.WAITING);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.out.println("Error updating Database");
+                else{
+                    persistState(complete, DeploymentPhase.WAITING);
                 }
+//                try {
+//                    nodes.removeAll(pendingNodes);
+//                    progressEJB.updatePhaseProgress(nodes, DeploymentPhase.WAITING);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    System.out.println("Error updating Database");
+//                }
             }
 
         }

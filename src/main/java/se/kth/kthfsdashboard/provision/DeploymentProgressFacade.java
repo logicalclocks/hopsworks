@@ -184,7 +184,7 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
     }
 
     public void deleteAllProgress() {
-        Query query = em.createQuery("DELETE c FROM NodeProgression");
-        int result = query.executeUpdate();
+        em.createQuery("DELETE FROM NodeProgression c WHERE c.phase = 'Complete'").executeUpdate();
+        
     }
 }

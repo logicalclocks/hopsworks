@@ -105,7 +105,7 @@
                     <h:outputText id="deletemsg" value="Are you sure you want to clear?" />
                     <p:commandButton id="acceptDelete" value="Confirm"  
                                      action="#{nodeProgressionController.deleteNodes()}"
-                                     oncomplete="removeDialog.hide()"
+                                     oncomplete="editLastDatatableRow() removeDialog.hide()"
                                      />
                 </p:dialog>
                 <p:commandButton id="deleteNodesButton" value="Delete Nodes" 
