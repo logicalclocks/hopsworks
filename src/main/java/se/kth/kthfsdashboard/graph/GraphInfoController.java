@@ -39,12 +39,12 @@ public class GraphInfoController implements Serializable {
     }
 
     public List<String> getGraphIds(String target, String graphGroup) {
-        return graphEjb.findIds(target, graphGroup);
+        return graphEjb.findSelectedIds(target, graphGroup);
     }
 
     public List<String> getGraphIds(String service, String role, String graphGroup) {
         String target = service + "-" + role;
-        return graphEjb.findIds(target, graphGroup);
+        return graphEjb.findSelectedIds(target, graphGroup);
 
     }
 

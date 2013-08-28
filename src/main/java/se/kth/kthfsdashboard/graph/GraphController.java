@@ -174,9 +174,8 @@ public class GraphController implements Serializable {
         return createGraphUrl(target, id, extraParams);
     }
 
-    public String getServiceGraphUrl(String service, String id) throws MalformedURLException {
+    public String getGraphUrl(String target, String id) throws MalformedURLException {
         HashMap extraParams = new HashMap<String, String>();
-        String target = service;
         Graph graph = graphEjb.find(target, id);
         String vars[] = {};
         if (!graph.getVar().isEmpty()) {

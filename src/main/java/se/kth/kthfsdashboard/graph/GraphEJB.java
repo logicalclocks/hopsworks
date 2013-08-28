@@ -61,8 +61,8 @@ public class GraphEJB  implements Serializable{
         return query.getResultList();
     }  
     
-    public List<String> findIds(String target, String group) {
-        TypedQuery<String> query = em.createNamedQuery("Graphs.find.Ids-By.Target.Group", String.class)
+    public List<String> findSelectedIds(String target, String group) {
+        TypedQuery<String> query = em.createNamedQuery("Graphs.find.SelectedIds-By.Target.Group", String.class)
                 .setParameter("target", target).setParameter("group", group);
         return query.getResultList();
     }

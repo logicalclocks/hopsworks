@@ -6,23 +6,23 @@
    {"model": "LINE", "type": "load", "type-instance": "", "ds": "midterm", "label": "Midterm", "color": "blue", "format": "%5.2lf"},
    {"model": "LINE", "type": "load", "type-instance": "", "ds": "shortterm", "label": "Shortterm", "color": "yellow", "format": "%5.2lf"}]
 },
-{"id": "memoryall", "plugin": "memory", "plugin-instance": "", "title": "Memory", "vertical-label": "Byte", "var" : "", "charts": 
+{"id": "memory", "plugin": "memory", "plugin-instance": "", "title": "Memory", "vertical-label": "Byte", "var" : "", "charts": 
  [{"model": "AREA", "type": "memory", "type-instance": "used", "ds": "value", "label": "Used", "color": "red", "format": "%5.2lf"},
   {"model": "AREA_STACK", "type": "memory", "type-instance": "buffered", "ds": "value", "label": "Buffered", "color": "blue", "format": "%5.2lf"},
   {"model": "AREA_STACK", "type": "memory", "type-instance": "cached", "ds": "value", "label": "Cached", "color": "yellow", "format": "%5.2lf"},
   {"model": "AREA_STACK", "type": "memory", "type-instance": "free", "ds": "value", "label": "Free", "color": "green", "format":"%5.2lf"}]
 },
-{"id": "swapall", "plugin": "swap", "plugin-instance": "", "title": "Swap", "vertical-label": "Byte", "var" : "", "charts": 
+{"id": "swap", "plugin": "swap", "plugin-instance": "", "title": "Swap", "vertical-label": "Byte", "var" : "", "charts": 
  [{"model": "AREA", "type": "swap", "type-instance": "used", "ds": "value", "label": "Used", "color": "red", "format": "%5.2lf"},
   {"model": "AREA_STACK", "type": "swap", "type-instance": "cached", "ds": "value", "label": "Cached", "color": "yellow", "format": "%5.2lf"},
   {"model": "AREA_STACK", "type": "swap", "type-instance": "free", "ds": "value", "label": "Free", "color": "green", "format": "%5.2lf"}]
 },
-{"id": "dfall", "plugin": "df", "plugin-instance": "", "title": "Physical Memory", "vertical-label": "Byte", "var" : "", "charts": 
+{"id": "df", "plugin": "df", "plugin-instance": "", "title": "Physical Memory", "vertical-label": "Byte", "var" : "", "charts": 
  [{"model": "AREA", "type": "df", "type-instance": "root", "ds": "used", "label": "Used", "color": "red", "format": "%5.2lf"},
   {"model": "AREA_STACK", "type": "df", "type-instance": "root", "ds": "free", "label": "Free", "color": "green", "format": "%5.2lf"}]
 }
 ,
-{"id": "interfaceall", "plugin": "interface", "plugin-instance": "", "title": "Network Interface", "vertical-label": "bps", "var" : "", "charts": 
+{"id": "interface-eth0", "plugin": "interface", "plugin-instance": "", "title": "Network Interface", "vertical-label": "bps", "var" : "", "charts": 
  [{"model": "LINE", "type": "if_octets", "type-instance": "eth0", "ds": "rx", "label": "RX", "color": "yellow", "format": "%5.2lf"},
   {"model": "LINE", "type": "if_octets", "type-instance": "eth0", "ds": "tx", "label": "TX", "color": "blue", "format": "%5.2lf"}]
 }

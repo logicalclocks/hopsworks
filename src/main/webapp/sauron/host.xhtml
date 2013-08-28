@@ -159,51 +159,44 @@
 
                 <p:spacer width="1" height="20" />
 
-                <h:form id="formdate" style="text-align: center">  
-                    <h:panelGrid columns="10"> 
-                        <p:selectOneButton id ="periods" value="#{graphController.period}">  
-                            <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
-                            <f:param name="hostid" value="#{hostController.hostId}"/>
-                            <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
-                        </p:selectOneButton>
-                        <h:outputText value="or from" />
-                        <p:calendar title="from" value="#{graphController.start}" id="calstart" showOn="button" pattern="dd/MM/yyyy HH:mm"/>  
-                        <h:outputText value=" to " />
-                        <p:calendar title="to" value="#{graphController.end}" id="calend" showOn="button" pattern="dd/MM/yyyy HH:mm"/>
-                        <h:outputText value=" in " />
-                        <p:selectOneMenu id="cols" value="#{settingsController.numOfGraphColumns}" >  
-                            <f:selectItems var="n" value="#{graphController.columns}" />  
-                        </p:selectOneMenu>
-                        <h:outputText value=" columns " />
-                        <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
-                            <f:param name="hostid" value="#{hostController.hostId}"/>
-                        </p:commandButton> 
-                    </h:panelGrid>
-                </h:form>   
+                <p:outputPanel rendered="#{not empty graphInfoController.getGroups('host')}">                
 
-                <!--            <h:form id="graphs">
-                               <p:toolbar>
-                                  <p:toolbarGroup align="left"><p:outputLabel value="Host Info"/></p:toolbarGroup>
-                               </p:toolbar>
-                               <p:dataGrid  var="g" value="#{graphController.hostGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                                  <p:graphicImage value="#{graphController.hostGraphUrl(g)}"/>
-                               </p:dataGrid> 
-                            </h:form>           -->
+                    <h:form id="formdate" style="text-align: center">  
+                        <h:panelGrid columns="10"> 
+                            <p:selectOneButton id ="periods" value="#{graphController.period}">  
+                                <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
+                                <f:param name="hostid" value="#{hostController.hostId}"/>
+                                <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
+                            </p:selectOneButton>
+                            <h:outputText value="or from" />
+                            <p:calendar title="from" value="#{graphController.start}" id="calstart" showOn="button" pattern="dd/MM/yyyy HH:mm"/>  
+                            <h:outputText value=" to " />
+                            <p:calendar title="to" value="#{graphController.end}" id="calend" showOn="button" pattern="dd/MM/yyyy HH:mm"/>
+                            <h:outputText value=" in " />
+                            <p:selectOneMenu id="cols" value="#{settingsController.numOfGraphColumns}" >  
+                                <f:selectItems var="n" value="#{graphController.columns}" />  
+                            </p:selectOneMenu>
+                            <h:outputText value=" columns " />
+                            <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
+                                <f:param name="hostid" value="#{hostController.hostId}"/>
+                            </p:commandButton> 
+                        </h:panelGrid>
+                    </h:form>   
 
-                <h:form id="graphs">
+                    <h:form id="graphs">
+                        <ui:repeat value="#{graphInfoController.getGroups('host')}" var="group">                        
+                            <p:toolbar>
+                                <p:toolbarGroup align="left"><p:outputLabel value="#{group}"/></p:toolbarGroup>
+                            </p:toolbar>
+                            <p:dataGrid  var="g" value="#{graphInfoController.getGraphIds('host', group)}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                                <p:graphicImage value="#{graphController.getGraphUrl('host', g)}"/>
+                            </p:dataGrid>
+                        </ui:repeat>
+                    </h:form>      
 
-                    <ui:repeat value="#{graphInfoController.getGroups('host')}" var="group">                        
-                        <p:toolbar>
-                            <p:toolbarGroup align="left"><p:outputLabel value="#{group}"/></p:toolbarGroup>
-                        </p:toolbar>
-                        <p:dataGrid  var="g" value="#{graphInfoController.getGraphIds('host', group)}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                            <p:graphicImage value="#{graphController.getGraphUrl2('host', g)}"/>
-                        </p:dataGrid>
-                    </ui:repeat>
-
-                </h:form>      
-
+                </p:outputPanel>
             </p:outputPanel>    
+
         </ui:define>
 
     </ui:composition>
