@@ -250,7 +250,7 @@
                                 <p:toolbarGroup align="left"><p:outputLabel value="#{group}"/></p:toolbarGroup>
                             </p:toolbar>
                             <p:dataGrid  var="id" value="#{graphInfoController.getGraphIds(roleController.service, group)}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                                <p:graphicImage value="#{graphController.getServiceGraphUrl(roleController.service, id)}"/>
+                                <p:graphicImage value="#{graphController.getGraphUrl(roleController.service, id)}"/>
                             </p:dataGrid>
                         </ui:repeat>                      
                     </h:form>

@@ -23,9 +23,9 @@ import javax.persistence.Table;
     @NamedQuery(name = "Graphs.find", query = "SELECT g FROM Graph g WHERE g.graphId = :graphId AND g.target = :target"),
     @NamedQuery(name = "Graphs.find-By.Target", query = "SELECT g FROM Graph g WHERE g.target = :target ORDER BY g.groupRank, g.rank"),    
     @NamedQuery(name = "Graphs.find.Targets", query = "SELECT DISTINCT(g.target) FROM Graph g ORDER BY g.target"),
-    @NamedQuery(name = "Graphs.find.Ids-By.Target.Group", query = "SELECT g.graphId FROM Graph g WHERE g.target = :target AND g.group = :group ORDER BY g.rank"),
+    @NamedQuery(name = "Graphs.find.SelectedIds-By.Target.Group", query = "SELECT g.graphId FROM Graph g WHERE g.selected = TRUE AND g.target = :target AND g.group = :group ORDER BY g.rank"),
     @NamedQuery(name = "Graphs.find.Ids-By.Target", query = "SELECT g.graphId FROM Graph g WHERE g.target = :target ORDER BY g.rank"),
-    @NamedQuery(name = "Graphs.find.Groups-By.Target", query = "SELECT DISTINCT(g.group) FROM Graph g WHERE g.target = :target ORDER BY g.groupRank"),
+    @NamedQuery(name = "Graphs.find.Groups-By.Target", query = "SELECT DISTINCT(g.group) FROM Graph g WHERE g.selected = TRUE AND g.target = :target ORDER BY g.groupRank"),
     @NamedQuery(name = "Graphs.removeAll", query = "DELETE FROM Graph g")
 })
 public class Graph implements Serializable {
