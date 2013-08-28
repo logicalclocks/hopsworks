@@ -218,70 +218,43 @@
 
                 <p:spacer width="1" height="25" />
 
-                <h:form id="formdate" style="text-align: center">  
-                    <h:panelGrid columns="10"> 
-                        <p:selectOneButton id ="periods" value="#{graphController.period}">  
-                            <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
-                            <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                            <f:param name="service" value="#{serviceStatusController.service}"/>
-                            <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
-                        </p:selectOneButton>
-                        <h:outputText value="or from" />
-                        <p:calendar title="from" value="#{graphController.start}" id="calstart" showOn="button" pattern="dd/MM/yyyy HH:mm"/>  
-                        <h:outputText value=" to " />
-                        <p:calendar title="to" value="#{graphController.end}" id="calend" showOn="button" pattern="dd/MM/yyyy HH:mm"/>
-                        <h:outputText value=" in " />
-                        <p:selectOneMenu id="cols" value="#{settingsController.numOfGraphColumns}" >  
-                            <f:selectItems var="n" value="#{graphController.columns}" />  
-                        </p:selectOneMenu>
-                        <h:outputText value=" columns " />
-                        <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
-                            <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                            <f:param name="service" value="#{serviceStatusController.service}"/>                   
-                        </p:commandButton> 
-                    </h:panelGrid>
-                </h:form> 
+                <p:outputPanel rendered="#{not empty graphInfoController.getGroups(roleController.service)}">              
 
-                <h:form id="graphs">
+                    <h:form id="formdate" style="text-align: center">  
+                        <h:panelGrid columns="10"> 
+                            <p:selectOneButton id ="periods" value="#{graphController.period}">  
+                                <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
+                                <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
+                                <f:param name="service" value="#{serviceStatusController.service}"/>
+                                <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
+                            </p:selectOneButton>
+                            <h:outputText value="or from" />
+                            <p:calendar title="from" value="#{graphController.start}" id="calstart" showOn="button" pattern="dd/MM/yyyy HH:mm"/>  
+                            <h:outputText value=" to " />
+                            <p:calendar title="to" value="#{graphController.end}" id="calend" showOn="button" pattern="dd/MM/yyyy HH:mm"/>
+                            <h:outputText value=" in " />
+                            <p:selectOneMenu id="cols" value="#{settingsController.numOfGraphColumns}" >  
+                                <f:selectItems var="n" value="#{graphController.columns}" />  
+                            </p:selectOneMenu>
+                            <h:outputText value=" columns " />
+                            <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
+                                <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
+                                <f:param name="service" value="#{serviceStatusController.service}"/>                   
+                            </p:commandButton> 
+                        </h:panelGrid>
+                    </h:form> 
 
-                    <p:outputPanel rendered="#{serviceStatusController.renderKTHFSGraphs()}">
-                        <p:toolbar>
-                            <p:toolbarGroup align="left"><p:outputLabel value="Name Node Info"/></p:toolbarGroup>
-                        </p:toolbar>
-                        <p:dataGrid  var="g" value="#{graphController.namenodeServiceGraphs}" columns="#{settingsController.numOfGraphColumns}"  
-                                     paginator="false" styleClass="ui-datagrid-no-border" >  
-                            <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}"/>  
-                        </p:dataGrid> 
-
-                        <p:toolbar>
-                            <p:toolbarGroup align="left"><p:outputLabel value="Aggregate Name Node Activity (Total Activity)"/></p:toolbarGroup>
-                        </p:toolbar>
-                        <p:dataGrid  var="g" value="#{graphController.namenodeServiceActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                            <p:graphicImage value="#{graphController.namenodesGraphUrl(g)}"/>  
-                        </p:dataGrid>             
-
-                        <!--
-                           <p:toolbar>
-                                   <p:toolbarGroup align="left"><p:outputLabel value="Data Node Info"/></p:toolbarGroup>
-                           </p:toolbar>
-                        -->
-                    </p:outputPanel>
-
-                    <p:outputPanel rendered="#{serviceStatusController.renderMySQLClusterGraphs()}" >
-                        <p:toolbar>
-                            <p:toolbarGroup align="left"><p:outputLabel value="MySQL Cluster NDB Info"/></p:toolbarGroup>
-                        </p:toolbar>
-                        <p:dataGrid  var="g" value="#{graphController.mysqlclusterActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-
-                            <p:graphicImage value="#{graphController.mysqlclusterGraphUrl(g)}" alt="Graph" rendered="true">
-
-                            </p:graphicImage>                      
-
-                        </p:dataGrid>
-                    </p:outputPanel>
-
-                </h:form>
-
+                    <h:form id="graphs">
+                        <ui:repeat value="#{graphInfoController.getGroups(roleController.service)}" var="group">                        
+                            <p:toolbar>
+                                <p:toolbarGroup align="left"><p:outputLabel value="#{group}"/></p:toolbarGroup>
+                            </p:toolbar>
+                            <p:dataGrid  var="id" value="#{graphInfoController.getGraphIds(roleController.service, group)}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                                <p:graphicImage value="#{graphController.getServiceGraphUrl(roleController.service, id)}"/>
+                            </p:dataGrid>
+                        </ui:repeat>                      
+                    </h:form>
+                </p:outputPanel>  
             </p:outputPanel> 
 
         </ui:define>

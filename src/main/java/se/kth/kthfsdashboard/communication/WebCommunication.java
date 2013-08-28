@@ -44,6 +44,10 @@ public class WebCommunication {
 
    public WebCommunication() {
    }
+   
+   public String getResource(String url) {
+       return fetchContent(url);
+   }
 
    private String createUrl(String context, String hostAddress, String... args) {
       String template = "%s://%s:%s/%s";

@@ -201,14 +201,13 @@
 
                 <p:spacer width="1" height="20" />
 
-                <p:outputPanel rendered="#{graphController.roleHasGraphs()}">
+                <p:outputPanel rendered="#{not empty graphInfoController.getGroups(roleController.service, roleController.role)}">
 
                     <h:form id="formdate" style="text-align: center">  
                         <h:panelGrid columns="10"> 
                             <p:selectOneButton id ="periods" value="#{graphController.period}">  
                                 <f:selectItems var="d" value="#{graphController.datePeriods}" itemLabel ="#{d.label}" itemValue="#{d.value}"/> 
-                                <f:param name="hostid" value="#{graphController.hostId}"/>
-                                <f:param name="role" value="#{graphController.role}"/>                  
+                                <f:param name="hostid" value="#{graphController.hostId}"/>            
                                 <p:ajax event="change" process="@form" update=":graphs, calstart, calend" listener="#{graphController.updateDates}"/>
                             </p:selectOneButton>
                             <h:outputText value="or from" />
@@ -221,56 +220,20 @@
                             </p:selectOneMenu>
                             <h:outputText value=" columns " />
                             <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
-                                <f:param name="hostid" value="#{graphController.hostId}"/>
-                                <f:param name="role" value="#{graphController.role}"/>                  
+                                <f:param name="hostid" value="#{graphController.hostId}"/>                 
                             </p:commandButton> 
                         </h:panelGrid>
                     </h:form> 
-                    
+
                     <h:form id="graphs">
-
-                        <p:outputPanel rendered="#{graphController.showNamenodeGraphs()}">
+                        <ui:repeat value="#{graphInfoController.getGroups(roleController.service, roleController.role)}" var="group">                        
                             <p:toolbar>
-                                <p:toolbarGroup align="left"><p:outputLabel value="Name Node Info"/></p:toolbarGroup>
-                            </p:toolbar>                     
-                            <p:dataGrid  var="g" value="#{graphController.namenodeGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                                <p:graphicImage value="#{graphController.namenodeGraphUrl(g)}" />  
-                            </p:dataGrid> 
-
-                            <p:toolbar>
-                                <p:toolbarGroup align="left"><p:outputLabel value="Name Node Activity"/></p:toolbarGroup>
+                                <p:toolbarGroup align="left"><p:outputLabel value="#{group}"/></p:toolbarGroup>
                             </p:toolbar>
-                            <p:dataGrid  var="g" value="#{graphController.namenodeActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                                <p:graphicImage value="#{graphController.namenodeGraphUrl(g)}" />   
-                            </p:dataGrid>               
-                        </p:outputPanel>
-
-                        <p:outputPanel rendered="#{graphController.showDatanodeGraphs()}">
-                            <p:toolbar>
-                                <p:toolbarGroup align="left"><p:outputLabel value="Data Node Activity"/></p:toolbarGroup>
-                            </p:toolbar>
-                            <p:dataGrid  var="g" value="#{graphController.datanodeActivitiesGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                                <p:graphicImage value="#{graphController.datanodeGraphUrl(g)}" />   
-                            </p:dataGrid>                 
-                        </p:outputPanel>   
-                        
-                        <p:outputPanel rendered="#{graphController.showResourceManagerGraphs()}">
-                            <p:toolbar>
-                                <p:toolbarGroup align="left"><p:outputLabel value="Resource Manager Queue Metrics"/></p:toolbarGroup>
-                            </p:toolbar>
-                            <p:dataGrid  var="g" value="#{graphController.resourceManagerGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                                <p:graphicImage value="#{graphController.resourceManagerUrl(g)}" />   
-                            </p:dataGrid>                 
-                        </p:outputPanel>                          
-
-                        <p:outputPanel rendered="#{graphController.showNodeManagerGraphs()}">
-                            <p:toolbar>
-                                <p:toolbarGroup align="left"><p:outputLabel value="Node Manager Metrics"/></p:toolbarGroup>
-                            </p:toolbar>
-                            <p:dataGrid  var="g" value="#{graphController.nodeManagerGraphs}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                                <p:graphicImage value="#{graphController.nodeManagerUrl(g)}" />   
-                            </p:dataGrid>                 
-                        </p:outputPanel>                         
+                            <p:dataGrid  var="id" value="#{graphInfoController.getGraphIds(roleController.service, roleController.role, group)}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                                <p:graphicImage value="#{graphController.getRoleGraphUrl(roleController.service, roleController.role, id)}"/>
+                            </p:dataGrid>
+                        </ui:repeat>    
                     </h:form>         
                 </p:outputPanel>     
 

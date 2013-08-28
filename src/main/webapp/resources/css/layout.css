@@ -192,6 +192,20 @@ body {
     text-align: left;
 }
 
+.GraphsTable .ui-datatable-footer {
+    text-align: right;
+}
+
+/*SettingPanel*/
+.SettingPanel  {
+    width: 1024px;
+    margin: 0 auto; /*center*/
+}
+
+.SettingPanel tr, .SettingPanel  td {
+    border: none;
+}
+
 
 /*datagrid*/
 .ui-datagrid-no-border .ui-datagrid-content {

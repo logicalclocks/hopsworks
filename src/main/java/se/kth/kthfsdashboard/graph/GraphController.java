@@ -16,9 +16,8 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
-import se.kth.kthfsdashboard.role.RoleType;
-import se.kth.kthfsdashboard.service.ServiceType;
 import se.kth.kthfsdashboard.struct.DatePeriod;
+import se.kth.kthfsdashboard.utils.ParseUtils;
 import se.kth.kthfsdashboard.utils.UrlUtils;
 
 /**
@@ -31,94 +30,38 @@ public class GraphController implements Serializable {
 
     @EJB
     private RoleEJB roleEjb;
+    @EJB
+    private GraphEJB graphEjb;
     @ManagedProperty("#{param.cluster}")
     private String cluster;
     @ManagedProperty("#{param.hostid}")
     private String hostId;
-    @ManagedProperty("#{param.service}")
-    private String service;
-    @ManagedProperty("#{param.role}")
-    private String role;
     private Date start;
     private Date end;
     private String period;
-    private List<DatePeriod> datePeriods = new ArrayList<DatePeriod>();
-    private List<Integer> columns;
-    private List<String> hostGraphs;
-    private List<String> namenodeServiceGraphs;
-    private List<String> namenodeGraphs;
-    private List<String> namenodeServiceActivitiesGraphs;
-    private List<String> namenodeActivitiesGraphs;
-    private List<String> datanodeActivitiesGraphs;
-    private List<String> mysqlclusterActivitiesGraphs;
-    private List<String> resourceManagerGraphs;
-    private List<String> nodeManagerGraphs;
+    private static final List<DatePeriod> datePeriods = new ArrayList<DatePeriod>();
+    private static final List<Integer> columns;
     private static String URL_PATH = "/rest/collectd/graph?";
     private static final Logger logger = Logger.getLogger(GraphController.class.getName());
-
-    public GraphController() {
-
-        namenodeServiceGraphs = new ArrayList<String>(Arrays.asList(
-                "serv_nn_capacity", "serv_nn_files", "serv_nn_load",
-                "serv_nn_heartbeats", "serv_nn_blockreplication",
-                "serv_nn_blocks", "serv_nn_specialblocks", "serv_nn_datanodes"));
-
-        namenodeServiceActivitiesGraphs = new ArrayList<String>(Arrays.asList(
-                "serv_nn_r_fileinfo", "serv_nn_r_getblocklocations", "serv_nn_r_getlisting",
-                "serv_nn_r_getlinktarget", "serv_nn_r_filesingetlisting",
-                "serv_nn_w_createfile_all", "serv_nn_w_filesappended", "serv_nn_w_filesrenamed",
-                "serv_nn_w_deletefile_all", "serv_nn_w_addblock", "serv_nn_w_createsymlink",
-                "serv_nn_o_getadditionaldatanode", "serv_nn_o_transactions", "serv_nn_o_transactionsbatchedinsync",
-                "serv_nn_o_blockreport", "serv_nn_o_syncs",
-                "serv_nn_t_safemodetime", "serv_nn_t_transactionsavgtime", "serv_nn_t_syncsavgtime",
-                "serv_nn_t_blockreportavgtime"));
-
-
-        namenodeGraphs = new ArrayList<String>(Arrays.asList("nn_capacity", "nn_files", "nn_load",
-                "nn_heartbeats", "nn_blockreplication", "nn_blocks", "nn_specialblocks", "nn_datanodes"));
-
-        namenodeActivitiesGraphs = new ArrayList<String>(Arrays.asList("nn_r_fileinfo", "nn_r_getblocklocations",
-                "nn_r_getlisting", "nn_r_getlinktarget", "nn_r_filesingetlisting", "nn_w_createfile_all",
-                "nn_w_filesappended", "nn_w_filesrenamed", "nn_w_deletefile_all", "nn_w_addblock", "nn_w_createsymlink",
-                "nn_o_getadditionaldatanode", "nn_o_transactions", "nn_o_transactionsbatchedinsync", "nn_o_blockreport",
-                "nn_o_syncs", "nn_t_safemodetime", "nn_t_transactionsavgtime",
-                "nn_t_syncsavgtime", "nn_t_blockreportavgtime"));
-
-        datanodeActivitiesGraphs = new ArrayList<String>(Arrays.asList("dd_heartbeats", "dd_avgTimeHeartbeats",
-                "dd_bytes", "dd_opsReads", "dd_opsWrites", "dd_blocksRead", "dd_blocksWritten",
-                "dd_blocksRemoved", "dd_blocksReplicated", "dd_blocksVerified",
-                "dd_opsReadBlock", "dd_opsWriteBlock", "dd_opsCopyBlock", "dd_opsReplaceBlock",
-                "dd_avgTimeReadBlock", "dd_avgTimeWriteBlock", "dd_avgTimeCopyBlock", "dd_avgTimeReplaceBlock",
-                "dd_opsBlockChecksum", "dd_opsBlockReports", "dd_avgTimeBlockChecksum", "dd_avgTimeBlockReports",
-                "dd_blockVerificationFailures", "dd_volumeFailures"));
-
-        resourceManagerGraphs = new ArrayList<String>(Arrays.asList("rm_Apps1", "rm_Apps2", "rm_Memory",
-                "rm_AggregateContainers", "rm_Containers"));
-
-        nodeManagerGraphs = new ArrayList<String>(Arrays.asList("nm_Containers1", "nm_Containers2", "nm_Memory"));
-
-        mysqlclusterActivitiesGraphs = new ArrayList<String>(Arrays.asList("mysql_freeDataMemory", "mysql_totalDataMemory",
-                "mysql_freeIndexMemory", "mysql_totalIndexMemory", "mysql_simpleReads", "mysql_Reads", "mysql_Writes",
-                "mysql_rangeScans", "mysql_tableScans"));
-
-        hostGraphs = new ArrayList<String>(Arrays.asList("load", "memory", "df", "interface", "swap"));
-
+    
+    static {
         columns = new ArrayList<Integer>(Arrays.asList(2, 3, 4, 5));
-
         datePeriods.add(new DatePeriod("hour", "1h"));
         datePeriods.add(new DatePeriod("2hr", "2h"));
         datePeriods.add(new DatePeriod("4hr", "4h"));
         datePeriods.add(new DatePeriod("day", "1d"));
         datePeriods.add(new DatePeriod("week", "7d"));
         datePeriods.add(new DatePeriod("month", "1m"));
-        datePeriods.add(new DatePeriod("year", "1y"));
+        datePeriods.add(new DatePeriod("year", "1y"));        
+    }
+
+    public GraphController() {
 
         Calendar c = Calendar.getInstance();
         c.setTime(new Date());
         c.add(Calendar.HOUR_OF_DAY, -1);
         start = c.getTime();
         end = new Date();
-
         period = "1h";
     }
 
@@ -141,22 +84,6 @@ public class GraphController implements Serializable {
 
     public void setHostId(String hostId) {
         this.hostId = hostId;
-    }
-
-    public String getService() {
-        return service;
-    }
-
-    public void setService(String service) {
-        this.service = service;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
     }
 
     public Date getStart() {
@@ -191,48 +118,8 @@ public class GraphController implements Serializable {
         return datePeriods;
     }
 
-    public List<String> getNamenodeServiceGraphs() {
-        return namenodeServiceGraphs;
-    }
-
     public List<Integer> getColumns() {
         return columns;
-    }
-
-    public void setColumns(List<Integer> columns) {
-        this.columns = columns;
-    }
-
-    public List<String> getNamenodeServiceActivitiesGraphs() {
-        return namenodeServiceActivitiesGraphs;
-    }
-
-    public List<String> getHostGraphs() {
-        return hostGraphs;
-    }
-
-    public List<String> getNamenodeGraphs() {
-        return namenodeGraphs;
-    }
-
-    public List<String> getNamenodeActivitiesGraphs() {
-        return namenodeActivitiesGraphs;
-    }
-
-    public List<String> getDatanodeActivitiesGraphs() {
-        return datanodeActivitiesGraphs;
-    }
-
-    public List<String> getMysqlclusterActivitiesGraphs() {
-        return mysqlclusterActivitiesGraphs;
-    }
-
-    public List<String> getResourceManagerGraphs() {
-        return resourceManagerGraphs;
-    }
-
-    public List<String> getNodeManagerGraphs() {
-        return nodeManagerGraphs;
     }
 
     public Long getEndTime() {
@@ -240,7 +127,6 @@ public class GraphController implements Serializable {
     }
 
     public void updateDates() {
-
         Calendar c = Calendar.getInstance();
         c.setTime(new Date());
         String unit = period.substring(period.length() - 1);
@@ -269,117 +155,87 @@ public class GraphController implements Serializable {
         return d.getTime() / 1000;
     }
 
-    public String graphUrl(String host, String plugin, String type, String chartType) throws MalformedURLException {
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put("chart_type", chartType);
+    private String createGraphUrl(String target, String id, HashMap<String, String> extraParams) throws MalformedURLException {
+        HashMap params = new HashMap<String, String>();
+        params.put("id", id);
+        params.put("target", target);
         params.put("start", getStartTime().toString());
         params.put("end", getEndTime().toString());
-        params.put("host", host);
-        params.put("plugin", plugin);
-        params.put("type", type);
+        for (String key : extraParams.keySet()) {
+            params.put(key, extraParams.get(key));
+        }
         return UrlUtils.addParams(URL_PATH, params);
     }
 
-    public String hostGraphUrl(String plugin) throws MalformedURLException {
-        String type = plugin.equals("interface") ? "if_octets" : plugin;
-        return graphUrl(hostId, plugin, type, plugin + "all");
+    public String getRoleGraphUrl(String service, String role, String id) throws MalformedURLException {
+        HashMap extraParams = new HashMap<String, String>();
+        String target = service + "-" + role;
+        extraParams.put("host", hostId);
+        return createGraphUrl(target, id, extraParams);
     }
 
-    public String namenodesGraphUrl(String chartType) {
-        HashMap<String, String> params = new HashMap<String, String>();
-        if (chartType.startsWith("serv_nn_")) {
-            List<String> namenodes = roleEjb.findHostId(cluster,
-                    ServiceType.KTHFS.toString(), RoleType.namenode.toString());
-            String namenodesString = "";
-            for (String namenode : namenodes) {
-                namenodesString += namenodesString.isEmpty() ? namenode : "," + namenode;
+    public String getServiceGraphUrl(String service, String id) throws MalformedURLException {
+        HashMap extraParams = new HashMap<String, String>();
+        String target = service;
+        Graph graph = graphEjb.find(target, id);
+        String vars[] = {};
+        if (!graph.getVar().isEmpty()) {
+            vars = graph.getVar().split(";");
+        }
+        for (String var : vars) {
+            if (var.startsWith("n=") && var.split("=")[1].contains("..")) { // n=X..X
+                String varName = "n";
+                String varValue = "";
+                String valueExp = var.split("=")[1];
+                Long from, to;
+                String fromExp = valueExp.substring(0, valueExp.indexOf(".."));
+                String toExp = valueExp.substring(valueExp.indexOf("..") + 2, valueExp.length());
+                if (ParseUtils.isInteger(fromExp)) {
+                    from = Long.parseLong(fromExp);
+                } else {
+                    from = Long.parseLong(readValue(fromExp));
+                }
+                if (ParseUtils.isInteger(toExp)) {
+                    to = Long.parseLong(toExp);
+                } else {
+                    to = Long.parseLong(readValue(toExp));
+                }
+                for (Long i = from; i <= to; i++) {
+                    varValue += varValue.isEmpty() ? i : "," + i;
+                }
+                extraParams.put(varName, varValue);
+            } else if (var.startsWith("host=")) {
+                String varName = "host";
+                String exp = var.split("=")[1];
+                String varValue = readValue(exp);
+                extraParams.put(varName, varValue);
+            } else {
+                throw new RuntimeException("Invalid syntax: " + var);
             }
-            params.put("host", namenodesString);
         }
-        params.put("chart_type", chartType);
-        params.put("start", getStartTime().toString());
-        params.put("end", getEndTime().toString());
-        return UrlUtils.addParams(URL_PATH, params);
-    }
-
-    public String namenodeGraphUrl(String chartType) {
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put("chart_type", chartType);
-        params.put("start", getStartTime().toString());
-        params.put("end", getEndTime().toString());
-        params.put("host", hostId);
-        return UrlUtils.addParams(URL_PATH, params);
-    }
-
-    public String datanodeGraphUrl(String chartType) {
-        return namenodeGraphUrl(chartType);
-    }
-
-    public String resourceManagerUrl(String chartType) {
-        return namenodeGraphUrl(chartType);
-    }
-    
-    public String nodeManagerUrl(String chartType) {
-        return namenodeGraphUrl(chartType);
-    }    
-
-    public String mysqlclusterGraphUrl(String chartType) {
-        // Finds host of mysqld
-        // Role=mysqld , Service=MySQLCluster, Clusters=cluster
-        List<Role> roles = roleEjb.findRoles(cluster, service, "mysqld");
-        String host = roles.size() > 0 ? roles.get(0).getHostId() : "";
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put("chart_type", chartType);
-        params.put("plugin", "dbi-ndbinfo");
-        params.put("start", getStartTime().toString());
-        params.put("end", getEndTime().toString());
-        params.put("host", host);
-        if (chartType.equals("mysql_freeDataMemory")
-                || chartType.equals("mysql_freeIndexMemory")
-                || chartType.equals("mysql_totalDataMemory")
-                || chartType.equals("mysql_totalIndexMemory")) {
-            Long n = roleEjb.count(cluster, service, "ndb");
-            params.put("n", n.toString());
+        if (!extraParams.containsKey("host")) {
+            extraParams.put("host", hostId);
         }
-        return UrlUtils.addParams(URL_PATH, params);
+        return createGraphUrl(target, id, extraParams);
     }
 
-    public boolean showNamenodeGraphs() {
-        if (role.equals("namenode")) {
-            return true;
+    private String readValue(String exp) {
+        String service = exp.substring(exp.indexOf("(") + 1, exp.indexOf(","));
+        String role = exp.substring(exp.indexOf(",") + 1, exp.indexOf(")"));
+        if (exp.startsWith("COUNT(")) {
+            return roleEjb.count(cluster, service, role).toString();
+        } else if (exp.startsWith("ROLE(")) {
+            List<Role> roles = roleEjb.findRoles(cluster, service, role);
+            String host = roles.size() > 0 ? roles.get(0).getHostId() : null;
+            return host;
+        } else if (exp.startsWith("ROLES(")) {
+            String host = "";
+            for (Role r : roleEjb.findRoles(cluster, service, role)) {
+                host += host.isEmpty() ? r.getHostId() : "," + r.getHostId();
+            }
+            return host;
+        } else {
+            throw new RuntimeException("Invalid Expression: " + exp);
         }
-        return false;
-    }
-
-    public boolean roleHasGraphs() {
-        if (role == null) {
-            return false;
-        }
-        if (role.equals("datanode") || role.equals("namenode") || role.equalsIgnoreCase("ResourceManager")
-                || role.equalsIgnoreCase("NodeManager")) {
-            return true;
-        }
-        return false;
-    }
-
-    public boolean showDatanodeGraphs() {
-        if (role.equals("datanode")) {
-            return true;
-        }
-        return false;
-    }
-
-    public boolean showResourceManagerGraphs() {
-        if (role.equalsIgnoreCase("ResourceManager")) {
-            return true;
-        }
-        return false;
-    }
-
-    public boolean showNodeManagerGraphs() {
-        if (role.equalsIgnoreCase("NodeManager")) {
-            return true;
-        }
-        return false;
     }
 }
