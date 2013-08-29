@@ -26,10 +26,11 @@ public class MySQLAccess implements Serializable {
     public StreamedContent getBackup() {
         List<String> command = new ArrayList<String>();
         command.add("mysqldump");
+        command.add("--default_character_set=utf8");
         command.add("--single-transaction");
         command.add("-u" + USERNAME);
         command.add("-p" + PASSWORD);
-        command.add(DATABASE);
+        command.add(DATABASE);      
         try {
             ProcessBuilder builder = new ProcessBuilder(command).redirectErrorStream(true);
             Process process = builder.start();
