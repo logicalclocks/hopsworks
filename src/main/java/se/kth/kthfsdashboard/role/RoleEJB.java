@@ -45,6 +45,12 @@ public class RoleEJB {
          throw new Exception("NoResultException");
       }
    }
+   
+   public List<Role> findHostRoles(String hostId) {
+      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-HostId", Role.class)
+              .setParameter("hostId", hostId);
+      return query.getResultList();
+   }   
 
    public List<Role> findRoles(String cluster) {
       TypedQuery<Role> query = em.createNamedQuery("Role.findBy.Cluster", Role.class)

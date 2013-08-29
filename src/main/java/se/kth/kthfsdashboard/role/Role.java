@@ -21,6 +21,7 @@ import se.kth.kthfsdashboard.struct.Status;
    @NamedQuery(name = "Role.findBy-Cluster-Group-Role", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
    @NamedQuery(name = "Role.findBy-Cluster-Service-Role-HostId", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.hostId = :hostId"),
    @NamedQuery(name = "Role.findBy-Cluster-Group-Role-Status", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
+   @NamedQuery(name = "Role.findBy-HostId", query = "SELECT r FROM Role r WHERE r.hostId = :hostId"),
    
    // need this?   
    @NamedQuery(name = "Role.findHostIdBy-Cluster-Service-Role", query = "SELECT r.hostId FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role ORDER BY r.hostId"),
