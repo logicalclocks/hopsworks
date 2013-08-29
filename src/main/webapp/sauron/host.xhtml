@@ -67,7 +67,9 @@
                             <p:column headerText="Public IP"><h:outputText value="#{host.publicIp}"/></p:column>
                             <p:column headerText="Private IP"><h:outputText value="#{host.privateIp}"/></p:column>
                             <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
-                            <p:column headerText="Last Heartbeat"><h:outputText value="#{host.lastHeartbeatFormatted} ago"/></p:column>
+                            <p:column headerText="Last Heartbeat">
+                                <h:outputText value="#{host.lastHeartbeatFormatted} ago" rendered="#{not empty host.lastHeartbeatFormatted}"/>
+                            </p:column>
                             <p:column headerText="Cores"><h:outputText value="#{host.cores}" /></p:column> 
                             <p:column headerText="Load Average">
                                 <p:dataTable styleClass="innerDataTable" var="host" value="#{host}">
