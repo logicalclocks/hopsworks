@@ -113,7 +113,7 @@
                     <p:dataTable var="graph" value="#{editGraphsController.selectedGraph}" id="graph">  
                         <f:facet name="header">Graph</f:facet>                            
                         <p:column headerText="Id">  
-                            <h:outputText value="#{graph.id}" />  
+                            <h:outputText value="#{graph.graphId}" />  
                         </p:column>  
                         <p:column headerText="Target">  
                             <h:outputText value="#{graph.target}" />  
@@ -132,7 +132,10 @@
                         </p:column>  
                         <p:column headerText="Vertical Label">
                             <h:outputText value="#{graph.verticalLabel}" />  
-                        </p:column>                  
+                        </p:column>  
+                        <p:column headerText="Var">
+                            <h:outputText value="#{graph.var}" />  
+                        </p:column>                          
                     </p:dataTable>
 
                     <p:spacer width="1" height="20" />
