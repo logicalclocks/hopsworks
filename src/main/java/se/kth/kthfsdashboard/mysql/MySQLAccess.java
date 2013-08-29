@@ -20,6 +20,8 @@ public class MySQLAccess implements Serializable {
     final static String PASSWORD = "kthfs";
     final static String DATABASE = "kthfs";
     final static String BACKUP_FILENAME = "dashboard.sql";
+    
+    final static Logger logger = Logger.getLogger(MySQLAccess.class.getName());
 
     public StreamedContent getBackup() {
         List<String> command = new ArrayList<String>();
@@ -36,7 +38,7 @@ public class MySQLAccess implements Serializable {
             StreamedContent backupContent = new DefaultStreamedContent(inputStream, "application/sql", BACKUP_FILENAME);
             return backupContent;
         } catch (Exception ex) {
-            Logger.getLogger(MySQLAccess.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             return null;
         }
     }
@@ -64,7 +66,7 @@ public class MySQLAccess implements Serializable {
             }
             return false;
         } catch (Exception ex) {
-            Logger.getLogger(MySQLAccess.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             return false;
         }
     }
