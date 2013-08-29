@@ -3,6 +3,7 @@ package se.kth.kthfsdashboard.host;
 import com.sun.jersey.api.client.ClientResponse;
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -48,6 +49,7 @@ public class HostController implements Serializable {
     private String role;
     private Host host;
     private boolean found;
+    private List<Role> roles;
     private static final Logger logger = Logger.getLogger(HostController.class.getName());
 
     public HostController() {
@@ -57,6 +59,7 @@ public class HostController implements Serializable {
     public void init() {
         logger.info("init HostController");
         loadHost();
+        loadRoles();
     }
 
     public void setCommand(String command) {
@@ -121,8 +124,11 @@ public class HostController implements Serializable {
             logger.log(Level.WARNING, "Host {0} not found.", hostId);
         }
     }
+    
+    private void loadRoles() {
+        roles = roleEjb.findHostRoles(hostId);
+    }
 
-//   public void doCommand(ActionEvent actionEvent) throws NoSuchAlgorithmException, Exception {
     public void doCommand() throws Exception {
         //  TODO: If the web application server craches, status will remain 'Running'.
         Command c = new Command(command, hostId, service, role, cluster);
@@ -136,8 +142,10 @@ public class HostController implements Serializable {
         Thread t = new Thread(r);
         t.setDaemon(true);
         t.start();
+    }
 
-//        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Operation is running in background..."));
+    public List<Role> getRoles() {
+        return roles;
     }
 
     class CommandThread implements Runnable {//it's not bad, because he does bad thing :D

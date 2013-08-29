@@ -60,14 +60,16 @@
                 <p:spacer width="1" height="8" />    
 
                 <h:form styleClass="styleInfoPanel" id="form_host">
-                    <p:panel  header="Details">
+                    <p:panel  header="Host Details">
                         <p:dataTable id="host" var="host" value="#{hostController.host}">
                             <p:column headerText="Host Id" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostId}"/></p:column> 
                             <p:column headerText="Hostname" styleClass="Health-#{host.health}"><h:outputText value="#{host.hostname}"/></p:column>
                             <p:column headerText="Public IP"><h:outputText value="#{host.publicIp}"/></p:column>
                             <p:column headerText="Private IP"><h:outputText value="#{host.privateIp}"/></p:column>
                             <p:column headerText="Health" styleClass="Health-#{host.health}"><h:outputText value="#{host.health}"/></p:column> 
-                            <p:column headerText="Last Heartbeat"><h:outputText value="#{host.lastHeartbeatFormatted} ago"/></p:column>
+                            <p:column headerText="Last Heartbeat">
+                                <h:outputText value="#{host.lastHeartbeatFormatted} ago" rendered="#{not empty host.lastHeartbeatFormatted}"/>
+                            </p:column>
                             <p:column headerText="Cores"><h:outputText value="#{host.cores}" /></p:column> 
                             <p:column headerText="Load Average">
                                 <p:dataTable styleClass="innerDataTable" var="host" value="#{host}">
@@ -89,11 +91,26 @@
                                 </div>
                             </p:column> 
                         </p:dataTable> 
-
                     </p:panel> 
-                </h:form>
 
-                <p:spacer width="1" height="8" />                                   
+                    <p:spacer width="1" height="20" /> 
+
+                    <p:panel header="Roles">
+                        <p:dataTable id="roles" var="role" value="#{hostController.roles}">
+                            <p:column headerText="Role name">
+                                <p:commandLink action="#{urlController.roleStatus()}" ajax="false">
+                                    <h:outputText value="#{role}"/>
+                                    <f:param name="cluster" value="#{role.cluster}"/>
+                                    <f:param name="service" value="#{role.service}"/>                        
+                                    <f:param name="role" value="#{role.role}"/>
+                                </p:commandLink>                         
+                            </p:column>
+                            <p:column headerText="Cluster"><h:outputText value="#{role.cluster}"/></p:column>
+                            <p:column headerText="Service"><h:outputText value="#{role.service}"/></p:column>                            
+                            <p:column headerText="Role"><h:outputText value="#{role.role}"/></p:column>                                                            
+                        </p:dataTable> 
+                    </p:panel>                     
+                </h:form>                                
 
                 <p:panel header="Control commands" rendered="false">  
                     <div class="commands">
