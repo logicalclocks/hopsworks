@@ -271,6 +271,37 @@
 ],
 
 
+"YARN": [
+{"group": "Resource Manager Queue Metrics", "graphs":[
+{"id": "yarn-rm-aggregate-containers", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Aggregate Containers", "vertical-label": "", "var" : "host=ROLE(YARN,ResourceManager)", "charts": 
+  [{"model": "LINE", "type": "gauge-AggregateContainersAllocated", "type-instance": "", "ds": "value", "label": "Allocated", "color": "RED", "format": "%5.2lf"},
+   {"model": "LINE", "type": "gauge-AggregateContainersReleased", "type-instance": "", "ds": "value", "label": "Released", "color": "GREEN", "format": "%5.2lf"}]
+},
+{"id": "yarn-rm-containers", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Containers", "vertical-label": "", "var" : "host=ROLE(YARN,ResourceManager)", "charts": 
+  [{"model": "LINE", "type": "gauge-AllocatedContainers", "type-instance": "", "ds": "value", "label": "Allocated", "color": "RED", "format": "%5.2lf"},
+   {"model": "LINE", "type": "gauge-ReservedContainers", "type-instance": "", "ds": "value", "label": "Reserved", "color": "YELLOW", "format": "%5.2lf"},
+   {"model": "LINE", "type": "gauge-PendingContainers", "type-instance": "", "ds": "value", "label": "Pending", "color": "BLUE", "format": "%5.2lf"}]
+},
+{"id": "yarn-rm-apps1", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Apps", "vertical-label": "", "var" : "host=ROLE(YARN,ResourceManager)", "charts": 
+  [{"model": "LINE", "type": "gauge-AppsSubmitted", "type-instance": "", "ds": "value", "label": "Submitted", "color": "BLUE", "format": "%5.2lf"},
+   {"model": "LINE", "type": "gauge-AppsCompleted", "type-instance": "", "ds": "value", "label": "Completed", "color": "GREEN", "format": "%5.2lf"},
+   {"model": "LINE", "type": "gauge-AppsRunning", "type-instance": "", "ds": "value", "label": "Running", "color": "RED", "format": "%5.2lf"},
+   {"model": "LINE", "type": "gauge-AppsPending", "type-instance": "", "ds": "value", "label": "Pending", "color": "YELLOW", "format": "%5.2lf"}]
+},
+{"id": "yarn-rm-apps2", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Apps", "vertical-label": "", "var" : "host=ROLE(YARN,ResourceManager)", "charts": 
+  [{"model": "LINE", "type": "gauge-AppsFailed", "type-instance": "", "ds": "value", "label": "Failed", "color": "RED", "format": "%5.2lf"},
+   {"model": "LINE", "type": "gauge-AppsKilled", "type-instance": "", "ds": "value", "label": "Killed", "color": "BLUE", "format": "%5.2lf"}]
+},
+{"id": "yarn-rm-memory", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Memory", "vertical-label": "MB", "var" : "host=ROLE(YARN,ResourceManager)", "charts": 
+  [{"model": "LINE", "type": "gauge-AllocatedMB", "type-instance": "", "ds": "value", "label": "Allocated", "color": "BLUE", "format": "%5.2lf"},
+   {"model": "LINE", "type": "gauge-AvailableMB", "type-instance": "", "ds": "value", "label": "Available", "color": "GREEN", "format": "%5.2lf"},
+   {"model": "LINE", "type": "gauge-PendingMB", "type-instance": "", "ds": "value", "label": "Pending", "color": "YELLOW", "format": "%5.2lf"},
+   {"model": "LINE", "type": "gauge-ReservedMB", "type-instance": "", "ds": "value", "label": "Reserved", "color": "RED", "format": "%5.2lf"}]
+}
+]}
+],
+
+
 
 "MYSQLCLUSTER": [
 {"group": "MySQL Cluster NDB Info", "graphs":[

@@ -34,6 +34,11 @@ import org.bouncycastle.openssl.PEMReader;
  */
 public class PKIUtils {
 
+    // TODO this should not be static
+    final static String PASSWORD = "changeit";
+    final static String KEYSTORE_FILENAME = "keystore.jks";
+    final static String ALIAS = "s1as";
+    
     final static Logger logger = Logger.getLogger(PKIUtils.class.getName());
     
 //    static {
@@ -45,7 +50,7 @@ public class PKIUtils {
             InterruptedException, NoSuchProviderException, InvalidKeyException, SignatureException {
 
         verifyCSR(csr);
-        File serverKeyPairFile = exportServerKeyPair("keystore.jks", "s1as", "changeit");
+        File serverKeyPairFile = exportServerKeyPair(KEYSTORE_FILENAME, ALIAS, PASSWORD);
         String generatedCert = sign(serverKeyPairFile, csr);
         return generatedCert;
     }
