@@ -39,21 +39,24 @@ public class ImportGraphController implements Serializable {
 
     public void handleUpload(FileUploadEvent event) {
         FacesMessage msg;
+        String msgString = "";
         try {
-            System.out.println("HERE");
             String jsonString = new String(event.getFile().getContents());
             JSONObject json = new JSONObject(jsonString);
-            parseGraphs(json);
-            msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", "Graphs imported sucessfully.");
+            List<Graph> graphs = parseGraphs(json);
+            graphEjb.importGraphs(parseGraphs(json));
+            msgString = graphs.size() > 1 ? graphs.size() + " graphs" : graphs.size() + " graph";
+            msgString += " imported sucessfully.";            
+            msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", msgString);
         } catch (Exception ex) {
-            Logger.getLogger(ImportGraphController.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "Failure", "Import failed. Check the graph description file and try again.");
         }
-
+        logger.info(msgString);
         FacesContext.getCurrentInstance().addMessage(null, msg);
     }
 
-    private void parseGraphs(JSONObject json) throws Exception {
+    private List<Graph> parseGraphs(JSONObject json) throws Exception {
 
         List<Graph> graphs = new ArrayList<Graph>();
         Iterator<String> keys = json.keys();
@@ -93,6 +96,6 @@ public class ImportGraphController implements Serializable {
                 }
             }
         }
-        graphEjb.importGraphs(graphs);
+        return graphs;
     }
 }
