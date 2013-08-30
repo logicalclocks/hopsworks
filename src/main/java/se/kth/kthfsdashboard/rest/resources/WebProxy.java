@@ -1,13 +1,9 @@
 package se.kth.kthfsdashboard.rest.resources;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.Stateless;
-import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -30,7 +26,7 @@ public class WebProxy {
     final static Logger logger = Logger.getLogger(WebProxy.class.getName());
 
     @GET
-    @Path("get/{ip}/{port}/{path:.+}")
+    @Path("get/{ip}/{port}/{path:.*}")
     @Produces(MediaType.TEXT_HTML)
     public Response getWebPage(@Context UriInfo uriInfo,
             @PathParam("ip") String ip,
