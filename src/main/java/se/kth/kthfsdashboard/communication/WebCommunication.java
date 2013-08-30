@@ -46,8 +46,12 @@ public class WebCommunication {
    }
    
    public String getResource(String url) {
-       return fetchContent(url);
+       return fetchContent(url, true);
    }
+   
+   public String getWebPage(String url) {
+       return fetchContent(url, false);
+   }   
 
    private String createUrl(String context, String hostAddress, String... args) {
       String template = "%s://%s:%s/%s";
@@ -58,11 +62,11 @@ public class WebCommunication {
       return url;
    }
 
-   private String fetchContent(String url) {
+   private String fetchContent(String url, boolean checkSuccess) {
       String content = NOT_AVAILABLE;
       try {
          ClientResponse response = getWebResource(url);
-         if (response.getClientResponseStatus().getFamily() == Response.Status.Family.SUCCESSFUL) {
+         if (!checkSuccess || response.getClientResponseStatus().getFamily() == Response.Status.Family.SUCCESSFUL) {
             content = response.getEntity(String.class);
          }
       } catch (Exception e) {
@@ -72,14 +76,14 @@ public class WebCommunication {
    }
 
    private String fetchLog(String url) {
-      String log = fetchContent(url);
+      String log = fetchContent(url, true);
       log = log.replaceAll("\n", "<br>");
       return log;
    }
 
    public String getConfig(String hostAddress, String cluster, String service, String role) {
       String url = createUrl("config", hostAddress, cluster, service, role);
-      return fetchContent(url);
+      return fetchContent(url, true);
    }
 
    public String getRoleLog(String hostAddress, String cluster, String service, String role, int lines) {
@@ -101,7 +105,7 @@ public class WebCommunication {
       List<NodesTableItem> resultList = new ArrayList<NodesTableItem>();
 
       String url = createUrl("mysql", hostAddress, "ndbinfo", "nodes");
-      String jsonString = fetchContent(url);
+      String jsonString = fetchContent(url, true);
       try {
          JSONArray json = new JSONArray(jsonString);
          if (json.get(0).equals("Error")) {

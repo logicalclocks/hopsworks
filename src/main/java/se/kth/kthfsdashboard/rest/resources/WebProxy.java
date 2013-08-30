@@ -36,7 +36,7 @@ public class WebProxy {
 
         WebCommunication web = new WebCommunication();
         String url = "http://" + ip + ":" + port + "/" + path;
-        String html = web.getResource(url);
+        String html = web.getWebPage(url);
         String target = uriInfo.getBaseUri().getPath() + "web/get/" + ip + "/" + port + "/";
         html = html.replaceAll("href=\"/", "href=\"" + target);
         html = html.replaceAll("HREF=\"/", "href=\"" + target);        
