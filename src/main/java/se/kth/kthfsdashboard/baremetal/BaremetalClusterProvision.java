@@ -46,7 +46,7 @@ public class BaremetalClusterProvision implements Provision {
     private HostEJB hostEJB;
     @EJB
     private DeploymentProgressFacade progressEJB;
-    private static final int RETRIES = 2;
+    private static final int RETRIES = 3;
     private String privateKey;
     private String publicKey;
     private String privateIP;
@@ -83,7 +83,7 @@ public class BaremetalClusterProvision implements Provision {
 
     @Override
     public void initializeCluster() {
-        progressEJB.createProgress(cluster);
+        progressEJB.createProgress(cluster,privateKey);
     }
 
     @Override

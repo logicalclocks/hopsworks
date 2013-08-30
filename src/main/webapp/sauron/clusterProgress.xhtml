@@ -53,7 +53,9 @@
                     <p:dataTable id="deploymentTable" var="node" value="#{nodeProgressionController.nodes}" 
                                  rowStyleClass="#{node.phase=='Complete' ? 'complete' : 
                                                   node.phase=='Error'? 'error':
-                                                  node.phase=='Waiting'?'pending':null}">
+                                                  node.phase=='Waiting'?'pending':null}"
+                                                  rowKey="#{node.id}"
+                                                  selectionMode="single">
 
                         <p:column>  
                             <f:facet name="header">
@@ -108,9 +110,22 @@
                                      oncomplete="editLastDatatableRow() removeDialog.hide()"
                                      />
                 </p:dialog>
+                <p:dialog header="Retry node" widgetVar="retryDialog" resizable="false"
+                          id="nodesRetryDig"  
+                          showEffect="fade" hideEffect="explode" modal="true">  
+                    <h:outputText id="retrymsg" value="Are you sure you want to retry selected node?" />
+                    <p:commandButton id="acceptRetry" value="Confirm"  
+                                     action="#{nodeProgressionController.retryNodes()}"
+                                     oncomplete="editLastDatatableRow() retryDialog.hide()"
+                                     />
+                </p:dialog>
+                
                 <p:commandButton id="deleteNodesButton" value="Delete Nodes" 
                                  update="clusterProgressForm:deletemsg" 
                                  oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
+                <p:commandButton id="retryNodesButton" value="Retry Nodes" 
+                                 update="clusterProgressForm:retrymsg" 
+                                 oncomplete="retryDialog.show()" title="View"/>
             </h:form> 
             <p:spacer width="1" height="8" />
         </ui:define>

@@ -72,7 +72,7 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
         }
     }
 
-    public void createProgress(Baremetal cluster) {
+    public void createProgress(Baremetal cluster, String privateKey) {
 
         NodeProgression progress;
         for (BaremetalGroup group : cluster.getNodes()) {
@@ -82,6 +82,9 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
                 progress.setNodeId(group.getHosts().get(i));
                 progress.setPhase(DeploymentPhase.WAITING.toString());
                 progress.setRole(group.getRoles().toString());
+                progress.setIp(group.getHosts().get(i));
+                progress.setLoginUser(cluster.getLoginUser());
+                progress.setPrivateKey(privateKey);
                 persistNodeProgress(progress);
             }
         }
@@ -138,7 +141,8 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
         }
     }
 
-    public void updateCreateProgress(String group, String nodeID, int i) throws Exception {
+    public void updateCreateProgress(String group, int i, NodeMetadata created)
+            throws Exception {
 
         TypedQuery<NodeProgression> query =
                 em.createNamedQuery("NodeProgression.findNodeByNodeID", NodeProgression.class)
@@ -146,9 +150,12 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
         try {
 
             NodeProgression node = query.getSingleResult();
-            node.setNodeId(nodeID);
+            node.setNodeId(created.getId());
             node.setPreviousPhase(node.getPhase());
             node.setPhase(DeploymentPhase.CREATED.toString());
+            node.setIp(created.getPrivateAddresses().iterator().next());
+            node.setLoginUser(created.getCredentials().getUser());
+            node.setPrivateKey(created.getCredentials().getPrivateKey());
 
             updateProgress(node);
 
@@ -183,8 +190,24 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
 
     }
 
+    public void updatePhaseProgress(NodeProgression node, DeploymentPhase phase)
+            throws Exception {
+        TypedQuery<NodeProgression> query =
+                em.createNamedQuery("NodeProgression.findNodeByNodeID", NodeProgression.class)
+                .setParameter("nodeId", node.getId());
+        try {
+            NodeProgression temp = query.getSingleResult();
+            temp.setPreviousPhase(temp.getPhase());
+            temp.setPhase(phase.toString());
+            System.out.println(temp);
+            updateProgress(temp);
+        } catch (NoResultException ex) {
+            throw new Exception("NoResultException");
+        }
+    }
+
     public void deleteAllProgress() {
         em.createQuery("DELETE FROM NodeProgression c WHERE c.phase = 'Complete'").executeUpdate();
-        
+
     }
 }
