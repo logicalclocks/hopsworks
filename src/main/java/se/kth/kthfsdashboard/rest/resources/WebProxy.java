@@ -25,6 +25,7 @@ public class WebProxy {
 
     final static Logger logger = Logger.getLogger(WebProxy.class.getName());
 
+//  TODO Change MediaType to TEXT_PLAIN if content is text (e.g. log files)
     @GET
     @Path("get/{ip}/{port}/{path:.*}")
     @Produces(MediaType.TEXT_HTML)
