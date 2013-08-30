@@ -237,4 +237,12 @@ public class GraphController implements Serializable {
             throw new RuntimeException("Invalid Expression: " + exp);
         }
     }
+    
+    public String getTarget(String target) {
+        return target.toUpperCase();
+    }
+    
+    public String getTarget(String service, String role) {
+        return (service + "-" + role).toUpperCase();
+    }    
 }
