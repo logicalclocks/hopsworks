@@ -5,6 +5,7 @@
 package se.kth.kthfsdashboard.provision;
 
 import java.io.Serializable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -39,6 +40,10 @@ public class NodeProgression implements Serializable {
     private String nodeRole;
     private String phase;
     private String previousPhase;
+    private String loginUser;
+    private String ip;
+    @Column(columnDefinition = "text")
+    private String privateKey;
 
     public Long getId() {
         return id;
@@ -88,6 +93,31 @@ public class NodeProgression implements Serializable {
         this.phase = phase;
     }
 
+    public String getLoginUser() {
+        return loginUser;
+    }
+
+    public void setLoginUser(String loginUser) {
+        this.loginUser = loginUser;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String publicKey) {
+        this.privateKey = publicKey;
+    }
+
+    
     @Override
     public int hashCode() {
         int hash = 17;
@@ -97,6 +127,9 @@ public class NodeProgression implements Serializable {
         hash += (phase != null ? phase.hashCode() : 0);
         hash += (previousPhase != null ? previousPhase.hashCode() : 0);
         hash += (nodeId != null ? nodeId.hashCode() : 0);
+        hash += (loginUser != null ? loginUser.hashCode() : 0);
+        hash += (ip != null ? ip.hashCode() : 0);
+        hash += (privateKey != null ? privateKey.hashCode() : 0);
         return hash;
     }
 
@@ -130,12 +163,27 @@ public class NodeProgression implements Serializable {
                  (this.nodeId != null && !this.nodeId.equals(other.nodeId))) {
             return false;
         }
+         if ((this.loginUser == null && other.loginUser != null) || 
+                 (this.loginUser != null && !this.loginUser.equals(other.loginUser))) {
+            return false;
+        }
+         if ((this.privateKey == null && other.privateKey != null) || 
+                 (this.privateKey != null && !this.privateKey.equals(other.privateKey))) {
+            return false;
+        }
+         if ((this.ip == null && other.ip != null) || 
+                 (this.ip != null && !this.ip.equals(other.ip))) {
+            return false;
+        }
         return true;
     }
 
     @Override
     public String toString() {
-        return "NodeProgression{" + "id=" + id + ", cluster=" + cluster + ", nodeId=" + nodeId
-                + ", nodeRole=" + nodeRole + ", phase=" + phase + ", previousPhase=" + previousPhase + '}';
+        return "NodeProgression{" + "id=" + id + ", cluster=" + cluster + ", nodeId=" + nodeId 
+                + ", nodeRole=" + nodeRole + ", phase=" + phase + ", previousPhase=" + previousPhase 
+                + ", loginUser=" + loginUser + ", ip=" + ip + ", privateKey=" + privateKey + '}';
     }
+
+    
 }
