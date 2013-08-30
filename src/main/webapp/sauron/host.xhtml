@@ -197,11 +197,15 @@
                             <p:commandButton value="Go" update=":graphs, periods"  actionListener="#{graphController.useCalendar()}" >
                                 <f:param name="hostid" value="#{hostController.hostId}"/>
                             </p:commandButton> 
+                            <p:commandButton value="Edit" id="editcharts" ajax="false" action="#{urlController.editGraphsUrl()}" icon="ui-icon-gear">
+                                <f:param name="target" value="#{graphController.getTarget('HOST')}"/>
+                            </p:commandButton> 
+                            <p:tooltip for="editcharts" value="Edit Graphs"/>
                         </h:panelGrid>
                     </h:form>   
 
                     <h:form id="graphs">
-                        <ui:repeat value="#{graphInfoController.getGroups('host')}" var="group">                        
+                        <ui:repeat value="#{graphInfoController.getGroups('HOST')}" var="group">                        
                             <p:toolbar>
                                 <p:toolbarGroup align="left"><p:outputLabel value="#{group}"/></p:toolbarGroup>
                             </p:toolbar>
