@@ -4,13 +4,18 @@
  */
 package se.kth.kthfsdashboard.provision;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.Serializable;
 import java.util.List;
+import java.util.concurrent.Executors;
 import javax.annotation.PostConstruct;
+import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
-
+import org.jclouds.compute.domain.ExecResponse;
 
 /**
  *
@@ -23,6 +28,9 @@ public class NodeProgressionController implements Serializable {
     @EJB
     private DeploymentProgressFacade deploymentFacade;
     private List<NodeProgression> nodes;
+    private NodeProgression selectedNode;
+    private ListeningExecutorService pool =
+            MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(5));
 
     /**
      * Creates a new instance of NodeProgressionController
@@ -40,9 +48,30 @@ public class NodeProgressionController implements Serializable {
         loadNodes();
         return nodes;
     }
-    
-    public void deleteNodes(){
+
+    public void deleteNodes() {
         deploymentFacade.deleteAllProgress();
+    }
+
+    @Asynchronous
+    public void retryNodes() {
+        if (selectedNode != null) {
+            ListenableFuture<ExecResponse> future = pool.submit(
+                    new RetryNodeCallable(selectedNode,
+                    "sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
+            
+            future.addListener(new RetryStatusTracker(future, selectedNode, deploymentFacade), pool);
+           
+            selectedNode=null;
+        }
+    }
+
+    public NodeProgression getSelectedNode() {
+        return selectedNode;
+    }
+
+    public void setSelectedNode(NodeProgression selectedNode) {
+        this.selectedNode = selectedNode;
     }
 
     public Integer progress(NodeProgression progress) {
@@ -58,11 +87,10 @@ public class NodeProgressionController implements Serializable {
         } else if (currentPhase.equals(DeploymentPhase.COMPLETE)) {
             return 100;
         } else if (currentPhase.equals(DeploymentPhase.WAITING)) {
-            if (previousPhase != null &&( previousPhase.equals(DeploymentPhase.INSTALL)
-                    ||previousPhase.equals(DeploymentPhase.CREATED))) {
+            if (previousPhase != null && (previousPhase.equals(DeploymentPhase.INSTALL)
+                    || previousPhase.equals(DeploymentPhase.CREATED))) {
                 return 33;
-            }
-            else if(previousPhase != null && previousPhase.equals(DeploymentPhase.CONFIGURE)){
+            } else if (previousPhase != null && previousPhase.equals(DeploymentPhase.CONFIGURE)) {
                 return 66;
             }
             return 0;
