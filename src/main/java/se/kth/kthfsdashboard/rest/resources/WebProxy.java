@@ -27,7 +27,7 @@ public class WebProxy {
 
 //  TODO Change MediaType to TEXT_PLAIN if content is text (e.g. log files)
     @GET
-    @Path("get/{ip}/{port}/{path:.*}")
+    @Path("/{ip}/{port}/{path:.*}")
     @Produces(MediaType.TEXT_HTML)
     public Response getWebPage(@Context UriInfo uriInfo,
             @PathParam("ip") String ip,
@@ -37,7 +37,7 @@ public class WebProxy {
         WebCommunication web = new WebCommunication();
         String url = "http://" + ip + ":" + port + "/" + path;
         String html = web.getWebPage(url);
-        String target = uriInfo.getBaseUri().getPath() + "web/get/" + ip + "/" + port + "/";
+        String target = uriInfo.getBaseUri().getPath() + "web/" + ip + "/" + port + "/";
         html = html.replaceAll("href=\"/", "href=\"" + target);
         html = html.replaceAll("HREF=\"/", "href=\"" + target);        
         return Response.ok(html).build();

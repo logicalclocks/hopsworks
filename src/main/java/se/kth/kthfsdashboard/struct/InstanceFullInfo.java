@@ -105,7 +105,7 @@ public class InstanceFullInfo implements Serializable {
 //  TODO Only if using private IP address        
         String path = ((HttpServletRequest) FacesContext.getCurrentInstance()
                 .getExternalContext().getRequest()).getContextPath();
-        String url = path + "/rest/web/get/" + ip + "/" + webPort + "/";
+        String url = path + "/rest/web/" + ip + "/" + webPort + "/";
         return url;
     }
 
