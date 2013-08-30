@@ -1,6 +1,6 @@
 <pretty-config xmlns="http://ocpsoft.org/schema/rewrite-config-prettyfaces" 
-               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-               xsi:schemaLocation="http://ocpsoft.org/schema/rewrite-config-prettyfaces
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xsi:schemaLocation="http://ocpsoft.org/schema/rewrite-config-prettyfaces
                       http://ocpsoft.org/xml/ns/prettyfaces/rewrite-config-prettyfaces.xsd">
 
    <url-mapping id="test">
@@ -33,10 +33,21 @@
       <view-id value="/sauron/manageCluster.xhtml" />
    </url-mapping> -->
    
+      
+<!--   <url-mapping id="edit-graphs">
+      <pattern value="/sauron/graphs" />
+      <view-id value="/sauron/edit-graphs.xhtml" />
+   </url-mapping> -->
+      
+<!--   <url-mapping id="edit-graphs">
+      <pattern value="/sauron/graphs/#{target}"/>
+      <view-id value="/sauron/edit-graphs.xhtml" />
+   </url-mapping>  -->
+      
    <url-mapping id="hosts">
       <pattern value="/sauron/hosts" />
       <view-id value="/sauron/hosts.xhtml" />
-   </url-mapping>
+   </url-mapping> 
       
    <url-mapping id="host">
       <pattern value="/sauron/hosts/#{hostid}" />

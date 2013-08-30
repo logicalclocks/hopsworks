@@ -4,170 +4,173 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
          http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
              
-   <context-param>
-      <param-name>javax.faces.PROJECT_STAGE</param-name>
-      <param-value>Development</param-value>
-      <!--        <param-value>Production</param-value>-->
-   </context-param>
-   <context-param>
-      <param-name>com.sun.faces.verifyObjects</param-name>
-      <param-value>false</param-value>
-   </context-param>
-   <context-param>
-      <param-name>com.sun.faces.validateXml</param-name>
-      <param-value>true</param-value>
-   </context-param>
-   <context-param>
-      <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
-      <param-value>client</param-value>
-   </context-param>    
-   <servlet>
-      <servlet-name>Faces Servlet</servlet-name>
-      <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
-      <load-on-startup>1</load-on-startup>
-   </servlet>
-   <servlet-mapping>
-      <servlet-name>Faces Servlet</servlet-name>
-      <url-pattern>/faces/*</url-pattern>
-   </servlet-mapping>
-   <servlet-mapping>
-      <servlet-name>Faces Servlet</servlet-name>
-      <url-pattern>*.xhtml</url-pattern>
-   </servlet-mapping>
+    <context-param>
+        <param-name>javax.faces.PROJECT_STAGE</param-name>
+        <param-value>Development</param-value>
+        <!--        <param-value>Production</param-value>-->
+    </context-param>
+    <context-param>
+        <param-name>com.sun.faces.verifyObjects</param-name>
+        <param-value>false</param-value>
+    </context-param>
+    <context-param>
+        <param-name>com.sun.faces.validateXml</param-name>
+        <param-value>true</param-value>
+    </context-param>
+    <context-param>
+        <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
+        <param-value>client</param-value>
+    </context-param>    
+    <servlet>
+        <servlet-name>Faces Servlet</servlet-name>
+        <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Faces Servlet</servlet-name>
+        <url-pattern>/faces/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Faces Servlet</servlet-name>
+        <url-pattern>*.xhtml</url-pattern>
+    </servlet-mapping>
     
-   <welcome-file-list>
-      <welcome-file>index.xhtml</welcome-file>
-   </welcome-file-list>
+    <welcome-file-list>
+        <welcome-file>index.xhtml</welcome-file>
+    </welcome-file-list>
     
 
-   <!--  REST  -->
+    <!--  REST  -->
     
-   <servlet>
-      <servlet-name>Jersey REST Service</servlet-name>
-      <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
-      <init-param>
-         <param-name>com.sun.jersey.config.property.packages</param-name>
-         <param-value>se.kth.kthfsdashboard.rest.resources</param-value>
-      </init-param>
-      <load-on-startup>1</load-on-startup>
-   </servlet>
-   <servlet-mapping>
-      <servlet-name>Jersey REST Service</servlet-name>
-      <url-pattern>/rest/*</url-pattern>
-   </servlet-mapping>
+    <servlet>
+        <servlet-name>Jersey REST Service</servlet-name>
+        <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.packages</param-name>
+            <param-value>se.kth.kthfsdashboard.rest.resources</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Jersey REST Service</servlet-name>
+        <url-pattern>/rest/*</url-pattern>
+    </servlet-mapping>
 
-   <servlet-mapping>
-      <servlet-name>Jersey REST Service</servlet-name>
-      <url-pattern>/resources/*</url-pattern>
-   </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Jersey REST Service</servlet-name>
+        <url-pattern>/resources/*</url-pattern>
+    </servlet-mapping>
 
-   <!-- declare the roles relevant for our webapp -->
-   <security-role>
-      <role-name>ADMIN</role-name>
-   </security-role>
-   <security-role>
-      <role-name>USER</role-name>
-   </security-role>
-   <security-role>
-      <role-name>AGENT</role-name>
-   </security-role>
+    <!-- declare the roles relevant for our webapp -->
+    <security-role>
+        <role-name>ADMIN</role-name>
+    </security-role>
+    <security-role>
+        <role-name>USER</role-name>
+    </security-role>
+    <security-role>
+        <role-name>AGENT</role-name>
+    </security-role>
 
-   <security-constraint>
-      <web-resource-collection>
-         <web-resource-name>Secured Content</web-resource-name>
-         <url-pattern>/sauron/*</url-pattern>
-      </web-resource-collection>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Secured Content</web-resource-name>
+            <url-pattern>/sauron/*</url-pattern>
+        </web-resource-collection>
       
-      <auth-constraint>
-         <role-name>ADMIN</role-name>
-         <role-name>USER</role-name>
-      </auth-constraint>
+        <auth-constraint>
+            <role-name>ADMIN</role-name>
+            <role-name>USER</role-name>
+        </auth-constraint>
   
-      <!-- we always want https! -->
-      <!--        <user-data-constraint>
-          <description>highest supported transport security level</description>
-          <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-      </user-data-constraint>-->
-   </security-constraint>
+        <!-- we always want https! -->
+        <!--        <user-data-constraint>
+            <description>highest supported transport security level</description>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>-->
+    </security-constraint>
     
-   <security-constraint>
-      <web-resource-collection>
-         <web-resource-name>Secured Content for agents sending alerts data</web-resource-name>
-         <url-pattern>/rest/collectd/*</url-pattern>
-      </web-resource-collection>
-      <auth-constraint>
-         <role-name>AGENT</role-name>
-         <role-name>ADMIN</role-name>            
-      </auth-constraint>
-      <!--        <user-data-constraint>
-          <description>SSL Support</description>
-          <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-      </user-data-constraint>        -->
-   </security-constraint>                  
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Secured Content for agents sending alerts data</web-resource-name>
+            <url-pattern>/rest/collectd/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>AGENT</role-name>
+            <role-name>ADMIN</role-name>            
+        </auth-constraint>
+        <!--        <user-data-constraint>
+            <description>SSL Support</description>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>        -->
+    </security-constraint>                  
             
-   <security-constraint>
-      <web-resource-collection>
-         <web-resource-name>Secured Content for agents sending status data</web-resource-name>
-         <url-pattern>/rest/agent/*</url-pattern>
-      </web-resource-collection>
-      <auth-constraint>
-         <role-name>AGENT</role-name>
-         <role-name>ADMIN</role-name>            
-      </auth-constraint>
-      <!--        <user-data-constraint>
-          <description>SSL Support</description>
-          <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-      </user-data-constraint> -->
-   </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Secured Content for agents sending status data</web-resource-name>
+            <url-pattern>/rest/agent/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>AGENT</role-name>
+            <role-name>ADMIN</role-name>            
+        </auth-constraint>
+        <!--        <user-data-constraint>
+            <description>SSL Support</description>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint> -->
+    </security-constraint>
                                                        
-   <login-config>
-      <!--<auth-method>FORM</auth-method>-->
-      <auth-method>BASIC</auth-method>
-      <realm-name>DBRealm</realm-name>
-      <form-login-config>
-         <form-login-page>/index.xhtml</form-login-page>
-         <form-error-page>/loginError.xhtml</form-error-page>
-      </form-login-config>
-   </login-config>
+    <login-config>
+        <!--<auth-method>FORM</auth-method>-->
+        <auth-method>BASIC</auth-method>
+        <realm-name>DBRealm</realm-name>
+        <form-login-config>
+            <form-login-page>/index.xhtml</form-login-page>
+            <form-error-page>/loginError.xhtml</form-error-page>
+        </form-login-config>
+    </login-config>
    
-<!--   <error-page>
-      <error-code>404</error-code>
-      <location>/error</location>
-   </error-page>   
-   <error-page>
-      <error-code>500</error-code>
-      <location>/error</location>
-   </error-page> -->
+    <!--   <error-page>
+       <error-code>404</error-code>
+       <location>/error</location>
+    </error-page>   
+    <error-page>
+       <error-code>500</error-code>
+       <location>/error</location>
+    </error-page> -->
       
-   <session-config>
-      <!-- on production systems you might have another value for the timeout -->
-      <session-timeout>20</session-timeout>
-      <!-- 
-         we don't want to use the default name JSESSIONID because this 
-         tells everyone (especially hackers) that our application is based on java 
-      -->
-      <cookie-config>
-         <name>SESSIONID</name>
-      </cookie-config>
-   </session-config>    
+    <session-config>
+        <!-- on production systems you might have another value for the timeout -->
+        <session-timeout>20</session-timeout>
+        <!-- 
+           we don't want to use the default name JSESSIONID because this 
+           tells everyone (especially hackers) that our application is based on java 
+        -->
+        <cookie-config>
+            <name>SESSIONID</name>
+        </cookie-config>
+    </session-config>    
     
-   <!-- PrimeFaces FileUpload Filter -->
-   <filter>
-      <filter-name>PrimeFaces FileUpload Filter</filter-name>
-      <filter-class>
-         org.primefaces.webapp.filter.FileUploadFilter
-      </filter-class>
-   </filter>
-   <filter-mapping>
-      <filter-name>PrimeFaces FileUpload Filter</filter-name>
-      <servlet-name>Faces Servlet</servlet-name>
-   </filter-mapping>
+    <!-- PrimeFaces FileUpload Filter -->
+    <filter>
+        <filter-name>PrimeFaces FileUpload Filter</filter-name>
+        <filter-class>org.primefaces.webapp.filter.FileUploadFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>PrimeFaces FileUpload Filter</filter-name>
+        <servlet-name>Faces Servlet</servlet-name>
+    </filter-mapping>   
     
-    
-   <!--PrettyFaces: ONLY Development Mode: disable the default caching mechanism -->
-<!--   <context-param>
-      <param-name>org.ocpsoft.rewrite.config.CONFIG_RELOADING</param-name>
-      <param-value>true</param-value>
-   </context-param>    -->
+<!-- To upload form pages with pretty URL!-->
+<!--    <filter-mapping>
+        <filter-name>PrimeFaces FileUpload Filter</filter-name>
+        <url-pattern>/*</url-pattern>     
+    </filter-mapping>  -->
+                         
+    <!--PrettyFaces: ONLY Development Mode: disable the default caching mechanism -->
+    <!--   <context-param>
+       <param-name>org.ocpsoft.rewrite.config.CONFIG_RELOADING</param-name>
+       <param-value>true</param-value>
+    </context-param>    -->
     
 </web-app>
