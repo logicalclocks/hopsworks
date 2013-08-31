@@ -97,18 +97,18 @@
 
                     <p:panel header="Roles">
                         <p:dataTable id="roles" var="role" value="#{hostController.roles}">
-                            <p:column headerText="Role name">
+                            <p:column headerText="Cluster"><h:outputText value="#{role.cluster}"/></p:column>
+                            <p:column headerText="Service"><h:outputText value="#{role.service}"/></p:column>                            
+                            <p:column headerText="Role"><h:outputText value="#{role.role}"/></p:column>                           
+                            <p:column headerText="Role Page">
                                 <p:commandLink action="#{urlController.roleStatus()}" ajax="false">
                                     <h:outputText value="#{role}"/>
                                     <f:param name="cluster" value="#{role.cluster}"/>
                                     <f:param name="service" value="#{role.service}"/>                        
                                     <f:param name="role" value="#{role.role}"/>
                                 </p:commandLink>                         
-                            </p:column>
-                            <p:column headerText="Cluster"><h:outputText value="#{role.cluster}"/></p:column>
-                            <p:column headerText="Service"><h:outputText value="#{role.service}"/></p:column>                            
-                            <p:column headerText="Role"><h:outputText value="#{role.role}"/></p:column>                                                            
-                        </p:dataTable> 
+                            </p:column>  
+                        </p:dataTable>                       
                     </p:panel>                     
                 </h:form>                                
 

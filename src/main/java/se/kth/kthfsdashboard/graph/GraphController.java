@@ -223,16 +223,16 @@ public class GraphController implements Serializable {
         String role = exp.substring(exp.indexOf(",") + 1, exp.indexOf(")"));
         if (exp.startsWith("COUNT(")) {
             return roleEjb.count(cluster, service, role).toString();
-        } else if (exp.startsWith("ROLE(")) {
+        } else if (exp.startsWith("HOST(")) {
             List<Role> roles = roleEjb.findRoles(cluster, service, role);
             String host = roles.size() > 0 ? roles.get(0).getHostId() : null;
             return host;
-        } else if (exp.startsWith("ROLES(")) {
-            String host = "";
+        } else if (exp.startsWith("HOSTS(")) {
+            String hosts = "";
             for (Role r : roleEjb.findRoles(cluster, service, role)) {
-                host += host.isEmpty() ? r.getHostId() : "," + r.getHostId();
+                hosts += hosts.isEmpty() ? r.getHostId() : "," + r.getHostId();
             }
-            return host;
+            return hosts;
         } else {
             throw new RuntimeException("Invalid Expression: " + exp);
         }
