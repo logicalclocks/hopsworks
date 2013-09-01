@@ -46,11 +46,18 @@ public class WebCommunication {
    }
    
    public String getResource(String url) {
-       return fetchContent(url, true);
+       return fetchContent(url);
    }
    
-   public String getWebPage(String url) {
-       return fetchContent(url, false);
+   public ClientResponse getWebResponse(String url) {
+       ClientResponse response;
+       try {
+           response = getWebResource(url);
+           return response;
+       } catch (Exception ex) {
+           logger.log(Level.SEVERE, null, ex);
+       }
+       return null;
    }   
 
    private String createUrl(String context, String hostAddress, String... args) {
@@ -62,11 +69,11 @@ public class WebCommunication {
       return url;
    }
 
-   private String fetchContent(String url, boolean checkSuccess) {
+   private String fetchContent(String url) {
       String content = NOT_AVAILABLE;
       try {
          ClientResponse response = getWebResource(url);
-         if (!checkSuccess || response.getClientResponseStatus().getFamily() == Response.Status.Family.SUCCESSFUL) {
+         if (response.getClientResponseStatus().getFamily() == Response.Status.Family.SUCCESSFUL) {
             content = response.getEntity(String.class);
          }
       } catch (Exception e) {
@@ -76,14 +83,14 @@ public class WebCommunication {
    }
 
    private String fetchLog(String url) {
-      String log = fetchContent(url, true);
+      String log = fetchContent(url);
       log = log.replaceAll("\n", "<br>");
       return log;
    }
 
    public String getConfig(String hostAddress, String cluster, String service, String role) {
       String url = createUrl("config", hostAddress, cluster, service, role);
-      return fetchContent(url, true);
+      return fetchContent(url);
    }
 
    public String getRoleLog(String hostAddress, String cluster, String service, String role, int lines) {
@@ -105,7 +112,7 @@ public class WebCommunication {
       List<NodesTableItem> resultList = new ArrayList<NodesTableItem>();
 
       String url = createUrl("mysql", hostAddress, "ndbinfo", "nodes");
-      String jsonString = fetchContent(url, true);
+      String jsonString = fetchContent(url);
       try {
          JSONArray json = new JSONArray(jsonString);
          if (json.get(0).equals("Error")) {
@@ -140,11 +147,14 @@ public class WebCommunication {
       }
       Client client = Client.create();
       WebResource webResource = client.resource(url);
+      
       MultivaluedMap params = new MultivaluedMapImpl();
       params.add("username", USERNAME);
       params.add("password", PASSWORD);
-      logger.log(Level.INFO, "WebCommunication: Requesting url: {0}", url);
-      ClientResponse response = webResource.queryParams(params).get(ClientResponse.class);
+      ClientResponse response = webResource.queryParams(params)
+              .header("Accept-Encoding", "gzip,deflate")
+              .get(ClientResponse.class);
+      logger.log(Level.INFO, "WebCommunication: Requesting url: {0}", url);      
       return response;
    }
 
