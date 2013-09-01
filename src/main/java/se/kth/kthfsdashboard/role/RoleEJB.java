@@ -130,6 +130,16 @@ public class RoleEJB {
          throw new Exception("NoResultException");
       }
    }    
+   
+   public String findHostIdByWebPort(int webport, int neighborWebport) {
+      TypedQuery<String> query = em.createNamedQuery("Role.findHostId.By-Webport", String.class)
+              .setParameter("webport", webport).setParameter("neighborWebport", neighborWebport);
+      try {
+      return query.getSingleResult();
+      } catch (Exception e) {
+          return null;
+      }
+   }    
 
    public void persist(Role role) {
       em.persist(role);
