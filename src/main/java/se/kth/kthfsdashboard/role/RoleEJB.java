@@ -67,6 +67,24 @@ public class RoleEJB {
               .setParameter("cluster", cluster);
       return query.getSingleResult();
    }   
+   
+   public Long totalCores(String cluster) {
+      TypedQuery<Long> query = em.createNamedQuery("RoleHost.TotalCores", Long.class)
+              .setParameter("cluster", cluster);
+      return query.getSingleResult();
+   }    
+   
+   public Long totalMemoryCapacity(String cluster) {
+      TypedQuery<Long> query = em.createNamedQuery("RoleHost.TotalMemoryCapacity", Long.class)
+              .setParameter("cluster", cluster);
+      return query.getSingleResult();
+   }
+   
+   public Long totalDiskCapacity(String cluster) {
+      TypedQuery<Long> query = em.createNamedQuery("RoleHost.TotalDiskCapacity", Long.class)
+              .setParameter("cluster", cluster);
+      return query.getSingleResult();
+   }      
 
    public List<RoleHostInfo> findRoleHost(String cluster) {
       TypedQuery<RoleHostInfo> query = em.createNamedQuery("Role.findRoleHostBy-Cluster", RoleHostInfo.class)

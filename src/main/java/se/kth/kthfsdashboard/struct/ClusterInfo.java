@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import se.kth.kthfsdashboard.utils.FormatUtils;
 
 /**
  *
@@ -12,115 +13,148 @@ import java.util.TreeMap;
  */
 public class ClusterInfo {
 
-   private String name;
-   private Long numberOfHosts;
-   private Set<String> services = new HashSet<String>();
-   private Set<String> roles = new HashSet<String>();
-   private Set<String> badServices = new HashSet<String>();
-   private Set<String> badRoles = new HashSet<String>();
-   private Map<String, Integer> rolesCount = new TreeMap<String, Integer>();
-   private Map<String, String> rolesServicesMap = new TreeMap<String, String>();   
-   private Integer started, stopped, timedOut;
+    private String name;
+    private Long numberOfHosts;
+    private Long totalCores;
+    private Long totalMemoryCapacity;
+    private Long totalDiskCapacity;
+    private Set<String> services = new HashSet<String>();
+    private Set<String> roles = new HashSet<String>();
+    private Set<String> badServices = new HashSet<String>();
+    private Set<String> badRoles = new HashSet<String>();
+    private Map<String, Integer> rolesCount = new TreeMap<String, Integer>();
+    private Map<String, String> rolesServicesMap = new TreeMap<String, String>();
+    private Integer started, stopped, timedOut;
 
-   public ClusterInfo(String name) {
-      started = 0;
-      stopped = 0;
-      timedOut = 0;
-      this.name = name;
-   }
+    public ClusterInfo(String name) {
+        started = 0;
+        stopped = 0;
+        timedOut = 0;
+        this.name = name;
+    }
 
-   public void setNumberOfHost(Long numberOfHosts) {
-      this.numberOfHosts = numberOfHosts;
-   }
+    public void setNumberOfHost(Long numberOfHosts) {
+        this.numberOfHosts = numberOfHosts;
+    }
 
-   public Long getNumberOfMachines() {
-      return numberOfHosts;
-   }
+    public Long getNumberOfMachines() {
+        return numberOfHosts;
+    }
 
-   public String getName() {
-      return name;
-   }
+    public String getName() {
+        return name;
+    }
 
-   public String[] getServices() {
-      return services.toArray(new String[services.size()]);
-   }
+    public String[] getServices() {
+        return services.toArray(new String[services.size()]);
+    }
 
-   public String[] getRoles() {
-      return roles.toArray(new String[roles.size()]);
-   }
+    public String[] getRoles() {
+        return roles.toArray(new String[roles.size()]);
+    }
 
-   public Integer roleCount(String role) {
-      return rolesCount.get(role);
-   }
-   
-   public String roleService(String role) {
-      return rolesServicesMap.get(role);
-   }
+    public Long getTotalCores() {
+        return totalCores;
+    }
 
-   public Health getClusterHealth() {
-      if (badRoles.isEmpty()) {
-         return Health.Good;
-      }
-      return Health.Bad;
-   }
+    public void setTotalCores(Long totalCores) {
+        this.totalCores = totalCores;
+    }
 
-   public Health serviceHealth(String service) {
-      if (badServices.contains(service)) {
-         return Health.Bad;
-      }
+    public Integer roleCount(String role) {
+        return rolesCount.get(role);
+    }
+
+    public String roleService(String role) {
+        return rolesServicesMap.get(role);
+    }
+
+    public Health getClusterHealth() {
+        if (badRoles.isEmpty()) {
+            return Health.Good;
+        }
+        return Health.Bad;
+    }
+
+    public Health serviceHealth(String service) {
+        if (badServices.contains(service)) {
+            return Health.Bad;
+        }
 //      return Health.None;
-      return Health.Good;      
-   }
+        return Health.Good;
+    }
 
-   public Health roleHealth(String role) {
-      if (badRoles.contains(role)) {
-         return Health.Bad;
-      }
+    public Health roleHealth(String role) {
+        if (badRoles.contains(role)) {
+            return Health.Bad;
+        }
 //      return Health.None;
-      return Health.Good;
-   }
+        return Health.Good;
+    }
 
-   public Map getStatus() {
-      
-     Map<Status, Integer> statusMap = new TreeMap<Status, Integer>();
-     if (started > 0 ) {
-        statusMap.put(Status.Started, started);
-     }
-     if (stopped > 0 ) {
-        statusMap.put(Status.Stopped, stopped);
-     }     
-     if (timedOut > 0 ) {
-        statusMap.put(Status.TimedOut, timedOut);
-     }     
-     return statusMap;
-   }
+    public Map getStatus() {
 
-   public void addRoles(List<RoleHostInfo> roleHostList) {
-      for (RoleHostInfo roleHost : roleHostList) {
-         services.add(roleHost.getRole().getService());
-         roles.add(roleHost.getRole().getRole());
-         rolesServicesMap.put(roleHost.getRole().getRole(), roleHost.getRole().getService());
-         if (roleHost.getStatus() == Status.Started) {
-            started += 1;
-         } else {
-            badServices.add(roleHost.getRole().getService());
-            badRoles.add(roleHost.getRole().getRole());
-            if (roleHost.getStatus() == Status.Stopped) {
-               stopped += 1;
-            } else if (roleHost.getStatus() == Status.TimedOut) {
-               timedOut += 1;
-            }            
-         }
-         addRole(roleHost.getRole().getRole());
-      }
-   }
+        Map<Status, Integer> statusMap = new TreeMap<Status, Integer>();
+        if (started > 0) {
+            statusMap.put(Status.Started, started);
+        }
+        if (stopped > 0) {
+            statusMap.put(Status.Stopped, stopped);
+        }
+        if (timedOut > 0) {
+            statusMap.put(Status.TimedOut, timedOut);
+        }
+        return statusMap;
+    }
 
-   private void addRole(String role) {
-      if (rolesCount.containsKey(role)) {
-         Integer current = rolesCount.get(role);
-         rolesCount.put(role, current + 1);
-      } else {
-         rolesCount.put(role, 1);
-      }
-   }
+    public void addRoles(List<RoleHostInfo> roleHostList) {
+        for (RoleHostInfo roleHost : roleHostList) {
+            services.add(roleHost.getRole().getService());
+            roles.add(roleHost.getRole().getRole());
+            rolesServicesMap.put(roleHost.getRole().getRole(), roleHost.getRole().getService());
+            if (roleHost.getStatus() == Status.Started) {
+                started += 1;
+            } else {
+                badServices.add(roleHost.getRole().getService());
+                badRoles.add(roleHost.getRole().getRole());
+                if (roleHost.getStatus() == Status.Stopped) {
+                    stopped += 1;
+                } else if (roleHost.getStatus() == Status.TimedOut) {
+                    timedOut += 1;
+                }
+            }
+            addRole(roleHost.getRole().getRole());
+        }
+    }
+
+    private void addRole(String role) {
+        if (rolesCount.containsKey(role)) {
+            Integer current = rolesCount.get(role);
+            rolesCount.put(role, current + 1);
+        } else {
+            rolesCount.put(role, 1);
+        }
+    }
+
+    public String getTotalMemoryCapacity() {
+        if (totalMemoryCapacity == null) {
+            return "N/A";
+        }
+        return FormatUtils.storage(totalMemoryCapacity);
+    }
+
+    public void setTotalMemoryCapacity(Long totalMemoryCapacity) {
+        this.totalMemoryCapacity = totalMemoryCapacity;
+    }
+
+    public String getTotalDiskCapacity() {
+        if (totalDiskCapacity == null) {
+            return "N/A";
+        }
+        return FormatUtils.storage(totalDiskCapacity);
+    }
+
+    public void setTotalDiskCapacity(Long totalDiskCapacity) {
+        this.totalDiskCapacity = totalDiskCapacity;
+    }
 }

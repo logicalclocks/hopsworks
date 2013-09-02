@@ -9,6 +9,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import se.kth.kthfsdashboard.role.RoleEJB;
+import se.kth.kthfsdashboard.struct.ClusterInfo;
 import se.kth.kthfsdashboard.struct.Health;
 import se.kth.kthfsdashboard.struct.ServiceInfo;
 
@@ -20,63 +21,77 @@ import se.kth.kthfsdashboard.struct.ServiceInfo;
 @RequestScoped
 public class ClusterStatusController {
 
-   @EJB
-   private RoleEJB roleEjb;
-   @ManagedProperty("#{param.cluster}")
-   private String cluster;   
-   private static final Logger logger = Logger.getLogger(ClusterStatusController.class.getName());
-   private List<ServiceInfo> services;
-   private Health clusterHealth;
-   private boolean found;
-   
-   public ClusterStatusController() {
-   }
+    @EJB
+    private RoleEJB roleEjb;
+    @ManagedProperty("#{param.cluster}")
+    private String cluster;
+    private static final Logger logger = Logger.getLogger(ClusterStatusController.class.getName());
+    private List<ServiceInfo> services;
+    private Health clusterHealth;
+    private boolean found;
+    private ClusterInfo clusterInfo;
 
-   @PostConstruct
-   public void init() {
-      logger.info("init ClusterStatusController");
-      services = new ArrayList<ServiceInfo>();
-      loadServices();
-   }
-   
-   public void setCluster(String cluster) {
-      this.cluster = cluster;
-   }
+    public ClusterStatusController() {
+    }
 
-   public String getCluster() {
-      return cluster;
-   }
-   
-   public boolean isFound() {
-      return found;
-   }
+    @PostConstruct
+    public void init() {
+        logger.info("init ClusterStatusController");
+        services = new ArrayList<ServiceInfo>();
+        loadServices();
+        loadCluster();
+    }
 
-   public void setFound(boolean found) {
-      this.found = found;
-   }   
+    public void setCluster(String cluster) {
+        this.cluster = cluster;
+    }
 
-   public List<ServiceInfo> getServices() {
-      return services;
-   }
-   
-   public Health getClusterHealth() {
-      return clusterHealth;
-   }
+    public String getCluster() {
+        return cluster;
+    }
 
-   public void loadServices() {
-      clusterHealth = Health.Good;
-      List <String> servicesList = roleEjb.findServices(cluster);
-      if (!servicesList.isEmpty()) {
-         found = true;
-      }
-      for (String s : servicesList ) {
-         ServiceInfo serviceInfo = new ServiceInfo(s);
-         Health health = serviceInfo.addRoles(roleEjb.findRoleHost(cluster, s));
-         if (health == Health.Bad) {
-            clusterHealth = Health.Bad;
-         }
-         services.add(serviceInfo);
-      }
-   }
-  
+    public boolean isFound() {
+        return found;
+    }
+
+    public void setFound(boolean found) {
+        this.found = found;
+    }
+
+    public List<ServiceInfo> getServices() {
+        return services;
+    }
+
+    public Health getClusterHealth() {
+        return clusterHealth;
+    }
+
+    public void loadServices() {
+        clusterHealth = Health.Good;
+        List<String> servicesList = roleEjb.findServices(cluster);
+        if (!servicesList.isEmpty()) {
+            found = true;
+        }
+        for (String s : servicesList) {
+            ServiceInfo serviceInfo = new ServiceInfo(s);
+            Health health = serviceInfo.addRoles(roleEjb.findRoleHost(cluster, s));
+            if (health == Health.Bad) {
+                clusterHealth = Health.Bad;
+            }
+            services.add(serviceInfo);
+        }
+    }
+
+    private void loadCluster() {
+        clusterInfo =  new ClusterInfo(cluster);
+        clusterInfo.setNumberOfHost(roleEjb.countHosts(cluster));
+        clusterInfo.setTotalCores(roleEjb.totalCores(cluster));
+        clusterInfo.setTotalMemoryCapacity(roleEjb.totalMemoryCapacity(cluster));
+        clusterInfo.setTotalDiskCapacity(roleEjb.totalDiskCapacity(cluster));
+        clusterInfo.addRoles(roleEjb.findRoleHost(cluster));
+    }
+
+    public ClusterInfo getClusterInfo() {
+        return clusterInfo;
+    }
 }
