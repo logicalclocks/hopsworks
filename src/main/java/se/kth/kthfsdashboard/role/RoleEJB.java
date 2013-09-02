@@ -3,13 +3,10 @@ package se.kth.kthfsdashboard.role;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-import javax.persistence.NamedQuery;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.struct.RoleHostInfo;
-import se.kth.kthfsdashboard.struct.Status;
 
 /**
  *
@@ -52,39 +49,8 @@ public class RoleEJB {
       return query.getResultList();
    }   
 
-   public List<Role> findRoles(String cluster) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.findBy.Cluster", Role.class)
-              .setParameter("cluster", cluster);
-      return query.getResultList();
-   }
-
-   public List<Role> findRoles(String cluster, String service) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group", Role.class)
-              .setParameter("cluster", cluster).setParameter("service", service);
-      return query.getResultList();
-   }
-
    public List<Role> findRoles(String cluster, String service, String role) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group-Role", Role.class)
-              .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role);
-      return query.getResultList();
-   }
-   
-   public Role findOneRole(String cluster, String service, String role) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group-Role", Role.class)
-              .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role);
-      return query.getSingleResult();
-   }   
-
-   public List<Role> findRoles(String cluster, String service, String role, Status status) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Group-Role-Status", Role.class)
-              .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role)
-              .setParameter("status", status);
-      return query.getResultList();
-   }
-
-   public List<String> findHostId(String cluster, String service, String role) {
-      TypedQuery<String> query = em.createNamedQuery("Role.findHostIdBy-Cluster-Service-Role", String.class)
+      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Service-Role", Role.class)
               .setParameter("cluster", cluster).setParameter("service", service).setParameter("role", role);
       return query.getResultList();
    }
@@ -129,24 +95,31 @@ public class RoleEJB {
       } catch (NoResultException ex) {
          throw new Exception("NoResultException");
       }
-   }    
+   }          
    
-   public String findHostIdByWebPort(int webport, int neighborWebport) {
-      TypedQuery<String> query = em.createNamedQuery("Role.findHostId.By-Webport", String.class)
-              .setParameter("webport", webport).setParameter("neighborWebport", neighborWebport);
-      try {
+   public String findCluster(String privateIp, int webPort) {
+      TypedQuery<String> query = em.createNamedQuery("RoleHost.find.ClusterBy-PrivateIp.WebPort", String.class)
+              .setParameter("privateIp", privateIp).setParameter("webPort", webPort);
       return query.getSingleResult();
-      } catch (Exception e) {
-          return null;
+   }   
+   
+   public String findPrivateIp(String cluster, String hostname, int webPort) {
+      TypedQuery<String> query = em.createNamedQuery("RoleHost.find.PrivateIpBy-Cluster.Hostname.WebPort", String.class)
+              .setParameter("cluster", cluster).setParameter("hostname", hostname)
+              .setParameter("webPort", webPort);
+      try {
+         return query.getSingleResult();
+      } catch (NoResultException ex) {
+         return null;
       }
-   }    
+   }     
 
    public void persist(Role role) {
       em.persist(role);
    }
 
    public void store(Role role) {
-      TypedQuery<Role> query = em.createNamedQuery("Role.findBy-Cluster-Service-Role-HostId", Role.class)
+      TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
               .setParameter("hostId", role.getHostId()).setParameter("cluster", role.getCluster())
               .setParameter("service", role.getService()).setParameter("role", role.getRole());
       List<Role> s = query.getResultList();

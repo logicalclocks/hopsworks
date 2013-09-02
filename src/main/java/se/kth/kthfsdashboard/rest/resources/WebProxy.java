@@ -45,11 +45,14 @@ public class WebProxy {
             @PathParam("path") String path) throws UnsupportedEncodingException, IOException, Exception {
 
         WebCommunication web = new WebCommunication();
-
         String url = "http://" + ip + ":" + port + "/" + path;
         ClientResponse response = web.getWebResponse(url);
-        String contentType = response.getHeaders().getFirst("Content-Type");
-
+        String contentType;
+        try {
+            contentType = response.getHeaders().getFirst("Content-Type");
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        }
         if (contentType.startsWith("text/html")) {
             String html = response.getEntity(String.class);
             String target = uriInfo.getBaseUri().getPath() + "web/" + ip + "/" + port + "/";
@@ -58,25 +61,20 @@ public class WebProxy {
             html = html.replaceAll("src=\"/", "src=\"" + target);
             html = html.replaceAll("SRC=\"/", "SRC=\"" + target);
 
-            //Use WebProxy for links to other roles and change hostname to IP address
-            int from = 0;
-            int to;
+            //Use WebProxy for links to other roles and relace hostname with IP address
+            String cluster = roleEjb.findCluster(ip, Integer.parseInt(port));
+            int to, from = 0;
             while (from < html.length() && from != -1) {
                 from = html.indexOf("href=\"http://", from);
                 if (from != -1) {
                     to = html.indexOf("\"", from + 7);
                     URL u = new URL(html.substring(from + 6, to));
-                    String hostId = roleEjb.findHostIdByWebPort(u.getPort(), Integer.parseInt(port));
-                    if (hostId != null) {
-                        Host h = hostEJB.findHostById(hostId);
-                        String ipAddress = h.getPrivateIp();
-                        if (ipAddress == null) {
-                            ipAddress = h.getPublicIp();
-                        }
-                        target = uriInfo.getBaseUri().getPath() + "web/" + ipAddress + "/" + u.getPort() + "/" + u.getPath();
+                    String privateIp = roleEjb.findPrivateIp(cluster, u.getHost(), u.getPort());
+                    if (privateIp != null) {
+                        target = uriInfo.getBaseUri().getPath() + "web/" + privateIp + "/" + u.getPort() + "/" + u.getPath();
                         html = html.replace(u.toString(), target);
                     }
-                    from = to + 1;
+                    from += target.length() + 8;
                 }
             }
             return Response.ok(html).type(response.getType()).build();

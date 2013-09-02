@@ -59,7 +59,7 @@ public class AgentResource {
     public Response getLoadAvg(@PathParam("name") String name) {
         JSONObject json = new JSONObject();
         try {
-            Host host = hostEJB.findHostByName(name);
+            Host host = hostEJB.findByHostname(name);
             json.put("hostname", host.getHostname());
             json.put("cores", host.getCores());
             json.put("load1", host.getLoad1());
@@ -81,7 +81,7 @@ public class AgentResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getLoads() {
         JSONArray jsonArray = new JSONArray();
-        List<Host> hosts = hostEJB.findHosts();
+        List<Host> hosts = hostEJB.find();
         for (Host host : hosts) {
             try {
                 JSONObject json = new JSONObject();
@@ -105,7 +105,7 @@ public class AgentResource {
         try {
             JSONObject json = new JSONObject(jsonStrig);
             String hostId = json.getString("host-id");
-            Host host = hostEJB.findHostById(hostId);
+            Host host = hostEJB.findByHostId(hostId);
             if (host == null) {
                 logger.log(Level.INFO, "Could not register host with id {0}: unknown host id.", hostId);
                 return Response.status(Response.Status.NOT_FOUND).build();
@@ -143,7 +143,7 @@ public class AgentResource {
             JSONObject json = new JSONObject(jsonStrig);
             long agentTime = json.getLong("agent-time");
             String hostId = json.getString("host-id");
-            Host host = hostEJB.findHostById(hostId);
+            Host host = hostEJB.findByHostId(hostId);
             if (host == null) {
                 logger.log(Level.INFO, "Host with id {0} not found.", hostId);
                 return Response.status(Response.Status.NOT_FOUND).build();
