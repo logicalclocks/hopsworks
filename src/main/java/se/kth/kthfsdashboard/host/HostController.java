@@ -133,12 +133,9 @@ public class HostController implements Serializable {
         //  TODO: If the web application server craches, status will remain 'Running'.
         Command c = new Command(command, hostId, service, role, cluster);
         commandEJB.persistCommand(c);
-
         Host h = hostEJB.findByHostId(hostId);
-        String ip = h.getPublicIp();
-
         FacesContext context = FacesContext.getCurrentInstance();
-        CommandThread r = new CommandThread(context, ip, c);
+        CommandThread r = new CommandThread(context, h.getPublicOrPrivateIp(), c);
         Thread t = new Thread(r);
         t.setDaemon(true);
         t.start();

@@ -157,6 +157,13 @@ public class Host implements Serializable {
     public void setRegistered(boolean registered) {
         this.registered = registered;
     }
+    
+    public String getPublicOrPrivateIp() {
+        if (publicIp == null || publicIp.isEmpty()) {
+            return privateIp;
+        }
+        return publicIp;
+    }
 
     public String getLastHeartbeatInSeconds() {
 

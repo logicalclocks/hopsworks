@@ -113,11 +113,7 @@ public class CommunicationController {
    private String findIpByHostId(String hostId) throws Exception {
       try {
          Host host = hostEJB.findByHostId(hostId);
-         String privateIp = host.getPrivateIp();
-         if (privateIp == null || privateIp.equals("")) {
-            return host.getPublicIp();
-         }
-         return privateIp;
+         return host.getPublicOrPrivateIp();
       } catch (Exception ex) {
          throw new RuntimeException("HostId " + hostId + " not found.");
       }
