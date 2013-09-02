@@ -194,7 +194,7 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
             throws Exception {
         TypedQuery<NodeProgression> query =
                 em.createNamedQuery("NodeProgression.findNodeByNodeID", NodeProgression.class)
-                .setParameter("nodeId", node.getId());
+                .setParameter("nodeId", node.getNodeId());
         try {
             NodeProgression temp = query.getSingleResult();
             temp.setPreviousPhase(temp.getPhase());
