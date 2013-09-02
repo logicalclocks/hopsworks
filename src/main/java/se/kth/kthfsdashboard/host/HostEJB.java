@@ -14,56 +14,59 @@ import javax.persistence.TypedQuery;
 @Stateless
 public class HostEJB {
 
-   @PersistenceContext(unitName = "kthfsPU")
-   private EntityManager em;
+    @PersistenceContext(unitName = "kthfsPU")
+    private EntityManager em;
 
-   public HostEJB() {
-   }
+    public HostEJB() {
+    }
 
-   public List<Host> findHosts() {
-      TypedQuery<Host> query = em.createNamedQuery("findAllHosts", Host.class);
-      return query.getResultList();
-   }
+    public List<Host> find() {
+        TypedQuery<Host> query = em.createNamedQuery("Host.find", Host.class);
+        return query.getResultList();
+    }
 
-   public Host findHostByName(String name) throws Exception {
-      TypedQuery<Host> query = em.createNamedQuery("findHostByName", Host.class).setParameter("hostname", name);
-      try {
-         return query.getSingleResult();
-      } catch (NoResultException ex) {
-         throw new Exception("NoResultException");
-      }
-   }
+    public Host findByHostname(String hostname) throws Exception {
+        TypedQuery<Host> query = em.createNamedQuery("Host.findBy-Hostname", Host.class).setParameter("hostname", hostname);
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException ex) {
+            throw new Exception("NoResultException");
+        }
+    }
 
-   public Host findHostById(String id) throws Exception {
-      TypedQuery<Host> query = em.createNamedQuery("findHostById", Host.class).setParameter("id", id);
-      List<Host> result = query.getResultList();
-      if (result.isEmpty()) {
-          return null;
-      } else if (result.size() == 1) {
-         return result.get(0);
-      } else {
-         throw new Exception("MultipHostsFoundException");
-      }
-   }
-   
-   public boolean hostExists(String id) {
-      TypedQuery<Host> query = em.createNamedQuery("findHostById", Host.class).setParameter("id", id);
-      if (query.getResultList().isEmpty()){
-         return false;
-      }
-      return true;
-   }   
+    public Host findByHostId(String hostId) throws Exception {
+        TypedQuery<Host> query = em.createNamedQuery("Host.findBy-HostId", Host.class).setParameter("hostId", hostId);
+        List<Host> result = query.getResultList();
+        if (result.isEmpty()) {
+            return null;
+        } else if (result.size() == 1) {
+            return result.get(0);
+        } else {
+            throw new Exception("MultipHostsFoundException");
+        }
+    }
 
-   public Host storeHost(Host host, boolean register) {
-      if (register) {
-         em.merge(host);
-      } else {
-         Host h = em.find(Host.class, host.getHostId());
-         host.setPrivateIp(h.getPrivateIp());
-         host.setPublicIp(h.getPublicIp());
-         host.setCores(h.getCores());
-         em.merge(host);
-      }
-      return host;
-   }
+    public boolean hostExists(String hostId) {
+        try {
+            if (findByHostId(hostId) != null) {
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Host storeHost(Host host, boolean register) {
+        if (register) {
+            em.merge(host);
+        } else {
+            Host h = em.find(Host.class, host.getHostId());
+            host.setPrivateIp(h.getPrivateIp());
+            host.setPublicIp(h.getPublicIp());
+            host.setCores(h.getCores());
+            em.merge(host);
+        }
+        return host;
+    }
 }

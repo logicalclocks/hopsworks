@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import se.kth.kthfsdashboard.role.Role;
 
 /**
  *

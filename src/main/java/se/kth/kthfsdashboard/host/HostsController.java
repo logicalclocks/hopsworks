@@ -36,7 +36,7 @@ public class HostsController implements Serializable {
    }
    
    private void loadHosts() {
-      hosts = hostEJB.findHosts();
+      hosts = hostEJB.find();
    }
 
 }

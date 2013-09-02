@@ -116,7 +116,7 @@ public class HostController implements Serializable {
 
     private void loadHost() {
         try {
-            host = hostEJB.findHostById(hostId);
+            host = hostEJB.findByHostId(hostId);
             if (host != null) {
                 found = true;
             }
@@ -134,7 +134,7 @@ public class HostController implements Serializable {
         Command c = new Command(command, hostId, service, role, cluster);
         commandEJB.persistCommand(c);
 
-        Host h = hostEJB.findHostById(hostId);
+        Host h = hostEJB.findByHostId(hostId);
         String ip = h.getPublicIp();
 
         FacesContext context = FacesContext.getCurrentInstance();

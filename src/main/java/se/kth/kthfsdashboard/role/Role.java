@@ -13,140 +13,132 @@ import se.kth.kthfsdashboard.struct.Status;
 @Entity
 @Table(name = "Roles")
 @NamedQueries({
-   @NamedQuery(name = "Role.findClusters", query = "SELECT DISTINCT r.cluster FROM Role r"),
-   @NamedQuery(name = "Role.findServices", query = "SELECT DISTINCT r.service FROM Role r WHERE r.cluster = :cluster"),
-   @NamedQuery(name = "Role.find", query = "SELECT r FROM Role r WHERE r.hostId = :hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),
-   @NamedQuery(name = "Role.findBy.Cluster", query = "SELECT r FROM Role r WHERE r.cluster = :cluster"),
-   @NamedQuery(name = "Role.findBy-Cluster-Group", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service"),
-   @NamedQuery(name = "Role.findBy-Cluster-Group-Role", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
-   @NamedQuery(name = "Role.findBy-Cluster-Service-Role-HostId", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.hostId = :hostId"),
-   @NamedQuery(name = "Role.findBy-Cluster-Group-Role-Status", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
-   @NamedQuery(name = "Role.findBy-HostId", query = "SELECT r FROM Role r WHERE r.hostId = :hostId ORDER BY r.cluster, r.service, r.role"),
-   
-   // need this?   
-   @NamedQuery(name = "Role.findHostIdBy-Cluster-Service-Role", query = "SELECT r.hostId FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role ORDER BY r.hostId"),
-   @NamedQuery(name = "Role.Count", query = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
-//   @NamedQuery(name = "Role.CountBy-Cluster-Service-Role-Status", query = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.status = :status"),
-   
-   @NamedQuery(name = "Role.Count-hosts", query = "SELECT count(DISTINCT r.hostId) FROM Role r WHERE r.cluster = :cluster"),
-
-   @NamedQuery(name = "Role.findRoleHostBy-Cluster", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster"),
-   @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service"),
-   @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service-Role", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),
-   @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service-Role-Host", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.hostId = :hostid"),
-
-   @NamedQuery(name = "Role.DeleteBy-HostId", query = "DELETE FROM Role r WHERE r.hostId = :hostId"),
+    @NamedQuery(name = "Role.findClusters", query = "SELECT DISTINCT r.cluster FROM Role r"),
+    @NamedQuery(name = "Role.findServices", query = "SELECT DISTINCT r.service FROM Role r WHERE r.cluster = :cluster"),
+    @NamedQuery(name = "Role.find", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.hostId = :hostId"),
+    @NamedQuery(name = "Role.findBy-HostId", query = "SELECT r FROM Role r WHERE r.hostId = :hostId ORDER BY r.cluster, r.service, r.role"),
+    @NamedQuery(name = "Role.findBy-Cluster-Service-Role", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
+    @NamedQuery(name = "Role.Count", query = "SELECT COUNT(r) FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
+    @NamedQuery(name = "Role.Count-hosts", query = "SELECT count(DISTINCT r.hostId) FROM Role r WHERE r.cluster = :cluster"),
+    @NamedQuery(name = "Role.findRoleHostBy-Cluster", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster"),
+    @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service"),
+    @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service-Role", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),
+    @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service-Role-Host", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.hostId = :hostid"),
+    @NamedQuery(name = "Role.DeleteBy-HostId", query = "DELETE FROM Role r WHERE r.hostId = :hostId"),
+    @NamedQuery(name = "RoleHost.find.ClusterBy-PrivateIp.WebPort", query = "SELECT r.cluster FROM Host h, Role r WHERE h.hostId = r.hostId AND h.privateIp = :privateIp AND r.webPort = :webPort"),
+//TODO fix this: Hotname may be wrong. mysql nodes change hostname. May use hostid ?    
+    @NamedQuery(name = "RoleHost.find.PrivateIpBy-Cluster.Hostname.WebPort", query = "SELECT h.privateIp FROM Host h, Role r WHERE h.hostId = r.hostId AND r.cluster = :cluster AND (h.hostname = :hostname OR h.hostId = :hostname) AND r.webPort = :webPort"),
 
 })
-
 public class Role implements Serializable {
-   @Id
-   @GeneratedValue(strategy = GenerationType.SEQUENCE)
-   private Long id;
-   @Column(nullable = false, length = 128)
-   private String hostId;
-   @Column(nullable = false, length = 48)
-   private String service;
-   @Column(name = "ROLE_", nullable = false, length = 48)
-   private String role;
-   @Column(nullable = false, length = 48)
-   private String cluster;
-   private long uptime;
-   @Column(nullable = false)
-   private Status status;
-   private int pid;
-   private Integer webPort;
 
-   public Role() {
-   }
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
+    @Column(nullable = false, length = 128)
+    private String hostId;
+    @Column(nullable = false, length = 48)
+    private String service;
+    @Column(name = "ROLE_", nullable = false, length = 48)
+    private String role;
+    @Column(nullable = false, length = 48)
+    private String cluster;
+    private long uptime;
+    @Column(nullable = false)
+    private Status status;
+    private int pid;
+    private Integer webPort;
 
-   public Long getId() {
-      return id;
-   }
+    public Role() {
+    }
 
-   public void setId(Long id) {
-      this.id = id;
-   }
+    public Long getId() {
+        return id;
+    }
 
-   public String getHostId() {
-      return hostId;
-   }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-   public void setHostId(String hostId) {
-      this.hostId = hostId;
-   }
+    public String getHostId() {
+        return hostId;
+    }
 
-   public String getService() {
-      return service;
-   }
+    public void setHostId(String hostId) {
+        this.hostId = hostId;
+    }
 
-   public void setService(String service) {
-      this.service = service;
-   }
+    public String getService() {
+        return service;
+    }
 
-   public String getRole() {
-      return role;
-   }
+    public void setService(String service) {
+        this.service = service;
+    }
 
-   public void setRole(String role) {
-      this.role = role;
-   }
+    public String getRole() {
+        return role;
+    }
 
-   public String getCluster() {
-      return cluster;
-   }
+    public void setRole(String role) {
+        this.role = role;
+    }
 
-   public void setCluster(String cluster) {
-      this.cluster = cluster;
-   }
+    public String getCluster() {
+        return cluster;
+    }
 
-   public long getUptime() {
-      return uptime;
-   }
+    public void setCluster(String cluster) {
+        this.cluster = cluster;
+    }
 
-   public void setUptime(long uptime) {
-      this.uptime = uptime;
-   }
+    public long getUptime() {
+        return uptime;
+    }
 
-   public Status getStatus() {
-      return status;
-   }
+    public void setUptime(long uptime) {
+        this.uptime = uptime;
+    }
 
-   public void setStatus(Status status) {
-      this.status = status;
-   }
+    public Status getStatus() {
+        return status;
+    }
 
-   public int getPid() {
-      return pid;
-   }
+    public void setStatus(Status status) {
+        this.status = status;
+    }
 
-   public void setPid(int pid) {
-      this.pid = pid;
-   }
+    public int getPid() {
+        return pid;
+    }
 
-   public Integer getWebPort() {
-      return webPort;
-   }
+    public void setPid(int pid) {
+        this.pid = pid;
+    }
 
-   public void setWebPort(Integer webPort) {
-      this.webPort = webPort;
-   }
-   
-   public Health getHealth() {
-      if (status == Status.Failed || status == Status.Stopped) {
-         return Health.Bad;
-      }
-      return Health.Good;
-   }   
+    public Integer getWebPort() {
+        return webPort;
+    }
 
-   public String uptimeInSeconds() {
+    public void setWebPort(Integer webPort) {
+        this.webPort = webPort;
+    }
 
-      DecimalFormat df = new DecimalFormat("#,###,##0.0");
-      return df.format(uptime / 1000);
-   }
-   
-   @Override
-   public String toString() {
-      return String.format("%s/%s/%s@%s", cluster, service, role, hostId);
-   }
+    public Health getHealth() {
+        if (status == Status.Failed || status == Status.Stopped) {
+            return Health.Bad;
+        }
+        return Health.Good;
+    }
+
+    public String uptimeInSeconds() {
+
+        DecimalFormat df = new DecimalFormat("#,###,##0.0");
+        return df.format(uptime / 1000);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s/%s/%s @ %s", cluster, service, role, hostId);
+    }
 }
