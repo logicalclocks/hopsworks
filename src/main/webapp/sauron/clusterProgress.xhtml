@@ -55,7 +55,8 @@
                                                   node.phase=='Error'? 'error':
                                                   node.phase=='Waiting'?'pending':null}"
                                                   rowKey="#{node.nodeId}"
-                                                  selectionMode="single">
+                                                  selection="#{nodeProgressionController.selectedNode}"
+                                                  selectionMode="multiple">
 
                         <p:column>  
                             <f:facet name="header">

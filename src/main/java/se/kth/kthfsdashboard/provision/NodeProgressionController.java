@@ -14,20 +14,22 @@ import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 import org.jclouds.compute.domain.ExecResponse;
+import org.jclouds.scriptbuilder.domain.OsFamily;
 
 /**
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @ManagedBean
-@RequestScoped
+@SessionScoped
 public class NodeProgressionController implements Serializable {
 
     @EJB
     private DeploymentProgressFacade deploymentFacade;
     private NodeProgressionDataModel nodes;
-    private NodeProgression selectedNode;
+    private NodeProgression[] selectedNode;
     private ListeningExecutorService pool =
             MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(5));
 
@@ -54,24 +56,29 @@ public class NodeProgressionController implements Serializable {
 
     @Asynchronous
     public void retryNodes() {
+        System.out.println("Testing retry");
         if (selectedNode != null) {
-            System.out.println("Selected Node:" + selectedNode.toString());
+            for(NodeProgression node: selectedNode){
+            System.out.println("Selected Node:" + node.toString());
             ListenableFuture<ExecResponse> future = pool.submit(
-                    new RetryNodeCallable(selectedNode,
-                    "sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
+                    new RetryNodeCallable(node,
+                   ScriptBuilder.builder()
+                    .scriptType(ScriptBuilder.ScriptType.RECOVER)
+                    .build()
+                    .render(OsFamily.UNIX)));
 
-            future.addListener(new RetryStatusTracker(future, selectedNode, deploymentFacade), pool);
-
+            future.addListener(new RetryStatusTracker(future, node, deploymentFacade), pool);
+            }
             selectedNode = null;
         }
     }
 
-    public NodeProgression getSelectedNode() {
+    public NodeProgression[] getSelectedNode() {
         return selectedNode;
     }
 
-    public void setSelectedNode(NodeProgression selectedNode) {
-        this.selectedNode = selectedNode;
+    public void setSelectedNode(NodeProgression[] selectedNodes) {
+        this.selectedNode = selectedNodes;
     }
 
     public Integer progress(NodeProgression progress) {
