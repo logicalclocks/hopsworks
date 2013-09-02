@@ -30,7 +30,7 @@ public class ScriptBuilder implements Statement {
 
     public static enum ScriptType {
 
-        INIT, INSTALL, JHDFS, INSTALLBAREMETAL,CONFIGBAREMETAL
+        INIT, INSTALL, JHDFS, INSTALLBAREMETAL,CONFIGBAREMETAL, RECOVER
     }
 
     public static Builder builder() {
@@ -249,6 +249,12 @@ public class ScriptBuilder implements Statement {
                 break;
             case CONFIGBAREMETAL:
                 createBaremetalConfig(statements);
+                statements.add(exec("sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
+                break;
+                
+            case RECOVER:
+                statements.add(exec("sudo apt-get clean;"));
+                statements.add(exec("sudo apt-get update;"));
                 statements.add(exec("sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
                 break;
 
