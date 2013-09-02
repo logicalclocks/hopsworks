@@ -33,79 +33,79 @@
 
 "KTHFS-DATANODE": [
 {"group": "DataNode Activity", "graphs":[
-{"id": "num-heartbeats", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Number of Heartbeats", "vertical-label": "heartbeats/s", "var" : "", "charts": 
+{"id": "num-heartbeats", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Number of Heartbeats", "vertical-label": "heartbeats/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-HeartbeatsNumOps", "type-instance": "", "ds": "value", "label": "Heartbeats", "color": "green", "format": "%5.2lf %S"}]
 },
-{"id": "avgtime-heartbeats", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Heartbeats Average Time", "vertical-label": "sec", "var" : "", "charts": 
+{"id": "avgtime-heartbeats", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Heartbeats Average Time", "vertical-label": "sec", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-HeartbeatsAvgTime", "type-instance": "", "ds": "value", "label": "Heartbeats Average Time", "color": "green", "format": "%5.2lf %S"}]
 },
-{"id": "bytes", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Bytes Read/Written", "vertical-label": "bytes", "var" : "", "charts": 
+{"id": "bytes", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Bytes Read/Written", "vertical-label": "bytes", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-BytesRead", "type-instance": "", "ds": "value", "label": "Read", "color": "BLUE", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "gauge-BytesWritten", "type-instance": "", "ds": "value", "label": "Written", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "ops-reads", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Read Operations", "vertical-label": "ops", "var" : "", "charts": 
+{"id": "ops-reads", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Read Operations", "vertical-label": "ops", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-ReadsFromLocalClient", "type-instance": "", "ds": "value", "label": "Local Client", "color": "BLUE", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "gauge-ReadsFromRemoteClient", "type-instance": "", "ds": "value", "label": "Remote Client", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "ops-writes", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Write Operations", "vertical-label": "ops", "var" : "", "charts": 
+{"id": "ops-writes", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Write Operations", "vertical-label": "ops", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-WritesFromLocalClient", "type-instance": "", "ds": "value", "label": "Local Client", "color": "BLUE", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "gauge-WritesFromRemoteClient", "type-instance": "", "ds": "value", "label": "Remote Client", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "blocks-read", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Blocks Read", "vertical-label": "blocks", "var" : "", "charts": 
+{"id": "blocks-read", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Blocks Read", "vertical-label": "blocks", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-BlocksRead", "type-instance": "", "ds": "value", "label": "Blocks Read", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "blocks-written", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Blocks Written", "vertical-label": "blocks", "var" : "", "charts": 
+{"id": "blocks-written", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Blocks Written", "vertical-label": "blocks", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-BlocksWritten", "type-instance": "", "ds": "value", "label": "Blocks Written", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "blocks-removed", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Blocks Removed", "vertical-label": "blocks", "var" : "", "charts": 
+{"id": "blocks-removed", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Blocks Removed", "vertical-label": "blocks", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-BlocksRemoved", "type-instance": "", "ds": "value", "label": "Blocks Removed", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "blocks-replicated", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Blocks Replicated", "vertical-label": "blocks", "var" : "", "charts": 
+{"id": "blocks-replicated", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Blocks Replicated", "vertical-label": "blocks", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-BlocksReplicated", "type-instance": "", "ds": "value", "label": "Blocks Replicated", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "blocks-verified", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Blocks Verified", "vertical-label": "blocks", "var" : "", "charts": 
+{"id": "blocks-verified", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Blocks Verified", "vertical-label": "blocks", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-BlocksVerified", "type-instance": "", "ds": "value", "label": "Blocks Verified", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "ops-read-block", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Read Block Operations", "vertical-label": "ops", "var" : "", "charts": 
+{"id": "ops-read-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Read Block Operations", "vertical-label": "ops", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-ReadBlockOpNumOps", "type-instance": "", "ds": "value", "label": "Read Block Operations", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "ops-write-block", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Write Block Operations", "vertical-label": "ops", "var" : "", "charts": 
+{"id": "ops-write-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Write Block Operations", "vertical-label": "ops", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-WriteBlockOpNumOps", "type-instance": "", "ds": "value", "label": "Write Block Operations", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "ops-copy-block", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Copy Block Operations", "vertical-label": "ops/s", "var" : "", "charts": 
+{"id": "ops-copy-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Copy Block Operations", "vertical-label": "ops/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-CopyBlockOpNumOps", "type-instance": "", "ds": "value", "label": "Copy Block Operations", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "ops-replace-block", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Replace Block Operations", "vertical-label": "ops", "var" : "", "charts": 
+{"id": "ops-replace-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Replace Block Operations", "vertical-label": "ops", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-ReplaceBlockOpNumOps", "type-instance": "", "ds": "value", "label": "Replace Block Operations", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "avgtime-read-block", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Read Block Average Time", "vertical-label": "sec", "var" : "", "charts": 
+{"id": "avgtime-read-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Read Block Average Time", "vertical-label": "sec", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-ReadBlockOpAvgTime", "type-instance": "", "ds": "value", "label": "Read Block Average Time", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "avgtime-write-block", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Write Block Average Time", "vertical-label": "sec", "var" : "", "charts": 
+{"id": "avgtime-write-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Write Block Average Time", "vertical-label": "sec", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-WriteBlockOpAvgTime", "type-instance": "", "ds": "value", "label": "Write Block Average Time", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "avgtime-copy-block", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Copy Block Average Time", "vertical-label": "sec", "var" : "", "charts": 
+{"id": "avgtime-copy-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Copy Block Average Time", "vertical-label": "sec", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-CopyBlockOpAvgTime", "type-instance": "", "ds": "value", "label": "Copy Block Average Time", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "avgtime-replace-block", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Replace Block Average Time", "vertical-label": "sec", "var" : "", "charts": 
+{"id": "avgtime-replace-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Replace Block Average Time", "vertical-label": "sec", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-ReplaceBlockOpAvgTime", "type-instance": "", "ds": "value", "label": "Replace Block Average Time", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "ops-block-checksum", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Block Checksum Operations", "vertical-label": "ops", "var" : "", "charts": 
+{"id": "ops-block-checksum", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Block Checksum Operations", "vertical-label": "ops", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-BlockChecksumOpNumOps", "type-instance": "", "ds": "value", "label": "Block Checksum Operations", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "ops-block-reports", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Block Report Operations", "vertical-label": "ops", "var" : "", "charts": 
+{"id": "ops-block-reports", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Block Report Operations", "vertical-label": "ops", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-BlockReportsNumOps", "type-instance": "", "ds": "value", "label": "Block Report Operations", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "avgtime-block-checksum", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Block Checksum Average Time", "vertical-label": "sec", "var" : "", "charts": 
+{"id": "avgtime-block-checksum", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Block Checksum Average Time", "vertical-label": "sec", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-BlockChecksumOpAvgTime", "type-instance": "", "ds": "value", "label": "Block Checksum Average Time", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "avgtime-block-report", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Block Report Average Time", "vertical-label": "sec", "var" : "", "charts": 
+{"id": "avgtime-block-report", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Block Report Average Time", "vertical-label": "sec", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-BlockReportsAvgTime", "type-instance": "", "ds": "value", "label": "Block Report Average Time", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "block-verification-failures", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Block Verification Failures", "vertical-label": "ops", "var" : "", "charts": 
+{"id": "block-verification-failures", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Block Verification Failures", "vertical-label": "ops", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-BlockVerificationFailures", "type-instance": "", "ds": "value", "label": "Block Verification Failures", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "volume-failures", "plugin": "GenericJMX-DataNodeActivity", "plugin-instance": "", "title": "Volume Failures", "vertical-label": "failures", "var" : "", "charts": 
+{"id": "volume-failures", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Volume Failures", "vertical-label": "failures", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-VolumeFailures", "type-instance": "", "ds": "value", "label": "Volume Failures", "color": "GREEN", "format": "%5.2lf %S"}]
 }
 ]}
@@ -115,102 +115,102 @@
 
 "KTHFS-NAMENODE": [
 {"group": "NameNode Info", "graphs":[
-{"id": "namenode-capacity", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Namenode Capacity", "vertical-label": "GB", "var" : "", "charts": 
+{"id": "namenode-capacity", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Namenode Capacity", "vertical-label": "GB", "var" : "", "charts": 
   [{"model": "LINE", "type": "memory-CapacityTotalGB", "type-instance": "", "ds": "value", "label": "Total", "color": "BLUE", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "memory-CapacityRemainingGB", "type-instance": "", "ds": "value", "label": "Total", "color": "GREEN", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "memory-CapacityUsedGB", "type-instance": "", "ds": "value", "label": "Used", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "files", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Files", "vertical-label": "", "var" : "", "charts": 
+{"id": "files", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Files", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-FilesTotal", "type-instance": "", "ds": "value", "label": "Total Files", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "total-load", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Total Load", "vertical-label": "", "var" : "", "charts": 
+{"id": "total-load", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Total Load", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-TotalLoad", "type-instance": "", "ds": "value", "label": "Total Load", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "expired-heartbeats", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Expired Heartbeats", "vertical-label": "heartbeats/s", "var" : "", "charts": 
+{"id": "expired-heartbeats", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Expired Heartbeats", "vertical-label": "heartbeats/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-ExpiredHeartbeats", "type-instance": "", "ds": "value", "label": "Expired Heartbeats", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "block-replication", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Block Replication", "vertical-label": "Blocks/s", "var" : "", "charts": 
+{"id": "block-replication", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Block Replication", "vertical-label": "Blocks/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-UnderReplicatedBlocks", "type-instance": "", "ds": "value", "label": "Under-Replicated", "color": "GREEN", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-PendingReplicationBlocks", "type-instance": "", "ds": "value", "label": "Pending", "color": "BLUE", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-ScheduledReplicationBlocks", "type-instance": "", "ds": "value", "label": "Scheduled", "color": "YELLOW", "format": "%5.2lf %S"}]
 },
-{"id": "blocks", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Block Replication", "vertical-label": "Blocks/s", "var" : "", "charts": 
+{"id": "blocks", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Block Replication", "vertical-label": "Blocks/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-BlockCapacity", "type-instance": "", "ds": "value", "label": "Blocks Total", "color": "GREEN", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-BlocksTotal", "type-instance": "", "ds": "value", "label": "Block Capacity", "color": "BLUE", "format": "%5.2lf %S"}]
 },
-{"id": "special-blocks", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Special Blocks", "vertical-label": "Blocks", "var" : "", "charts": 
+{"id": "special-blocks", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Special Blocks", "vertical-label": "Blocks", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-CorruptBlocks", "type-instance": "", "ds": "value", "label": "Corrupt", "color": "RED", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-ExcessBlocks", "type-instance": "", "ds": "value", "label": "Excess", "color": "BLUE", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-MissingBlocks", "type-instance": "", "ds": "value", "label": "Missing", "color": "YELLOW", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-PendingDeletionBlocks", "type-instance": "", "ds": "value", "label": "Pending Delete", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "num_datanodes", "plugin": "GenericJMX-FSNamesystemState", "plugin-instance": "", "title": "Number of Data Nodes", "vertical-label": "", "var" : "", "charts": 
+{"id": "num_datanodes", "plugin": "GenericJMX", "plugin-instance": "FSNamesystemState", "title": "Number of Data Nodes", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-NumDeadDataNodes", "type-instance": "", "ds": "value", "label": "Dead", "color": "RED", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "gauge-NumLiveDataNodes", "type-instance": "", "ds": "value", "label": "Live", "color": "GREEN", "format": "%5.2lf %S"}]
 }
 ]}
 ,
 {"group": "NameNode Activity", "graphs":[
-{"id": "read-ops-fileinfo", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of FileInfo operations", "vertical-label": "ops/s", "var" : "", "charts": 
+{"id": "read-ops-fileinfo", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of FileInfo operations", "vertical-label": "ops/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-FileInfoOps", "type-instance": "", "ds": "value", "label": "FileInfo", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "read-ops-getblocklocations", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of GetBlockLocations operations", "vertical-label": "ops/s", "var" : "", "charts": 
+{"id": "read-ops-getblocklocations", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of GetBlockLocations operations", "vertical-label": "ops/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-GetBlockLocations", "type-instance": "", "ds": "value", "label": "GetBlockLocations", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "read-ops-getlisting", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of GetListing operations", "vertical-label": "ops/s", "var" : "", "charts": 
+{"id": "read-ops-getlisting", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of GetListing operations", "vertical-label": "ops/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-GetListingOps", "type-instance": "", "ds": "value", "label": "GetListing", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "read-ops-getlinktarget", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of GetLinkTarget operations", "vertical-label": "ops/s", "var" : "", "charts": 
+{"id": "read-ops-getlinktarget", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of GetLinkTarget operations", "vertical-label": "ops/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-GetLinkTargetOps", "type-instance": "", "ds": "value", "label": "GetLinkTarget", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "read-ops-filesingetlisting", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of FilesInGetListing operations", "vertical-label": "ops/s", "var" : "", "charts": 
+{"id": "read-ops-filesingetlisting", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of FilesInGetListing operations", "vertical-label": "ops/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-FilesInGetListingOps", "type-instance": "", "ds": "value", "label": "FilesInGetListing", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "write-createfile", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "CreateFile operations", "vertical-label": "/s", "var" : "", "charts": 
+{"id": "write-createfile", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "CreateFile operations", "vertical-label": "/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-CreateFileOps", "type-instance": "", "ds": "value", "label": "CreateFile Operations", "color": "RED", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-FilesCreated", "type-instance": "", "ds": "value", "label": "Files Created", "color": "BLUE", "format": "%5.2lf %S"}]
 },
-{"id": "write-filesappended", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of Files Appended", "vertical-label": "files/s", "var" : "", "charts": 
+{"id": "write-filesappended", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of Files Appended", "vertical-label": "files/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-FilesAppended", "type-instance": "", "ds": "value", "label": "Files Appended", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "write-filesrenamed", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of Files Renamed", "vertical-label": "files/s", "var" : "", "charts": 
+{"id": "write-filesrenamed", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of Files Renamed", "vertical-label": "files/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-FilesRenamed", "type-instance": "", "ds": "value", "label": "Files Renamed", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "write-ops-deletefile", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Delete File Operations", "vertical-label": "/s", "var" : "", "charts": 
+{"id": "write-ops-deletefile", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Delete File Operations", "vertical-label": "/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-DeleteFileOps", "type-instance": "", "ds": "value", "label": "DeleteFile Operations", "color": "RED", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-FilesDeleted", "type-instance": "", "ds": "value", "label": "Files Deleted", "color": "BLUE", "format": "%5.2lf %S"}]
 },
-{"id": "write-ops-addblock", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "AddBlock Operations", "vertical-label": "ops/s", "var" : "", "charts": 
+{"id": "write-ops-addblock", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "AddBlock Operations", "vertical-label": "ops/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-AddBlockOps", "type-instance": "", "ds": "value", "label": "AddBlock Operations", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "write-ops-createsymlink", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "CreateSymlink Operations", "vertical-label": "ops/s", "var" : "", "charts": 
+{"id": "write-ops-createsymlink", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "CreateSymlink Operations", "vertical-label": "ops/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-CreateSymlinkOps", "type-instance": "", "ds": "value", "label": "CreateSymlink Operations", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "ops-getadditionaldatanode", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "GetAdditionalDatanode Operations", "vertical-label": "ops/s", "var" : "", "charts": 
+{"id": "ops-getadditionaldatanode", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "GetAdditionalDatanode Operations", "vertical-label": "ops/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-GetAdditionalDatanodeOps", "type-instance": "", "ds": "value", "label": "GetAdditionalDatanode Operations", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "ops-transactions", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of Transaction Operations", "vertical-label": "ops/s", "var" : "", "charts": 
+{"id": "ops-transactions", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of Transaction Operations", "vertical-label": "ops/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-TransactionsNumOps", "type-instance": "", "ds": "value", "label": "Transactions Operations", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "transactions-batchedinsync", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of Transactions Batched In Sync", "vertical-label": "transactions/s", "var" : "", "charts": 
+{"id": "transactions-batchedinsync", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of Transactions Batched In Sync", "vertical-label": "transactions/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-TransactionsBatchedInSync", "type-instance": "", "ds": "value", "label": "Transactions Batched In Sync", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "ops-blockreport", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of BlockReport Operations", "vertical-label": "ops/s", "var" : "", "charts": 
+{"id": "ops-blockreport", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of BlockReport Operations", "vertical-label": "ops/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-BlockReportNumOps", "type-instance": "", "ds": "value", "label": "BlockReport Operations", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "syncs", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of Syncs", "vertical-label": "sync/s", "var" : "", "charts": 
+{"id": "syncs", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of Syncs", "vertical-label": "sync/s", "var" : "", "charts": 
   [{"model": "LINE", "type": "counter-SyncsNumOps", "type-instance": "", "ds": "value", "label": "Syncs", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "avgtime-blockreport", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "BlockReport Avgerage Time", "vertical-label": "sec", "var" : "", "charts": 
+{"id": "avgtime-blockreport", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "BlockReport Avgerage Time", "vertical-label": "sec", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-BlockReportAvgTime", "type-instance": "", "ds": "value", "label": "BlockReport Avg Time", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "avgtime-transactions", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Transactions Avgerage Time", "vertical-label": "sec", "var" : "", "charts": 
+{"id": "avgtime-transactions", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Transactions Avgerage Time", "vertical-label": "sec", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-TransactionsAvgTime", "type-instance": "", "ds": "value", "label": "Transactions Avg Time", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "avgtime-sync", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Syncs Avgerage Time", "vertical-label": "sec", "var" : "", "charts": 
+{"id": "avgtime-sync", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Syncs Avgerage Time", "vertical-label": "sec", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-SyncsAvgTime", "type-instance": "", "ds": "value", "label": "Syncs Avg Time", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "safemode-time", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "SafeMode Time", "vertical-label": "sec", "var" : "", "charts": 
+{"id": "safemode-time", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "SafeMode Time", "vertical-label": "sec", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-SafeModeTime", "type-instance": "", "ds": "value", "label": "SafeMode Time", "color": "RED", "format": "%5.2lf %S"}]
 }
 ]}
@@ -220,26 +220,26 @@
 
 "YARN-RESOURCEMANAGER": [
 {"group": "Resource Manager Queue Metrics", "graphs":[
-{"id": "yarn-rm-aggregate-containers", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Aggregate Containers", "vertical-label": "", "var" : "", "charts": 
+{"id": "yarn-rm-aggregate-containers", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Aggregate Containers", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-AggregateContainersAllocated", "type-instance": "", "ds": "value", "label": "Allocated", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-AggregateContainersReleased", "type-instance": "", "ds": "value", "label": "Released", "color": "GREEN", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-containers", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Containers", "vertical-label": "", "var" : "", "charts": 
+{"id": "yarn-rm-containers", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Containers", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-AllocatedContainers", "type-instance": "", "ds": "value", "label": "Allocated", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-ReservedContainers", "type-instance": "", "ds": "value", "label": "Reserved", "color": "YELLOW", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-PendingContainers", "type-instance": "", "ds": "value", "label": "Pending", "color": "BLUE", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-apps1", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Apps", "vertical-label": "", "var" : "", "charts": 
+{"id": "yarn-rm-apps1", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Apps", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-AppsSubmitted", "type-instance": "", "ds": "value", "label": "Submitted", "color": "BLUE", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-AppsCompleted", "type-instance": "", "ds": "value", "label": "Completed", "color": "GREEN", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-AppsRunning", "type-instance": "", "ds": "value", "label": "Running", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-AppsPending", "type-instance": "", "ds": "value", "label": "Pending", "color": "YELLOW", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-apps2", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Apps", "vertical-label": "", "var" : "", "charts": 
+{"id": "yarn-rm-apps2", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Apps", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-AppsFailed", "type-instance": "", "ds": "value", "label": "Failed", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-AppsKilled", "type-instance": "", "ds": "value", "label": "Killed", "color": "BLUE", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-memory", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Memory", "vertical-label": "MB", "var" : "", "charts": 
+{"id": "yarn-rm-memory", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Memory", "vertical-label": "MB", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-AllocatedMB", "type-instance": "", "ds": "value", "label": "Allocated", "color": "BLUE", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-AvailableMB", "type-instance": "", "ds": "value", "label": "Available", "color": "GREEN", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-PendingMB", "type-instance": "", "ds": "value", "label": "Pending", "color": "YELLOW", "format": "%5.2lf"},
@@ -252,18 +252,18 @@
 
 "YARN-NODEMANAGER": [
 {"group": "Resource Manager Queue Metrics", "graphs":[
-{"id": "yarn-nm-containers1", "plugin": "GenericJMX-NodeManager", "plugin-instance": "", "title": "Containers", "vertical-label": "", "var" : "", "charts": 
+{"id": "yarn-nm-containers1", "plugin": "GenericJMX", "plugin-instance": "NodeManager", "title": "Containers", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-ContainersLaunched", "type-instance": "", "ds": "value", "label": "Launched", "color": "YELLOW", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-ContainersCompleted", "type-instance": "", "ds": "value", "label": "Completed", "color": "GREEN", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-ContainersFailed", "type-instance": "", "ds": "value", "label": "Failed", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-ContainersKilled", "type-instance": "", "ds": "value", "label": "Killed", "color": "BLUE", "format": "%5.2lf"}]
 },
-{"id": "yarn-nm-containers2", "plugin": "GenericJMX-NodeManager", "plugin-instance": "", "title": "Containers", "vertical-label": "", "var" : "", "charts": 
+{"id": "yarn-nm-containers2", "plugin": "GenericJMX", "plugin-instance": "NodeManager", "title": "Containers", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-AllocatedContainers", "type-instance": "", "ds": "value", "label": "Allocated", "color": "YELLOW", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-ContainersIniting", "type-instance": "", "ds": "value", "label": "Initing", "color": "GREEN", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-ContainersRunning", "type-instance": "", "ds": "value", "label": "Running", "color": "BLUE", "format": "%5.2lf"}]
 },
-{"id": "yarn-nm-memory", "plugin": "GenericJMX-NodeManager", "plugin-instance": "", "title": "Containers", "vertical-label": "MB", "var" : "", "charts": 
+{"id": "yarn-nm-memory", "plugin": "GenericJMX", "plugin-instance": "NodeManager", "title": "Containers", "vertical-label": "MB", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge-AvailableGB", "type-instance": "", "ds": "value", "label": "Available", "color": "GREEN", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-AllocatedGB", "type-instance": "", "ds": "value", "label": "Allocated", "color": "BLUE", "format": "%5.2lf"}]
 },
@@ -273,26 +273,26 @@
 
 "YARN": [
 {"group": "Resource Manager Queue Metrics", "graphs":[
-{"id": "yarn-rm-aggregate-containers", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Aggregate Containers", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
+{"id": "yarn-rm-aggregate-containers", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Aggregate Containers", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
   [{"model": "LINE", "type": "gauge-AggregateContainersAllocated", "type-instance": "", "ds": "value", "label": "Allocated", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-AggregateContainersReleased", "type-instance": "", "ds": "value", "label": "Released", "color": "GREEN", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-containers", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Containers", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
+{"id": "yarn-rm-containers", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Containers", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
   [{"model": "LINE", "type": "gauge-AllocatedContainers", "type-instance": "", "ds": "value", "label": "Allocated", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-ReservedContainers", "type-instance": "", "ds": "value", "label": "Reserved", "color": "YELLOW", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-PendingContainers", "type-instance": "", "ds": "value", "label": "Pending", "color": "BLUE", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-apps1", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Apps", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
+{"id": "yarn-rm-apps1", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Apps", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
   [{"model": "LINE", "type": "gauge-AppsSubmitted", "type-instance": "", "ds": "value", "label": "Submitted", "color": "BLUE", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-AppsCompleted", "type-instance": "", "ds": "value", "label": "Completed", "color": "GREEN", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-AppsRunning", "type-instance": "", "ds": "value", "label": "Running", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-AppsPending", "type-instance": "", "ds": "value", "label": "Pending", "color": "YELLOW", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-apps2", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Apps", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
+{"id": "yarn-rm-apps2", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Apps", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
   [{"model": "LINE", "type": "gauge-AppsFailed", "type-instance": "", "ds": "value", "label": "Failed", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-AppsKilled", "type-instance": "", "ds": "value", "label": "Killed", "color": "BLUE", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-memory", "plugin": "GenericJMX-ReourceManager", "plugin-instance": "", "title": "Memory", "vertical-label": "MB", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
+{"id": "yarn-rm-memory", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Memory", "vertical-label": "MB", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
   [{"model": "LINE", "type": "gauge-AllocatedMB", "type-instance": "", "ds": "value", "label": "Allocated", "color": "BLUE", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-AvailableMB", "type-instance": "", "ds": "value", "label": "Available", "color": "GREEN", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge-PendingMB", "type-instance": "", "ds": "value", "label": "Pending", "color": "YELLOW", "format": "%5.2lf"},
@@ -305,31 +305,31 @@
 
 "MYSQLCLUSTER": [
 {"group": "MySQL Cluster NDB Info", "graphs":[
-{"id": "free-data-memory", "plugin": "dbi-ndbinfo", "plugin-instance": "", "title": "Free Data Memory", "vertical-label": "bytes", "var" : "n=1..COUNT(MYSQLCLUSTER,ndb);host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
+{"id": "free-data-memory", "plugin": "dbi", "plugin-instance": "ndbinfo", "title": "Free Data Memory", "vertical-label": "bytes", "var" : "n=1..COUNT(MYSQLCLUSTER,ndb);host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
   [{"model": "LINES", "type": "gauge-free_data_memory-@n", "type-instance": "", "ds": "value", "label": "Node @n", "color": "COLOR(@n)", "format": "%5.2lf %S"}]
 },
-{"id": "total-data-memory", "plugin": "dbi-ndbinfo", "plugin-instance": "", "title": "Total Data Memory", "vertical-label": "bytes", "var" : "n=1..COUNT(MYSQLCLUSTER,ndb);host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
+{"id": "total-data-memory", "plugin": "dbi", "plugin-instance": "ndbinfo", "title": "Total Data Memory", "vertical-label": "bytes", "var" : "n=1..COUNT(MYSQLCLUSTER,ndb);host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
   [{"model": "LINES", "type": "gauge-total_data_memory-@n", "type-instance": "", "ds": "value", "label": "Node @n", "color": "COLOR(@n)", "format": "%5.2lf %S"}]
 },
-{"id": "free-index-memory", "plugin": "dbi-ndbinfo", "plugin-instance": "", "title": "Free Index Memory", "vertical-label": "bytes", "var" : "n=1..COUNT(MYSQLCLUSTER,ndb);host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
+{"id": "free-index-memory", "plugin": "dbi", "plugin-instance": "ndbinfo", "title": "Free Index Memory", "vertical-label": "bytes", "var" : "n=1..COUNT(MYSQLCLUSTER,ndb);host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
   [{"model": "LINES", "type": "gauge-free_index_memory-@n", "type-instance": "", "ds": "value", "label": "Node @n", "color": "COLOR(@n)", "format": "%5.2lf %S"}]
 },
-{"id": "free-total-memory", "plugin": "dbi-ndbinfo", "plugin-instance": "", "title": "Total Index Memory", "vertical-label": "bytes", "var" : "n=1..COUNT(MYSQLCLUSTER,ndb);host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
+{"id": "free-total-memory", "plugin": "dbi", "plugin-instance": "ndbinfo", "title": "Total Index Memory", "vertical-label": "bytes", "var" : "n=1..COUNT(MYSQLCLUSTER,ndb);host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
   [{"model": "LINES", "type": "gauge-total_index_memory-@n", "type-instance": "", "ds": "value", "label": "Node @n", "color": "COLOR(@n)", "format": "%5.2lf %S"}]
 },
-{"id": "simple-reads", "plugin": "dbi-ndbinfo", "plugin-instance": "", "title": "Simple Reads", "vertical-label": "reads/s", "var" : "host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
+{"id": "simple-reads", "plugin": "dbi", "plugin-instance": "ndbinfo", "title": "Simple Reads", "vertical-label": "reads/s", "var" : "host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
   [{"model": "LINE", "type": "derive-rate_counters_sum-SIMPLE_READS", "type-instance": "", "ds": "value", "label": "Simple Reads", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "reads", "plugin": "dbi-ndbinfo", "plugin-instance": "", "title": "Reads", "vertical-label": "reads/s", "var" : "host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
+{"id": "reads", "plugin": "dbi", "plugin-instance": "ndbinfo", "title": "Reads", "vertical-label": "reads/s", "var" : "host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
   [{"model": "LINE", "type": "derive-rate_counters_sum-READS", "type-instance": "", "ds": "value", "label": "Reads", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "writes", "plugin": "dbi-ndbinfo", "plugin-instance": "", "title": "Writes", "vertical-label": "writes/s", "var" : "host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
+{"id": "writes", "plugin": "dbi", "plugin-instance": "ndbinfo", "title": "Writes", "vertical-label": "writes/s", "var" : "host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
   [{"model": "LINE", "type": "derive-rate_counters_sum-WRITES", "type-instance": "", "ds": "value", "label": "Writes", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "range-scans", "plugin": "dbi-ndbinfo", "plugin-instance": "", "title": "Range Scans", "vertical-label": "scans/s", "var" : "host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
+{"id": "range-scans", "plugin": "dbi", "plugin-instance": "ndbinfo", "title": "Range Scans", "vertical-label": "scans/s", "var" : "host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
   [{"model": "LINE", "type": "derive-rate_counters_sum-RANGE_SCANS", "type-instance": "", "ds": "value", "label": "Range Scans", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "table-scans", "plugin": "dbi-ndbinfo", "plugin-instance": "", "title": "Table Scans", "vertical-label": "scans/s", "var" : "host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
+{"id": "table-scans", "plugin": "dbi", "plugin-instance": "ndbinfo", "title": "Table Scans", "vertical-label": "scans/s", "var" : "host=HOST(MYSQLCLUSTER,mysqld)", "charts": 
   [{"model": "LINE", "type": "derive-rate_counters_sum-TABLE_SCANS", "type-instance": "", "ds": "value", "label": "Table Scans", "color": "GREEN", "format": "%5.2lf %S"}]
 }
 ]}
@@ -339,102 +339,102 @@
 
 "KTHFS": [
 {"group": "NameNode Info", "graphs":[
-{"id": "kthfs-namenode-capacity", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Namenode Capacity", "vertical-label": "GB", "var" : "host=HOST(KTHFS,namenode)", "charts": 
+{"id": "kthfs-namenode-capacity", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Namenode Capacity", "vertical-label": "GB", "var" : "host=HOST(KTHFS,namenode)", "charts": 
   [{"model": "LINE", "type": "memory-CapacityTotalGB", "type-instance": "", "ds": "value", "label": "Total", "color": "BLUE", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "memory-CapacityRemainingGB", "type-instance": "", "ds": "value", "label": "Total", "color": "GREEN", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "memory-CapacityUsedGB", "type-instance": "", "ds": "value", "label": "Used", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "kthfs-files", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Files", "vertical-label": "", "var" : "host=HOST(KTHFS,namenode)", "charts": 
+{"id": "kthfs-files", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Files", "vertical-label": "", "var" : "host=HOST(KTHFS,namenode)", "charts": 
   [{"model": "LINE", "type": "gauge-FilesTotal", "type-instance": "", "ds": "value", "label": "Total Files", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "kthfs-total-load", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Total Load", "vertical-label": "", "var" : "host=HOST(KTHFS,namenode)", "charts": 
+{"id": "kthfs-total-load", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Total Load", "vertical-label": "", "var" : "host=HOST(KTHFS,namenode)", "charts": 
   [{"model": "LINE", "type": "gauge-TotalLoad", "type-instance": "", "ds": "value", "label": "Total Load", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "kthfs-expired-heartbeats", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Expired Heartbeats", "vertical-label": "heartbeats/s", "var" : "host=HOST(KTHFS,namenode)", "charts": 
+{"id": "kthfs-expired-heartbeats", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Expired Heartbeats", "vertical-label": "heartbeats/s", "var" : "host=HOST(KTHFS,namenode)", "charts": 
   [{"model": "LINE", "type": "counter-ExpiredHeartbeats", "type-instance": "", "ds": "value", "label": "Expired Heartbeats", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "kthfs-block-replication", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Block Replication", "vertical-label": "Blocks/s", "var" : "host=HOST(KTHFS,namenode)", "charts": 
+{"id": "kthfs-block-replication", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Block Replication", "vertical-label": "Blocks/s", "var" : "host=HOST(KTHFS,namenode)", "charts": 
   [{"model": "LINE", "type": "counter-UnderReplicatedBlocks", "type-instance": "", "ds": "value", "label": "Under-Replicated", "color": "GREEN", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-PendingReplicationBlocks", "type-instance": "", "ds": "value", "label": "Pending", "color": "BLUE", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-ScheduledReplicationBlocks", "type-instance": "", "ds": "value", "label": "Scheduled", "color": "YELLOW", "format": "%5.2lf %S"}]
 },
-{"id": "kthfs-blocks", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Block Replication", "vertical-label": "Blocks/s", "var" : "host=HOST(KTHFS,namenode)", "charts": 
+{"id": "kthfs-blocks", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Block Replication", "vertical-label": "Blocks/s", "var" : "host=HOST(KTHFS,namenode)", "charts": 
   [{"model": "LINE", "type": "counter-BlockCapacity", "type-instance": "", "ds": "value", "label": "Blocks Total", "color": "GREEN", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-BlocksTotal", "type-instance": "", "ds": "value", "label": "Block Capacity", "color": "BLUE", "format": "%5.2lf %S"}]
 },
-{"id": "kthfs-special-blocks", "plugin": "GenericJMX-FSNamesystem", "plugin-instance": "", "title": "Special Blocks", "vertical-label": "Blocks", "var" : "host=HOST(KTHFS,namenode)", "charts": 
+{"id": "kthfs-special-blocks", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Special Blocks", "vertical-label": "Blocks", "var" : "host=HOST(KTHFS,namenode)", "charts": 
   [{"model": "LINE", "type": "counter-CorruptBlocks", "type-instance": "", "ds": "value", "label": "Corrupt", "color": "RED", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-ExcessBlocks", "type-instance": "", "ds": "value", "label": "Excess", "color": "BLUE", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-MissingBlocks", "type-instance": "", "ds": "value", "label": "Missing", "color": "YELLOW", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "counter-PendingDeletionBlocks", "type-instance": "", "ds": "value", "label": "Pending Delete", "color": "GREEN", "format": "%5.2lf %S"}]
 },
-{"id": "kthfs-num_datanodes", "plugin": "GenericJMX-FSNamesystemState", "plugin-instance": "", "title": "Number of Data Nodes", "vertical-label": "", "var" : "host=HOST(KTHFS,namenode)", "charts": 
+{"id": "kthfs-num_datanodes", "plugin": "GenericJMX", "plugin-instance": "FSNamesystemState", "title": "Number of Data Nodes", "vertical-label": "", "var" : "host=HOST(KTHFS,namenode)", "charts": 
   [{"model": "LINE", "type": "gauge-NumDeadDataNodes", "type-instance": "", "ds": "value", "label": "Dead", "color": "RED", "format": "%5.2lf %S"},
    {"model": "LINE", "type": "gauge-NumLiveDataNodes", "type-instance": "", "ds": "value", "label": "Live", "color": "GREEN", "format": "%5.2lf %S"}]
 }
 ]}
 ,
 {"group": "Aggregate (Total) NameNode Activity", "graphs":[
-{"id": "aggregate-read-ops-fileinfo", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of FileInfo operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-read-ops-fileinfo", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of FileInfo operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-FileInfoOps", "type-instance": "", "ds": "value", "label": "FileInfo", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-read-ops-getblocklocations", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of GetBlockLocations operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-read-ops-getblocklocations", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of GetBlockLocations operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-GetBlockLocations", "type-instance": "", "ds": "value", "label": "GetBlockLocations", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-read-ops-getlisting", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of GetListing operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-read-ops-getlisting", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of GetListing operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-GetListingOps", "type-instance": "", "ds": "value", "label": "GetListing", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-read-ops-getlinktarget", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of GetLinkTarget operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-read-ops-getlinktarget", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of GetLinkTarget operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-GetLinkTargetOps", "type-instance": "", "ds": "value", "label": "GetLinkTarget", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-read-ops-filesingetlisting", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of FilesInGetListing operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-read-ops-filesingetlisting", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of FilesInGetListing operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-FilesInGetListingOps", "type-instance": "", "ds": "value", "label": "FilesInGetListing", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-write-createfile", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "CreateFile operations", "vertical-label": "/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-write-createfile", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "CreateFile operations", "vertical-label": "/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-CreateFileOps", "type-instance": "", "ds": "value", "label": "CreateFile Operations", "color": "RED", "format": "%5.2lf %S"},
    {"model": "SUM_LINE", "type": "counter-FilesCreated", "type-instance": "", "ds": "value", "label": "Files Created", "color": "BLUE", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-write-filesappended", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of Files Appended", "vertical-label": "files/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-write-filesappended", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of Files Appended", "vertical-label": "files/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-FilesAppended", "type-instance": "", "ds": "value", "label": "Files Appended", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-write-filesrenamed", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of Files Renamed", "vertical-label": "files/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-write-filesrenamed", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of Files Renamed", "vertical-label": "files/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-FilesRenamed", "type-instance": "", "ds": "value", "label": "Files Renamed", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-write-ops-deletefile", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Delete File Operations", "vertical-label": "/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-write-ops-deletefile", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Delete File Operations", "vertical-label": "/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-DeleteFileOps", "type-instance": "", "ds": "value", "label": "DeleteFile Operations", "color": "RED", "format": "%5.2lf %S"},
    {"model": "SUM_LINE", "type": "counter-FilesDeleted", "type-instance": "", "ds": "value", "label": "Files Deleted", "color": "BLUE", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-write-ops-addblock", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "AddBlock Operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-write-ops-addblock", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "AddBlock Operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-AddBlockOps", "type-instance": "", "ds": "value", "label": "AddBlock Operations", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-write-ops-createsymlink", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "CreateSymlink Operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-write-ops-createsymlink", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "CreateSymlink Operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-CreateSymlinkOps", "type-instance": "", "ds": "value", "label": "CreateSymlink Operations", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-ops-getadditionaldatanode", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "GetAdditionalDatanode Operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-ops-getadditionaldatanode", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "GetAdditionalDatanode Operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-GetAdditionalDatanodeOps", "type-instance": "", "ds": "value", "label": "GetAdditionalDatanode Operations", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-ops-transactions", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of Transaction Operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-ops-transactions", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of Transaction Operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-TransactionsNumOps", "type-instance": "", "ds": "value", "label": "Transactions Operations", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-transactions-batchedinsync", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of Transactions Batched In Sync", "vertical-label": "transactions/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-transactions-batchedinsync", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of Transactions Batched In Sync", "vertical-label": "transactions/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-TransactionsBatchedInSync", "type-instance": "", "ds": "value", "label": "Transactions Batched In Sync", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-ops-blockreport", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of BlockReport Operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-ops-blockreport", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of BlockReport Operations", "vertical-label": "ops/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-BlockReportNumOps", "type-instance": "", "ds": "value", "label": "BlockReport Operations", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-syncs", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Number of Syncs", "vertical-label": "sync/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-syncs", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Number of Syncs", "vertical-label": "sync/s", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "SUM_LINE", "type": "counter-SyncsNumOps", "type-instance": "", "ds": "value", "label": "Syncs", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-avgtime-blockreport", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "BlockReport Avgerage Time", "vertical-label": "sec", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-avgtime-blockreport", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "BlockReport Avgerage Time", "vertical-label": "sec", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "AVG_LINE", "type": "gauge-BlockReportAvgTime", "type-instance": "", "ds": "value", "label": "BlockReport Avg Time", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-avgtime-transactions", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Transactions Avgerage Time", "vertical-label": "sec", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-avgtime-transactions", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Transactions Avgerage Time", "vertical-label": "sec", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "AVG_LINE", "type": "gauge-TransactionsAvgTime", "type-instance": "", "ds": "value", "label": "Transactions Avg Time", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-avgtime-sync", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "Syncs Avgerage Time", "vertical-label": "sec", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-avgtime-sync", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "Syncs Avgerage Time", "vertical-label": "sec", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "AVG_LINE", "type": "gauge-SyncsAvgTime", "type-instance": "", "ds": "value", "label": "Syncs Avg Time", "color": "RED", "format": "%5.2lf %S"}]
 },
-{"id": "aggregate-safemode-time", "plugin": "GenericJMX-NameNodeActivity", "plugin-instance": "", "title": "SafeMode Average Time", "vertical-label": "sec", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
+{"id": "aggregate-safemode-time", "plugin": "GenericJMX", "plugin-instance": "NameNodeActivity", "title": "SafeMode Average Time", "vertical-label": "sec", "var" : "host=HOSTS(KTHFS,namenode)", "charts": 
   [{"model": "AVG_LINE", "type": "gauge-SafeModeTime", "type-instance": "", "ds": "value", "label": "SafeMode Time", "color": "RED", "format": "%5.2lf %S"}]
 }
 
