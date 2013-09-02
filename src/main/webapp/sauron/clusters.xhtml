@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"   
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -8,93 +8,96 @@
       xmlns:p="http://primefaces.org/ui"
       >
 
-   <ui:composition template="layout.xhtml">
+    <ui:composition template="layout.xhtml">
 
-      <ui:define name="title">
-         #{settingsController.name} - Clusters
-      </ui:define>
-      <ui:define name="css"/>
-      <ui:define name="scripts"/>
-      <ui:define name="content">
-         <!--Navigation Bar - Begin -->
-         <h:form styleClass="styleNav">
-            <p:panelGrid>  
-               <p:row>  
-                  <p:column>
-                     <h:outputText value="Clusters"/>
-                  </p:column>
-               </p:row>
-            </p:panelGrid>
-         </h:form>
-         <!--Navigation Bar - End-->
+        <ui:define name="title">
+            #{settingsController.name} - Clusters
+        </ui:define>
+        <ui:define name="css"/>
+        <ui:define name="scripts"/>
+        <ui:define name="content">
+            <!--Navigation Bar - Begin -->
+            <h:form styleClass="styleNav">
+                <p:panelGrid>  
+                    <p:row>  
+                        <p:column>
+                            <h:outputText value="Clusters"/>
+                        </p:column>
+                    </p:row>
+                </p:panelGrid>
+            </h:form>
+            <!--Navigation Bar - End-->
 
-         <div class="services-header">#{clustersController.clusters.size()} Cluster<h:outputText value ="s" rendered="#{clustersController.clusters.size()>1}"/> Under Management:</div>
+            <div class="services-header">#{clustersController.clusters.size()} Cluster<h:outputText value ="s" rendered="#{clustersController.clusters.size()>1}"/> Under Management:</div>
 
-         <p:panel header="Clusters">  
-            <h:form id="formServices">  
+            <p:panel header="Clusters">  
+                <h:form id="formServices">  
 
-               <p:growl id="messages"/>  
+                    <p:growl id="messages"/>  
 
-               <p:dataTable id="table_services" var="cluster" value="#{clustersController.clusters}">
+                    <p:dataTable id="table_services" var="cluster" value="#{clustersController.clusters}">
 
-                  <p:column  headerText="Cluster name">  
-                     <p:commandLink styleClass="Health-#{cluster.clusterHealth}" id="id#{cluster.name}" 
-                                    action="#{urlController.clusterStatus(cluster.name)}" ajax="false">  
-                        <h:outputText value="#{cluster.name}" />
-                     </p:commandLink> 
-                  </p:column> 
-                  
-                  <p:column headerText="Services">
-                     <ui:repeat value="#{cluster.services}" var="service" varStatus="status">
-                        <p:commandLink styleClass="Health-#{cluster.serviceHealth(service)}" 
-                                       action="#{urlController.serviceStatus}" ajax="false">
-                           <h:outputText value="#{service}"/>
-                           <f:param name="cluster" value="#{cluster.name}"/>
-                           <f:param name="service" value="#{service}"/>
-                        </p:commandLink>
-                        <p:spacer width="6" height="0" rendered="#{!status.last}"/>
-                     </ui:repeat>
-                  </p:column>
+                        <p:column  headerText="Cluster name">  
+                            <p:commandLink styleClass="Health-#{cluster.clusterHealth}" id="id#{cluster.name}" 
+                                           action="#{urlController.clusterStatus(cluster.name)}" ajax="false">  
+                                <h:outputText value="#{cluster.name}" />
+                            </p:commandLink> 
+                        </p:column> 
 
-                  <p:column headerText="Roles">
-                     <ui:repeat value="#{cluster.roles}" var="role" varStatus="status">
-                        <p:commandLink styleClass="Health-#{cluster.roleHealth(role)}" 
-                                       action="#{urlController.serviceInstances()}" ajax="false">
-                           <h:outputText value="${cluster.roleCount(role)} ${role}"/>
-                           <f:param name="cluster" value="#{cluster.name}"/>
-                           <f:param name="role" value="#{role}"/>
-                           <f:param name="service" value="#{cluster.roleService(role)}"/>
-                        </p:commandLink>
-                        <p:spacer width="6" height="0" rendered="#{!status.last}"/>
-                     </ui:repeat>
-                  </p:column>                                    
-                  
-                  <p:column headerText="Roles Status">
-                     <ui:repeat value="#{cluster.status.entrySet().toArray()}" var="item" varStatus="status">
-                        <h:outputText value="${item.value} ${item.key}" styleClass="Status-${item.key}"/>
-                           <h:outputText value=", " rendered="#{!status.last}"/>
-                     </ui:repeat>
-                  </p:column>
-                  
-                  <p:column headerText="Health"  styleClass="Health-#{cluster.clusterHealth}">
-                     <h:outputText value="#{cluster.clusterHealth}"/>
-                  </p:column>                    
-                                                      
-                  <p:column headerText="Number of Hosts"><h:outputText value="#{cluster.numberOfMachines}"/></p:column>                   
-                  
-                  <p:column headerText="Actions" style="width:10%">
-                     <p:menuButton value="Actions" disabled="true">  
-                        <p:menuitem disabled="true" value="Start..." update=":formServices:messages" actionListener="#{serviceController.startService()}" />  
-                        <p:menuitem disabled="true" value="Stop..." update=":formServices:messages" actionListener="#{serviceController.stopService()}" />  
-                        <p:menuitem disabled="true" value="Restart..." update=":formServices:messages" actionListener="#{serviceController.restartService()}"/>  
-                        <p:separator />  
-                        <p:menuitem disabled="true" value="Delete..." update=":formServices:messages" actionListener="#{serviceController.deleteService()}"/>  
-                     </p:menuButton>  
-                  </p:column>
-               </p:dataTable>  
-            </h:form> 
-         </p:panel>
-         <p:spacer width="1" height="8" />
-      </ui:define>
-   </ui:composition>
+                        <p:column headerText="Services">
+                            <ui:repeat value="#{cluster.services}" var="service" varStatus="status">
+                                <p:commandLink styleClass="Health-#{cluster.serviceHealth(service)}" 
+                                               action="#{urlController.serviceStatus}" ajax="false">
+                                    <h:outputText value="#{service}"/>
+                                    <f:param name="cluster" value="#{cluster.name}"/>
+                                    <f:param name="service" value="#{service}"/>
+                                </p:commandLink>
+                                <p:spacer width="6" height="0" rendered="#{!status.last}"/>
+                            </ui:repeat>
+                        </p:column>
+
+                        <p:column headerText="Roles">
+                            <ui:repeat value="#{cluster.roles}" var="role" varStatus="status">
+                                <p:commandLink styleClass="Health-#{cluster.roleHealth(role)}" 
+                                               action="#{urlController.serviceInstances()}" ajax="false">
+                                    <h:outputText value="${cluster.roleCount(role)} ${role}" style="white-space: nowrap"/>
+                                    <f:param name="cluster" value="#{cluster.name}"/>
+                                    <f:param name="role" value="#{role}"/>
+                                    <f:param name="service" value="#{cluster.roleService(role)}"/>
+                                </p:commandLink>
+                                <p:spacer width="6" height="0" rendered="#{!status.last}"/>
+                            </ui:repeat>
+                        </p:column>                                    
+
+                        <p:column headerText="Roles Status">
+                            <ui:repeat value="#{cluster.status.entrySet().toArray()}" var="item" varStatus="status">
+                                <h:outputText value="${item.value} ${item.key}" styleClass="Status-${item.key}" style="white-space: nowrap"/>
+                                <h:outputText value=", " rendered="#{!status.last}"/>
+                            </ui:repeat>
+                        </p:column>
+
+                        <p:column headerText="Health"  styleClass="Health-#{cluster.clusterHealth}">
+                            <h:outputText value="#{cluster.clusterHealth}"/>
+                        </p:column>                    
+
+                        <p:column headerText="Hosts"><h:outputText value="#{cluster.numberOfMachines}"/></p:column>
+                        <p:column headerText="Cores"><h:outputText value="#{cluster.totalCores}"/></p:column>
+                        <p:column headerText="Disk Capacity"><h:outputText value="#{cluster.totalDiskCapacity}"/></p:column>
+                        <p:column headerText="Memory Capacity"><h:outputText value="#{cluster.totalMemoryCapacity}"/></p:column> 
+
+                        <p:column headerText="Actions" style="width:10%">
+                            <p:menuButton value="Actions" disabled="true">  
+                                <p:menuitem disabled="true" value="Start..." update=":formServices:messages" actionListener="#{serviceController.startService()}" />  
+                                <p:menuitem disabled="true" value="Stop..." update=":formServices:messages" actionListener="#{serviceController.stopService()}" />  
+                                <p:menuitem disabled="true" value="Restart..." update=":formServices:messages" actionListener="#{serviceController.restartService()}"/>  
+                                <p:separator />  
+                                <p:menuitem disabled="true" value="Delete..." update=":formServices:messages" actionListener="#{serviceController.deleteService()}"/>  
+                            </p:menuButton>  
+                        </p:column>
+                    </p:dataTable>  
+                </h:form> 
+            </p:panel>
+            <p:spacer width="1" height="8" />
+        </ui:define>
+    </ui:composition>
 </html>

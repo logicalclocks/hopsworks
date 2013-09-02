@@ -41,6 +41,9 @@ public class ClustersController {
       for (String cluster : roleEjb.findClusters()) {  
          ClusterInfo clusterInfo = new ClusterInfo(cluster);
          clusterInfo.setNumberOfHost(roleEjb.countHosts(cluster));
+         clusterInfo.setTotalCores(roleEjb.totalCores(cluster));
+         clusterInfo.setTotalMemoryCapacity(roleEjb.totalMemoryCapacity(cluster));
+         clusterInfo.setTotalDiskCapacity(roleEjb.totalDiskCapacity(cluster));
          clusterInfo.addRoles(roleEjb.findRoleHost(cluster));
          clusters.add(clusterInfo);
       }

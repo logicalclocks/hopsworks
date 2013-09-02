@@ -18,7 +18,7 @@ import se.kth.kthfsdashboard.utils.FormatUtils;
     @NamedQuery(name = "Host.find", query = "SELECT h FROM Host h"),
     @NamedQuery(name = "Host.findBy-HostId", query = "SELECT h FROM Host h WHERE h.hostId = :hostId"),
     @NamedQuery(name = "Host.findBy-Hostname", query = "SELECT h FROM Host h WHERE h.hostname = :hostname"),
-    @NamedQuery(name = "Host.findBy-Hostname.NeighborIp", query = "SELECT h1 FROM Host h1, Role r1, Host h2, Role r2 WHERE h1.hostId = r1.hostId AND h2.hostId = r2.hostId AND r1.cluster = r2.cluster AND h1.privateIp = :hostname"),
+    @NamedQuery(name = "Host.findBy-Hostname.NeighborIp", query = "SELECT h1 FROM Host h1, Role r1, Host h2, Role r2 WHERE h1.hostId = r1.hostId AND h2.hostId = r2.hostId AND r1.cluster = r2.cluster AND h1.privateIp = :hostname"),    
 })
 public class Host implements Serializable {
 

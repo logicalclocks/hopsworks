@@ -28,7 +28,9 @@ import se.kth.kthfsdashboard.struct.Status;
     @NamedQuery(name = "RoleHost.find.ClusterBy-PrivateIp.WebPort", query = "SELECT r.cluster FROM Host h, Role r WHERE h.hostId = r.hostId AND h.privateIp = :privateIp AND r.webPort = :webPort"),
 //TODO fix this: Hotname may be wrong. mysql nodes change hostname. May use hostid ?    
     @NamedQuery(name = "RoleHost.find.PrivateIpBy-Cluster.Hostname.WebPort", query = "SELECT h.privateIp FROM Host h, Role r WHERE h.hostId = r.hostId AND r.cluster = :cluster AND (h.hostname = :hostname OR h.hostId = :hostname) AND r.webPort = :webPort"),
-
+    @NamedQuery(name = "RoleHost.TotalCores", query="SELECT SUM(h2.cores) FROM Host h2 WHERE h2.hostId IN (SELECT h.hostId FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster GROUP BY h.hostId)"),
+    @NamedQuery(name = "RoleHost.TotalMemoryCapacity", query="SELECT SUM(h2.memoryCapacity) FROM Host h2 WHERE h2.hostId IN (SELECT h.hostId FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster GROUP BY h.hostId)"),
+    @NamedQuery(name = "RoleHost.TotalDiskCapacity", query="SELECT SUM(h2.diskCapacity) FROM Host h2 WHERE h2.hostId IN (SELECT h.hostId FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster GROUP BY h.hostId)"),        
 })
 public class Role implements Serializable {
 
