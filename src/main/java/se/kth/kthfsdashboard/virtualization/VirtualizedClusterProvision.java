@@ -392,7 +392,7 @@ public final class VirtualizedClusterProvision implements Provision{
 
                         hostEJB.storeHost(host, true);
                     }
-                    progressEJB.updateCreateProgress(group.getSecurityGroup(), node.getId(), i++);
+                    progressEJB.updateCreateProgress(group.getSecurityGroup(), i++,node);
                 }
 
             }
