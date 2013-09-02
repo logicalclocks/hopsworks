@@ -120,8 +120,12 @@ public class AgentResource {
             host.setRegistered(true);
             host.setLastHeartbeat((new Date()).getTime());
             host.setHostname(json.getString("hostname"));
-            host.setPublicIp(json.getString("public-ip"));
-            host.setPrivateIp(json.getString("private-ip"));
+            if (json.has("public-ip")) {
+                host.setPublicIp(json.getString("public-ip"));
+            }
+            if (json.has("private-ip")) {
+                host.setPrivateIp(json.getString("private-ip"));
+            }
             host.setDiskCapacity(json.getLong("disk-capacity"));
             host.setMemoryCapacity(json.getLong("memory-capacity"));
             host.setCores(json.getInt("cores"));

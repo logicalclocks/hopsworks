@@ -17,8 +17,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import se.kth.kthfsdashboard.communication.WebCommunication;
-import se.kth.kthfsdashboard.host.Host;
-import se.kth.kthfsdashboard.host.HostEJB;
 import se.kth.kthfsdashboard.role.RoleEJB;
 
 /**
@@ -33,8 +31,6 @@ public class WebProxy {
     final static Logger logger = Logger.getLogger(WebProxy.class.getName());
     @EJB
     RoleEJB roleEjb;
-    @EJB
-    HostEJB hostEJB;
 
     @GET
     @Path("/{ip}/{port}/{path:.*}")

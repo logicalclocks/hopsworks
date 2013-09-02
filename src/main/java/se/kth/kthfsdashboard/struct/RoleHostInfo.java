@@ -2,7 +2,6 @@ package se.kth.kthfsdashboard.struct;
 
 import se.kth.kthfsdashboard.host.Host;
 import se.kth.kthfsdashboard.role.Role;
-import se.kth.kthfsdashboard.role.RoleType;
 
 /**
  *
@@ -38,16 +37,6 @@ public class RoleHostInfo {
    
    public Status getStatus() {
 
-//      for test //////////////////////////////
-//      if (host.getHostname().equals("cloud1.sics.se")) {
-//         return Status.Stopped;
-//      }
-//      
-//      if(role.getRole().equals(RoleType.mysqld.toString())) {
-//         return Status.Started;
-//      }
-// /////////////////////////////////////////////     
-      
       
 //      if(host.getHealth() == Health.Good) {
          return role.getStatus();
