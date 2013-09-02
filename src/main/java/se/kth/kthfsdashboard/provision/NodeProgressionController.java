@@ -63,6 +63,7 @@ public class NodeProgressionController implements Serializable {
             future.addListener(new RetryStatusTracker(future, selectedNode, deploymentFacade), pool);
 
             selectedNode = null;
+
         }
     }
 
