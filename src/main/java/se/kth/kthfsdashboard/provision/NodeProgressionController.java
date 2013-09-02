@@ -8,7 +8,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.Serializable;
-import java.util.List;
 import java.util.concurrent.Executors;
 import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
@@ -27,7 +26,7 @@ public class NodeProgressionController implements Serializable {
 
     @EJB
     private DeploymentProgressFacade deploymentFacade;
-    private List<NodeProgression> nodes;
+    private NodeProgressionDataModel nodes;
     private NodeProgression selectedNode;
     private ListeningExecutorService pool =
             MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(5));
@@ -43,7 +42,7 @@ public class NodeProgressionController implements Serializable {
         loadNodes();
     }
 
-    public List<NodeProgression> getNodes() {
+    public NodeProgressionDataModel getNodes() {
 
         loadNodes();
         return nodes;
@@ -56,13 +55,14 @@ public class NodeProgressionController implements Serializable {
     @Asynchronous
     public void retryNodes() {
         if (selectedNode != null) {
+            System.out.println("Selected Node:" + selectedNode.toString());
             ListenableFuture<ExecResponse> future = pool.submit(
                     new RetryNodeCallable(selectedNode,
                     "sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
-            
+
             future.addListener(new RetryStatusTracker(future, selectedNode, deploymentFacade), pool);
-           
-            selectedNode=null;
+
+            selectedNode = null;
         }
     }
 
@@ -99,6 +99,6 @@ public class NodeProgressionController implements Serializable {
     }
 
     private void loadNodes() {
-        nodes = deploymentFacade.findAll();
+        nodes = new NodeProgressionDataModel(deploymentFacade.findAll());
     }
 }

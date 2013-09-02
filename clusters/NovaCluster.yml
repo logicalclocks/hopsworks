@@ -1,7 +1,7 @@
 ## YAML Template.
 ---
 !!se.kth.kthfsdashboard.virtualization.clusterparser.Cluster
-  name: test
+  name: nova
   environment: dev
   installPhase: false
   globalServices: 

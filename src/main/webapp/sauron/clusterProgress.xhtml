@@ -54,7 +54,7 @@
                                  rowStyleClass="#{node.phase=='Complete' ? 'complete' : 
                                                   node.phase=='Error'? 'error':
                                                   node.phase=='Waiting'?'pending':null}"
-                                                  rowKey="#{node.id}"
+                                                  rowKey="#{node.nodeId}"
                                                   selectionMode="single">
 
                         <p:column>  
@@ -95,7 +95,7 @@
                             <h:outputText value="#{node.phase}"/>
                         </p:column>
                         <f:facet name="footer">
-                            In total there are #{fn:length(nodeProgressionController.nodes)} nodes deploying.
+                            In total there are #{nodeProgressionController.nodes.size()} nodes deploying.
                         </f:facet>
                     </p:dataTable>
 
