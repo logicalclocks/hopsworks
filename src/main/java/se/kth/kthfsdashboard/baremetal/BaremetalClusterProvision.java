@@ -4,7 +4,6 @@
  */
 package se.kth.kthfsdashboard.baremetal;
 
-import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -33,6 +32,7 @@ import se.kth.kthfsdashboard.provision.NodeStatusTracker;
 import se.kth.kthfsdashboard.provision.Provision;
 import se.kth.kthfsdashboard.provision.ProvisionController;
 import se.kth.kthfsdashboard.provision.ScriptBuilder;
+import se.kth.kthfsdashboard.provision.StoreResults;
 import se.kth.kthfsdashboard.virtualization.clusterparser.Baremetal;
 import se.kth.kthfsdashboard.virtualization.clusterparser.BaremetalGroup;
 
@@ -46,13 +46,12 @@ public class BaremetalClusterProvision implements Provision {
     private HostEJB hostEJB;
     @EJB
     private DeploymentProgressFacade progressEJB;
-    private static final int RETRIES = 3;
+    private static final int RETRIES = 5;
     private String privateKey;
     private String publicKey;
     private String privateIP;
     private Baremetal cluster;
     private MessageController messages;
-    //private Map<String, Set<? extends NodeMetadata>> nodes = new HashMap();
     private Map<String, Set<? extends NodeMetadata>> nodes =
             new ConcurrentHashMap<String, Set<? extends NodeMetadata>>();
     private Map<NodeMetadata, List<String>> mgms = new HashMap();
@@ -68,8 +67,6 @@ public class BaremetalClusterProvision implements Provision {
     private CountDownLatch latch;
     private CopyOnWriteArraySet<NodeMetadata> pendingNodes;
     private int max = 0;
-//    private SSHClient client;
-//    private KeyProvider keys;
 
     public BaremetalClusterProvision(ProvisionController controller) {
         this.privateIP = controller.getPrivateIP();
@@ -119,7 +116,7 @@ public class BaremetalClusterProvision implements Provision {
                     System.out.println("Error updating the DataBase");
                 }
                 //Generate function to store results when done
-                final StoreResults results = new StoreResults(group.getRoles(), latch);
+                final StoreResults results = new StoreResults(group.getRoles(), latch, this);
                 ListenableFuture<Set<NodeMetadata>> groupCreation =
                         pool.submit(new InitializeBaremetalCallable(privateKey, host, cluster.getLoginUser(),
                         initScript, nodes, group, messages));
@@ -225,6 +222,52 @@ public class BaremetalClusterProvision implements Provision {
         
     }
 
+    @Override
+    public List<String> getNdbsIP() {
+        return ndbsIP;
+    }
+
+    @Override
+    public List<String> getMgmIP() {
+        return mgmIP;
+    }
+
+    @Override
+    public List<String> getMySQLClientIP() {
+        return mySQLClientsIP;
+    }
+
+    @Override
+    public List<String> getNamenodesIP() {
+        return getNamenodesIP();
+    }
+
+    @Override
+    public Map<NodeMetadata, List<String>> getMgms() {
+        return getMgms();
+    }
+
+    @Override
+    public Map<NodeMetadata, List<String>> getNdbs() {
+        return getNdbs();
+    }
+
+    @Override
+    public Map<NodeMetadata, List<String>> getMysqlds() {
+        return getMysqlds();
+    }
+
+    @Override
+    public Map<NodeMetadata, List<String>> getNamenodes() {
+        return getNamenodes();
+    }
+
+    @Override
+    public Map<NodeMetadata, List<String>> getDatanodes() {
+        return getDatanodes();
+    }
+       
+
     private void nodePhase(Set<NodeMetadata> nodes, Map<NodeMetadata, List<String>> map,
             ScriptBuilder.Builder scriptBuilder, int retries) {
         //Iterative Approach
@@ -320,13 +363,6 @@ public class BaremetalClusterProvision implements Provision {
                 else{
                     persistState(complete, DeploymentPhase.WAITING);
                 }
-//                try {
-//                    nodes.removeAll(pendingNodes);
-//                    progressEJB.updatePhaseProgress(nodes, DeploymentPhase.WAITING);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    System.out.println("Error updating Database");
-//                }
             }
 
         }
@@ -347,58 +383,4 @@ public class BaremetalClusterProvision implements Provision {
         }
     }
 
-    private class StoreResults implements Function<Set<? extends NodeMetadata>, Void> {
-
-        CountDownLatch latch;
-        List<String> rolesList;
-
-        public StoreResults(List<String> roles, CountDownLatch latch) {
-            this.rolesList = roles;
-            this.latch = latch;
-        }
-
-        @Override
-        public Void apply(Set<? extends NodeMetadata> input) {
-
-            Set<String> roles = new HashSet(rolesList);
-            if (roles.contains("MySQLCluster-mgm")) {
-                Iterator<? extends NodeMetadata> iter = input.iterator();
-                while (iter.hasNext()) {
-                    //Add private ip to mgm
-                    NodeMetadata node = iter.next();
-                    mgmIP.addAll(node.getPrivateAddresses());
-                    mgms.put(node, rolesList);
-                }
-            } else if (roles.contains("MySQLCluster-ndb")) {
-                Iterator<? extends NodeMetadata> iter = input.iterator();
-                while (iter.hasNext()) {
-                    NodeMetadata node = iter.next();
-                    ndbsIP.addAll(node.getPrivateAddresses());
-                    ndbs.put(node, rolesList);
-                }
-            } else if (roles.contains("MySQLCluster-mysqld")) {
-                Iterator<? extends NodeMetadata> iter = input.iterator();
-                while (iter.hasNext()) {
-                    NodeMetadata node = iter.next();
-                    mySQLClientsIP.addAll(node.getPrivateAddresses());
-                    mysqlds.put(node, rolesList);
-                }
-            } else if (roles.contains("KTHFS-namenode")) {
-                Iterator<? extends NodeMetadata> iter = input.iterator();
-                while (iter.hasNext()) {
-                    NodeMetadata node = iter.next();
-                    namenodesIP.addAll(node.getPrivateAddresses());
-                    namenodes.put(node, rolesList);
-                }
-            } else if (roles.contains("KTHFS-datanode")) {
-                Iterator<? extends NodeMetadata> iter = input.iterator();
-                while (iter.hasNext()) {
-                    NodeMetadata node = iter.next();
-                    datanodes.put(node, rolesList);
-                }
-            }
-            latch.countDown();
-            return null;
-        }
-    }
 }
