@@ -10,7 +10,13 @@
     <ui:composition template="layout.xhtml">
 
         <ui:define name="title">
-            #{settingsController.name} - Service Action History
+            #{settingsController.name} - Service Status
+        </ui:define>
+
+        <ui:define name="css">
+        </ui:define>
+
+        <ui:define name="scripts">
         </ui:define>
 
         <ui:define name="content">
@@ -29,10 +35,10 @@
                             </p:commandLink> 
                             <h:outputText value=" &raquo; "/>
                             <p:commandLink action="#{urlController.serviceStatus}" ajax="false">  
-                                <h:outputText value="#{serviceStatusController.service}" />
-                                <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                                <f:param name="service" value="#{serviceStatusController.service}"/>                          
-                            </p:commandLink>                      
+                                <h:outputText value="#{serviceInstancesController.service}" />
+                                <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
+                                <f:param name="service" value="#{serviceInstancesController.service}"/>                          
+                            </p:commandLink>                       
                         </p:column>
                     </p:row>
                 </p:panelGrid>
@@ -44,41 +50,40 @@
                 <p:panel header="Error" style="width: 300px; margin: 0 auto;">
                     <p align="center">Service not found!</p>   
                 </p:panel>
-            </p:outputPanel>     
+            </p:outputPanel>         
 
-            <p:outputPanel rendered="#{serviceStatusController.found}">           
-
+            <p:outputPanel rendered="#{serviceStatusController.found}">         
                 <!-- Second Toolbar-->
                 <h:form>  
-                    <p:toolbar styleClass="SecondToolbar#{serviceStatusController.health}">
+                    <p:toolbar styleClass="SecondToolbar#{serviceStatusController.health}">  
                         <p:toolbarGroup align="left">  
                             <p:commandLink  action="#{urlController.serviceStatus}" ajax="false">
                                 <h:outputText value="#{serviceStatusController.service}"/>
-                                <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
+                                <f:param name="cluster" value="#{serviceStatusController.cluster}"/>                            
                                 <f:param name="service" value="#{serviceStatusController.service}"/>                      
                             </p:commandLink>
 
                             <p:commandButton value="Status" icon="ui-icon-home" 
                                              action="#{urlController.serviceStatus}" ajax="false">
-                                <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
+                                <f:param name="cluster" value="#{serviceStatusController.cluster}"/>                            
+                                <f:param name="service" value="#{serviceStatusController.service}"/> 
+                            </p:commandButton>  
+                            <p:commandButton value="Instances" icon="ui-icon-note" 
+                                             action="#{urlController.serviceInstances}">
+                                <f:param name="cluster" value="#{serviceStatusController.cluster}"/>   
                                 <f:param name="service" value="#{serviceStatusController.service}"/>
                             </p:commandButton>  
-                            <p:commandButton  value="Instances" icon="ui-icon-note" 
-                                              action="#{urlController.serviceInstances}">
-                                <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
-                                <f:param name="service" value="#{serviceStatusController.service}"/>
-                            </p:commandButton>  
-                            <p:commandButton styleClass="Selected" value="Action History" icon="ui-icon-circle-triangle-e" 
+                            <p:commandButton value="Actions History" icon="ui-icon-circle-triangle-e" 
                                              action="#{urlController.serviceActionHistory}">
                                 <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
                                 <f:param name="service" value="#{serviceStatusController.service}"/>                      
-                            </p:commandButton>  
-                            <p:commandButton value="Terminal" icon="ui-icon-carat-1-e" 
+                            </p:commandButton> 
+                            <p:commandButton styleClass="Selected" value="Terminal" icon="ui-icon-carat-1-e" 
                                              rendered="#{serviceStatusController.renderTerminalLink()}"                                             
                                              action="#{urlController.serviceTerminal}">
                                 <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
                                 <f:param name="service" value="#{serviceStatusController.service}"/>                      
-                            </p:commandButton>                        
+                            </p:commandButton>                              
                         </p:toolbarGroup>  
 
                         <p:toolbarGroup align="right">  
@@ -91,45 +96,28 @@
                     </p:toolbar>  
                 </h:form>
 
-                <p:spacer width="1" height="10" />
+                <!-- Second Toolbar - End -->        
+
+                <p:spacer width="1" height="25" />
 
 
-                <p:panel header="Running Commands">
-                    <p:dataTable var="command" value="#{commandController.runningCommandsByClusterService}">
-                        <p:column headerText="Command"><h:outputText value="#{command.command}"/></p:column>
-                        <p:column headerText="Host Id"><h:outputText value="#{command.hostId}"/></p:column>               
-                        <p:column headerText="Cluster"><h:outputText value="#{command.cluster}"/></p:column>
-                        <p:column headerText="Service"><h:outputText value="#{command.service}"/></p:column>
-                        <p:column headerText="Role"><h:outputText value="#{command.role}"/></p:column>
-                        <p:column headerText="Started at"><h:outputText value="#{command.startTimeShort}"/></p:column>
-                        <p:column headerText="Status"><h:outputText value="#{command.status}"/></p:column>
-                    </p:dataTable>                 
+                <p:panel header="Terminal" styleClass="TerminalPanel">
+                    <h:form >  
+                        <p:focus for="terminal" />  
+
+                        <p:terminal id="terminal" widgetVar="term" prompt="client@kthfs:~$" 
+                                    commandHandler="#{terminalController.handleCommand}"  height="600"  width="99.5%"
+                                    welcomeMessage=""  />  
+
+                    </h:form>                      
                 </p:panel>
 
-                <p:spacer width="1" height="10" />
+                <p:spacer width="1" height="25" />
 
-                <p:panel header="Recent Commands">
-
-                    <p:dataTable var="command" value="#{commandController.recentCommandsByClusterService}">
-
-                        <p:column headerText="Command"><h:outputText value="#{command.command}"/></p:column>
-                        <p:column headerText="Host Id"><h:outputText value="#{command.hostId}"/></p:column>
-                        <p:column headerText="Cluster"><h:outputText value="#{command.cluster}"/></p:column>
-                        <p:column headerText="Service"><h:outputText value="#{command.service}"/></p:column>
-                        <p:column headerText="Role"><h:outputText value="#{command.role}"/></p:column>
-                        <p:column headerText="Started at"><h:outputText value="#{command.startTimeShort}"/></p:column>
-                        <p:column headerText="Status">
-                            <h:outputText styleClass="CommandStatus_#{command.status}" value="#{command.status}, #{command.endTimeShort}"/>
-                        </p:column>
-                    </p:dataTable>             
-
-                </p:panel>
-
-            </p:outputPanel>              
+            </p:outputPanel> 
 
         </ui:define>
 
     </ui:composition>
 
 </html>
-

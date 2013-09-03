@@ -102,14 +102,10 @@ public class ServiceStatusController {
       return serviceRoles;
    }
 
-   public boolean renderKTHFSGraphs() {
+   public boolean renderTerminalLink() {
       return service.equals(ServiceType.KTHFS.toString());
    }
-
-   public boolean renderMySQLClusterGraphs() {
-      return service.equals(ServiceType.MySQLCluster.toString());
-   }
-
+   
    public boolean renderNdbInfoTable() {
       return service.equals(ServiceType.MySQLCluster.toString());
    }

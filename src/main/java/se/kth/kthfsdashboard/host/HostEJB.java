@@ -2,10 +2,12 @@ package se.kth.kthfsdashboard.host;
 
 import java.util.List;
 import javax.ejb.Stateless;
+import javax.management.relation.RoleStatus;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.kthfsdashboard.struct.Status;
 
 /**
  *
@@ -45,6 +47,13 @@ public class HostEJB {
             throw new Exception("MultipHostsFoundException");
         }
     }
+    
+    public List<Host> find(String cluster, String service, String role, Status status) {
+        TypedQuery<Host> query = em.createNamedQuery("Host.findBy-Cluster.Service.Role.Status", Host.class)
+                .setParameter("cluster", cluster).setParameter("service", service)
+                .setParameter("role", role).setParameter("status", status);
+        return query.getResultList();
+    }    
 
     public boolean hostExists(String hostId) {
         try {
