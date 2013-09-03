@@ -30,7 +30,7 @@ public class ScriptBuilder implements Statement {
 
     public static enum ScriptType {
 
-        INIT, INSTALL, JHDFS, INSTALLBAREMETAL,CONFIGBAREMETAL, RECOVER
+        INIT, INSTALL, JHDFS, INSTALLBAREMETAL, CONFIGBAREMETAL, RECOVER
     }
 
     public static Builder builder() {
@@ -251,7 +251,7 @@ public class ScriptBuilder implements Statement {
                 createBaremetalConfig(statements);
                 statements.add(exec("sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
                 break;
-                
+
             case RECOVER:
                 statements.add(exec("sudo apt-get clean;"));
                 statements.add(exec("sudo apt-get update;"));
@@ -276,6 +276,8 @@ public class ScriptBuilder implements Statement {
         //Start json
         StringBuilder json = generateConfigJSON(runlist);
         //Create the file in this directory in the node
+        statements.add(exec("sudo apt-get clean;"));
+        statements.add(exec("sudo apt-get update;"));
         statements.add(createOrOverwriteFile("/etc/chef/chef.json", ImmutableSet.of(json.toString())));
     }
 
@@ -283,7 +285,8 @@ public class ScriptBuilder implements Statement {
         List<String> installList = createInstallList();
         //Start json
         StringBuilder json = generateInstallJSON(installList);
-
+        statements.add(exec("sudo apt-get clean;"));
+        statements.add(exec("sudo apt-get update;"));
         statements.add(createOrOverwriteFile("/etc/chef/chef.json", ImmutableSet.of(json.toString())));
     }
 
@@ -307,11 +310,10 @@ public class ScriptBuilder implements Statement {
         statements.add(exec("sudo bash -c 'cat > /etc/chef/chef.json <<-'END_OF_FILE'\n"
                 + json.toString() + "\nEND_OF_FILE'"));
     }
-    
+
     /*
      * JSON generators for install list and config lists
      */
-
     private StringBuilder generateInstallJSON(List<String> installList) {
         //Start json
         StringBuilder json = new StringBuilder();

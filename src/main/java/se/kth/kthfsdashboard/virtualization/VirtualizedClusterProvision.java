@@ -67,6 +67,7 @@ import se.kth.kthfsdashboard.provision.Provision;
 import se.kth.kthfsdashboard.provision.ProvisionController;
 import se.kth.kthfsdashboard.provision.RoleMapPorts;
 import se.kth.kthfsdashboard.provision.ScriptBuilder;
+import se.kth.kthfsdashboard.provision.StoreResults;
 import se.kth.kthfsdashboard.virtualization.clusterparser.Cluster;
 import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
 
@@ -81,7 +82,7 @@ public final class VirtualizedClusterProvision implements Provision{
     private HostEJB hostEJB;
     @EJB
     private DeploymentProgressFacade progressEJB;
-    private static final int RETRIES = 3;
+    private static final int RETRIES = 5;
     private ComputeService service;
     private Provider provider;
     private String id;
@@ -90,7 +91,6 @@ public final class VirtualizedClusterProvision implements Provision{
     private String publicKey;
     private String privateIP;
     private MessageController messages;
-    //private Map<String, Set<? extends NodeMetadata>> nodes = new HashMap();
     private Map<String, Set<? extends NodeMetadata>> nodes =
             new ConcurrentHashMap<String, Set<? extends NodeMetadata>>();
     private Map<NodeMetadata, List<String>> mgms = new HashMap();
@@ -108,7 +108,7 @@ public final class VirtualizedClusterProvision implements Provision{
     private int max = 0;
     private int totalNodes = 0;
     private Cluster cluster;
-    //private boolean debug;
+
     /*
      * Constructor of a VirtualizedClusterProvision
      */
@@ -121,7 +121,6 @@ public final class VirtualizedClusterProvision implements Provision{
         this.privateIP = controller.getPrivateIP();
         this.publicKey = controller.getPublicKey();
         this.messages = controller.getMessages();
-        //this.debug = controller.getClusterController().isRenderConsole();
         this.service = initContext();
         this.progressEJB = controller.getDeploymentProgressFacade();
         this.hostEJB = controller.getHostEJB();
@@ -433,29 +432,11 @@ public final class VirtualizedClusterProvision implements Provision{
             totalNodes += group.getNumber();
             //Create async provision
             //Generate function to store results when done
-            final StoreResults results = new StoreResults(group.getRoles(), latch);
+            final StoreResults results = new StoreResults(group.getRoles(), latch, this);
             //Generate listenable future that will store the results in the hashmap when done
             ListenableFuture<Set<? extends NodeMetadata>> groupCreation =
                     pool.submit(new CreateGroupCallable(service, group, kthfsTemplate, nodes, messages));
                     
-//                    new Callable<Set<? extends NodeMetadata>>() {
-//                @Override
-//                public Set<? extends NodeMetadata> call() {
-//                    Set<? extends NodeMetadata> ready = null;
-//                    try {
-//                        ready = service.createNodesInGroup(group.getSecurityGroup(), group.getNumber(), kthfsTemplate.build());
-//
-//                    } catch (RunNodesException e) {
-//                        System.out.println("error adding nodes to group "
-//                                + "ups something got wrong on the nodes");
-//                    } finally {
-//                        nodes.put(group.getSecurityGroup(), ready);
-//                        messages.addMessage("Nodes created in Security Group " + group.getSecurityGroup() + " with "
-//                                + "basic setup");
-//                        return ready;
-//                    }
-//                }
-//            });
             Futures.transform(groupCreation, results);
 
         }
@@ -559,6 +540,52 @@ public final class VirtualizedClusterProvision implements Provision{
         
     }
 
+    @Override
+    public List<String> getNdbsIP() {
+        return ndbsIP;
+    }
+
+    @Override
+    public List<String> getMgmIP() {
+        return mgmIP;
+    }
+
+    @Override
+    public List<String> getMySQLClientIP() {
+        return mySQLClientsIP;
+    }
+
+    @Override
+    public List<String> getNamenodesIP() {
+        return namenodesIP;
+    }
+
+    @Override
+    public Map<NodeMetadata, List<String>> getMgms() {
+        return mgms;
+    }
+
+    @Override
+    public Map<NodeMetadata, List<String>> getNdbs() {
+        return ndbs;
+    }
+
+    @Override
+    public Map<NodeMetadata, List<String>> getMysqlds() {
+        return mysqlds;
+    }
+
+    @Override
+    public Map<NodeMetadata, List<String>> getNamenodes() {
+        return namenodes;
+    }
+
+    @Override
+    public Map<NodeMetadata, List<String>> getDatanodes() {
+        return datanodes;
+    }
+       
+           
     /*
      * Private methods for the virtualizer
      */
@@ -603,9 +630,6 @@ public final class VirtualizedClusterProvision implements Provision{
 
         if (build == null) {
             throw new NullPointerException("Not selected supported provider");
-
-
-
 
         }
 
@@ -736,13 +760,6 @@ public final class VirtualizedClusterProvision implements Provision{
                 messages.addMessage("Launch phase complete...");
 
             } catch (InterruptedException e) {
-
-//                    if (!pendingNodes.isEmpty()) {
-//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-//                        //Mark the nodes that are been reinstalled
-//                        persistState(remain, DeploymentPhase.RETRYING);
-//                        --retries;
-//                    }
                 e.printStackTrace();
             } finally {
                 //Update the nodes that have finished the install phase
@@ -760,66 +777,7 @@ public final class VirtualizedClusterProvision implements Provision{
                 else{
                     persistState(complete, DeploymentPhase.COMPLETE);
                 }
-//                try {
-//                    nodes.removeAll(pendingNodes);
-//                    persistState(nodes, DeploymentPhase.WAITING);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    System.out.println("Error updating Database");
-//                }
             }
-
-//        if (!nodes.isEmpty() && retries != 0) {
-//            //Initialize countdown latch
-//            latch = new CountDownLatch(nodes.size());
-//            pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
-//            Iterator<NodeMetadata> iter = nodes.iterator();
-//            while (iter.hasNext()) {
-//                final NodeMetadata node = iter.next();
-//                List<String> ips = new LinkedList(node.getPrivateAddresses());
-//                //Listenable Future
-//                String nodeId = node.getId();
-//                ScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node), nodeId.replaceFirst("/", "-"));
-//                ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
-//                        RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
-//                future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
-//                        future), pool);
-//            }
-//            try {
-//                //wait for all the works to finish, 45 min estimated for each node +60 min extra margin to give
-//                //some extra time.
-//                latch.await(25 * nodes.size() + 60, TimeUnit.MINUTES);
-//                messages.addMessage("Launch phase complete...");
-//                //error openstack 126
-//                if (!pendingNodes.isEmpty()) {
-//
-//                    Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-//                    //Mark the nodes that are been reprovisioned
-//                    persistState(remain, DeploymentPhase.RETRYING);
-//                    nodePhase(remain, map, scriptBuilder, --retries);
-//                }
-//            } catch (InterruptedException e) {
-//
-//                if (!pendingNodes.isEmpty()) {
-//
-//                    Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-//                    //Mark the nodes that are been reprovisioned
-//                    persistState(remain, DeploymentPhase.RETRYING);
-//                    nodePhase(remain, map, scriptBuilder, --retries);
-//                }
-//                e.printStackTrace();
-//            } finally {
-//                //Mark the completed nodes in the view
-//                try {
-//                    nodes.removeAll(pendingNodes);
-//                    progressEJB.updatePhaseProgress(nodes, DeploymentPhase.WAITING);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    System.out.println("Error updating Database");
-//                }
-//            }
-//
-//        }
         }
         if(retries==0&&!pendingNodes.isEmpty()){
             persistState(pendingNodes, DeploymentPhase.ERROR);
@@ -851,21 +809,9 @@ public final class VirtualizedClusterProvision implements Provision{
                 //some extra time.
                 latch.await(25 * nodes.size() + 60, TimeUnit.MINUTES);
                 messages.addMessage("Install phase complete...");
-                //error 129 openstack
-//                    if (!pendingNodes.isEmpty()) {
-//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-//                        //Mark the nodes that are been reinstalled
-//                        persistState(remain, DeploymentPhase.RETRYING);
-//                        --retries;
-//                    }
+                
             } catch (InterruptedException e) {
 
-//                    if (!pendingNodes.isEmpty()) {
-//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-//                        //Mark the nodes that are been reinstalled
-//                        persistState(remain, DeploymentPhase.RETRYING);
-//                        --retries;
-//                    }
                 e.printStackTrace();
             } finally {
                 //Update the nodes that have finished the install phase
@@ -883,74 +829,11 @@ public final class VirtualizedClusterProvision implements Provision{
                 else{
                     persistState(complete, DeploymentPhase.WAITING);
                 }
-//                try {
-//                    nodes.removeAll(pendingNodes);
-//                    progressEJB.updatePhaseProgress(nodes, DeploymentPhase.WAITING);
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    System.out.println("Error updating Database");
-//                }
             }
-
         }
         if(retries==0&&!pendingNodes.isEmpty()){
             persistState(pendingNodes, DeploymentPhase.ERROR);
         }
-
-
-
-//            if (!nodes.isEmpty() && retries != 0) {
-//                //Initialize countdown latch
-//                latch = new CountDownLatch(nodes.size());
-//                pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
-//                Iterator<NodeMetadata> iter = nodes.iterator();
-//                while (iter.hasNext()) {
-//                    final NodeMetadata node = iter.next();
-////                List<String> ips = new LinkedList(node.getPrivateAddresses());
-//                    //Listenable Future
-//                    ScriptBuilder script = scriptBuilder.build();
-//                    ListenableFuture<ExecResponse> future = service.submitScriptOnNode(node.getId(), new StatementList(script),
-//                            RunScriptOptions.Builder.overrideAuthenticateSudo(true).overrideLoginCredentials(node.getCredentials()));
-////              
-//                    future.addListener(new NodeStatusTracker(node, latch, pendingNodes,
-//                            future), pool);
-//                }
-//
-//                try {
-//                    //wait for all the works to finish, 25 min estimated for each node +30 min extra margin to give
-//                    //some extra time.
-//                    latch.await(25 * nodes.size() + 60, TimeUnit.MINUTES);
-//                    messages.addMessage("Install phase complete...");
-//                    //error 126 openstack
-//                    if (!pendingNodes.isEmpty()) {
-//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-//                        //Mark the nodes that are been reinstalled
-//                        persistState(remain, DeploymentPhase.RETRYING);
-//
-//                        nodeInstall(remain, scriptBuilder, --retries);
-//                    }
-//                } catch (InterruptedException e) {
-//
-//                    if (!pendingNodes.isEmpty()) {
-//
-//                        Set<NodeMetadata> remain = new HashSet<NodeMetadata>(pendingNodes);
-//                        //Mark the nodes that are been reinstalled
-//                        persistState(remain, DeploymentPhase.RETRYING);
-//
-//                        nodeInstall(remain, scriptBuilder, --retries);
-//                    }
-//                    e.printStackTrace();
-//                } finally {
-//                    //Update the nodes that have finished the install phase
-//                    try {
-//                        nodes.removeAll(pendingNodes);
-//                        progressEJB.updatePhaseProgress(nodes, DeploymentPhase.WAITING);
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                        System.out.println("Error updating Database");
-//                    }
-//                }
-//            }
     }
 
     /*
@@ -965,61 +848,5 @@ public final class VirtualizedClusterProvision implements Provision{
         }
     }
 
-    /*
-     * Do better
-     */
-    private class StoreResults implements Function<Set<? extends NodeMetadata>, Void> {
-
-        CountDownLatch latch;
-        List<String> rolesList;
-
-        public StoreResults(List<String> roles, CountDownLatch latch) {
-            this.rolesList = roles;
-            this.latch = latch;
-        }
-
-        @Override
-        public Void apply(Set<? extends NodeMetadata> input) {
-
-            Set<String> roles = new HashSet(rolesList);
-            if (roles.contains("MySQLCluster-mgm")) {
-                Iterator<? extends NodeMetadata> iter = input.iterator();
-                while (iter.hasNext()) {
-                    //Add private ip to mgm
-                    NodeMetadata node = iter.next();
-                    mgmIP.addAll(node.getPrivateAddresses());
-                    mgms.put(node, rolesList);
-                }
-            } else if (roles.contains("MySQLCluster-ndb")) {
-                Iterator<? extends NodeMetadata> iter = input.iterator();
-                while (iter.hasNext()) {
-                    NodeMetadata node = iter.next();
-                    ndbsIP.addAll(node.getPrivateAddresses());
-                    ndbs.put(node, rolesList);
-                }
-            } else if (roles.contains("MySQLCluster-mysqld")) {
-                Iterator<? extends NodeMetadata> iter = input.iterator();
-                while (iter.hasNext()) {
-                    NodeMetadata node = iter.next();
-                    mySQLClientsIP.addAll(node.getPrivateAddresses());
-                    mysqlds.put(node, rolesList);
-                }
-            } else if (roles.contains("KTHFS-namenode")) {
-                Iterator<? extends NodeMetadata> iter = input.iterator();
-                while (iter.hasNext()) {
-                    NodeMetadata node = iter.next();
-                    namenodesIP.addAll(node.getPrivateAddresses());
-                    namenodes.put(node, rolesList);
-                }
-            } else if (roles.contains("KTHFS-datanode")) {
-                Iterator<? extends NodeMetadata> iter = input.iterator();
-                while (iter.hasNext()) {
-                    NodeMetadata node = iter.next();
-                    datanodes.put(node, rolesList);
-                }
-            }
-            latch.countDown();
-            return null;
-        }
-    }
+    
 }
