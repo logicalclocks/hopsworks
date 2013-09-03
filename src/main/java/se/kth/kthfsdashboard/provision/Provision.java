@@ -4,14 +4,39 @@
  */
 package se.kth.kthfsdashboard.provision;
 
+import java.util.List;
+import java.util.Map;
+import org.jclouds.compute.domain.NodeMetadata;
+
 /**
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public interface Provision {
-    
+
     public void initializeCluster();
+
     public boolean launchNodesBasicSetup();
+
     public void installPhase();
+
     public void deployingConfigurations();
+
+    public List<String> getNdbsIP();
+
+    public List<String> getMgmIP();
+
+    public List<String> getMySQLClientIP();
+
+    public List<String> getNamenodesIP();
+
+    public Map<NodeMetadata, List<String>> getMgms();
+
+    public Map<NodeMetadata, List<String>> getNdbs();
+
+    public Map<NodeMetadata, List<String>> getMysqlds();
+
+    public Map<NodeMetadata, List<String>> getNamenodes();
+
+    public Map<NodeMetadata, List<String>> getDatanodes();
 }
