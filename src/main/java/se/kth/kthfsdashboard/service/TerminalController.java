@@ -71,11 +71,10 @@ public class TerminalController {
     public String handleCommand(String command, String[] params) {
         if (service.equals(ServiceType.KTHFS.toString())) {
             if (!command.equals("hdfs")) {
-                return "Invalid command. Commad must start with: hdfs";
+                return "Invalid command. Accepted commands are: hdfs";
             } else if (command.contains(";")) {
                 return "Invalid character ;";
             } else {
-                System.out.println(">>" + command);
                 WebCommunication web = new WebCommunication();
                 String result = "Error: Could not contact a KTHFS node";
                 try {
@@ -99,11 +98,10 @@ public class TerminalController {
     }
 
     private String textToHtml(String text) {
-
         String html = StringEscapeUtils.escapeHtml(text);
         html = html.replaceAll("\n", "<br>");
-        html = html.replaceAll("\t", StringUtils.repeat("&nbsp;", 15));
-        html = html.replaceAll("  ", StringUtils.repeat("&nbsp;", 4));
+        html = html.replaceAll("\t", StringUtils.repeat("&nbsp;", 8));
+        html = html.replaceAll(" ", StringUtils.repeat("&nbsp;", 1));
         return html;
     }
 }
