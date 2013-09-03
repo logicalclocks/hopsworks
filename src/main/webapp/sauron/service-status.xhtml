@@ -78,6 +78,12 @@
                                 <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
                                 <f:param name="service" value="#{serviceStatusController.service}"/>                      
                             </p:commandButton>  
+                            <p:commandButton value="Terminal" icon="ui-icon-carat-1-e" 
+                                             rendered="#{serviceStatusController.renderTerminalLink()}"
+                                             action="#{urlController.serviceTerminal}">
+                                <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
+                                <f:param name="service" value="#{serviceStatusController.service}"/>                      
+                            </p:commandButton>                            
                         </p:toolbarGroup>  
 
                         <p:toolbarGroup align="right">  
@@ -152,7 +158,7 @@
                     </p:panel>                    
                 </h:form>
 
-                <p:spacer width="1" height="25" />
+                <p:spacer width="1" height="25" />        
 
 
                 <p:accordionPanel activeIndex="-1">

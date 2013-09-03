@@ -85,7 +85,11 @@
       <pattern value="/sauron/clusters/#{cluster}/#{service}/action_history" />
       <view-id value="/sauron/service-actionhistory.xhtml" />
    </url-mapping>      
-
+   <url-mapping id="service-terminal">
+      <pattern value="/sauron/clusters/#{cluster}/#{service}/terminal" />
+      <view-id value="/sauron/service-terminal.xhtml" />
+   </url-mapping>  
+   
    <url-mapping id="role-status">
       <pattern value="/sauron/clusters/#{cluster}/#{service}/#{role}/#{hostid}" />
       <view-id value="/sauron/role-status.xhtml" />

@@ -123,6 +123,10 @@ public class UrlController {
     public String serviceActionHistory() {
         return "service-actionhistory?faces-redirect=true&cluster=" + cluster + "&service=" + service;
     }
+    
+    public String serviceTerminal() {
+        return "service-terminal?faces-redirect=true&cluster=" + cluster + "&service=" + service;
+    }    
 
     public String roleStatus() {
         return "role-status?faces-redirect=true&hostid=" + hostId + "&cluster=" + cluster
