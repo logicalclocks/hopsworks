@@ -4,8 +4,6 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
-import java.net.URI;
-import java.net.URLEncoder;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
@@ -24,6 +22,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import org.codehaus.jettison.json.JSONArray;
 import se.kth.kthfsdashboard.struct.NodesTableItem;
+import se.kth.kthfsdashboard.utils.FormatUtils;
 
 /**
  *
@@ -31,25 +30,20 @@ import se.kth.kthfsdashboard.struct.NodesTableItem;
  */
 public class WebCommunication {
 
-    public enum Type {
-
-        STDOUT, STDERR, DO
-    }
     private static boolean DISABLE_CERTIFICATE_VALIDATION = true;
     private static String USERNAME = "kthfsagent@sics.se";
     private static String PASSWORD = "kthfsagent";
     private static String PROTOCOL = "https";
     private static int PORT = 8090;
     private static String NOT_AVAILABLE = "Not available.";
-//   private static int LOG_LINES = 50;   
     private static final Logger logger = Logger.getLogger(WebCommunication.class.getName());
 
     public WebCommunication() {
     }
 
-    public String getResource(String url) {
-        return fetchContent(url);
-    }
+//    public String getResource(String url) {
+//        return fetchContent(url);
+//    }
 
     public ClientResponse getWebResponse(String url) {
         ClientResponse response;
@@ -60,34 +54,6 @@ public class WebCommunication {
             logger.log(Level.SEVERE, null, ex);
         }
         return null;
-    }
-
-    private String createUrl(String context, String hostAddress, String... args) {
-        String template = "%s://%s:%s/%s";
-        String url = String.format(template, PROTOCOL, hostAddress, PORT, context);
-        for (int i = 0; i < args.length; i++) {
-            url += "/" + args[i];
-        }
-        return url;
-    }
-
-    private String fetchContent(String url) {
-        String content = NOT_AVAILABLE;
-        try {
-            ClientResponse response = getWebResource(url);
-            if (response.getClientResponseStatus().getFamily() == Response.Status.Family.SUCCESSFUL) {
-                content = response.getEntity(String.class);
-            }
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, null, e);
-        }
-        return content;
-    }
-
-    private String fetchLog(String url) {
-        String log = fetchContent(url);
-        log = log.replaceAll("\n", "<br>");
-        return log;
     }
 
     public String getConfig(String hostAddress, String cluster, String service, String role) {
@@ -137,18 +103,51 @@ public class WebCommunication {
         return resultList;
     }
 
-    public ClientResponse execute(String hostAddress, String cluster, String service, String role, String command, String[] params) throws Exception {
+    public String execute(String hostAddress, String cluster, String service, String role, String command, String[] params) throws Exception {
         String url = createUrl("execute", hostAddress, cluster, service, role, command);
         String paramsString = "";
         for (String param : params) {
             paramsString += paramsString.isEmpty() ? param : " " + param;
         }
-        return postWebResource(url, paramsString);
+        ClientResponse response = postWebResource(url, paramsString);
+        if (response.getClientResponseStatus().getFamily() == Response.Status.Family.SUCCESSFUL) {
+            return FormatUtils.stdoutToHtml(response.getEntity(String.class));
+        }
+        throw new RuntimeException("Did not succeed to execute command.");
     }
 
     public ClientResponse doCommand(String hostAddress, String cluster, String service, String role, String command) throws Exception {
         String url = createUrl("do", hostAddress, cluster, service, role, command);
         return getWebResource(url);
+    }
+
+    private String createUrl(String context, String hostAddress, String... args) {
+        String template = "%s://%s:%s/%s";
+        String url = String.format(template, PROTOCOL, hostAddress, PORT, context);
+        for (int i = 0; i < args.length; i++) {
+            url += "/" + args[i];
+        }
+        return url;
+    }
+
+    private String fetchContent(String url) {
+        String content = NOT_AVAILABLE;
+        try {
+            ClientResponse response = getWebResource(url);
+            if (response.getClientResponseStatus().getFamily() == Response.Status.Family.SUCCESSFUL) {
+                content = response.getEntity(String.class);
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, null, e);
+        }
+        return content;
+    }
+
+    private String fetchLog(String url) {
+        String log = fetchContent(url);
+//        log = log.replaceAll("\n", "<br>");
+        log = FormatUtils.stdoutToHtml(log);
+        return log;
     }
 
     private ClientResponse getWebResource(String url) throws Exception {
