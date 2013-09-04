@@ -4,6 +4,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
@@ -42,13 +43,16 @@ public class WebProxy {
 
         WebCommunication web = new WebCommunication();
         String url = "http://" + ip + ":" + port + "/" + path;
-        ClientResponse response = web.getWebResponse(url);
+        ClientResponse response;
         String contentType;
         try {
+            response = web.getWebResponse(url);
             contentType = response.getHeaders().getFirst("Content-Type");
-        } catch (Exception e) {
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, null, ex);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
+
         if (contentType.startsWith("text/html")) {
             String html = response.getEntity(String.class);
             String target = uriInfo.getBaseUri().getPath() + "web/" + ip + "/" + port + "/";

@@ -25,7 +25,7 @@ import se.kth.kthfsdashboard.struct.Status;
     @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service-Role", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role"),
     @NamedQuery(name = "Role.findRoleHostBy-Cluster-Service-Role-Host", query = "SELECT NEW se.kth.kthfsdashboard.struct.RoleHostInfo(r, h) FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.hostId = :hostid"),
     @NamedQuery(name = "Role.DeleteBy-HostId", query = "DELETE FROM Role r WHERE r.hostId = :hostId"),
-    @NamedQuery(name = "RoleHost.find.ClusterBy-PrivateIp.WebPort", query = "SELECT r.cluster FROM Host h, Role r WHERE h.hostId = r.hostId AND h.privateIp = :privateIp AND r.webPort = :webPort"),
+    @NamedQuery(name = "RoleHost.find.ClusterBy-Ip.WebPort", query = "SELECT r.cluster FROM Host h, Role r WHERE h.hostId = r.hostId AND (h.privateIp = :ip OR h.publicIp = :ip) AND r.webPort = :webPort"),
 //TODO fix this: Hotname may be wrong. mysql nodes change hostname. May use hostid ?    
     @NamedQuery(name = "RoleHost.find.PrivateIpBy-Cluster.Hostname.WebPort", query = "SELECT h.privateIp FROM Host h, Role r WHERE h.hostId = r.hostId AND r.cluster = :cluster AND (h.hostname = :hostname OR h.hostId = :hostname) AND r.webPort = :webPort"),
     @NamedQuery(name = "RoleHost.TotalCores", query="SELECT SUM(h2.cores) FROM Host h2 WHERE h2.hostId IN (SELECT h.hostId FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster GROUP BY h.hostId)"),
