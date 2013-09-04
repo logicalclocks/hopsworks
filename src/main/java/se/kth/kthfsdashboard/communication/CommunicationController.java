@@ -75,6 +75,20 @@ public class CommunicationController {
    public void setHostId(String hostId) {
       this.hostId = hostId;
    }
+   
+   private String findIpByHostId(String hostId) throws Exception {
+      try {
+         Host host = hostEJB.findByHostId(hostId);
+         return host.getPublicOrPrivateIp();
+      } catch (Exception ex) {
+         throw new RuntimeException("HostId " + hostId + " not found.");
+      }
+   }
+   
+   private String findIpByRole(String cluster, String service, String role) throws Exception {
+      String id = roleEjb.findRoles(cluster, service, role).get(0).getHostId();
+      return findIpByHostId(id);
+   }     
 
    public String serviceLog(int lines) {
       try {
@@ -95,11 +109,6 @@ public class CommunicationController {
       return webComm.getConfig(ip, cluster, service, mgmserverRole);
    }
 
-   private String findIpByRole(String cluster, String service, String role) throws Exception {
-      String host = roleEjb.findRoles(cluster, service, role).get(0).getHostId();
-      return findIpByHostId(host);
-   }
-
    public String getRoleLog(int lines) {
       try {
          WebCommunication webComm = new WebCommunication();
@@ -108,16 +117,7 @@ public class CommunicationController {
       } catch (Exception ex) {
          return ex.getMessage();
       }
-   }
-
-   private String findIpByHostId(String hostId) throws Exception {
-      try {
-         Host host = hostEJB.findByHostId(hostId);
-         return host.getPublicOrPrivateIp();
-      } catch (Exception ex) {
-         throw new RuntimeException("HostId " + hostId + " not found.");
-      }
-   }
+   } 
 
    public String getAgentLog(int lines) {
       try {
@@ -136,14 +136,14 @@ public class CommunicationController {
       final String ROLE = "mysqld";
       List<NodesTableItem> results;
       try {
-         String host = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostId();
+         String id = roleEjb.findRoles(cluster, service, ROLE).get(0).getHostId();
+         String ip = findIpByHostId(id);
          WebCommunication wc = new WebCommunication();
-         results = wc.getNdbinfoNodesTable(host);
+         results = wc.getNdbinfoNodesTable(ip);
       } catch (Exception ex) {
          results = new ArrayList<NodesTableItem>();
       }
       return results;
-
    }
 
 }
