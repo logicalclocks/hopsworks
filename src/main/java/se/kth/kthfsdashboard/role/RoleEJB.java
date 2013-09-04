@@ -115,9 +115,9 @@ public class RoleEJB {
       }
    }          
    
-   public String findCluster(String privateIp, int webPort) {
-      TypedQuery<String> query = em.createNamedQuery("RoleHost.find.ClusterBy-PrivateIp.WebPort", String.class)
-              .setParameter("privateIp", privateIp).setParameter("webPort", webPort);
+   public String findCluster(String ip, int webPort) {
+      TypedQuery<String> query = em.createNamedQuery("RoleHost.find.ClusterBy-Ip.WebPort", String.class)
+              .setParameter("ip", ip).setParameter("webPort", webPort);
       return query.getSingleResult();
    }   
    
