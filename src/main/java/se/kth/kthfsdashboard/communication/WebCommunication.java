@@ -21,6 +21,7 @@ import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import org.codehaus.jettison.json.JSONArray;
+import se.kth.kthfsdashboard.role.RoleType;
 import se.kth.kthfsdashboard.struct.NodesTableItem;
 import se.kth.kthfsdashboard.utils.FormatUtils;
 
@@ -103,13 +104,13 @@ public class WebCommunication {
         return resultList;
     }
 
-    public String execute(String hostAddress, String cluster, String service, String role, String command, String[] params) throws Exception {
+    public String execute(String hostAddress, String cluster, String service, String role, String command, String options, String[] params) throws Exception {
         String url = createUrl("execute", hostAddress, cluster, service, role, command);
-        String paramsString = "";
+        String optionsAndParams = options;
         for (String param : params) {
-            paramsString += paramsString.isEmpty() ? param : " " + param;
+            optionsAndParams += optionsAndParams.isEmpty() ? param : " " + param;
         }
-        ClientResponse response = postWebResource(url, paramsString);
+        ClientResponse response = postWebResource(url, optionsAndParams);
         if (response.getClientResponseStatus().getFamily() == Response.Status.Family.SUCCESSFUL) {
             return FormatUtils.stdoutToHtml(response.getEntity(String.class));
         }
