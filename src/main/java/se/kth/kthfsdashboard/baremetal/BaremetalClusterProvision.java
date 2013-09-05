@@ -239,32 +239,32 @@ public class BaremetalClusterProvision implements Provision {
 
     @Override
     public List<String> getNamenodesIP() {
-        return getNamenodesIP();
+        return namenodesIP;
     }
 
     @Override
     public Map<NodeMetadata, List<String>> getMgms() {
-        return getMgms();
+        return mgms;
     }
 
     @Override
     public Map<NodeMetadata, List<String>> getNdbs() {
-        return getNdbs();
+        return ndbs;
     }
 
     @Override
     public Map<NodeMetadata, List<String>> getMysqlds() {
-        return getMysqlds();
+        return mysqlds;
     }
 
     @Override
     public Map<NodeMetadata, List<String>> getNamenodes() {
-        return getNamenodes();
+        return namenodes;
     }
 
     @Override
     public Map<NodeMetadata, List<String>> getDatanodes() {
-        return getDatanodes();
+        return datanodes;
     }
        
 

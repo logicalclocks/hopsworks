@@ -34,7 +34,7 @@
      
   - securityGroup: datanodes
     number: 2
-    hosts: [10.20.0.15, 10.20.0.16]
+    hosts: [10.20.0.16, 10.20.0.17]
     roles:
      [KTHFS-datanode]
   ##Override chef attributes for roles:

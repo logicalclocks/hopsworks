@@ -4,7 +4,6 @@
  */
 package se.kth.kthfsdashboard.virtualization;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
