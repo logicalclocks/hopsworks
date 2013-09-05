@@ -103,7 +103,8 @@ public class ServiceStatusController {
    }
 
    public boolean renderTerminalLink() {
-      return service.equals(ServiceType.KTHFS.toString());
+      return service.equalsIgnoreCase(ServiceType.KTHFS.toString()) || 
+              service.equalsIgnoreCase(ServiceType.MySQLCluster.toString());
    }
    
    public boolean renderNdbInfoTable() {
