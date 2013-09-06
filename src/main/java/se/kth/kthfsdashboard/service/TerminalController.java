@@ -71,7 +71,7 @@ public class TerminalController {
             if (command.equals("hdfs")) {
                 roleName = RoleType.datanode.toString();
             } else {
-                return "Unknown command. Known commands are: hdfs";
+                return "Unknown command. Accepted commands are: hdfs";
             }
 
         } else if (service.equalsIgnoreCase(ServiceType.MySQLCluster.toString())) {
@@ -80,7 +80,7 @@ public class TerminalController {
             } else if (command.equals("ndb_mgm")) {
                 roleName = RoleType.mgmserver.toString();
             } else {
-                return "Unknown command. Known commands are: mysql, ndb_mgm";
+                return "Unknown command. Accepted commands are: mysql, ndb_mgm";
             }
         } else {
             return null;
