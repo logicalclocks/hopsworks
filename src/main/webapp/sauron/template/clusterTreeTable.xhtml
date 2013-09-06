@@ -10,35 +10,59 @@
       >
 
     <h:body>
-        <h:form>
-            <p:treeTable id="clusterTreeStatus" value="#{clusterManagementController.root}" var="element">
-                <p:column style="width:50px">
-                    <f:facet name="header">
-                        Name
-                    </f:facet>    
-                    <h:outputText value="#{element.name}" />
-                </p:column>
-                <p:column style="width:50px">
-                    <f:facet name="header">
-                        Instances
-                    </f:facet>             
-                    <h:outputText value="#{element.number}" />
-                </p:column>
-                <p:column style="width:50px">
-                    <f:facet name="header">
-                        Status
-                    </f:facet>
-                    <h:outputText value="#{element.status}" />
-                </p:column>
-                <p:column style="width:150px" >
-                    <f:facet name="header">
-                        Notes
-                    </f:facet>
-                </p:column>
-            </p:treeTable>
+        <h:form id="clusterProgressForm">
+                <p:panel >  
 
-            
-        </h:form>
+
+                    <p:growl id="messages"/>  
+                    <p:poll id="tableUpdate" async="true" update="deploymentTable" autoStart="true" 
+                            process="@this" interval="15"/>
+                    <p:dataTable id="deploymentTable" var="node" value="#{nodeProgressionController.nodes}" 
+                                 rowStyleClass="#{node.phase=='Complete' ? 'complete' : 
+                                                  node.phase=='Error'? 'error':
+                                                  node.phase=='Waiting'?'pending':null}"
+                                                  rowKey="#{node.nodeId}"
+                                                  selection="#{nodeProgressionController.selectedNode}"
+                                                  selectionMode="multiple">
+
+                        <p:column>  
+                            <f:facet name="header">
+                                Cluster Name
+                            </f:facet> 
+                            <h:outputText value="#{node.cluster}"/>
+                        </p:column> 
+
+                        <p:column>
+                            <f:facet name="header">
+                                Roles
+                            </f:facet>
+                            <h:outputText value="#{node.role}"/>
+                        </p:column>   
+                        <p:column width="200">
+                            <f:facet name="header">
+                                Progress
+                            </f:facet>
+
+                            <p:progressBar id="progressBarClient" widgetVar="pbClient" style="width:180px"
+                                           value="#{nodeProgressionController.progress(node)}"
+                                           labelTemplate="{value}%" styleClass="animated"
+                                           />
+
+                        </p:column>
+                        <p:column>
+                            <f:facet name="header">
+                                Phase
+                            </f:facet>
+                            <h:outputText value="#{node.phase}"/>
+                        </p:column>
+                       
+                    </p:dataTable>
+
+
+                </p:panel>
+                
+            </h:form> 
+            <p:spacer width="1" height="8" />
     </h:body>
 </html>
 
