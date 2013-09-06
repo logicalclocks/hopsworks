@@ -204,34 +204,6 @@ public class ProvisionController implements Serializable {
 
     }
 
-//    /*
-//     * Select extra options depending of the provider we selected
-//     * For example we include the bootstrap script to download and do basic setup the first time
-//     * For openstack we override the need to generate a key pair and the user used by the image to login
-//     * EC2 jclouds detects the login by default
-//     */
-//    private void selectProviderTemplateOptions(String provider, TemplateBuilder kthfsTemplate,
-//            JHDFSScriptBuilder script) {
-//        Provider check = Provider.fromString(provider);
-//        StatementList bootstrap = new StatementList(script);
-//        switch (check) {
-//            case AWS_EC2:
-//                kthfsTemplate.options(EC2TemplateOptions.Builder
-//                        .runScript(bootstrap));
-//                break;
-//            case OPENSTACK:
-//                kthfsTemplate.options(NovaTemplateOptions.Builder
-//                        .overrideLoginUser(clusterController.getCluster().getProvider().getLoginUser())
-//                        .generateKeyPair(true)
-//                        .runScript(bootstrap));
-//                break;
-//            case RACKSPACE:
-//
-//                break;
-//            default:
-//                throw new AssertionError();
-//        }
-//    }
     public static enum ScriptLogger {
 
         INSTANCE;
