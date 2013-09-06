@@ -63,11 +63,7 @@ public class ServiceStatusController {
    @PostConstruct
    public void init() {
       logger.info("init ServiceStatusController");
-      Long t1, t2;
-      t1 = System.currentTimeMillis();
       loadRoles();
-      t2 = System.currentTimeMillis();
-      logger.log(Level.INFO, "ServiceStatusController >> loadRoles() took {0} ms", t2 - t1);
    }
 
    public String getService() {
