@@ -67,27 +67,20 @@ public class TerminalController {
     public String handleCommand(String command, String[] params) {
 //      TODO: Check special characters like ";" to avoid injection
         String roleName;
-        String options;
         if (service.equalsIgnoreCase(ServiceType.KTHFS.toString())) {
             if (command.equals("hdfs")) {
                 roleName = RoleType.datanode.toString();
-                options = "";
             } else {
-                return "Invalid command. Accepted commands are: hdfs";
+                return "Unknown command. Known commands are: hdfs";
             }
 
         } else if (service.equalsIgnoreCase(ServiceType.MySQLCluster.toString())) {
-            if (command.equals("mysqlclient")) {
+            if (command.equals("mysql")) {
                 roleName = RoleType.mysqld.toString();
-                options = "-e";
-            } else if (command.equals("mgmclient")) {
+            } else if (command.equals("ndb_mgm")) {
                 roleName = RoleType.mgmserver.toString();
-                options = "-e";                
             } else {
-                return "Invalid command. Accepted commands are: mysqlclient, mgmclient";
-            }
-            if (!(params.length >= 1 && params[0].startsWith("\"") && params[params.length - 1].endsWith("\""))) {
-                return "Usage: " + command + " \"[COMMANDS]\"";
+                return "Unknown command. Known commands are: mysql, ndb_mgm";
             }
         } else {
             return null;
@@ -99,7 +92,7 @@ public class TerminalController {
                 throw new RuntimeException("No live node available.");
             }
             WebCommunication web = new WebCommunication();
-            return web.execute(hosts.get(0).getPublicOrPrivateIp(), cluster, service, roleName, command, options, params);
+            return web.execute(hosts.get(0).getPublicOrPrivateIp(), cluster, service, roleName, command, params);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
             return "Error: Could not contact a node";

@@ -104,9 +104,9 @@ public class WebCommunication {
         return resultList;
     }
 
-    public String execute(String hostAddress, String cluster, String service, String role, String command, String options, String[] params) throws Exception {
+    public String execute(String hostAddress, String cluster, String service, String role, String command, String[] params) throws Exception {
         String url = createUrl("execute", hostAddress, cluster, service, role, command);
-        String optionsAndParams = options;
+        String optionsAndParams = "";
         for (String param : params) {
             optionsAndParams += optionsAndParams.isEmpty() ? param : " " + param;
         }
