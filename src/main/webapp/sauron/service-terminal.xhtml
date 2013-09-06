@@ -105,7 +105,7 @@
                     <h:form >  
                         <p:focus for="terminal" />  
 
-                        <p:terminal id="terminal" widgetVar="term" prompt="client@kthfs:~$" 
+                        <p:terminal id="terminal" widgetVar="term" prompt="client@#{serviceStatusController.service}:~$" 
                                     commandHandler="#{terminalController.handleCommand}"  height="600"  width="99.5%"
                                     welcomeMessage=""  />  
 
