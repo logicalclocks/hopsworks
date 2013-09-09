@@ -121,8 +121,8 @@
     </security-constraint>
                                                        
     <login-config>
-        <!--<auth-method>FORM</auth-method>-->
-        <auth-method>BASIC</auth-method>
+        <auth-method>FORM</auth-method>
+        <!--<auth-method>BASIC</auth-method>-->
         <realm-name>DBRealm</realm-name>
         <form-login-config>
             <form-login-page>/index.xhtml</form-login-page>
