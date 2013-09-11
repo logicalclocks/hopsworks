@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:p="http://primefaces.org/ui"
-       xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:ui="http://java.sun.com/jsf/facelets">
     <script type="text/javascript">
         function editLastDatatableRow(){
@@ -42,10 +42,10 @@
                                                              value="#{clusterManagementController.baremetalCluster.installPhase}"/>
                                     <h:outputText value="Login user:"/>
                                     <p:inputText value="#{clusterManagementController.baremetalCluster.loginUser}" 
-                                                />
-                                     <h:outputText value="Total number of Hosts:"/>
-                                     <p:inputText value="#{clusterManagementController.baremetalCluster.totalHosts}" 
-                                                />
+                                                 />
+                                    <h:outputText value="Total number of Hosts:"/>
+                                    <p:inputText value="#{clusterManagementController.baremetalCluster.totalHosts}" 
+                                                 />
                                 </h:panelGrid>
                             </p:panel>
                         </p:tab>
@@ -54,7 +54,6 @@
                                 <h:panelGrid columns="2">
                                     <h:outputText value="Skip Chef override configuration:"/>
                                     <h:selectBooleanCheckbox value="#{clusterManagementController.skipChef}"/>
-                                    <!--TODO BaremetalGroupModel-->
                                 </h:panelGrid>
                                 <h:panelGrid columns="4" columnClasses="label, value">
                                     <p:dataTable id="groupList" var="group"
@@ -62,7 +61,7 @@
                                                  rowKey="#{group.securityGroup}"
                                                  selection="#{clusterManagementController.selectedBaremetalGroup}"
                                                  selectionMode="multiple"
-                                                 editable="false">
+                                                 editable="true">
                                         <f:facet name="header">
                                             Click delete selection after selecting multiple instances to delete, use shift-click to select multiples
                                         </f:facet>
@@ -92,7 +91,7 @@
                                                     <h:outputText value="#{group.hosts}" />
                                                 </f:facet>
                                                 <f:facet name="input">
-                                                    <p:inputText value="#{group.hosts}" />
+                                                    <p:inputText  value="#{group.stringHosts}" />
                                                 </f:facet>
                                             </p:cellEditor>
                                         </p:column>
@@ -101,7 +100,7 @@
                                                 <f:facet name="output">
                                                     <h:outputText value="#{group.roles}" />
                                                 </f:facet>
-                                                                                             
+
                                                 <f:facet name="input">
                                                     <h:outputText value="Roles:"/>
                                                     <p:selectManyCheckbox id="roles" value="#{group.roles}" >  
@@ -109,13 +108,16 @@
 
                                                     </p:selectManyCheckbox>  
                                                 </f:facet>
-                                               
+
                                             </p:cellEditor>
                                         </p:column>
+                                        <p:column headerText="Actions">
+                                            <p:rowEditor />
+                                        </p:column>
 
-                                        
+
                                     </p:dataTable>
-                                    
+
                                 </h:panelGrid>
                                 <p:dialog header="Remove Group" widgetVar="removeDialog" resizable="false"
                                           id="groupDig"  
@@ -142,7 +144,7 @@
                                         <p:selectManyCheckbox value="#{clusterManagementController.options.addBaremetalGroupName.roles}" >  
                                             <f:selectItems value="#{clusterManagementController.options.roles}"  />  
                                         </p:selectManyCheckbox>  
-                                        
+
 
                                     </h:panelGrid>
                                     <p:commandButton id="acceptName" value="Confirm" update="groupList" 
@@ -161,8 +163,8 @@
                                                  oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
                             </p:panel>
                         </p:tab>
-                        
-                          <p:tab id="chefAttributes" title="Override Chef">
+
+                        <p:tab id="chefAttributes" title="Override Chef">
                             <p:panel header="Override Chef">
 
                                 <h:messages errorClass="error"/>
