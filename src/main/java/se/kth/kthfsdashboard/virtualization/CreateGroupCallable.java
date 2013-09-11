@@ -27,8 +27,8 @@ public class CreateGroupCallable implements Callable<Set<? extends NodeMetadata>
     private Map<String, Set<? extends NodeMetadata>> nodes;
     private MessageController messages;
 
-    public CreateGroupCallable(ComputeService service, NodeGroup group, 
-            TemplateBuilder kthfsTemplate, Map<String, Set<? extends NodeMetadata>> nodes, 
+    public CreateGroupCallable(ComputeService service, NodeGroup group,
+            TemplateBuilder kthfsTemplate, Map<String, Set<? extends NodeMetadata>> nodes,
             MessageController messages) {
         this.service = service;
         this.group = group;
@@ -41,16 +41,16 @@ public class CreateGroupCallable implements Callable<Set<? extends NodeMetadata>
     public Set<? extends NodeMetadata> call() {
         Set<? extends NodeMetadata> ready = null;
         try {
-            ready = service.createNodesInGroup(group.getSecurityGroup(), group.getNumber(), 
+            ready = service.createNodesInGroup(group.getSecurityGroup(), group.getNumber(),
                     kthfsTemplate.build());
-
+            nodes.put(group.getSecurityGroup(), ready);
+            messages.addMessage("Nodes created in Security Group " + group.getSecurityGroup() + " with "
+                    + "basic setup");
         } catch (RunNodesException e) {
             System.out.println("error adding nodes to group "
                     + "ups something got wrong on the nodes");
         } finally {
-            nodes.put(group.getSecurityGroup(), ready);
-            messages.addMessage("Nodes created in Security Group " + group.getSecurityGroup() + " with "
-                    + "basic setup");
+
             return ready;
         }
     }

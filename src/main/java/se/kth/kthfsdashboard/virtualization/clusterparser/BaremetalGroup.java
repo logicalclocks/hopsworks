@@ -5,18 +5,20 @@
 package se.kth.kthfsdashboard.virtualization.clusterparser;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
+import javax.persistence.Transient;
 
 /**
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-public class BaremetalGroup implements Serializable{
+public class BaremetalGroup implements Serializable {
+
     private String securityGroup;
     private int number;
     private List<String> hosts;
     private List<String> roles;
-    
 
     public BaremetalGroup() {
     }
@@ -45,6 +47,18 @@ public class BaremetalGroup implements Serializable{
         this.hosts = hosts;
     }
 
+    public String getStringHosts() {
+        String temp = hosts.toString().replaceAll("\\[", "");
+        temp = temp.replaceAll(" ", "");
+        return temp.toString().replaceAll("\\]", "");
+    }
+
+    public void setStringHosts(String hosts) {
+
+        String[] splittedHosts = hosts.split(",");
+        setHosts(Arrays.asList(splittedHosts));
+    }
+
     public List<String> getRoles() {
         return roles;
     }
@@ -52,14 +66,11 @@ public class BaremetalGroup implements Serializable{
     public void setRoles(List<String> roles) {
         this.roles = roles;
     }
-    
+
     @Override
     public String toString() {
-        return "BaremetalGroup{" + "securityGroup=" + securityGroup + ", number=" 
-                + number + ", hosts=" + hosts + ", roles=" + roles + 
-                 '}';
+        return "BaremetalGroup{" + "securityGroup=" + securityGroup + ", number="
+                + number + ", hosts=" + hosts + ", roles=" + roles
+                + '}';
     }
-    
-    
-    
 }
