@@ -28,6 +28,7 @@ import org.primefaces.model.StreamedContent;
 import org.primefaces.model.TreeNode;
 import org.primefaces.model.UploadedFile;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.introspector.BeanAccess;
 import se.kth.kthfsdashboard.provision.ClusterOptions;
 
 /**
@@ -242,6 +243,7 @@ public class ClusterManagementController implements Serializable {
 
     private void parseYMLtoCluster() {
         try {
+            yaml.setBeanAccess(BeanAccess.FIELD);
             Object document = yaml.load(file.getInputstream());
 
             if (document != null) {
@@ -308,8 +310,8 @@ public class ClusterManagementController implements Serializable {
     }
 
     public String onFlowProcess(FlowEvent event) {
-        logger.info("Current wizard step:" + event.getOldStep());
-        logger.info("Next step:" + event.getNewStep());
+        logger.info("Current wizard step: "+event.getOldStep());
+        logger.info("Next step: "+event.getNewStep());
         if (skipChef) {
             skipChef = false;	//reset in case user goes back
             persistNodes();
