@@ -304,7 +304,7 @@ public class ClusterManagementController implements Serializable {
 
     public List<ClusterEntity> listAvailableClusters() {
         //We purge any possible selections from the user when we load the clusters
-        file = null;
+        //file = null;
         cluster = null;
         baremetalCluster = null;
         return clusterEJB.findAll();
