@@ -43,9 +43,9 @@ public class TerminalController2 implements Serializable {
     public void init() {
         logger.info("init TerminalController2");
     }
-    
+
     public Integer getA() {
-        a +=1 ;
+        a += 1;
         return a;
     }
 
@@ -76,63 +76,73 @@ public class TerminalController2 implements Serializable {
         state = States.SPARK.toString();
         return "client@Spark:~$";
     }
-    
+
     public String getPrompt2() {
         return state + ">";
     }
 
     public String handleCommand(String command, String[] params) {
-//        String service = "Spark";
-//        String cluster = "cluster1";
         System.out.println("Satet = " + state);
-
 //      TODO: Check special characters like ";" to avoid injection
         String ip;
-        if (state.equals(States.SPARK.toString())) {
-            if (service.equalsIgnoreCase("Spark")) {
-                if (!command.equals("spark-shell")) {
-                    return "Unknown command. Accepted commands are: spark-shell";
+        if (service.equalsIgnoreCase("Spark")) {
+            if (state.equals(States.SPARK.toString())) {
+                if (command.equals("spark-shell")) {
+                    try {
+//                      TODO: get only one host
+                        List<Host> hosts = hostEjb.find(cluster, service, "");
+                        if (hosts.isEmpty()) {
+                            throw new RuntimeException("No live node available.");
+                        }
+                        WebCommunication web = new WebCommunication();
+                        state = States.SPARK_SHELL.toString();
+                        ip = hosts.get(0).getPublicOrPrivateIp();
+                        return web.executeStart(ip, cluster, service, "-", command, params);
+                    } catch (Exception ex) {
+                        state = States.SPARK.toString();
+                        logger.log(Level.SEVERE, null, ex);
+                        return "Error: An Error occured while contacting the server.";
+                    }
+                } else if (command.startsWith("spark-class")) {
+                    try {
+//                      TODO: get only one host
+                        List<Host> hosts = hostEjb.find(cluster, service, "");
+                        if (hosts.isEmpty()) {
+                            throw new RuntimeException("No live node available.");
+                        }
+                        WebCommunication web = new WebCommunication();
+                        ip = hosts.get(0).getPublicOrPrivateIp();
+                        return web.executeRun(ip, cluster, service, "-", command, params);
+                    } catch (Exception ex) {
+                        logger.log(Level.SEVERE, null, ex);
+                        return "Error: An Error occured while contacting the server.";
+                    }                    
+                } else {
+                    return "Unknown command. Accepted commands are: spark-shell, spark-class";
                 }
-            } else {
-                return null;
-            }
-            try {
+            } else if (state.equals(States.SPARK_SHELL.toString())) {
 //             TODO: get only one host
                 List<Host> hosts = hostEjb.find(cluster, service, "");
                 if (hosts.isEmpty()) {
                     throw new RuntimeException("No live node available.");
                 }
-                WebCommunication web = new WebCommunication();
-                state = States.SPARK_SHELL.toString();
-                ip = hosts.get(0).getPublicOrPrivateIp();
-                return web.executeStart(ip, cluster, service, "-", command, params);
-            } catch (Exception ex) {
-                state = States.SPARK.toString();
-                logger.log(Level.SEVERE, null, ex);
-                return "Error: Could not contact a node";
-            }
-        } else if (state.equals(States.SPARK_SHELL.toString())) {
-//             TODO: get only one host
-            List<Host> hosts = hostEjb.find(cluster, service, "");
-            if (hosts.isEmpty()) {
-                throw new RuntimeException("No live node available.");
-            }
-            try {
-                WebCommunication web = new WebCommunication();
-                state = States.SPARK_SHELL.toString();
-                ip = hosts.get(0).getPublicOrPrivateIp();
-                if (command.equals("exit")) {
-                    state = States.SPARK.toString();
+                try {
+                    WebCommunication web = new WebCommunication();
+                    state = States.SPARK_SHELL.toString();
+                    ip = hosts.get(0).getPublicOrPrivateIp();
+                    if (command.equals("exit")) {
+                        state = States.SPARK.toString();
+                    }
+                    return web.executeContinue(ip, cluster, service, "-", command, params);
+                } catch (Exception ex) {
+                    state = States.SPARK_SHELL.toString();
+                    logger.log(Level.SEVERE, null, ex);
+                    return "Error: Could not contact a node";
                 }
-                return web.executeContinue(ip, cluster, service, "-", command, params);
-            } catch (Exception ex) {
-                state = States.SPARK_SHELL.toString();
-                logger.log(Level.SEVERE, null, ex);
-                return "Error: Could not contact a node";
+            } else {
+                return null;
             }
-        } else {
-            return null;
         }
-
+        return null;
     }
 }
