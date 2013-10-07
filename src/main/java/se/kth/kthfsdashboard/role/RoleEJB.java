@@ -27,10 +27,15 @@ public class RoleEJB {
    }
 
    public List<String> findServices(String cluster) {
-      TypedQuery<String> query = em.createNamedQuery("Role.findServices", String.class)
+      TypedQuery<String> query = em.createNamedQuery("Role.findServicesBy-Cluster", String.class)
               .setParameter("cluster", cluster);
       return query.getResultList();
    }
+   
+   public List<String> findServices() {
+      TypedQuery<String> query = em.createNamedQuery("Role.findServices", String.class);
+      return query.getResultList();
+   }   
 
    public Role find(String hostId, String cluster, String service, String role) throws Exception{
       TypedQuery<Role> query = em.createNamedQuery("Role.find", Role.class)
@@ -130,8 +135,8 @@ public class RoleEJB {
       } catch (NoResultException ex) {
          return null;
       }
-   }     
-
+   }
+   
    public void persist(Role role) {
       em.persist(role);
    }

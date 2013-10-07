@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"   
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -8,35 +8,40 @@
       xmlns:p="http://primefaces.org/ui"
       >
 
-   <ui:composition template="sauron/layout.xhtml">
+    <ui:composition template="sauron/layout.xhtml">
 
-      <ui:define name="title">
-         Test
-      </ui:define>
+        <ui:define name="title">
+            Test
+        </ui:define>
 
-      <ui:define name="content">
+        <ui:define name="content">
 
-         TEST
+            TEST
 
-         <h:form id="form_add_host_cmd">
-            <p:commandLink value="KTHFS Client" onclick="dlgClient.show()"/>
-         </h:form>
 
-         <p:dialog widgetVar="dlgClient" modal="true" header="KTHFS Client" draggable="false" resizable="false" styleClass="Dialog" >  
-            <h:form id="form_client">
-               <p:growl id="growl" showDetail="true"/>   
+            <p:panel header="Terminal" styleClass="TerminalPanel">
+                
+                
+                <h:form id="form1">
+                    <p:outputLabel value="#{terminalController2.a}"/>
+                </h:form>
+                
+                <h:form id="form2">
+                    <p:commandButton value="Refresh" update=":formterm"/>
+                </h:form>                
+                
+                <h:form id="formterm">  
+                    <p:focus for="terminal" />  
+                    <p:terminal id="terminal" widgetVar="term" prompt="#{terminalController2.prompt2}" 
+                                commandHandler="#{terminalController2.handleCommand}"  height="550"  width="99.5%"
+                                welcomeMessage=""  />  
 
-               <p:focus for="terminal" />  
+                </h:form>                      
+            </p:panel>            
 
-               <p:terminal id="terminal" widgetVar="term" commandHandler="#{terminalController.handleCommand}"  
-                           welcomeMessage="Welcome to PrimeFaces Terminal, how are you today?" />  
 
-               <p:commandButton type="button" value="Clear" icon="ui-icon-trash" onclick="PF('term').clear()" style="margin-top:10px"/>  
-            </h:form>      
-         </p:dialog> 
+        </ui:define>
 
-      </ui:define>
-
-   </ui:composition>
+    </ui:composition>
 
 </html>

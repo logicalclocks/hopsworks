@@ -6,5 +6,5 @@ package se.kth.kthfsdashboard.service;
  */
 public enum ServiceType {
 
-   KTHFS, MySQLCluster, YARN, MapReduce
+   KTHFS, MySQLCluster, YARN, MapReduce, Spark
 }

@@ -60,7 +60,7 @@ public class RoleController {
          health = roleHost.getHealth().toString();
          found = true;
       } catch (Exception ex) {
-         logger.warning("init: ".concat(ex.getMessage()));
+         logger.warning("init RoleController: ".concat(ex.getMessage()));
       }
    }
 

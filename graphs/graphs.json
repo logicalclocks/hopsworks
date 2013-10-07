@@ -220,26 +220,26 @@
 
 "YARN-RESOURCEMANAGER": [
 {"group": "Resource Manager Queue Metrics", "graphs":[
-{"id": "yarn-rm-aggregate-containers", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Aggregate Containers", "vertical-label": "", "var" : "", "charts": 
+{"id": "yarn-rm-aggregate-containers", "plugin": "GenericJMX", "plugin-instance": "ResourceManager", "title": "Aggregate Containers", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge", "type-instance": "AggregateContainersAllocated", "ds": "value", "label": "Allocated", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "AggregateContainersReleased", "ds": "value", "label": "Released", "color": "GREEN", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-containers", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Containers", "vertical-label": "", "var" : "", "charts": 
+{"id": "yarn-rm-containers", "plugin": "GenericJMX", "plugin-instance": "ResourceManager", "title": "Containers", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge", "type-instance": "AllocatedContainers", "ds": "value", "label": "Allocated", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "ReservedContainers", "ds": "value", "label": "Reserved", "color": "YELLOW", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "PendingContainers", "ds": "value", "label": "Pending", "color": "BLUE", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-apps1", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Apps", "vertical-label": "", "var" : "", "charts": 
+{"id": "yarn-rm-apps1", "plugin": "GenericJMX", "plugin-instance": "ResourceManager", "title": "Apps", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge", "type-instance": "AppsSubmitted", "ds": "value", "label": "Submitted", "color": "BLUE", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "AppsCompleted", "ds": "value", "label": "Completed", "color": "GREEN", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "AppsRunning", "ds": "value", "label": "Running", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "AppsPending", "ds": "value", "label": "Pending", "color": "YELLOW", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-apps2", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Apps", "vertical-label": "", "var" : "", "charts": 
+{"id": "yarn-rm-apps2", "plugin": "GenericJMX", "plugin-instance": "ResourceManager", "title": "Apps", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge", "type-instance": "AppsFailed", "ds": "value", "label": "Failed", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "AppsKilled", "ds": "value", "label": "Killed", "color": "BLUE", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-memory", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Memory", "vertical-label": "MB", "var" : "", "charts": 
+{"id": "yarn-rm-memory", "plugin": "GenericJMX", "plugin-instance": "ResourceManager", "title": "Memory", "vertical-label": "MB", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge", "type-instance": "AllocatedMB", "ds": "value", "label": "Allocated", "color": "BLUE", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "AvailableMB", "ds": "value", "label": "Available", "color": "GREEN", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "PendingMB", "ds": "value", "label": "Pending", "color": "YELLOW", "format": "%5.2lf"},
@@ -251,7 +251,7 @@
 
 
 "YARN-NODEMANAGER": [
-{"group": "Resource Manager Queue Metrics", "graphs":[
+{"group": "Node Manager Queue Metrics", "graphs":[
 {"id": "yarn-nm-containers1", "plugin": "GenericJMX", "plugin-instance": "NodeManager", "title": "Containers", "vertical-label": "", "var" : "", "charts": 
   [{"model": "LINE", "type": "gauge", "type-instance": "ContainersLaunched", "ds": "value", "label": "Launched", "color": "YELLOW", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "ContainersCompleted", "ds": "value", "label": "Completed", "color": "GREEN", "format": "%5.2lf"},
@@ -273,26 +273,26 @@
 
 "YARN": [
 {"group": "Resource Manager Queue Metrics", "graphs":[
-{"id": "yarn-rm-aggregate-containers", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Aggregate Containers", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
+{"id": "yarn-rm-aggregate-containers", "plugin": "GenericJMX", "plugin-instance": "ResourceManager", "title": "Aggregate Containers", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
   [{"model": "LINE", "type": "gauge", "type-instance": "AggregateContainersAllocated", "ds": "value", "label": "Allocated", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "AggregateContainersReleased", "ds": "value", "label": "Released", "color": "GREEN", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-containers", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Containers", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
+{"id": "yarn-rm-containers", "plugin": "GenericJMX", "plugin-instance": "ResourceManager", "title": "Containers", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
   [{"model": "LINE", "type": "gauge", "type-instance": "AllocatedContainers", "ds": "value", "label": "Allocated", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "ReservedContainers", "ds": "value", "label": "Reserved", "color": "YELLOW", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "PendingContainers", "ds": "value", "label": "Pending", "color": "BLUE", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-apps1", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Apps", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
+{"id": "yarn-rm-apps1", "plugin": "GenericJMX", "plugin-instance": "ResourceManager", "title": "Apps", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
   [{"model": "LINE", "type": "gauge", "type-instance": "AppsSubmitted", "ds": "value", "label": "Submitted", "color": "BLUE", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "AppsCompleted", "ds": "value", "label": "Completed", "color": "GREEN", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "AppsRunning", "ds": "value", "label": "Running", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "AppsPending", "ds": "value", "label": "Pending", "color": "YELLOW", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-apps2", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Apps", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
+{"id": "yarn-rm-apps2", "plugin": "GenericJMX", "plugin-instance": "ResourceManager", "title": "Apps", "vertical-label": "", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
   [{"model": "LINE", "type": "gauge", "type-instance": "AppsFailed", "ds": "value", "label": "Failed", "color": "RED", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "AppsKilled", "ds": "value", "label": "Killed", "color": "BLUE", "format": "%5.2lf"}]
 },
-{"id": "yarn-rm-memory", "plugin": "GenericJMX", "plugin-instance": "ReourceManager", "title": "Memory", "vertical-label": "MB", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
+{"id": "yarn-rm-memory", "plugin": "GenericJMX", "plugin-instance": "ResourceManager", "title": "Memory", "vertical-label": "MB", "var" : "host=HOST(YARN,ResourceManager)", "charts": 
   [{"model": "LINE", "type": "gauge", "type-instance": "AllocatedMB", "ds": "value", "label": "Allocated", "color": "BLUE", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "AvailableMB", "ds": "value", "label": "Available", "color": "GREEN", "format": "%5.2lf"},
    {"model": "LINE", "type": "gauge", "type-instance": "PendingMB", "ds": "value", "label": "Pending", "color": "YELLOW", "format": "%5.2lf"},

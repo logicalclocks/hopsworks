@@ -110,6 +110,9 @@ public class ClusterInfo {
     public void addRoles(List<RoleHostInfo> roleHostList) {
         for (RoleHostInfo roleHost : roleHostList) {
             services.add(roleHost.getRole().getService());
+            if (roleHost.getRole().getRole().toString().equals("")) {
+                continue;
+            }
             roles.add(roleHost.getRole().getRole());
             rolesServicesMap.put(roleHost.getRole().getRole(), roleHost.getRole().getService());
             if (roleHost.getStatus() == Status.Started) {

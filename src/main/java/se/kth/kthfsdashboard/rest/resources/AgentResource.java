@@ -171,10 +171,18 @@ public class AgentResource {
                 role.setHostId(host.getHostId());
                 role.setCluster(s.getString("cluster"));
                 role.setService(s.getString("service"));
-                role.setRole(s.getString("role"));
+                if (s.has("role")) {
+                    role.setRole(s.getString("role"));
+                } else {
+                    role.setRole("");
+                }
                 role.setWebPort(s.has("web-port") ? s.getInt("web-port") : null);
                 role.setPid(s.has("pid") ? s.getInt("pid") : 0);
-                role.setStatus(Status.valueOf(s.getString("status")));
+                if (s.has("status")) {
+                    role.setStatus(Status.valueOf(s.getString("status")));
+                } else {
+                    role.setStatus(Status.None);
+                }
                 if (s.has("stop-time")) {
                     role.setUptime(s.getLong("stop-time") - s.getLong("start-time"));
                 } else if (s.has("start-time")) {

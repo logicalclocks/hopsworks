@@ -8,6 +8,7 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
+import javax.inject.Inject;
 import se.kth.kthfsdashboard.communication.WebCommunication;
 import se.kth.kthfsdashboard.host.Host;
 import se.kth.kthfsdashboard.host.HostEJB;
@@ -31,6 +32,9 @@ public class TerminalController {
     @EJB
     private HostEJB hostEjb;
     private static final Logger logger = Logger.getLogger(TerminalController.class.getName());
+    
+//    @Inject
+    private TerminalController2 s;
 
     public TerminalController() {
     }
@@ -86,13 +90,13 @@ public class TerminalController {
             return null;
         }
         try {
-//             TODO: get only one host
+//          TODO: get only one host
             List<Host> hosts = hostEjb.find(cluster, service, roleName, Status.Started);
             if (hosts.isEmpty()) {
                 throw new RuntimeException("No live node available.");
             }
             WebCommunication web = new WebCommunication();
-            return web.execute(hosts.get(0).getPublicOrPrivateIp(), cluster, service, roleName, command, params);
+            return web.executeRun(hosts.get(0).getPublicOrPrivateIp(), cluster, service, roleName, command, params);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
             return "Error: Could not contact a node";
