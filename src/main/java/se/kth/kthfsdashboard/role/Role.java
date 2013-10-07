@@ -14,7 +14,7 @@ import se.kth.kthfsdashboard.struct.Status;
 @Table(name = "Roles")
 @NamedQueries({
     @NamedQuery(name = "Role.findClusters", query = "SELECT DISTINCT r.cluster FROM Role r"),
-    @NamedQuery(name = "Role.findServices", query = "SELECT DISTINCT r.service FROM Role r WHERE r.cluster = :cluster"),
+    @NamedQuery(name = "Role.findServicesBy-Cluster", query = "SELECT DISTINCT r.service FROM Role r WHERE r.cluster = :cluster"),
     @NamedQuery(name = "Role.find", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role AND r.hostId = :hostId"),
     @NamedQuery(name = "Role.findBy-HostId", query = "SELECT r FROM Role r WHERE r.hostId = :hostId ORDER BY r.cluster, r.service, r.role"),
     @NamedQuery(name = "Role.findBy-Cluster-Service-Role", query = "SELECT r FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
@@ -30,7 +30,7 @@ import se.kth.kthfsdashboard.struct.Status;
     @NamedQuery(name = "RoleHost.find.PrivateIpBy-Cluster.Hostname.WebPort", query = "SELECT h.privateIp FROM Host h, Role r WHERE h.hostId = r.hostId AND r.cluster = :cluster AND (h.hostname = :hostname OR h.hostId = :hostname) AND r.webPort = :webPort"),
     @NamedQuery(name = "RoleHost.TotalCores", query="SELECT SUM(h2.cores) FROM Host h2 WHERE h2.hostId IN (SELECT h.hostId FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster GROUP BY h.hostId)"),
     @NamedQuery(name = "RoleHost.TotalMemoryCapacity", query="SELECT SUM(h2.memoryCapacity) FROM Host h2 WHERE h2.hostId IN (SELECT h.hostId FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster GROUP BY h.hostId)"),
-    @NamedQuery(name = "RoleHost.TotalDiskCapacity", query="SELECT SUM(h2.diskCapacity) FROM Host h2 WHERE h2.hostId IN (SELECT h.hostId FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster GROUP BY h.hostId)"),        
+    @NamedQuery(name = "RoleHost.TotalDiskCapacity", query="SELECT SUM(h2.diskCapacity) FROM Host h2 WHERE h2.hostId IN (SELECT h.hostId FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster GROUP BY h.hostId)"),    
 })
 public class Role implements Serializable {
 

@@ -100,17 +100,25 @@
 
                 <p:spacer width="1" height="25" />
 
+                <p:panel header="Terminal" styleClass="TerminalPanel" rendered="#{serviceStatusController.service != 'Spark'}">
 
-                <p:panel header="Terminal" styleClass="TerminalPanel">
                     <h:form >  
                         <p:focus for="terminal" />  
 
                         <p:terminal id="terminal" widgetVar="term" prompt="client@#{serviceStatusController.service}:~$" 
                                     commandHandler="#{terminalController.handleCommand}"  height="600"  width="99.5%"
                                     welcomeMessage=""  />  
-
                     </h:form>                      
                 </p:panel>
+
+                <p:panel header="Terminal" styleClass="TerminalPanel" rendered="#{serviceStatusController.service == 'Spark'}">
+                    <h:form id="formterm">  
+                        <p:focus for="terminal" />  
+                        <p:terminal id="terminal" widgetVar="term" prompt="#{terminalController2.getPrompt(serviceStatusController.cluster, serviceStatusController.service)}" 
+                                    commandHandler="#{terminalController2.handleCommand}"  height="600"  width="99.5%"
+                                    welcomeMessage=""  />  
+                    </h:form>                      
+                </p:panel>                  
 
                 <p:spacer width="1" height="25" />
 

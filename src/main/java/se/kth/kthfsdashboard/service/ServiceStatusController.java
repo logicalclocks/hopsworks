@@ -48,7 +48,7 @@ public class ServiceStatusController {
       serviceRolesMap.put(ServiceType.KTHFS, roles);
 
       roles = new ArrayList<ServiceRoleInfo>();
-      roles.add(new ServiceRoleInfo("MySQL Cluster NDBD (ndb)", RoleType.ndb));
+      roles.add(new ServiceRoleInfo("MySQL Cluster NDB (ndb)", RoleType.ndb));
       roles.add(new ServiceRoleInfo("MySQL Server (mysqld)", RoleType.mysqld));
       roles.add(new ServiceRoleInfo("MGM Server (mgmserver)", RoleType.mgmserver));
       roles.add(new ServiceRoleInfo("Memcached (memcached)", RoleType.memcached));
@@ -58,13 +58,19 @@ public class ServiceStatusController {
       roles.add(new ServiceRoleInfo("Resource Manager", RoleType.resourcemanager));
       roles.add(new ServiceRoleInfo("Node Manager", RoleType.nodemanager));
       serviceRolesMap.put(ServiceType.YARN, roles);
+
+      roles = new ArrayList<ServiceRoleInfo>();
+      serviceRolesMap.put(ServiceType.Spark, roles);   
+   
    }
 
    @PostConstruct
    public void init() {
       logger.info("init ServiceStatusController");
       loadRoles();
+      found =true; // TODO: Remove this. Fix it for Spark
    }
+   
 
    public String getService() {
       return service;
@@ -100,7 +106,8 @@ public class ServiceStatusController {
 
    public boolean renderTerminalLink() {
       return service.equalsIgnoreCase(ServiceType.KTHFS.toString()) || 
-              service.equalsIgnoreCase(ServiceType.MySQLCluster.toString());
+              service.equalsIgnoreCase(ServiceType.MySQLCluster.toString()) ||
+              service.equalsIgnoreCase(ServiceType.Spark.toString());
    }
    
    public boolean renderNdbInfoTable() {

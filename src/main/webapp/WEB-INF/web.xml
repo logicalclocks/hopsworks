@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" 
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
-         http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
-             
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee           http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
     <context-param>
         <param-name>javax.faces.PROJECT_STAGE</param-name>
         <param-value>Development</param-value>
@@ -20,7 +16,7 @@
     <context-param>
         <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
         <param-value>client</param-value>
-    </context-param>    
+    </context-param>
     <servlet>
         <servlet-name>Faces Servlet</servlet-name>
         <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
@@ -34,14 +30,10 @@
         <servlet-name>Faces Servlet</servlet-name>
         <url-pattern>*.xhtml</url-pattern>
     </servlet-mapping>
-    
     <welcome-file-list>
         <welcome-file>index.xhtml</welcome-file>
     </welcome-file-list>
-    
-
     <!--  REST  -->
-    
     <servlet>
         <servlet-name>Jersey REST Service</servlet-name>
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
@@ -55,12 +47,10 @@
         <servlet-name>Jersey REST Service</servlet-name>
         <url-pattern>/rest/*</url-pattern>
     </servlet-mapping>
-
     <servlet-mapping>
         <servlet-name>Jersey REST Service</servlet-name>
         <url-pattern>/resources/*</url-pattern>
     </servlet-mapping>
-
     <!-- declare the roles relevant for our webapp -->
     <security-role>
         <role-name>ADMIN</role-name>
@@ -71,25 +61,21 @@
     <security-role>
         <role-name>AGENT</role-name>
     </security-role>
-
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>Secured Content</web-resource-name>
             <url-pattern>/sauron/*</url-pattern>
         </web-resource-collection>
-      
         <auth-constraint>
             <role-name>ADMIN</role-name>
             <role-name>USER</role-name>
         </auth-constraint>
-  
         <!-- we always want https! -->
         <!--        <user-data-constraint>
             <description>highest supported transport security level</description>
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
         </user-data-constraint>-->
     </security-constraint>
-    
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>Secured Content for agents sending alerts data</web-resource-name>
@@ -97,14 +83,13 @@
         </web-resource-collection>
         <auth-constraint>
             <role-name>AGENT</role-name>
-            <role-name>ADMIN</role-name>            
+            <role-name>ADMIN</role-name>
         </auth-constraint>
         <!--        <user-data-constraint>
             <description>SSL Support</description>
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
         </user-data-constraint>        -->
-    </security-constraint>                  
-            
+    </security-constraint>
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>Secured Content for agents sending status data</web-resource-name>
@@ -112,14 +97,13 @@
         </web-resource-collection>
         <auth-constraint>
             <role-name>AGENT</role-name>
-            <role-name>ADMIN</role-name>            
+            <role-name>ADMIN</role-name>
         </auth-constraint>
         <!--        <user-data-constraint>
             <description>SSL Support</description>
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
         </user-data-constraint> -->
     </security-constraint>
-                                                       
     <login-config>
         <!--<auth-method>FORM</auth-method>-->
         <auth-method>BASIC</auth-method>
@@ -129,7 +113,6 @@
             <form-error-page>/loginError.xhtml</form-error-page>
         </form-login-config>
     </login-config>
-   
     <!--   <error-page>
        <error-code>404</error-code>
        <location>/error</location>
@@ -138,19 +121,15 @@
        <error-code>500</error-code>
        <location>/error</location>
     </error-page> -->
-      
     <session-config>
         <!-- on production systems you might have another value for the timeout -->
         <session-timeout>20</session-timeout>
-        <!-- 
-           we don't want to use the default name JSESSIONID because this 
-           tells everyone (especially hackers) that our application is based on java 
-        -->
+        <!-- we don't want to use the default name JSESSIONID because this 
+        tells everyone (especially hackers) that our application is based on java -->
         <cookie-config>
             <name>SESSIONID</name>
         </cookie-config>
-    </session-config>    
-    
+    </session-config>
     <!-- PrimeFaces FileUpload Filter -->
     <filter>
         <filter-name>PrimeFaces FileUpload Filter</filter-name>
@@ -159,18 +138,15 @@
     <filter-mapping>
         <filter-name>PrimeFaces FileUpload Filter</filter-name>
         <servlet-name>Faces Servlet</servlet-name>
-    </filter-mapping>   
-    
-<!-- To upload form pages with pretty URL!-->
-<!--    <filter-mapping>
+    </filter-mapping>
+    <!-- To upload from pages with pretty URL!-->
+    <!--    <filter-mapping>
         <filter-name>PrimeFaces FileUpload Filter</filter-name>
         <url-pattern>/*</url-pattern>     
     </filter-mapping>  -->
-                         
     <!--PrettyFaces: ONLY Development Mode: disable the default caching mechanism -->
     <!--   <context-param>
        <param-name>org.ocpsoft.rewrite.config.CONFIG_RELOADING</param-name>
        <param-value>true</param-value>
     </context-param>    -->
-    
 </web-app>

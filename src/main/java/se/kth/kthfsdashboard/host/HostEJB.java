@@ -1,8 +1,8 @@
 package se.kth.kthfsdashboard.host;
 
+import java.io.Serializable;
 import java.util.List;
 import javax.ejb.Stateless;
-import javax.management.relation.RoleStatus;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -14,7 +14,7 @@ import se.kth.kthfsdashboard.struct.Status;
  * @author Hamidreza Afzali <afzali@kth.se>
  */
 @Stateless
-public class HostEJB {
+public class HostEJB implements Serializable{
 
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
@@ -54,6 +54,13 @@ public class HostEJB {
                 .setParameter("role", role).setParameter("status", status);
         return query.getResultList();
     }    
+    
+    public List<Host> find(String cluster, String service, String role) {
+        TypedQuery<Host> query = em.createNamedQuery("Host.findBy-Cluster.Service.Role", Host.class)
+                .setParameter("cluster", cluster).setParameter("service", service)
+                .setParameter("role", role);
+        return query.getResultList();
+    }     
 
     public boolean hostExists(String hostId) {
         try {

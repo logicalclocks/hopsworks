@@ -15,7 +15,7 @@ import javax.faces.context.FacesContext;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.primefaces.event.FileUploadEvent;
-import se.kth.kthfsdashboard.utils.ChartType;
+import se.kth.kthfsdashboard.utils.ChartModel;
 
 /**
  *
@@ -82,7 +82,7 @@ public class ImportGraphController implements Serializable {
                     JSONArray charts = graph.getJSONArray("charts");
                     for (int chartIndex = 0; chartIndex < charts.length(); chartIndex++) {
                         JSONObject chartObj = charts.getJSONObject(chartIndex);
-                        ChartType model = ChartType.valueOf(chartObj.getString("model"));
+                        ChartModel model = ChartModel.valueOf(chartObj.getString("model"));
                         String type = chartObj.getString("type");
                         String typeInstance = chartObj.getString("type-instance");
                         String ds = chartObj.getString("ds");

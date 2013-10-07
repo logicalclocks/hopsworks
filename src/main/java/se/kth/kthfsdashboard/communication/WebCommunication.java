@@ -21,6 +21,7 @@ import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONObject;
 import se.kth.kthfsdashboard.role.RoleType;
 import se.kth.kthfsdashboard.struct.NodesTableItem;
 import se.kth.kthfsdashboard.utils.FormatUtils;
@@ -45,7 +46,6 @@ public class WebCommunication {
 //    public String getResource(String url) {
 //        return fetchContent(url);
 //    }
-
     public ClientResponse getWebResponse(String url) {
         ClientResponse response;
         try {
@@ -104,15 +104,32 @@ public class WebCommunication {
         return resultList;
     }
 
-    public String execute(String hostAddress, String cluster, String service, String role, String command, String[] params) throws Exception {
-        String url = createUrl("execute", hostAddress, cluster, service, role, command);
+    public String executeRun(String hostAddress, String cluster, String service, String role, String command, String[] params) throws Exception {
+        return execute("execute/run", hostAddress, cluster, service, role, command, params);
+    }
+
+    public String executeStart(String hostAddress, String cluster, String service, String role, String command, String[] params) throws Exception {
+        return execute("execute/start", hostAddress, cluster, service, role, command, params);
+    }
+
+    public String executeContinue(String hostAddress, String cluster, String service, String role, String command, String[] params) throws Exception {
+        return execute("execute/continue", hostAddress, cluster, service, role, command, params);
+    }
+
+    private String execute(String path, String hostAddress, String cluster, String service, String role, String command, String[] params) throws Exception {
+        String url = createUrl(path, hostAddress, cluster, service, role, command);
         String optionsAndParams = "";
         for (String param : params) {
             optionsAndParams += optionsAndParams.isEmpty() ? param : " " + param;
         }
         ClientResponse response = postWebResource(url, optionsAndParams);
         if (response.getClientResponseStatus().getFamily() == Response.Status.Family.SUCCESSFUL) {
-            return FormatUtils.stdoutToHtml(response.getEntity(String.class));
+            String responseString = response.getEntity(String.class);
+            if (path.equalsIgnoreCase("execute/continue")) {
+                JSONObject json = new JSONObject(responseString);
+                responseString = json.getString("before");
+            }
+            return FormatUtils.stdoutToHtml(responseString);
         }
         throw new RuntimeException("Did not succeed to execute command.");
     }

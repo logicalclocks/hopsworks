@@ -97,18 +97,7 @@
                 </h:form>
 
                 <!-- Second Toolbar - End -->        
-
-                <!--Test-->
-                <h:form id="form_test" rendered="false">
-                    <p:commandButton value="Test Stop" action="#{hostController.doCommand()}" update="" ajax="true" process="@form" 
-                                     oncomplete="dlgAction.show();"  >
-                        <f:param name="hostid" value="#{roleController.hostId}" />
-                        <f:param name="cluster" value="#{roleController.cluster}" />
-                        <f:param name="role" value="#{roleController.role}" />
-                        <f:param name="service" value="#{roleController.service}"/>                                  
-                        <f:param name="command" value="stop" />              
-                    </p:commandButton> 
-                </h:form>            
+          
 
                 <p:dialog modal="true" widgetVar="dlgAction" header="Action in progress..." draggable="false" closable="false" resizable="false">  
                     <p:graphicImage library="images" name="ajaxloadingbar.gif" />  
@@ -224,7 +213,7 @@
 
                 <p:spacer width="1" height="25" />
 
-                <p:outputPanel rendered="#{not empty graphInfoController.getGroups(roleController.service)}">              
+                <p:outputPanel rendered="#{not empty graphInfoController.getGroups(serviceController.service)}">              
 
                     <h:form id="formdate" style="text-align: center">  
                         <h:panelGrid columns="10"> 
@@ -248,19 +237,19 @@
                                 <f:param name="service" value="#{serviceStatusController.service}"/>                   
                             </p:commandButton> 
                             <p:commandButton value="Edit" id="editcharts" ajax="false" action="#{urlController.editGraphsUrl()}" icon="ui-icon-gear">
-                                <f:param name="target" value="#{graphController.getTarget(roleController.service)}"/>
+                                <f:param name="target" value="#{graphController.getTarget(serviceController.service)}"/>
                             </p:commandButton> 
                             <p:tooltip for="editcharts" value="Edit Graphs"/>                             
                         </h:panelGrid>
                     </h:form> 
 
                     <h:form id="graphs">
-                        <ui:repeat value="#{graphInfoController.getGroups(roleController.service)}" var="group">                        
+                        <ui:repeat value="#{graphInfoController.getGroups(serviceController.service)}" var="group">                        
                             <p:toolbar>
                                 <p:toolbarGroup align="left"><p:outputLabel value="#{group}"/></p:toolbarGroup>
                             </p:toolbar>
-                            <p:dataGrid  var="id" value="#{graphInfoController.getGraphIds(roleController.service, group)}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
-                                <p:graphicImage value="#{graphController.getGraphUrl(roleController.service, id)}"/>
+                            <p:dataGrid  var="id" value="#{graphInfoController.getGraphIds(serviceController.service, group)}" columns="#{settingsController.numOfGraphColumns}"  paginator="false" styleClass="ui-datagrid-no-border" >  
+                                <p:graphicImage value="#{graphController.getGraphUrl(serviceController.service, id)}"/>
                             </p:dataGrid>
                         </ui:repeat>                      
                     </h:form>

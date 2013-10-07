@@ -4,11 +4,14 @@ body {
 
 }
 
+.MainButton {
+    background-color: lightblue;
+}
+
 .stylelayout {
     font-family:    Arial,sans-serif;
     font-size:      12px;
 }
-
 
 .styleNav {
     font-family:    Arial,sans-serif;
@@ -509,6 +512,16 @@ body {
 
 .Signin .ui-messages-error-icon {
     display: none!important;
+}
+
+/* DlgNewChar */
+
+.DlgNewChar .ui-selectonemenu{
+    min-width: 350px;    
+}
+
+.DlgNewChar .ui-inputfield {
+    min-width: 342px;  
 }
 
 
