@@ -1,5 +1,6 @@
 package se.kth.kthfsdashboard.service;
 
+import se.kth.kthfsdashboard.struct.ServiceType;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -8,11 +9,10 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import javax.inject.Inject;
 import se.kth.kthfsdashboard.communication.WebCommunication;
 import se.kth.kthfsdashboard.host.Host;
 import se.kth.kthfsdashboard.host.HostEJB;
-import se.kth.kthfsdashboard.role.RoleType;
+import se.kth.kthfsdashboard.struct.RoleType;
 import se.kth.kthfsdashboard.struct.Status;
 
 /**

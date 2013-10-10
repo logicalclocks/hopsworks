@@ -1,4 +1,4 @@
-package se.kth.kthfsdashboard.role;
+package se.kth.kthfsdashboard.struct;
 
 /**
  *

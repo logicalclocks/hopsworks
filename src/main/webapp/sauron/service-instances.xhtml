@@ -54,14 +54,14 @@
             </h:form>
             <!--Navigation Bar - End-->
 
-            <p:outputPanel rendered="#{not serviceStatusController.found}">
+            <p:outputPanel rendered="#{not serviceController.serviceFound}">
                 <p:spacer width="1" height="50" />             
                 <p:panel header="Error" style="width: 300px; margin: 0 auto;">
                     <p align="center">Service not found!</p>   
                 </p:panel>
             </p:outputPanel>     
 
-            <p:outputPanel rendered="#{serviceStatusController.found}">           
+            <p:outputPanel rendered="#{serviceController.serviceFound}">           
 
                 <!-- Second Toolbar-->
                 <h:form>  
@@ -79,6 +79,7 @@
                                 <f:param name="service" value="#{serviceInstancesController.service}"/>
                             </p:commandButton>  
                             <p:commandButton styleClass="Selected" value="Instances" icon="ui-icon-note" 
+                                             rendered="#{serviceStatusController.renderInstancesLink()}"                                                 
                                              action="#{urlController.serviceInstances}">
                                 <f:param name="cluster" value="#{serviceInstancesController.cluster}"/>
                                 <f:param name="service" value="#{serviceInstancesController.service}"/>

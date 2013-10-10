@@ -1,4 +1,4 @@
-package se.kth.kthfsdashboard.service;
+package se.kth.kthfsdashboard.struct;
 
 /**
  *

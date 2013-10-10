@@ -73,6 +73,12 @@ public class RoleEJB {
       return query.getSingleResult();
    }   
    
+   public Long countRoles(String cluster, String service) {
+      TypedQuery<Long> query = em.createNamedQuery("Role.Count-roles", Long.class)
+              .setParameter("cluster", cluster).setParameter("service", service);
+      return query.getSingleResult();
+   }   
+   
    public Long totalCores(String cluster) {
       TypedQuery<Long> query = em.createNamedQuery("RoleHost.TotalCores", Long.class)
               .setParameter("cluster", cluster);
