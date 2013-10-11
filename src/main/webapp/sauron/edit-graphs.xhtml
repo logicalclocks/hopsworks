@@ -80,7 +80,7 @@
                         <h:outputText value="Target:" />  
                         <p:selectOneMenu  id="target" required="true" value="#{newGraphController.graph.target}" style="min-width: 250px">                                
                             <f:selectItem itemLabel="Select Target" noSelectionOption="true"/> 
-                            <f:selectItems value="#{newGraphController.targets}" var="target" itemLabel="#{target}" itemValue="#{target}"/>  
+                            <f:selectItems value="#{graphsControllerStatic.targets}" var="target" itemLabel="#{target}" itemValue="#{target}"/>  
                             <p:ajax update=":formNew:group :formNew:plugin :formNew:pluginInstance :formNew:add" listener="#{newGraphController.loadGroupsAndPlugins()}"/> 
                         </p:selectOneMenu>                              
                         <p:spacer width="1" height="1" />
@@ -176,7 +176,7 @@
                         </p:selectOneMenu>                                     
                         <p:outputPanel id="typeInstanceInfo">
                             <p:outputPanel rendered="#{not empty newGraphController.typeInstanceInfo}">
-                                <span class="ui-icon ui-icon-notice" style="display:inline-block;" title="#{newGraphController.typeInstanceInfo}"/>
+                                <span class="ui-icon ui-icon-help" style="display:inline-block;" title="#{newGraphController.typeInstanceInfo}"/>
                             </p:outputPanel>  
                             <p:outputPanel rendered="#{empty newGraphController.typeInstanceInfo}">
                                 <p:spacer width="1" height="1" />                             
@@ -189,14 +189,14 @@
 
                         <h:outputText value="Model:"/>  
                         <p:selectOneMenu id="model" value="#{newGraphController.chart.model}" required="true">                            
-                            <f:selectItems value="#{newGraphController.models}" var="model" itemLabel="#{model}" itemValue="#{model}"/>  
+                            <f:selectItems value="#{graphsControllerStatic.models}" var="model" itemLabel="#{model}" itemValue="#{model}"/>  
                         </p:selectOneMenu>                            
                         <p:spacer width="1" height="1" />
 
 
                         <h:outputText value="Color:"/>  
                         <p:selectOneMenu id="color" value="#{newGraphController.chart.color}" required="true">   
-                            <f:selectItems value="#{newGraphController.colors}" var="color" itemLabel="#{color}" itemValue="#{color}"/>  
+                            <f:selectItems value="#{graphsControllerStatic.colors}" var="color" itemLabel="#{color}" itemValue="#{color}"/>  
                         </p:selectOneMenu>                            
                         <p:spacer width="1" height="1" />                           
 
@@ -206,7 +206,7 @@
 
                         <h:outputText value="Format:"/>  
                         <p:selectOneMenu id="format" value="#{newGraphController.chart.format}" editable="true">   
-                            <f:selectItems value="#{newGraphController.formats}" var="format" itemLabel="#{format}" itemValue="#{format}"/>  
+                            <f:selectItems value="#{graphsControllerStatic.formats}" var="format" itemLabel="#{format}" itemValue="#{format}"/>  
                         </p:selectOneMenu>   
                         <p:spacer width="1" height="1" /> 
 
@@ -245,7 +245,7 @@
                 <h:panelGrid columns="5"> 
                     <p:selectOneMenu value="#{urlController.target}" widgetVar="target">
                         <f:selectItem itemLabel="Select Target" itemValue="" />  
-                        <f:selectItems value="#{editGraphsController.targets}" var="target" itemLabel="#{target}" itemValue="#{target}"/>  
+                        <f:selectItems value="#{graphsControllerStatic.targets}" var="target" itemLabel="#{target}" itemValue="#{target}"/>  
                     </p:selectOneMenu> 
                     <p:commandButton value="Go"  action="#{urlController.editGraphsUrl()}" styleClass="MainButton">                            
                         <f:param name="target" value="#{target}"/>

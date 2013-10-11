@@ -197,4 +197,8 @@ public class Graph implements Serializable {
     public ArrayList<Chart> getCharts() {
         return charts;
     }
+    
+    public boolean ifTargets(String service) {
+        return this.target.startsWith(service.toUpperCase());
+    }
 }

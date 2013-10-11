@@ -7,5 +7,5 @@ package se.kth.kthfsdashboard.utils;
 
 public enum ChartModel {
 
-    LINE, AREA, AREA_STACK, LINES, SUM_LINE, AVG_LINE
+    LINE, LINES, SUM_LINE, AVG_LINE, AREA, AREA_STACK
 }

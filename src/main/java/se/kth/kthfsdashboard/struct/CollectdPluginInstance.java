@@ -25,10 +25,13 @@ public class CollectdPluginInstance {
     }
 
     public void add(String type, String typeInstance, String statement, String InstancesFrom) {
-        if (statement.isEmpty()) {        
-            typeInstance += "-" + InstancesFrom;            
-        } else {
-            typeInstance += "-@n"; 
+
+        if (statement != null) {
+            if (statement.isEmpty()) {
+                typeInstance += "-" + InstancesFrom;
+            } else {
+                typeInstance += "-@n";
+            }
         }
         HashSet<String> instancesList;
         if (typeInstances.containsKey(type)) {
