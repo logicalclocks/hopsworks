@@ -1,7 +1,7 @@
 package se.kth.kthfsdashboard.graph;
 
 import java.io.Serializable;
-import se.kth.kthfsdashboard.utils.ChartModel;
+import se.kth.kthfsdashboard.struct.ChartModel;
 
 /**
  *

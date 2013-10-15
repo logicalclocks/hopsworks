@@ -16,7 +16,7 @@
 
             <p:spacer width="1" height="10" />
 
-            <h:form id="msg">
+            <h:form id="formMsg">
                 <p:growl id="msgGrowl" showDetail="true"/>  
             </h:form>   
 
@@ -26,7 +26,7 @@
                 </p:outputLabel>
             </div>
 
-
+            <!-- Dialog Import Graphs -->
             <p:dialog modal="true" widgetVar="dlgImport" header="Import Graphs" draggable="false" 
                       closable="true" resizable="false" width="500" height="200">  
                 <h:panelGrid columns="1" >
@@ -35,7 +35,7 @@
                         <p:fileUpload fileUploadListener="#{importGraphController.handleUpload}" 
                                       oncomplete="dlgProgress.hide(); dlgImport.hide()" onstart="dlgImport.hide(); dlgProgress.show()"
                                       mode="advanced"  
-                                      update=":msg :form1"  
+                                      update=":formMsg :formMain"  
                                       auto="true"  
                                       sizeLimit="1000000000"   
                                       allowTypes="/(\.|\/)(json)$/"
@@ -49,79 +49,76 @@
                       draggable="false" closable="true" resizable="false">  
                 <p:graphicImage library="images" name="ajaxloadingbar.gif" />  
             </p:dialog>             
+            <!-- Dialog Import Graphs - End -->
 
-
-
-
-            <p:dialog modal="true" widgetVar="dlgNewGraph" header="New Graph" draggable="true" closable="true" resizable="false" width="1024" height="600">  
+            <!-- Dialog New Graph -->
+            <p:dialog modal="true" widgetVar="dlgNewGraph" header="New Graph" draggable="true" closable="true" resizable="false" width="1024"  >  
 
                 <h:form id="formNew" >  
 
                     <h:panelGrid columns="3" cellpadding="4">  
                         <h:outputText value="Graph Id:" style="white-space: nowrap"/>  
-                        <p:inputText id="id" value="#{newGraphController.graph.graphId}" required="#{empty newGraphController.graph.graphId or not newGraphController.idValid}" style="min-width: 242px">
-                            <p:ajax event="keyup" update=":formNew:validity :formNew:add" listener="#{newGraphController.checkGraphId()}"/>                     
+                        <p:inputText id="id" value="#{graphControllerNew.graph.graphId}" required="true" style="min-width: 242px">
+                            <p:ajax event="keyup" update=":formNew:validity" listener="#{graphControllerNew.checkGraphId()}"/>                     
                         </p:inputText>
 
                         <p:spacer width="40" height="1" >
                             <p:outputPanel id="validity" >
-                                <p:outputPanel  rendered="#{not empty newGraphController.graph.graphId and newGraphController.idValid}">
+                                <p:outputPanel  rendered="#{not empty graphControllerNew.graph.graphId and graphControllerNew.idValid}">
                                     <span class="ui-icon ui-icon-check green" style="display:inline-block;" title="Id is unique"/>
                                 </p:outputPanel>                          
-                                <p:outputPanel  rendered="#{not empty newGraphController.graph.graphId and not newGraphController.idValid}">
+                                <p:outputPanel  rendered="#{not empty graphControllerNew.graph.graphId and not graphControllerNew.idValid}">
                                     <span class="ui-icon ui-icon-notice" style="display:inline-block;" title="Id must be unique: A graph with this id already exists"/>
                                 </p:outputPanel> 
-                                <p:outputPanel  rendered="#{empty newGraphController.graph.graphId}">
+                                <p:outputPanel  rendered="#{empty graphControllerNew.graph.graphId}">
                                     <span class="ui-icon ui-icon-notice" style="display:inline-block;" title="Enter a unique id"/>
                                 </p:outputPanel>                                 
                             </p:outputPanel>
                         </p:spacer>
 
                         <h:outputText value="Target:" />  
-                        <p:selectOneMenu  id="target" required="true" value="#{newGraphController.graph.target}" style="min-width: 250px">                                
+                        <p:selectOneMenu  id="target" required="true" value="#{graphControllerNew.graph.target}" style="min-width: 250px">                                
                             <f:selectItem itemLabel="Select Target" noSelectionOption="true"/> 
-                            <f:selectItems value="#{graphsControllerStatic.targets}" var="target" itemLabel="#{target}" itemValue="#{target}"/>  
-                            <p:ajax update=":formNew:group :formNew:plugin :formNew:pluginInstance :formNew:add" listener="#{newGraphController.loadGroupsAndPlugins()}"/> 
+                            <f:selectItems value="#{graphControllerStatic.targets}" var="target" itemLabel="#{target}" itemValue="#{target}"/>  
+                            <p:ajax update=":formNew:group :formNew:plugin :formNew:pluginInstance :formNew:charts" listener="#{graphControllerNew.loadGroupsAndPlugins()}"/> 
                         </p:selectOneMenu>                              
                         <p:spacer width="1" height="1" />
 
                         <h:outputText value="Group:"/>  
-                        <p:selectOneMenu id="group" value="#{newGraphController.graph.group}" editable="true" required="true" style="min-width: 250px">   
-                            <f:selectItems value="#{newGraphController.groups}" var="group" itemLabel="#{group}" itemValue="#{group}"/>  
+                        <p:selectOneMenu id="group" value="#{graphControllerNew.graph.group}" editable="true" required="true" style="min-width: 250px">   
+                            <f:selectItems value="#{graphControllerNew.groups}" var="group" itemLabel="#{group}" itemValue="#{group}"/>  
                         </p:selectOneMenu>                            
                         <p:spacer width="1" height="1" />
 
                         <h:outputText value="Plugin:"/>  
-                        <p:selectOneMenu id="plugin" value="#{newGraphController.graph.plugin}" editable="true" required="true" style="min-width: 250px">
-                            <f:selectItems value="#{newGraphController.plugins}" var="plugin" itemLabel="#{plugin}" itemValue="#{plugin}"/>  
-                            <p:ajax update=":formNew:pluginInstance :formNew:add" listener="#{newGraphController.loadPluginInstance()}"/> 
+                        <p:selectOneMenu id="plugin" value="#{graphControllerNew.graph.plugin}" editable="true" required="true" style="min-width: 250px">
+                            <f:selectItems value="#{graphControllerNew.plugins}" var="plugin" itemLabel="#{plugin}" itemValue="#{plugin}"/>  
+                            <p:ajax update=":formNew:pluginInstance :formNew:charts" listener="#{graphControllerNew.loadPluginInstance()}"/> 
                         </p:selectOneMenu> 
                         <p:spacer width="1" height="1" />
 
                         <h:outputText value="Plugin-Instance:" style="white-space: nowrap"/>
-                        <p:selectOneMenu id="pluginInstance" value="#{newGraphController.graph.pluginInstance}" editable="true" style="min-width: 250px">
-                            <f:selectItems value="#{newGraphController.pluginInstances}" var="instance" itemLabel="#{instance}" itemValue="#{instance}"/>
-                            <p:ajax update=":formNew:charts" listener="#{newGraphController.changedPluginInstance}"/>
+                        <p:selectOneMenu id="pluginInstance" value="#{graphControllerNew.graph.pluginInstance}" editable="true" style="min-width: 250px">
+                            <f:selectItems value="#{graphControllerNew.pluginInstances}" var="instance" itemLabel="#{instance}" itemValue="#{instance}"/>
+                            <p:ajax update=":formNew:charts" listener="#{graphControllerNew.pluginInstanceChanged()}"/>
                         </p:selectOneMenu>
                         <p:spacer width="1" height="1" />
 
                         <h:outputText value="Title:"/>
-                        <p:inputText value ="#{newGraphController.graph.title}" style="min-width: 242px"/>
+                        <p:inputText value ="#{graphControllerNew.graph.title}" style="min-width: 242px"/>
                         <p:spacer width="1" height="1" />
 
                         <h:outputText value="Vertical Label:" style="white-space: nowrap"/>
-                        <p:inputText value ="#{newGraphController.graph.verticalLabel}" style="min-width: 242px"/>
+                        <p:inputText value ="#{graphControllerNew.graph.verticalLabel}" style="min-width: 242px"/>
                         <p:spacer width="1" height="1" />
 
                         <h:outputText value="Var:"/>
-                        <p:inputText id="var" value ="#{newGraphController.graph.var}" title="Example: n=1..COUNT(KTHFS,namenode);host=HOST(KTHFS,namenode)" style="min-width: 242px"/>
+                        <p:inputText id="var" value ="#{graphControllerNew.graph.var}" title="Example: n=1..COUNT(KTHFS,namenode);host=HOST(KTHFS,namenode)" style="min-width: 242px"/>
                         <p:tooltip for="var" showEvent="focus" hideEvent="blur" />
                         <p:spacer width="1" height="1" />                        
                     </h:panelGrid> 
 
-                    <p:commandButton id="newChart" value="New Chart" icon="ui-icon-plusthick" actionListener="#{newGraphController.showNewChartDialog}" update=":formNew"/> 
-
-                    <p:dataTable var="chart" value="#{newGraphController.charts}" id="charts">  
+                    <p:dataTable var="chart" value="#{graphControllerNew.graph.charts}" id="charts">  
                         <f:facet name="header">Charts</f:facet>                          
                         <p:column headerText="Model">  
                             <h:outputText value="#{chart.model}" />  
@@ -149,112 +146,102 @@
                         </p:column> 
                     </p:dataTable>                      
 
-                    <p:spacer width="1" height="30" />                          
-                    <p:commandButton id="add" value="Save Graph" icon="ui-icon-check" actionListener="#{newGraphController.addGraph()}" update=":formNew" />                    
+                    <p:spacer width="1" height="30" />   
 
+                    <p:outputPanel style="float: right">                   
+                    <p:spacer width="1" height="30" /> 
+                        <p:commandButton id="newChart" value="New Chart" icon="ui-icon-plusthick" actionListener="#{graphControllerNew.showNewChartDialog}" update=":formNew"/> 
+
+                        <p:commandButton id="add" value="Save" icon="ui-icon-disk" actionListener="#{graphControllerNew.addGraph}" 
+                                         update=":formNew" />                         
+                    </p:outputPanel> 
                 </h:form>
+                <p:spacer width="1" height="25" />                  
             </p:dialog>
+            <!-- Dialog New Graph - End -->
 
 
-
-
+            <!-- Dialog New Chart -->
             <p:dialog modal="true" widgetVar="dlgNewChart" header="New Chart" draggable="false" closable="true" resizable="false" width="500" height="300">  
                 <h:form id="formNewChart" styleClass="DlgNewChar">  
                     <h:panelGrid columns="3" cellpadding="4">   
                         <h:outputText value="Type:"/>  
-                        <p:selectOneMenu id="type" value="#{newGraphController.chart.type}" required="true" editable="true">   
-                            <f:selectItems value="#{newGraphController.types}" var="type" itemLabel="#{type}" itemValue="#{type}"/>  
+                        <p:selectOneMenu id="type" value="#{graphControllerNew.chart.type}" required="true" editable="true">   
+                            <f:selectItems value="#{graphControllerNew.types}" var="type" itemLabel="#{type}" itemValue="#{type}"/>  
                             <p:ajax update=":formNewChart:typeInstance :formNewChart:typeInstanceInfo :formNewChart:model :formNewChart:color" 
-                                    listener="#{newGraphController.loadTypeInstances()}"/>                             
+                                    listener="#{graphControllerNew.loadTypeInstances()}"/>                             
                         </p:selectOneMenu>                            
                         <p:spacer width="1" height="1" />                        
 
                         <h:outputText value="Type-Instance:"/>  
-                        <p:selectOneMenu id="typeInstance" value="#{newGraphController.chart.typeInstance}" required="true" editable="true">   
-                            <f:selectItems value="#{newGraphController.typeInstances}" var="typeInstance" itemLabel="#{typeInstance}" itemValue="#{typeInstance}"/> 
+                        <p:selectOneMenu id="typeInstance" value="#{graphControllerNew.chart.typeInstance}" required="true" editable="true">   
+                            <f:selectItems value="#{graphControllerNew.typeInstances}" var="typeInstance" itemLabel="#{typeInstance}" itemValue="#{typeInstance}"/> 
                             <p:ajax update=":formNewChart:typeInstanceInfo"/>    
                         </p:selectOneMenu>                                     
                         <p:outputPanel id="typeInstanceInfo">
-                            <p:outputPanel rendered="#{not empty newGraphController.typeInstanceInfo}">
-                                <span class="ui-icon ui-icon-help" style="display:inline-block;" title="#{newGraphController.typeInstanceInfo}"/>
+                            <p:outputPanel rendered="#{not empty graphControllerNew.typeInstanceInfo}">
+                                <span class="ui-icon ui-icon-help" style="display:inline-block;" title="#{graphControllerNew.typeInstanceInfo}"/>
                             </p:outputPanel>  
-                            <p:outputPanel rendered="#{empty newGraphController.typeInstanceInfo}">
+                            <p:outputPanel rendered="#{empty graphControllerNew.typeInstanceInfo}">
                                 <p:spacer width="1" height="1" />                             
                             </p:outputPanel>                            
                         </p:outputPanel>                        
 
                         <h:outputText value="Data Set:"/>
-                        <p:inputText value ="#{newGraphController.chart.ds}" required="true"/>
+                        <p:inputText value ="#{graphControllerNew.chart.ds}" required="true"/>
                         <p:spacer width="1" height="1" />
 
                         <h:outputText value="Model:"/>  
-                        <p:selectOneMenu id="model" value="#{newGraphController.chart.model}" required="true">                            
-                            <f:selectItems value="#{graphsControllerStatic.models}" var="model" itemLabel="#{model}" itemValue="#{model}"/>  
+                        <p:selectOneMenu id="model" value="#{graphControllerNew.chart.model}" required="true">                            
+                            <f:selectItems value="#{graphControllerStatic.models}" var="model" itemLabel="#{model}" itemValue="#{model}"/>  
                         </p:selectOneMenu>                            
                         <p:spacer width="1" height="1" />
 
 
                         <h:outputText value="Color:"/>  
-                        <p:selectOneMenu id="color" value="#{newGraphController.chart.color}" required="true">   
-                            <f:selectItems value="#{graphsControllerStatic.colors}" var="color" itemLabel="#{color}" itemValue="#{color}"/>  
+                        <p:selectOneMenu id="color" value="#{graphControllerNew.chart.color}" required="true">   
+                            <f:selectItems value="#{graphControllerStatic.colors}" var="color" itemLabel="#{color}" itemValue="#{color}"/>  
                         </p:selectOneMenu>                            
                         <p:spacer width="1" height="1" />                           
 
                         <h:outputText value="Label:"/>
-                        <p:inputText value ="#{newGraphController.chart.label}" required="true"/>
+                        <p:inputText value ="#{graphControllerNew.chart.label}" required="true"/>
                         <p:spacer width="1" height="1" /> 
 
                         <h:outputText value="Format:"/>  
-                        <p:selectOneMenu id="format" value="#{newGraphController.chart.format}" editable="true">   
-                            <f:selectItems value="#{graphsControllerStatic.formats}" var="format" itemLabel="#{format}" itemValue="#{format}"/>  
+                        <p:selectOneMenu id="format" value="#{graphControllerNew.chart.format}" editable="true">   
+                            <f:selectItems value="#{graphControllerStatic.formats}" var="format" itemLabel="#{format}" itemValue="#{format}"/>  
                         </p:selectOneMenu>   
                         <p:spacer width="1" height="1" /> 
 
                         <p:spacer width="1" height="1" />                          
                         <p:outputPanel style="float: right">
                             <p:spacer width="1" height="25"/>                         
-                            <p:commandButton id="addChart" value="Add"
-                                             actionListener="#{newGraphController.addChart}" update=":formNew :formNewChart" />
+                            <p:commandButton id="addChart" value="Add" icon="ui-icon-check"
+                                             actionListener="#{graphControllerNew.addChart}" update=":formNew :formNewChart" />
                         </p:outputPanel>                      
                     </h:panelGrid> 
                 </h:form>
             </p:dialog>                        
 
+            <!-- Dialog New Chart - End -->
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            <h:form id="form1">
+            <!-- Form Graphs -->
+            <h:form id="formMain">
                 <h:panelGrid columns="5"> 
                     <p:selectOneMenu value="#{urlController.target}" widgetVar="target">
                         <f:selectItem itemLabel="Select Target" itemValue="" />  
-                        <f:selectItems value="#{graphsControllerStatic.targets}" var="target" itemLabel="#{target}" itemValue="#{target}"/>  
+                        <f:selectItems value="#{graphControllerStatic.targets}" var="target" itemLabel="#{target}" itemValue="#{target}"/>  
+                        <p:ajax event="change" listener="#{urlController.redirectToEditGraphs()}"/>                        
                     </p:selectOneMenu> 
-                    <p:commandButton value="Go"  action="#{urlController.editGraphsUrl()}" styleClass="MainButton">                            
-                        <f:param name="target" value="#{target}"/>
-                    </p:commandButton>
-                    <p:commandButton value="Save" actionListener="#{editGraphsController.save()}" update=":msg" 
-                                     widgetVar="save" />
 
-                    <p:commandButton value="Import Graphs" onclick="dlgImport.show()"/>  
-                    <p:commandButton value="New" action="#{newGraphController.showNewGraphDialog}"/>  
+                    <p:commandButton value="Import Graphs" icon="ui-icon-arrowreturnthick-1-s" onclick="dlgImport.show()"/>  
+                    <p:commandButton value="New" icon="ui-icon-plusthick" action="#{graphControllerNew.showNewGraphDialog}"/>  
 
                     <p:outputLabel style="color:red; font-size: small">#{editGraphsController.message}</p:outputLabel>
                 </h:panelGrid>
@@ -290,12 +277,12 @@
                         <h:outputText value="#{graph.var}" />  
                     </p:column>                          
                     <p:column style="width:4%">  
-                        <p:commandButton id="selectButton" oncomplete="dialog1.show()" update=":form1:graphDlg" icon="ui-icon-search" title="Detail">  
+                        <p:commandButton id="selectButton" oncomplete="dialog1.show()" update=":formMain:graphDlg" icon="ui-icon-search" title="Detail">  
                             <f:setPropertyActionListener value="#{graph}" target="#{editGraphsController.selectedGraph}" />  
                         </p:commandButton>  
                     </p:column> 
                     <f:facet name="footer" >  
-                        <p:commandButton value="Save" actionListener="#{editGraphsController.save()}" update=":msg" 
+                        <p:commandButton value="Save" icon="ui-icon-disk" actionListener="#{editGraphsController.save()}" update=":formMsg" 
                                          disabled="#{empty editGraphsController.graphs}"/>
                     </f:facet>       
                 </p:dataTable>
@@ -362,6 +349,7 @@
                     <p:spacer width="1" height="10" />
                 </p:dialog>  
             </h:form>
+            <!-- Form Graphs - End -->
 
         </ui:define>
 

@@ -237,7 +237,7 @@
                                 <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
                                 <f:param name="service" value="#{serviceStatusController.service}"/>                   
                             </p:commandButton> 
-                            <p:commandButton value="Edit" id="editcharts" ajax="false" action="#{urlController.editGraphsUrl()}" icon="ui-icon-gear">
+                            <p:commandButton value="Edit" id="editcharts" ajax="false" action="#{urlController.redirectToEditGraphs()}" icon="ui-icon-gear">
                                 <f:param name="target" value="#{graphController.getTarget(serviceController.service)}"/>
                             </p:commandButton> 
                             <p:tooltip for="editcharts" value="Edit Graphs"/>                             

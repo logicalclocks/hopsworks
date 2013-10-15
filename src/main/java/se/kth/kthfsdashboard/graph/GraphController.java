@@ -182,7 +182,7 @@ public class GraphController implements Serializable {
             vars = graph.getVar().split(";");
         }
         for (String var : vars) {
-            if (var.startsWith("n=") && var.split("=")[1].contains("..")) { // n=X..X
+            if (var.startsWith("n=") && var.split("=")[1].contains("..")) { // n=A..B
                 String varName = "n";
                 String varValue = "";
                 String valueExp = var.split("=")[1];

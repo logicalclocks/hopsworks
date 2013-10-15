@@ -1,9 +1,12 @@
 package se.kth.kthfsdashboard.url;
 
+import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
+import javax.faces.context.FacesContext;
 
 /**
  *
@@ -138,11 +141,16 @@ public class UrlController {
                 + "&service=" + service + "&role=" + role;
     }
 
-    public String editGraphsUrl() {
-        String url = "edit-graphs?faces-redirect=true&";
+    public void redirectToEditGraphs() {
+        String url = "edit-graphs.xhtml";
         if (target != null) {
-            url += url + "target=" + target;
+            url += "?target=" + target;
         }
-        return url;
+        try {
+            System.out.println(url);
+            FacesContext.getCurrentInstance().getExternalContext().redirect(url);        
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
     }
 }

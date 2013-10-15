@@ -8,10 +8,11 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import se.kth.kthfsdashboard.role.ServiceRoleMapper;
-import se.kth.kthfsdashboard.struct.ColorType;
 import se.kth.kthfsdashboard.struct.RoleType;
 import se.kth.kthfsdashboard.struct.ServiceType;
-import se.kth.kthfsdashboard.utils.ChartModel;
+import se.kth.kthfsdashboard.struct.ChartModel;
+import se.kth.kthfsdashboard.utils.ColorUtils;
+import se.kth.kthfsdashboard.utils.FormatUtils;
 
 /**
  *
@@ -19,15 +20,14 @@ import se.kth.kthfsdashboard.utils.ChartModel;
  */
 @ManagedBean
 @RequestScoped
-public class GraphsControllerStatic implements Serializable {
+public class GraphControllerStatic implements Serializable {
 
-    private static final String COLOR_N = "COLOR(@n)";
     private static final List<String> targets;
     private static final ChartModel[] models;
     private static final List<String> colors;
     private static final List<String> formats;
 
-    private static final Logger logger = Logger.getLogger(GraphsControllerStatic.class.getName());
+    private static final Logger logger = Logger.getLogger(GraphControllerStatic.class.getName());
     
     static {
         targets = new ArrayList<String>();
@@ -40,25 +40,17 @@ public class GraphsControllerStatic implements Serializable {
                 }
             }
         }
-        models = ChartModel.values();
-        
-        colors = new ArrayList<String>();
-        for (ColorType c: ColorType.values()) {
-            colors.add(c.toString());
-        }
-        colors.add(COLOR_N);
-
-        formats = new ArrayList<String>();
-        formats.add("%5.2lf");
-        formats.add("%5.2lf %S");
+        models = ChartModel.values();        
+        colors = ColorUtils.chartColors();
+        formats = FormatUtils.rrdChartFormats();
     }
 
-    public GraphsControllerStatic() {
+    public GraphControllerStatic() {
     }
 
     @PostConstruct
     public void init() {
-        logger.info("init EditGraphsController2");
+        logger.info("init GraphsControllerStatic");
     }
 
     public List<String> getTargets() {

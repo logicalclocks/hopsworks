@@ -9,17 +9,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
+import javax.faces.context.FacesContext;
+import javax.faces.event.ActionEvent;
 import org.primefaces.context.RequestContext;
 import se.kth.kthfsdashboard.struct.CollectdBasicType;
 import se.kth.kthfsdashboard.struct.CollectdPluginInstance;
 import se.kth.kthfsdashboard.struct.CollectdPluginType;
 import se.kth.kthfsdashboard.struct.ColorType;
 import se.kth.kthfsdashboard.struct.ServiceType;
-import se.kth.kthfsdashboard.utils.ChartModel;
+import se.kth.kthfsdashboard.struct.ChartModel;
+import se.kth.kthfsdashboard.struct.RoleType;
 import se.kth.kthfsdashboard.utils.CollectdConfigUtils;
+import se.kth.kthfsdashboard.utils.ColorUtils;
 
 /**
  *
@@ -27,12 +31,10 @@ import se.kth.kthfsdashboard.utils.CollectdConfigUtils;
  */
 @ManagedBean
 @SessionScoped
-public class NewGraphController implements Serializable {
+public class GraphControllerNew implements Serializable {
 
     @EJB
     private GraphEJB graphEjb;
-    @ManagedProperty(value = "#{EditGraphController}")
-    private EditGraphsController editGraphController;
     private static List<String> types;
     private static List<String> typeInstances;
     private List<String> groups;
@@ -40,24 +42,23 @@ public class NewGraphController implements Serializable {
     private List<String> pluginInstances;
     private boolean validId;
     private Graph graph;
-    private List<Chart> charts;
     private Chart chart = new Chart();
     private String typeInstanceInfo;
-    private static Map<String, CollectdPluginInstance> dbiPluginInstances;
-    private static Map<String, HashMap<String, CollectdPluginInstance>> jmxPluginInstances;
-    private static final String COLOR_N = "COLOR(@n)";     /// ???????????????????
-    private static final String VARIABLE = "@n";
+    private Map<String, CollectdPluginInstance> dbiPluginInstances;
+    private Map<String, HashMap<String, CollectdPluginInstance>> jmxPluginInstances;
     private static final String COLLECTD_PLUGIN_FILE = "/etc/collectd/collectd.conf";
-    private static final String COLLECTD_DBI_PLUGIN_FILE = "/home/x/NetBeansProjects/kthfs-pantry/cookbooks/collect/templates/default/dbi_plugin.conf.erb";
-    private static final String COLLECTD_JMX_PLUGIN_FILE = "/home/x/NetBeansProjects/kthfs-pantry/cookbooks/collect/templates/default/jmx_plugin.conf.erb";
-    private static final Logger logger = Logger.getLogger(NewGraphController.class.getName());
+    private static final String COLLECTD_DBI_PLUGIN_FILE = "/etc/collectd/plugins/dbi_plugin.conf";
+    private static final String COLLECTD_JMX_PLUGIN_FILE = "/etc/collectd/plugins/jmx_plugin.conf";
+    private static final Logger logger = Logger.getLogger(GraphControllerNew.class.getName());
+    private Map<String, String> pluginInstanceTargetMap;
+    private static final String VAR_N = "@n";
 
-    public NewGraphController() {
+    public GraphControllerNew() {
     }
 
     @PostConstruct
     public void init() {
-        logger.info("init NewGraphsController");
+        logger.info("init GraphControllerNew");
         dbiPluginInstances = CollectdConfigUtils.parseDbiPlugin(COLLECTD_DBI_PLUGIN_FILE);
         jmxPluginInstances = CollectdConfigUtils.parseJMXPlugin(COLLECTD_JMX_PLUGIN_FILE);
     }
@@ -68,22 +69,6 @@ public class NewGraphController implements Serializable {
 
     public void checkGraphId() {
         validId = !graphEjb.exists(graph.getGraphId());
-    }
-
-    public EditGraphsController getEditGraphController() {
-        return editGraphController;
-    }
-
-    public void setEditGraphController(EditGraphsController editGraphController) {
-        this.editGraphController = editGraphController;
-    }
-
-    public List<Chart> getCharts() {
-        return charts;
-    }
-
-    public void setCharts(List<Chart> charts) {
-        this.charts = charts;
     }
 
     public Chart getChart() {
@@ -119,15 +104,15 @@ public class NewGraphController implements Serializable {
     }
 
     public void showNewGraphDialog() {
-        graph = new Graph();
-        graph.setGraphId("testId"); // remove this
-        charts = new ArrayList<Chart>();
-        groups = null;
-        plugins = null;
-        pluginInstances = null;
         // TODO This can be removed. It is also loaded in init
         dbiPluginInstances = CollectdConfigUtils.parseDbiPlugin(COLLECTD_DBI_PLUGIN_FILE);
         jmxPluginInstances = CollectdConfigUtils.parseJMXPlugin(COLLECTD_JMX_PLUGIN_FILE);
+
+        graph = new Graph();
+//        graph.setGraphId("testId"); // remove this
+        groups = null;
+        plugins = null;
+        pluginInstances = null;
         RequestContext.getCurrentInstance().update("formNew");
         RequestContext.getCurrentInstance().reset("formNew");
         RequestContext.getCurrentInstance().execute("dlgNewGraph.show()");
@@ -139,13 +124,38 @@ public class NewGraphController implements Serializable {
         RequestContext.getCurrentInstance().execute("dlgNewChart.show()");
     }
 
-    public void changedPluginInstance() {
-        for (Chart c : charts) {
-            c.setPluginInstance(graph.getPluginInstance());
-        }
-    }
+    public void addGraph(ActionEvent actionEvent) {
 
-    public void addGraph() {
+        if (graph.getCharts().isEmpty()) {
+            FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No chart is defined");
+            logger.log(Level.INFO, "Graph not added: No chart is defined");
+            FacesContext.getCurrentInstance().addMessage(null, msg);
+            RequestContext.getCurrentInstance().update("formMsg");
+            return;
+        }
+
+        checkGraphId();
+        if (!validId) {
+            FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Graph ID must be unique.");
+            logger.log(Level.INFO, "Graph not added: Graph ID must be unique");
+            FacesContext.getCurrentInstance().addMessage(null, msg);
+            RequestContext.getCurrentInstance().update("formMsg");
+            return;
+        }
+
+        for (Chart c : graph.getCharts()) {
+            if (c.getTypeInstance().contains(VAR_N)) {
+                if (!graph.getVar().contains("n=")) {
+                    FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Variable 'n' must be initialized, sicnce it is used by a chart.");
+                    logger.log(Level.INFO, "Graph not added: Variable 'n' must be initialized, sicnce it is used by a chart.");
+                    FacesContext.getCurrentInstance().addMessage(null, msg);
+                    RequestContext.getCurrentInstance().update("formMsg");
+//                    RequestContext.getCurrentInstance().execute("var.focus()");
+                    return;
+                }
+            }
+        }
+
         groups = graphEjb.findGroups(graph.getTarget());
         Integer groupRank;
         if (groups.contains(graph.getGroup())) {
@@ -159,31 +169,36 @@ public class NewGraphController implements Serializable {
 
         graph.setGroupRank(groupRank);
         graph.setRank(rank);
+        graph.setSelected(true);
         graphEjb.persistGraph(graph);
-        editGraphController = new EditGraphsController();
-        editGraphController.setSelectedGraph(graph);
-        logger.log(Level.INFO, "Graph added");
+
+        FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", "Graph added successfully.");
+        logger.log(Level.INFO, "Graph added successfully");
+        FacesContext.getCurrentInstance().addMessage(null, msg);
+        RequestContext.getCurrentInstance().update("formMsg");
+        RequestContext.getCurrentInstance().update("formMain");
+        RequestContext.getCurrentInstance().execute("dlgNewGraph.hide()");
     }
 
     public void addChart() {
         chart.setPlugin(graph.getPlugin());
         chart.setPluginInstance(graph.getPluginInstance());
-        charts.add(chart);
+        graph.addChart(chart);
         RequestContext.getCurrentInstance().execute("dlgNewChart.hide()");
     }
 
     public void loadGroupsAndPlugins() {
         plugins = new ArrayList<String>();
         groups = graphEjb.findGroups(graph.getTarget());
-        if (graph.ifTargets(ServiceType.KTHFS.toString())
-                || graph.ifTargets(ServiceType.YARN.toString())
-                || graph.ifTargets(ServiceType.Spark.toString())
-                || graph.ifTargets(ServiceType.MapReduce.toString())) {
+        if (graph.ifTargetsService(ServiceType.KTHFS.toString())
+                || graph.ifTargetsService(ServiceType.YARN.toString())
+                || graph.ifTargetsService(ServiceType.Spark.toString())
+                || graph.ifTargetsService(ServiceType.MapReduce.toString())) {
             plugins.add(CollectdPluginType.GenericJMX.toString());
 
-        } else if (graph.ifTargets(ServiceType.MySQLCluster.toString())) {
+        } else if (graph.ifTargetsRole(ServiceType.MySQLCluster.toString(), RoleType.ndb.toString())) {
             plugins.add(CollectdPluginType.dbi.toString());
-        } else {
+        } else if (graph.ifTargets("HOST")) {
             plugins.addAll(CollectdConfigUtils.loadPluginsFromConfigFile(COLLECTD_PLUGIN_FILE));
         }
 
@@ -200,17 +215,21 @@ public class NewGraphController implements Serializable {
         loadPluginInstance();
     }
 
-    public void loadPluginInstance() {        
+    public void loadPluginInstance() {
+        graph.clearCharts();
         pluginInstances = new ArrayList<String>();
-        if (!plugins.isEmpty() && isDbi()) {
+        if (!plugins.isEmpty() && isDbi()
+                && graph.ifTargetsRole(ServiceType.MySQLCluster.toString(), RoleType.ndb.toString())) {
             for (String instance : dbiPluginInstances.keySet()) {
                 pluginInstances.add(instance);
             }
         } else if (!plugins.isEmpty() && isGenericJMX()) {
+            pluginInstanceTargetMap = new HashMap<String, String>();
             for (String target : jmxPluginInstances.keySet()) {
-                if (target.startsWith(graph.getTarget())) {
+                if (graph.ifTargets(target)) {
                     for (String instance : jmxPluginInstances.get(target).keySet()) {
                         pluginInstances.add(instance);
+                        pluginInstanceTargetMap.put(instance, target);
                     }
                 }
             }
@@ -220,6 +239,10 @@ public class NewGraphController implements Serializable {
         } else {
             graph.setPluginInstance(null);
         }
+    }
+
+    public void pluginInstanceChanged() {
+        graph.clearCharts();
     }
 
     private List<String> loadBasicTypes() {
@@ -232,18 +255,27 @@ public class NewGraphController implements Serializable {
 
     public List<String> getTypes() {
 
-        if (graph == null || graph.getTarget() == null || graph.getPluginInstance() == null) {
+        if (graph == null || graph.getTarget() == null || graph.getPlugin() == null
+                || graph.getPluginInstance() == null || plugins.isEmpty()) {
             return null;
         }
-        if (!plugins.isEmpty() && isDbi()) {
+        if (isDbi()) {
+//            TODO : remove ?
             if (dbiPluginInstances == null) {
                 dbiPluginInstances = CollectdConfigUtils.parseDbiPlugin(COLLECTD_DBI_PLUGIN_FILE);
             }
             types = dbiPluginInstances.get(graph.getPluginInstance()).getTypes();
+        } else if (isGenericJMX()) {
+//            TODO : remove ?
+            if (jmxPluginInstances == null) {
+                jmxPluginInstances = CollectdConfigUtils.parseJMXPlugin(COLLECTD_JMX_PLUGIN_FILE);
+            }
+            types = jmxPluginInstances.get(pluginInstanceTargetMap.get(graph.getPluginInstance())).get(graph.getPluginInstance()).getTypes();
 
         } else {
             types = loadBasicTypes();
         }
+
         if (!types.isEmpty()) {
             chart.setType(types.get(0));
         } else {
@@ -260,13 +292,19 @@ public class NewGraphController implements Serializable {
                 typeInstances.add(instance);
             }
         }
+        if (!plugins.isEmpty() && isGenericJMX()) {
+            for (String instance : jmxPluginInstances.get(pluginInstanceTargetMap.get(graph.getPluginInstance()))
+                    .get(graph.getPluginInstance()).getTypeInstances(chart.getType())) {
+                typeInstances.add(instance);
+            }
+        }
+        if (isDbi() || isGenericJMX()) {
+            chart.setDs("value");
+        }
         if (!typeInstances.isEmpty()) {
             chart.setTypeInstance(typeInstances.get(0));
-            if (isDbi()) {
-                chart.setDs("value");
-            }
             if (isTypeInstanceVariable()) {
-                chart.setColor(COLOR_N);
+                chart.setColor(ColorUtils.VAR_COLOR);
                 chart.setModel(ChartModel.LINES);
             } else {
                 chart.setColor(ColorType.values()[0].toString());
@@ -295,6 +333,6 @@ public class NewGraphController implements Serializable {
     }
 
     private boolean isTypeInstanceVariable() {
-        return chart.getTypeInstance().contains(VARIABLE);
+        return chart.getTypeInstance().contains(VAR_N);
     }
 }

@@ -6,5 +6,5 @@ package se.kth.kthfsdashboard.struct;
  */
 public enum CollectdBasicType {
 
-    guage, counter, derive, absolute
+    guage, counter, derive, absolute, memory
 }
