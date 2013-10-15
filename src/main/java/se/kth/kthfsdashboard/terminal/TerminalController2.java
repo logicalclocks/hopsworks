@@ -91,9 +91,10 @@ public class TerminalController2 implements Serializable {
                             throw new RuntimeException("No live node available.");
                         }
                         WebCommunication web = new WebCommunication();
-                        state = States.SPARK_SHELL.toString();
                         ip = hosts.get(0).getPublicOrPrivateIp();
-                        return web.executeStart(ip, cluster, service, "-", command, params);
+                        String result = web.executeStart(ip, cluster, service, "-", command, params);
+                        state = States.SPARK_SHELL.toString();                        
+                        return result;
                     } catch (Exception ex) {
                         state = States.SPARK.toString();
                         logger.log(Level.SEVERE, null, ex);
@@ -125,13 +126,15 @@ public class TerminalController2 implements Serializable {
                 try {
                     WebCommunication web = new WebCommunication();
                     state = States.SPARK_SHELL.toString();
-                    ip = hosts.get(0).getPublicOrPrivateIp();
-                    
+                    ip = hosts.get(0).getPublicOrPrivateIp();                    
+                    String result = web.executeContinue(ip, cluster, service, "-", command, params);
+                    // The command is also included in the result. So we remove the first line!
+                    result = result.split("<br>")[1];
                     //TODO: This does not work. 'exit' is processed by the shell itself
                     if (command.equals("exit")) {
                         state = States.SPARK.toString();
-                    }
-                    return web.executeContinue(ip, cluster, service, "-", command, params);
+                    }                    
+                    return result;
                 } catch (Exception ex) {
                     state = States.SPARK_SHELL.toString();
                     logger.log(Level.SEVERE, null, ex);
