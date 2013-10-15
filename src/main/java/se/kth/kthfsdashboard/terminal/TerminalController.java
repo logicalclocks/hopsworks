@@ -1,4 +1,4 @@
-package se.kth.kthfsdashboard.service;
+package se.kth.kthfsdashboard.terminal;
 
 import se.kth.kthfsdashboard.struct.ServiceType;
 import java.util.List;
@@ -32,9 +32,20 @@ public class TerminalController {
     @EJB
     private HostEJB hostEjb;
     private static final Logger logger = Logger.getLogger(TerminalController.class.getName());
-    
-//    @Inject
-    private TerminalController2 s;
+    private static final String welcomeMessage;
+
+    static {
+
+        welcomeMessage = (""
+                + "    __  ______  ____  _____\n"
+                + "   / / / / __ \\/ __ \\/ ___/\n"
+                + "  / /_/ / / / / /_/ /\\__ \\ \n"
+                + " / __  / /_/ / ____/___/ / \n"
+                + "/_/ /_/\\____/_/    /____/  \n\n")
+                .replace(" ", "&nbsp;")
+                .replace("\\", "&#92;")
+                .replace("\n", "<br/>");
+    }
 
     public TerminalController() {
     }
@@ -66,6 +77,10 @@ public class TerminalController {
 
     public String getCluster() {
         return cluster;
+    }
+
+    public String getWelcomeMessage() {
+        return welcomeMessage;
     }
 
     public String handleCommand(String command, String[] params) {

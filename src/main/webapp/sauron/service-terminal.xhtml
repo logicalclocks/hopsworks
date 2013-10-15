@@ -108,7 +108,7 @@
 
                         <p:terminal id="terminal" widgetVar="term" prompt="client@#{serviceStatusController.service}:~$" 
                                     commandHandler="#{terminalController.handleCommand}"  height="600"  width="99.5%"
-                                    welcomeMessage=""  />  
+                                    welcomeMessage="#{terminalController.welcomeMessage}"  />  
                     </h:form>                      
                 </p:panel>
 
@@ -117,7 +117,7 @@
                         <p:focus for="terminal" />  
                         <p:terminal id="terminal" widgetVar="term" prompt="#{terminalController2.getPrompt(serviceStatusController.cluster, serviceStatusController.service)}" 
                                     commandHandler="#{terminalController2.handleCommand}"  height="600"  width="99.5%"
-                                    welcomeMessage=""  />  
+                                    welcomeMessage="#{terminalController.welcomeMessage}"  />  
                     </h:form>                      
                 </p:panel>                  
 
