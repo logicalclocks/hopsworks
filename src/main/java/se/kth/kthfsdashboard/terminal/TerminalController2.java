@@ -77,12 +77,8 @@ public class TerminalController2 implements Serializable {
         return "client@Spark:~$";
     }
 
-    public String getPrompt2() {
-        return state + ">";
-    }
-
     public String handleCommand(String command, String[] params) {
-        System.out.println("Satet = " + state);
+        logger.log(Level.INFO, "handleCommand - State = {0}", state);
 //      TODO: Check special characters like ";" to avoid injection
         String ip;
         if (service.equalsIgnoreCase("Spark")) {
@@ -130,6 +126,8 @@ public class TerminalController2 implements Serializable {
                     WebCommunication web = new WebCommunication();
                     state = States.SPARK_SHELL.toString();
                     ip = hosts.get(0).getPublicOrPrivateIp();
+                    
+                    //TODO: This does not work. 'exit' is processed by the shell itself
                     if (command.equals("exit")) {
                         state = States.SPARK.toString();
                     }

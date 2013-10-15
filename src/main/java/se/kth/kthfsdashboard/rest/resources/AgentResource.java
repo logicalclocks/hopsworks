@@ -215,8 +215,12 @@ public class AgentResource {
             if (json.has("PluginInstance")) {
                 alert.setPluginInstance(json.getString("PluginInstance"));
             }
-            alert.setType(json.getString("Type"));
-            alert.setTypeInstance(json.getString("TypeInstance"));
+            if (json.has("Type")) {
+                alert.setType(json.getString("Type"));
+            }
+            if (json.has("TypeInstance")) {
+                alert.setTypeInstance(json.getString("TypeInstance"));
+            }
             if (json.has("DataSource")) {
                 alert.setDataSource(json.getString("DataSource"));
             }

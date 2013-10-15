@@ -35,13 +35,13 @@ public class TerminalController {
     private static final String welcomeMessage;
 
     static {
-
-        welcomeMessage = (""
-                + "    __  ______  ____  _____\n"
-                + "   / / / / __ \\/ __ \\/ ___/\n"
-                + "  / /_/ / / / / /_/ /\\__ \\ \n"
-                + " / __  / /_/ / ____/___/ / \n"
-                + "/_/ /_/\\____/_/    /____/  \n\n")
+        welcomeMessage = ("Welcome to \n"
+                + "       __  ______  ____  _____  \n"
+                + "      / / / / __ \\/ __ \\/ ___/\n"
+                + "     / /_/ / / / / /_/ /\\__ \\ \n"
+                + "    / __  / /_/ / ____/___/ /    \n"
+                + "   /_/ /_/\\____/_/    /____/    \n"
+                + "                                 \n")
                 .replace(" ", "&nbsp;")
                 .replace("\\", "&#92;")
                 .replace("\n", "<br/>");
