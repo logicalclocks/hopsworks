@@ -1,5 +1,6 @@
 package se.kth.kthfsdashboard.struct;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,7 +11,7 @@ import java.util.Set;
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
-public class CollectdPluginInstance {
+public class CollectdPluginInstance implements Serializable{
 
     private HashMap<String, HashSet<String>> typeInstances;
     private HashMap<String, String> statements;
@@ -25,10 +26,14 @@ public class CollectdPluginInstance {
     }
 
     public void add(String type, String typeInstance, String statement, String InstancesFrom) {
-        if (statement.isEmpty()) {        
-            typeInstance += "-" + InstancesFrom;            
-        } else {
-            typeInstance += "-@n"; 
+
+        if (statement != null) {
+//            if (statement.isEmpty()) {
+//                typeInstance += "-" + InstancesFrom;
+//            } else {
+//                typeInstance += "-@n";
+//            }
+            typeInstance += statement.isEmpty() ? "-" + InstancesFrom : "-@n";
         }
         HashSet<String> instancesList;
         if (typeInstances.containsKey(type)) {

@@ -46,14 +46,14 @@
             </h:form>
             <!--Navigation Bar - End-->
 
-            <p:outputPanel rendered="#{not serviceStatusController.found}">
+            <p:outputPanel rendered="#{not roleController.found}">
                 <p:spacer width="1" height="50" />             
                 <p:panel header="Error" style="width: 300px; margin: 0 auto;">
-                    <p align="center">Service not found!</p>   
+                    <p align="center">Role not found!</p>   
                 </p:panel>
             </p:outputPanel>     
 
-            <p:outputPanel rendered="#{serviceStatusController.found}">           
+            <p:outputPanel rendered="#{roleController.found}">           
 
                 <!-- Second Toolbar-->
                 <h:form>  

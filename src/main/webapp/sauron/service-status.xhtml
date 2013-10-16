@@ -45,14 +45,14 @@
             </h:form>
             <!--Navigation Bar - End-->
 
-            <p:outputPanel rendered="#{not serviceStatusController.found}">
+            <p:outputPanel rendered="#{not serviceController.serviceFound}">
                 <p:spacer width="1" height="50" />             
                 <p:panel header="Error" style="width: 300px; margin: 0 auto;">
                     <p align="center">Service not found!</p>   
                 </p:panel>
             </p:outputPanel>         
 
-            <p:outputPanel rendered="#{serviceStatusController.found}">         
+            <p:outputPanel rendered="#{serviceController.serviceFound}">         
                 <!-- Second Toolbar-->
                 <h:form>  
                     <p:toolbar styleClass="SecondToolbar#{serviceStatusController.health}">  
@@ -69,6 +69,7 @@
                                 <f:param name="service" value="#{serviceStatusController.service}"/> 
                             </p:commandButton>  
                             <p:commandButton value="Instances" icon="ui-icon-note" 
+                                             rendered="#{serviceStatusController.renderInstancesLink()}"                                             
                                              action="#{urlController.serviceInstances}">
                                 <f:param name="cluster" value="#{serviceStatusController.cluster}"/>   
                                 <f:param name="service" value="#{serviceStatusController.service}"/>
@@ -236,7 +237,7 @@
                                 <f:param name="cluster" value="#{serviceStatusController.cluster}"/>
                                 <f:param name="service" value="#{serviceStatusController.service}"/>                   
                             </p:commandButton> 
-                            <p:commandButton value="Edit" id="editcharts" ajax="false" action="#{urlController.editGraphsUrl()}" icon="ui-icon-gear">
+                            <p:commandButton value="Edit" id="editcharts" ajax="false" action="#{urlController.redirectToEditGraphs()}" icon="ui-icon-gear">
                                 <f:param name="target" value="#{graphController.getTarget(serviceController.service)}"/>
                             </p:commandButton> 
                             <p:tooltip for="editcharts" value="Edit Graphs"/>                             

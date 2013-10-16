@@ -1,5 +1,6 @@
-package se.kth.kthfsdashboard.service;
+package se.kth.kthfsdashboard.terminal;
 
+import se.kth.kthfsdashboard.struct.ServiceType;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -8,11 +9,10 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import javax.inject.Inject;
 import se.kth.kthfsdashboard.communication.WebCommunication;
 import se.kth.kthfsdashboard.host.Host;
 import se.kth.kthfsdashboard.host.HostEJB;
-import se.kth.kthfsdashboard.role.RoleType;
+import se.kth.kthfsdashboard.struct.RoleType;
 import se.kth.kthfsdashboard.struct.Status;
 
 /**
@@ -32,9 +32,20 @@ public class TerminalController {
     @EJB
     private HostEJB hostEjb;
     private static final Logger logger = Logger.getLogger(TerminalController.class.getName());
-    
-//    @Inject
-    private TerminalController2 s;
+    private static final String welcomeMessage;
+
+    static {
+        welcomeMessage = ("Welcome to \n"
+                + "       __  ______  ____  _____  \n"
+                + "      / / / / __ \\/ __ \\/ ___/\n"
+                + "     / /_/ / / / / /_/ /\\__ \\ \n"
+                + "    / __  / /_/ / ____/___/ /    \n"
+                + "   /_/ /_/\\____/_/    /____/    \n"
+                + "                                 \n")
+                .replace(" ", "&nbsp;")
+                .replace("\\", "&#92;")
+                .replace("\n", "<br/>");
+    }
 
     public TerminalController() {
     }
@@ -66,6 +77,10 @@ public class TerminalController {
 
     public String getCluster() {
         return cluster;
+    }
+
+    public String getWelcomeMessage() {
+        return welcomeMessage;
     }
 
     public String handleCommand(String command, String[] params) {

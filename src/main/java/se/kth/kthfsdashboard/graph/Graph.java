@@ -21,18 +21,16 @@ import javax.persistence.Table;
 @Table(name = "Graphs")
 @NamedQueries({
     @NamedQuery(name = "Graphs.find", query = "SELECT g FROM Graph g WHERE g.graphId = :graphId AND g.target = :target"),
-    @NamedQuery(name = "Graphs.find-By.GraphId", query = "SELECT g FROM Graph g WHERE g.graphId = :graphId"),       
-    @NamedQuery(name = "Graphs.find-By.Target", query = "SELECT g FROM Graph g WHERE g.target = :target ORDER BY g.groupRank, g.rank"),    
+    @NamedQuery(name = "Graphs.find-By.GraphId", query = "SELECT g FROM Graph g WHERE g.graphId = :graphId"),
+    @NamedQuery(name = "Graphs.find-By.Target", query = "SELECT g FROM Graph g WHERE g.target = :target ORDER BY g.groupRank, g.rank"),
     @NamedQuery(name = "Graphs.find.Targets", query = "SELECT DISTINCT(g.target) FROM Graph g ORDER BY g.target"),
     @NamedQuery(name = "Graphs.find.SelectedIds-By.Target.Group", query = "SELECT g.graphId FROM Graph g WHERE g.selected = TRUE AND g.target = :target AND g.group = :group ORDER BY g.rank"),
     @NamedQuery(name = "Graphs.find.Ids-By.Target", query = "SELECT g.graphId FROM Graph g WHERE g.target = :target ORDER BY g.rank"),
-    @NamedQuery(name = "Graphs.find.Groups-By.Target", query = "SELECT DISTINCT(g.group) FROM Graph g WHERE g.selected = TRUE AND g.target = :target ORDER BY g.groupRank"), 
-    @NamedQuery(name = "Graphs.find.LastGroupRank-By.Target", query = "SELECT MAX(g.groupRank) FROM Graph g WHERE g.target = :target"), 
-    @NamedQuery(name = "Graphs.find.GroupRank-By.Target.Group", query = "SELECT DISTINCT(g.groupRank) FROM Graph g WHERE g.target = :target AND g.group = :group"), 
-    @NamedQuery(name = "Graphs.find.lastRank-By.Target.Group", query = "SELECT MAX(g.rank) FROM Graph g WHERE g.target = :target AND g.group = :group"), 
-
-    @NamedQuery(name = "Graphs.removeAll", query = "DELETE FROM Graph g"),
-})
+    @NamedQuery(name = "Graphs.find.Groups-By.Target", query = "SELECT DISTINCT(g.group) FROM Graph g WHERE g.selected = TRUE AND g.target = :target ORDER BY g.groupRank"),
+    @NamedQuery(name = "Graphs.find.LastGroupRank-By.Target", query = "SELECT MAX(g.groupRank) FROM Graph g WHERE g.target = :target"),
+    @NamedQuery(name = "Graphs.find.GroupRank-By.Target.Group", query = "SELECT DISTINCT(g.groupRank) FROM Graph g WHERE g.target = :target AND g.group = :group"),
+    @NamedQuery(name = "Graphs.find.lastRank-By.Target.Group", query = "SELECT MAX(g.rank) FROM Graph g WHERE g.target = :target AND g.group = :group"),
+    @NamedQuery(name = "Graphs.removeAll", query = "DELETE FROM Graph g"),})
 public class Graph implements Serializable {
 
     @Id
@@ -83,11 +81,11 @@ public class Graph implements Serializable {
         this.verticalLabel = verticalLabel;
         this.selected = true;
     }
-    
+
     public void addChart(Chart chart) {
         charts.add(chart);
     }
-   
+
     @Override
     public String toString() {
         return "Graph {Target: " + target + ", Group: " + group + ", Id: " + graphId
@@ -196,5 +194,22 @@ public class Graph implements Serializable {
 
     public ArrayList<Chart> getCharts() {
         return charts;
+    }
+    
+    public void clearCharts() {
+        charts.clear();
+    }
+
+    public boolean ifTargetsService(String service) {
+        return ifTargets(service.toUpperCase());
+    }
+
+    public boolean ifTargetsRole(String service, String role) {
+        return ifTargets(service.toUpperCase() + "-" + role.toUpperCase());
+    }
+
+    public boolean ifTargets(String target) {
+        return this.target.startsWith(target.toUpperCase())
+                || target.toUpperCase().startsWith(this.target);
     }
 }

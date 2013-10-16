@@ -15,7 +15,7 @@ import javax.faces.context.FacesContext;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.primefaces.event.FileUploadEvent;
-import se.kth.kthfsdashboard.utils.ChartModel;
+import se.kth.kthfsdashboard.struct.ChartModel;
 
 /**
  *

@@ -22,7 +22,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
-import se.kth.kthfsdashboard.role.RoleType;
+import se.kth.kthfsdashboard.struct.RoleType;
 import se.kth.kthfsdashboard.struct.NodesTableItem;
 import se.kth.kthfsdashboard.utils.FormatUtils;
 

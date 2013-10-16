@@ -28,6 +28,8 @@ public class ServiceController {
    private String cluster;
    @ManagedProperty("#{param.status}")
    private String status;
+    @EJB
+    private RoleEJB roleEjb;   
   
    private static final Logger logger = Logger.getLogger(ServiceController.class.getName());   
 
@@ -78,6 +80,10 @@ public class ServiceController {
 
    public String getStatus() {
       return status;
+   }
+   
+   public boolean isServiceFound() {
+       return roleEjb.countRoles(cluster, service) > 0;
    }
 
    public void addMessage(String summary) {
