@@ -96,6 +96,8 @@ public class AuthBackingBean {
 
       if (request.isUserInRole("ADMIN")) {
          return "/sauron/clusters.xml?faces-redirect=true";
+      } else       if (request.isUserInRole("BBC_RESEARCHER")) {
+         return "/bbc/index.xml?faces-redirect=true";
       } else {
          return "/sauron/clusters.xml?faces-redirect=true";
       }
