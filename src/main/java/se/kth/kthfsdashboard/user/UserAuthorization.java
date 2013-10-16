@@ -185,9 +185,9 @@ public class UserAuthorization  {
          System.out.println(request == null);
         try {        
             request.login(this.username, this.password);        
-           if(request.isUserInRole("admin")) {  
+           if(request.isUserInRole("ADMIN")) {  
                 return "/pages/protected/admin/index.xhtml?faces-redirect=true";  
-           } else if(request.isUserInRole("professor")){  
+           } else if(request.isUserInRole("BBC_RESEARCHER")){  
                 return "/pages/protected/professor/index.xhtml?faces-redirect=true";  
            }        
         } catch (ServletException e) {
