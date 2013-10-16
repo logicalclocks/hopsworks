@@ -27,7 +27,7 @@
             </div>
 
             <!-- Dialog Import Graphs -->
-            <p:dialog modal="true" widgetVar="dlgImport" header="Import Graphs" draggable="false" 
+            <p:dialog modal="true" widgetVar="dlgImport" header="Import Graph" draggable="false" 
                       closable="true" resizable="false" width="500" height="200">  
                 <h:panelGrid columns="1" >
                     <p:outputLabel value="Choose a graph description file to import:"/>               
@@ -240,7 +240,7 @@
                         <p:ajax event="change" listener="#{urlController.redirectToEditGraphs()}"/>                        
                     </p:selectOneMenu> 
 
-                    <p:commandButton value="Import Graphs" icon="ui-icon-arrowreturnthick-1-s" onclick="dlgImport.show()"/>  
+                    <p:commandButton value="Import" icon="ui-icon-arrowreturnthick-1-s" onclick="dlgImport.show()"/>  
                     <p:commandButton value="New" icon="ui-icon-plusthick" action="#{graphControllerNew.showNewGraphDialog}"/>  
 
                     <p:outputLabel style="color:red; font-size: small">#{editGraphsController.message}</p:outputLabel>
