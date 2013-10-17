@@ -129,7 +129,7 @@ public class TerminalController2 implements Serializable {
                     ip = hosts.get(0).getPublicOrPrivateIp();                    
                     String result = web.executeContinue(ip, cluster, service, "-", command, params);
                     // The command is also included in the result. So we remove the first line!
-                    result = result.split("<br>")[1];
+                    result = result.split("<br>",2)[1];
                     //TODO: This does not work. 'exit' is processed by the shell itself
                     if (command.equals("exit")) {
                         state = States.SPARK.toString();

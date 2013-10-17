@@ -65,14 +65,14 @@
 
             <p:confirmDialog id="confirmAllDialog" message="Are you sure about deleting all the alerts?"  
                              header="Delete confirmation" severity="alert" widgetVar="confirmAll">  
-               <p:commandButton id="confirm1" value="Yes" update="alerts, :title, :msg" oncomplete="confirmAll.hide()"  
+               <p:commandButton id="confirm1" value="Yes" update="alerts, :title, :formMsg" oncomplete="confirmAll.hide()"  
                                 actionListener="#{alertController.deleteAllAlerts()}" />  
                <p:commandButton id="decline1" value="No" onclick="confirmAll.hide()" type="button" />   
             </p:confirmDialog>             
 
             <p:confirmDialog id="confirmDelectedDialog" message="Are you sure about deleting the selected alerts?"  
                              header="Delete confirmation" severity="alert" widgetVar="confirmSelected">  
-               <p:commandButton id="confirm2" value="Yes" update="alerts, :title, :msg" onclick="confirmSelected.hide()"  
+               <p:commandButton id="confirm2" value="Yes" update="alerts, :title, :formMsg" onclick="confirmSelected.hide()"  
                                 actionListener="#{alertController.deleteSelectedAlerts()}" />  
                <p:commandButton id="decline2" value="No" onclick="confirmSelected.hide()" type="button" />   
             </p:confirmDialog>             
