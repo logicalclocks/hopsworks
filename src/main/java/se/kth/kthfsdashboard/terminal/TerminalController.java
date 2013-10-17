@@ -112,11 +112,6 @@ public class TerminalController {
             }
             WebCommunication web = new WebCommunication();
             String result = web.executeRun(hosts.get(0).getPublicOrPrivateIp(), cluster, service, roleName, command, params);
-
-            // TODO: Remove this. It is a quick fix.
-            if (result.contains("WARN") && result.contains("util.NativeCodeLoader") && result.contains("<br>")) {
-                result = result.split("<br>",2)[1];
-            }
             return result;
 
         } catch (Exception ex) {
