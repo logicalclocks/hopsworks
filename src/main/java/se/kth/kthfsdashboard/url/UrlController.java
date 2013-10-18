@@ -3,6 +3,7 @@ package se.kth.kthfsdashboard.url;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.faces.application.NavigationHandler;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
@@ -126,10 +127,10 @@ public class UrlController {
     public String serviceActionHistory() {
         return "service-actionhistory?faces-redirect=true&cluster=" + cluster + "&service=" + service;
     }
-    
+
     public String serviceTerminal() {
         return "service-terminal?faces-redirect=true&cluster=" + cluster + "&service=" + service;
-    }    
+    }
 
     public String roleStatus() {
         return "role-status?faces-redirect=true&hostid=" + hostId + "&cluster=" + cluster
@@ -142,15 +143,12 @@ public class UrlController {
     }
 
     public void redirectToEditGraphs() {
-        String url = "edit-graphs.xhtml";
+        String outcome = "edit-graphs?faces-redirect=true";
         if (target != null) {
-            url += "?target=" + target;
+            outcome += "&target=" + target;
         }
-        try {
-            System.out.println(url);
-            FacesContext.getCurrentInstance().getExternalContext().redirect(url);        
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
-        }
+        FacesContext context = FacesContext.getCurrentInstance();
+        NavigationHandler navigationHandler = context.getApplication().getNavigationHandler();
+        navigationHandler.handleNavigation(context, null, outcome);
     }
 }
