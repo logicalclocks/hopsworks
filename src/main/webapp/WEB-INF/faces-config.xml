@@ -56,7 +56,7 @@
             <redirect/>
         </navigation-case> 
         <navigation-case>
-            <from-outcome>editgraphs</from-outcome>
+            <from-outcome>edit-graphs</from-outcome>
             <to-view-id>/sauron/edit-graphs.xhtml</to-view-id>
             <redirect/>
         </navigation-case>         
