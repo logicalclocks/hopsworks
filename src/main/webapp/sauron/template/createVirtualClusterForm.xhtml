@@ -270,12 +270,12 @@
                                     <h:panelGrid columns="2" >
                                         <h:outputText id="addGroup" value="Group name:" />
                                         <p:inputText id="groupName" 
-                                                     value="#{clusterManagementController.options.addGroupName.securityGroup}"
+                                                     value="#{clusterManagementController.options.addGroupName.service}"
                                                      />
                                         <h:outputText value="Number of Nodes:"/>
                                         <p:inputText value="#{clusterManagementController.options.addGroupName.number}"/>
                                         <h:outputText value="Roles:"/>
-                                        <p:selectManyCheckbox value="#{clusterManagementController.options.addGroupName.roles}" >  
+                                        <p:selectManyCheckbox value="#{clusterManagementController.options.addGroupName.recipes}" >  
                                             <f:selectItems value="#{clusterManagementController.options.roles}"  />  
                                         </p:selectManyCheckbox>  
                                         <h:outputText value="Ports:"/>

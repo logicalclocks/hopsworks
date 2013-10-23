@@ -23,9 +23,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultStreamedContent;
-import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.StreamedContent;
-import org.primefaces.model.TreeNode;
 import org.primefaces.model.UploadedFile;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.BeanAccess;
@@ -48,9 +46,6 @@ public class ClusterManagementController implements Serializable {
     private boolean skipChef;
     private boolean renderEC2;
     private ClusterOptions options = new ClusterOptions();
-    private TreeNode root;
-    private TreeNode selectedItem;
-    private TreeNode[] selectedItems;
     private static Logger logger = Logger.getLogger(Cluster.class.getName());
     private String clusterType;
     /**
@@ -150,26 +145,6 @@ public class ClusterManagementController implements Serializable {
 
     public void setRenderEC2(boolean renderEC2) {
         this.renderEC2 = renderEC2;
-    }
-
-    public TreeNode getRoot() {
-        return root;
-    }
-
-    public TreeNode getSelectedItem() {
-        return selectedItem;
-    }
-
-    public void setSelectedItem(TreeNode selectedItem) {
-        this.selectedItem = selectedItem;
-    }
-
-    public TreeNode[] getSelectedItems() {
-        return selectedItems;
-    }
-
-    public void setSelectedItems(TreeNode[] selectedItems) {
-        this.selectedItems = selectedItems;
     }
 
     public NodeGroupDataModel getGroupsModel() {
@@ -430,20 +405,20 @@ public class ClusterManagementController implements Serializable {
 
     private void persistPorts() {
         if (!isBaremetal()) {
-            cluster.getAuthorizeSpecificPorts().clear();
-            cluster.getAuthorizeSpecificPorts().addAll(ports);
+//            cluster.getAuthorizeSpecificPorts().clear();
+//            cluster.getAuthorizeSpecificPorts().addAll(ports);
         }
     }
 
     private void persistChef() {
         if (isBaremetal()) {
-            baremetalCluster.getChefAttributes().clear();
-            baremetalCluster.getChefAttributes().addAll(chefAttributes);
-        } else {
-            if (cluster.getChefAttributes() != null) {
-                cluster.getChefAttributes().clear();
-                cluster.getChefAttributes().addAll(chefAttributes);
-            }
+//            baremetalCluster.getChefAttributes().clear();
+//            baremetalCluster.getChefAttributes().addAll(chefAttributes);
+//        } else {
+//            if (cluster.getChefAttributes() != null) {
+//                cluster.getChefAttributes().clear();
+//                cluster.getChefAttributes().addAll(chefAttributes);
+//            }
         }
     }
 
@@ -483,17 +458,17 @@ public class ClusterManagementController implements Serializable {
             if (document != null && document instanceof Cluster) {
 
                 cluster = (Cluster) document;
-                ports = new ArrayList<Integer>(cluster.getAuthorizeSpecificPorts());
+                ports = new ArrayList<Integer>(cluster.getGlobal().getAuthorizePorts());
 
-                if (cluster.getChefAttributes() != null) {
-
-                    chefAttributes = new ArrayList<ChefAttributes>(cluster.getChefAttributes());
-                    chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
-                } else {
-                    chefAttributes = new ArrayList<ChefAttributes>();
-                    cluster.setChefAttributes(chefAttributes);
-                    chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
-                }
+//                if (cluster.getChefAttributes() != null) {
+//
+//                    chefAttributes = new ArrayList<ChefAttributes>(cluster.getChefAttributes());
+//                    chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
+//                } else {
+//                    chefAttributes = new ArrayList<ChefAttributes>();
+//                    cluster.setChefAttributes(chefAttributes);
+//                    chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
+//                }
                 groups = new ArrayList<NodeGroup>(cluster.getNodes());
                 groupsModel = new NodeGroupDataModel(groups);
 
@@ -504,15 +479,15 @@ public class ClusterManagementController implements Serializable {
             } else if (document != null && document instanceof Baremetal) {
                 //probably need to check references like in the cluster case
                 baremetalCluster = (Baremetal) document;
-                if (baremetalCluster.getChefAttributes() != null) {
-
-                    chefAttributes = new ArrayList<ChefAttributes>(baremetalCluster.getChefAttributes());
-                    chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
-                } else {
-                    chefAttributes = new ArrayList<ChefAttributes>();
-                    baremetalCluster.setChefAttributes(chefAttributes);
-                    chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
-                }
+//                if (baremetalCluster.getChefAttributes() != null) {
+//
+//                    chefAttributes = new ArrayList<ChefAttributes>(baremetalCluster.getChefAttributes());
+//                    chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
+//                } else {
+//                    chefAttributes = new ArrayList<ChefAttributes>();
+//                    baremetalCluster.setChefAttributes(chefAttributes);
+//                    chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
+//                }
 
                 baremetalGroups = new ArrayList<BaremetalGroup>(baremetalCluster.getNodes());
                 baremetalGroupsModel = new BaremetalGroupDataModel(baremetalGroups);

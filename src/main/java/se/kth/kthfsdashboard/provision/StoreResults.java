@@ -32,7 +32,7 @@ public class StoreResults implements Function<Set<? extends NodeMetadata>, Void>
     public Void apply(Set<? extends NodeMetadata> input) {
 
         Set<String> roles = new HashSet(rolesList);
-        if (roles.contains("MySQLCluster-mgm")) {
+        if (roles.contains("mgm")) {
             Iterator<? extends NodeMetadata> iter = input.iterator();
             while (iter.hasNext()) {
                 //Add private ip to mgm
@@ -40,28 +40,28 @@ public class StoreResults implements Function<Set<? extends NodeMetadata>, Void>
                 provision.getMgmIP().addAll(node.getPrivateAddresses());
                 provision.getMgms().put(node, rolesList);
             }
-        } else if (roles.contains("MySQLCluster-ndb")) {
+        } else if (roles.contains("ndb")) {
             Iterator<? extends NodeMetadata> iter = input.iterator();
             while (iter.hasNext()) {
                 NodeMetadata node = iter.next();
                 provision.getNdbsIP().addAll(node.getPrivateAddresses());
                 provision.getNdbs().put(node, rolesList);
             }
-        } else if (roles.contains("MySQLCluster-mysqld")) {
+        } else if (roles.contains("mysqld")) {
             Iterator<? extends NodeMetadata> iter = input.iterator();
             while (iter.hasNext()) {
                 NodeMetadata node = iter.next();
                 provision.getMySQLClientIP().addAll(node.getPrivateAddresses());
                 provision.getMysqlds().put(node, rolesList);
             }
-        } else if (roles.contains("KTHFS-namenode")) {
+        } else if (roles.contains("namenode")) {
             Iterator<? extends NodeMetadata> iter = input.iterator();
             while (iter.hasNext()) {
                 NodeMetadata node = iter.next();
                 provision.getNamenodesIP().addAll(node.getPrivateAddresses());
                 provision.getNamenodes().put(node, rolesList);
             }
-        } else if (roles.contains("KTHFS-datanode")) {
+        } else if (roles.contains("datanode")) {
             Iterator<? extends NodeMetadata> iter = input.iterator();
             while (iter.hasNext()) {
                 NodeMetadata node = iter.next();

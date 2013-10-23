@@ -92,12 +92,13 @@ public class BaremetalClusterProvision implements Provision {
         final ScriptBuilder initScript = ScriptBuilder.builder()
                 .scriptType(ScriptBuilder.ScriptType.INIT)
                 .publicKey(publicKey)
+                .gitRepo(cluster.getGlobal().getGit().getRepository())
                 .build();
 
         for (final BaremetalGroup group : cluster.getNodes()) {
 
             messages.addMessage("Creating " + group.getNumber()
-                    + "  nodes in Security Group " + group.getSecurityGroup());
+                    + "  nodes in Security Group " + group.getService());
             //Identify the biggest group
             max = max < group.getNumber() ? group.getNumber() : max;
             //iterate over the hosts
@@ -116,7 +117,12 @@ public class BaremetalClusterProvision implements Provision {
                     System.out.println("Error updating the DataBase");
                 }
                 //Generate function to store results when done
-                final StoreResults results = new StoreResults(group.getRoles(), latch, this);
+                List<String> services = new LinkedList<String>();
+                services.add(group.getService());
+                if(group.getRecipes()!=null){
+                    services.addAll(group.getRecipes());
+                }
+                final StoreResults results = new StoreResults(services, latch, this);
                 ListenableFuture<Set<NodeMetadata>> groupCreation =
                         pool.submit(new InitializeBaremetalCallable(privateKey, host, cluster.getLoginUser(),
                         initScript, nodes, group, messages));

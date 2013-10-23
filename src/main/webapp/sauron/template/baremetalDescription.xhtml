@@ -26,7 +26,7 @@
                 
                 <p:tab title="Nodes:" >
                     <p:accordionPanel value="#{clusterManagementController.baremetalCluster.nodes}" var="node">
-                        <p:tab title="Security Group: #{node.securityGroup}">
+                        <p:tab title="Security Group: #{node.service}">
                             <h:panelGrid columns="2" cellpadding="5">
                                 <h:outputLabel value="Number:"/>
                                 <h:outputText value="#{node.number}" />

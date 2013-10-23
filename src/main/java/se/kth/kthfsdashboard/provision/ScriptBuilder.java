@@ -50,6 +50,9 @@ public class ScriptBuilder implements Statement {
         private String privateIP;
         private String clusterName;
         private String nodeId;
+        private String gitName;
+        private String gitKey;
+        private String gitRepo;
 
         /*
          * Define the type of script we are going to prepare
@@ -136,13 +139,28 @@ public class ScriptBuilder implements Statement {
             this.nodeId = id;
             return this;
         }
+
+        public Builder gitName(String name) {
+            this.gitName = name;
+            return this;
+        }
+
+        public Builder gitKey(String key) {
+            this.gitKey = key;
+            return this;
+        }
+
+        public Builder gitRepo(String repo) {
+            this.gitRepo = repo;
+            return this;
+        }
+
         /*
          * Default script build, use when defined all the other building options
          */
-
         public ScriptBuilder build() {
             return new ScriptBuilder(scriptType, ndbs, mgms, mysql,
-                    namenodes, roles, nodeIP, nodeId, key, privateIP, clusterName);
+                    namenodes, roles, nodeIP, nodeId, key, privateIP, clusterName, gitName, gitKey, gitRepo);
         }
         /*
          * Same as default but in this case we include the ip during the build and the roles.
@@ -150,7 +168,7 @@ public class ScriptBuilder implements Statement {
 
         public ScriptBuilder build(String ip, List<String> roles, String nodeId) {
             return new ScriptBuilder(scriptType, ndbs, mgms, mysql,
-                    namenodes, roles, ip, nodeId, key, privateIP, clusterName);
+                    namenodes, roles, ip, nodeId, key, privateIP, clusterName, gitName, gitKey, gitRepo);
         }
     }
     private ScriptType scriptType;
@@ -164,10 +182,13 @@ public class ScriptBuilder implements Statement {
     private String privateIP;
     private String clusterName;
     private String nodeId;
+    private String gitName;
+    private String gitKey;
+    private String gitRepo;
 
     protected ScriptBuilder(ScriptType scriptType, List<String> ndbs, List<String> mgms,
             List<String> mysql, List<String> namenodes, List<String> roles, String ip, String nodeId, String key,
-            String privateIP, String clusterName) {
+            String privateIP, String clusterName, String gitName, String gitKey, String gitRepo) {
         this.scriptType = scriptType;
         this.ndbs = ndbs;
         this.mgms = mgms;
@@ -179,6 +200,9 @@ public class ScriptBuilder implements Statement {
         this.privateIP = privateIP;
         this.clusterName = clusterName;
         this.nodeId = nodeId;
+        this.gitName = gitName;
+        this.gitKey = gitKey;
+        this.gitRepo = gitRepo;
     }
 
     @Override
@@ -219,18 +243,12 @@ public class ScriptBuilder implements Statement {
                 statements.add(exec("git config --global user.email \"jdowling@sics.se\";"));
                 statements.add(exec("git config --global http.sslVerify false;"));
                 statements.add(exec("git config --global http.postBuffer 524288000;"));
-                statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone https://ghetto.sics.se/jdowling/kthfs-pantry.git /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone "+gitRepo+" /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone "+gitRepo+" /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone "+gitRepo+" /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone "+gitRepo+" /tmp/chef-solo/;"));
                 statements.add(exec("sudo apt-get install -f -q -y libmysqlclient-dev;"));
 
                 break;
@@ -469,36 +487,36 @@ public class ScriptBuilder implements Statement {
         boolean collectdAdded = false;
         //Look at the roles, if it matches add the recipes for that role
         for (String role : roles) {
-            if (role.equals("MySQLCluster-ndb")) {
+            if (role.equals("ndb")) {
 
                 builder.addRecipe("ndb::ndbd");
                 builder.addRecipe("ndb::ndbd-kthfs");
                 collectdAdded = true;
             }
-            if (role.equals("MySQLCluster-mysqld")) {
+            if (role.equals("mysqld")) {
 
                 builder.addRecipe("ndb::mysqld");
                 builder.addRecipe("ndb::mysqld-kthfs");
                 collectdAdded = true;
             }
-            if (role.equals("MySQLCluster-mgm")) {
+            if (role.equals("mgm")) {
 
                 builder.addRecipe("ndb::mgmd");
                 builder.addRecipe("ndb::mgmd-kthfs");
                 collectdAdded = true;
             }
-            if (role.equals("MySQLCluster-memcached")) {
+            if (role.equals("memcached")) {
                 builder.addRecipe("ndb::memcached");
                 builder.addRecipe("ndb::memcached-kthfs");
             }
 
             //This are for the Hadoop nodes
-            if (role.equals("KTHFS-namenode")) {
+            if (role.equals("namenode")) {
                 builder.addRecipe("java");
                 builder.addRecipe("kthfs::namenode");
                 collectdAdded = true;
             }
-            if (role.equals("KTHFS-datanode")) {
+            if (role.equals("datanode")) {
                 builder.addRecipe("java");
                 builder.addRecipe("kthfs::datanode");
                 collectdAdded = true;

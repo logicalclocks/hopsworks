@@ -6,12 +6,6 @@ package se.kth.kthfsdashboard.virtualization.clusterparser;
 
 import java.io.Serializable;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 
 /**
  *
@@ -20,26 +14,28 @@ import javax.persistence.ManyToOne;
 
 public class NodeGroup implements Serializable{
 
-    private String securityGroup;
+    private String service;
     private int number;
-    private List<String> roles;
-    private List<String> authorizePorts;
+    private List<String> recipes;
+    private List<Integer> authorizePorts;
+    private String chefAttributes;
+    private String bittorrent;
 
     public NodeGroup(){
         
     }
     
     public NodeGroup(String name){
-        this.securityGroup=name;
+        this.service=name;
         
     }
        
-    public String getSecurityGroup() {
-        return securityGroup;
+    public String getService() {
+        return service;
     }
 
-    public void setSecurityGroup(String securityGroup) {
-        this.securityGroup = securityGroup;
+    public void setService(String name) {
+        this.service = name;
     }
 
     public int getNumber() {
@@ -50,25 +46,41 @@ public class NodeGroup implements Serializable{
         this.number = number;
     }
 
-    public List<String> getRoles() {
-        return roles;
+    public List<String> getRecipes() {
+        return recipes;
     }
 
-    public void setRoles(List<String> roles) {
-        this.roles = roles;
+    public void setRecipes(List<String> recipes) {
+        this.recipes = recipes;
     }
 
-    public List<String> getAuthorizePorts() {
+    public List<Integer> getAuthorizePorts() {
         return authorizePorts;
     }
 
-    public void setAuthorizePorts(List<String> authorizePorts) {
+    public void setAuthorizePorts(List<Integer> authorizePorts) {
         this.authorizePorts = authorizePorts;
+    }
+
+    public String getChefAttributes() {
+        return chefAttributes;
+    }
+
+    public void setChefAttributes(String chefAttributes) {
+        this.chefAttributes = chefAttributes;
+    }
+
+    public String getBittorrent() {
+        return bittorrent;
+    }
+
+    public void setBittorrent(String bittorrent) {
+        this.bittorrent = bittorrent;
     }
 
     @Override
     public String toString() {
-        return "NodeGroup{" + "securityGroup=" + securityGroup + ", number=" + number + ", roles=" + roles + ", authorizePorts=" + authorizePorts + '}';
+        return "NodeGroup{" + "securityGroup=" + service + ", number=" + number + ", roles=" + recipes + ", authorizePorts=" + authorizePorts + '}';
     }
          
     

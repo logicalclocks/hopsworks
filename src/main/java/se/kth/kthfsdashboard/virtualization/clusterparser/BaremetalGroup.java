@@ -7,7 +7,6 @@ package se.kth.kthfsdashboard.virtualization.clusterparser;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
-import javax.persistence.Transient;
 
 /**
  *
@@ -15,20 +14,22 @@ import javax.persistence.Transient;
  */
 public class BaremetalGroup implements Serializable {
 
-    private String securityGroup;
+    private String service;
     private int number;
     private List<String> hosts;
-    private List<String> roles;
+    private List<String> recipes;
+    private String bittorrent;
+    private String chefAttributes;
 
     public BaremetalGroup() {
     }
 
-    public String getSecurityGroup() {
-        return securityGroup;
+    public String getService() {
+        return service;
     }
 
-    public void setSecurityGroup(String securityGroup) {
-        this.securityGroup = securityGroup;
+    public void setService(String service) {
+        this.service = service;
     }
 
     public int getNumber() {
@@ -59,18 +60,34 @@ public class BaremetalGroup implements Serializable {
         setHosts(Arrays.asList(splittedHosts));
     }
 
-    public List<String> getRoles() {
-        return roles;
+    public List<String> getRecipes() {
+        return recipes;
     }
 
-    public void setRoles(List<String> roles) {
-        this.roles = roles;
+    public void setRecipes(List<String> recipes) {
+        this.recipes = recipes;
     }
 
+    public String getBittorrent() {
+        return bittorrent;
+    }
+
+    public void setBittorrent(String bittorrent) {
+        this.bittorrent = bittorrent;
+    }
+
+    public String getChefAttributes() {
+        return chefAttributes;
+    }
+
+    public void setChefAttributes(String chefAttributes) {
+        this.chefAttributes = chefAttributes;
+    }
+    
     @Override
     public String toString() {
-        return "BaremetalGroup{" + "securityGroup=" + securityGroup + ", number="
-                + number + ", hosts=" + hosts + ", roles=" + roles
+        return "BaremetalGroup{" + "securityGroup=" + service + ", number="
+                + number + ", hosts=" + hosts + ", roles=" + recipes
                 + '}';
     }
 }

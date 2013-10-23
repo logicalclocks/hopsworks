@@ -1,0 +1,57 @@
+  name: test2
+  installPhase: false
+  global:
+    environment:
+    ##user defined recipes
+    recipes: 
+     - ssh 
+     - chefClient
+    authorizePorts: 
+     - 3306
+     - 4343 
+     - 3321
+    git:
+      user: jim
+      key: jim
+      repository: https://ghetto.sics.se/jdowling/kthfs-pantry.git
+  provider:
+    name: aws-ec2
+    instanceType: m1.large
+    loginUser: ubuntu
+    image: eu-west-1/ami-35667941
+    region: eu-west-1
+    zones: 
+    - eu-west-1a
+  ##lists of groups, with the roles the nodes will have and open ports 
+  nodes:
+  - service: ndb
+    number: 2
+    
+  - service: mgm
+    number: 1
+    recipes: 
+    authorizePorts: 
+      - 10
+    chefAttributes:
+    bittorrent:
+  - service: mysqld
+    number: 1
+    recipes: 
+    authorizePorts: 
+      - 20
+    chefAttributes:
+  - service: namenode
+    number: 2
+    recipes:
+      - namenode
+    authorizePorts:
+     - 30
+    chefAttributes:
+  - service: datanode
+    number: 2
+    recipes: 
+    authorizePorts: 
+     - 40   
+    chefAttributes:
+
+...

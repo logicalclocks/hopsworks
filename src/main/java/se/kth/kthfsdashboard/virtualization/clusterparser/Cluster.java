@@ -4,7 +4,6 @@ package se.kth.kthfsdashboard.virtualization.clusterparser;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.*;
 
 /**
  *
@@ -14,30 +13,28 @@ import javax.persistence.*;
 public class Cluster implements Serializable{
 
     private String name;
-    private String environment;
+//    private String environment;
     private boolean installPhase;
-    private List<String> globalServices=new ArrayList<String>();
-    private List<String> authorizePorts=new ArrayList<String>();
-    private List<Integer> authorizeSpecificPorts=new ArrayList<Integer>();
-    
-
+    private GlobalProperties global;
+//    private List<String> globalServices=new ArrayList<String>();
+//    private List<String> authorizePorts=new ArrayList<String>();
+//    private List<Integer> authorizeSpecificPorts=new ArrayList<Integer>();
     private Provider provider = new Provider();
-
     private List<NodeGroup> nodes = new ArrayList<NodeGroup>();
 
-    private List<ChefAttributes> chefAttributes= new ArrayList<ChefAttributes>();
+//    private List<ChefAttributes> chefAttributes= new ArrayList<ChefAttributes>();
 
-    public List<String> getGlobalServices() {
-        return globalServices;
-    }
-
-    public void setGlobalServices(List<String> globalServices) {
-        this.globalServices = globalServices;
-    }
-
-    public List<String> getAuthorizePorts() {
-        return authorizePorts;
-    }
+//    public List<String> getGlobalServices() {
+//        return globalServices;
+//    }
+//
+//    public void setGlobalServices(List<String> globalServices) {
+//        this.globalServices = globalServices;
+//    }
+//
+//    public List<String> getAuthorizePorts() {
+//        return authorizePorts;
+//    }
 
     public boolean isInstallPhase() {
         return installPhase;
@@ -47,25 +44,25 @@ public class Cluster implements Serializable{
         this.installPhase = installPhase;
     }
 
-    public void setAuthorizePorts(List<String> authorizePorts) {
-        this.authorizePorts = authorizePorts;
-    }
-
-    public List<Integer> getAuthorizeSpecificPorts() {
-        return authorizeSpecificPorts;
-    }
-
-    public void setAuthorizeSpecificPorts(List<Integer> authorizeSpecificPorts) {
-        this.authorizeSpecificPorts = authorizeSpecificPorts;
-    }
+//    public void setAuthorizePorts(List<String> authorizePorts) {
+//        this.authorizePorts = authorizePorts;
+//    }
+//
+//    public List<Integer> getAuthorizeSpecificPorts() {
+//        return authorizeSpecificPorts;
+//    }
+//
+//    public void setAuthorizeSpecificPorts(List<Integer> authorizeSpecificPorts) {
+//        this.authorizeSpecificPorts = authorizeSpecificPorts;
+//    }
    
-    public List<ChefAttributes> getChefAttributes() {
-        return chefAttributes;
-    }
-
-    public void setChefAttributes(List<ChefAttributes> chefAttributes) {
-        this.chefAttributes = chefAttributes;
-    }
+//    public List<ChefAttributes> getChefAttributes() {
+//        return chefAttributes;
+//    }
+//
+//    public void setChefAttributes(List<ChefAttributes> chefAttributes) {
+//        this.chefAttributes = chefAttributes;
+//    }
 
     public String getName() {
         return name;
@@ -75,13 +72,13 @@ public class Cluster implements Serializable{
         this.name = name;
     }
 
-    public String getEnvironment() {
-        return environment;
-    }
-
-    public void setEnvironment(String environment) {
-        this.environment = environment;
-    }
+//    public String getEnvironment() {
+//        return environment;
+//    }
+//
+//    public void setEnvironment(String environment) {
+//        this.environment = environment;
+//    }
     
     public Provider getProvider() {
         return provider;
@@ -99,11 +96,17 @@ public class Cluster implements Serializable{
         this.nodes = nodes;
     }
 
-    @Override
-    public String toString() {
-        return "Cluster{" + "name=" + name + ", environment=" + environment + ", provider=" + provider + ", instances=" + nodes + '}';
+    public GlobalProperties getGlobal() {
+        return global;
+    }
+
+    public void setGlobal(GlobalProperties global) {
+        this.global = global;
     }
     
-    
-    
+    @Override
+    public String toString() {
+        return "Cluster{" + "name=" + name + ", provider=" + provider + ", instances=" + nodes + '}';
+    }
+        
 }

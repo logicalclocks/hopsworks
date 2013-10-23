@@ -1,0 +1,50 @@
+!!se.kth.kthfsdashboard.virtualization.clusterparser.Baremetal
+  name: baremetal
+  installPhase: false
+  loginUser: ubuntu
+  totalHosts: 8
+  global:
+    environment:
+    ##user defined recipes
+    recipes: 
+     - ssh 
+     - chefClient
+    git:
+      user: jim
+      key: jim
+      repository: https://ghetto.sics.se/jdowling/kthfs-pantry.git
+  ##lists of service, we define a service with the number of instances and roles?  
+  nodes:
+  - service: ndb
+    number: 2
+    hosts: [10.20.0.8, 10.20.0.11]
+    recipes: [MySQLCluster-ndb]
+    chefAttributes: 
+    bittorrent:
+  - service: mgm
+    number: 1
+    hosts: [10.20.0.6]
+    recipes: [MySQLCluster-mgm]
+    chefAttributes: 
+    bittorrent:
+  - service: mysql
+    number: 1
+    hosts: [10.20.0.7]
+    recipes: [MySQLCluster-mysqld]
+    chefAttributes:
+    bittorrent:
+  - service: namenode
+    number: 2
+    hosts: [10.20.0.12, 10.20.0.14]
+    recipes: [KTHFS-namenode]
+    chefAttributes:  
+    bittorrent:  
+  - service: datanode
+    number: 2
+    hosts: [10.20.0.16, 10.20.0.17]
+    recipes: [KTHFS-datanode]
+    chefAttributes:
+    bittorrent:
+  
+
+...

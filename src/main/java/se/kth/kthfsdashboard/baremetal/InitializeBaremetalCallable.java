@@ -91,8 +91,8 @@ public class InitializeBaremetalCallable implements Callable<Set<NodeMetadata>>{
                             e.printStackTrace();
                             System.out.println("Error loading the private Key");
                         } finally {
-                            nodes.put(group.getSecurityGroup(), ready);
-                            messages.addMessage("Nodes created in Security Group " + group.getSecurityGroup() + " with "
+                            nodes.put(group.getService(), ready);
+                            messages.addMessage("Nodes created in Security Group " + group.getService() + " with "
                                     + "basic setup");
                             return ready;
                         }

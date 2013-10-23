@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.kthfsdashboard.virtualization;
+package se.kth.kthfsdashboard.util;
 
 import se.kth.kthfsdashboard.provision.ScriptBuilder;
 import com.google.common.io.Files;

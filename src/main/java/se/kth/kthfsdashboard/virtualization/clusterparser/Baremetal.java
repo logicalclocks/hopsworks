@@ -14,13 +14,13 @@ import java.util.List;
  */
 public class Baremetal implements Serializable{
         private String name;
-        private String environment;
         private boolean installPhase;
         private String loginUser;
         private int totalHosts;
+        private GlobalProperties global;
         
         private List<BaremetalGroup> nodes = new ArrayList<BaremetalGroup>();
-        private List<ChefAttributes>chefAttributes =new ArrayList<ChefAttributes>();
+        
 
     public Baremetal() {
     }
@@ -31,14 +31,6 @@ public class Baremetal implements Serializable{
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getEnvironment() {
-        return environment;
-    }
-
-    public void setEnvironment(String environment) {
-        this.environment = environment;
     }
 
     public boolean isInstallPhase() {
@@ -64,15 +56,7 @@ public class Baremetal implements Serializable{
     public void setNodes(List<BaremetalGroup> nodes) {
         this.nodes = nodes;
     }
-
-    public List<ChefAttributes> getChefAttributes() {
-        return chefAttributes;
-    }
-
-    public void setChefAttributes(List<ChefAttributes> chefAttributes) {
-        this.chefAttributes = chefAttributes;
-    }
-
+   
     public int getTotalHosts() {
         return totalHosts;
     }
@@ -81,12 +65,20 @@ public class Baremetal implements Serializable{
         this.totalHosts = totalHosts;
     }
 
+    public GlobalProperties getGlobal() {
+        return global;
+    }
+
+    public void setGlobal(GlobalProperties global) {
+        this.global = global;
+    }
+
     
     @Override
     public String toString() {
-        return "Baremetal{" + "name=" + name + ", environment=" + environment + ", installPhase=" 
+        return "Baremetal{" + "name=" + name +  ", installPhase=" 
                 + installPhase + ", loginUser=" + loginUser + ", nodes=" + nodes + ", chefAttributes=" 
-                + chefAttributes + '}';
+                + '}';
     }
         
         

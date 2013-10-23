@@ -41,12 +41,12 @@
                 </p:tab>
                 <p:tab title="Nodes:" >
                     <p:accordionPanel value="#{clusterManagementController.cluster.nodes}" var="node">
-                        <p:tab title="Security Group: #{node.securityGroup}">
+                        <p:tab title="Security Group: #{node.service}">
                             <h:panelGrid columns="2" cellpadding="5">
                                 <h:outputLabel value="Number:"/>
                                 <h:outputText value="#{node.number}" />
                                 <h:outputLabel value="Roles:"/>
-                                <h:outputText value="#{node.roles}" />
+                                <h:outputText value="#{node.recipes}" />
                                 <h:outputLabel value="Authorize Ports:"/>
                                 <h:outputText value="#{node.authorizePorts}" />
                             </h:panelGrid>
