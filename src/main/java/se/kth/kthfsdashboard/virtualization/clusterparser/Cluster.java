@@ -15,7 +15,7 @@ public class Cluster implements Serializable{
     private String name;
 //    private String environment;
     private boolean installPhase;
-    private GlobalProperties global;
+    private GlobalProperties global = new GlobalProperties();
 //    private List<String> globalServices=new ArrayList<String>();
 //    private List<String> authorizePorts=new ArrayList<String>();
 //    private List<Integer> authorizeSpecificPorts=new ArrayList<Integer>();

@@ -43,7 +43,7 @@ public class ClusterManagementController implements Serializable {
     private Baremetal baremetalCluster;
     private UploadedFile file;
     private Yaml yaml = new Yaml();
-    private boolean skipChef;
+//    private boolean skipChef;
     private boolean renderEC2;
     private ClusterOptions options = new ClusterOptions();
     private static Logger logger = Logger.getLogger(Cluster.class.getName());
@@ -59,13 +59,19 @@ public class ClusterManagementController implements Serializable {
     private List<NodeGroup> groups;
     private List<Integer> ports;
     private Integer[] selectedPorts;
+    private List<String> globalRecipes;
+    private String[] selectedGlobalRecipes;
     private NodeGroupDataModel groupsModel;
     private BaremetalGroupDataModel baremetalGroupsModel;
     private List<BaremetalGroup> baremetalGroups;
-    private ChefAttributeDataModel chefAttributesModel;
-    private List<ChefAttributes> chefAttributes;
+    //private ChefAttributeDataModel chefAttributesModel;
+    //private List<ChefAttributes> chefAttributes;
     private ClusterEntity[] selectedClusters;
     private ClusterEntity edit;
+    private String addRecipes;
+    private String addPorts;
+    private String editRecipes;
+    private String editPorts;
 
     /**
      * Creates a new instance of ClusterManagementController
@@ -78,9 +84,10 @@ public class ClusterManagementController implements Serializable {
         groups = new ArrayList<NodeGroup>();
         groupsModel = new NodeGroupDataModel(groups);
 
+        globalRecipes = new ArrayList<String>();
         ports = new ArrayList<Integer>();
-        chefAttributes = new ArrayList<ChefAttributes>();
-        chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
+//        chefAttributes = new ArrayList<ChefAttributes>();
+//        chefAttributesModel = new ChefAttributeDataModel(chefAttributes);
     }
 
     public Cluster getCluster() {
@@ -123,14 +130,13 @@ public class ClusterManagementController implements Serializable {
         this.zones = zones;
     }
 
-    public boolean isSkipChef() {
-        return skipChef;
-    }
-
-    public void setSkipChef(boolean skip) {
-        this.skipChef = skip;
-    }
-
+//    public boolean isSkipChef() {
+//        return skipChef;
+//    }
+//
+//    public void setSkipChef(boolean skip) {
+//        this.skipChef = skip;
+//    }
     public ClusterOptions getOptions() {
         return options;
     }
@@ -195,14 +201,29 @@ public class ClusterManagementController implements Serializable {
         this.selectedAttributes = selectedAttributes;
     }
 
-    public ChefAttributeDataModel getChefAttributesModel() {
-        return chefAttributesModel;
+    public String[] getSelectedGlobalRecipes() {
+        return selectedGlobalRecipes;
     }
 
-    public void setChefAttributesModel(ChefAttributeDataModel chefAttributesModel) {
-        this.chefAttributesModel = chefAttributesModel;
+    public void setSelectedGlobalRecipes(String[] selectedGlobalRecipes) {
+        this.selectedGlobalRecipes = selectedGlobalRecipes;
     }
 
+    public List<String> getGlobalRecipes() {
+        return globalRecipes;
+    }
+
+    public void setGlobalRecipes(List<String> globalRecipes) {
+        this.globalRecipes = globalRecipes;
+    }
+
+//    public ChefAttributeDataModel getChefAttributesModel() {
+//        return chefAttributesModel;
+//    }
+//
+//    public void setChefAttributesModel(ChefAttributeDataModel chefAttributesModel) {
+//        this.chefAttributesModel = chefAttributesModel;
+//    }
     public ClusterEntity[] getSelectedClusters() {
         return selectedClusters;
     }
@@ -286,9 +307,9 @@ public class ClusterManagementController implements Serializable {
     }
 
     public void removeClusters() {
-        Collection<ClusterEntity> selection = Arrays.asList(selectedClusters);
-        for (ClusterEntity selections : selection) {
-            clusterEJB.removeCluster(selections);
+        Collection<ClusterEntity> selections = Arrays.asList(selectedClusters);
+        for (ClusterEntity selection : selections) {
+            clusterEJB.removeCluster(selection);
         }
     }
 
@@ -317,50 +338,73 @@ public class ClusterManagementController implements Serializable {
     public String onFlowProcess(FlowEvent event) {
         logger.info("Current wizard step: " + event.getOldStep());
         logger.info("Next step: " + event.getNewStep());
-        if (skipChef) {
-            skipChef = false;	//reset in case user goes back
-            persistNodes();
-            return "confirm";
-        } else {
-            if (event.getNewStep().toLowerCase().indexOf("provider") >= 0) {
-                persistPorts();
-            }
-            if (event.getNewStep().toLowerCase().indexOf("chef") >= 0) {
-                persistNodes();
-            }
-            if (event.getNewStep().toLowerCase().indexOf("confirm") >= 0) {
-                persistChef();
-            }
-            return event.getNewStep();
+
+        if (event.getNewStep().toLowerCase().indexOf("provider") >= 0) {
+
+            persistPorts();
+            persistGlobalRecipes();
         }
+        if (event.getNewStep().toLowerCase().indexOf("confirm") >= 0) {
+            persistNodes();
+        }
+
+        return event.getNewStep();
+
 
     }
 
     /*
      * Form Modifiers to generate the cluster
      */
-    public void addChefJson() {
-        chefAttributes.add(options.getAddRole());
-        options.setAddRole(new ChefAttributes());
-    }
-
-    public void removeChefJson() {
-        Collection<ChefAttributes> selection = Arrays.asList(selectedAttributes);
-        chefAttributes.removeAll(selection);
-    }
-
+//    public void addChefJson() {
+//        chefAttributes.add(options.getAddRole());
+//        options.setAddRole(new ChefAttributes());
+//    }
+//
+//    public void removeChefJson() {
+//        Collection<ChefAttributes> selection = Arrays.asList(selectedAttributes);
+//        chefAttributes.removeAll(selection);
+//    }
     public void addGroup() {
         if (isBaremetal()) {
-            BaremetalGroup temp = options.getAddBaremetalGroupName();
+
             String[] hosts = options.getInputHosts().split(",");
 
-            temp.setHosts(Arrays.asList(hosts));
-            baremetalGroups.add(temp);
+            options.getAddBaremetalGroupName().setHosts(Arrays.asList(hosts));
+            baremetalGroups.add(options.getAddBaremetalGroupName());
             options.setAddBaremetalGroupName(new BaremetalGroup());
             options.setInputHosts("");
+            System.out.println("bye");
         } else {
+            List<Integer> inputPorts = options.getPortsAsList(options.getInputPorts());
+            String[] recipes = options.getInputRecipes().split(",");
+            options.getAddGroupName().setAuthorizePorts(inputPorts);
+            options.getAddGroupName().setRecipes(Arrays.asList(recipes));
             groups.add(options.getAddGroupName());
             options.setAddGroupName(new NodeGroup());
+            options.setInputPorts("");
+            options.setInputRecipes("");
+            System.out.println("hello");
+        }
+    }
+
+    public void editGroup() {
+        if (isBaremetal()) {
+            //todo
+//            String[] hosts = options.getInputHosts().split(",");
+//
+//            options.getAddBaremetalGroupName().setHosts(Arrays.asList(hosts));
+//            baremetalGroups.add(options.getAddBaremetalGroupName());
+//            options.setAddBaremetalGroupName(new BaremetalGroup());
+//            options.setInputHosts("");
+        } else {
+            List<Integer> inputPorts = options.getPortsAsList(options.getEditPorts());
+            String[] recipes = options.getEditRecipes().split(",");
+            options.getEditGroup().setAuthorizePorts(inputPorts);
+            options.getEditGroup().setRecipes(Arrays.asList(recipes));
+            options.setEditGroup(new NodeGroup());
+            options.setInputPorts("");
+            options.setInputRecipes("");
         }
     }
 
@@ -384,6 +428,16 @@ public class ClusterManagementController implements Serializable {
         ports.removeAll(selection);
     }
 
+    public void addRecipe() {
+        globalRecipes.add(options.getGlobalRecipe());
+        Collections.sort(globalRecipes);
+    }
+
+    public void removeGlobalRecipes() {
+        Collection<String> selection = Arrays.asList(selectedGlobalRecipes);
+        globalRecipes.removeAll(selection);
+    }
+
     public NodeGroup[] getSelectedGroup() {
         return selectedGroup;
     }
@@ -405,24 +459,33 @@ public class ClusterManagementController implements Serializable {
 
     private void persistPorts() {
         if (!isBaremetal()) {
-//            cluster.getAuthorizeSpecificPorts().clear();
-//            cluster.getAuthorizeSpecificPorts().addAll(ports);
+            cluster.getGlobal().getAuthorizePorts().clear();
+            cluster.getGlobal().getAuthorizePorts().addAll(ports);
         }
     }
 
-    private void persistChef() {
+    private void persistGlobalRecipes() {
         if (isBaremetal()) {
-//            baremetalCluster.getChefAttributes().clear();
-//            baremetalCluster.getChefAttributes().addAll(chefAttributes);
-//        } else {
-//            if (cluster.getChefAttributes() != null) {
-//                cluster.getChefAttributes().clear();
-//                cluster.getChefAttributes().addAll(chefAttributes);
-//            }
+            baremetalCluster.getGlobal().getRecipes().clear();
+            baremetalCluster.getGlobal().getRecipes().addAll(globalRecipes);
+        } else {
+            cluster.getGlobal().getRecipes().clear();
+            cluster.getGlobal().getRecipes().addAll(globalRecipes);
         }
     }
-
-    public void generateTable(ActionEvent event) {
+    
+//    private void persistChef() {
+//        if (isBaremetal()) {
+////            baremetalCluster.getChefAttributes().clear();
+////            baremetalCluster.getChefAttributes().addAll(chefAttributes);
+////        } else {
+////            if (cluster.getChefAttributes() != null) {
+////                cluster.getChefAttributes().clear();
+////                cluster.getChefAttributes().addAll(chefAttributes);
+////            }
+//        }
+//    }
+    public void generateYAML(ActionEvent event) {
         if (edit != null) {
             edit.setClusterType(clusterType);
 
@@ -498,6 +561,15 @@ public class ClusterManagementController implements Serializable {
         }
 
         return "createClusterWizard";
+    }
+
+    public void editSelectedGroup() {
+        if (selectedGroup.length > 0) {
+            System.out.println(selectedGroup[0]);
+            options.setEditGroup(selectedGroup[0]);
+            options.setEditPorts(selectedGroup[0].getAuthorizePorts().toString());
+            options.setEditRecipes(selectedGroup[0].getRecipes().toString());
+        }
     }
 
     public String loadSelection() {

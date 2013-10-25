@@ -28,10 +28,10 @@
                             <p:panel header="Common Parameters">
                                 <h:messages errorClass="error"/>
                                 <h:panelGrid columns="2" columnClasses="label,value" styleClass="grid">
-                                    <h:outputText value="Cluster name: *" />
+                                    <h:outputText value="Cluster name: " />
                                     <p:inputText required="false" label="name"
                                                  value="#{clusterManagementController.baremetalCluster.name}" />
-                                    <h:outputText value="Environment: *" />
+                                    <h:outputText value="Environment: " />
                                     <p:selectOneMenu id="environment" 
                                                      value="#{clusterManagementController.baremetalCluster.environment}">
                                         <f:selectItem itemLabel="Select One" itemValue="" /> 

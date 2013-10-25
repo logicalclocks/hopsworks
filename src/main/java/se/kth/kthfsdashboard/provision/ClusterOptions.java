@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.ejb.EJB;
 import static org.jclouds.aws.domain.Region.DEFAULT_REGIONS;
 import org.jclouds.ec2.domain.InstanceType;
 import se.kth.kthfsdashboard.virtualization.clusterparser.BaremetalGroup;
@@ -20,7 +21,7 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class ClusterOptions {
-
+    @EJB
     private final Map<String, String> environment = new HashMap<String, String>();
     private final Map<String, String> provider = new HashMap<String, String>();
     private final Map<String, String> roles = new HashMap<String, String>();
@@ -30,11 +31,16 @@ public class ClusterOptions {
     private final Map<String, List<String>> ec2availabilityZones = new HashMap<String, List<String>>();
     
     private int portNumber;
-    private String hosts="";
+    private String globalRecipe;
+    private String hosts;
     private BaremetalGroup addBaremetalGroupName;
     private NodeGroup addGroupName;
+    private NodeGroup editGroup;
     private ChefAttributes addRole;
-
+    private String recipes;
+    private String ports;
+    private String editRecipes;
+    private String editPorts;
     public ClusterOptions() {
 
         environment.put("Production", "prod");
@@ -42,11 +48,11 @@ public class ClusterOptions {
         provider.put("Amazon", "aws-ec2");
         provider.put("OpenStack", "openstack-nova");
 
-        roles.put("MySQLDaemon", "MySQLCluster-mysqld");
-        roles.put("Management Server", "MySQLCluster-mgm");
-        roles.put("NDB", "MySQLCluster-ndb");
-        roles.put("Namenode", "KTHFS-namenode");
-        roles.put("Datanode", "KTHFS-datanode");
+        roles.put("MySQLDaemon", "mysqld");
+        roles.put("Management Server", "mgm");
+        roles.put("NDB", "ndb");
+        roles.put("Namenode", "namenode");
+        roles.put("Datanode", "datanode");
 
         services.put("SSH", "ssh");
         services.put("Chef-Client", "chefClient");
@@ -90,6 +96,7 @@ public class ClusterOptions {
         addGroupName=new NodeGroup();
         addBaremetalGroupName=new BaremetalGroup();
         addRole=new ChefAttributes();
+        editGroup=new NodeGroup();
     }
 
     public Map<String, String> getProvider() {
@@ -151,16 +158,70 @@ public class ClusterOptions {
     public void setAddBaremetalGroupName(BaremetalGroup addBaremetalGroupName) {
         this.addBaremetalGroupName = addBaremetalGroupName;
     }
+
+    public String getGlobalRecipe() {
+        return globalRecipe;
+    }
+
+    public void setGlobalRecipe(String globalRecipe) {
+        this.globalRecipe = globalRecipe;
+    }
+
+    public NodeGroup getEditGroup() {
+        return editGroup;
+    }
+
+    public void setEditGroup(NodeGroup editGroup) {
+        this.editGroup = editGroup;
+    }
     
     public String getInputHosts(){
         return hosts;
     }
     public void setInputHosts(String hosts){
         this.hosts=hosts;
-//       this.addBaremetalGroupName.setHosts(Arrays.asList(splittedHosts));
     }
-//    public String getInputHosts(){
-//        return hosts;
-//    }
+
+    public String getInputRecipes(){
+        return recipes;
+    }
+    
+    public void setInputRecipes(String recipes){
+        this.recipes=recipes;
+    }
+    
+    public String getInputPorts(){
+        return ports;
+    }
+    
+    public void setInputPorts(String ports){
+        this.ports=ports;
+    }
+
+    public String getEditRecipes() {
+        return editRecipes;
+    }
+
+    public void setEditRecipes(String editRecipes) {
+        this.editRecipes = editRecipes;
+    }
+
+    public String getEditPorts() {
+        return editPorts;
+    }
+
+    public void setEditPorts(String editPorts) {
+        this.editPorts = editPorts;
+    }
+    public List<Integer> getPortsAsList(String ports){
+        System.out.println(ports);
+        List<Integer> result = new ArrayList<Integer>();
+        String[] splittedPorts = ports.split(",");
+        for(String port:splittedPorts){
+            result.add(new Integer(port));
+        }
+        return result;
+    }   
+
     
 }

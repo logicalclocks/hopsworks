@@ -127,7 +127,7 @@ public class ClusterParserTest extends TestCase {
         assertEquals(10, mgm.getAuthorizePorts().get(0).intValue());
         assertNull(mgm.getChefAttributes());
 
-        assertEquals("mysql", mysql.getService());
+        assertEquals("mysqld", mysql.getService());
         assertEquals(1, mysql.getNumber());
 
         assertEquals(20, mysql.getAuthorizePorts().get(0).intValue());

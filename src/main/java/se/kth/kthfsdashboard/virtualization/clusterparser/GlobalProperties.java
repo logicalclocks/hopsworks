@@ -4,6 +4,7 @@
  */
 package se.kth.kthfsdashboard.virtualization.clusterparser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,8 +13,8 @@ import java.util.List;
  */
 public class GlobalProperties {
     private String environment;
-    private List<String> recipes;
-    private List<Integer> authorizePorts;
+    private List<String> recipes= new ArrayList<String>();
+    private List<Integer> authorizePorts = new ArrayList<Integer>();
     private GitProperties git;
 
     public GlobalProperties() {

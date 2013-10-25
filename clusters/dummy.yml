@@ -1,3 +1,4 @@
+  !!se.kth.kthfsdashboard.virtualization.clusterparser.Cluster
   name: test2
   installPhase: false
   global:

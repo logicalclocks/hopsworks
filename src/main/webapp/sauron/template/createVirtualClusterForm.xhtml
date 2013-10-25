@@ -35,7 +35,7 @@
                                 <h:messages errorClass="error"/>
 
                                 <h:panelGrid columns="2" columnClasses="label, value" styleClass="grid">
-                                    <h:outputText value="Cluster name: *" />
+                                    <h:outputText value="Cluster name: " />
                                     <p:inputText required="false" label="name"
                                                  value="#{clusterManagementController.cluster.name}" />
 
@@ -47,27 +47,77 @@
                                         <p:ajax listener="#{clusterManagementController.handleProviderChange}"
                                                 event="change" update="instancesEC2 instanceRest" process="@form"/>
                                     </p:selectOneMenu>
-                                    <h:outputText value="Environment: *" />
-                                    <p:selectOneMenu id="environment" value="#{clusterManagementController.cluster.environment}">
+                                    <h:outputText value="Environment: " />
+                                    <p:selectOneMenu id="environment" value="#{clusterManagementController.cluster.global.environment}">
                                         <f:selectItem itemLabel="Select One" itemValue="" /> 
                                         <f:selectItems value="#{clusterManagementController.options.environment}" />
 
                                     </p:selectOneMenu>
                                     <h:outputText value="Install Phase: "/>
                                     <p:selectBooleanCheckbox label="Jump?" value="#{clusterManagementController.cluster.installPhase}"/>
-                                    <h:outputText value="Global Services:" />
-                                    <p:selectManyCheckbox id="scroll" value="#{clusterManagementController.cluster.globalServices}" >  
-                                        <f:selectItems value="#{clusterManagementController.options.services}"  />  
-
-                                    </p:selectManyCheckbox>  
-                                    <h:outputText value="Authorize Ports:" />
-                                    <p:selectManyCheckbox id="scrollPorts" value="#{clusterManagementController.cluster.authorizePorts}" >  
-                                        <f:selectItems value="#{clusterManagementController.options.services}"  />  
-
-                                    </p:selectManyCheckbox>  
-
+                                    <!--                                    <h:outputText value="Global Recipes:" />
+                                                                        <p:selectManyCheckbox id="scroll" value="" >  
+                                                                            <f:selectItems value=""  />  
+                                    
+                                                                        </p:selectManyCheckbox>  -->
 
                                 </h:panelGrid>
+
+                                <h:panelGrid columns="2" columnClasses="value">
+                                    <p:dataTable id="recipeList" var="recipe" 
+                                                 value="#{clusterManagementController.globalRecipes}"
+                                                 rowKey="#{recipe}"
+                                                 selection="#{clusterManagementController.selectedGlobalRecipes}"
+                                                 selectionMode="multiple"
+                                                 editable="true">
+
+                                        <f:facet name="header">
+                                            Click delete selection after selecting multiple instances to delete, use shift-click to select multiples
+                                        </f:facet>
+                                        <p:column headerText="Recipe">
+                                            <p:cellEditor>
+                                                <f:facet name="output">
+                                                    <h:outputText value="#{recipe}" />
+                                                </f:facet>
+                                                <f:facet name="input">
+                                                    <p:inputText value="#{recipe}" />
+                                                </f:facet>
+                                            </p:cellEditor>
+                                        </p:column>
+                                        <p:column headerText="Actions">
+                                            <p:rowEditor />
+                                        </p:column>
+                                    </p:dataTable>
+                                </h:panelGrid>
+                                <p:dialog header="Remove Recipe" widgetVar="removeRecipeDialog" resizable="false"
+                                          id="removeRecipeDig"  
+                                          showEffect="fade" hideEffect="explode" modal="true">  
+                                    <h:outputText id="deleteRecipe" value="Are you sure you want to delete?" />
+                                    <p:commandButton  value="Confirm" update="recipeList" 
+                                                      action="#{clusterManagementController.removeGlobalRecipes}" 
+                                                      oncomplete="editLastDataTableRow removeRecipeDialog.close()"
+                                                      />
+                                </p:dialog>  
+                                <p:dialog header="Add Recipe" widgetVar="addRecipeDialog" resizable="false"
+                                          id="addRecipeDig"
+                                          showEffect="fade" hideEffect="explode" modal="true">
+                                    <h:outputText id="addRecipe" value="Recipe:" />
+                                    <p:inputText id="globalRecipe"
+                                                 value="#{clusterManagementController.options.globalRecipe}"/>
+                                    <p:commandButton id="acceptRecipe" value="Confirm" update="recipeList" 
+                                                     action="#{clusterManagementController.addRecipe}"
+                                                     oncomplete="editLastDataTableRow addRecipeDialog.close()"
+                                                     />
+
+                                </p:dialog>
+                                <p:commandButton id="addRecipeButton" value="New Recipe" 
+                                                 icon="ui-icon-plusthick"
+                                                 update="mainForm:addRecipe" 
+                                                 oncomplete="addRecipeDialog.show()" title="VIew"
+                                                 />
+                                <p:commandButton id="deleteRecipeButton" value="Delete Selection" 
+                                                 update="mainForm:deleteRecipe" 
+                                                 oncomplete="removeRecipeDialog.show()" icon="ui-icon-minusthick" title="View"/>
                                 <h:panelGrid columns="2" columnClasses="label, value">
                                     <p:dataTable id="portList" var="port" 
                                                  value="#{clusterManagementController.ports}"
@@ -185,75 +235,38 @@
                         <p:tab id="nodeGroups" title="Groups">
                             <p:panel header="Cluster Nodes">
                                 <!--<h:form id="groupTableForm">-->
-                                <h:panelGrid columns="2">
-                                    <h:outputText value="Skip Chef override configuration:"/>
-                                    <h:selectBooleanCheckbox value="#{clusterManagementController.skipChef}"/>
-                                </h:panelGrid>
-                                <h:panelGrid columns="5" columnClasses="label, value" >
+
+                                <h:panelGrid columns="2" columnClasses="label, value" >
 
 
                                     <p:dataTable id="groupList" var="group" 
                                                  value="#{clusterManagementController.groupsModel}"
-                                                 rowKey="#{group.securityGroup}"
+                                                 rowKey="#{group.service}"
                                                  selection="#{clusterManagementController.selectedGroup}"
                                                  selectionMode="multiple"
-                                                 editable="true">
-
+                                                 editable="false">
                                         <f:facet name="header">
                                             Click delete selection after selecting multiple instances to delete, use shift-click to select multiples
                                         </f:facet>
-                                        <p:column headerText="Group Name">
-                                            <p:cellEditor>
-                                                <f:facet name="output">
-                                                    <h:outputText value="#{group.securityGroup}" />
-                                                </f:facet>
-                                                <f:facet name="input">
-                                                    <p:inputText value="#{group.securityGroup}" />
-                                                </f:facet>
-                                            </p:cellEditor>
+                                        <p:column headerText="Service">
+                                            <h:outputText value="#{group.service}" />
                                         </p:column>
                                         <p:column headerText="Number of Nodes">
-                                            <p:cellEditor>
-                                                <f:facet name="output">
-                                                    <h:outputText value="#{group.number}" />
-                                                </f:facet>
-                                                <f:facet name="input">
-                                                    <p:inputText value="#{group.number}" />
-                                                </f:facet>
-                                            </p:cellEditor>
+                                            <h:outputText value="#{group.number}" />
                                         </p:column>
-                                        <p:column headerText="Roles and Ports">
-                                            <p:cellEditor>
-                                                <f:facet name="output">
-                                                    <h:outputText value="Roles: #{group.roles}" />
-                                                </f:facet>
-                                                
-                                                <f:facet name="output">
-                                                    <h:outputText value="Ports: #{group.authorizePorts}"/>
-                                                </f:facet>
-                                                <f:facet name="input">
-                                                    <h:outputText value="Roles:"/>
-                                                    <p:selectManyCheckbox id="roles" value="#{group.roles}" >  
-                                                        <f:selectItems value="#{clusterManagementController.options.roles}"  />  
-
-                                                    </p:selectManyCheckbox>  
-                                                </f:facet>
-
-                                                <f:facet name="input">
-                                                    <h:outputText value="Ports:"/>
-                                                    <p:selectManyCheckbox id="rolePorts" value="#{group.authorizePorts}" >  
-                                                        <f:selectItems value="#{clusterManagementController.options.roles}"  />  
-                                                    </p:selectManyCheckbox>
-                                                </f:facet>
-                                            </p:cellEditor>
+                                        <p:column headerText="Recipes">       
+                                            <h:outputText value="#{group.recipes}"/>         
                                         </p:column>
-
-                                        <p:column headerText="Actions">
-                                            <p:rowEditor />
+                                        <p:column headerText="Ports">
+                                            <h:outputText value="#{group.authorizePorts}"/>
                                         </p:column>
-
+                                        <p:column headerText="Bittorrent">
+                                            <h:outputText value="#{group.bittorrent}"/>
+                                        </p:column>
+                                        <p:column headerText="Chef Attributes">
+                                            <h:outputText value="#{group.chefAttributes}"/>
+                                        </p:column>
                                     </p:dataTable>
-
                                 </h:panelGrid>
                                 <p:dialog header="Remove Group" widgetVar="removeDialog" resizable="false"
                                           id="groupDig"  
@@ -267,130 +280,83 @@
                                 <p:dialog header="Add Group" widgetVar="addGroup" resizable="false"
                                           id="addDig"
                                           showEffect="fade" hideEffect="explode" modal="true">
+<!--                                    <h:form id="createGroup">-->
                                     <h:panelGrid columns="2" >
-                                        <h:outputText id="addGroup" value="Group name:" />
-                                        <p:inputText id="groupName" 
-                                                     value="#{clusterManagementController.options.addGroupName.service}"
-                                                     />
+                                        <h:outputText id="addGroup" value="Service:" />
+                                        <p:selectOneMenu id="serviceName" 
+                                                         value="#{clusterManagementController.options.addGroupName.service}" 
+                                                         >
+                                            <f:selectItem itemLabel="Select One" itemValue="" /> 
+                                            <f:selectItems value="#{clusterManagementController.options.roles}" />
+                                        </p:selectOneMenu>
+                                        <h:outputText value="Bittorrent support:"/>
+                                        <p:selectOneMenu value="#{clusterManagementController.options.addGroupName.bittorrent}">
+                                            <f:selectItem itemLabel="True" itemValue="true"/>
+                                            <f:selectItem itemLabel="False" itemValue="false"/>
+                                        </p:selectOneMenu>
                                         <h:outputText value="Number of Nodes:"/>
                                         <p:inputText value="#{clusterManagementController.options.addGroupName.number}"/>
-                                        <h:outputText value="Roles:"/>
-                                        <p:selectManyCheckbox value="#{clusterManagementController.options.addGroupName.recipes}" >  
-                                            <f:selectItems value="#{clusterManagementController.options.roles}"  />  
-                                        </p:selectManyCheckbox>  
+                                        <h:outputText value="Recipes:"/>
+                                        <p:inputTextarea value="#{clusterManagementController.options.inputRecipes}"  autoResize="true"/> 
                                         <h:outputText value="Ports:"/>
-                                        <p:selectManyCheckbox value="#{clusterManagementController.options.addGroupName.authorizePorts}" >  
-                                            <f:selectItems value="#{clusterManagementController.options.roles}"  />  
-                                        </p:selectManyCheckbox>  
-
+                                        <p:inputTextarea value="#{clusterManagementController.options.inputPorts}" autoResize="true"/>   
+                                        <h:outputText value="Chef Attributes:"/>
+                                        <p:inputTextarea value="#{clusterManagementController.options.addGroupName.chefAttributes}" autoResize="true"/>   
                                     </h:panelGrid>
                                     <p:commandButton id="acceptName" value="Confirm" update="groupList" 
+                                                     process="addDig"
                                                      action="#{clusterManagementController.addGroup}"
                                                      oncomplete="editLastDataTableRow addGroup.close()"
                                                      />
 
                                 </p:dialog>
-                                <p:commandButton id="addGroupButton" value="New Group" 
-                                                 icon="ui-icon-plusthick"
-                                                 update="mainForm:addGroup" 
-                                                 oncomplete="addGroup.show()" title="VIew"
-                                                 />
-                                <p:commandButton id="deleteButton" value="Delete Selection" 
-                                                 update="mainForm:deletemsg" 
-                                                 oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
-                                <!--</h:form>-->
-                            </p:panel>
-
-                        </p:tab>
-
-                        <p:tab id="chefAttributes" title="Override Chef">
-                            <p:panel header="Override Chef">
-
-                                <h:messages errorClass="error"/>
-
-                                <h:panelGrid columns="3" columnClasses="label, value">
-                                    <p:dataTable id="roleList" var="chef"
-                                                 value="#{clusterManagementController.chefAttributesModel}"
-                                                 rowKey="#{chef.role}"
-                                                 selection="#{clusterManagementController.selectedAttributes}"
-                                                 selectionMode="multiple"
-                                                 editable="true">
-
-                                        <f:facet name="header">
-                                            Click delete selection after selecting multiple instances to delete, use shift-click to select multiples
-                                        </f:facet>
-                                        <p:column headerText="Role">
-                                            <p:cellEditor>
-                                                <f:facet name="output">
-                                                    <h:outputText value="#{chef.role}" />
-                                                </f:facet>
-                                                <f:facet name="input">
-                                                    <p:selectOneMenu 
-                                                        value="#{clusterManagementController.options.addRole.role}" >
-                                                        <f:selectItem itemLabel="Select One" itemValue="" /> 
-                                                        <f:selectItems value="#{clusterManagementController.options.roles}" />
-                                                    </p:selectOneMenu>
-                                                </f:facet>
-                                            </p:cellEditor>
-                                        </p:column>
-                                        <p:column headerText="Chef JSON">
-                                            <p:cellEditor>
-                                                <f:facet name="output">
-                                                    <h:outputText value="" />
-                                                </f:facet>
-                                                <f:facet name="input">
-                                                    <p:inputTextarea autoResize="true" value="#{chef.chefJson}"  />
-                                                </f:facet>
-                                            </p:cellEditor>
-                                        </p:column>
-                                        <p:column headerText="Actions">
-                                            <p:rowEditor />
-                                        </p:column>
-
-                                    </p:dataTable>
-                                </h:panelGrid>
-                                <p:dialog header="Remove Json" widgetVar="removeChefJSONDialog" resizable="false"
-                                          id="removeJSONDig"  
-                                          showEffect="fade" hideEffect="explode" modal="true">  
-                                    <h:outputText id="deleteJSON" value="Are you sure you want to delete?" />
-                                    <p:commandButton  value="Confirm" update="roleList" 
-                                                      action="#{clusterManagementController.removeChefJson}" 
-                                                      oncomplete="editLastDataTableRow removeChefJSONDialog.close()"
-                                                      />
-                                </p:dialog>  
-                                <p:dialog header="Add Json" widgetVar="addChefJSONDialog" resizable="false"
-                                          id="addJSONDig"
+                                <p:dialog header="Edit Group" widgetVar="editGroup" resizable="false"
+                                          id="editDig"
                                           showEffect="fade" hideEffect="explode" modal="true">
-                                    <h:panelGrid columns="2">
-                                        <h:outputText id="addJSON" value="Role:" />
-                                        <p:selectOneMenu id="chefRoles" 
-                                                         value="#{clusterManagementController.options.addRole.role}" >
+                                    <h:panelGrid columns="2" >
+                                        <h:outputText id="editGroup" value="Service:" />
+                                        <p:selectOneMenu 
+                                            value="#{clusterManagementController.options.editGroup.service}" 
+                                                         >
                                             <f:selectItem itemLabel="Select One" itemValue="" /> 
                                             <f:selectItems value="#{clusterManagementController.options.roles}" />
                                         </p:selectOneMenu>
-                                        <h:outputText value="Chef JSON:"/>
-                                        <p:inputTextarea  autoResize="true" 
-                                                          value="#{clusterManagementController.options.addRole.chefJson}"/>
+                                        <h:outputText value="Bittorrent support:"/>
+                                        <p:selectOneMenu value="#{clusterManagementController.options.editGroup.bittorrent}">
+                                            <f:selectItem itemLabel="True" itemValue="true"/>
+                                            <f:selectItem itemLabel="False" itemValue="false"/>
+                                        </p:selectOneMenu>
+                                        <h:outputText value="Number of Nodes:"/>
+                                        <p:inputText value="#{clusterManagementController.options.editGroup.number}"/>
+                                        <h:outputText value="Recipes:"/>
+                                        <p:inputTextarea value="#{clusterManagementController.options.editRecipes}" autoResize="true"/> 
+                                        <h:outputText value="Ports:"/>
+                                        <p:inputTextarea value="#{clusterManagementController.options.editPorts}" autoResize="true"/>   
+                                        <h:outputText value="Chef Attributes:"/>
+                                        <p:inputTextarea value="#{clusterManagementController.options.editGroup.chefAttributes}" autoResize="true"/>   
                                     </h:panelGrid>
-
-
-                                    <p:commandButton  value="Confirm" update="groupList" 
-                                                      action="#{clusterManagementController.addChefJson}"
-                                                      oncomplete="editLastDataTableRow addChefJSONDialog.close()"
-                                                      />
-
+                                    <p:commandButton value="Confirm" update="groupList" 
+                                                     process="editDig"
+                                                     action="#{clusterManagementController.editGroup}"
+                                                     oncomplete="editLastDataTableRow editGroup.close()"
+                                                     />
                                 </p:dialog>
-                                <p:commandButton id="addChefButton" value="New Chef" 
+                                <p:commandButton id="addGroupButton" value="New Group" 
                                                  icon="ui-icon-plusthick"
-                                                 update="mainForm:addJSON" 
-                                                 oncomplete="addChefJSONDialog.show()" title="VIew"
+                                                 update="mainForm:addDig" 
+                                                 oncomplete="addGroup.show()" title="View"
                                                  />
-                                <p:commandButton id="deleteChefButton" value="Delete Selection" 
-                                                 update="mainForm:deleteJSON" 
-                                                 oncomplete="removeChefJSONDialog.show()" icon="ui-icon-minusthick" 
-                                                 title="View"/>
+                                <p:commandButton id="editButton" value="Edit selection"
+                                                 update="mainForm:editDig"
+                                                 actionListener="#{clusterManagementController.editSelectedGroup}"
+                                                 oncomplete="editGroup.show()" title="View"/>
+                                <p:commandButton id="deleteButton" value="Delete Selection" 
+                                                 update="mainForm:deletemsg" 
+                                                 oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
                             </p:panel>
+
                         </p:tab>
+
                         <p:tab id="confirm" title="Confirmation">
                             <p:panel header="Confirmation">
 
@@ -400,7 +366,7 @@
 
                             </p:panel>
                             <p:commandButton value="Submit" update="growl"
-                                             actionListener="#{clusterManagementController.generateTable}"
+                                             actionListener="#{clusterManagementController.generateYAML}"
                                              action="proceedLaunchCluster"/>
                         </p:tab>
 
