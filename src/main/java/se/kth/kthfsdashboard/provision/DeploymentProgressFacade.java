@@ -66,7 +66,8 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
                 progress.setCluster(cluster.getName());
                 progress.setNodeId(group.getService() + i);
                 progress.setPhase(DeploymentPhase.WAITING.toString());
-                progress.setRole(group.getRecipes().toString());
+                
+                progress.setRole(group.getService());
                 persistNodeProgress(progress);
             }
         }

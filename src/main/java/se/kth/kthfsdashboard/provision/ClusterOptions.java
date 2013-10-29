@@ -5,7 +5,6 @@
 package se.kth.kthfsdashboard.provision;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +12,6 @@ import javax.ejb.EJB;
 import static org.jclouds.aws.domain.Region.DEFAULT_REGIONS;
 import org.jclouds.ec2.domain.InstanceType;
 import se.kth.kthfsdashboard.virtualization.clusterparser.BaremetalGroup;
-import se.kth.kthfsdashboard.virtualization.clusterparser.ChefAttributes;
 import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
 
 /**
@@ -21,6 +19,7 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class ClusterOptions {
+
     @EJB
     private final Map<String, String> environment = new HashMap<String, String>();
     private final Map<String, String> provider = new HashMap<String, String>();
@@ -29,18 +28,19 @@ public class ClusterOptions {
     private final List<String> ec2Regions = new ArrayList<String>(DEFAULT_REGIONS);
     private final List<String> ec2InstanceTypes = new ArrayList<String>();
     private final Map<String, List<String>> ec2availabilityZones = new HashMap<String, List<String>>();
-    
     private int portNumber;
     private String globalRecipe;
     private String hosts;
-    private BaremetalGroup addBaremetalGroupName;
-    private NodeGroup addGroupName;
+    private BaremetalGroup addBaremetalGroup;
+    private BaremetalGroup editBaremetalGroup;
+    private NodeGroup addGroup;
     private NodeGroup editGroup;
-    private ChefAttributes addRole;
     private String recipes;
     private String ports;
     private String editRecipes;
     private String editPorts;
+    private String editHosts;
+
     public ClusterOptions() {
 
         environment.put("Production", "prod");
@@ -92,11 +92,11 @@ public class ClusterOptions {
             }
             ec2availabilityZones.put(region, temp);
         }
-        
-        addGroupName=new NodeGroup();
-        addBaremetalGroupName=new BaremetalGroup();
-        addRole=new ChefAttributes();
-        editGroup=new NodeGroup();
+
+        addGroup = new NodeGroup();
+        addBaremetalGroup = new BaremetalGroup();
+        editBaremetalGroup = new BaremetalGroup();
+        editGroup = new NodeGroup();
     }
 
     public Map<String, String> getProvider() {
@@ -130,33 +130,25 @@ public class ClusterOptions {
     public void setPortNumber(int portNumber) {
         this.portNumber = portNumber;
     }
-   
+
     public Map<String, List<String>> getEc2availabilityZones() {
         return ec2availabilityZones;
     }
-    
-    public ChefAttributes getAddRole() {
-        return addRole;
+
+    public NodeGroup getAddGroup() {
+        return addGroup;
     }
 
-    public void setAddRole(ChefAttributes addRole) {
-        this.addRole = addRole;
+    public void setAddGroup(NodeGroup addGroup) {
+        this.addGroup = addGroup;
     }
 
-    public NodeGroup getAddGroupName() {
-        return addGroupName;
+    public BaremetalGroup getAddBaremetalGroup() {
+        return addBaremetalGroup;
     }
 
-    public void setAddGroupName(NodeGroup addGroupName) {
-        this.addGroupName = addGroupName;
-    }
-
-    public BaremetalGroup getAddBaremetalGroupName() {
-        return addBaremetalGroupName;
-    }
-
-    public void setAddBaremetalGroupName(BaremetalGroup addBaremetalGroupName) {
-        this.addBaremetalGroupName = addBaremetalGroupName;
+    public void setAddBaremetalGroup(BaremetalGroup addBaremetalGroup) {
+        this.addBaremetalGroup = addBaremetalGroup;
     }
 
     public String getGlobalRecipe() {
@@ -174,28 +166,29 @@ public class ClusterOptions {
     public void setEditGroup(NodeGroup editGroup) {
         this.editGroup = editGroup;
     }
-    
-    public String getInputHosts(){
+
+    public String getInputHosts() {
         return hosts;
     }
-    public void setInputHosts(String hosts){
-        this.hosts=hosts;
+
+    public void setInputHosts(String hosts) {
+        this.hosts = hosts;
     }
 
-    public String getInputRecipes(){
+    public String getInputRecipes() {
         return recipes;
     }
-    
-    public void setInputRecipes(String recipes){
-        this.recipes=recipes;
+
+    public void setInputRecipes(String recipes) {
+        this.recipes = recipes;
     }
-    
-    public String getInputPorts(){
+
+    public String getInputPorts() {
         return ports;
     }
-    
-    public void setInputPorts(String ports){
-        this.ports=ports;
+
+    public void setInputPorts(String ports) {
+        this.ports = ports;
     }
 
     public String getEditRecipes() {
@@ -213,15 +206,21 @@ public class ClusterOptions {
     public void setEditPorts(String editPorts) {
         this.editPorts = editPorts;
     }
-    public List<Integer> getPortsAsList(String ports){
-        System.out.println(ports);
-        List<Integer> result = new ArrayList<Integer>();
-        String[] splittedPorts = ports.split(",");
-        for(String port:splittedPorts){
-            result.add(new Integer(port));
-        }
-        return result;
-    }   
 
-    
+    public BaremetalGroup getEditBaremetalGroup() {
+        return editBaremetalGroup;
+    }
+
+    public void setEditBaremetalGroup(BaremetalGroup editBaremetalGroup) {
+        this.editBaremetalGroup = editBaremetalGroup;
+    }
+
+    public String getEditHosts() {
+        return editHosts;
+    }
+
+    public void setEditHosts(String editHosts) {
+        this.editHosts = editHosts;
+    }
+
 }

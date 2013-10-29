@@ -204,14 +204,25 @@ public final class VirtualizedClusterProvision implements Provision {
                     }
                 }
 
-                //Authorize the global ports TCP
-                for (int port : Ints.toArray(globalPorts)) {
+                //Authorize the global ports TCP + extra ports of the group
+                for (Integer port : globalPorts) {
                     if (!openTCP.contains(port)) {
                         client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
-                                groupName, IpProtocol.TCP, port, port, "0.0.0.0/0");
+                                groupName, IpProtocol.TCP, port.intValue(), port.intValue(), "0.0.0.0/0");
                         openTCP.add(port);
                     }
                 }
+
+                if (group.getAuthorizePorts()!=null) {
+                    for (Integer port : group.getAuthorizePorts()) {
+                        if (!openTCP.contains(port)) {
+                            client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
+                                    groupName, IpProtocol.TCP, port.intValue(), port.intValue(), "0.0.0.0/0");
+                            openTCP.add(port);
+                        }
+                    }
+                }
+
                 //This is a delay we must use for EC2. There is a limit on REST requests and if we dont limit the
                 //bursts of the requests it will fail
                 try {
@@ -279,15 +290,29 @@ public final class VirtualizedClusterProvision implements Provision {
 
 
                         //Authorize the global ports
-                        for (int port : Ints.toArray(globalPorts)) {
+                        for (Integer port : globalPorts) {
                             if (!openTCP.contains(port)) {
                                 Ingress ingress = Ingress.builder()
-                                        .fromPort(port)
-                                        .toPort(port)
+                                        .fromPort(port.intValue())
+                                        .toPort(port.intValue())
                                         .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.TCP)
                                         .build();
                                 client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
                                 openTCP.add(port);
+                            }
+                        }
+
+                        if (group.getAuthorizePorts()!=null) {
+                            for (Integer port : group.getAuthorizePorts()) {
+                                if (!openTCP.contains(port)) {
+                                    Ingress ingress = Ingress.builder()
+                                            .fromPort(port.intValue())
+                                            .toPort(port.intValue())
+                                            .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.TCP)
+                                            .build();
+                                    client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
+                                    openTCP.add(port);
+                                }
                             }
                         }
                         //This is a delay we must use for EC2. There is a limit on REST requests and if we dont limit the
@@ -321,6 +346,7 @@ public final class VirtualizedClusterProvision implements Provision {
                     .scriptType(ScriptBuilder.ScriptType.INIT)
                     .publicKey(publicKey)
                     .gitRepo(cluster.getGlobal().getGit().getRepository())
+                    .gitName(cluster.getGlobal().getGit().getUser())
                     .build();
             selectProviderTemplateOptions(cluster, kthfsTemplate, initScript);
 

@@ -17,7 +17,7 @@ public class Baremetal implements Serializable{
         private boolean installPhase;
         private String loginUser;
         private int totalHosts;
-        private GlobalProperties global;
+        private GlobalProperties global=new GlobalProperties();
         
         private List<BaremetalGroup> nodes = new ArrayList<BaremetalGroup>();
         

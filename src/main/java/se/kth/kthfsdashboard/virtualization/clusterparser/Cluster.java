@@ -13,28 +13,11 @@ import java.util.List;
 public class Cluster implements Serializable{
 
     private String name;
-//    private String environment;
     private boolean installPhase;
     private GlobalProperties global = new GlobalProperties();
-//    private List<String> globalServices=new ArrayList<String>();
-//    private List<String> authorizePorts=new ArrayList<String>();
-//    private List<Integer> authorizeSpecificPorts=new ArrayList<Integer>();
     private Provider provider = new Provider();
     private List<NodeGroup> nodes = new ArrayList<NodeGroup>();
 
-//    private List<ChefAttributes> chefAttributes= new ArrayList<ChefAttributes>();
-
-//    public List<String> getGlobalServices() {
-//        return globalServices;
-//    }
-//
-//    public void setGlobalServices(List<String> globalServices) {
-//        this.globalServices = globalServices;
-//    }
-//
-//    public List<String> getAuthorizePorts() {
-//        return authorizePorts;
-//    }
 
     public boolean isInstallPhase() {
         return installPhase;
@@ -44,26 +27,6 @@ public class Cluster implements Serializable{
         this.installPhase = installPhase;
     }
 
-//    public void setAuthorizePorts(List<String> authorizePorts) {
-//        this.authorizePorts = authorizePorts;
-//    }
-//
-//    public List<Integer> getAuthorizeSpecificPorts() {
-//        return authorizeSpecificPorts;
-//    }
-//
-//    public void setAuthorizeSpecificPorts(List<Integer> authorizeSpecificPorts) {
-//        this.authorizeSpecificPorts = authorizeSpecificPorts;
-//    }
-   
-//    public List<ChefAttributes> getChefAttributes() {
-//        return chefAttributes;
-//    }
-//
-//    public void setChefAttributes(List<ChefAttributes> chefAttributes) {
-//        this.chefAttributes = chefAttributes;
-//    }
-
     public String getName() {
         return name;
     }
@@ -71,15 +34,7 @@ public class Cluster implements Serializable{
     public void setName(String name) {
         this.name = name;
     }
-
-//    public String getEnvironment() {
-//        return environment;
-//    }
-//
-//    public void setEnvironment(String environment) {
-//        this.environment = environment;
-//    }
-    
+   
     public Provider getProvider() {
         return provider;
     }

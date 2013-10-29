@@ -84,6 +84,17 @@ public class BaremetalGroup implements Serializable {
         this.chefAttributes = chefAttributes;
     }
     
+    public String getStringRecipes() {
+        String temp = recipes.toString().replaceAll("\\[", "");
+        temp = temp.replaceAll(" ", "");
+        return temp.toString().replaceAll("\\]", "");
+    }
+    
+    public void setStringRecipes(String recipes){
+        String[] splittedRecipes = recipes.split(",");
+        setRecipes(Arrays.asList(splittedRecipes));
+    }
+    
     @Override
     public String toString() {
         return "BaremetalGroup{" + "securityGroup=" + service + ", number="

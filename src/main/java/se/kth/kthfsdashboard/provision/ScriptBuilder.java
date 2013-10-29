@@ -239,8 +239,8 @@ public class ScriptBuilder implements Statement {
                 statements.add(exec("cd /etc/chef;"));
                 statements.add(exec("sudo wget http://lucan.sics.se/kthfs/solo.rb;"));
                 //Setup and fetch git recipes
-                statements.add(exec("git config --global user.name \"Jim Dowling\";"));
-                statements.add(exec("git config --global user.email \"jdowling@sics.se\";"));
+                statements.add(exec("git config --global user.name \""+gitName+"\";"));
+                //statements.add(exec("git config --global user.email \"jdowling@sics.se\";"));
                 statements.add(exec("git config --global http.sslVerify false;"));
                 statements.add(exec("git config --global http.postBuffer 524288000;"));
                 statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
@@ -411,16 +411,16 @@ public class ScriptBuilder implements Statement {
         json.append("\"clients\":[");
         //Depending of the security group name of the demo we specify which collectd config to use
         Set<String> roleSet = new HashSet<String>(roles);
-        if (roleSet.contains("MySQLCluster-mysqld") // JIM: We can just have an empty clients list for mgm and ndb nodes    
+        if (roleSet.contains("mysqld") // JIM: We can just have an empty clients list for mgm and ndb nodes    
                 //                || group.getSecurityGroup().equals("mgm")
                 //                || group.getSecurityGroup().equals("ndb")
                 ) {
             json.append("\"mysqld\"");
         }
-        if (roleSet.contains("KTHFS-datanode")) {
+        if (roleSet.contains("datanode")) {
             json.append("\"dn\"");
         }
-        if (roleSet.contains("KTHFS-namenode")) {
+        if (roleSet.contains("namenode")) {
             json.append("\"nn\"");
         }
         json.append("]},");
@@ -435,7 +435,7 @@ public class ScriptBuilder implements Statement {
         json.append("\"cluster\":\"").append(clusterName).append("\",");
         json.append("\"hostid\":\"").append(nodeId).append("\",");
 
-        if (roleSet.contains("KTHFS-datanode") || roleSet.contains("KTHFS-namenode")) {
+        if (roleSet.contains("datanode") || roleSet.contains("namenode")) {
             json.append("\"service\":\"").append("KTHFS").append("\",");
         }
 //        else{

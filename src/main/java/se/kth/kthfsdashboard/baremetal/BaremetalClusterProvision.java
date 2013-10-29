@@ -93,6 +93,7 @@ public class BaremetalClusterProvision implements Provision {
                 .scriptType(ScriptBuilder.ScriptType.INIT)
                 .publicKey(publicKey)
                 .gitRepo(cluster.getGlobal().getGit().getRepository())
+                .gitName(cluster.getGlobal().getGit().getUser())
                 .build();
 
         for (final BaremetalGroup group : cluster.getNodes()) {

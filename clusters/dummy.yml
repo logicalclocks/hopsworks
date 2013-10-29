@@ -13,8 +13,8 @@
      - 3321
     git:
       user: jim
-      key: jim
       repository: https://ghetto.sics.se/jdowling/kthfs-pantry.git
+      key: jim
   provider:
     name: aws-ec2
     instanceType: m1.large

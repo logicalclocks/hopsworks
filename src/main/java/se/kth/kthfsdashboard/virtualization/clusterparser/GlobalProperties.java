@@ -15,7 +15,7 @@ public class GlobalProperties {
     private String environment;
     private List<String> recipes= new ArrayList<String>();
     private List<Integer> authorizePorts = new ArrayList<Integer>();
-    private GitProperties git;
+    private GitProperties git = new GitProperties();
 
     public GlobalProperties() {
     }
