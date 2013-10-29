@@ -320,6 +320,8 @@ public class ClusterManagementController implements Serializable {
     public String proceedCreateWizard() {
         globalRecipes.clear();
         ports.clear();
+        baremetalGroups.clear();
+        groups.clear();
         if (!isBaremetal()) {
             cluster = new Cluster();
             cluster.getProvider().setImage("eu-west-1/ami-ffcdce8b");
