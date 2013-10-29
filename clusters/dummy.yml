@@ -1,4 +1,4 @@
-!!se.kth.kthfsdashboard.virtualization.clusterparser.Cluster
+  !!se.kth.kthfsdashboard.virtualization.clusterparser.Cluster
   name: test2
   installPhase: false
   global:
@@ -12,9 +12,9 @@
      - 4343 
      - 3321
     git:
-      user: Jim Dowling
+      user: jim
       repository: https://ghetto.sics.se/jdowling/kthfs-pantry.git
-      key: notNull
+      key: jim
   provider:
     name: aws-ec2
     instanceType: m1.large
@@ -30,15 +30,29 @@
     
   - service: mgm
     number: 1
-    
+    recipes: 
+    authorizePorts: 
+      - 10
+    chefAttributes:
+    bittorrent:
   - service: mysqld
     number: 1
-    
+    recipes: 
+    authorizePorts: 
+      - 20
+    chefAttributes:
   - service: namenode
     number: 2
-   
+    recipes:
+      - namenode
+    authorizePorts:
+     - 30
+    chefAttributes:
   - service: datanode
     number: 2
-    
+    recipes: 
+    authorizePorts: 
+     - 40   
+    chefAttributes:
 
 ...

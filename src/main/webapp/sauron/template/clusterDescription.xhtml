@@ -14,15 +14,20 @@
                         <h:outputLabel value="Name:"/>
                         <h:outputText value="#{clusterManagementController.cluster.name}" />
                         <h:outputLabel value="Environment:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.environment}" />
+                        <h:outputText value="#{clusterManagementController.cluster.global.environment}" />
                         <h:outputText value="Install Phase:"/>
                         <h:outputText value="#{clusterManagementController.cluster.installPhase}"/>
-                        <h:outputLabel value="Global Services:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.globalServices}" />
+                        <h:outputLabel value="Recipes:"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.recipes}" />
                         <h:outputLabel value="Authorize Ports:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.authorizePorts}" />
-                        <h:outputLabel value="Authorize Specific Ports:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.authorizeSpecificPorts}" />
+                        <h:outputText value="#{clusterManagementController.cluster.global.authorizePorts}" />
+                        <h:outputLabel value="Git user:"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.git.user}" />
+                        <h:outputLabel value="Git repository:"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.git.repository}" />
+                        <h:outputLabel value="Git key:"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.git.key}" />
+                        
                     </h:panelGrid>
                 </p:tab>
                 <p:tab title="Provider Details:">
@@ -41,29 +46,23 @@
                 </p:tab>
                 <p:tab title="Nodes:" >
                     <p:accordionPanel value="#{clusterManagementController.cluster.nodes}" var="node">
-                        <p:tab title="Security Group: #{node.securityGroup}">
+                        <p:tab title="Service: #{node.service}">
                             <h:panelGrid columns="2" cellpadding="5">
                                 <h:outputLabel value="Number:"/>
                                 <h:outputText value="#{node.number}" />
-                                <h:outputLabel value="Roles:"/>
-                                <h:outputText value="#{node.roles}" />
+                                <h:outputLabel value="Recipes:"/>
+                                <h:outputText value="#{node.recipes}" />
                                 <h:outputLabel value="Authorize Ports:"/>
                                 <h:outputText value="#{node.authorizePorts}" />
+                                <h:outputLabel value="Chef Attributes:"/>
+                                <h:outputText value="#{node.chefAttributes}" />
+                                <h:outputLabel value="Bittorrent:"/>
+                                <h:outputText value="#{node.bittorrent}" />
                             </h:panelGrid>
                         </p:tab>
                     </p:accordionPanel>
                 </p:tab>
-                <p:tab title="Chef Attributes:" >
-                    <p:accordionPanel value="#{clusterManagementController.cluster.chefAttributes}" var="chef">
-                        <p:tab title="Role: #{chef.role}">
-                            <h:panelGrid columns="2" cellpadding="5">
-                                <h:outputLabel value="Json:"/>
-                                <h:outputText value="#{chef.chefJson}" />
-
-                            </h:panelGrid>
-                        </p:tab>
-                    </p:accordionPanel>
-                </p:tab>
+                
             </p:accordionPanel>
             <br/>
         </ui:composition>

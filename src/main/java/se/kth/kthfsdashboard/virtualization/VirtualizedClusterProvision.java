@@ -140,18 +140,24 @@ public final class VirtualizedClusterProvision implements Provision {
 
         String region = cluster.getProvider().getRegion();
         //List to gather  ports, we initialize with the ports defined by the user
-        List<Integer> globalPorts = new LinkedList<Integer>(cluster.getAuthorizeSpecificPorts());
+        List<Integer> globalPorts = new LinkedList<Integer>(cluster.getGlobal().getAuthorizePorts());
 
-        //All need the kthfsagent ports opened
+        //All need the kthfsagent ports opened, SSH and web ports
         globalPorts.addAll(Ints.asList(commonTCP.get("kthfsagent")));
+        globalPorts.addAll(Ints.asList(commonTCP.get("ssh")));
+        globalPorts.addAll(Ints.asList(commonTCP.get("http&https")));
+
+        /*
+         * To remove this snippet, not used anymore
+         */
         //For each basic role, we map the ports in that role into a list which we append to the commonPorts
-        for (String commonRole : cluster.getAuthorizePorts()) {
-            if (commonTCP.containsKey(commonRole)) {
-                //Use guava library to transform the array into a list, add all the ports
-                List<Integer> portsRole = Ints.asList(commonTCP.get(commonRole));
-                globalPorts.addAll(portsRole);
-            }
-        }
+//        for (String commonRole : cluster.getAuthorizePorts()) {
+//            if (commonTCP.containsKey(commonRole)) {
+//                //Use guava library to transform the array into a list, add all the ports
+//                List<Integer> portsRole = Ints.asList(commonTCP.get(commonRole));
+//                globalPorts.addAll(portsRole);
+//            }
+//        }
 
 
         //If EC2 client
@@ -162,52 +168,61 @@ public final class VirtualizedClusterProvision implements Provision {
             EC2Client client = temp.getApi();
             //For each group of the security groups
             for (NodeGroup group : cluster.getNodes()) {
-                String groupName = "jclouds#" + group.getSecurityGroup();// jclouds way of defining groups
+                String groupName = "jclouds#" + group.getService();// jclouds way of defining groups
                 Set<Integer> openTCP = new HashSet<Integer>(); //To avoid opening duplicate ports
                 Set<Integer> openUDP = new HashSet<Integer>();// gives exception upon trying to open duplicate ports in a group
                 System.out.printf("%d: creating security group: %s%n", System.currentTimeMillis(),
-                        group.getSecurityGroup());
+                        group.getService());
                 //create security group
-                messages.addMessage("Creating Security Group: " + group.getSecurityGroup());
+                messages.addMessage("Creating Security Group: " + group.getService());
                 try {
                     client.getSecurityGroupServices().createSecurityGroupInRegion(
-                            region, groupName, group.getSecurityGroup());
+                            region, groupName, group.getService());
                 } catch (Exception e) {
 
                     //If group already exists continue to the next group
                     continue;
                 }
                 //Open the ports for that group
-                for (String authPort : group.getAuthorizePorts()) {
+                //Authorize the ports for TCP and UDP roles in cluster file for that group
 
-                    //Authorize the ports for TCP and UDP roles in cluster file for that group
-
-                    if (portsTCP.containsKey(authPort)) {
-                        for (int port : portsTCP.get(authPort)) {
-                            if (!openTCP.contains(port)) {
-                                client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
-                                        groupName, IpProtocol.TCP, port, port, "0.0.0.0/0");
-                                openTCP.add(port);
-                            }
+                if (portsTCP.containsKey(group.getService())) {
+                    for (int port : portsTCP.get(group.getService())) {
+                        if (!openTCP.contains(port)) {
+                            client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
+                                    groupName, IpProtocol.TCP, port, port, "0.0.0.0/0");
+                            openTCP.add(port);
                         }
+                    }
 
-                        for (int port : portsUDP.get(authPort)) {
-                            if (!openUDP.contains(port)) {
-                                client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
-                                        groupName, IpProtocol.UDP, port, port, "0.0.0.0/0");
-                                openUDP.add(port);
-                            }
+                    for (int port : portsUDP.get(group.getService())) {
+                        if (!openUDP.contains(port)) {
+                            client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
+                                    groupName, IpProtocol.UDP, port, port, "0.0.0.0/0");
+                            openUDP.add(port);
                         }
                     }
                 }
-                //Authorize the global ports TCP
-                for (int port : Ints.toArray(globalPorts)) {
+
+                //Authorize the global ports TCP + extra ports of the group
+                for (Integer port : globalPorts) {
                     if (!openTCP.contains(port)) {
                         client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
-                                groupName, IpProtocol.TCP, port, port, "0.0.0.0/0");
+                                groupName, IpProtocol.TCP, port.intValue(), port.intValue(), "0.0.0.0/0");
                         openTCP.add(port);
                     }
                 }
+
+                if (group.getAuthorizePorts()!=null) {
+                    for (Integer port : group.getAuthorizePorts()) {
+                        if (!openTCP.contains(port)) {
+                            client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
+                                    groupName, IpProtocol.TCP, port.intValue(), port.intValue(), "0.0.0.0/0");
+                            openTCP.add(port);
+                        }
+                    }
+                }
+
                 //This is a delay we must use for EC2. There is a limit on REST requests and if we dont limit the
                 //bursts of the requests it will fail
                 try {
@@ -234,56 +249,70 @@ public final class VirtualizedClusterProvision implements Provision {
                 //+++++++++++++++++    
                 //For each group of the security groups
                 for (NodeGroup group : cluster.getNodes()) {
-                    String groupName = "jclouds-" + group.getSecurityGroup(); //jclouds way of defining groups
+                    String groupName = "jclouds-" + group.getService(); //jclouds way of defining groups
                     Set<Integer> openTCP = new HashSet<Integer>(); //To avoid opening duplicate ports
                     Set<Integer> openUDP = new HashSet<Integer>();// gives exception upon trying to open duplicate ports in a group
                     System.out.printf("%d: creating security group: %s%n", System.currentTimeMillis(),
-                            group.getSecurityGroup());
+                            group.getService());
                     //create security group
                     if (!client.list().anyMatch(nameEquals(groupName))) {
-                        messages.addMessage("Creating security group: " + group.getSecurityGroup());
-                        SecurityGroup created = client.createWithDescription(groupName, group.getSecurityGroup());
+                        messages.addMessage("Creating security group: " + group.getService());
+                        SecurityGroup created = client.createWithDescription(groupName, group.getService());
                         //get the ports
-                        for (String authPort : group.getAuthorizePorts()) {
-                            //Authorize the ports for TCP and UDP
-                            if (portsTCP.containsKey(authPort)) {
-                                for (int port : portsTCP.get(authPort)) {
-                                    if (!openTCP.contains(port)) {
-                                        Ingress ingress = Ingress.builder()
-                                                .fromPort(port)
-                                                .toPort(port)
-                                                .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.TCP)
-                                                .build();
-                                        client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
-                                        openTCP.add(port);
-                                    }
 
+                        //Authorize the ports for TCP and UDP
+                        if (portsTCP.containsKey(group.getService())) {
+                            for (int port : portsTCP.get(group.getService())) {
+                                if (!openTCP.contains(port)) {
+                                    Ingress ingress = Ingress.builder()
+                                            .fromPort(port)
+                                            .toPort(port)
+                                            .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.TCP)
+                                            .build();
+                                    client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
+                                    openTCP.add(port);
                                 }
-                                for (int port : portsUDP.get(authPort)) {
-                                    if (!openUDP.contains(port)) {
-                                        Ingress ingress = Ingress.builder()
-                                                .fromPort(port)
-                                                .toPort(port)
-                                                .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.UDP)
-                                                .build();
-                                        client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
-                                        openUDP.add(port);
-                                    }
 
-                                }
                             }
+                            for (int port : portsUDP.get(group.getService())) {
+                                if (!openUDP.contains(port)) {
+                                    Ingress ingress = Ingress.builder()
+                                            .fromPort(port)
+                                            .toPort(port)
+                                            .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.UDP)
+                                            .build();
+                                    client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
+                                    openUDP.add(port);
+                                }
 
+                            }
                         }
+
+
                         //Authorize the global ports
-                        for (int port : Ints.toArray(globalPorts)) {
+                        for (Integer port : globalPorts) {
                             if (!openTCP.contains(port)) {
                                 Ingress ingress = Ingress.builder()
-                                        .fromPort(port)
-                                        .toPort(port)
+                                        .fromPort(port.intValue())
+                                        .toPort(port.intValue())
                                         .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.TCP)
                                         .build();
                                 client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
                                 openTCP.add(port);
+                            }
+                        }
+
+                        if (group.getAuthorizePorts()!=null) {
+                            for (Integer port : group.getAuthorizePorts()) {
+                                if (!openTCP.contains(port)) {
+                                    Ingress ingress = Ingress.builder()
+                                            .fromPort(port.intValue())
+                                            .toPort(port.intValue())
+                                            .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.TCP)
+                                            .build();
+                                    client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
+                                    openTCP.add(port);
+                                }
                             }
                         }
                         //This is a delay we must use for EC2. There is a limit on REST requests and if we dont limit the
@@ -316,21 +345,23 @@ public final class VirtualizedClusterProvision implements Provision {
             ScriptBuilder initScript = ScriptBuilder.builder()
                     .scriptType(ScriptBuilder.ScriptType.INIT)
                     .publicKey(publicKey)
+                    .gitRepo(cluster.getGlobal().getGit().getRepository())
+                    .gitName(cluster.getGlobal().getGit().getUser())
                     .build();
             selectProviderTemplateOptions(cluster, kthfsTemplate, initScript);
 
             for (NodeGroup group : cluster.getNodes()) {
 
-                progressEJB.initializeCreateGroup(group.getSecurityGroup(), group.getNumber());
+                progressEJB.initializeCreateGroup(group.getService(), group.getNumber());
 
                 messages.addMessage("Creating " + group.getNumber()
-                        + "  nodes in Security Group " + group.getSecurityGroup());
+                        + "  nodes in Security Group " + group.getService());
                 Set<? extends NodeMetadata> ready = service.createNodesInGroup(
-                        group.getSecurityGroup(), group.getNumber(), kthfsTemplate.build());
+                        group.getService(), group.getNumber(), kthfsTemplate.build());
                 //For the demo, we keep track of the returned set of node Metadata launched and which group 
-                messages.addMessage("Nodes created in Security Group " + group.getSecurityGroup() + " with "
+                messages.addMessage("Nodes created in Security Group " + group.getService() + " with "
                         + "basic setup");
-                nodes.put(group.getSecurityGroup(), ready);
+                nodes.put(group.getService(), ready);
                 //Identify the biggest group
                 max = max < group.getNumber() ? group.getNumber() : max;
                 //Fetch the total of nodes
@@ -340,39 +371,44 @@ public final class VirtualizedClusterProvision implements Provision {
                 //Supposing ideal approach that the users dont mix roles.
                 //Think if it is possible to optimize
 
-                Set<String> roles = new HashSet(group.getRoles());
+                //With actual changes, name is main kthfs service and recipes are optional recipes from the users
+                List<String> services = new LinkedList();
+                services.add(group.getService());
+                if (group.getRecipes() != null) {
+                    services.addAll(group.getRecipes());
+                }
                 Iterator<? extends NodeMetadata> iter = ready.iterator();
 
                 int i = 0;
                 while (iter.hasNext()) {
                     NodeMetadata node = iter.next();
 
-                    if (roles.contains("MySQLCluster-mgm")) {
+                    if (services.contains("mgm")) {
                         //Add private ip to mgm
                         mgmIP.addAll(node.getPrivateAddresses());
-                        mgms.put(node, group.getRoles());
+                        mgms.put(node, services);
                     }
-                    if (roles.contains("MySQLCluster-ndb")) {
+                    if (services.contains("ndb")) {
 
                         ndbsIP.addAll(node.getPrivateAddresses());
-                        ndbs.put(node, group.getRoles());
+                        ndbs.put(node, services);
 
                     }
-                    if (roles.contains("MySQLCluster-mysqld")) {
+                    if (services.contains("mysqld")) {
 
                         mySQLClientsIP.addAll(node.getPrivateAddresses());
-                        mysqlds.put(node, group.getRoles());
+                        mysqlds.put(node, services);
 
                     }
-                    if (roles.contains("KTHFS-namenode")) {
+                    if (services.contains("namenode")) {
 
                         namenodesIP.addAll(node.getPrivateAddresses());
-                        namenodes.put(node, group.getRoles());
+                        namenodes.put(node, services);
                     }
 
-                    if (roles.contains("KTHFS-datanode")) {
+                    if (services.contains("datanode")) {
 
-                        datanodes.put(node, group.getRoles());
+                        datanodes.put(node, services);
 
                     }
                     Host host = new Host();
@@ -389,7 +425,7 @@ public final class VirtualizedClusterProvision implements Provision {
 
                         hostEJB.storeHost(host, true);
                     }
-                    progressEJB.updateCreateProgress(group.getSecurityGroup(), i++, node);
+                    progressEJB.updateCreateProgress(group.getService(), i++, node);
                 }
 
             }
@@ -419,23 +455,29 @@ public final class VirtualizedClusterProvision implements Provision {
         ScriptBuilder initScript = ScriptBuilder.builder()
                 .scriptType(ScriptBuilder.ScriptType.INIT)
                 .publicKey(publicKey)
+                .gitRepo(cluster.getGlobal().getGit().getRepository())
                 .build();
 
         selectProviderTemplateOptions(cluster, kthfsTemplate, initScript);
         for (final NodeGroup group : cluster.getNodes()) {
             try {
-                progressEJB.initializeCreateGroup(group.getSecurityGroup(), group.getNumber());
+                progressEJB.initializeCreateGroup(group.getService(), group.getNumber());
             } catch (Exception e) {
                 e.printStackTrace();
                 System.out.println("Error updating the DataBase");
             }
-            messages.addMessage("Creating " + group.getNumber() + "  nodes in Security Group " + group.getSecurityGroup());
+            messages.addMessage("Creating " + group.getNumber() + "  nodes in Security Group " + group.getService());
             max = max < group.getNumber() ? group.getNumber() : max;
             //Fetch the total of nodes
             totalNodes += group.getNumber();
             //Create async provision
             //Generate function to store results when done
-            final StoreResults results = new StoreResults(group.getRoles(), latch, this);
+            List<String> services = new LinkedList<String>();
+            services.add(group.getService());
+            if (group.getRecipes() != null) {
+                services.addAll(group.getRecipes());
+            }
+            final StoreResults results = new StoreResults(services, latch, this);
             //Generate listenable future that will store the results in the hashmap when done
             ListenableFuture<Set<? extends NodeMetadata>> groupCreation =
                     pool.submit(new CreateGroupCallable(service, group, kthfsTemplate, nodes, messages));

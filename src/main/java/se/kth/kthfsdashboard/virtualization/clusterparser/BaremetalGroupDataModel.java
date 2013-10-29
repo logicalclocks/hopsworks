@@ -25,14 +25,14 @@ public class BaremetalGroupDataModel extends ListDataModel<BaremetalGroup>
     
     @Override
     public Object getRowKey(BaremetalGroup t) {
-        return t.getSecurityGroup();
+        return t.getService();
     }
 
     @Override
     public BaremetalGroup getRowData(String rowKey) {
         List<BaremetalGroup> nodes = (List<BaremetalGroup>) getWrappedData();
         for (BaremetalGroup group : nodes) {
-            if (group.getSecurityGroup().equals(rowKey)) {
+            if (group.getService().equals(rowKey)) {
                 return group;
             }
         }

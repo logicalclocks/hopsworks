@@ -5,14 +5,13 @@
 package se.kth.kthfsdashboard.provision;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.ejb.EJB;
 import static org.jclouds.aws.domain.Region.DEFAULT_REGIONS;
 import org.jclouds.ec2.domain.InstanceType;
 import se.kth.kthfsdashboard.virtualization.clusterparser.BaremetalGroup;
-import se.kth.kthfsdashboard.virtualization.clusterparser.ChefAttributes;
 import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
 
 /**
@@ -21,6 +20,7 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
  */
 public class ClusterOptions {
 
+    @EJB
     private final Map<String, String> environment = new HashMap<String, String>();
     private final Map<String, String> provider = new HashMap<String, String>();
     private final Map<String, String> roles = new HashMap<String, String>();
@@ -28,12 +28,18 @@ public class ClusterOptions {
     private final List<String> ec2Regions = new ArrayList<String>(DEFAULT_REGIONS);
     private final List<String> ec2InstanceTypes = new ArrayList<String>();
     private final Map<String, List<String>> ec2availabilityZones = new HashMap<String, List<String>>();
-    
     private int portNumber;
-    private String hosts="";
-    private BaremetalGroup addBaremetalGroupName;
-    private NodeGroup addGroupName;
-    private ChefAttributes addRole;
+    private String globalRecipe;
+    private String hosts;
+    private BaremetalGroup addBaremetalGroup;
+    private BaremetalGroup editBaremetalGroup;
+    private NodeGroup addGroup;
+    private NodeGroup editGroup;
+    private String recipes;
+    private String ports;
+    private String editRecipes;
+    private String editPorts;
+    private String editHosts;
 
     public ClusterOptions() {
 
@@ -42,11 +48,11 @@ public class ClusterOptions {
         provider.put("Amazon", "aws-ec2");
         provider.put("OpenStack", "openstack-nova");
 
-        roles.put("MySQLDaemon", "MySQLCluster-mysqld");
-        roles.put("Management Server", "MySQLCluster-mgm");
-        roles.put("NDB", "MySQLCluster-ndb");
-        roles.put("Namenode", "KTHFS-namenode");
-        roles.put("Datanode", "KTHFS-datanode");
+        roles.put("MySQLDaemon", "mysqld");
+        roles.put("Management Server", "mgm");
+        roles.put("NDB", "ndb");
+        roles.put("Namenode", "namenode");
+        roles.put("Datanode", "datanode");
 
         services.put("SSH", "ssh");
         services.put("Chef-Client", "chefClient");
@@ -86,10 +92,11 @@ public class ClusterOptions {
             }
             ec2availabilityZones.put(region, temp);
         }
-        
-        addGroupName=new NodeGroup();
-        addBaremetalGroupName=new BaremetalGroup();
-        addRole=new ChefAttributes();
+
+        addGroup = new NodeGroup();
+        addBaremetalGroup = new BaremetalGroup();
+        editBaremetalGroup = new BaremetalGroup();
+        editGroup = new NodeGroup();
     }
 
     public Map<String, String> getProvider() {
@@ -123,44 +130,97 @@ public class ClusterOptions {
     public void setPortNumber(int portNumber) {
         this.portNumber = portNumber;
     }
-   
+
     public Map<String, List<String>> getEc2availabilityZones() {
         return ec2availabilityZones;
     }
-    
-    public ChefAttributes getAddRole() {
-        return addRole;
+
+    public NodeGroup getAddGroup() {
+        return addGroup;
     }
 
-    public void setAddRole(ChefAttributes addRole) {
-        this.addRole = addRole;
+    public void setAddGroup(NodeGroup addGroup) {
+        this.addGroup = addGroup;
     }
 
-    public NodeGroup getAddGroupName() {
-        return addGroupName;
+    public BaremetalGroup getAddBaremetalGroup() {
+        return addBaremetalGroup;
     }
 
-    public void setAddGroupName(NodeGroup addGroupName) {
-        this.addGroupName = addGroupName;
+    public void setAddBaremetalGroup(BaremetalGroup addBaremetalGroup) {
+        this.addBaremetalGroup = addBaremetalGroup;
     }
 
-    public BaremetalGroup getAddBaremetalGroupName() {
-        return addBaremetalGroupName;
+    public String getGlobalRecipe() {
+        return globalRecipe;
     }
 
-    public void setAddBaremetalGroupName(BaremetalGroup addBaremetalGroupName) {
-        this.addBaremetalGroupName = addBaremetalGroupName;
+    public void setGlobalRecipe(String globalRecipe) {
+        this.globalRecipe = globalRecipe;
     }
-    
-    public String getInputHosts(){
+
+    public NodeGroup getEditGroup() {
+        return editGroup;
+    }
+
+    public void setEditGroup(NodeGroup editGroup) {
+        this.editGroup = editGroup;
+    }
+
+    public String getInputHosts() {
         return hosts;
     }
-    public void setInputHosts(String hosts){
-        this.hosts=hosts;
-//       this.addBaremetalGroupName.setHosts(Arrays.asList(splittedHosts));
+
+    public void setInputHosts(String hosts) {
+        this.hosts = hosts;
     }
-//    public String getInputHosts(){
-//        return hosts;
-//    }
-    
+
+    public String getInputRecipes() {
+        return recipes;
+    }
+
+    public void setInputRecipes(String recipes) {
+        this.recipes = recipes;
+    }
+
+    public String getInputPorts() {
+        return ports;
+    }
+
+    public void setInputPorts(String ports) {
+        this.ports = ports;
+    }
+
+    public String getEditRecipes() {
+        return editRecipes;
+    }
+
+    public void setEditRecipes(String editRecipes) {
+        this.editRecipes = editRecipes;
+    }
+
+    public String getEditPorts() {
+        return editPorts;
+    }
+
+    public void setEditPorts(String editPorts) {
+        this.editPorts = editPorts;
+    }
+
+    public BaremetalGroup getEditBaremetalGroup() {
+        return editBaremetalGroup;
+    }
+
+    public void setEditBaremetalGroup(BaremetalGroup editBaremetalGroup) {
+        this.editBaremetalGroup = editBaremetalGroup;
+    }
+
+    public String getEditHosts() {
+        return editHosts;
+    }
+
+    public void setEditHosts(String editHosts) {
+        this.editHosts = editHosts;
+    }
+
 }
