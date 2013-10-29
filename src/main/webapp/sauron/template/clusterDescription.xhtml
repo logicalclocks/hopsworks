@@ -8,9 +8,9 @@
       xmlns:c="http://java.sun.com/jsp/jstl/core">
     <h:body>
         <ui:composition>
-            <p:accordionPanel dynamic="true" cache="true">
+            <p:accordionPanel  dynamic="true" cache="true" >
                 <p:tab title="General Details:">
-                    <h:panelGrid columns="2" cellpadding="5">
+                    <h:panelGrid columns="2" cellpadding="10">
                         <h:outputLabel value="Name:"/>
                         <h:outputText value="#{clusterManagementController.cluster.name}" />
                         <h:outputLabel value="Environment:"/>
@@ -31,7 +31,7 @@
                     </h:panelGrid>
                 </p:tab>
                 <p:tab title="Provider Details:">
-                    <h:panelGrid columns="2" cellpadding="5">
+                    <h:panelGrid columns="2" cellpadding="10">
                         <h:outputLabel value="Name:"/>
                         <h:outputText value="#{clusterManagementController.cluster.provider.name}" />
                         <h:outputLabel value="Instance Type:"/>
@@ -45,9 +45,9 @@
                     </h:panelGrid>
                 </p:tab>
                 <p:tab title="Nodes:" >
-                    <p:accordionPanel value="#{clusterManagementController.cluster.nodes}" var="node">
+                    <p:tabView value="#{clusterManagementController.cluster.nodes}" var="node">
                         <p:tab title="Service: #{node.service}">
-                            <h:panelGrid columns="2" cellpadding="5">
+                            <h:panelGrid columns="2" cellpadding="10">
                                 <h:outputLabel value="Number:"/>
                                 <h:outputText value="#{node.number}" />
                                 <h:outputLabel value="Recipes:"/>
@@ -60,11 +60,11 @@
                                 <h:outputText value="#{node.bittorrent}" />
                             </h:panelGrid>
                         </p:tab>
-                    </p:accordionPanel>
+                    </p:tabView>
                 </p:tab>
                 
             </p:accordionPanel>
-            <br/>
+
         </ui:composition>
 
     </h:body>

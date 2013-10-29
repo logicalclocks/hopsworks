@@ -27,6 +27,19 @@ body {
     border-width: 1px;
 }
 
+/*Wizard style*/
+
+.wizard {
+    width: 700px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.wizardElements{
+    margin-left:auto;
+    margin-right:auto;
+}
+
 /*Panel rrd graph*/
 
 .styleRrdGraph .ui-panel {
