@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+
+    <h:body>
+        <ui:composition>
+            <h:form id="recipeForm" binding="#{recipeForm}">
+                <p:dialog header="Remove Recipe" widgetVar="removeRecipeDialog" resizable="false"
+                          id="removeRecipeDig"  
+                          showEffect="fade" hideEffect="explode" modal="true">
+                    <p:messages id="commonMsgs"/>
+                    <h:outputText id="deleteRecipe" value="Are you sure you want to delete?" />
+                    <p:commandButton  value="Confirm" update=":mainForm:recipeList" 
+                                      action="#{clusterManagementController.removeGlobalRecipes}" 
+                                      oncomplete="editLastDataTableRow removeRecipeDialog.close()"
+                                      />
+                </p:dialog>  
+                <p:dialog header="Add Recipe" widgetVar="addRecipeDialog" resizable="false"
+                          id="addRecipeDig"  visible="#{recipeForm.submitted and facesContext.validationFailed}"
+                          showEffect="fade" hideEffect="explode" modal="true">
+                    <h:outputText id="addRecipe" value="Recipe:" />
+                    <p:inputText id="globalRecipe" label="AddRecipe"  
+                                 title="Name of the recipe you want to include"
+                                 value="#{clusterManagementController.options.globalRecipe}"
+                                 required="true"/>
+                    <p:commandButton id="acceptRecipe" value="Confirm" update=":mainForm" 
+                                     process="@this"
+                                     action="#{clusterManagementController.addRecipe}"
+                                     oncomplete="editLastDataTableRow addRecipeDialog.close()"
+                                     />
+
+                </p:dialog>
+            </h:form>
+        </ui:composition>
+    </h:body>
+</html>
+

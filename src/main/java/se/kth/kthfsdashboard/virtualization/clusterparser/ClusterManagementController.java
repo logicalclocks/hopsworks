@@ -14,7 +14,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
@@ -318,6 +317,7 @@ public class ClusterManagementController implements Serializable {
     }
 
     public String proceedCreateWizard() {
+        edit=null;
         globalRecipes.clear();
         ports.clear();
         baremetalGroups.clear();
@@ -479,15 +479,25 @@ public class ClusterManagementController implements Serializable {
     }
 
     public void editSelectedGroup() {
+        
         if (!isBaremetal() && selectedGroup.length > 0) {
 
             options.setEditGroup(selectedGroup[0]);
             options.setEditPorts(selectedGroup[0].getStringPorts());
             options.setEditRecipes(selectedGroup[0].getStringRecipes());
+//            RequestContext context =RequestContext.getCurrentInstance();
+//            context.update("mainForm:editDig");
+//            context.execute("editGroup.show()");
+//            System.out.println("hello");
+
         } else if (isBaremetal() && selectedBaremetalGroup.length > 0) {
             options.setEditBaremetalGroup(selectedBaremetalGroup[0]);
             options.setEditHosts(selectedBaremetalGroup[0].getStringHosts());
             options.setEditRecipes(selectedBaremetalGroup[0].getStringRecipes());
+//            RequestContext context =RequestContext.getCurrentInstance();
+//            context.update("mainForm:editDig");
+//            context.execute("editGroup.show()");
+//            System.out.println("bye");
         }
     }
 

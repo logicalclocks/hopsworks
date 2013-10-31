@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core">
+    <h:body>
+        <ui:composition>
+            <h:form id="editGroupForm" binding="#{editDialogForm}">
+
+                    <p:dialog header="Edit Group" widgetVar="editGroup" resizable="false"
+                              id="editDig"  visible="#{editDialogForm.submitted and facesContext.validationFailed}"
+                              showEffect="fade" hideEffect="explode" modal="true">
+                        <p:messages id="nodeMsgs" redisplay="true" autoUpdate="true"/>
+                        <h:panelGrid columns="2" >
+                            <h:outputText id="editGroup" value="Service:" />
+                            <p:selectOneMenu label="Select a kthfs service"
+                                             value="#{clusterManagementController.options.editBaremetalGroup.service}" 
+                                             required="true">
+                                <f:selectItem itemLabel="Select One" itemValue="" /> 
+                                <f:selectItems value="#{clusterManagementController.options.roles}" />
+                            </p:selectOneMenu>
+                            <h:outputText value="Bittorrent support:"/>
+                            <p:selectOneMenu value="#{clusterManagementController.options.editBaremetalGroup.bittorrent}">
+                                <f:selectItem itemLabel="True" itemValue="true"/>
+                                <f:selectItem itemLabel="False" itemValue="false"/>
+                            </p:selectOneMenu>
+                            <h:outputText value="Number of Nodes: *"/>
+                            <p:inputText value="#{clusterManagementController.options.editBaremetalGroup.number}"
+                                         required="false" label="Missing number of nodes"
+                                         title="Number of machines for this service"/>
+                            <h:outputText value="Hosts:"/>
+                            <p:inputTextarea value="#{clusterManagementController.options.editHosts}" 
+                                             title="Insert the ips of the machines to connect separated each one by a comma"
+                                             autoResize="true"/>
+                            <h:outputText value="Recipes:"/>
+                            <p:inputTextarea value="#{clusterManagementController.options.editRecipes}" 
+                                             title="Extra chef recipes you want to run in these nodes separated by commas" 
+                                             autoResize="true"/> 
+                            <h:outputText value="Chef Attributes:"/>
+                            <p:inputTextarea value="#{clusterManagementController.options.editBaremetalGroup.chefAttributes}" 
+                                             title="Json to override chef" autoResize="true"/>   
+                        </h:panelGrid>
+                        <p:commandButton value="Confirm" update=":mainForm:groupList" 
+                                         process="editDig"
+                                         action="#{clusterManagementController.editGroup}"
+                                         oncomplete="editLastDataTableRow editGroup.close()"
+                                         />
+                    </p:dialog>
+                </h:form>
+        </ui:composition>
+    </h:body>
+</html>
+
