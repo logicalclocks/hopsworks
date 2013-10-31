@@ -17,7 +17,7 @@
     </script>
     <h:body>
         <ui:composition>
-            <pe:tooltip global="true" showEvent="focus" myPosition="left center" atPosition="right center" />  
+            <pe:tooltip global="true"  myPosition="left center" atPosition="right center" />  
             <div id="createWizard" >
 
                 <h:form id="mainForm">
@@ -102,40 +102,21 @@
                                         </p:column>
                                     </p:dataTable>
                                 </h:panelGrid>
-                                <p:dialog header="Remove Recipe" widgetVar="removeRecipeDialog" resizable="false"
-                                          id="removeRecipeDig"  
-                                          showEffect="fade" hideEffect="explode" modal="true">  
-                                    <h:outputText id="deleteRecipe" value="Are you sure you want to delete?" />
-                                    <p:commandButton  value="Confirm" update="recipeList" 
-                                                      action="#{clusterManagementController.removeGlobalRecipes}" 
-                                                      oncomplete="editLastDataTableRow removeRecipeDialog.close()"
-                                                      />
-                                </p:dialog>  
-                                <p:dialog header="Add Recipe" widgetVar="addRecipeDialog" resizable="false"
-                                          id="addRecipeDig"
-                                          showEffect="fade" hideEffect="explode" modal="true">
-                                    <h:outputText id="addRecipe" value="Recipe:" />
-                                    <p:inputText id="globalRecipe" label="AddRecipe"  
-                                                 title="Name of the recipe you want to include"
-                                                 value="#{clusterManagementController.options.globalRecipe}"/>
-                                    <p:commandButton id="acceptRecipe" value="Confirm" update="recipeList" 
-                                                     action="#{clusterManagementController.addRecipe}"
-                                                     oncomplete="editLastDataTableRow addRecipeDialog.close()"
-                                                     />
 
-                                </p:dialog>
                                 <p:commandButton id="addRecipeButton" value="New Recipe" 
                                                  icon="ui-icon-plusthick"
-                                                 update="mainForm:addRecipe" 
-                                                 oncomplete="addRecipeDialog.show()" title="VIew"
+                                                 update=":recipeForm:addRecipe" 
+                                                 process=":recipeForm:addRecipeDig"
+                                                 oncomplete="addRecipeDialog.show()" 
                                                  />
                                 <p:commandButton id="deleteRecipeButton" value="Delete Selection" 
-                                                 update="mainForm:deleteRecipe" 
-                                                 oncomplete="removeRecipeDialog.show()" icon="ui-icon-minusthick" title="View"/>
+                                                 process=":recipeForm:removeRecipeDig"
+                                                 update=":recipeForm:deleteRecipe" 
+                                                 oncomplete="removeRecipeDialog.show()" icon="ui-icon-minusthick" />
                             </p:panel>
                         </p:tab>
                         <p:tab  id="nodeGroups" title="Groups">
-                            <p:messages id="nodeMsgs"/>
+                            
                             <p:panel header="Cluster Nodes">
 
                                 <h:panelGrid columns="4" columnClasses="label, value" styleClass="wizardElements">
@@ -144,7 +125,7 @@
                                                  rowKey="#{group.service}"
                                                  selection="#{clusterManagementController.selectedBaremetalGroup}"
                                                  selectionMode="multiple"
-                                                 editable="fale">
+                                                 editable="false">
                                         <f:facet name="header">
                                             Click delete selection after selecting multiple instances to delete, use shift-click to select multiples
                                         </f:facet>
@@ -169,110 +150,20 @@
                                     </p:dataTable>
 
                                 </h:panelGrid>
-                                <p:dialog header="Remove Group" widgetVar="removeDialog" resizable="false"
-                                          id="groupDig"  
-                                          showEffect="fade" hideEffect="explode" modal="true">  
-                                    <h:outputText id="deletemsg" value="Are you sure you want to delete?" />
-                                    <p:commandButton id="acceptDelete" value="Confirm" update="groupList" 
-                                                     process="groupDig"
-                                                     action="#{clusterManagementController.removeGroup}" 
-                                                     oncomplete="editLastDataTableRow removeDialog.close()"
-                                                     />
-                                </p:dialog>  
-                                <p:dialog header="Add Group" widgetVar="addGroup" resizable="false"
-                                          id="addDig"
-                                          showEffect="fade" hideEffect="explode" modal="true">
-                                    <h:panelGrid columns="2" >
-                                        <h:outputText id="addGroup" value="Service: *" />
-                                        <p:selectOneMenu id="serviceName" 
-                                                         label="Select a kthfs service"
-                                                         value="#{clusterManagementController.options.addBaremetalGroup.service}" 
-                                                         >
-                                            <f:selectItem itemLabel="Select One" itemValue="" /> 
-                                            <f:selectItems value="#{clusterManagementController.options.roles}" />
-                                        </p:selectOneMenu>
-                                        <h:outputText value="Bittorrent support:"/>
-                                        <p:selectOneMenu value="#{clusterManagementController.options.addBaremetalGroup.bittorrent}">
-                                            <f:selectItem itemLabel="True" itemValue="true"/>
-                                            <f:selectItem itemLabel="False" itemValue="false"/>
-                                        </p:selectOneMenu>
-                                        <h:outputText value="Number of Nodes: *"/>
-                                        <p:inputText value="#{clusterManagementController.options.addBaremetalGroup.number}"
-                                                     required="true" label="Missing number of nodes"
-                                                     title="Number of machines for this service"/>
-                                        <h:outputText value="Hosts: *"/>
-                                        <p:inputTextarea value="#{clusterManagementController.options.inputHosts}" 
-                                                         label="Hosts missing" 
-                                                         title="Insert the ips of the machines to connect separated each one by a comma"
-                                                         autoResize="true"/>
-                                        <h:outputText value="Recipes:"/>
-                                        <p:inputTextarea value="#{clusterManagementController.options.inputRecipes}"  
-                                                         title="Extra chef recipes you want to run in these nodes separated by commas"
-                                                         autoResize="true"/> 
-                                        <h:outputText value="Chef Attributes:"/>
-                                        <p:inputTextarea value="#{clusterManagementController.options.addBaremetalGroup.chefAttributes}" 
-                                                         title="Json to override chef" 
-                                                         autoResize="true"/>   
 
-                                    </h:panelGrid>
-                                    <p:commandButton id="acceptName" value="Confirm" update="groupList" 
-                                                     process="addDig"
-                                                     action="#{clusterManagementController.addGroup}"
-                                                     oncomplete="editLastDataTableRow addGroup.close()"
-                                                     />
-
-                                </p:dialog>
-
-                                <p:dialog header="Edit Group" widgetVar="editGroup" resizable="false"
-                                          id="editDig"
-                                          showEffect="fade" hideEffect="explode" modal="true">
-                                    <h:panelGrid columns="2" >
-                                        <h:outputText id="editGroup" value="Service:" />
-                                        <p:selectOneMenu label="Select a kthfs service"
-                                                         value="#{clusterManagementController.options.editBaremetalGroup.service}" 
-                                                         >
-                                            <f:selectItem itemLabel="Select One" itemValue="" /> 
-                                            <f:selectItems value="#{clusterManagementController.options.roles}" />
-                                        </p:selectOneMenu>
-                                        <h:outputText value="Bittorrent support:"/>
-                                        <p:selectOneMenu value="#{clusterManagementController.options.editBaremetalGroup.bittorrent}">
-                                            <f:selectItem itemLabel="True" itemValue="true"/>
-                                            <f:selectItem itemLabel="False" itemValue="false"/>
-                                        </p:selectOneMenu>
-                                        <h:outputText value="Number of Nodes: *"/>
-                                        <p:inputText value="#{clusterManagementController.options.editBaremetalGroup.number}"
-                                                     required="true" label="Missing number of nodes"
-                                                     title="Number of machines for this service"/>
-                                        <h:outputText value="Hosts:"/>
-                                        <p:inputTextarea value="#{clusterManagementController.options.editHosts}" 
-                                                         title="Insert the ips of the machines to connect separated each one by a comma"
-                                                         autoResize="true"/>
-                                        <h:outputText value="Recipes:"/>
-                                        <p:inputTextarea value="#{clusterManagementController.options.editRecipes}" 
-                                                         title="Extra chef recipes you want to run in these nodes separated by commas" 
-                                                         autoResize="true"/> 
-                                        <h:outputText value="Chef Attributes:"/>
-                                        <p:inputTextarea value="#{clusterManagementController.options.editBaremetalGroup.chefAttributes}" 
-                                                         title="Json to override chef" autoResize="true"/>   
-                                    </h:panelGrid>
-                                    <p:commandButton value="Confirm" update="groupList" 
-                                                     process="editDig"
-                                                     action="#{clusterManagementController.editGroup}"
-                                                     oncomplete="editLastDataTableRow editGroup.close()"
-                                                     />
-                                </p:dialog>
                                 <p:commandButton id="addGroupButton" value="New Group" 
                                                  icon="ui-icon-plusthick"
-                                                 update="mainForm:addDig" 
-                                                 oncomplete="addGroup.show()" title="View"
+                                                 update=":addGroupForm:addDig" 
+                                                 oncomplete="addGroup.show()" 
                                                  />
                                 <p:commandButton id="editButton" value="Edit selection"
-                                                 update="mainForm:editDig"
+                                                 update=":editGroupForm:editDig"
                                                  actionListener="#{clusterManagementController.editSelectedGroup}"
-                                                 oncomplete="editGroup.show()" title="View"/>
+                                                 oncomplete="editGroup.show()"
+                                                 />
                                 <p:commandButton id="deleteButton" value="Delete Selection" 
-                                                 update="mainForm:deletemsg" 
-                                                 oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
+                                                 update=":removeGroupForm:deletemsg" 
+                                                 oncomplete="removeDialog.show()" icon="ui-icon-minusthick"/>
                             </p:panel>
                         </p:tab>
 
@@ -290,7 +181,13 @@
                                              action="proceedLaunchCluster"/>
                         </p:tab>
                     </p:wizard>
+                  
                 </h:form>
+                <ui:include src="/sauron/template/recipeForm.xhtml"/>
+                <ui:include src="/sauron/template/removeBaremetalGroupForm.xhtml"/>
+                <ui:include src="/sauron/template/addBaremetalGroupForm.xhtml"/>
+                <ui:include src="/sauron/template/editBaremetalGroupForm.xhtml"/>
+                
             </div>
         </ui:composition>
     </h:body>

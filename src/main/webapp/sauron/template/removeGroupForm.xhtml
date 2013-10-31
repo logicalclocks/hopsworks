@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+    <h:body>
+        <ui:composition>
+        <h:form id="removeGroupForm">
+            <p:dialog header="Remove Group" widgetVar="removeDialog" resizable="false"
+                      id="groupDig"  
+                      showEffect="fade" hideEffect="explode" modal="true">  
+                <h:outputText id="deletemsg" value="Are you sure you want to delete?" />
+                <p:commandButton id="acceptDelete" value="Confirm" update=":mainForm:groupList" 
+                                 process="groupDig"
+                                 action="#{clusterManagementController.removeGroup}" 
+                                 oncomplete="editLastDataTableRow removeDialog.close()"
+                                 />
+            </p:dialog>  
+        </h:form>
+        </ui:composition>
+    </h:body>
+</html>
+

@@ -17,10 +17,14 @@
                         <h:outputText value="#{clusterManagementController.cluster.global.environment}" />
                         <h:outputText value="Install Phase:"/>
                         <h:outputText value="#{clusterManagementController.cluster.installPhase}"/>
-                        <h:outputLabel value="Recipes:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.recipes}" />
-                        <h:outputLabel value="Authorize Ports:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.authorizePorts}" />
+                        <h:outputLabel value="Recipes:" 
+                                       rendered="#{clusterManagementController.cluster.global.recipes.size()>0}"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.recipes}" 
+                                      rendered="#{clusterManagementController.cluster.global.recipes.size()>0}"/>
+                        <h:outputLabel value="Authorize Ports:" 
+                                       rendered="#{clusterManagementController.cluster.global.authorizePorts.size()>0}"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.authorizePorts}" 
+                                      rendered="#{clusterManagementController.cluster.global.authorizePorts.size()>0}"/>
                         <h:outputLabel value="Git user:"/>
                         <h:outputText value="#{clusterManagementController.cluster.global.git.user}" />
                         <h:outputLabel value="Git repository:"/>
@@ -45,22 +49,30 @@
                     </h:panelGrid>
                 </p:tab>
                 <p:tab title="Nodes:" >
-                    <p:tabView value="#{clusterManagementController.cluster.nodes}" var="node">
+                    <p:accordionPanel value="#{clusterManagementController.cluster.nodes}" var="node">
                         <p:tab title="Service: #{node.service}">
                             <h:panelGrid columns="2" cellpadding="10">
                                 <h:outputLabel value="Number:"/>
                                 <h:outputText value="#{node.number}" />
-                                <h:outputLabel value="Recipes:"/>
-                                <h:outputText value="#{node.recipes}" />
-                                <h:outputLabel value="Authorize Ports:"/>
-                                <h:outputText value="#{node.authorizePorts}" />
-                                <h:outputLabel value="Chef Attributes:"/>
-                                <h:outputText value="#{node.chefAttributes}" />
-                                <h:outputLabel value="Bittorrent:"/>
-                                <h:outputText value="#{node.bittorrent}" />
+                                <h:outputLabel value="Recipes:" 
+                                               rendered="#{node.recipes!='' and node.recipes!=null}"/>
+                                <h:outputText value="#{node.recipes}" 
+                                              rendered="#{node.recipes!='' and node.recipes!=null}"/>
+                                <h:outputLabel value="Authorize Ports:"
+                                               rendered="#{node.authorizePorts!='' and node.authorizePorts!=null}"/>
+                                <h:outputText value="#{node.authorizePorts}" 
+                                              rendered="#{node.authorizePorts!='' and node.authorizePorts!=null}"/>
+                                <h:outputLabel value="Chef Attributes:" 
+                                               rendered="#{node.chefAttributes!='' and node.chefAttributes!=null}"/>
+                                <h:outputText value="#{node.chefAttributes}" 
+                                              rendered="#{node.chefAttributes!='' and node.chefAttributes!=null}" />
+                                <h:outputLabel value="Bittorrent:" 
+                                               rendered="#{node.bittorrent!='' and node.bittorrent!=null}"/>
+                                <h:outputText value="#{node.bittorrent}" 
+                                              rendered="#{node.bittorrent!='' and node.bittorrent!=null}"/>
                             </h:panelGrid>
                         </p:tab>
-                    </p:tabView>
+                    </p:accordionPanel>
                 </p:tab>
                 
             </p:accordionPanel>

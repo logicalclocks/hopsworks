@@ -21,39 +21,45 @@
                         <h:outputText value="#{clusterManagementController.baremetalCluster.loginUser}" />                      
                         <h:outputLabel value="Total Hosts:"/>
                         <h:outputText value="#{clusterManagementController.baremetalCluster.totalHosts}" /> 
-                        <h:outputLabel value="Recipes:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.recipes}" />
-                        <h:outputLabel value="Authorize Ports:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.authorizePorts}" />
+                        <h:outputLabel value="Recipes:" 
+                                       rendered="#{clusterManagementController.baremetalCluster.global.recipes.size()>0}"/>
+                        <h:outputText value="#{clusterManagementController.baremetalCluster.global.recipes}" 
+                                      rendered="#{clusterManagementController.baremetalCluster.global.recipes.size()>0}"/>
                         <h:outputLabel value="Git user:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.git.user}" />
+                        <h:outputText value="#{clusterManagementController.baremetalCluster.global.git.user}" />
                         <h:outputLabel value="Git repository:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.git.repository}" />
+                        <h:outputText value="#{clusterManagementController.baremetalCluster.global.git.repository}" />
                         <h:outputLabel value="Git key:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.git.key}" />
+                        <h:outputText value="#{clusterManagementController.baremetalCluster.global.git.key}" />
                     </h:panelGrid>
                 </p:tab>
-                
+
                 <p:tab title="Nodes:" >
-                    <p:tabView value="#{clusterManagementController.baremetalCluster.nodes}" var="node">
+                    <p:accordionPanel value="#{clusterManagementController.baremetalCluster.nodes}" var="node">
                         <p:tab title="Service: #{node.service}">
                             <h:panelGrid columns="2" cellpadding="10">
                                 <h:outputLabel value="Number:"/>
                                 <h:outputText value="#{node.number}" />
                                 <h:outputLabel value="Hosts:"/>
                                 <h:outputText value="#{node.hosts}" />
-                                <h:outputLabel value="Recipes:"/>
-                                <h:outputText value="#{node.recipes}" />
-                                <h:outputLabel value="Chef Attributes:"/>
-                                <h:outputText value="#{node.chefAttributes}" />
-                                <h:outputLabel value="Bittorrent:"/>
-                                <h:outputText value="#{node.bittorrent}" />
+                                <h:outputLabel value="Recipes:" 
+                                               rendered="#{node.recipes!='' and node.recipes!=null}"/>
+                                <h:outputText value="#{node.recipes}" 
+                                              rendered="#{node.recipes!='' and node.recipes!=null}"/>
+                                <h:outputLabel value="Chef Attributes:" 
+                                               rendered="#{node.chefAttributes!='' and node.chefAttributes!=null}"/>
+                                <h:outputText value="#{node.chefAttributes}" 
+                                              rendered="#{node.chefAttributes!='' and node.chefAttributes!=null}" />
+                                <h:outputLabel value="Bittorrent:" 
+                                               rendered="#{node.bittorrent!='' and node.bittorrent!=null}"/>
+                                <h:outputText value="#{node.bittorrent}" 
+                                              rendered="#{node.bittorrent!='' and node.bittorrent!=null}"/>
                             </h:panelGrid>
                         </p:tab>
-                    </p:tabView>
+                    </p:accordionPanel>
                 </p:tab>
             </p:accordionPanel>
-            
+
         </ui:composition>
 
     </h:body>
