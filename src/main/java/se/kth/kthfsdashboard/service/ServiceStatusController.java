@@ -69,7 +69,7 @@ public class ServiceStatusController {
     }
 
     public boolean renderTerminalLink() {
-        return service.equalsIgnoreCase(ServiceType.KTHFS.toString())
+        return service.equalsIgnoreCase(ServiceType.HopsHDFS.toString())
                 || service.equalsIgnoreCase(ServiceType.MySQLCluster.toString())
                 || service.equalsIgnoreCase(ServiceType.Spark.toString());
     }

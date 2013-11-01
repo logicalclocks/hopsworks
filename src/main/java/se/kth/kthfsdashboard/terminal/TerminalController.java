@@ -86,7 +86,7 @@ public class TerminalController {
     public String handleCommand(String command, String[] params) {
 //      TODO: Check special characters like ";" to avoid injection
         String roleName;
-        if (service.equalsIgnoreCase(ServiceType.KTHFS.toString())) {
+        if (service.equalsIgnoreCase(ServiceType.HopsHDFS.toString())) {
             if (command.equals("hdfs")) {
                 roleName = RoleType.datanode.toString();
             } else {
