@@ -200,9 +200,10 @@ public class ScriptBuilder implements Statement {
         this.privateIP = privateIP;
         this.clusterName = clusterName;
         this.nodeId = nodeId;
-        this.gitName = gitName;
-        this.gitKey = gitKey;
-        this.gitRepo = gitRepo;
+        this.gitName = (gitName.equals("") || gitName == null) ? "Jim Dowling" : gitName;
+        this.gitKey = gitKey; //To do the same
+        this.gitRepo = (gitRepo.equals("") || gitRepo == null)
+                ? "https://ghetto.sics.se/jdowling/kthfs-pantry.git" : gitRepo;
     }
 
     @Override
@@ -239,16 +240,16 @@ public class ScriptBuilder implements Statement {
                 statements.add(exec("cd /etc/chef;"));
                 statements.add(exec("sudo wget http://lucan.sics.se/kthfs/solo.rb;"));
                 //Setup and fetch git recipes
-                statements.add(exec("git config --global user.name \""+gitName+"\";"));
+                statements.add(exec("git config --global user.name \"" + gitName + "\";"));
                 //statements.add(exec("git config --global user.email \"jdowling@sics.se\";"));
                 statements.add(exec("git config --global http.sslVerify false;"));
                 statements.add(exec("git config --global http.postBuffer 524288000;"));
                 statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
                 statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone "+gitRepo+" /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone "+gitRepo+" /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone "+gitRepo+" /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone "+gitRepo+" /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
                 statements.add(exec("sudo apt-get install -f -q -y libmysqlclient-dev;"));
 
                 break;

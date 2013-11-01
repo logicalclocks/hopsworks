@@ -59,19 +59,19 @@
                                 </h:panelGrid>
                             </p:panel>
                             <p:spacer height="25px"/>
-                            <p:panel header="Git parameters" >
+                            <p:panel header="Git parameters (Optional)" collapsed="true" toggleable="true">
                                 <h:panelGrid columns="2" columnClasses="label, value" styleClass="wizardElements">
-                                    <h:outputText value="Git username: *" />
-                                    <p:inputText required="true" label="Missing git user"
+                                    <h:outputText value="Git username: " />
+                                    <p:inputText required="false" label="Missing git user"
                                                  title="Enter user name to access your git repository"
                                                  value="#{clusterManagementController.cluster.global.git.user}" />
 
-                                    <h:outputText value="Git repository: *" />
-                                    <p:inputText required="true" label="Missing a git repository"
+                                    <h:outputText value="Git repository: " />
+                                    <p:inputText required="false" label="Missing a git repository"
                                                  title="Enter url to clone your git repository"
                                                  value="#{clusterManagementController.cluster.global.git.repository}" />
-                                    <h:outputText value="Git key: *" />
-                                    <p:inputTextarea required="true" label="Missing a key for the git repository"
+                                    <h:outputText value="Git key: " />
+                                    <p:inputTextarea required="false" label="Missing a key for the git repository"
                                                      title="Security key to clone your repository" rows ="10"
                                                      value="#{clusterManagementController.cluster.global.git.key}" />
                                 </h:panelGrid>
@@ -226,8 +226,8 @@
                                         <f:selectItem itemLabel="Select One" itemValue="" /> 
                                         <f:selectItems value="#{clusterManagementController.options.ec2Regions}" 
                                                        var="region"/>
-                                        <p:ajax listener="#{clusterManagementController.handleRegionChange}"
-                                                event="change" update="zones" process="@this"/>
+<!--                                        <p:ajax listener="#{clusterManagementController.handleRegionChange}"
+                                                event="change" update="zones" process="@this"/>-->
 
                                     </p:selectOneMenu>
                                     <p:inputText value="#{clusterManagementController.cluster.provider.region}" 
@@ -236,12 +236,12 @@
                                                  title="OpenStack region, usually it is the same name as the Project name"
                                                  required="#{!clusterManagementController.renderEC2}"/>
                                     <h:outputText value="Zones:" 
-                                                  rendered="#{clusterManagementController.renderEC2}"
+                                                  rendered="false"
                                                   />
 
                                     <p:selectManyCheckbox id="zones" 
                                                           value="#{clusterManagementController.cluster.provider.zones}" 
-                                                          rendered="#{clusterManagementController.renderEC2}">
+                                                          rendered="false">
 
                                         <f:selectItems value="#{clusterManagementController.zones}" />
                                     </p:selectManyCheckbox>

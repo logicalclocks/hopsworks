@@ -46,7 +46,7 @@ public class ClusterManagementController implements Serializable {
     private Yaml yaml;
     private boolean renderEC2;
     private ClusterOptions options = new ClusterOptions();
-    private String clusterType;
+    private String clusterType = "";
     /**
      * Variables for defining options of the cluster during the editing process
      * in the tables
@@ -71,19 +71,19 @@ public class ClusterManagementController implements Serializable {
     public ClusterManagementController() {
         Representer repr = new ClusterRepresenter();
         repr.setPropertyUtils(new UnsortedPropertyUtils());
-        
+
         DumperOptions dumperOptions = new DumperOptions();
         dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-        
+
         baremetalGroups = new ArrayList<BaremetalGroup>();
         baremetalGroupsModel = new BaremetalGroupDataModel(baremetalGroups);
 
         groups = new ArrayList<NodeGroup>();
         groupsModel = new NodeGroupDataModel(groups);
-
+        cluster = new Cluster();
         globalRecipes = new ArrayList<String>();
         ports = new ArrayList<Integer>();
-        yaml =new Yaml(repr,dumperOptions);
+        yaml = new Yaml(repr, dumperOptions);
         yaml.setBeanAccess(BeanAccess.FIELD);
 
     }
@@ -266,7 +266,7 @@ public class ClusterManagementController implements Serializable {
     }
 
     private void parseYMLtoCluster() {
-        
+
         try {
             Object document = yaml.load(file.getInputstream());
 
@@ -317,7 +317,7 @@ public class ClusterManagementController implements Serializable {
     }
 
     public String proceedCreateWizard() {
-        edit=null;
+        edit = null;
         globalRecipes.clear();
         ports.clear();
         baremetalGroups.clear();
@@ -360,7 +360,7 @@ public class ClusterManagementController implements Serializable {
     }
 
     public void generateYAML(ActionEvent event) {
-       
+
         if (edit != null) {
             edit.setClusterType(clusterType);
 
@@ -479,7 +479,7 @@ public class ClusterManagementController implements Serializable {
     }
 
     public void editSelectedGroup() {
-        
+
         if (!isBaremetal() && selectedGroup.length > 0) {
 
             options.setEditGroup(selectedGroup[0]);

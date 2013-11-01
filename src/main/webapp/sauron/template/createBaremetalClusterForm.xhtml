@@ -20,7 +20,7 @@
             <pe:tooltip global="true"  myPosition="left center" atPosition="right center" />  
             <div id="createWizard" >
 
-                <h:form id="mainForm">
+                <h:form id="mainForm" >
                     <p:wizard widgetVar="wiz"
                               flowListener="#{clusterManagementController.onFlowProcess}" styleClass="wizard">
                         <p:tab id="clusterCommon" title="Common">
@@ -56,19 +56,19 @@
                                 </h:panelGrid>
                             </p:panel>
                             <p:spacer height="25px"/>
-                            <p:panel header="Git parameters" >
+                            <p:panel header="Git parameters (Optional)" collapsed="true" toggleable="true">
                                 <h:panelGrid columns="2" columnClasses="label, value" styleClass="wizardElements">
-                                    <h:outputText value="Git username: *" />
-                                    <p:inputText required="true" label="Missing git user"
+                                    <h:outputText value="Git username: " />
+                                    <p:inputText required="false" label="Missing git user"
                                                  title="Enter user name to access your git repository"
                                                  value="#{clusterManagementController.baremetalCluster.global.git.user}" />
 
-                                    <h:outputText value="Git repository: *" />
-                                    <p:inputText required="true" label="Missing a git repository"
+                                    <h:outputText value="Git repository: " />
+                                    <p:inputText required="false" label="Missing a git repository"
                                                  title="Enter url to clone your git repository"
                                                  value="#{clusterManagementController.baremetalCluster.global.git.repository}" />
-                                    <h:outputText value="Git key: *" />
-                                    <p:inputTextarea required="true" label="Missing a key for the git repository"
+                                    <h:outputText value="Git key: " />
+                                    <p:inputTextarea required="false" label="Missing a key for the git repository"
                                                      title="Security key to clone your repository" rows="10"
                                                      value="#{clusterManagementController.baremetalCluster.global.git.key}" />
                                 </h:panelGrid>
@@ -184,7 +184,7 @@
                   
                 </h:form>
                 <ui:include src="/sauron/template/recipeForm.xhtml"/>
-                <ui:include src="/sauron/template/removeBaremetalGroupForm.xhtml"/>
+                <ui:include src="/sauron/template/removeGroupForm.xhtml"/>
                 <ui:include src="/sauron/template/addBaremetalGroupForm.xhtml"/>
                 <ui:include src="/sauron/template/editBaremetalGroupForm.xhtml"/>
                 

@@ -25,12 +25,30 @@
                                        rendered="#{clusterManagementController.cluster.global.authorizePorts.size()>0}"/>
                         <h:outputText value="#{clusterManagementController.cluster.global.authorizePorts}" 
                                       rendered="#{clusterManagementController.cluster.global.authorizePorts.size()>0}"/>
-                        <h:outputLabel value="Git user:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.git.user}" />
-                        <h:outputLabel value="Git repository:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.git.repository}" />
-                        <h:outputLabel value="Git key:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.git.key}" />
+                        <h:outputLabel value="Git user:" 
+                                       rendered="#{clusterManagementController.cluster.global.git.user!='' 
+                                                   and clusterManagementController.cluster.global.git!=null 
+                                                   and clusterManagementController.cluster.global.git.user!=null}"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.git.user}"
+                                      rendered="#{clusterManagementController.cluster.global.git.user!='' 
+                                                   and clusterManagementController.cluster.global.git!=null 
+                                                   and clusterManagementController.cluster.global.git.user!=null}"/>
+                        <h:outputLabel value="Git repository:" 
+                                       rendered="#{clusterManagementController.cluster.global.git.repository!='' 
+                                                   and clusterManagementController.cluster.global.git!=null 
+                                                   and clusterManagementController.cluster.global.git.repository!=null}"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.git.repository}" 
+                                      rendered="#{clusterManagementController.cluster.global.git.repository!='' 
+                                                   and clusterManagementController.cluster.global.git!=null 
+                                                   and clusterManagementController.cluster.global.git.repository!=null}"/>
+                        <h:outputLabel value="Git key:" 
+                                       rendered="#{clusterManagementController.cluster.global.git.key!='' 
+                                                   and clusterManagementController.cluster.global.git!=null 
+                                                   and clusterManagementController.cluster.global.git.key!=null}"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.git.key}" 
+                                      rendered="#{clusterManagementController.cluster.global.git.key!='' 
+                                                   and clusterManagementController.cluster.global.git!=null 
+                                                   and clusterManagementController.cluster.global.git.key!=null}"/>
                         
                     </h:panelGrid>
                 </p:tab>
@@ -44,8 +62,9 @@
                         <h:outputText value="#{clusterManagementController.cluster.provider.image}" />
                         <h:outputLabel value="Region:"/>
                         <h:outputText value="#{clusterManagementController.cluster.provider.region}" />
-                        <h:outputLabel value="Zones:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.provider.zones}" />
+                        <h:outputLabel value="Zones:" rendered="false"/>
+                        <h:outputText value="#{clusterManagementController.cluster.provider.zones}" 
+                                      rendered ="false"/>
                     </h:panelGrid>
                 </p:tab>
                 <p:tab title="Nodes:" >
