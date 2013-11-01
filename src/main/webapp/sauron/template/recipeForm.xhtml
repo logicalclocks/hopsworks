@@ -26,7 +26,7 @@
                                  title="Name of the recipe you want to include"
                                  value="#{clusterManagementController.options.globalRecipe}"
                                  required="true"/>
-                    <p:commandButton id="acceptRecipe" value="Confirm" update=":mainForm" 
+                    <p:commandButton id="acceptRecipe" value="Confirm" update=":mainForm:recipeList" 
                                      process="@this"
                                      action="#{clusterManagementController.addRecipe}"
                                      oncomplete="editLastDataTableRow addRecipeDialog.close()"

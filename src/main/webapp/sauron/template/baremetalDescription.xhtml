@@ -25,12 +25,30 @@
                                        rendered="#{clusterManagementController.baremetalCluster.global.recipes.size()>0}"/>
                         <h:outputText value="#{clusterManagementController.baremetalCluster.global.recipes}" 
                                       rendered="#{clusterManagementController.baremetalCluster.global.recipes.size()>0}"/>
-                        <h:outputLabel value="Git user:"/>
-                        <h:outputText value="#{clusterManagementController.baremetalCluster.global.git.user}" />
-                        <h:outputLabel value="Git repository:"/>
-                        <h:outputText value="#{clusterManagementController.baremetalCluster.global.git.repository}" />
-                        <h:outputLabel value="Git key:"/>
-                        <h:outputText value="#{clusterManagementController.baremetalCluster.global.git.key}" />
+                        <h:outputLabel value="Git user:" 
+                                       rendered="#{clusterManagementController.baremetalCluster.global.git.user!='' 
+                                                   and clusterManagementController.baremetalCluster.global.git!=null 
+                                                   and clusterManagementController.baremetalCluster.global.git.user!=null}"/>
+                        <h:outputText value="#{clusterManagementController.baremetalCluster.global.git.user}" 
+                                      rendered="#{clusterManagementController.baremetalCluster.global.git.user!='' 
+                                                  and clusterManagementController.baremetalCluster.global.git!=null 
+                                                  and clusterManagementController.baremetalCluster.global.git.user!=null}"/>
+                        <h:outputLabel value="Git repository:" 
+                                       rendered="#{clusterManagementController.baremetalCluster.global.git.repository!='' 
+                                                   and clusterManagementController.baremetalCluster.global.git!=null 
+                                                   and clusterManagementController.baremetalCluster.global.git.repository!=null}"/>
+                        <h:outputText value="#{clusterManagementController.baremetalCluster.global.git.repository}" 
+                                      rendered="#{clusterManagementController.baremetalCluster.global.git.repository!='' 
+                                                  and clusterManagementController.baremetalCluster.global.git!=null 
+                                                  and clusterManagementController.baremetalCluster.global.git.repository!=null}"/>
+                        <h:outputLabel value="Git key:" 
+                                       rendered="#{clusterManagementController.baremetalCluster.global.git.key!='' 
+                                                   and clusterManagementController.baremetalCluster.global.git!=null 
+                                                   and clusterManagementController.baremetalCluster.global.git.key!=null}"/>
+                        <h:outputText value="#{clusterManagementController.baremetalCluster.global.git.key}" 
+                                      rendered="#{clusterManagementController.baremetalCluster.global.git.key!='' 
+                                                   and clusterManagementController.baremetalCluster.global.git!=null 
+                                                   and clusterManagementController.baremetalCluster.global.git.key!=null}"/>
                     </h:panelGrid>
                 </p:tab>
 
