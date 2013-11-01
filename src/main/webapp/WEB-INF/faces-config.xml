@@ -16,6 +16,11 @@
     
     <navigation-rule>        
         <navigation-case>
+            <from-outcome>bbchome</from-outcome>
+            <to-view-id>bbc/index.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
             <from-outcome>logout</from-outcome>
             <to-view-id>/index.xhtml</to-view-id>
             <redirect/>

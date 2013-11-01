@@ -1,0 +1,157 @@
+/* 
+    Document   : bbc
+    Created on : Oct 22, 2013, 3:46:27 PM
+    Author     : Hamidreza Afzali <afzali@kth.se>
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+
+#HomeTabView {
+    border-width: 0px;
+}
+
+.BbcMainLayout {
+    text-align: center;
+}
+
+.BbcMainLayout .BbcPanel {
+    width: 700px; 
+    margin: 0 auto;
+}
+
+.BbcMainLayout .ui-widget-content {
+    border-width: 0px;
+}
+
+.BbcNewSamplePanel  {
+    margin: 0 auto;
+    border: 0px;
+    height: 520px;
+}
+
+.sideMenuItem {
+    margin: 2px;
+    padding: 5px; 
+    display: block;
+    height: 35px;    
+    background-repeat:no-repeat;    
+}
+.sideMenuItem.Home {
+    background-image: url("#{resource['images/bbc/home-dark.png']}");
+}
+.sideMenuItem.Home:hover {
+    background-image: url("#{resource['images/bbc/home-light.png']}");
+}
+.sideMenuItem.New {
+    background-image: url("#{resource['images/bbc/new-sc-dark.png']}");
+}
+.sideMenuItem.New:hover {
+    background-image: url("#{resource['images/bbc/new-sc-light.png']}");
+}
+.sideMenuItem.Find {
+    background-image: url("#{resource['images/bbc/find-sc-dark.png']}");
+}
+.sideMenuItem.Find:hover {
+    background-image: url("#{resource['images/bbc/find-sc-light.png']}");
+}
+
+.ButtonsOnRight {
+    float: right; 
+    margin-top: 5px; 
+    margin-bottom: 5px;
+}
+
+.RequiredNotice {
+    color: red;
+}
+
+.newSampleGeneralInfoPanelGrid  td {
+    vertical-align: top;
+}
+
+
+.BbcAccordion .ui-accordion-header {
+    height: 22px;
+    text-align: left;
+}
+
+.BbcAccordion .ui-accordion-content {
+    padding: 0px;
+}
+
+
+.BbcInnerPanel .ui-widget-header{
+    height: 10px;
+}
+
+.newSampleContactPanelGrid {
+    background-color: #F0F0F0 ;   /* light gray */
+    width: 100%; 
+    text-align: left;    
+}
+
+.newSampleContactPanelGrid .ui-inputtext {
+    width: 280px;
+}
+
+.newSampleSampleCollectionPanelGrid {
+    text-align: left;
+}
+
+.newSampleSampleCollectionPanelGrid td{
+    vertical-align: top;    
+}
+
+.findSampleSampleCollectionPanelGrid {
+    text-align: left;
+}
+
+.findSampleSampleCollectionPanelGrid td{
+    vertical-align: top;    
+}
+
+.LabelExample {
+    width: 280px;
+    display: block;
+    font-size: 9px;
+    color: gray;
+}
+
+.thinToolbar {
+    border: 0px;
+    padding: 0px;
+}
+
+.thinToolbar .ui-button {
+    height: 25px;
+}
+
+.BbcFieldSet .ui-fieldset-legend {
+    background-color: white;
+    padding: 0px;
+    border: 0px;
+    text-align: left;
+}
+
+.BbcFieldSet .MainLabel {
+    display: block;
+    width: 100px;
+}
+
+.newSampleSamplesPanelGrid {
+    text-align: left;
+    width: 100%
+}
+
+.newSampleSamplesPanelGrid td{
+    vertical-align: top;    
+}
+
+.newSampleSampleDonorsPanelGrid {
+    text-align: left;
+}
+
+.newSampleSampleDonorsPanelGrid td{
+    vertical-align: top;    
+}
