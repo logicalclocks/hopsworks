@@ -31,117 +31,121 @@ import javax.servlet.http.HttpSession;
 //@SessionScoped
 public class AuthBackingBean {
 
-   private static Logger log = Logger.getLogger(AuthBackingBean.class.getName());
-   private String username;
-   private String password;
-   private Username user; // The JPA entity.
-   @EJB
-   private UserFacade userService;
+    private static Logger log = Logger.getLogger(AuthBackingBean.class.getName());
+    private String username;
+    private String password;
+    private Username user; // The JPA entity.
+    @EJB
+    private UserFacade userService;
 
-   public AuthBackingBean() {
-   }
+    public AuthBackingBean() {
+    }
 
-   private void addUser() {
-      Username u = new Username();
-      u.setEmail("basher");
-      Group g = Group.ADMIN;
-      List<Group> lg = new ArrayList<Group>();
-      lg.add(g);
-      u.setGroups(lg);
-      u.setMobileNum("000");
-      u.setName("Linda");
-      u.setPassword("jim");
-      u.setRegisteredOn(new Date());
-      u.setUsername("lindass");
-      u.setSalt("bl".getBytes());
+//    private void addUser() {
+//        Username u = new Username();
+//        u.setEmail("basher");
+//        Group g = Group.ADMIN;
+//        List<Group> lg = new ArrayList<Group>();
+//        lg.add(g);
+//        u.setGroups(lg);
+//        u.setMobileNum("000");
+//        u.setName("Linda");
+//        u.setPassword("jim");
+//        u.setRegisteredOn(new Date());
+//        u.setUsername("lindass");
+//        u.setSalt("bl".getBytes());
+//
+//        userService.persist(u);
+//
+//    }
 
-      userService.persist(u);
+    public String login() {
 
-   }
+        // addUser();
+        FacesContext context = FacesContext.getCurrentInstance();
+        HttpServletRequest request = (HttpServletRequest) context
+                .getExternalContext().getRequest();
 
-   public String login() {
+        if (username.isEmpty()) {
+            FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "Enter your username.");
+            context.addMessage(null, msg);
+            return null;
+        }
 
-      // addUser();
-      FacesContext context = FacesContext.getCurrentInstance();
-      HttpServletRequest request = (HttpServletRequest) context
-              .getExternalContext().getRequest();
+        if (password.isEmpty()) {
+            FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "Enter your password.");
+            context.addMessage(null, msg);
+            return null;
+        }
 
-      if (username.isEmpty()) {
-         FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "Enter your username.");
-         context.addMessage(null, msg);
-         return null;
-      }
+        try {
+            if (request.getRemoteUser() != null) {
+                request.logout();
+            }
+            request.login(username, password);
+            user = userService.findByEmail(username);
+        } catch (ServletException e) {
+            FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "The username or password is incorrect.");
+            context.addMessage(null, msg);
+            return null;
+        }
 
-      if (password.isEmpty()) {
-         FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "Enter your password.");
-         context.addMessage(null, msg);
-         return null;
-      }
+        //you can fetch user from database for authenticated principal and do some action  
+        Principal principal = request.getUserPrincipal();
+        log.log(Level.INFO, "Logging IN Authenticated user: {0}", principal.getName());
 
-      try {
-         if (request.getRemoteUser() != null) {
-            request.logout();
-         }
-         request.login(username, password);
-         user = userService.findByEmail(username);
-      } catch (ServletException e) {
-         FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "The username or password is incorrect.");
-         context.addMessage(null, msg);
-         return null;
-      }
 
-      //you can fetch user from database for authenticated principal and do some action  
-      Principal principal = request.getUserPrincipal();
-      log.log(Level.INFO, "Logging IN Authenticated user: {0}", principal.getName());
+// TODO Fix this: Role is always ADMIN
+        
+        if (request.isUserInRole("ADMIN")) {
+//            return "/sauron/clusters.xml?faces-redirect=true";
+            return "/bbc/index.xml?faces-redirect=true";            
+//        } else if (request.isUserInRole("BBC_RESEARCHER")) {
+//            return "/bbc/index.xml?faces-redirect=true";
+        } else {
+            return "/sauron/clusters.xml?faces-redirect=true";
+        }
+    }
 
-      if (request.isUserInRole("ADMIN")) {
-         return "/sauron/clusters.xml?faces-redirect=true";
-      } else       if (request.isUserInRole("BBC_RESEARCHER")) {
-         return "/bbc/index.xml?faces-redirect=true";
-      } else {
-         return "/sauron/clusters.xml?faces-redirect=true";
-      }
-   }
-
-   public String logout() {
+    public String logout() {
 //      TODO does not work correctly
-      String result = "logout";
-      FacesContext context = FacesContext.getCurrentInstance();
-      if (context.getExternalContext().getRequest() == null) {
-         return "/loginError.xml";
-      }
-      HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-      Principal principal = request.getUserPrincipal();
-      HttpSession s = request.getSession(false);
-      log.log(Level.INFO, "Logging OUT Authenticated user: {0}", principal.getName());
+        String result = "logout";
+        FacesContext context = FacesContext.getCurrentInstance();
+        if (context.getExternalContext().getRequest() == null) {
+            return "/loginError.xml";
+        }
+        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
+        Principal principal = request.getUserPrincipal();
+        HttpSession s = request.getSession(false);
+        log.log(Level.INFO, "Logging OUT Authenticated user: {0}", principal.getName());
 
-      if (s != null) {
-         try {
-            s.invalidate();
-            request.logout();
-         } catch (ServletException e) {
-            log.log(Level.SEVERE, "Failed to logout user!", e);
-            result = "/loginError.xml";
-         } catch (Throwable e) {
-            log.log(Level.SEVERE, "Throwable Exception when calling logout user! ", e.toString());
-         }
-      }
-      return result;
-   }
+        if (s != null) {
+            try {
+                s.invalidate();
+                request.logout();
+            } catch (ServletException e) {
+                log.log(Level.SEVERE, "Failed to logout user!", e);
+                result = "/loginError.xml";
+            } catch (Throwable e) {
+                log.log(Level.SEVERE, "Throwable Exception when calling logout user! ", e.toString());
+            }
+        }
+        return result;
+    }
 
-   public String getUsername() {
-      return username;
-   }
+    public String getUsername() {
+        return username;
+    }
 
-   public void setUsername(String username) {
-      this.username = username;
-   }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-   public String getPassword() {
-      return password;
-   }
+    public String getPassword() {
+        return password;
+    }
 
-   public void setPassword(String password) {
-      this.password = password;
-   }
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }

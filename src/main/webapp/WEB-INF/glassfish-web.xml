@@ -1,18 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE glassfish-web-app PUBLIC "-//GlassFish.org//DTD GlassFish Application Server 3.1 Servlet 3.0//EN" "http://glassfish.org/dtds/glassfish-web-app_3_0-1.dtd">
 <glassfish-web-app error-url="">
-  <property name="allowLinking" value="true"/>
-  <parameter-encoding default-charset="UTF-8"/>
-  <security-role-mapping>
-    <role-name>USER</role-name>
-    <group-name>USER</group-name>
-  </security-role-mapping>
-  <security-role-mapping>
-    <role-name>ADMIN</role-name>
-    <group-name>ADMIN</group-name>
-  </security-role-mapping>
-  <security-role-mapping>
-    <role-name>AGENT</role-name>
-    <group-name>AGENT</group-name>
-  </security-role-mapping>
+    <property name="allowLinking" value="true"/>
+    <parameter-encoding default-charset="UTF-8"/>
+    <security-role-mapping>
+        <role-name>USER</role-name>
+        <group-name>USER</group-name>
+    </security-role-mapping>
+    <security-role-mapping>
+        <role-name>ADMIN</role-name>
+        <group-name>ADMIN</group-name>
+    </security-role-mapping>
+    <security-role-mapping>
+        <role-name>AGENT</role-name>
+        <group-name>AGENT</group-name>
+    </security-role-mapping>
+    <security-role-mapping>
+        <role-name>BBC_RESEARCHER</role-name>
+        <group-name>BBC_RESEARCHER</group-name>
+    </security-role-mapping>  
 </glassfish-web-app>

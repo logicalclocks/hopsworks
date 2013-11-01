@@ -97,6 +97,6 @@
    <url-mapping id="role-actionhistory">
       <pattern value="/sauron/clusters/#{cluster}/#{service}/#{role}/#{hostid}/action_history" />
       <view-id value="/sauron/role-actionhistory.xhtml" />
-   </url-mapping>  
+   </url-mapping>    
 
 </pretty-config>
