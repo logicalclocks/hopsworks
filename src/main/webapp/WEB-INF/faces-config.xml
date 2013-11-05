@@ -7,14 +7,29 @@
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
               xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd">
 
-<!--    <lifecycle>
+    <!--    <lifecycle>
         <phase-listener>
             se.kth.kthfsdashboard.user.AuthenticationPhaseListener
         </phase-listener>
     </lifecycle>-->
     
     
-    <navigation-rule>        
+    <navigation-rule>      
+        <navigation-case>
+            <from-outcome>wfhome</from-outcome>
+            <to-view-id>wf/index.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>  
+        <navigation-case>
+            <from-outcome>manageWorkflows</from-outcome>
+            <to-view-id>wf/manageWorkflows.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>manageJobs</from-outcome>
+            <to-view-id>wf/manageJobs.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
         <navigation-case>
             <from-outcome>bbchome</from-outcome>
             <to-view-id>bbc/index.xhtml</to-view-id>
