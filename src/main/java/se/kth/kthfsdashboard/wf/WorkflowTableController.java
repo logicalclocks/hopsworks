@@ -17,7 +17,7 @@ import javax.faces.model.SelectItem;
  */
 @ManagedBean
 @ViewScoped
-public class workflowTableController implements Serializable{
+public class WorkflowTableController implements Serializable{
     
     private List<Workflow> workflows;
     private Workflow selectedWorkflow;
@@ -25,7 +25,7 @@ public class workflowTableController implements Serializable{
     private List<Workflow> selectedWorkflowsList;
     private SelectItem[] workflowNamesOptions;
 
-    public workflowTableController() {
+    public WorkflowTableController() {
         workflows = new ArrayList<Workflow>(WorkflowConverter.workflows.values());
     }
 

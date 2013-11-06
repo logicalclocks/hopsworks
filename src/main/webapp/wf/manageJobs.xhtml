@@ -7,7 +7,7 @@
     <h:head>
         <title>BiobankCloud - Job History</title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-        
+
     </h:head>
     <h:body>
         <h:form class="stylelayout" id="formToolbar"> 
@@ -34,7 +34,32 @@
             </p:toolbar> 
 
         </h:form>
-        
+
+        <p:spacer height="20px"/>
+        <div id="table" style="margin-left: 100px; margin-right: 100px">
+            <h:form>
+                <p:dataTable id="jobsWithFilterOptions" var="job" value="#{jobTableController.jobs}" 
+                             rowKey="#{job.uniqueID}" selection="#{jobTableController.selectedJob}" 
+                             selectionMode="single">
+                    <p:column headerText="UniqueID" >
+                        <h:outputText value="#{job.uniqueID}" />
+                    </p:column>
+                    <p:column headerText="Name" >
+                        <h:outputText value="#{job.name}" />
+                    </p:column>
+                    <p:column headerText="ExecutedBy" filterBy="#{job.executedBy}" filterOptions="#{jobTableController.jobNamesAsOptions}" filterPosition="top">
+                        <h:outputText value="#{job.executedBy}" />
+                    </p:column>
+                    <p:column headerText="Date Run" sortBy="#{job.dateRun}" >
+                        <h:outputText value="#{job.dateRun}" />
+                    </p:column>
+                    <p:column headerText="Time lapse (s)" >
+                        <h:outputText value="#{job.completionTime}" />
+                    </p:column>
+
+                </p:dataTable>
+            </h:form>
+        </div>
     </h:body>
 </html>
 
