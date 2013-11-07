@@ -9,19 +9,39 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
 
 /**
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
+@Entity
+@Table(name="Jobs")
+@NamedQueries({
+    @NamedQuery(name = "Job.findAll", query = "SELECT c FROM Job c")
+})
+
 public class Job implements Serializable {
-    private final String uniqueID;
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    private String uniqueID;
     private String executedBy;
     private String name;
     private String dateRun;
-    private int completionTime;
+    private long completionTime;
+
+    public Job() {
+    }
     
-    public Job(String executedBy, String name, String dateRun, int completionTime){
+    public Job(String executedBy, String name, String dateRun, long completionTime){
         byte[] contents = null;
         byte[] digest = null;
         String hashtext="";
@@ -79,11 +99,27 @@ public class Job implements Serializable {
         this.dateRun = dateRun;
     }
 
-    public int getCompletionTime() {
+    public long getCompletionTime() {
         return completionTime;
     }
 
     public void setCompletionTime(int completionTime) {
+        this.completionTime = completionTime;
+    }
+    
+     public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setUniqueID(String uniqueID) {
+        this.uniqueID = uniqueID;
+    }
+
+    public void setCompletionTime(long completionTime) {
         this.completionTime = completionTime;
     }
     

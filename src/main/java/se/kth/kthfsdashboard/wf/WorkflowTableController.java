@@ -7,18 +7,21 @@ package se.kth.kthfsdashboard.wf;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import javax.ejb.Asynchronous;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ViewScoped;
+import javax.faces.bean.SessionScoped;
 import javax.faces.model.SelectItem;
+import se.kth.kthfsdashboard.job.JobDispatcher;
 
 /**
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @ManagedBean
-@ViewScoped
+@SessionScoped
 public class WorkflowTableController implements Serializable{
-    
+    //@ManagedProperty(value = "#{dispatcher}")
+    private JobDispatcher dispatcher;
     private List<Workflow> workflows;
     private Workflow selectedWorkflow;
     private Workflow[] selectedWorkflows;
@@ -27,6 +30,7 @@ public class WorkflowTableController implements Serializable{
 
     public WorkflowTableController() {
         workflows = new ArrayList<Workflow>(WorkflowConverter.workflows.values());
+        dispatcher = new JobDispatcher();
     }
 
     public List<Workflow> getWorkflows() {
@@ -62,5 +66,12 @@ public class WorkflowTableController implements Serializable{
         this.selectedWorkflow = selectedWorkflow;
     }
     
-    
+    @Asynchronous
+    public void runSelectedWorkflow(){
+        System.out.println(selectedWorkflow.getWorkflowName());
+        if(dispatcher==null){
+            System.out.println("null");
+        }
+        dispatcher.submitWorkflowTask(selectedWorkflow);
+    }
 }

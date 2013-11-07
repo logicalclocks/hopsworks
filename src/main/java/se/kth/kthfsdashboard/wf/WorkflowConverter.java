@@ -20,10 +20,11 @@ public class WorkflowConverter implements Converter{
     public static Map<String, Workflow> workflows = new HashMap<String, Workflow>();
     
     static {
-        workflows.put("alberto", new Workflow("alberto","workflow1", "20-10-2013","blablabla"));
-        workflows.put("jim", new Workflow("jim","workflow2", "12-9-2013","bowtie test"));
-        workflows.put("jorgen", new Workflow("jorgen"," jorgen","10-8-2013","workflow, simply a test"));
-        workflows.put("kamal", new Workflow("kamal"," test", "2-3-2013","workflow, simply a test"));
+        workflows.put("alberto", new Workflow("alberto","workflow1", "20-10-2013","blablabla", 
+                "declare hello-world; deftask spell( ~out : ~<str> ) *{    out=`echo ${str[@]}`; sleep 30 }* x = 'hello' 'world'; out = spell( str : x ); target out;"));
+//        workflows.put("jim", new Workflow("jim","workflow2", "12-9-2013","bowtie test", ""));
+//        workflows.put("jorgen", new Workflow("jorgen"," jorgen","10-8-2013","workflow, simply a test", ""));
+//        workflows.put("kamal", new Workflow("kamal"," test", "2-3-2013","workflow, simply a test", ""));
         
     }
     
