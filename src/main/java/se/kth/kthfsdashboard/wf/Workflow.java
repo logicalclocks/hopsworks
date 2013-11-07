@@ -15,20 +15,18 @@ public class Workflow implements Serializable{
     private String workflowName;
     private String workflowDate;
     private String workflowTags;
+    private String workflowMetadata;
 
     public Workflow() {
     }
 
-    public Workflow(String owner, String workflowName, String workflowDate, String workflowContents) {
+    public Workflow(String owner, String workflowName, String workflowDate, String workflowTags, String Metadata) {
         this.owner = owner;
         this.workflowName = workflowName;
         this.workflowDate = workflowDate;
-        this.workflowTags = workflowContents;
+        this.workflowTags = workflowTags;
+        this.workflowMetadata = Metadata;
     }
-    
-    
-
-    
 
     public String getWorkflowTags() {
         return workflowTags;
@@ -61,8 +59,13 @@ public class Workflow implements Serializable{
     public void setWorkflowDate(String workflowDate) {
         this.workflowDate = workflowDate;
     }
-    
-      
-    
+
+    public String getWorkflowMetadata() {
+        return workflowMetadata;
+    }
+
+    public void setWorkflowMetadata(String workflowMetadata) {
+        this.workflowMetadata = workflowMetadata;
+    }
     
 }

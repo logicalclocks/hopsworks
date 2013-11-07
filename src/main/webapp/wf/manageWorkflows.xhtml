@@ -37,12 +37,14 @@
         </h:form>
         <p:spacer height="20px"/>
         <div id="table" style="margin-left: 100px; margin-right: 100px">
-            <h:panelGrid columns="2" style="width:100%">
-
-                <p:button value="Add Workflow" icon="ui-icon-plus" />
-                <p:button value="Run" icon="ui-icon-play" style="float: right"/>
-            </h:panelGrid>            <p:spacer width="500px" height="5px"/>
             <h:form>
+                <h:panelGrid columns="2" style="width:100%">
+
+                    <p:button value="Add Workflow" icon="ui-icon-plus" />
+                    <p:commandButton value="Run" icon="ui-icon-play" style="float: right" 
+                                     actionListener="#{workflowTableController.runSelectedWorkflow()}"/>
+                </h:panelGrid>            <p:spacer width="500px" height="5px"/>
+
                 <p:dataTable id="workflowsWithFilterOptions" var="wf" value="#{workflowTableController.workflows}" 
                              rowKey="#{wf.workflowName}" selection="#{workflowTableController.selectedWorkflow}" 
                              selectionMode="single">
