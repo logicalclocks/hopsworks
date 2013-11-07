@@ -58,6 +58,12 @@
             <type>jar</type>
         </dependency>
         <dependency>
+            <groupId>de.huberlin.logview</groupId>
+            <artifactId>logview</artifactId>
+            <version>0.13</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
             <groupId>javax</groupId>
             <artifactId>javaee-web-api</artifactId>
             <version>6.0</version>
@@ -239,6 +245,12 @@
             <version>0.6.3</version>
         </dependency>
 
+        <dependency>
+            <groupId>de.huberlin.cuneiform</groupId>
+            <artifactId>cuneiform</artifactId>
+            <version>0.13</version>
+            
+        </dependency>
 
         <dependency>
             <groupId>org.ocpsoft.rewrite</groupId>
