@@ -6,13 +6,14 @@ package se.kth.kthfsdashboard.job;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ViewScoped;
+import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 import javax.faces.model.SelectItem;
 
 /**
@@ -20,31 +21,32 @@ import javax.faces.model.SelectItem;
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @ManagedBean
-@ViewScoped
+@RequestScoped
 public class JobTableController implements Serializable {
 
-//    @EJB
-//    private JobHistoryFacade jobHistory;
+    @EJB
+    private JobHistoryFacade jobHistory;
     private List<Job> jobs;
-    private List<String> filter;
     private Job selectedJob;
     private Job[] selectedJobs;
     private List<Job> selectedJobsList;
     private SelectItem[] jobNamesOptions;
-    
+    private Set<String> filter;
 
     public JobTableController() {
     }
 
     @PostConstruct
     public void init() {
-//        jobs=jobHistory.findAll();
-        jobs = new ArrayList<Job>();
-        filter = new ArrayList<String>();
-        for(Job job:jobs){
+        jobs = jobHistory.findAll();
+
+//        jobs = new ArrayList<Job>(converter.jobs.values());
+        //jobs = new ArrayList<Job>();
+        filter = new HashSet<String>();
+        for (Job job : jobs) {
             filter.add(job.getExecutedBy());
         }
-        
+
     }
 
     public List<Job> getJobs() {

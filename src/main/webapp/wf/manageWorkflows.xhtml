@@ -42,7 +42,7 @@
 
                     <p:button value="Add Workflow" icon="ui-icon-plus" />
                     <p:commandButton value="Run" icon="ui-icon-play" style="float: right" 
-                                     actionListener="#{workflowTableController.runSelectedWorkflow()}"/>
+                                     action="#{workflowTableController.runSelectedWorkflow()}"/>
                 </h:panelGrid>            <p:spacer width="500px" height="5px"/>
 
                 <p:dataTable id="workflowsWithFilterOptions" var="wf" value="#{workflowTableController.workflows}" 

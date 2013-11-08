@@ -47,7 +47,7 @@ public class Job implements Serializable {
         String hashtext="";
         
         try{
-            contents = (executedBy+name+dateRun+completionTime).getBytes("UTF-8");
+            contents = (executedBy+name+dateRun).getBytes("UTF-8");
             digest = MessageDigest.getInstance("MD5").digest(contents);
             BigInteger bigint= new BigInteger(1,digest);
             hashtext = bigint.toString(16);
