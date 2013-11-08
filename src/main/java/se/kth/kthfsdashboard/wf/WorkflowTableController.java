@@ -7,11 +7,15 @@ package se.kth.kthfsdashboard.wf;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
+import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.model.SelectItem;
 import se.kth.kthfsdashboard.job.JobDispatcher;
+import se.kth.kthfsdashboard.job.JobHistoryFacade;
 
 /**
  *
@@ -19,8 +23,11 @@ import se.kth.kthfsdashboard.job.JobDispatcher;
  */
 @ManagedBean
 @SessionScoped
-public class WorkflowTableController implements Serializable{
+public class WorkflowTableController implements Serializable {
     //@ManagedProperty(value = "#{dispatcher}")
+
+    @EJB
+    private JobHistoryFacade jobHistory;
     private JobDispatcher dispatcher;
     private List<Workflow> workflows;
     private Workflow selectedWorkflow;
@@ -29,8 +36,13 @@ public class WorkflowTableController implements Serializable{
     private SelectItem[] workflowNamesOptions;
 
     public WorkflowTableController() {
+
+    }
+
+    @PostConstruct
+    public void init() {
         workflows = new ArrayList<Workflow>(WorkflowConverter.workflows.values());
-        dispatcher = new JobDispatcher();
+        dispatcher = new JobDispatcher(jobHistory);
     }
 
     public List<Workflow> getWorkflows() {
@@ -40,18 +52,18 @@ public class WorkflowTableController implements Serializable{
     public void setWorkflows(List<Workflow> workflows) {
         this.workflows = workflows;
     }
-    
-    public SelectItem[] getWfNamesAsOptions(){
-        workflowNamesOptions = 
+
+    public SelectItem[] getWfNamesAsOptions() {
+        workflowNamesOptions =
                 createFilterOptions(WorkflowConverter.workflows.keySet().toArray(new String[0]));
         return workflowNamesOptions;
     }
-    
+
     private SelectItem[] createFilterOptions(String[] data) {
         SelectItem[] options = new SelectItem[data.length + 1];
 
         options[0] = new SelectItem("", "Select");
-        for(int i = 0; i < data.length; i++) {
+        for (int i = 0; i < data.length; i++) {
             options[i + 1] = new SelectItem(data[i], data[i]);
         }
 
@@ -65,11 +77,11 @@ public class WorkflowTableController implements Serializable{
     public void setSelectedWorkflow(Workflow selectedWorkflow) {
         this.selectedWorkflow = selectedWorkflow;
     }
-    
+
     @Asynchronous
-    public void runSelectedWorkflow(){
+    public void runSelectedWorkflow() {
         System.out.println(selectedWorkflow.getWorkflowName());
-        if(dispatcher==null){
+        if (dispatcher == null) {
             System.out.println("null");
         }
         dispatcher.submitWorkflowTask(selectedWorkflow);

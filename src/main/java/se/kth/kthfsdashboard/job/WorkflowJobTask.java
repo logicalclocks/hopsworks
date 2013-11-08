@@ -20,18 +20,22 @@ import se.kth.kthfsdashboard.wf.Workflow;
 public class WorkflowJobTask implements Callable<Job> {
 
     private Workflow selectedWorkflow;
+    private JobHistoryFacade history;
 
-    public WorkflowJobTask(Workflow selectedWorkflow) {
+    public WorkflowJobTask(Workflow selectedWorkflow, JobHistoryFacade history) {
         this.selectedWorkflow = selectedWorkflow;
+        this.history = history;
     }
 
     @Override
     public Job call() {
         final File dir = new File(System.getProperty("user.dir") + "/build");
-        Job pending = new Job();
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date dateStarted = new Date();
+        Job pending = new Job(selectedWorkflow.getOwner(),
+                selectedWorkflow.getWorkflowName(), dateStarted.toString(), 0);
         try {
-            DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            Date dateStarted = new Date();
+            history.create(pending);
             FileUtils.deleteDirectory(dir);
             LocalDispatcher ld = new LocalDispatcher(
                     dir, // the working directory for all the intermediate data
@@ -43,11 +47,7 @@ public class WorkflowJobTask implements Callable<Job> {
 
             Date dateFinished = new Date();
 
-            pending = new Job(selectedWorkflow.getOwner(),
-                    selectedWorkflow.getWorkflowName(),
-                    dateStarted.toString(),
-                    dateFinished.getTime() - dateStarted.getTime());
-
+            pending.setCompletionTime(dateFinished.getTime() - dateStarted.getTime());
 
         } catch (Exception ex) {
             ex.printStackTrace();

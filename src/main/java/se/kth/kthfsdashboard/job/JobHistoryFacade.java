@@ -36,4 +36,21 @@ public class JobHistoryFacade extends AbstractFacade<Job> {
         TypedQuery<Job> query = em.createNamedQuery("Job.findAll", Job.class);
         return query.getResultList();
     }
+
+    @Override
+    public void create(Job entity) {
+        super.create(entity);
+    }
+
+    @Override
+    public void edit(Job entity) {
+        super.edit(entity);
+    }
+
+    @Override
+    public void remove(Job entity) {
+        super.remove(entity);
+    }
+     
+     
 }
