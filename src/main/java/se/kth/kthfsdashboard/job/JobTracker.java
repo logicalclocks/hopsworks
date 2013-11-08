@@ -14,8 +14,10 @@ import java.util.concurrent.ExecutionException;
 public class JobTracker  implements Runnable {
 
     private ListenableFuture<Job> futureJobResult;
+    private JobHistoryFacade history;
 
-    public JobTracker(ListenableFuture<Job> futureJobResult) {
+    public JobTracker(ListenableFuture<Job> futureJobResult, JobHistoryFacade history) {
+        this.history = history;
         this.futureJobResult = futureJobResult;
     }
     
@@ -24,7 +26,9 @@ public class JobTracker  implements Runnable {
     public void run() {
         try {
             //Submit job result to the database so we can fetch the history.
-            System.out.println(futureJobResult.get().getName());
+            Job result = futureJobResult.get();
+            history.edit(result);
+            System.out.println(result.getName());
         } catch (InterruptedException ex) {
             System.out.println("Thread Interrupted!");
         } catch (ExecutionException ex) {
