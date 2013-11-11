@@ -40,7 +40,8 @@
             <h:form>
                 <h:panelGrid columns="2" style="width:100%">
 
-                    <p:button value="Add Workflow" icon="ui-icon-plus" />
+                    <p:commandButton value="Add Workflow" icon="ui-icon-plus" update="addWorkflowDialog"
+                                     oncomplete="workflowDialog.show()"/>
                     <p:commandButton value="Run" icon="ui-icon-play" style="float: right" 
                                      action="#{workflowTableController.runSelectedWorkflow()}"/>
                 </h:panelGrid>            <p:spacer width="500px" height="5px"/>
@@ -62,6 +63,21 @@
                     </p:column>
 
                 </p:dataTable>
+                <p:dialog id="addWorkflowDialog" header="Add New Workflow" widgetVar="workflowDialog" resizable="false" 
+                          showEffect="explode" hideEffect="explode" >
+                    <h:panelGrid columns="2">
+                        <h:outputText value="Upload workflow file"/>
+                        <p:fileUpload value="#{workflowUploadController.file}"  mode="simple"   showButtons="false"
+                                      sizeLimit="5000"   
+                                      allowTypes="/(\.|\/)(cf)$/"/>
+                        <h:outputText value="Owner:" />
+                        <h:inputText value="#{workflowUploadController.owner}"/>
+                        <h:outputText value="Tags:"/>
+                        <h:inputTextarea value="#{workflowUploadController.tags}" rows="3" />
+                    </h:panelGrid>
+                    <p:commandButton value="submit workflow" action="#{workflowUploadController.addNewWorkflow()}"
+                                     oncomplete="workflowDialog.close()" update="workflowsWithFilterOptions" />
+                </p:dialog>
             </h:form>
         </div>
     </h:body>
