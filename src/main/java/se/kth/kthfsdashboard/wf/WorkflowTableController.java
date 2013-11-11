@@ -11,7 +11,6 @@ import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.model.SelectItem;
 import se.kth.kthfsdashboard.job.JobDispatcher;
@@ -28,6 +27,8 @@ public class WorkflowTableController implements Serializable {
 
     @EJB
     private JobHistoryFacade jobHistory;
+    @EJB
+    private WorkflowFacade workflowFacade;
     private JobDispatcher dispatcher;
     private List<Workflow> workflows;
     private Workflow selectedWorkflow;
@@ -36,12 +37,12 @@ public class WorkflowTableController implements Serializable {
     private SelectItem[] workflowNamesOptions;
 
     public WorkflowTableController() {
-
     }
 
     @PostConstruct
     public void init() {
-        workflows = new ArrayList<Workflow>(WorkflowConverter.workflows.values());
+        //workflows = new ArrayList<Workflow>(WorkflowConverter.workflows.values());
+        workflows = workflowFacade.findAll();
         dispatcher = new JobDispatcher(jobHistory);
     }
 
