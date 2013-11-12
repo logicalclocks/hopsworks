@@ -190,7 +190,7 @@ public class GraphControllerNew implements Serializable {
     public void loadGroupsAndPlugins() {
         plugins = new ArrayList<String>();
         groups = graphEjb.findGroups(graph.getTarget());
-        if (graph.ifTargetsService(ServiceType.HopsHDFS.toString())
+        if (graph.ifTargetsService(ServiceType.HOPS.toString())
                 || graph.ifTargetsService(ServiceType.YARN.toString())
                 || graph.ifTargetsService(ServiceType.Spark.toString())
                 || graph.ifTargetsService(ServiceType.MapReduce.toString())) {

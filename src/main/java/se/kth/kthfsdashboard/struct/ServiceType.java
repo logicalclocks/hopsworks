@@ -6,5 +6,5 @@ package se.kth.kthfsdashboard.struct;
  */
 public enum ServiceType {
 
-   HopsHDFS, MySQLCluster, YARN, MapReduce, Spark
+   HOPS, MySQLCluster, YARN, MapReduce, Spark
 }

@@ -3,6 +3,7 @@ package se.kth.kthfsdashboard.graph;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -55,7 +56,7 @@ public class Graph implements Serializable {
     @Column(length = 64)
     private String verticalLabel;
     private boolean selected;
-    private ArrayList<Chart> charts = new ArrayList<Chart>();
+    private List<Chart> charts = new ArrayList<Chart>();
 
     public Graph() {
         this.target = null;
@@ -192,7 +193,7 @@ public class Graph implements Serializable {
         this.selected = selected;
     }
 
-    public ArrayList<Chart> getCharts() {
+    public List<Chart> getCharts() {
         return charts;
     }
     
