@@ -524,6 +524,8 @@
 
             <!--New Sample Collection Dialog - End-->
 
+            
+            
             <!--Find Sample Collection Dialog-->
             <p:dialog modal="true" widgetVar="dlgFindSampleCollection" header="Sample Collection" 
                       draggable="true" closable="true" resizable="true" width="800"  height="550">  
@@ -536,7 +538,15 @@
                                     <p:outputLabel value="Material type:" styleClass="MainLabel"/>
                                     <p:outputPanel>
                                         <h:panelGrid columns="3" >
-                                            <h:panelGrid columns="2">
+                                            <p:selectOneRadio >
+                                                <p:row>
+                                                <f:selectItem itemLabel="a1" itemValue="a1"/>
+                                                <f:selectItem itemLabel="a2" itemValue="a2"/>
+                                                <f:selectItem itemLabel="a2" itemValue="a3"/>
+                                                </p:row>
+                                                <f:selectItem itemLabel="a4" itemValue="a4"/>
+                                            </p:selectOneRadio>
+<!--                                            <h:panelGrid columns="2">
                                                 <p:selectBooleanCheckbox value="" /><p:outputLabel value="Whole blood" style="width: 160px; display: block;"/>  
                                                 <p:selectBooleanCheckbox value="" /><p:outputLabel value="Plasma"/>  
                                                 <p:selectBooleanCheckbox value="" /><p:outputLabel value="Serum"/>   
@@ -553,7 +563,7 @@
                                                 <p:selectBooleanCheckbox value="" /><p:outputLabel value="Tissue"/>  
                                                 <p:selectBooleanCheckbox value="" /><p:outputLabel value="Faeces"/>   
                                                 <p:selectBooleanCheckbox value="" /><p:outputLabel value="Other"/>                                                       
-                                            </h:panelGrid>                                                
+                                            </h:panelGrid>                                                -->
                                         </h:panelGrid> 
                                     </p:outputPanel>                                   
                                 </h:panelGrid>
