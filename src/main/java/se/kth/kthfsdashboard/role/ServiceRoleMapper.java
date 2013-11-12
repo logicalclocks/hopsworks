@@ -21,7 +21,7 @@ public class ServiceRoleMapper {
         serviceRoleMap = new EnumMap<ServiceType, List<RoleType>>(ServiceType.class);
         roleFullNames = new EnumMap<RoleType, String>(RoleType.class);
 
-        serviceRoleMap.put(ServiceType.KTHFS, Arrays.asList(RoleType.namenode, RoleType.datanode));
+        serviceRoleMap.put(ServiceType.HOPS, Arrays.asList(RoleType.namenode, RoleType.datanode));
         serviceRoleMap.put(ServiceType.MySQLCluster, Arrays.asList(RoleType.ndb, RoleType.mysqld, RoleType.mgmserver, RoleType.memcached));
         serviceRoleMap.put(ServiceType.YARN, Arrays.asList(RoleType.resourcemanager, RoleType.nodemanager));
         serviceRoleMap.put(ServiceType.Spark, new ArrayList<RoleType>()); // Empty list

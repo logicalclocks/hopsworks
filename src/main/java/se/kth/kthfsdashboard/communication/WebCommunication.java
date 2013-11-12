@@ -5,7 +5,6 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
 import java.security.SecureRandom;
-import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.logging.Logger;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -22,7 +20,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
-import se.kth.kthfsdashboard.struct.RoleType;
 import se.kth.kthfsdashboard.struct.NodesTableItem;
 import se.kth.kthfsdashboard.utils.FormatUtils;
 
@@ -33,8 +30,9 @@ import se.kth.kthfsdashboard.utils.FormatUtils;
 public class WebCommunication {
 
     private static boolean DISABLE_CERTIFICATE_VALIDATION = true;
-    private static String USERNAME = "kthfsagent@sics.se";
-    private static String PASSWORD = "kthfsagent";
+    // TODO: We should get a unique agent username/password from the DB - one for each agent.
+    private static String USERNAME = "hopsagent@sics.se";
+    private static String PASSWORD = "hopsagent";
     private static String PROTOCOL = "https";
     private static int PORT = 8090;
     private static String NOT_AVAILABLE = "Not available.";
