@@ -33,7 +33,7 @@ public class Alert implements Serializable {
    @Id
    @GeneratedValue(strategy = GenerationType.SEQUENCE)
    private Long id;
-   @Column(nullable = false, length = 512)
+   @Column(nullable = false, length = 1024)
    private String message;
    @Column(length = 256)
    private String hostId;
