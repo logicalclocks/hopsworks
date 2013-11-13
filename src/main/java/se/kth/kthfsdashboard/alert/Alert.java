@@ -35,7 +35,7 @@ public class Alert implements Serializable {
    private Long id;
    @Column(nullable = false, length = 512)
    private String message;
-   @Column(length = 128)
+   @Column(length = 256)
    private String hostId;
    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
    private Date alertTime;
