@@ -80,6 +80,14 @@ public class FormatUtils {
         }
         return df.format(d);
     }
+    
+    public static String dateNoTime(Date d) {
+        SimpleDateFormat df = new SimpleDateFormat("MMM dd, yyyy");
+        if (d == null) {
+            return "";
+        }
+        return df.format(d);
+    }    
 
     public static String stdoutToHtml(String text) {
         String html = StringEscapeUtils.escapeHtml(text);

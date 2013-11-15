@@ -20,19 +20,13 @@
 
         <ui:define name="leftmenu">
             <p:commandLink styleClass="sideMenuItem Home" action="bbchome"/>
-            <p:commandLink styleClass="sideMenuItem New" action="#{sampleController.showNewSampleCollectionDialog()}"/>
-            <p:commandLink styleClass="sideMenuItem Find" action="#{sampleController.showFindSampleCollectionDialog()}"/>
+            <p:commandLink styleClass="sideMenuItem New" action="#{bbcController.showNewSampleCollectionDialog()}"/>
+            <p:commandLink styleClass="sideMenuItem Find" action="#{bbcController.showFindSampleCollectionDialog()}"/>
         </ui:define>
 
 
         <ui:define name="content">
-
-
-
-
-
             <p:tabView id="homeTabView" styleClass="BbcTabView">
-
                 <p:tab id="tab1Welcome" title="Welcome">
                     <p:panel styleClass="BbcPanel">
                         <p:spacer width="1" height="20" />
@@ -40,12 +34,8 @@
                         <p:separator id="separator"/>
                         <p:spacer width="1" height="20"/>
                         <p:outputLabel value="This website is intended to help researchers initiate collaborations. Here you can find information about sample collections containing human biological material as well as survey and register data associated with the donors."/>
-
-
-
                     </p:panel>
                 </p:tab>
-
                 <p:tab id="tab2Org" title="Organizations">
                     <p:panel styleClass="BbcPanel">
                         <p:spacer width="1" height="20"/>
@@ -55,27 +45,27 @@
                 <p:tab id="tab3Sample" title="Sample Collections">
                     <p:panel styleClass="BbcPanel" >
                         <p:spacer width="1" height="20"/>
-                        <h3>Number of Sample Collections per Diagnosis GBbcTabViewroup</h3>
+                        <h3>Number of Sample Collections per Diagnosis Group</h3>
                     </p:panel>
                 </p:tab>
             </p:tabView>
-
         </ui:define>
+
 
 
         <ui:define name="dialogs">
 
             <!--New Sample Collection Dialog-->
-            <p:dialog modal="true" widgetVar="dlgNewSampleCollection" header="Information about the sample collection" 
+            <p:dialog modal="true" id="newSampleCollection" widgetVar="dlgNewSampleCollection" header="Information about the sample collection" 
                       draggable="true" closable="true" resizable="true" width="825"  height="620">  
 
                 <h:form id="formNewSampleCollection" >   
-                    <p:tabView id="NewSampleTabView">
-                        <p:tab id="tabNewSample_GeneralInfo" title="General Information">
+                    <p:tabView>
+                        <p:tab title="General Information">
                             <p:panel styleClass="BbcNewSamplePanel" style="">
                                 <h:panelGrid columns="3">                                 
                                     <p:outputLabel value="Last update:"/>
-                                    <p:inputText label="Last update:"/>
+                                    <p:inputText label="Last update:" readonly="true" value="#{sampleController.sample.lastUpdatedFormatted}"/>
                                     <p:graphicImage library="images/bbc" name="help.png" title="Date when data was last updated (MM-dd-yyyy)"/>
                                 </h:panelGrid>
 
@@ -86,29 +76,29 @@
                                                 <p:outputLabel value="Swedish Name:"/>                                    
                                                 <p:outputLabel value="*" styleClass="RequiredNotice"/>                                        
                                             </p:outputPanel>
-                                            <p:inputText required="true" style="width: 550px"/>
+                                            <p:inputText required="true" style="width: 550px" value="#{sampleController.sample.swedishName}"/>
                                             <p:graphicImage library="images/bbc" name="help.png" title="Sample Collection ID or Study name in Swedish"/>
 
                                             <p:outputLabel value="English Name:"/>
-                                            <p:inputText style="width: 550px"/>
+                                            <p:inputText style="width: 550px" value="#{sampleController.sample.englishName}"/>
                                             <p:graphicImage library="images/bbc" name="help.png" title="Sample Collection ID or Study name in English (can be same as Swedish)"/>                                    
 
                                             <p:outputLabel value="Responsible:"/>
-                                            <p:inputText style="width: 550px"/>
+                                            <p:inputText style="width: 550px" value="#{sampleController.sample.responsible}"/>
                                             <p:graphicImage library="images/bbc" name="help.png" title="Name of Sample Collection Responsible or Principal Investigator"/>                                    
 
                                             <p:outputLabel value="Organization:"/>
-                                            <p:selectOneMenu style="width: 560px" editable="true">
-                                                <f:selectItems value="#{dataController1.organizations}" />
+                                            <p:selectOneMenu style="width: 560px" editable="true" value="#{sampleController.sample.organization}">
+                                                <f:selectItems value="#{staticDataController.organizations}" />
                                             </p:selectOneMenu>
                                             <p:graphicImage library="images/bbc" name="help.png" title="If your Organization is missing is missing in the list, please contact us to add it"/>
 
                                             <p:outputLabel value="Description:"/>
-                                            <p:inputTextarea style="width: 550px" maxlength="2000" rows="11"/>
+                                            <p:inputTextarea style="width: 550px" maxlength="2000" rows="11" value="#{sampleController.sample.description}" />
                                             <p:graphicImage library="images/bbc" name="help.png" title="Description of the sample collection of study (max 2000 characters)"/>
 
                                             <p:outputLabel value="Other Information:"/>
-                                            <p:inputTextarea style="width: 550px" maxlength="2000" rows="5"/>
+                                            <p:inputTextarea style="width: 550px" maxlength="2000" rows="5"  value="#{sampleController.sample.otherInformation}"/>
                                         </h:panelGrid>
                                     </p:tab>
                                 </p:accordionPanel>                        
@@ -116,7 +106,7 @@
                         </p:tab>
 
 
-                        <p:tab id="tabNewSample_Contact" title="Contact">
+                        <p:tab title="Contact">
                             <p:panel styleClass="BbcNewSamplePanel" style="">
                                 <p:accordionPanel styleClass="BbcAccordion">
                                     <p:tab title="Contact" >
@@ -151,45 +141,45 @@
                                                 <p:outputLabel value="First Name:"/>                                    
                                                 <p:outputLabel value="*" styleClass="RequiredNotice"/>                                        
                                             </p:outputPanel>
-                                            <p:inputText required="true"/>
+                                            <p:inputText required="true" readonly="true" value="#{sampleController.sample.dataAdminstrator.firstName}"/>
                                             <p:spacer width="1" height="1"/>     
 
                                             <p:outputPanel>
                                                 <p:outputLabel value="Last Name:"/>                                    
                                                 <p:outputLabel value="*" styleClass="RequiredNotice"/>                                        
                                             </p:outputPanel>
-                                            <p:inputText required="true"/>
+                                            <p:inputText required="true" readonly="true" value="#{sampleController.sample.dataAdminstrator.lastName}"/>
                                             <p:spacer width="1" height="1"/>     
 
                                             <p:outputPanel>
                                                 <p:outputLabel value="Email Address:"/>                                    
                                                 <p:outputLabel value="*" styleClass="RequiredNotice"/>                                        
                                             </p:outputPanel>
-                                            <p:inputText required="true"/>                                                                                        
-                                            <p:commandLink value="Send E-mail"/>
+                                            <p:inputText required="true"  readonly="true" value="#{sampleController.sample.dataAdminstrator.emailAddress}"/>                                                                                        
+                                            <a href="mailto:#{sampleController.sample.dataAdminstrator.emailAddress}">Send E-mail</a>
 
                                             <p:outputLabel value="Phone:"/>                                    
-                                            <p:inputText />
+                                            <p:inputText readonly="true" value="#{sampleController.sample.dataAdminstrator.phone}"/>
                                             <p:spacer width="1" height="1"/>     
 
                                             <p:outputLabel value="Stree Name:"/>                                    
-                                            <p:inputText />
-                                            <p:spacer width="1" height="1"/>     
+                                            <p:inputText readonly="true" value="#{sampleController.sample.dataAdminstrator.streetName}"/>
+                                            <p:spacer width="1" height="1" />     
 
                                             <p:outputLabel value="Zip:"/>                                    
-                                            <p:inputText />
+                                            <p:inputText readonly="true" value="#{sampleController.sample.dataAdminstrator.zip}"/>
                                             <p:spacer width="1" height="1"/>     
 
                                             <p:outputLabel value="City:"/>                                    
-                                            <p:inputText />
+                                            <p:inputText readonly="true" value="#{sampleController.sample.dataAdminstrator.city}"/>
                                             <p:spacer width="1" height="1"/>     
 
                                             <p:outputLabel value="Coutry:"/>                                    
-                                            <p:inputText />
+                                            <p:inputText readonly="true" value="#{sampleController.sample.dataAdminstrator.country}"/>
                                             <p:spacer width="1" height="1"/>     
 
                                             <p:outputLabel value="Address:"/>                                    
-                                            <p:inputText />
+                                            <p:inputText readonly="true" value="#{sampleController.sample.dataAdminstrator.address}"/>
                                             <p:spacer width="1" height="1"/>     
 
                                             <p:spacer/>                                        
@@ -197,30 +187,30 @@
                                             <p:spacer width="1" height="1"/>     
 
                                             <p:outputLabel value="Organization:"/>                                    
-                                            <p:inputText />
+                                            <p:inputText readonly="true" value="#{sampleController.sample.dataAdminstrator.organization}"/>
                                             <p:spacer width="1" height="1"/>     
 
                                             <p:outputLabel value="Department:"/>                                    
-                                            <p:inputText />                                            
+                                            <p:inputText readonly="true" value="#{sampleController.sample.dataAdminstrator.department}"/>                                            
                                             <p:spacer width="1" height="1"/>                                                         
                                         </h:panelGrid>
                                     </p:tab>                            
                                 </p:accordionPanel>
                             </p:panel>
-                        </p:tab>                        
+                        </p:tab>                      
 
 
-                        <p:tab id="tabNewSample_SampleCollection" title="Sample Collection">
+                        <p:tab title="Sample Collection">
                             <p:panel styleClass="BbcNewSamplePanel">
                                 <h:panelGrid columns="2" styleClass="newSampleSampleCollectionPanelGrid">
                                     <p:outputLabel value="The sample collection consists of:"/>
                                     <p:outputPanel>
                                         <h:panelGrid columns="2" >
-                                            <p:selectBooleanCheckbox value=""/>
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.consistsOfHealthCare}"/>
                                             <p:outputLabel value="Withdrawal from a health care sample collection"/>
-                                            <p:selectBooleanCheckbox value="" />
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.consistsOfOtherResearch}" />
                                             <p:outputLabel value="Withdrawal from other research sample collection"/>
-                                            <p:selectBooleanCheckbox value="" />
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.consistsOfThisResearch}" />
                                             <p:outputLabel value="Samples collected specifically for this research study"/>                                    
                                         </h:panelGrid>
                                     </p:outputPanel>
@@ -230,19 +220,19 @@
 
                                     <p:outputLabel value="Sample collection starts:"/>                            
                                     <h:panelGrid columns="2" >
-                                        <p:calendar value="#{sampleController.testValue}" showOn="button" />  
+                                        <p:calendar value="#{sampleController.sample.sampleCollection.starts}" showOn="button" />  
                                         <p:graphicImage library="images/bbc" name="help.png" title="Data sample collection starts"/>
                                     </h:panelGrid>                                 
 
                                     <p:outputLabel value="Sample collection ends"/>                            
                                     <h:panelGrid columns="2" >
-                                        <p:calendar value="#{sampleController.testValue}" showOn="button" />   
+                                        <p:calendar value="#{sampleController.sample.sampleCollection.ends}" showOn="button" />   
                                         <p:graphicImage library="images/bbc" name="help.png" title="Data sample collection ends, if defined"/>
                                     </h:panelGrid>                            
 
                                     <p:outputLabel value="Destruction date:"/>                            
                                     <h:panelGrid columns="2" >
-                                        <p:calendar value="#{sampleController.testValue}" showOn="button" />  
+                                        <p:calendar value="#{sampleController.sample.sampleCollection.destruction}" showOn="button" />  
                                         <p:graphicImage library="images/bbc" name="help.png" title="Data when samples ought to be destroyed, if any"/>
                                     </h:panelGrid>                            
 
@@ -252,20 +242,20 @@
                                     <p:outputLabel value="Categories of Data Collected:"/> 
                                     <h:panelGrid columns="2" >
                                         <h:panelGrid columns="2" >
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Register data"/>                                       
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Survey"/> 
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Physiological measurements"/>                                     
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.categoryRegisterDate}" /><p:outputLabel value="Register data"/>                                       
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.categorySurvey}" /><p:outputLabel value="Survey"/> 
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.categoryPhysiologicalMeasurements}" /><p:outputLabel value="Physiological measurements"/>                                     
                                         </h:panelGrid>
                                         <h:panelGrid columns="2" >
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Imaging data"/>  
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Medical records"/>  
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Register Other"/>  
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.categoryImagingData}" /><p:outputLabel value="Imaging data"/>  
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.categoryMedicalRecords}" /><p:outputLabel value="Medical records"/>  
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.categoryRegisterOther}" /><p:outputLabel value="Register Other"/>  
                                         </h:panelGrid>
                                     </h:panelGrid>                            
 
                                     <p:outputLabel value="Other:"/>
                                     <p:outputPanel>
-                                        <p:inputText value="" style="width: 400px "/>                                
+                                        <p:inputText value="#{sampleController.sample.sampleCollection.categoryOtherText}" style="width: 400px "/>                                
                                         <p:graphicImage library="images/bbc" name="help.png" title="Specify the other Category of Data Collected"/>
                                     </p:outputPanel>
 
@@ -275,42 +265,133 @@
                                     <p:outputLabel value="Register Or Survey Data:"/> 
                                     <h:panelGrid columns="3" >
                                         <h:panelGrid columns="2" >
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Individual Disease History"/>                                     
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Individual History of Injuries"/> 
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Medication"/> 
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Perception of Health"/>                                     
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Women's Health"/> 
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.dataIndividualDiseaseHistory}" /><p:outputLabel value="Individual Disease History"/>                                     
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.dataIndividualHistoryOfInjuries}" /><p:outputLabel value="Individual History of Injuries"/> 
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.dataMedication}" /><p:outputLabel value="Medication"/> 
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.dataPerceptionOfHealth}" /><p:outputLabel value="Perception of Health"/>                                     
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.dataWomensHealth}" /><p:outputLabel value="Women's Health"/> 
                                         </h:panelGrid>
                                         <h:panelGrid columns="2" >
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Reproductive History"/>                                     
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Familial Disease History"/> 
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Life Habits/Behaviours"/> 
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Sociodemographic Characteristics"/>                                     
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Socioeconomic Characteristics"/> 
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.dataReproductiveHistory}" /><p:outputLabel value="Reproductive History"/>                                     
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.dataFamilialDiseaseHistory}" /><p:outputLabel value="Familial Disease History"/> 
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.dataLifeHabitsBehaviours}" /><p:outputLabel value="Life Habits/Behaviours"/> 
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.dataSociodemographicCharacteristics}" /><p:outputLabel value="Sociodemographic Characteristics"/>                                     
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.dataSocioeconomicCharacteristics}" /><p:outputLabel value="Socioeconomic Characteristics"/> 
                                         </h:panelGrid>
                                         <h:panelGrid columns="2" >
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Physical Environment"/>                                     
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Mental Health"/> 
-                                            <p:selectBooleanCheckbox value="" /><p:outputLabel value="Other"/> 
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.dataPhysicalEnvironment}" /><p:outputLabel value="Physical Environment"/>                                     
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.dataMentalHealth}" /><p:outputLabel value="Mental Health"/> 
+                                            <p:selectBooleanCheckbox value="#{sampleController.sample.sampleCollection.dataOther}" /><p:outputLabel value="Other"/> 
                                         </h:panelGrid>                                
                                     </h:panelGrid>
 
                                     <p:outputLabel value="Other:"/>
                                     <p:outputPanel>
-                                        <p:inputText value="" style="width: 400px "/>                                
+                                        <p:inputText value="#{sampleController.sample.sampleCollection.dataOtherText}" style="width: 400px "/>                                
                                         <p:graphicImage library="images/bbc" name="help.png" title="Other Register or Survey Data"/>
                                     </p:outputPanel>
                                 </h:panelGrid>                                                              
                             </p:panel>
                         </p:tab>                            
 
-                        <p:tab id="tabNewSample_Diagnosis" title="Diagnosis">
+
+                        <p:tab title="Study">
+                            <p:panel styleClass="BbcNewSamplePanel" style="">                            
+                                <h:panelGrid columns="3" styleClass="newSampleGeneralInfoPanelGrid">                                 
+                                    <p:outputLabel value="Aim:"/>
+                                    <p:inputTextarea style="width: 600px" maxlength="2000" rows="5" value="#{sampleController.sample.study.aim}"/>
+                                    <p:graphicImage library="images/bbc" name="help.png" title="Aim of Study or Sample Collection according to ethical approval or such"/>
+                                </h:panelGrid>  
+
+                                <p:spacer width="1" height="15"/>                            
+
+                                <p:fieldset styleClass="BbcFieldSet" toggleable="true" legend="Study design">
+                                    <h:panelGrid columns="2" styleClass="newSampleSamplesPanelGrid">
+                                        <p:outputLabel value="Type of collection/study:"/>  
+                                        <h:panelGrid columns="3" style="width: 100%">
+                                            <h:panelGrid columns="2" >
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfStudyCaseControl}" /><p:outputLabel value="Case-control"/>                                     
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfStudyCohort}" /><p:outputLabel value="Cohort"/> 
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfStudyLongitudinal}" /><p:outputLabel value="Longitudinal"/> 
+                                            </h:panelGrid>                                        
+                                            <h:panelGrid columns="2" >
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfStudyTwinStudy}" /><p:outputLabel value="Twin-study"/>                                     
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfStudyQualityControl}" /><p:outputLabel value="Quality control"/> 
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfStudyPopulationbased}" /><p:outputLabel value="Population-based"/> 
+                                            </h:panelGrid> 
+                                            <h:panelGrid columns="2" >
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfStudyDiseaseSpecific}" /><p:outputLabel value="Disease Specific"/>                                     
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfStudyCrossSectional}" /><p:outputLabel value="Cross-sectional"/> 
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfStudyOther}" /><p:outputLabel value="Other"/> 
+                                            </h:panelGrid>                                         
+                                        </h:panelGrid>
+
+                                        <p:outputLabel value="Other:"/>
+                                        <h:panelGrid columns="2" styleClass="newSampleGeneralInfoPanelGrid">                                 
+                                            <p:inputText style="width: 190px" value="#{sampleController.sample.study.typeOfStudyOtherText}"/>
+                                            <p:graphicImage library="images/bbc" name="help.png" title="Enter text if Type of collection is 'Other'"/>
+                                        </h:panelGrid>                                      
+
+                                        <p:outputLabel value="Study Start:"/>
+                                        <h:panelGrid columns="2" styleClass="newSampleGeneralInfoPanelGrid">                                 
+                                            <p:calendar value="#{sampleController.sample.study.start}" showOn="button" />
+                                            <p:graphicImage library="images/bbc" name="help.png" title="Date study starts"/>
+                                        </h:panelGrid>                                      
+
+                                        <p:outputLabel value="Planned sampled individuals:"/>
+                                        <h:panelGrid columns="2" styleClass="newSampleGeneralInfoPanelGrid">                                 
+                                            <p:inputText style="width: 190px" value="#{sampleController.sample.study.plannedSampledIndividuals}"/>
+                                            <p:graphicImage library="images/bbc" name="help.png" title="Number of planned individuals with biological samples for the study"/>
+                                        </h:panelGrid>                                     
+                                    </h:panelGrid>                                                                 
+                                </p:fieldset>                           
+
+                                <p:spacer width="1" height="15"/>
+
+                                <p:fieldset styleClass="BbcFieldSet" toggleable="true" legend="Study design">
+                                    <h:panelGrid columns="2" styleClass="newSampleSamplesPanelGrid">
+                                        <p:outputLabel value="Omics Experiments:"/>
+                                        <h:panelGrid columns="2" style="width: 100%">
+                                            <h:panelGrid columns="2">
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.omicsExperimentsExists}" /><p:outputLabel value="Exists"/>                                     
+                                            </h:panelGrid>                                    
+                                            <h:panelGrid columns="2">
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.omicsExperimentsPlanned}" /><p:outputLabel value="Planned"/> 
+                                            </h:panelGrid>
+                                        </h:panelGrid>                                
+
+                                        <p:outputLabel value="Type of omics experiment:"/>
+                                        <h:panelGrid columns="2" style="width: 100%">
+                                            <h:panelGrid columns="2">
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfOmicsGenomics}" /><p:outputLabel value="Genomics"/>                                     
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfOmicsTranscriptomics}" /><p:outputLabel value="Transcriptomics"/> 
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfOmicsProteomics}" /><p:outputLabel value="Proteomics"/>                                             
+                                            </h:panelGrid>                                    
+                                            <h:panelGrid columns="2">
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfOmicsMetabolomics}" /><p:outputLabel value="Metabolomics"/> 
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfOmicsLipidomics}" /><p:outputLabel value="Lipidomics"/> 
+                                                <p:selectBooleanCheckbox value="#{sampleController.sample.study.typeOfOmicsOther}" /><p:outputLabel value="Other"/>                                             
+                                            </h:panelGrid>
+                                        </h:panelGrid> 
+
+                                        <p:outputLabel value="Omics method:"/>
+                                        <h:panelGrid columns="2" styleClass="newSampleGeneralInfoPanelGrid">                                 
+                                            <p:inputText style="width: 350px" value="#{sampleController.sample.study.omicsMethod}"/>
+                                            <p:graphicImage library="images/bbc" name="help.png" title="Omics Platform or method (e.g. Illumina)"/>
+                                        </h:panelGrid>                                     
+                                    </h:panelGrid> 
+                                </p:fieldset>
+                            </p:panel>
+                        </p:tab>
+                       
+
+                        <p:tab title="Diagnosis">
                             <p:panel styleClass="BbcNewSamplePanel" style="">
                                 <p:fieldset styleClass="BbcFieldSet" toggleable="true" legend="Main Diagnosis Group">
                                     <h:panelGrid columns="3">                                 
                                         <p:outputLabel value="Diagnosis Group (ICD-10):"/>
-                                        <p:selectOneMenu value="" style="width: 400px" editable="true">
-                                            <f:selectItems value="#{dataController1.diagnosisGroups}" />
+                                        <p:selectOneMenu value="#{sampleController.sample.diagnosis.diagnosisGroup}" style="width: 400px" editable="true">
+                                            <f:selectItems value="#{staticDataController.diagnosisGroups}" />
                                         </p:selectOneMenu>
                                         <p:graphicImage library="images/bbc" name="help.png" title="The main diagnosis group for the sample collection/study"/>
                                     </h:panelGrid>
@@ -349,103 +430,16 @@
                                 <p:fieldset styleClass="BbcFieldSet" legend="Comorbidity">
                                     <h:panelGrid columns="3" >                                       
                                         <p:spacer width="100" height="1"/>
-                                        <p:selectBooleanCheckbox value="" />
+                                        <p:selectBooleanCheckbox value="#{sampleController.sample.diagnosis.comorbidity}" />
                                         <p:graphicImage library="images/bbc" name="help.png" title="Check if information about comorbidity exists"/>
                                     </h:panelGrid>                                
                                 </p:fieldset> 
                             </p:panel>
-                        </p:tab>    
+                        </p:tab>   
+                        
+                        
 
-                        <p:tab id="tabNewSample_Study" title="Study">
-                            <p:panel styleClass="BbcNewSamplePanel" style="">                            
-                                <h:panelGrid columns="3" styleClass="newSampleGeneralInfoPanelGrid">                                 
-                                    <p:outputLabel value="Aim:"/>
-                                    <p:inputTextarea style="width: 600px" maxlength="2000" rows="5"/>
-                                    <p:graphicImage library="images/bbc" name="help.png" title="Aim of Study or Sample Collection according to ethical approval or such"/>
-                                </h:panelGrid>  
-
-                                <p:spacer width="1" height="15"/>                            
-
-                                <p:fieldset styleClass="BbcFieldSet" toggleable="true" legend="Study design">
-                                    <h:panelGrid columns="2" styleClass="newSampleSamplesPanelGrid">
-                                        <p:outputLabel value="Type of collection/study:"/>  
-                                        <h:panelGrid columns="3" style="width: 100%">
-                                            <h:panelGrid columns="2" >
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Case-control"/>                                     
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Cohort"/> 
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Longitudinal"/> 
-                                            </h:panelGrid>                                        
-                                            <h:panelGrid columns="2" >
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Twin-study"/>                                     
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Quality control"/> 
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Population-based"/> 
-                                            </h:panelGrid> 
-                                            <h:panelGrid columns="2" >
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Disease Specific"/>                                     
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Cross-sectional"/> 
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Other"/> 
-                                            </h:panelGrid>                                         
-                                        </h:panelGrid>
-
-                                        <p:outputLabel value="Other:"/>
-                                        <h:panelGrid columns="2" styleClass="newSampleGeneralInfoPanelGrid">                                 
-                                            <p:inputText style="width: 190px" />
-                                            <p:graphicImage library="images/bbc" name="help.png" title="Enter text if Type of collection is 'Other'"/>
-                                        </h:panelGrid>                                      
-
-                                        <p:outputLabel value="Study Start:"/>
-                                        <h:panelGrid columns="2" styleClass="newSampleGeneralInfoPanelGrid">                                 
-                                            <p:calendar value="#{sampleController.testValue}" showOn="button" />
-                                            <p:graphicImage library="images/bbc" name="help.png" title="Date study starts"/>
-                                        </h:panelGrid>                                      
-
-                                        <p:outputLabel value="Planned sampled individuals:"/>
-                                        <h:panelGrid columns="2" styleClass="newSampleGeneralInfoPanelGrid">                                 
-                                            <p:inputText style="width: 190px" />
-                                            <p:graphicImage library="images/bbc" name="help.png" title="Number of planned individuals with biological samples for the study"/>
-                                        </h:panelGrid>                                     
-                                    </h:panelGrid>                                                                 
-                                </p:fieldset>                           
-
-                                <p:spacer width="1" height="15"/>
-
-                                <p:fieldset styleClass="BbcFieldSet" toggleable="true" legend="Study design">
-                                    <h:panelGrid columns="2" styleClass="newSampleSamplesPanelGrid">
-                                        <p:outputLabel value="Omics Experiments:"/>
-                                        <h:panelGrid columns="2" style="width: 100%">
-                                            <h:panelGrid columns="2">
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Exists"/>                                     
-                                            </h:panelGrid>                                    
-                                            <h:panelGrid columns="2">
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Planned"/> 
-                                            </h:panelGrid>
-                                        </h:panelGrid>                                
-
-                                        <p:outputLabel value="Type of omics experiment:"/>
-                                        <h:panelGrid columns="2" style="width: 100%">
-                                            <h:panelGrid columns="2">
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Genomics"/>                                     
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Transcriptomics"/> 
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Proteomics"/>                                             
-                                            </h:panelGrid>                                    
-                                            <h:panelGrid columns="2">
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Metabolomics"/> 
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Lipidomics"/> 
-                                                <p:selectBooleanCheckbox value="" /><p:outputLabel value="Other"/>                                             
-                                            </h:panelGrid>
-                                        </h:panelGrid> 
-
-                                        <p:outputLabel value="Omics method:"/>
-                                        <h:panelGrid columns="2" styleClass="newSampleGeneralInfoPanelGrid">                                 
-                                            <p:inputText style="width: 350px" />
-                                            <p:graphicImage library="images/bbc" name="help.png" title="Omics Platform or method (e.g. Illumina)"/>
-                                        </h:panelGrid>                                     
-                                    </h:panelGrid> 
-                                </p:fieldset>
-                            </p:panel>
-                        </p:tab>
-
-                        <p:tab id="tabNewSample_Samples" title="Samples">
+                        <p:tab title="Samples">
                             <p:panel styleClass="BbcNewSamplePanel">
                                 <p:fieldset styleClass="BbcFieldSet" toggleable="true" legend="">
                                     <h:panelGrid columns="2" styleClass="newSampleSamplesPanelGrid">
@@ -453,35 +447,35 @@
                                         <p:outputPanel>
                                             <h:panelGrid columns="3" style="width: 100%">
                                                 <h:panelGrid columns="2">
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="Whole blood"/>  
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="Plasma"/>  
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="Serum"/>   
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="Urine"/>                                                       
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.materialTypeWholeBlood}" /><p:outputLabel value="Whole blood"/>  
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.materialTypePlasma}" /><p:outputLabel value="Plasma"/>  
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.materialTypeSerum}" /><p:outputLabel value="Serum"/>   
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.materialTypeUrine}" /><p:outputLabel value="Urine"/>                                                       
                                                 </h:panelGrid>
                                                 <h:panelGrid columns="2">
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="Saliva"/>  
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="CSF"/>  
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="DNA"/>   
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="RNA"/>                                                       
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.materialTypeSaliva}" /><p:outputLabel value="Saliva"/>  
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.materialTypeCSF}" /><p:outputLabel value="CSF"/>  
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.materialTypeDNA}" /><p:outputLabel value="DNA"/>   
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.materialTypeRNA}" /><p:outputLabel value="RNA"/>                                                       
                                                 </h:panelGrid>
                                                 <h:panelGrid columns="2">
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="Cell"/>  
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="Tissue"/>  
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="Faeces"/>   
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="Other"/>                                                       
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.materialTypeCell}" /><p:outputLabel value="Cell"/>  
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.materialTypeTissue}" /><p:outputLabel value="Tissue"/>  
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.materialTypeFaeces}" /><p:outputLabel value="Faeces"/>   
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.materialTypeOther}" /><p:outputLabel value="Other"/>                                                       
                                                 </h:panelGrid>                                                
                                             </h:panelGrid> 
                                         </p:outputPanel>
 
                                         <p:outputLabel value="Other:"/>                                        
                                         <h:panelGrid columns="2" >
-                                            <p:inputText style="width: 400px"/>
+                                            <p:inputText style="width: 400px" value="#{sampleController.sample.samples.materialTypeOtherText}"/>
                                             <p:graphicImage library="images/bbc" name="help.png" title="Other material type"/>                                             
                                         </h:panelGrid>
 
                                         <p:outputLabel value="Cell or Tissue Type:"/>
                                         <h:panelGrid columns="2" >
-                                            <p:inputText style="width: 400px"/>
+                                            <p:inputText style="width: 400px" value="#{sampleController.sample.samples.cellOrTissueType}"/>
                                             <p:graphicImage library="images/bbc" name="help.png" title="If the material type is cell of issue, please specify the type"/>                                        
                                         </h:panelGrid>
                                     </h:panelGrid>
@@ -493,21 +487,21 @@
                                         <p:outputPanel>
                                             <h:panelGrid columns="2" style="width: 100%">
                                                 <h:panelGrid columns="2">
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="Room temperature"/>  
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="+4 °C"/>  
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="-18 °C to -35 °C"/>   
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.temperatureRoom}" /><p:outputLabel value="Room temperature"/>  
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.temperatureP4C}" /><p:outputLabel value="+4 °C"/>  
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.temperatureM18CToM35C}" /><p:outputLabel value="-18 °C to -35 °C"/>   
                                                 </h:panelGrid>                                                 
                                                 <h:panelGrid columns="2">
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="-60 °C to -85 °C"/>  
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="Liquid nitrogen"/>  
-                                                    <p:selectBooleanCheckbox value="" /><p:outputLabel value="Other"/>   
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.temperatureM60CToM85C}" /><p:outputLabel value="-60 °C to -85 °C"/>  
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.temperatureLiquidNitrogen}" /><p:outputLabel value="Liquid nitrogen"/>  
+                                                    <p:selectBooleanCheckbox value="#{sampleController.sample.samples.temperatureOther}" /><p:outputLabel value="Other"/>   
                                                 </h:panelGrid>                                                 
                                             </h:panelGrid>                                   
                                         </p:outputPanel>
 
                                         <p:outputLabel value="Other:"/>
                                         <h:panelGrid columns="2" >
-                                            <p:inputText style="width: 400px"/>
+                                            <p:inputText style="width: 400px" value="#{sampleController.sample.samples.temperatureOtherText}"/>
                                             <p:graphicImage library="images/bbc" name="help.png" title="Other Storage Temperature"/>                                        
                                         </h:panelGrid>                                        
                                     </h:panelGrid>    
@@ -547,30 +541,30 @@
                             </p:panel>
                         </p:tab>                            
 
-                        <p:tab id="tabNewSample_SampleDonors" title="Sample Donors">
+                        <p:tab title="Sample Donors">
                             <p:panel styleClass="BbcNewSamplePanel" style="">
                                 <h:panelGrid columns="2" styleClass="newSampleSampleDonorsPanelGrid">
                                     <h:outputText value="Sex:"/>
                                     <h:panelGrid columns="2">
-                                        <p:selectBooleanCheckbox value="" /><p:outputLabel value="Female"/>
-                                        <p:selectBooleanCheckbox value="" /><p:outputLabel value="Male"/>                                         
+                                        <p:selectBooleanCheckbox value="#{sampleController.sample.sampleDonors.sexFemale}" /><p:outputLabel value="Female"/>
+                                        <p:selectBooleanCheckbox value="#{sampleController.sample.sampleDonors.sexMale}" /><p:outputLabel value="Male"/>                                         
                                     </h:panelGrid>
 
                                     <h:outputText value="Number of sample donors:"/>
                                     <h:panelGrid columns="2" >
-                                        <p:inputText style="width: 200px"/>
+                                        <p:inputText style="width: 200px" value="#{sampleController.sample.sampleDonors.numberOfSampleDonors}"/>
                                         <p:graphicImage library="images/bbc" name="help.png" title="Number of individuals with biological samples in the collection today"/>
                                     </h:panelGrid>  
 
                                     <h:outputText value="Age youngest:"/>
                                     <h:panelGrid columns="2" >
-                                        <p:inputText style="width: 200px"/>
+                                        <p:inputText style="width: 200px" value="#{sampleController.sample.sampleDonors.ageYoungest}"/>
                                         <p:graphicImage library="images/bbc" name="help.png" title="Age of youngest sample donor"/>
                                     </h:panelGrid>  
 
                                     <h:outputText value="Age oldest:"/> 
                                     <h:panelGrid columns="2" >
-                                        <p:inputText style="width: 200px"/>
+                                        <p:inputText style="width: 200px" value="#{sampleController.sample.sampleDonors.ageOldest}"/>
                                         <p:graphicImage library="images/bbc" name="help.png" title="Age of oldest sample donor"/>                                        
                                     </h:panelGrid>                                      
                                 </h:panelGrid>                                                             
@@ -578,7 +572,7 @@
                             </p:panel>
                         </p:tab>  
 
-                        <p:tab id="tabNewSample_Publications" title="Publications">
+                        <p:tab title="Publications">
                             <p:panel styleClass="BbcNewSamplePanel" style="">
                                 <p:accordionPanel styleClass="BbcAccordion">
                                     <p:tab title="Publication" >
@@ -609,13 +603,14 @@
                     </p:tabView> 
 
                     <p:outputPanel styleClass="ButtonsOnRight">
-                        <p:commandButton value="Create"/>
+                        <p:commandButton id="createSample" value="Create" actionListener="#{sampleController.createSample}" />
                         <p:commandButton value="Cancel" onclick="dlgNewSampleCollection.hide();"/>                        
                     </p:outputPanel>
                 </h:form>      
             </p:dialog>
 
             <!--New Sample Collection Dialog - End-->
+
 
 
 
