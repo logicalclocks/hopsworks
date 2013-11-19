@@ -13,7 +13,7 @@ public class Diagnosis implements Serializable{
     }
     
     private String diagnosisGroup;
-    private boolean comorbidity;
+    private Boolean comorbidity;
 
     public String getDiagnosisGroup() {
         return diagnosisGroup;
@@ -23,11 +23,11 @@ public class Diagnosis implements Serializable{
         this.diagnosisGroup = diagnosisGroup;
     }
 
-    public boolean isComorbidity() {
+    public Boolean getComorbidity() {
         return comorbidity;
     }
 
-    public void setComorbidity(boolean comorbidity) {
+    public void setComorbidity(Boolean comorbidity) {
         this.comorbidity = comorbidity;
     }
     

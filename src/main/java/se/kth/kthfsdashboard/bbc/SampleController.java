@@ -5,6 +5,7 @@ import java.util.Date;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+import org.primefaces.context.RequestContext;
 
 /**
  *
@@ -17,6 +18,8 @@ public class SampleController implements Serializable {
     @EJB
     private SampleEjb sampleEjb;
     private Sample sample = new Sample();
+    private boolean create;
+    private boolean show;
     
     public SampleController() {
 
@@ -28,10 +31,11 @@ public class SampleController implements Serializable {
         sample.setSamples(new Samples());
         sample.setSampleDonors(new SampleDonors());
     }
-
+    
     public void createSample() {
-        System.out.println("*** " + sample.getLastUpdatedFormatted() + " " + sample.getSwedishName());
         sampleEjb.persistSample(sample);
+        RequestContext.getCurrentInstance().execute("dlgNewSampleCollection.hide()");        
+        System.out.println("*** Created: " + sample.getSwedishName());        
     }
 
     public Sample getSample() {
@@ -39,6 +43,23 @@ public class SampleController implements Serializable {
     }
 
     public void setSample(Sample sample) {
+        System.out.println("HERE");
         this.sample = sample;
+    }
+
+    public boolean isCreate() {
+        return create;
+    }
+
+    public void setCreate(boolean create) {
+        this.create = create;
+    }
+
+    public boolean isShow() {
+        return show;
+    }
+
+    public void setShow(boolean show) {
+        this.show = show;
     }
 }

@@ -21,10 +21,8 @@ public class SampleEjb {
     public SampleEjb() {
     }
 
-    public List<Sample> find(Date fromDate, Date toDate, Severity severity) {
-        TypedQuery<Sample> query = em.createNamedQuery("Alerts.findBy-Severity", Sample.class)
-                .setParameter("fromdate", fromDate).setParameter("todate", toDate)
-                .setParameter("severity", severity);
+    public List<Sample> findAll() {
+        TypedQuery<Sample> query = em.createNamedQuery("Samples.findAll", Sample.class);
         return query.getResultList();
     }
     

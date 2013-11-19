@@ -3,7 +3,6 @@
     Created on : Oct 22, 2013, 3:46:27 PM
     Author     : Hamidreza Afzali <afzali@kth.se>
     Description:
-        Purpose of the stylesheet follows.
 */
 
 
@@ -13,6 +12,7 @@
 
 .BbcMainLayout {
     text-align: center;
+    height: 640px;;    
 }
 
 .BbcMainLayout .BbcPanel {
@@ -21,7 +21,7 @@
 }
 
 .BbcMainLayout .ui-widget-content {
-    border-width: 0px;
+    border-width: 0px;   
 }
 
 .BbcNewSamplePanel  {
