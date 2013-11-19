@@ -24,6 +24,7 @@ public class BbcController implements Serializable {
     
     public void showSampleCollectionDialog() {
         RequestContext.getCurrentInstance().update("formNewSampleCollection");
+        RequestContext.getCurrentInstance().reset("formNewSampleCollection");        
         RequestContext.getCurrentInstance().execute("dlgNewSampleCollection.show()");
     }    
 
