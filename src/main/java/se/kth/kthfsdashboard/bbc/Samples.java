@@ -32,6 +32,24 @@ public class Samples implements Serializable {
     private boolean temperatureOther;
     private String temperatureOtherText;
 
+    public String getMaterialTypeAll() {
+        String all = "";
+        all += materialTypeWholeBlood ? "@Whole Blood" : "";
+        all += materialTypePlasma ? "@Plasma" : "";
+        all += materialTypeSerum ? "@Serum" : "";
+        all += materialTypeUrine ? "@Urine" : "";
+        all += materialTypeSaliva ? "@Saliva" : "";
+        all += materialTypeCSF ? "@CSF" : "";
+        all += materialTypeDNA ? "@DNA" : "";
+        all += materialTypeRNA ? "@RNA" : "";
+        all += materialTypeCell ? "@Cell" : "";
+        all += materialTypeTissue ? "@Tissue" : "";
+        all += materialTypeFaeces ? "@Faeces" : "";
+        all += materialTypeOther ? "@Other" : "";
+        all = all.length() > 0 ? all.substring(1) : all;
+        return all;
+    }
+
     public boolean isMaterialTypeWholeBlood() {
         return materialTypeWholeBlood;
     }
@@ -199,5 +217,4 @@ public class Samples implements Serializable {
     public void setTemperatureOtherText(String temperatureOtherText) {
         this.temperatureOtherText = temperatureOtherText;
     }
-
 }

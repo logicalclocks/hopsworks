@@ -2,33 +2,32 @@ package se.kth.kthfsdashboard.bbc;
 
 import java.io.Serializable;
 import java.util.Date;
+import javax.persistence.Temporal;
 
 /**
  *
  * @author Hamidreza Afzali <afzalli@kth.se>
  */
-public class SampleCollection implements Serializable{
-    
+public class SampleCollection implements Serializable {
+
     public SampleCollection() {
-        
     }
-    
     private boolean consistsOfHealthCare;
     private boolean consistsOfOtherResearch;
     private boolean consistsOfThisResearch;
-    
+    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private Date starts;
+    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private Date ends;
+    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private Date destruction;
-    
-    private boolean categoryRegisterDate;
+    private boolean categoryRegisterData;
     private boolean categorySurvey;
     private boolean categoryPhysiologicalMeasurements;
-    private boolean categoryImagingData;    
-    private boolean categoryMedicalRecords; 
-    private boolean categoryRegisterOther;    
-    private String  categoryOtherText;
-    
+    private boolean categoryImagingData;
+    private boolean categoryMedicalRecords;
+    private boolean categoryRegisterOther;
+    private String categoryOtherText;
     private boolean dataIndividualDiseaseHistory;
     private boolean dataIndividualHistoryOfInjuries;
     private boolean dataMedication;
@@ -38,11 +37,42 @@ public class SampleCollection implements Serializable{
     private boolean dataFamilialDiseaseHistory;
     private boolean dataLifeHabitsBehaviours;
     private boolean dataSociodemographicCharacteristics;
-    private boolean dataSocioeconomicCharacteristics;    	
+    private boolean dataSocioeconomicCharacteristics;
     private boolean dataPhysicalEnvironment;
     private boolean dataMentalHealth;
     private boolean dataOther;
-    private String  dataOtherText;            
+    private String dataOtherText;
+
+    public String getCategoryAll() {
+        String all = "";
+        all += categoryRegisterData ? "@Register Data" : "";
+        all += categorySurvey ? "@Survey" : "";
+        all += categoryPhysiologicalMeasurements ? "@Physiological Measurements" : "";
+        all += categoryImagingData ? "@Imaging Data" : "";
+        all += categoryMedicalRecords ? "@Medical Records" : "";
+        all += categoryRegisterOther ? "@Register Other" : "";
+        all = all.length() > 0 ? all.substring(1) : all;
+        return all;
+    }
+
+    public String getDataAll() {
+        String all = "";
+        all += dataIndividualDiseaseHistory ? "@Individual Disease History" : "";
+        all += dataIndividualHistoryOfInjuries ? "@Individual History of Injuries" : "";
+        all += dataMedication ? "@Medication" : "";
+        all += dataPerceptionOfHealth ? "@Perception of Health" : "";
+        all += dataWomensHealth ? "@Womens Health" : "";
+        all += dataReproductiveHistory ? "@Reproductive History" : "";
+        all += dataFamilialDiseaseHistory ? "@Familial Disease History" : "";
+        all += dataLifeHabitsBehaviours ? "@Life Habits Behaviours" : "";
+        all += dataSociodemographicCharacteristics ? "@Sociodemographic Characteristics" : "";
+        all += dataSocioeconomicCharacteristics ? "@Socioeconomic Characteristics" : "";
+        all += dataPhysicalEnvironment ? "@Physical Environment" : "";
+        all += dataMentalHealth ? "@Mental Health" : "";
+        all += dataOther ? "@Other" : "";
+        all = all.length() > 0 ? all.substring(1) : all;
+        return all;
+    }
 
     public boolean isConsistsOfHealthCare() {
         return consistsOfHealthCare;
@@ -92,12 +122,12 @@ public class SampleCollection implements Serializable{
         this.destruction = destruction;
     }
 
-    public boolean isCategoryRegisterDate() {
-        return categoryRegisterDate;
+    public boolean isCategoryRegisterData() {
+        return categoryRegisterData;
     }
 
-    public void setCategoryRegisterDate(boolean categoryRegisterDate) {
-        this.categoryRegisterDate = categoryRegisterDate;
+    public void setCategoryRegisterData(boolean categoryRegisterData) {
+        this.categoryRegisterData = categoryRegisterData;
     }
 
     public boolean isCategorySurvey() {
@@ -259,5 +289,4 @@ public class SampleCollection implements Serializable{
     public void setDataOtherText(String dataOtherText) {
         this.dataOtherText = dataOtherText;
     }
-            
 }

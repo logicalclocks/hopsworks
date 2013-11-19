@@ -13,30 +13,24 @@ import org.primefaces.context.RequestContext;
 @SessionScoped
 public class BbcController implements Serializable {
 
-    
-    private String testValue;
-    
     public BbcController() {
     }
-
+   
     public void showNewSampleCollectionDialog() {
-        System.out.println("HERE");
         RequestContext.getCurrentInstance().update("formNewSampleCollection");
         RequestContext.getCurrentInstance().reset("formNewSampleCollection");
         RequestContext.getCurrentInstance().execute("dlgNewSampleCollection.show()");
     }
     
-    public void showFindSampleCollectionDialog() {
-//        RequestContext.getCurrentInstance().update("formFindSampleCollection");
-//        RequestContext.getCurrentInstance().reset("formFindSampleCollection");
-//        RequestContext.getCurrentInstance().execute("dlgFindSampleCollection.show()");
+    public void showSampleCollectionDialog() {
+        RequestContext.getCurrentInstance().update("formNewSampleCollection");
+        RequestContext.getCurrentInstance().execute("dlgNewSampleCollection.show()");
     }    
-    
-    public String getTestValue() {
-        return testValue;
+
+    public void showFindSampleCollectionDialog() {
+        RequestContext.getCurrentInstance().update("formFindSampleCollection");
+        RequestContext.getCurrentInstance().reset("formFindSampleCollection");
+        RequestContext.getCurrentInstance().execute("dlgFindSampleCollection.show()");
     }
 
-    public void setTestValue(String testValue) {
-        this.testValue = testValue;
-    }
 }
