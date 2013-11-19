@@ -38,6 +38,18 @@ public class Study implements Serializable {
     public String getAim() {
         return aim;
     }
+    
+    public String getTypeOfOmicsAll() {
+        String all = "";
+        all += TypeOfOmicsGenomics ? "@Genomics" : "";
+        all += TypeOfOmicsTranscriptomics ? "@Transcriptomics" : "";
+        all += TypeOfOmicsProteomics ? "@Proteomics" : "";
+        all += TypeOfOmicsMetabolomics ? "@Metabolomics" : "";
+        all += TypeOfOmicsLipidomics ? "@Lipidomics" : "";
+        all += TypeOfOmicsOther ? "@Other" : "";
+        all = all.length() > 0 ? all.substring(1) : all;
+        return all;
+    }    
 
     public void setAim(String aim) {
         this.aim = aim;

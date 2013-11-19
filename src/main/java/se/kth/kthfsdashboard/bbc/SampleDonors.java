@@ -16,6 +16,14 @@ public class SampleDonors implements Serializable {
     private String ageYoungest;
     private String ageOldest;
 
+    public String getSexAll() {
+        String all = "";
+        all += sexFemale ? "@Female" : "";
+        all += sexMale ? "@Male" : "";
+        all = all.length() > 0 ? all.substring(1) : all;
+        return all;
+    }
+
     public boolean isSexFemale() {
         return sexFemale;
     }

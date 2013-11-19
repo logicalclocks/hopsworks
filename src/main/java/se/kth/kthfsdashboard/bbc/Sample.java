@@ -12,7 +12,7 @@ import se.kth.kthfsdashboard.utils.FormatUtils;
 @Entity
 @Table(name = "Samples")
 @NamedQueries({
-   @NamedQuery(name = "Alerts.findAll", query = "SELECT a FROM Alert a WHERE a.alertTime >= :fromdate AND a.alertTime <= :todate ORDER BY a.alertTime DESC"),
+   @NamedQuery(name = "Samples.findAll", query = "SELECT s FROM Sample s"),
 })
 public class Sample implements Serializable {
 

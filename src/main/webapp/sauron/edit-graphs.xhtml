@@ -254,33 +254,33 @@
                     <p:column selectionMode="multiple" style="width:2%" /> 
                     <p:column headerText="Id">  
                         <h:outputText value="#{graph.graphId}" />  
-                    </p:column>                           
-                    <p:column headerText="Target">  
-                        <h:outputText value="#{graph.target}" />  
-                    </p:column>                        
-                    <p:column headerText="Group">  
-                        <h:outputText value="#{graph.group}" />  
-                    </p:column>                      
-                    <p:column headerText="Plugin">  
-                        <h:outputText value="#{graph.plugin}" />  
-                    </p:column>  
-                    <p:column headerText="Plugin Instance">  
-                        <h:outputText value="#{graph.pluginInstance}" />  
-                    </p:column>  
+                    </p:column>        
+                    <p:column headerText="Target">
+                        <h:outputText value="#{graph.target}" />
+                    </p:column>      
+                    <p:column headerText="Group">
+                        <h:outputText value="#{graph.group}" />
+                    </p:column>   
+                    <p:column headerText="Plugin">
+                        <h:outputText value="#{graph.plugin}" />
+                    </p:column>
+                    <p:column headerText="Plugin Instance">
+                        <h:outputText value="#{graph.pluginInstance}" />
+                    </p:column>
                     <p:column headerText="Title">
-                        <h:outputText value="#{graph.title}" />  
-                    </p:column>  
+                        <h:outputText value="#{graph.title}" />
+                    </p:column>
                     <p:column headerText="Vertical Label">
-                        <h:outputText value="#{graph.verticalLabel}" />  
-                    </p:column>  
+                        <h:outputText value="#{graph.verticalLabel}" />
+                    </p:column>
                     <p:column headerText="Var">
-                        <h:outputText value="#{graph.var}" />  
-                    </p:column>                          
-                    <p:column style="width:4%">  
-                        <p:commandButton id="selectButton" oncomplete="dialog1.show()" update=":formMain:graphDlg" icon="ui-icon-search" title="Detail">  
-                            <f:setPropertyActionListener value="#{graph}" target="#{editGraphsController.selectedGraph}" />  
-                        </p:commandButton>  
-                    </p:column> 
+                        <h:outputText value="#{graph.var}" />
+                    </p:column>
+                    <p:column style="width:4%">
+                        <p:commandButton id="selectButton" oncomplete="dialog1.show()" update=":formMain:graphDlg" icon="ui-icon-search" title="Detail">
+                            <f:setPropertyActionListener value="#{graph}" target="#{editGraphsController.selectedGraph}" />
+                        </p:commandButton>
+                    </p:column>
                     <f:facet name="footer" >  
                         <p:commandButton value="Save" icon="ui-icon-disk" actionListener="#{editGraphsController.save()}" update=":formMsg" 
                                          disabled="#{empty editGraphsController.graphs}"/>
