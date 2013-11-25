@@ -213,7 +213,7 @@ public final class VirtualizedClusterProvision implements Provision {
                     }
                 }
 
-                if (group.getAuthorizePorts()!=null) {
+                if (group.getAuthorizePorts() != null) {
                     for (Integer port : group.getAuthorizePorts()) {
                         if (!openTCP.contains(port)) {
                             client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
@@ -302,7 +302,7 @@ public final class VirtualizedClusterProvision implements Provision {
                             }
                         }
 
-                        if (group.getAuthorizePorts()!=null) {
+                        if (group.getAuthorizePorts() != null) {
                             for (Integer port : group.getAuthorizePorts()) {
                                 if (!openTCP.contains(port)) {
                                     Ingress ingress = Ingress.builder()
@@ -397,13 +397,19 @@ public final class VirtualizedClusterProvision implements Provision {
                     if (services.contains("mysqld")) {
 
                         mySQLClientsIP.addAll(node.getPrivateAddresses());
-                        mysqlds.put(node, services);
+                        //To avoid launching the node in two phases, see if it is sharing a same node
+                        if (!group.getRecipes().contains("mysqld")) {
+                            mysqlds.put(node, services);
+                        }
 
                     }
                     if (services.contains("namenode")) {
 
                         namenodesIP.addAll(node.getPrivateAddresses());
-                        namenodes.put(node, services);
+                        //avoid relaunching a node in the corresponding 
+                        if (!group.getRecipes().contains("namenode")) {
+                            namenodes.put(node, services);
+                        }
                     }
 
                     if (services.contains("datanode")) {
@@ -568,7 +574,7 @@ public final class VirtualizedClusterProvision implements Provision {
                 .privateIP(privateIP)
                 .publicKey(publicKey)
                 .clusterName(cluster.getName())
-                .scriptType(ScriptBuilder.ScriptType.JHDFS);
+                .scriptType(ScriptBuilder.ScriptType.HOPS);
 
         //Asynchronous node launch
         //launch mgms
