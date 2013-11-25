@@ -1,6 +1,6 @@
 !!se.kth.kthfsdashboard.virtualization.clusterparser.Cluster
   name: test2
-  installPhase: false
+  installPhase: true
   global:
     environment:
     ##user defined recipes
@@ -13,13 +13,14 @@
      - 3321
     git:
       user: Jim Dowling
-      repository: https://ghetto.sics.se/jdowling/kthfs-pantry.git
+      repository: https://ghetto.sics.se/jdowling/hops-chef.git
       key: notNull
   provider:
     name: aws-ec2
     instanceType: m1.large
     loginUser: ubuntu
-    image: eu-west-1/ami-35667941
+    image: eu-west-1/ami-35667941 
+    ##image: eu-west-1/ami-ffcdce8b
     region: eu-west-1
     zones: 
     - eu-west-1a
@@ -33,12 +34,17 @@
     
   - service: mysqld
     number: 1
-    
+    recipes: 
+      - namenode
   - service: namenode
-    number: 2
+    number: 1
+    recipes:
+      - resourcemanager
    
   - service: datanode
     number: 2
+    recipes:
+      - nodemanager
     
 
 ...
