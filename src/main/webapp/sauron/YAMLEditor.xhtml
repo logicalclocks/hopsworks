@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:pe="http://primefaces.org/ui/extensions">
+    <ui:composition template="layout.xhtml">
+
+        <ui:define name="title">
+            #{settingsController.name} - Cluster Editor
+        </ui:define>
+        <ui:define name="css"/>
+        <ui:define name="scripts"/>
+        <ui:define name="content">
+            <!--Navigation Bar - Begin -->
+            <h:form styleClass="styleNav">
+                <p:panelGrid>  
+                    <p:row>  
+                        <p:column>
+                            <h:outputText value="Cluster"/>
+                        </p:column>
+                    </p:row>
+                </p:panelGrid>
+            </h:form>
+
+            <div id="editor" align="left">
+                <div class="services-header">Edit your YAML cluster:</div>
+                <p:spacer width="1" height="8" />
+                <div id="codeEditor">
+                    <h:body>
+                        <h:form>
+                            <p:panel id="codeEditorPanel" header="Cluster Editor" >
+                                <p:growl id="growl" showDetail="true" />
+
+                                <pe:codeMirror id="codeMirror" mode="#{yAMLEditorController.mode}" 
+                                               theme="rubyblue" 
+                                               value="#{yAMLEditorController.content}" lineNumbers="true"
+                                               
+                                               />
+
+                               
+                            </p:panel> 
+                            <p:commandButton  update="codeMirror"
+                                                 value="Save changes"/>
+                        </h:form>
+                    </h:body>
+                </div>
+            </div>
+        </ui:define>
+    </ui:composition>
+</html>
+

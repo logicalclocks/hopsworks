@@ -14,6 +14,7 @@
                     <p:messages id="commonMsgs"/>
                     <h:outputText id="deleteRecipe" value="Are you sure you want to delete?" />
                     <p:commandButton  value="Confirm" update=":mainForm:recipeList" 
+                                      process="@this"
                                       action="#{clusterManagementController.removeGlobalRecipes}" 
                                       oncomplete="editLastDataTableRow removeRecipeDialog.close()"
                                       />

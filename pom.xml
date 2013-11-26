@@ -233,6 +233,11 @@
             <artifactId>primefaces-extensions</artifactId>
             <version>0.6.3</version>
         </dependency>
+        <dependency>
+            <groupId>org.primefaces.extensions</groupId>
+            <artifactId>resources-codemirror</artifactId>
+            <version>0.6.3</version>
+        </dependency>
 
 
         <dependency>

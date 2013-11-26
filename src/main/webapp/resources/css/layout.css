@@ -55,6 +55,13 @@ body {
     font-size: 9px;
 }
 
+/*Code Editor Style*/
+#codeEditor{
+    width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 /*Credentials Form*/
 #computeCredentialsForm{
 
