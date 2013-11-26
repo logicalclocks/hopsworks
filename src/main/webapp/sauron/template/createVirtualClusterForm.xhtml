@@ -40,10 +40,10 @@
                                     <p:selectOneMenu id="providers" label="Select a provider"
                                                      required="true"
                                                      value="#{clusterManagementController.cluster.provider.name}">
-                                        <f:selectItem itemLabel="Select One" itemValue="" /> 
+<!--                                        <f:selectItem itemLabel="Select One" itemValue="" /> -->
                                         <f:selectItems value="#{clusterManagementController.options.provider}" />
                                         <p:ajax listener="#{clusterManagementController.handleProviderChange}"
-                                                event="change" update="instancesEC2 instanceRest" process="@form"/>
+                                                event="change" update="instancesEC2 instanceRest" process="@this"/>
                                     </p:selectOneMenu>
                                     <h:outputText value="Environment: *" />
                                     <p:selectOneMenu id="environment" label="Select environment type"
@@ -110,13 +110,13 @@
 
                                 <p:commandButton id="addRecipeButton" value="New Recipe" 
                                                  icon="ui-icon-plusthick"
-                                                 update=":recipeForm:addRecipe" 
+
                                                  process=":recipeForm:addRecipeDig"
                                                  oncomplete="addRecipeDialog.show()" 
                                                  />
                                 <p:commandButton id="deleteRecipeButton" value="Delete Selection" 
                                                  process=":recipeForm:removeRecipeDig"
-                                                 update=":recipeForm:deleteRecipe" 
+                                                
                                                  oncomplete="removeRecipeDialog.show()" icon="ui-icon-minusthick" />
                             </p:panel>
 
@@ -149,36 +149,14 @@
                                         </p:column>
                                     </p:dataTable>
                                 </h:panelGrid>
-                                <p:dialog header="Remove Port" widgetVar="removePortDialog" resizable="false"
-                                          id="removePortDig"  
-                                          showEffect="fade" hideEffect="explode" modal="true">  
-                                    <h:outputText id="deletePort" value="Are you sure you want to delete?" />
-                                    <p:commandButton  value="Confirm" update="portList" 
-                                                      process="removePortDig"
-                                                      action="#{clusterManagementController.removePorts}" 
-                                                      oncomplete="editLastDataTableRow removePortDialog.close()"
-                                                      />
-                                </p:dialog>  
-                                <p:dialog header="Add Port" widgetVar="addPortDialog" resizable="false"
-                                          id="addPortDig"
-                                          showEffect="fade" hideEffect="explode" modal="true">
-                                    <h:outputText id="addPort" value="Port Number:" />
-                                    <p:inputText id="portNumber" title="A port number in range 0 - 65535"
-                                                 value="#{clusterManagementController.options.portNumber}"/>
-                                    <p:commandButton id="acceptPort" value="Confirm" update="portList"
-                                                     process="addPortDig"
-                                                     action="#{clusterManagementController.addPort}"
-                                                     oncomplete="editLastDataTableRow addPortDialog.close()"
-                                                     />
-
-                                </p:dialog>
+                           
                                 <p:commandButton id="addPortButton" value="New Port" 
                                                  icon="ui-icon-plusthick"
-                                                 update="mainForm:addPort" 
+                                                 update=":portForm:addPort" 
                                                  oncomplete="addPortDialog.show()" 
                                                  />
                                 <p:commandButton id="deletePortButton" value="Delete Selection" 
-                                                 update="mainForm:deletePort" 
+                                                 update=":portForm:deletePort" 
                                                  oncomplete="removePortDialog.show()" icon="ui-icon-minusthick" />
                             </p:panel>
 
@@ -318,6 +296,7 @@
 
                 </h:form>
                 <ui:include src="/sauron/template/recipeForm.xhtml"/>
+                <ui:include src="/sauron/template/portForm.xhtml"/>
                 <ui:include src="/sauron/template/removeGroupForm.xhtml"/>
                 <ui:include src="/sauron/template/addGroupForm.xhtml"/>
                 <ui:include src="/sauron/template/editGroupForm.xhtml"/>
