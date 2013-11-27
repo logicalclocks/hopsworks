@@ -33,16 +33,17 @@
                             <p:panel id="codeEditorPanel" header="Cluster Editor" >
                                 <p:growl id="growl" showDetail="true" />
 
-                                <pe:codeMirror id="codeMirror" mode="#{yAMLEditorController.mode}" 
+                                <pe:codeMirror id="codeMirror" mode="#{editorYamlController.mode}" 
                                                theme="rubyblue" 
-                                               value="#{yAMLEditorController.content}" lineNumbers="true"
+                                               value="#{editorYamlController.content}" lineNumbers="true"
                                                
                                                />
 
                                
                             </p:panel> 
                             <p:commandButton  update="codeMirror"
-                                                 value="Save changes"/>
+                                                 value="Save changes"
+                                                 action="#{editorYamlController.saveChanges()}"/>
                         </h:form>
                     </h:body>
                 </div>
