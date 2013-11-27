@@ -17,6 +17,7 @@ import java.util.List;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
@@ -29,6 +30,7 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.BeanAccess;
 import org.yaml.snakeyaml.representer.Representer;
 import se.kth.kthfsdashboard.provision.ClusterOptions;
+import se.kth.kthfsdashboard.provision.EditorYamlController;
 
 /**
  *
@@ -40,6 +42,8 @@ public class ClusterManagementController implements Serializable {
 
     @EJB
     private ClusterFacade clusterEJB;
+    @ManagedProperty(value = "#{editorYamlController}")
+    private EditorYamlController editorYamlController;
     private Cluster cluster;
     private Baremetal baremetalCluster;
     private UploadedFile file;
@@ -232,6 +236,15 @@ public class ClusterManagementController implements Serializable {
         return clusterType.equals("baremetal");
     }
 
+    public EditorYamlController getEditorYamlController() {
+        return editorYamlController;
+    }
+
+    public void setEditorYamlController(EditorYamlController editorYamlController) {
+        this.editorYamlController = editorYamlController;
+    }
+    
+
     /*
      * Event Handlers
      */
@@ -387,36 +400,45 @@ public class ClusterManagementController implements Serializable {
 
     }
 
-    public String editSelection() {
-        if (selectedClusters.length != 0) {
-            edit = selectedClusters[0];
-            clusterType = edit.getClusterType();
-            Object document = yaml.load(edit.getYamlContent());
-            if (document != null && document instanceof Cluster) {
+//    public String editSelection() {
+//        if (selectedClusters.length != 0) {
+//            edit = selectedClusters[0];
+//            clusterType = edit.getClusterType();
+//            Object document = yaml.load(edit.getYamlContent());
+//            if (document != null && document instanceof Cluster) {
+//
+//                cluster = (Cluster) document;
+//                ports = new ArrayList<Integer>(cluster.getGlobal().getAuthorizePorts());
+//                groups = new ArrayList<NodeGroup>(cluster.getNodes());
+//                groupsModel = new NodeGroupDataModel(groups);
+//
+//                zones = options.getEc2availabilityZones().get(cluster.getProvider().getRegion());
+//                if (cluster.getProvider().getName().equals("aws-ec2")) {
+//                    renderEC2 = true;
+//                }
+//            } else if (document != null && document instanceof Baremetal) {
+//                //probably need to check references like in the cluster case
+//                baremetalCluster = (Baremetal) document;
+//                baremetalGroups = new ArrayList<BaremetalGroup>(baremetalCluster.getNodes());
+//                baremetalGroupsModel = new BaremetalGroupDataModel(baremetalGroups);
+//
+//            } else {
+//                cluster = null;
+//            }
+//        }
+//
+//        return "createClusterWizard";
+//    }
 
-                cluster = (Cluster) document;
-                ports = new ArrayList<Integer>(cluster.getGlobal().getAuthorizePorts());
-                groups = new ArrayList<NodeGroup>(cluster.getNodes());
-                groupsModel = new NodeGroupDataModel(groups);
-
-                zones = options.getEc2availabilityZones().get(cluster.getProvider().getRegion());
-                if (cluster.getProvider().getName().equals("aws-ec2")) {
-                    renderEC2 = true;
-                }
-            } else if (document != null && document instanceof Baremetal) {
-                //probably need to check references like in the cluster case
-                baremetalCluster = (Baremetal) document;
-                baremetalGroups = new ArrayList<BaremetalGroup>(baremetalCluster.getNodes());
-                baremetalGroupsModel = new BaremetalGroupDataModel(baremetalGroups);
-
-            } else {
-                cluster = null;
-            }
+    public String editSelection(){
+        if(selectedClusters.length != 0){
+            edit=selectedClusters[0];
+            editorYamlController.setEntity(edit);
+            editorYamlController.init();
+            return "editClusterEditor";
         }
-
-        return "createClusterWizard";
+        return "";
     }
-
     public String loadSelection() {
         if (selectedClusters.length != 0) {
             ClusterEntity selection = selectedClusters[0];
