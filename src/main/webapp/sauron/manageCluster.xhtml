@@ -122,7 +122,8 @@
                                          oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
                         
                         <p:commandButton id="editSelection" value="Edit selected cluster"
-                                         action="#{clusterManagementController.editSelection()}"/>
+                                         update="clusterForm:editMsg"
+                                         oncomplete="editType.show()"/>
                         <p:commandButton id="loadButton" value="Load selected cluster"
                                          action="#{clusterManagementController.loadSelection()}"/>
                         <p:commandButton id="exportButton" value="Export selected cluster"
@@ -131,6 +132,18 @@
                             <p:fileDownload value="#{clusterManagementController.exportCluster()}"/>
                         </p:commandButton>
 
+                        <p:dialog header="Select Edit Option" widgetVar="editType" resizable="false"
+                                  id="editTypeDig"
+                                  showEffect="fade" modal="true">
+                            <h:outputText id="editMsg" value="How do you want to edit the cluster?:"/>
+                            <p:selectOneRadio id="editType" 
+                                              value="#{clusterManagementController.editType}">
+                                <f:selectItem itemLabel="Wizard" itemValue="wizard"/>
+                                <f:selectItem itemLabel="Online Editor" itemValue="editor"/>
+                            </p:selectOneRadio>
+                            <p:commandButton id="editTypeSelected" value="Proceed"
+                                             action="#{clusterManagementController.editSelection()}"/>
+                        </p:dialog>
 
                     </h:form>  
                 </div>
