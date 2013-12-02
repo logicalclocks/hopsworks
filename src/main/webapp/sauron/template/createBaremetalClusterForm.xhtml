@@ -4,7 +4,8 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:p="http://primefaces.org/ui"
       xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:ui="http://java.sun.com/jsf/facelets">
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:pe="http://primefaces.org/ui/extensions">
     <script type="text/javascript">
         function editLastDatatableRow(){
 
@@ -16,23 +17,35 @@
     </script>
     <h:body>
         <ui:composition>
+            <pe:tooltip global="true"  myPosition="left center" atPosition="right center" />  
             <div id="createWizard" >
 
-                <h:form id="mainForm">
-
-                    <p:growl id="growl" sticky="true" showDetail="true"/>
-
+                <h:form id="mainForm" >
                     <p:wizard widgetVar="wiz"
-                              flowListener="#{clusterManagementController.onFlowProcess}">
+                              flowListener="#{clusterManagementController.onFlowProcess}" styleClass="wizard">
                         <p:tab id="clusterCommon" title="Common">
-                            <p:panel header="Common Parameters">
-                                <h:messages errorClass="error"/>
-                                <h:panelGrid columns="2" columnClasses="label,value" styleClass="grid">
-                                    <h:outputText value="Cluster name: " />
-                                    <p:inputText required="false" label="name"
+
+                            <p:messages id="commonMsgs"/>
+                            <p:panel header="Global Attributes" >
+                                <h:panelGrid columns="2" columnClasses="label,value" styleClass="wizardElements">
+                                    <h:outputText value="Cluster name: *" />
+                                    <p:inputText required="true" label="Missing cluster name"
+                                                 title="Enter a name for the cluster"
                                                  value="#{clusterManagementController.baremetalCluster.name}" />
-                                    <h:outputText value="Environment: " />
-                                    <p:selectOneMenu id="environment" 
+                                    <h:outputText value="Login user: *"/>
+                                    <p:inputText value="#{clusterManagementController.baremetalCluster.loginUser}" 
+                                                 label="Missing login user for machines" 
+                                                 required="true"
+                                                 title="User to log on the machines"/>
+                                    <h:outputText value="Total number of Hosts: *"/>
+                                    <p:inputText required="true"
+                                                 label="Missing total number of machines"
+                                                 title="Enter the total number of machines to configure"
+                                                 value="#{clusterManagementController.baremetalCluster.totalHosts}"/>
+                                    <h:outputText value="Environment: *" />
+                                    <p:selectOneMenu id="environment"
+                                                     required="true"
+                                                     label="Select environment type"
                                                      value="#{clusterManagementController.baremetalCluster.global.environment}">
                                         <f:selectItem itemLabel="Select One" itemValue="" /> 
                                         <f:selectItems value="#{clusterManagementController.options.environment}" />
@@ -40,14 +53,30 @@
                                     <h:outputText value="Install Phase: "/>
                                     <p:selectBooleanCheckbox label="Jump?" 
                                                              value="#{clusterManagementController.baremetalCluster.installPhase}"/>
-                                    <h:outputText value="Login user:"/>
-                                    <p:inputText value="#{clusterManagementController.baremetalCluster.loginUser}" 
-                                                 />
-                                    <h:outputText value="Total number of Hosts:"/>
-                                    <p:inputText value="#{clusterManagementController.baremetalCluster.totalHosts}" 
-                                                 />
                                 </h:panelGrid>
-                                <h:panelGrid columns="2" columnClasses="value">
+                            </p:panel>
+                            <p:spacer height="25px"/>
+                            <p:panel header="Git parameters (Optional)" collapsed="true" toggleable="true">
+                                <h:panelGrid columns="2" columnClasses="label, value" styleClass="wizardElements">
+                                    <h:outputText value="Git username: " />
+                                    <p:inputText required="false" label="Missing git user"
+                                                 title="Enter user name to access your git repository"
+                                                 value="#{clusterManagementController.baremetalCluster.global.git.user}" />
+
+                                    <h:outputText value="Git repository: " />
+                                    <p:inputText required="false" label="Missing a git repository"
+                                                 title="Enter url to clone your git repository"
+                                                 value="#{clusterManagementController.baremetalCluster.global.git.repository}" />
+                                    <h:outputText value="Git key: " />
+                                    <p:inputTextarea required="false" label="Missing a key for the git repository"
+                                                     title="Security key to clone your repository" rows="10"
+                                                     value="#{clusterManagementController.baremetalCluster.global.git.key}" />
+                                </h:panelGrid>
+
+                            </p:panel>
+                            <p:spacer height="25px"/>
+                            <p:panel header="Global Recipes" styleClass="wizard">
+                                <h:panelGrid columns="2" columnClasses="value" styleClass="wizardElements">
                                     <p:dataTable id="recipeList" var="recipe" 
                                                  value="#{clusterManagementController.globalRecipes}"
                                                  rowKey="#{recipe}"
@@ -73,47 +102,30 @@
                                         </p:column>
                                     </p:dataTable>
                                 </h:panelGrid>
-                                <p:dialog header="Remove Recipe" widgetVar="removeRecipeDialog" resizable="false"
-                                          id="removeRecipeDig"  
-                                          showEffect="fade" hideEffect="explode" modal="true">  
-                                    <h:outputText id="deleteRecipe" value="Are you sure you want to delete?" />
-                                    <p:commandButton  value="Confirm" update="recipeList" 
-                                                      action="#{clusterManagementController.removeGlobalRecipes}" 
-                                                      oncomplete="editLastDataTableRow removeRecipeDialog.close()"
-                                                      />
-                                </p:dialog>  
-                                <p:dialog header="Add Recipe" widgetVar="addRecipeDialog" resizable="false"
-                                          id="addRecipeDig"
-                                          showEffect="fade" hideEffect="explode" modal="true">
-                                    <h:outputText id="addRecipe" value="Recipe:" />
-                                    <p:inputText id="globalRecipe"
-                                                 value="#{clusterManagementController.options.globalRecipe}"/>
-                                    <p:commandButton id="acceptRecipe" value="Confirm" update="recipeList" 
-                                                     action="#{clusterManagementController.addRecipe}"
-                                                     oncomplete="editLastDataTableRow addRecipeDialog.close()"
-                                                     />
 
-                                </p:dialog>
                                 <p:commandButton id="addRecipeButton" value="New Recipe" 
                                                  icon="ui-icon-plusthick"
-                                                 update="mainForm:addRecipe" 
-                                                 oncomplete="addRecipeDialog.show()" title="VIew"
+                                                 update=":recipeForm:addRecipe" 
+                                                 process=":recipeForm:addRecipeDig"
+                                                 oncomplete="addRecipeDialog.show()" 
                                                  />
                                 <p:commandButton id="deleteRecipeButton" value="Delete Selection" 
-                                                 update="mainForm:deleteRecipe" 
-                                                 oncomplete="removeRecipeDialog.show()" icon="ui-icon-minusthick" title="View"/>
+                                                 process=":recipeForm:removeRecipeDig"
+                                                 update=":recipeForm:deleteRecipe" 
+                                                 oncomplete="removeRecipeDialog.show()" icon="ui-icon-minusthick" />
                             </p:panel>
                         </p:tab>
                         <p:tab  id="nodeGroups" title="Groups">
+                            
                             <p:panel header="Cluster Nodes">
 
-                                <h:panelGrid columns="4" columnClasses="label, value">
+                                <h:panelGrid columns="4" columnClasses="label, value" styleClass="wizardElements">
                                     <p:dataTable id="groupList" var="group"
                                                  value="#{clusterManagementController.baremetalGroupsModel}"
                                                  rowKey="#{group.service}"
                                                  selection="#{clusterManagementController.selectedBaremetalGroup}"
                                                  selectionMode="multiple"
-                                                 editable="fale">
+                                                 editable="false">
                                         <f:facet name="header">
                                             Click delete selection after selecting multiple instances to delete, use shift-click to select multiples
                                         </f:facet>
@@ -138,91 +150,20 @@
                                     </p:dataTable>
 
                                 </h:panelGrid>
-                                <p:dialog header="Remove Group" widgetVar="removeDialog" resizable="false"
-                                          id="groupDig"  
-                                          showEffect="fade" hideEffect="explode" modal="true">  
-                                    <h:outputText id="deletemsg" value="Are you sure you want to delete?" />
-                                    <p:commandButton id="acceptDelete" value="Confirm" update="groupList" 
-                                                     process="groupDig"
-                                                     action="#{clusterManagementController.removeGroup}" 
-                                                     oncomplete="editLastDataTableRow removeDialog.close()"
-                                                     />
-                                </p:dialog>  
-                                <p:dialog header="Add Group" widgetVar="addGroup" resizable="false"
-                                          id="addDig"
-                                          showEffect="fade" hideEffect="explode" modal="true">
-                                    <h:panelGrid columns="2" >
-                                        <h:outputText id="addGroup" value="Service:" />
-                                        <p:selectOneMenu id="serviceName" 
-                                                         value="#{clusterManagementController.options.addBaremetalGroup.service}" 
-                                                         >
-                                            <f:selectItem itemLabel="Select One" itemValue="" /> 
-                                            <f:selectItems value="#{clusterManagementController.options.roles}" />
-                                        </p:selectOneMenu>
-                                        <h:outputText value="Bittorrent support:"/>
-                                        <p:selectOneMenu value="#{clusterManagementController.options.addBaremetalGroup.bittorrent}">
-                                            <f:selectItem itemLabel="True" itemValue="true"/>
-                                            <f:selectItem itemLabel="False" itemValue="false"/>
-                                        </p:selectOneMenu>
-                                        <h:outputText value="Hosts:"/>
-                                        <p:inputTextarea value="#{clusterManagementController.options.inputHosts}" autoResize="true"/>
-                                        <h:outputText value="Recipes:"/>
-                                        <p:inputTextarea value="#{clusterManagementController.options.inputRecipes}"  autoResize="true"/> 
-                                        <h:outputText value="Chef Attributes:"/>
-                                        <p:inputTextarea value="#{clusterManagementController.options.addBaremetalGroup.chefAttributes}" autoResize="true"/>   
 
-                                    </h:panelGrid>
-                                    <p:commandButton id="acceptName" value="Confirm" update="groupList" 
-                                                     process="addDig"
-                                                     action="#{clusterManagementController.addGroup}"
-                                                     oncomplete="editLastDataTableRow addGroup.close()"
-                                                     />
-
-                                </p:dialog>
-
-                                <p:dialog header="Edit Group" widgetVar="editGroup" resizable="false"
-                                          id="editDig"
-                                          showEffect="fade" hideEffect="explode" modal="true">
-                                    <h:panelGrid columns="2" >
-                                        <h:outputText id="editGroup" value="Service:" />
-                                        <p:selectOneMenu 
-                                            value="#{clusterManagementController.options.editBaremetalGroup.service}" 
-                                            >
-                                            <f:selectItem itemLabel="Select One" itemValue="" /> 
-                                            <f:selectItems value="#{clusterManagementController.options.roles}" />
-                                        </p:selectOneMenu>
-                                        <h:outputText value="Bittorrent support:"/>
-                                        <p:selectOneMenu value="#{clusterManagementController.options.editBaremetalGroup.bittorrent}">
-                                            <f:selectItem itemLabel="True" itemValue="true"/>
-                                            <f:selectItem itemLabel="False" itemValue="false"/>
-                                        </p:selectOneMenu>
-                                        <h:outputText value="Number of Nodes:"/>
-                                        <p:inputText value="#{clusterManagementController.options.editBaremetalGroup.number}"/>
-                                        <h:outputText value="Hosts:"/>
-                                        <p:inputTextarea value="#{clusterManagementController.options.editHosts}" autoResize="true"/>
-                                        <h:outputText value="Recipes:"/>
-                                        <p:inputTextarea value="#{clusterManagementController.options.editRecipes}" autoResize="true"/> 
-                                        <h:outputText value="Chef Attributes:"/>
-                                        <p:inputTextarea value="#{clusterManagementController.options.editBaremetalGroup.chefAttributes}" autoResize="true"/>   
-                                    </h:panelGrid>
-                                    <p:commandButton value="Confirm" update="groupList" 
-                                                     process="editDig"
-                                                     action="#{clusterManagementController.editGroup}"
-                                                     oncomplete="editLastDataTableRow editGroup.close()"
-                                                     />
-                                </p:dialog>
                                 <p:commandButton id="addGroupButton" value="New Group" 
                                                  icon="ui-icon-plusthick"
-                                                 update="mainForm:addDig" 
-                                                 oncomplete="addGroup.show()" title="View"
+                                                 update=":addGroupForm:addDig" 
+                                                 oncomplete="addGroup.show()" 
                                                  />
                                 <p:commandButton id="editButton" value="Edit selection"
-                                                 update="mainForm:editDig"
+                                                 update=":editGroupForm:editDig"
                                                  actionListener="#{clusterManagementController.editSelectedGroup}"
-                                                 oncomplete="editGroup.show()" title="View"/>
+                                                 oncomplete="editGroup.show()"
+                                                 />
                                 <p:commandButton id="deleteButton" value="Delete Selection" 
-                                                 update="mainForm:deletemsg" 
-                                                 oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
+                                                 update=":removeGroupForm:deletemsg" 
+                                                 oncomplete="removeDialog.show()" icon="ui-icon-minusthick"/>
                             </p:panel>
                         </p:tab>
 
@@ -235,12 +176,18 @@
 
 
                             </p:panel>
-                            <p:commandButton value="Submit" update="growl"
+                            <p:commandButton value="Submit" 
                                              actionListener="#{clusterManagementController.generateYAML}"
                                              action="proceedLaunchCluster"/>
                         </p:tab>
                     </p:wizard>
+                  
                 </h:form>
+                <ui:include src="/sauron/template/recipeForm.xhtml"/>
+                <ui:include src="/sauron/template/removeGroupForm.xhtml"/>
+                <ui:include src="/sauron/template/addBaremetalGroupForm.xhtml"/>
+                <ui:include src="/sauron/template/editBaremetalGroupForm.xhtml"/>
+                
             </div>
         </ui:composition>
     </h:body>

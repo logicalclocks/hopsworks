@@ -23,8 +23,10 @@ public class ClusterRepresenter extends Representer {
         String name = property.getName();
         if ((name.equals("recipes") || name.equals("authorizePorts")
                 || name.equals("chefAttributes") || name.equals("zones") || name.equals("loginUser")
-                ||name.equals("bittorrent"))
-                && propertyValue == null) {
+                ||name.equals("bittorrent")||name.equals("git")||name.equals("user")||name.equals("repository")
+                ||name.equals("key")||name.equals("nodes"))
+                && (propertyValue == null||"".equals(propertyValue)||"{}".equals(propertyValue)
+                ||"[]".equals(propertyValue))) {
             return null;
         } else if(name.equals("environment")&&propertyValue==null){
             return super.representJavaBeanProperty(javaBean, property, "prod", customTag);

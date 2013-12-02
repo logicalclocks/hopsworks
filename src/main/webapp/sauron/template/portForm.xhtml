@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+    <h:body>
+        <ui:composition>
+            <h:form id="portForm" binding="#{portForm}">
+                <p:dialog header="Remove Port" widgetVar="removePortDialog" resizable="false"
+                                          id="removePortDig"  
+                                          showEffect="fade" hideEffect="explode" modal="true">  
+                                    <h:outputText id="deletePort" value="Are you sure you want to delete?" />
+                                    <p:commandButton  value="Confirm" update=":mainForm:portList" 
+                                                      process="@this"
+                                                      action="#{clusterManagementController.removePorts}" 
+                                                      oncomplete="editLastDataTableRow removePortDialog.close()"
+                                                      />
+                                </p:dialog>  
+                                <p:dialog header="Add Port" widgetVar="addPortDialog" resizable="false"
+                                          id="addPortDig"
+                                          showEffect="fade" hideEffect="explode" modal="true">
+                                    <h:outputText id="addPort" value="Port Number:" />
+                                    <p:inputText id="portNumber" title="A port number in range 0 - 65535"
+                                                 value="#{clusterManagementController.options.portNumber}"
+                                                 required="true"/>
+                                    <p:commandButton id="acceptPort" value="Confirm" update=":mainForm:portList"
+                                                     process="@this"
+                                                     action="#{clusterManagementController.addPort}"
+                                                     oncomplete="editLastDataTableRow addPortDialog.close()"
+                                                     />
+
+                                </p:dialog>
+            </h:form>
+        </ui:composition>
+    </h:body>
+</html>
+

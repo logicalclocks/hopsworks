@@ -8,30 +8,52 @@
       xmlns:c="http://java.sun.com/jsp/jstl/core">
     <h:body>
         <ui:composition>
-            <p:accordionPanel dynamic="true" cache="true">
+            <p:accordionPanel  dynamic="true" cache="true" >
                 <p:tab title="General Details:">
-                    <h:panelGrid columns="2" cellpadding="5">
+                    <h:panelGrid columns="2" cellpadding="10">
                         <h:outputLabel value="Name:"/>
                         <h:outputText value="#{clusterManagementController.cluster.name}" />
                         <h:outputLabel value="Environment:"/>
                         <h:outputText value="#{clusterManagementController.cluster.global.environment}" />
                         <h:outputText value="Install Phase:"/>
                         <h:outputText value="#{clusterManagementController.cluster.installPhase}"/>
-                        <h:outputLabel value="Recipes:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.recipes}" />
-                        <h:outputLabel value="Authorize Ports:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.authorizePorts}" />
-                        <h:outputLabel value="Git user:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.git.user}" />
-                        <h:outputLabel value="Git repository:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.git.repository}" />
-                        <h:outputLabel value="Git key:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.global.git.key}" />
+                        <h:outputLabel value="Recipes:" 
+                                       rendered="#{clusterManagementController.cluster.global.recipes.size()>0}"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.recipes}" 
+                                      rendered="#{clusterManagementController.cluster.global.recipes.size()>0}"/>
+                        <h:outputLabel value="Authorize Ports:" 
+                                       rendered="#{clusterManagementController.cluster.global.authorizePorts.size()>0}"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.authorizePorts}" 
+                                      rendered="#{clusterManagementController.cluster.global.authorizePorts.size()>0}"/>
+                        <h:outputLabel value="Git user:" 
+                                       rendered="#{clusterManagementController.cluster.global.git.user!='' 
+                                                   and clusterManagementController.cluster.global.git!=null 
+                                                   and clusterManagementController.cluster.global.git.user!=null}"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.git.user}"
+                                      rendered="#{clusterManagementController.cluster.global.git.user!='' 
+                                                   and clusterManagementController.cluster.global.git!=null 
+                                                   and clusterManagementController.cluster.global.git.user!=null}"/>
+                        <h:outputLabel value="Git repository:" 
+                                       rendered="#{clusterManagementController.cluster.global.git.repository!='' 
+                                                   and clusterManagementController.cluster.global.git!=null 
+                                                   and clusterManagementController.cluster.global.git.repository!=null}"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.git.repository}" 
+                                      rendered="#{clusterManagementController.cluster.global.git.repository!='' 
+                                                   and clusterManagementController.cluster.global.git!=null 
+                                                   and clusterManagementController.cluster.global.git.repository!=null}"/>
+                        <h:outputLabel value="Git key:" 
+                                       rendered="#{clusterManagementController.cluster.global.git.key!='' 
+                                                   and clusterManagementController.cluster.global.git!=null 
+                                                   and clusterManagementController.cluster.global.git.key!=null}"/>
+                        <h:outputText value="#{clusterManagementController.cluster.global.git.key}" 
+                                      rendered="#{clusterManagementController.cluster.global.git.key!='' 
+                                                   and clusterManagementController.cluster.global.git!=null 
+                                                   and clusterManagementController.cluster.global.git.key!=null}"/>
                         
                     </h:panelGrid>
                 </p:tab>
                 <p:tab title="Provider Details:">
-                    <h:panelGrid columns="2" cellpadding="5">
+                    <h:panelGrid columns="2" cellpadding="10">
                         <h:outputLabel value="Name:"/>
                         <h:outputText value="#{clusterManagementController.cluster.provider.name}" />
                         <h:outputLabel value="Instance Type:"/>
@@ -40,31 +62,40 @@
                         <h:outputText value="#{clusterManagementController.cluster.provider.image}" />
                         <h:outputLabel value="Region:"/>
                         <h:outputText value="#{clusterManagementController.cluster.provider.region}" />
-                        <h:outputLabel value="Zones:"/>
-                        <h:outputText value="#{clusterManagementController.cluster.provider.zones}" />
+                        <h:outputLabel value="Zones:" rendered="false"/>
+                        <h:outputText value="#{clusterManagementController.cluster.provider.zones}" 
+                                      rendered ="false"/>
                     </h:panelGrid>
                 </p:tab>
                 <p:tab title="Nodes:" >
                     <p:accordionPanel value="#{clusterManagementController.cluster.nodes}" var="node">
                         <p:tab title="Service: #{node.service}">
-                            <h:panelGrid columns="2" cellpadding="5">
+                            <h:panelGrid columns="2" cellpadding="10">
                                 <h:outputLabel value="Number:"/>
                                 <h:outputText value="#{node.number}" />
-                                <h:outputLabel value="Recipes:"/>
-                                <h:outputText value="#{node.recipes}" />
-                                <h:outputLabel value="Authorize Ports:"/>
-                                <h:outputText value="#{node.authorizePorts}" />
-                                <h:outputLabel value="Chef Attributes:"/>
-                                <h:outputText value="#{node.chefAttributes}" />
-                                <h:outputLabel value="Bittorrent:"/>
-                                <h:outputText value="#{node.bittorrent}" />
+                                <h:outputLabel value="Recipes:" 
+                                               rendered="#{node.recipes!='' and node.recipes!=null}"/>
+                                <h:outputText value="#{node.recipes}" 
+                                              rendered="#{node.recipes!='' and node.recipes!=null}"/>
+                                <h:outputLabel value="Authorize Ports:"
+                                               rendered="#{node.authorizePorts!='' and node.authorizePorts!=null}"/>
+                                <h:outputText value="#{node.authorizePorts}" 
+                                              rendered="#{node.authorizePorts!='' and node.authorizePorts!=null}"/>
+                                <h:outputLabel value="Chef Attributes:" 
+                                               rendered="#{node.chefAttributes!='' and node.chefAttributes!=null}"/>
+                                <h:outputText value="#{node.chefAttributes}" 
+                                              rendered="#{node.chefAttributes!='' and node.chefAttributes!=null}" />
+                                <h:outputLabel value="Bittorrent:" 
+                                               rendered="#{node.bittorrent!='' and node.bittorrent!=null}"/>
+                                <h:outputText value="#{node.bittorrent}" 
+                                              rendered="#{node.bittorrent!='' and node.bittorrent!=null}"/>
                             </h:panelGrid>
                         </p:tab>
                     </p:accordionPanel>
                 </p:tab>
                 
             </p:accordionPanel>
-            <br/>
+
         </ui:composition>
 
     </h:body>

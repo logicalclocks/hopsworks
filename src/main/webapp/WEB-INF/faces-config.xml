@@ -96,6 +96,11 @@
             <to-view-id>/sauron/createClusterWizard.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+        <navigation-case>
+            <from-outcome>editClusterEditor</from-outcome>
+            <to-view-id>/sauron/YAMLEditor.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
     </navigation-rule>    
 
    

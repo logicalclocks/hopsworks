@@ -14,10 +14,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
@@ -30,6 +30,7 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.BeanAccess;
 import org.yaml.snakeyaml.representer.Representer;
 import se.kth.kthfsdashboard.provision.ClusterOptions;
+import se.kth.kthfsdashboard.provision.EditorYamlController;
 
 /**
  *
@@ -41,13 +42,15 @@ public class ClusterManagementController implements Serializable {
 
     @EJB
     private ClusterFacade clusterEJB;
+    @ManagedProperty(value = "#{editorYamlController}")
+    private EditorYamlController editorYamlController;
     private Cluster cluster;
     private Baremetal baremetalCluster;
     private UploadedFile file;
     private Yaml yaml;
     private boolean renderEC2;
     private ClusterOptions options = new ClusterOptions();
-    private String clusterType;
+    private String clusterType = "";
     /**
      * Variables for defining options of the cluster during the editing process
      * in the tables
@@ -72,19 +75,19 @@ public class ClusterManagementController implements Serializable {
     public ClusterManagementController() {
         Representer repr = new ClusterRepresenter();
         repr.setPropertyUtils(new UnsortedPropertyUtils());
-        
+
         DumperOptions dumperOptions = new DumperOptions();
         dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-        
+
         baremetalGroups = new ArrayList<BaremetalGroup>();
         baremetalGroupsModel = new BaremetalGroupDataModel(baremetalGroups);
 
         groups = new ArrayList<NodeGroup>();
         groupsModel = new NodeGroupDataModel(groups);
-
+        cluster = new Cluster();
         globalRecipes = new ArrayList<String>();
         ports = new ArrayList<Integer>();
-        yaml =new Yaml(repr,dumperOptions);
+        yaml = new Yaml(repr, dumperOptions);
         yaml.setBeanAccess(BeanAccess.FIELD);
 
     }
@@ -233,6 +236,15 @@ public class ClusterManagementController implements Serializable {
         return clusterType.equals("baremetal");
     }
 
+    public EditorYamlController getEditorYamlController() {
+        return editorYamlController;
+    }
+
+    public void setEditorYamlController(EditorYamlController editorYamlController) {
+        this.editorYamlController = editorYamlController;
+    }
+    
+
     /*
      * Event Handlers
      */
@@ -267,7 +279,7 @@ public class ClusterManagementController implements Serializable {
     }
 
     private void parseYMLtoCluster() {
-        
+
         try {
             Object document = yaml.load(file.getInputstream());
 
@@ -318,8 +330,11 @@ public class ClusterManagementController implements Serializable {
     }
 
     public String proceedCreateWizard() {
+        edit = null;
         globalRecipes.clear();
         ports.clear();
+        baremetalGroups.clear();
+        groups.clear();
         if (!isBaremetal()) {
             cluster = new Cluster();
             cluster.getProvider().setImage("eu-west-1/ami-ffcdce8b");
@@ -358,7 +373,7 @@ public class ClusterManagementController implements Serializable {
     }
 
     public void generateYAML(ActionEvent event) {
-       
+
         if (edit != null) {
             edit.setClusterType(clusterType);
 
@@ -385,36 +400,45 @@ public class ClusterManagementController implements Serializable {
 
     }
 
-    public String editSelection() {
-        if (selectedClusters.length != 0) {
-            edit = selectedClusters[0];
-            clusterType = edit.getClusterType();
-            Object document = yaml.load(edit.getYamlContent());
-            if (document != null && document instanceof Cluster) {
+//    public String editSelection() {
+//        if (selectedClusters.length != 0) {
+//            edit = selectedClusters[0];
+//            clusterType = edit.getClusterType();
+//            Object document = yaml.load(edit.getYamlContent());
+//            if (document != null && document instanceof Cluster) {
+//
+//                cluster = (Cluster) document;
+//                ports = new ArrayList<Integer>(cluster.getGlobal().getAuthorizePorts());
+//                groups = new ArrayList<NodeGroup>(cluster.getNodes());
+//                groupsModel = new NodeGroupDataModel(groups);
+//
+//                zones = options.getEc2availabilityZones().get(cluster.getProvider().getRegion());
+//                if (cluster.getProvider().getName().equals("aws-ec2")) {
+//                    renderEC2 = true;
+//                }
+//            } else if (document != null && document instanceof Baremetal) {
+//                //probably need to check references like in the cluster case
+//                baremetalCluster = (Baremetal) document;
+//                baremetalGroups = new ArrayList<BaremetalGroup>(baremetalCluster.getNodes());
+//                baremetalGroupsModel = new BaremetalGroupDataModel(baremetalGroups);
+//
+//            } else {
+//                cluster = null;
+//            }
+//        }
+//
+//        return "createClusterWizard";
+//    }
 
-                cluster = (Cluster) document;
-                ports = new ArrayList<Integer>(cluster.getGlobal().getAuthorizePorts());
-                groups = new ArrayList<NodeGroup>(cluster.getNodes());
-                groupsModel = new NodeGroupDataModel(groups);
-
-                zones = options.getEc2availabilityZones().get(cluster.getProvider().getRegion());
-                if (cluster.getProvider().getName().equals("aws-ec2")) {
-                    renderEC2 = true;
-                }
-            } else if (document != null && document instanceof Baremetal) {
-                //probably need to check references like in the cluster case
-                baremetalCluster = (Baremetal) document;
-                baremetalGroups = new ArrayList<BaremetalGroup>(baremetalCluster.getNodes());
-                baremetalGroupsModel = new BaremetalGroupDataModel(baremetalGroups);
-
-            } else {
-                cluster = null;
-            }
+    public String editSelection(){
+        if(selectedClusters.length != 0){
+            edit=selectedClusters[0];
+            editorYamlController.setEntity(edit);
+            editorYamlController.init();
+            return "editClusterEditor";
         }
-
-        return "createClusterWizard";
+        return "";
     }
-
     public String loadSelection() {
         if (selectedClusters.length != 0) {
             ClusterEntity selection = selectedClusters[0];
@@ -477,15 +501,25 @@ public class ClusterManagementController implements Serializable {
     }
 
     public void editSelectedGroup() {
+
         if (!isBaremetal() && selectedGroup.length > 0) {
 
             options.setEditGroup(selectedGroup[0]);
             options.setEditPorts(selectedGroup[0].getStringPorts());
             options.setEditRecipes(selectedGroup[0].getStringRecipes());
+//            RequestContext context =RequestContext.getCurrentInstance();
+//            context.update("mainForm:editDig");
+//            context.execute("editGroup.show()");
+//            System.out.println("hello");
+
         } else if (isBaremetal() && selectedBaremetalGroup.length > 0) {
             options.setEditBaremetalGroup(selectedBaremetalGroup[0]);
             options.setEditHosts(selectedBaremetalGroup[0].getStringHosts());
             options.setEditRecipes(selectedBaremetalGroup[0].getStringRecipes());
+//            RequestContext context =RequestContext.getCurrentInstance();
+//            context.update("mainForm:editDig");
+//            context.execute("editGroup.show()");
+//            System.out.println("bye");
         }
     }
 

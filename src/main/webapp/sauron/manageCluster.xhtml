@@ -70,11 +70,11 @@
                         <h:outputText value="You can also select a cluster from the database"/>
 
                         <p:growl id="messages" showDetail="true"/>
-                        <p:dataTable id="clusterList" selectionMode="multiple" var="cluster"
+                        <p:dataTable id="clusterList" selectionMode="multiple" var="cluster" widgetVar="list"
                                      value="#{clusterManagementController.listAvailableClusters()}"
                                      rowKey="#{cluster.id}"
                                      selection="#{clusterManagementController.selectedClusters}"
-                                     editable="false">
+                                     editable="false" >
 
                             <f:facet name="header">
                                 Available cluster configurations
@@ -120,6 +120,7 @@
                         <p:commandButton id="deleteClusterButton" value="Delete clusters" 
                                          update="clusterForm:deletemsg" 
                                          oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
+                        
                         <p:commandButton id="editSelection" value="Edit selected cluster"
                                          action="#{clusterManagementController.editSelection()}"/>
                         <p:commandButton id="loadButton" value="Load selected cluster"

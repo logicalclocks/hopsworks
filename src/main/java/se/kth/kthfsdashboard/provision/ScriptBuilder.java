@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -30,7 +31,7 @@ public class ScriptBuilder implements Statement {
 
     public static enum ScriptType {
 
-        INIT, INSTALL, JHDFS, INSTALLBAREMETAL, CONFIGBAREMETAL, RECOVER
+        INIT, INSTALL, HOPS, INSTALLBAREMETAL, CONFIGBAREMETAL, RECOVER
     }
 
     public static Builder builder() {
@@ -63,7 +64,7 @@ public class ScriptBuilder implements Statement {
         }
 
         /*
-         * JHDFS Script
+         * HOPS Script
          * List of ndbs for chef to configure the nodes
          */
         public Builder ndbs(List<String> ndbs) {
@@ -72,7 +73,7 @@ public class ScriptBuilder implements Statement {
         }
 
         /*
-         * JHDFS Script
+         * HOPS Script
          * List of mgms for chef to configure the nodes
          */
         public Builder mgms(List<String> mgms) {
@@ -81,7 +82,7 @@ public class ScriptBuilder implements Statement {
         }
 
         /*
-         * JHDFS Script
+         * HOPS Script
          * List of mysql for chef to configure the nodes
          */
         public Builder mysql(List<String> mysql) {
@@ -90,7 +91,7 @@ public class ScriptBuilder implements Statement {
         }
 
         /*
-         * JHDFS Script
+         * HOPS Script
          * List of namenodes for chef to configure the nodes
          */
         public Builder namenodes(List<String> namenodes) {
@@ -99,7 +100,7 @@ public class ScriptBuilder implements Statement {
         }
 
         /*
-         * JHDFS Script
+         * HOPS Script
          * List of roles for chef to configure the nodes
          */
         public Builder roles(List<String> roles) {
@@ -108,7 +109,7 @@ public class ScriptBuilder implements Statement {
         }
 
         /*
-         * JHDFS Script
+         * HOPS Script
          * IP of the node
          */
         public Builder nodeIP(String ip) {
@@ -167,8 +168,18 @@ public class ScriptBuilder implements Statement {
          */
 
         public ScriptBuilder build(String ip, List<String> roles, String nodeId) {
+            // System.out.println(this.toString());
             return new ScriptBuilder(scriptType, ndbs, mgms, mysql,
                     namenodes, roles, ip, nodeId, key, privateIP, clusterName, gitName, gitKey, gitRepo);
+        }
+
+        @Override
+        public String toString() {
+            return "Builder{" + "scriptType=" + scriptType + ", ndbs=" + ndbs + ", mgms=" + mgms
+                    + ", mysql=" + mysql + ", namenodes=" + namenodes + ", roles=" + roles + ", nodeIP="
+                    + nodeIP + ", key=" + key + ", privateIP=" + privateIP + ", clusterName=" + clusterName
+                    + ", nodeId=" + nodeId + ", gitName=" + gitName + ", gitKey=" + gitKey + ", gitRepo="
+                    + gitRepo + '}';
         }
     }
     private ScriptType scriptType;
@@ -185,6 +196,7 @@ public class ScriptBuilder implements Statement {
     private String gitName;
     private String gitKey;
     private String gitRepo;
+    private HashSet<String> filterClients = new HashSet<String>();
 
     protected ScriptBuilder(ScriptType scriptType, List<String> ndbs, List<String> mgms,
             List<String> mysql, List<String> namenodes, List<String> roles, String ip, String nodeId, String key,
@@ -200,9 +212,13 @@ public class ScriptBuilder implements Statement {
         this.privateIP = privateIP;
         this.clusterName = clusterName;
         this.nodeId = nodeId;
-        this.gitName = gitName;
-        this.gitKey = gitKey;
-        this.gitRepo = gitRepo;
+        this.gitName = (gitName == null || gitName.equals("")) ? "Jim Dowling" : gitName;
+        this.gitKey = gitKey; //To do the same
+        this.gitRepo = (gitRepo == null || gitRepo.equals(""))
+                ? "https://ghetto.sics.se/jdowling/hops-chef.git" : gitRepo;
+        filterClients.add("mysqld");
+        filterClients.add("datanode");
+        filterClients.add("namenode");
     }
 
     @Override
@@ -219,7 +235,7 @@ public class ScriptBuilder implements Statement {
         ImmutableList.Builder<Statement> statements = ImmutableList.builder();
         switch (scriptType) {
             case INIT:
-                statements.add(exec("sudo dpkg --configure -a"));
+                //statements.add(exec("sudo dpkg --configure -a"));
                 statements.add(exec("sudo apt-get update;"));
                 List<String> keys = new ArrayList();
                 keys.add(key);
@@ -239,16 +255,16 @@ public class ScriptBuilder implements Statement {
                 statements.add(exec("cd /etc/chef;"));
                 statements.add(exec("sudo wget http://lucan.sics.se/kthfs/solo.rb;"));
                 //Setup and fetch git recipes
-                statements.add(exec("git config --global user.name \""+gitName+"\";"));
+                statements.add(exec("git config --global user.name \"" + gitName + "\";"));
                 //statements.add(exec("git config --global user.email \"jdowling@sics.se\";"));
                 statements.add(exec("git config --global http.sslVerify false;"));
                 statements.add(exec("git config --global http.postBuffer 524288000;"));
                 statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
                 statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone "+gitRepo+" /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone "+gitRepo+" /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone "+gitRepo+" /tmp/chef-solo/;"));
-                statements.add(exec("sudo git clone "+gitRepo+" /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
+                statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
                 statements.add(exec("sudo apt-get install -f -q -y libmysqlclient-dev;"));
 
                 break;
@@ -257,7 +273,7 @@ public class ScriptBuilder implements Statement {
                 createNodeInstall(statements);
                 statements.add(exec("sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
                 break;
-            case JHDFS:
+            case HOPS:
                 createNodeConfiguration(statements);
                 statements.add(exec("sudo chef-solo -c /etc/chef/solo.rb -j /etc/chef/chef.json"));
                 break;
@@ -330,7 +346,7 @@ public class ScriptBuilder implements Statement {
     }
 
     /*
-     * JSON generators for install list and config lists
+     * JSON generators for install list lists
      */
     private StringBuilder generateInstallJSON(List<String> installList) {
         //Start json
@@ -350,6 +366,10 @@ public class ScriptBuilder implements Statement {
         json.append("]}");
         return json;
     }
+    
+    /*
+     * JSON generator for configuration phase with recipes run list
+     */
 
     private StringBuilder generateConfigJSON(List<String> runlist) {
         //Start json
@@ -394,9 +414,9 @@ public class ScriptBuilder implements Statement {
         }
         json.append("]},");
         //Get the nodes private ip
-        //List<String> ips = new LinkedList(data.getPrivateAddresses());
         //add the ip in the json
         json.append("\"ip\":\"").append(ip).append("\",");
+        json.append("\"mysql_ip\":\"").append(mysql.get(0)).append("\",");
         //***
         json.append("\"data_memory\":\"120\",");
 
@@ -411,22 +431,46 @@ public class ScriptBuilder implements Statement {
         json.append("\"clients\":[");
         //Depending of the security group name of the demo we specify which collectd config to use
         Set<String> roleSet = new HashSet<String>(roles);
-        if (roleSet.contains("mysqld") // JIM: We can just have an empty clients list for mgm and ndb nodes    
-                //                || group.getSecurityGroup().equals("mgm")
-                //                || group.getSecurityGroup().equals("ndb")
-                ) {
-            json.append("\"mysqld\"");
-        }
-        if (roleSet.contains("datanode")) {
-            json.append("\"dn\"");
-        }
-        if (roleSet.contains("namenode")) {
-            json.append("\"nn\"");
+        //filter and keep what we want to look for
+        roleSet.retainAll(filterClients);
+        Iterator<String> iterRoles = roleSet.iterator();
+        while (iterRoles.hasNext()) {
+
+            String role = iterRoles.next();
+
+            if (role.equals("mysqld") // JIM: We can just have an empty clients list for mgm and ndb nodes    
+                    //                || group.getSecurityGroup().equals("mgm")
+                    //                || group.getSecurityGroup().equals("ndb")
+                    ) {
+                json.append("\"mysqld\"");
+
+            }
+            if (role.equals("datanode")) {
+                json.append("\"dn\"");
+
+            }
+            if (role.equals("namenode")) {
+                json.append("\"nn\"");
+
+            }
+            if (iterRoles.hasNext()) {
+                json.append(",");
+            }
         }
         json.append("]},");
-        //Generate kthfs fragment
-        //server ip of the dashboard
-        json.append("\"kthfs\":{\"server_ip\":\"").append(privateIP).append("\",");
+        //Where the hell is this??
+        json.append("\"hopsagent\":{\"server\":\"").append(privateIP).append(":8080\"},");
+        //need to add support for agent_user and agent_pass
+
+        json.append("\"mysql\":{\"bind_address\":\"").append(mysql.get(0)).append("\"},");
+        
+        /*Generate hops fragment
+         /*server ip of the dashboard
+         */
+        json.append("\"hops\":{\"server\":\"").append(privateIP).append(":8080").append("\",");
+        //rest url
+        //json.append("\"rest_url\":\"").append("http://").append(privateIP)
+           //     .append("/kthfs-dashboard").append("\",");
         //mgm ip
         //TODO ADD SUPPORT FOR MULTIPLE MGMS
         json.append("\"ndb_connectstring\":\"").append(mgms.get(0)).append("\",");
@@ -435,6 +479,7 @@ public class ScriptBuilder implements Statement {
         json.append("\"cluster\":\"").append(clusterName).append("\",");
         json.append("\"hostid\":\"").append(nodeId).append("\",");
 
+        roleSet = new HashSet<String>(roles);
         if (roleSet.contains("datanode") || roleSet.contains("namenode")) {
             json.append("\"service\":\"").append("KTHFS").append("\",");
         }
@@ -455,6 +500,7 @@ public class ScriptBuilder implements Statement {
         //My own ip
         json.append("\"ip\":\"").append(ip).append("\"");
         json.append("},");
+        
         //Recipe runlist append in the json
         json.append("\"run_list\":[");
         for (int i = 0; i < runlist.size(); i++) {
@@ -476,62 +522,72 @@ public class ScriptBuilder implements Statement {
         RunListBuilder builder = new RunListBuilder();
         builder.addRecipe("ndb::install");
         builder.addRecipe("java");
-        builder.addRecipe("kthfs::install");
+       // builder.addRecipe("hops::install");
         return builder.build();
     }
 
     private List<String> createRunList() {
         RunListBuilder builder = new RunListBuilder();
-        // builder.addRecipe("kthfsagent");
-        builder.addRecipe("kthfsagent");
+        builder.addRecipe("python::package");
+        builder.addRecipe("java");
+        builder.addRecipe("hopsagent");
         boolean collectdAdded = false;
+
         //Look at the roles, if it matches add the recipes for that role
         for (String role : roles) {
             if (role.equals("ndb")) {
-
                 builder.addRecipe("ndb::ndbd");
-                builder.addRecipe("ndb::ndbd-kthfs");
+                builder.addRecipe("ndb::ndbd-hops");
                 collectdAdded = true;
             }
             if (role.equals("mysqld")) {
-
                 builder.addRecipe("ndb::mysqld");
-                builder.addRecipe("ndb::mysqld-kthfs");
+                builder.addRecipe("ndb::mysqld-hops");
                 collectdAdded = true;
             }
             if (role.equals("mgm")) {
-
                 builder.addRecipe("ndb::mgmd");
-                builder.addRecipe("ndb::mgmd-kthfs");
+                builder.addRecipe("ndb::mgmd-hops");
                 collectdAdded = true;
             }
             if (role.equals("memcached")) {
                 builder.addRecipe("ndb::memcached");
-                builder.addRecipe("ndb::memcached-kthfs");
+                builder.addRecipe("ndb::memcached-hops");
             }
 
             //This are for the Hadoop nodes
             if (role.equals("namenode")) {
-                builder.addRecipe("java");
-                builder.addRecipe("kthfs::namenode");
+                //builder.addRecipe("java");
+                builder.addRecipe("hops::namenode");
                 collectdAdded = true;
             }
             if (role.equals("datanode")) {
-                builder.addRecipe("java");
-                builder.addRecipe("kthfs::datanode");
+                //builder.addRecipe("java");
+                builder.addRecipe("hops::datanode");
                 collectdAdded = true;
             }
-            if (collectdAdded) {
-                //builder.addRecipe("kthfsagent");
-                builder.addRecipe("collect::attr-driven");
+            if (role.equals("resourcemanager")) {
+                //builder.addRecipe("java");
+                builder.addRecipe("hops::resourcemanager");
+                collectdAdded = true;
             }
-            // We always need to restart the kthfsagent after we have
-            // updated its list of services
-            builder.addRecipe("java::openjdk");
-            builder.addRecipe("kthfsagent::restart");
+            if (role.equals("nodemanager")) {
+                // builder.addRecipe("java");
+                builder.addRecipe("hops::nodemanager");
+            }
+            if (role.equals("spark")) {
+                builder.addRecipe("spark");
+            }
 
         }
-
+        // We always need to restart the kthfsagent after we have
+        // updated its list of services
+        if (collectdAdded) {
+            //builder.addRecipe("kthfsagent");
+            builder.addRecipe("collect::attr-driven");
+        }
+        //builder.addRecipe("java::openjdk");
+        builder.addRecipe("hopsagent::restart");
         return builder.build();
 
 
