@@ -253,7 +253,7 @@ public class ScriptBuilder implements Statement {
 
                 statements.add(exec("sudo mkdir /etc/chef;"));
                 statements.add(exec("cd /etc/chef;"));
-                statements.add(exec("sudo wget http://lucan.sics.se/kthfs/solo.rb;"));
+                statements.add(exec("sudo wget http://snurran.sics.se/hops/solo.rb;"));
                 //Setup and fetch git recipes
                 statements.add(exec("git config --global user.name \"" + gitName + "\";"));
                 //statements.add(exec("git config --global user.email \"jdowling@sics.se\";"));
