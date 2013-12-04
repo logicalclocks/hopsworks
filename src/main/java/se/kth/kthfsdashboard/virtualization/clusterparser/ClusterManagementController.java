@@ -51,6 +51,7 @@ public class ClusterManagementController implements Serializable {
     private boolean renderEC2;
     private ClusterOptions options = new ClusterOptions();
     private String clusterType = "";
+    private String editType = "";
     /**
      * Variables for defining options of the cluster during the editing process
      * in the tables
@@ -106,6 +107,14 @@ public class ClusterManagementController implements Serializable {
 
     public void setFile(UploadedFile file) {
         this.file = file;
+    }
+
+    public String getEditType() {
+        return editType;
+    }
+
+    public void setEditType(String editType) {
+        this.editType = editType;
     }
 
     public String getClusterType() {
@@ -243,7 +252,7 @@ public class ClusterManagementController implements Serializable {
     public void setEditorYamlController(EditorYamlController editorYamlController) {
         this.editorYamlController = editorYamlController;
     }
-    
+
 
     /*
      * Event Handlers
@@ -429,16 +438,43 @@ public class ClusterManagementController implements Serializable {
 //
 //        return "createClusterWizard";
 //    }
-
-    public String editSelection(){
-        if(selectedClusters.length != 0){
-            edit=selectedClusters[0];
+    public String editSelection() {
+        if (selectedClusters.length != 0 && editType.equals("editor")) {
+            edit = selectedClusters[0];
             editorYamlController.setEntity(edit);
             editorYamlController.init();
             return "editClusterEditor";
+        } else if (selectedClusters.length != 0 && editType.equals("wizard")) {
+            edit = selectedClusters[0];
+            clusterType = edit.getClusterType();
+            Object document = yaml.load(edit.getYamlContent());
+            if (document != null && document instanceof Cluster) {
+
+                cluster = (Cluster) document;
+                ports = new ArrayList<Integer>(cluster.getGlobal().getAuthorizePorts());
+                groups = new ArrayList<NodeGroup>(cluster.getNodes());
+                groupsModel = new NodeGroupDataModel(groups);
+
+                zones = options.getEc2availabilityZones().get(cluster.getProvider().getRegion());
+                if (cluster.getProvider().getName().equals("aws-ec2")) {
+                    renderEC2 = true;
+                }
+            } else if (document != null && document instanceof Baremetal) {
+                //probably need to check references like in the cluster case
+                baremetalCluster = (Baremetal) document;
+                baremetalGroups = new ArrayList<BaremetalGroup>(baremetalCluster.getNodes());
+                baremetalGroupsModel = new BaremetalGroupDataModel(baremetalGroups);
+
+            } else {
+                cluster = null;
+            }
+            return "createClusterWizard";
+        } else {
+            System.out.println("hello");
+            return "";
         }
-        return "";
     }
+
     public String loadSelection() {
         if (selectedClusters.length != 0) {
             ClusterEntity selection = selectedClusters[0];

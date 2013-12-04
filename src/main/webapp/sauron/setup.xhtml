@@ -12,7 +12,7 @@
     <ui:composition template="layout.xhtml">
 
         <ui:define name="title">
-            #{settingsController.name} - Setup Credentials
+            #{settingsController.name} - Credentials
         </ui:define>
         <ui:define name="css"/>
         <ui:define name="scripts"/>
@@ -29,24 +29,16 @@
             </h:form>
             <!--Navigation Bar - End-->
             <div id="content" align="center">
-                <div class="services-header">Setup Credentials:</div>
+                <div class="services-header">Credentials:</div>
 
 
                 <p:spacer width="1" height="8" />
-                <ui:include src="/sauron/template/computeCredentialsForm.xhtml"/></div>
+                <!--<ui:include src="/sauron/template/computeCredentialsForm.xhtml"/>-->
+                <ui:include src="/sauron/template/credentials.xhtml"/>
+            </div>
 
 
         </ui:define>
-
-        <!--        <ui:define name="form">
-                    <div id="content" align="center">
-                        <div class="services-header">Setup Credentials:</div>
-        
-        
-                    <p:spacer width="1" height="8" />
-                    <ui:include src="/sauron/template/computeCredentialsForm.xhtml"/></div>
-                </ui:define>-->
-
     </ui:composition>
 </html>
 
