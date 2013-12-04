@@ -2,18 +2,26 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.kthfsdashboard.user;
+package se.kth.kthfsdashboard.provision;
 
+import java.io.Serializable;
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 
 /**
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-public class PaaSCredentials {
+@Entity
+@NamedQueries({
+    @NamedQuery(name = "PaaSCredentials.findAll", query = "SELECT c FROM PaaSCredentials c")
+})
+public class PaaSCredentials implements Serializable {
     
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
