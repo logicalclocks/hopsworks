@@ -33,35 +33,35 @@ public class Alert implements Serializable {
    @Id
    @GeneratedValue(strategy = GenerationType.SEQUENCE)
    private Long id;
-   @Column(nullable = false, length = 512)
+   @Column(nullable = false, length = 1024)
    private String message;
-   @Column(length = 128)
+   @Column(length = 256)
    private String hostId;
    @Temporal(javax.persistence.TemporalType.TIMESTAMP)
    private Date alertTime;
    private long agentTime;
    private Provider provider;   
-   @Column(length = 32)
+   @Column(length = 128)
    private String plugin;
-   @Column(length = 32)
+   @Column(length = 128)
    private String pluginInstance;
-   @Column(length = 32)
+   @Column(length = 128)
    private String type;
-   @Column(length = 32)
+   @Column(length = 128)
    private String typeInstance;
 
-   @Column(length = 32)
+   @Column(length = 128)
    private String dataSource;   
    
-   @Column(length = 16)
+   @Column(length = 32)
    private String CurrentValue;
-   @Column(length = 16)
+   @Column(length = 32)
    private String WarningMin;
-   @Column(length = 16)
+   @Column(length = 32)
    private String WarningMax;   
-   @Column(length = 16)
+   @Column(length = 32)
    private String FailureMin;
-   @Column(length = 16)
+   @Column(length = 32)
    private String FailureMax; 
    
    private Severity severity;
