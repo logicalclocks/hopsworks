@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core">
+    <h:head>
+        <title>BiobankCloud - Job History</title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+
+    </h:head>
+    <h:body>
+        <h:form class="stylelayout" id="formToolbar"> 
+
+            <p:toolbar styleClass="MainToolbar">  
+                <p:toolbarGroup align="left">  
+                    <p:commandLink value="BiobankCloud" action="wfhome"/>
+                </p:toolbarGroup> 
+
+                <p:toolbarGroup align="left">              
+                    <p:commandButton value="Workflows" action="manageWorkflows" />
+                    <p:commandButton value="Jobs" action="manageJobs"/>
+                </p:toolbarGroup>  
+
+                <p:toolbarGroup align="right">  
+                    <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
+                    <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
+                        <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" />  
+                        <p:separator/>
+                        <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
+                    </p:menu>  
+                </p:toolbarGroup>  
+
+            </p:toolbar> 
+
+        </h:form>
+
+        <p:spacer height="20px"/>
+        <div id="stats" style="margin-left: 100px; margin-right: 100px">
+            <h:form>
+                <p:dataTable >
+                    <f:facet name="statistics">
+                        Statistics
+                    </f:facet>
+                    <p:column headerText="Jobs">
+                        avg. Job
+                    </p:column>
+                    <p:column headerText="Duration">
+                        avg.Duration
+                    </p:column>
+                    <p:column headerText="Oldest">
+                        Oldest
+                    </p:column>
+                    <p:column headerText="Latest">
+                        Latest
+                    </p:column>
+
+                </p:dataTable>
+            </h:form>
+        </div>
+        <p:spacer height="20px"/>
+        <div id="table" style="margin-left: 100px; margin-right: 100px">
+            <h:form id="jobForm">
+                <p:dataTable id="jobsWithFilterOptions" var="job" value="#{jobTableController.jobs}" 
+                             rowKey="#{job.uniqueID}" selection="#{jobTableController.selectedJob}" 
+                             selectionMode="single" >
+                    <p:ajax event="rowSelect" update=":jobForm:display" oncomplete="jobDialog.show()" />  
+                    <p:column headerText="UniqueID" >
+                        <h:outputText value="#{job.uniqueID}" />
+                    </p:column>
+                    <p:column headerText="Name" >
+                        <h:outputText value="#{job.name}" />
+                    </p:column>
+                    <p:column headerText="ExecutedBy" filterBy="#{job.executedBy}" filterOptions="#{jobTableController.jobNamesAsOptions}" filterPosition="top">
+                        <h:outputText value="#{job.executedBy}" />
+                    </p:column>
+                    <p:column headerText="Date Run" sortBy="#{job.dateRun}" >
+                        <h:outputText value="#{job.dateRun}" />
+                    </p:column>
+                    <p:column headerText="Time lapse (s)" >
+                        <h:outputText value="#{job.completionTime}" />
+                    </p:column>
+
+                </p:dataTable>
+                <p:dialog header="Job Detail" widgetVar="jobDialog" resizable="false" 
+                          showEffect="explode" hideEffect="explode" >
+                    <p:lineChart id="stacked" value="#{chartBean.categoryModel}" legendPosition="ne" stacked="true" fill="true"
+                                 title="Stacked and Filled" style="height:300px; width:500px" xaxisLabel="Year" yaxisLabel="Births" />
+                    <p:spacer height="20px"/>
+                    <p:panelGrid id="display" columns="5" >
+
+                        <p:column headerText="UniqueID" >
+                            <h:outputText value="#{jobTableController.selectedJob.uniqueID}" />
+                        </p:column>
+
+                        <p:column headerText="Name" >
+                            <h:outputText value="#{jobTableController.selectedJob.name}"/>
+                        </p:column>
+
+                        <p:column headerText="ExecutedBy" >
+                            <h:outputText value="#{jobTableController.selectedJob.executedBy}" />
+                        </p:column>
+
+                        <p:column headerText="Date Run" >
+                            <h:outputText value="#{jobTableController.selectedJob.dateRun}" />
+                        </p:column>
+                        <p:column headerText="Time lapse (s)">
+                            <h:outputText value="#{jobTableController.selectedJob.completionTime}"/>
+                        </p:column>
+                    </p:panelGrid>
+                </p:dialog>
+            </h:form>
+        </div>
+    </h:body>
+</html>
+
