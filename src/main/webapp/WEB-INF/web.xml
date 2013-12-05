@@ -56,10 +56,10 @@
         <role-name>ADMIN</role-name>
     </security-role>
     <security-role>
-        <role-name>USER</role-name>
+        <role-name>AGENT</role-name>
     </security-role>
     <security-role>
-        <role-name>AGENT</role-name>
+        <role-name>BBC_ADMIN</role-name>
     </security-role>
     <security-role>
         <role-name>BBC_RESEARCHER</role-name>
@@ -71,7 +71,6 @@
         </web-resource-collection>
         <auth-constraint>
             <role-name>ADMIN</role-name>
-            <role-name>USER</role-name>
         </auth-constraint>
         <!-- we always want https! -->
         <!--        <user-data-constraint>
@@ -95,11 +94,21 @@
     </security-constraint>
     <security-constraint>
         <web-resource-collection>
-            <web-resource-name>BiobankCloud Researcher Private pages</web-resource-name>
+            <web-resource-name>BiobankCloud Admin Researcher Private pages</web-resource-name>
             <url-pattern>/bbc/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
+            <role-name>BBC_ADMIN</role-name>
+        </auth-constraint>
+    </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>BiobankCloud Researcher Private pages</web-resource-name>
+            <url-pattern>/wf/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
             <role-name>BBC_RESEARCHER</role-name>
+            <role-name>BBC_ADMIN</role-name>
             <role-name>ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
