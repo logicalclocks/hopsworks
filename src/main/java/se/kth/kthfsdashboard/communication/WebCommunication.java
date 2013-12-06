@@ -31,8 +31,8 @@ public class WebCommunication {
 
     private static boolean DISABLE_CERTIFICATE_VALIDATION = true;
     // TODO: We should get a unique agent username/password from the DB - one for each agent.
-    private static String USERNAME = "hopsagent@sics.se";
-    private static String PASSWORD = "hopsagent";
+    private static String USERNAME = "hopagent@sics.se";
+    private static String PASSWORD = "hopagent";
     private static String PROTOCOL = "https";
     private static int PORT = 8090;
     private static String NOT_AVAILABLE = "Not available.";
