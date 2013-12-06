@@ -9,5 +9,5 @@ package se.kth.kthfsdashboard.user;
  * @author Jim Dowling<jdowling@sics.se>
  */
 public enum Group {
-    ADMIN, USER, AGENT, BBC_RESEARCHER;
+    ADMIN, USER, AGENT, BBC_RESEARCHER,BBC_ADMIN;
 }

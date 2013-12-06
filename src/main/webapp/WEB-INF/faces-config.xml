@@ -116,6 +116,21 @@
             <to-view-id>/sauron/createClusterWizard.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+        <navigation-case>
+            <from-outcome>lims</from-outcome>
+            <to-view-id>/bbc/index.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>clusters</from-outcome>
+            <to-view-id>/sauron/index.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>workflows</from-outcome>
+            <to-view-id>/wf/index.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
     </navigation-rule>    
 
    

@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.ServletException;
@@ -35,6 +36,8 @@ public class AuthBackingBean {
     private String username;
     private String password;
     private Username user; // The JPA entity.
+    @ManagedProperty(value="#{bbcViewController}")
+    private BbcViewController views;
     @EJB
     private UserFacade userService;
 
@@ -94,17 +97,18 @@ public class AuthBackingBean {
         Principal principal = request.getUserPrincipal();
         log.log(Level.INFO, "Logging IN Authenticated user: {0}", principal.getName());
 
-
+        views.setUser(user);
 // TODO Fix this: Role is always ADMIN
         
-        if (request.isUserInRole("ADMIN")) {
+//        if (request.isUserInRole("ADMIN")) {
+////            return "/sauron/clusters.xml?faces-redirect=true";
+//            return "/bbc/index.xml?faces-redirect=true";            
+////        } else if (request.isUserInRole("BBC_RESEARCHER")) {
+////            return "/bbc/index.xml?faces-redirect=true";
+//        } else {
 //            return "/sauron/clusters.xml?faces-redirect=true";
-            return "/bbc/index.xml?faces-redirect=true";            
-//        } else if (request.isUserInRole("BBC_RESEARCHER")) {
-//            return "/bbc/index.xml?faces-redirect=true";
-        } else {
-            return "/sauron/clusters.xml?faces-redirect=true";
-        }
+//        }
+        return "/bbc-views.xhtml";
     }
 
     public String logout() {
@@ -148,4 +152,13 @@ public class AuthBackingBean {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public BbcViewController getViews() {
+        return views;
+    }
+
+    public void setViews(BbcViewController views) {
+        this.views = views;
+    }
+    
 }
