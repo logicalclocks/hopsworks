@@ -36,11 +36,11 @@ public class TerminalController {
 
     static {
         welcomeMessage = ("Welcome to \n"
-                + "       __  ______  ____  _____  \n"
-                + "      / / / / __ \\/ __ \\/ ___/\n"
-                + "     / /_/ / / / / /_/ /\\__ \\ \n"
-                + "    / __  / /_/ / ____/___/ /    \n"
-                + "   /_/ /_/\\____/_/    /____/    \n"
+                + "       __  ______  ______  \n"
+                + "      / / / / __ \\/ __ /\n"
+                + "     / /_/ / / / / /_/ /\n"
+                + "    / __  / /_/ / ____/   \n"
+                + "   /_/ /_/\\____/_/       \n"
                 + "                                 \n")
                 .replace(" ", "&nbsp;")
                 .replace("\\", "&#92;")
@@ -86,14 +86,14 @@ public class TerminalController {
     public String handleCommand(String command, String[] params) {
 //      TODO: Check special characters like ";" to avoid injection
         String roleName;
-        if (service.equalsIgnoreCase(ServiceType.HOPS.toString())) {
+        if (service.equalsIgnoreCase(ServiceType.HDFS.toString())) {
             if (command.equals("hdfs")) {
                 roleName = RoleType.datanode.toString();
             } else {
                 return "Unknown command. Accepted commands are: hdfs";
             }
 
-        } else if (service.equalsIgnoreCase(ServiceType.MySQLCluster.toString())) {
+        } else if (service.equalsIgnoreCase(ServiceType.NDB.toString())) {
             if (command.equals("mysql")) {
                 roleName = RoleType.mysqld.toString();
             } else if (command.equals("ndb_mgm")) {

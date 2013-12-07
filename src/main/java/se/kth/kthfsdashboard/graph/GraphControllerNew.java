@@ -190,13 +190,13 @@ public class GraphControllerNew implements Serializable {
     public void loadGroupsAndPlugins() {
         plugins = new ArrayList<String>();
         groups = graphEjb.findGroups(graph.getTarget());
-        if (graph.ifTargetsService(ServiceType.HOPS.toString())
+        if (graph.ifTargetsService(ServiceType.HDFS.toString())
                 || graph.ifTargetsService(ServiceType.YARN.toString())
                 || graph.ifTargetsService(ServiceType.Spark.toString())
                 || graph.ifTargetsService(ServiceType.MapReduce.toString())) {
             plugins.add(CollectdPluginType.GenericJMX.toString());
 
-        } else if (graph.ifTargetsRole(ServiceType.MySQLCluster.toString(), RoleType.ndb.toString())) {
+        } else if (graph.ifTargetsRole(ServiceType.NDB.toString(), RoleType.ndb.toString())) {
             plugins.add(CollectdPluginType.dbi.toString());
         } else if (graph.ifTargets("HOST")) {
             plugins.addAll(CollectdConfigUtils.loadPluginsFromConfigFile(COLLECTD_PLUGIN_FILE));
@@ -219,7 +219,7 @@ public class GraphControllerNew implements Serializable {
         graph.clearCharts();
         pluginInstances = new ArrayList<String>();
         if (!plugins.isEmpty() && isDbi()
-                && graph.ifTargetsRole(ServiceType.MySQLCluster.toString(), RoleType.ndb.toString())) {
+                && graph.ifTargetsRole(ServiceType.NDB.toString(), RoleType.ndb.toString())) {
             for (String instance : dbiPluginInstances.keySet()) {
                 pluginInstances.add(instance);
             }

@@ -69,8 +69,8 @@ public class ServiceStatusController {
     }
 
     public boolean renderTerminalLink() {
-        return service.equalsIgnoreCase(ServiceType.HOPS.toString())
-                || service.equalsIgnoreCase(ServiceType.MySQLCluster.toString())
+        return service.equalsIgnoreCase(ServiceType.HDFS.toString())
+                || service.equalsIgnoreCase(ServiceType.NDB.toString())
                 || service.equalsIgnoreCase(ServiceType.Spark.toString());
     }
     
@@ -79,15 +79,15 @@ public class ServiceStatusController {
     }    
 
     public boolean renderNdbInfoTable() {
-        return service.equals(ServiceType.MySQLCluster.toString());
+        return service.equals(ServiceType.NDB.toString());
     }
 
     public boolean renderLog() {
-        return service.equals(ServiceType.MySQLCluster.toString());
+        return service.equals(ServiceType.NDB.toString());
     }
 
     public boolean renderConfiguration() {
-        return service.equals(ServiceType.MySQLCluster.toString());
+        return service.equals(ServiceType.NDB.toString());
     }
 
     private void loadRoles() {
