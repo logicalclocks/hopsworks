@@ -89,6 +89,17 @@
 
                             <p:toolbarGroup align="right">  
                                 <p:menuButton value="Actions">  
+                                    <p:menuitem id="restart_role" value="Restart" action="#{hostController.doCommand}" 
+                                                process="@this"
+                                                disabled="#{roleController.disableStart()}" ajax ="true" 
+                                                update=":form_running:commandsinfo"
+                                                oncomplete="dlgAction.show()">
+                                        <f:param name="hostid" value="#{roleController.hostId}" />
+                                        <f:param name="cluster" value="#{roleController.cluster}" />
+                                        <f:param name="role" value="#{roleController.role}" />
+                                        <f:param name="service" value="#{roleController.service}"/>                                  
+                                        <f:param name="command" value="restart" />
+                                    </p:menuitem>
                                     <p:menuitem id="start_role" value="Start" action="#{hostController.doCommand}" process="@this"
                                                 disabled="#{roleController.disableStart()}" ajax ="true" update=":form_running:commandsinfo"
                                                 oncomplete="dlgAction.show()">
