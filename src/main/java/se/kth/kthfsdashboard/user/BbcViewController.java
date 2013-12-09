@@ -50,7 +50,9 @@ public class BbcViewController implements Serializable{
     }
     
     public boolean renderWorfkflows(){
-        return user.getGroups().contains(Group.ADMIN) ||user.getGroups().contains(Group.BBC_RESEARCHER);
+        return user.getGroups().contains(Group.ADMIN) 
+                ||user.getGroups().contains(Group.BBC_RESEARCHER)
+                ||user.getGroups().contains(Group.BBC_ADMIN);
     }
     
     public boolean renderClusters(){
