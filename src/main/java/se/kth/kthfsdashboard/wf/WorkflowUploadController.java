@@ -10,7 +10,6 @@ import java.util.Date;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
-import javax.faces.bean.ViewScoped;
 import org.primefaces.model.UploadedFile;
 
 /**
@@ -51,8 +50,9 @@ public class WorkflowUploadController implements Serializable{
         this.owner = owner;
     }
     
-    public void addNewWorkflow() {
+    public String addNewWorkflow() {
         try {
+            System.out.println(file!=null);
             byte[] data = file.getContents();
             String content = new String(data, "UTF-8");
             Workflow created = new Workflow(owner, file.getFileName(), new Date().toString(), tags, content);
@@ -60,5 +60,6 @@ public class WorkflowUploadController implements Serializable{
         } catch (UnsupportedEncodingException e) {
             System.out.println("Unsupported format");
         }
+        return "manageWorkflows";
     }
 }

@@ -11,6 +11,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.model.SelectItem;
 import se.kth.kthfsdashboard.job.JobDispatcher;
@@ -21,7 +22,7 @@ import se.kth.kthfsdashboard.job.JobHistoryFacade;
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @ManagedBean
-@SessionScoped
+@RequestScoped
 public class WorkflowTableController implements Serializable {
     //@ManagedProperty(value = "#{dispatcher}")
 
@@ -32,8 +33,6 @@ public class WorkflowTableController implements Serializable {
     private JobDispatcher dispatcher;
     private List<Workflow> workflows;
     private Workflow selectedWorkflow;
-    private Workflow[] selectedWorkflows;
-    private List<Workflow> selectedWorkflowsList;
     private SelectItem[] workflowNamesOptions;
 
     public WorkflowTableController() {
@@ -86,5 +85,10 @@ public class WorkflowTableController implements Serializable {
             System.out.println("null");
         }
         dispatcher.submitWorkflowTask(selectedWorkflow);
+    }
+    
+    public String removeSelectedWorkflow(){
+        workflowFacade.remove(selectedWorkflow);
+        return "manageWorkflows";
     }
 }

@@ -4,6 +4,14 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:p="http://primefaces.org/ui"
       xmlns:ui="http://java.sun.com/jsf/facelets">
+    <script type="text/javascript">
+        function editLastDatatableRow(){
+
+            jQuery('.ui-datatable-data tr').last().find('span.ui-icon-pencil').each(function(){
+                jQuery(this).click()
+            });
+        }
+    </script>
     <h:head>
         <title>BiobankCloud - Workflow Table</title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
@@ -37,7 +45,7 @@
         </h:form>
         <p:spacer height="20px"/>
         <div id="table" style="margin-left: 100px; margin-right: 100px">
-            <h:form>
+            <h:form enctype="multipart/form-data">
                 <h:panelGrid columns="2" style="width:100%">
 
                     <p:commandButton value="Add Workflow" icon="ui-icon-plus" update="addWorkflowDialog"
@@ -63,6 +71,8 @@
                     </p:column>
 
                 </p:dataTable>
+                <p:commandButton value="Delete Workflow" oncomplete="removeDialog.show()"/>
+
                 <p:dialog id="addWorkflowDialog" header="Add New Workflow" widgetVar="workflowDialog" resizable="false" 
                           showEffect="explode" hideEffect="explode" >
                     <h:panelGrid columns="2">
@@ -75,8 +85,18 @@
                         <h:outputText value="Tags:"/>
                         <h:inputTextarea value="#{workflowUploadController.tags}" rows="3" />
                     </h:panelGrid>
-                    <p:commandButton value="submit workflow" action="#{workflowUploadController.addNewWorkflow()}"
+                    <p:commandButton value="submit workflow" 
+                                     action="#{workflowUploadController.addNewWorkflow}" ajax="false"
                                      oncomplete="workflowDialog.close()" update="workflowsWithFilterOptions" />
+                </p:dialog>
+                <p:dialog header="Remove Workflow" widgetVar="removeDialog" resizable="false"
+                          id="wfRemoveDig"  
+                          showEffect="fade" hideEffect="explode" modal="true">  
+                    <h:outputText id="deletemsg" value="Are you sure you want to delete?" />
+                    <p:commandButton id="acceptDelete" value="Confirm"  
+                                     action="#{workflowTableController.removeSelectedWorkflow()}"
+                                     oncomplete="editLastDataTableRow removeDialog.close()"
+                                     />
                 </p:dialog>
             </h:form>
         </div>
