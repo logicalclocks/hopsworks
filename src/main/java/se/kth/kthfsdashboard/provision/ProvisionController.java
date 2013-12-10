@@ -41,10 +41,10 @@ public class ProvisionController implements Serializable {
     private DeploymentProgressFacade deploymentFacade;
     @EJB
     private HostEJB hostEJB;
+    @EJB
+    private CredentialsFacade credentialsEJB;
     @ManagedProperty(value = "#{messageController}")
     private MessageController messages;
-    @ManagedProperty(value = "#{computeCredentialsMB}")
-    private ComputeCredentialsMB computeCredentialsMB;
     @ManagedProperty(value = "#{clusterManagementController}")
     private ClusterManagementController clusterController;
     private Provision provisioner;
@@ -54,6 +54,7 @@ public class ProvisionController implements Serializable {
     private String privateIP;
     private String publicKey;
     private String privateKey;
+    private boolean isBaremetal = false;
     //If Openstack selected, endpoint for keystone API
     private String keystoneEndpoint;
     private ComputeService service;
@@ -63,14 +64,6 @@ public class ProvisionController implements Serializable {
      * Creates a new instance of ProvisionController
      */
     public ProvisionController() {
-    }
-
-    public ComputeCredentialsMB getComputeCredentialsMB() {
-        return computeCredentialsMB;
-    }
-
-    public void setComputeCredentialsMB(ComputeCredentialsMB computeCredentialsMB) {
-        this.computeCredentialsMB = computeCredentialsMB;
     }
 
     public ClusterManagementController getClusterController() {
@@ -132,12 +125,10 @@ public class ProvisionController implements Serializable {
     public String getPrivateKey() {
         return privateKey;
     }
-    
-    
+
     /*
      * Command to launch the instance
      */
-
     public void launchCluster() {
         setCredentials();
         launchProvisioner();
@@ -147,7 +138,7 @@ public class ProvisionController implements Serializable {
     @Asynchronous
     public void launchProvisioner() {
         boolean installPhase;
-        if (!computeCredentialsMB.isBaremetal()) {
+        if (isBaremetal) {
             provisioner = new BaremetalClusterProvision(this);
             installPhase = clusterController.getBaremetalCluster().isInstallPhase();
 
@@ -177,28 +168,26 @@ public class ProvisionController implements Serializable {
      * retrieves the information from the credentials page
      */
     private void setCredentials() {
-        Provider check = Provider.fromString(clusterController.getCluster().getProvider().getName());
-        if (!computeCredentialsMB.isAwsec2()
-                && Provider.AWS_EC2
-                .equals(check)) {
+        PaaSCredentials credentials = credentialsEJB.find();
+        Provider check = Provider.fromString(credentials.getProvider());
+        if (Provider.AWS_EC2.equals(check)) {
             provider = Provider.AWS_EC2.toString();
-            id = computeCredentialsMB.getAwsec2Id();
-            key = computeCredentialsMB.getAwsec2Key();
-        } else if (!computeCredentialsMB.isOpenstack()
-                && Provider.OPENSTACK
-                .equals(check)) {
+            id = credentials.getAccountId();
+            key = credentials.getAccessKey();
+        } else if (Provider.OPENSTACK.equals(check)) {
             provider = Provider.OPENSTACK.toString();
-            id = computeCredentialsMB.getOpenstackId();
-            key = computeCredentialsMB.getOpenstackKey();
-            keystoneEndpoint = computeCredentialsMB.getOpenstackKeystone();
-        } else if (!computeCredentialsMB.isBaremetal()) {
-            privateKey = computeCredentialsMB.getPrivateKey();
+            id = credentials.getAccountId();
+            key = credentials.getAccessKey();
+            keystoneEndpoint = credentials.getKeystoneURL();
+        } else if (Provider.BAREMETAL.equals(check)) {
+            privateKey = credentials.getPrivateKey();
+            isBaremetal=true;
         }
 
         //Setup the private IP for the nodes to know where is the dashboard
         //Add public key for managing nodes using ssh.
-        privateIP = computeCredentialsMB.getPrivateIP();
-        publicKey = computeCredentialsMB.getPublicKey();
+        privateIP = credentials.getDashboardIP();
+        publicKey = credentials.getPublicKey();
 
     }
 

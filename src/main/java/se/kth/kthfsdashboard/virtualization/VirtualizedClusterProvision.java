@@ -143,7 +143,7 @@ public final class VirtualizedClusterProvision implements Provision {
         List<Integer> globalPorts = new LinkedList<Integer>(cluster.getGlobal().getAuthorizePorts());
 
         //All need the kthfsagent ports opened, SSH and web ports
-        globalPorts.addAll(Ints.asList(commonTCP.get("kthfsagent")));
+        globalPorts.addAll(Ints.asList(commonTCP.get("hopagent")));
         globalPorts.addAll(Ints.asList(commonTCP.get("ssh")));
         globalPorts.addAll(Ints.asList(commonTCP.get("http&https")));
 

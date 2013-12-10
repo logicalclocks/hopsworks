@@ -59,7 +59,7 @@ public class RoleMapPorts {
                 roleMappings.put("mysqld", mysqldUDP);
                 break;
             case COMMON:
-                roleMappings.put("kthfsagent", kthfsagent);
+                roleMappings.put("hopagent", kthfsagent);
                 roleMappings.put("ssh", ssh);
                 roleMappings.put("webServer", webserver);
                 roleMappings.put("chefClient", chefClient);

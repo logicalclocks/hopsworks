@@ -11,7 +11,8 @@ package se.kth.kthfsdashboard.provision;
 public enum Provider {
     AWS_EC2("aws-ec2"),
     OPENSTACK("openstack-nova"),
-    RACKSPACE("rackspace");
+    RACKSPACE("rackspace"),
+    BAREMETAL("baremetal");
     
     private final String text;
     

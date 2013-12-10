@@ -215,7 +215,7 @@ public class ScriptBuilder implements Statement {
         this.gitName = (gitName == null || gitName.equals("")) ? "Jim Dowling" : gitName;
         this.gitKey = gitKey; //To do the same
         this.gitRepo = (gitRepo == null || gitRepo.equals(""))
-                ? "https://ghetto.sics.se/jdowling/hops-chef.git" : gitRepo;
+                ? "https://github.com/hopstart/hop-chef.git" : gitRepo;
         filterClients.add("mysqld");
         filterClients.add("datanode");
         filterClients.add("namenode");
@@ -530,50 +530,50 @@ public class ScriptBuilder implements Statement {
         RunListBuilder builder = new RunListBuilder();
         builder.addRecipe("python::package");
         builder.addRecipe("java");
-        builder.addRecipe("hopsagent");
+        builder.addRecipe("hopagent");
         boolean collectdAdded = false;
 
         //Look at the roles, if it matches add the recipes for that role
         for (String role : roles) {
             if (role.equals("ndb")) {
                 builder.addRecipe("ndb::ndbd");
-                builder.addRecipe("ndb::ndbd-hops");
+                builder.addRecipe("ndb::ndbd-hop");
                 collectdAdded = true;
             }
             if (role.equals("mysqld")) {
                 builder.addRecipe("ndb::mysqld");
-                builder.addRecipe("ndb::mysqld-hops");
+                builder.addRecipe("ndb::mysqld-hop");
                 collectdAdded = true;
             }
             if (role.equals("mgm")) {
                 builder.addRecipe("ndb::mgmd");
-                builder.addRecipe("ndb::mgmd-hops");
+                builder.addRecipe("ndb::mgmd-hop");
                 collectdAdded = true;
             }
             if (role.equals("memcached")) {
                 builder.addRecipe("ndb::memcached");
-                builder.addRecipe("ndb::memcached-hops");
+                builder.addRecipe("ndb::memcached-hop");
             }
 
             //This are for the Hadoop nodes
             if (role.equals("namenode")) {
                 //builder.addRecipe("java");
-                builder.addRecipe("hops::namenode");
+                builder.addRecipe("hop::namenode");
                 collectdAdded = true;
             }
             if (role.equals("datanode")) {
                 //builder.addRecipe("java");
-                builder.addRecipe("hops::datanode");
+                builder.addRecipe("hop::datanode");
                 collectdAdded = true;
             }
             if (role.equals("resourcemanager")) {
                 //builder.addRecipe("java");
-                builder.addRecipe("hops::resourcemanager");
+                builder.addRecipe("hop::resourcemanager");
                 collectdAdded = true;
             }
             if (role.equals("nodemanager")) {
                 // builder.addRecipe("java");
-                builder.addRecipe("hops::nodemanager");
+                builder.addRecipe("hop::nodemanager");
             }
             if (role.equals("spark")) {
                 builder.addRecipe("spark");
@@ -587,7 +587,7 @@ public class ScriptBuilder implements Statement {
             builder.addRecipe("collect::attr-driven");
         }
         //builder.addRecipe("java::openjdk");
-        builder.addRecipe("hopsagent::restart");
+        builder.addRecipe("hopagent::restart");
         return builder.build();
 
 
