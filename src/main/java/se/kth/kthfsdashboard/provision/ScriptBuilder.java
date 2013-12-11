@@ -528,6 +528,7 @@ public class ScriptBuilder implements Statement {
 
     private List<String> createRunList() {
         RunListBuilder builder = new RunListBuilder();
+        builder.addRecipe("apt");
         builder.addRecipe("python::package");
         builder.addRecipe("java");
         builder.addRecipe("hopagent");
