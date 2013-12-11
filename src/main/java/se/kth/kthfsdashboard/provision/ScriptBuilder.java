@@ -243,17 +243,14 @@ public class ScriptBuilder implements Statement {
                 statements.add(exec("sudo apt-get install -f -y --force-yes make;"));
                 statements.add(exec("sudo apt-get install -f -y -qq --force-yes ruby1.9.1-full;"));
                 statements.add(exec("sudo apt-get install -f -y --force-yes git;"));
-                statements.add(InstallRubyGems.builder()
-                        .version("1.8.10")
-                        .build());
-//                statements.add(
-//                        InstallChefGems.builder()
-//                        .version("10.20.0").build());
-                statements.add(exec("sudo gem install chef -v '10.20.0' --no-rdoc"));
+                statements.add(exec("curl -L https://www.opscode.com/chef/install.sh | sudo bash"));
 
                 statements.add(exec("sudo mkdir /etc/chef;"));
                 statements.add(exec("cd /etc/chef;"));
-                statements.add(exec("sudo wget http://snurran.sics.se/hops/solo.rb;"));
+                List<String> soloLines = new ArrayList<String>();
+                soloLines.add("file_cache_path \"/tmp/chef-solo\"");
+                soloLines.add("cookbook_path \"/tmp/chef-solo/cookbooks\"");
+                statements.add(createOrOverwriteFile("/etc/chef/solo.rb",soloLines));
                 //Setup and fetch git recipes
                 statements.add(exec("git config --global user.name \"" + gitName + "\";"));
                 //statements.add(exec("git config --global user.email \"jdowling@sics.se\";"));
@@ -459,7 +456,7 @@ public class ScriptBuilder implements Statement {
         }
         json.append("]},");
         //Where the hell is this??
-        json.append("\"hopsagent\":{\"server\":\"").append(privateIP).append(":8080\"},");
+        json.append("\"hopagent\":{\"server\":\"").append(privateIP).append(":8080\"},");
         //need to add support for agent_user and agent_pass
 
         json.append("\"mysql\":{\"bind_address\":\"").append(mysql.get(0)).append("\"},");
@@ -467,7 +464,7 @@ public class ScriptBuilder implements Statement {
         /*Generate hops fragment
          /*server ip of the dashboard
          */
-        json.append("\"hops\":{\"server\":\"").append(privateIP).append(":8080").append("\",");
+        json.append("\"hop\":{\"server\":\"").append(privateIP).append(":8080").append("\",");
         //rest url
         //json.append("\"rest_url\":\"").append("http://").append(privateIP)
            //     .append("/kthfs-dashboard").append("\",");
