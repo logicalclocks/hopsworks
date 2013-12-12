@@ -5,7 +5,6 @@
 package se.kth.kthfsdashboard.job;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,7 +12,6 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
-import javax.faces.bean.SessionScoped;
 import javax.faces.model.SelectItem;
 
 /**
@@ -31,7 +29,6 @@ public class JobTableController implements Serializable {
     private Job[] selectedJobs;
     private List<Job> selectedJobsList;
     private SelectItem[] jobNamesOptions;
-    private Set<String> filter;
 
     public JobTableController() {
     }
@@ -40,13 +37,9 @@ public class JobTableController implements Serializable {
     public void init() {
         jobs = jobHistory.findAll();
 
-//        jobs = new ArrayList<Job>(converter.jobs.values());
-        //jobs = new ArrayList<Job>();
-        filter = new HashSet<String>();
-        for (Job job : jobs) {
-            filter.add(job.getExecutedBy());
-        }
-
+        HashSet<Job> temp = new HashSet(jobs);
+        jobNamesOptions =
+                createFilterOptions(temp.toArray(new Job[temp.size()]));
     }
 
     public List<Job> getJobs() {
@@ -56,19 +49,17 @@ public class JobTableController implements Serializable {
     public void setJobs(List<Job> jobs) {
         this.jobs = jobs;
     }
+    
+   public SelectItem[] jobNamesAsOptions(){
+       return jobNamesOptions;
+   }
 
-    public SelectItem[] getJobNamesAsOptions() {
-        jobNamesOptions =
-                createFilterOptions(filter.toArray(new String[0]));
-        return jobNamesOptions;
-    }
-
-    private SelectItem[] createFilterOptions(String[] data) {
+    private SelectItem[] createFilterOptions(Job[] data) {
         SelectItem[] options = new SelectItem[data.length + 1];
 
         options[0] = new SelectItem("", "Select");
         for (int i = 0; i < data.length; i++) {
-            options[i + 1] = new SelectItem(data[i], data[i]);
+            options[i + 1] = new SelectItem(data[i].getExecutedBy(), data[i].getExecutedBy());
         }
 
         return options;

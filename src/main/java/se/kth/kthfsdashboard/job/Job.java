@@ -122,6 +122,45 @@ public class Job implements Serializable {
     public void setCompletionTime(long completionTime) {
         this.completionTime = completionTime;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 59 * hash + (this.uniqueID != null ? this.uniqueID.hashCode() : 0);
+        hash = 59 * hash + (this.executedBy != null ? this.executedBy.hashCode() : 0);
+        hash = 59 * hash + (this.name != null ? this.name.hashCode() : 0);
+        hash = 59 * hash + (this.dateRun != null ? this.dateRun.hashCode() : 0);
+        hash = 59 * hash + (int) (this.completionTime ^ (this.completionTime >>> 32));
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Job other = (Job) obj;
+        if ((this.uniqueID == null) ? (other.uniqueID != null) : !this.uniqueID.equals(other.uniqueID)) {
+            return false;
+        }
+        if ((this.executedBy == null) ? (other.executedBy != null) : !this.executedBy.equals(other.executedBy)) {
+            return false;
+        }
+        if ((this.name == null) ? (other.name != null) : !this.name.equals(other.name)) {
+            return false;
+        }
+        if ((this.dateRun == null) ? (other.dateRun != null) : !this.dateRun.equals(other.dateRun)) {
+            return false;
+        }
+        if (this.completionTime != other.completionTime) {
+            return false;
+        }
+        return true;
+    }
+    
     
     
 }

@@ -72,7 +72,8 @@
                     <p:column headerText="Name" >
                         <h:outputText value="#{job.name}" />
                     </p:column>
-                    <p:column headerText="ExecutedBy" filterBy="#{job.executedBy}" filterOptions="#{jobTableController.jobNamesAsOptions}" filterPosition="top">
+                    <p:column headerText="ExecutedBy" filterBy="#{job.executedBy}" 
+                              filterOptions="#{jobTableController.jobNamesAsOptions()}" filterPosition="bottom">
                         <h:outputText value="#{job.executedBy}" />
                     </p:column>
                     <p:column headerText="Date Run" sortBy="#{job.dateRun}" >

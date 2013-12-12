@@ -58,7 +58,7 @@
                              rowKey="#{wf.workflowName}" selection="#{workflowTableController.selectedWorkflow}" 
                              selectionMode="single">
                     <p:column headerText="Owner" filterBy="#{wf.owner}" 
-                              filterOptions="#{workflowTableController.wfNamesAsOptions}" filterPosition="top"
+                              filterOptions="#{workflowTableController.wfNamesAsOptions}" filterPosition="bottom"
                               filterMatchMode="exact">
                         <h:outputText value="#{wf.owner}"  />
                     </p:column>
