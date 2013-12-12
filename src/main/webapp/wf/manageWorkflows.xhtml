@@ -57,8 +57,10 @@
                 <p:dataTable id="workflowsWithFilterOptions" var="wf" value="#{workflowTableController.workflows}" 
                              rowKey="#{wf.workflowName}" selection="#{workflowTableController.selectedWorkflow}" 
                              selectionMode="single">
-                    <p:column headerText="Owner" filterBy="#{wf.owner}" filterOptions="#{workflowTableController.wfNamesAsOptions}" filterPosition="top">
-                        <h:outputText value="#{wf.owner}" />
+                    <p:column headerText="Owner" filterBy="#{wf.owner}" 
+                              filterOptions="#{workflowTableController.wfNamesAsOptions}" filterPosition="top"
+                              filterMatchMode="exact">
+                        <h:outputText value="#{wf.owner}"  />
                     </p:column>
                     <p:column headerText="Name" filterBy="#{wf.workflowName}" filterMatchMode="startsWith">
                         <h:outputText value="#{wf.workflowName}" />
@@ -66,7 +68,7 @@
                     <p:column headerText="Date" sortBy="#{wf.workflowDate}" filterMatchMode="startsWith">
                         <h:outputText value="#{wf.workflowDate}" />
                     </p:column>
-                    <p:column headerText="Tags" filterBy="#{wf.workflowTags}" filterMatchMode="startsWith">
+                    <p:column headerText="Tags" filterBy="#{wf.workflowTags}" filterMatchMode="contains">
                         <h:outputText value="#{wf.workflowTags}" />
                     </p:column>
 

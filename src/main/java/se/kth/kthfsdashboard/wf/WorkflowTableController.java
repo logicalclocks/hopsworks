@@ -5,14 +5,13 @@
 package se.kth.kthfsdashboard.wf;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
-import javax.faces.bean.SessionScoped;
 import javax.faces.model.SelectItem;
 import se.kth.kthfsdashboard.job.JobDispatcher;
 import se.kth.kthfsdashboard.job.JobHistoryFacade;
@@ -43,6 +42,9 @@ public class WorkflowTableController implements Serializable {
         //workflows = new ArrayList<Workflow>(WorkflowConverter.workflows.values());
         workflows = workflowFacade.findAll();
         dispatcher = new JobDispatcher(jobHistory);
+        HashSet<Workflow> temp = new HashSet(workflows);
+        workflowNamesOptions =
+                createFilterOptions(temp.toArray(new Workflow[temp.size()]));
     }
 
     public List<Workflow> getWorkflows() {
@@ -54,17 +56,16 @@ public class WorkflowTableController implements Serializable {
     }
 
     public SelectItem[] getWfNamesAsOptions() {
-        workflowNamesOptions =
-                createFilterOptions(WorkflowConverter.workflows.keySet().toArray(new String[0]));
+
         return workflowNamesOptions;
     }
 
-    private SelectItem[] createFilterOptions(String[] data) {
+    private SelectItem[] createFilterOptions(Workflow[] data) {
         SelectItem[] options = new SelectItem[data.length + 1];
 
         options[0] = new SelectItem("", "Select");
         for (int i = 0; i < data.length; i++) {
-            options[i + 1] = new SelectItem(data[i], data[i]);
+            options[i + 1] = new SelectItem(data[i].getOwner(), data[i].getOwner());
         }
 
         return options;
@@ -86,8 +87,8 @@ public class WorkflowTableController implements Serializable {
         }
         dispatcher.submitWorkflowTask(selectedWorkflow);
     }
-    
-    public String removeSelectedWorkflow(){
+
+    public String removeSelectedWorkflow() {
         workflowFacade.remove(selectedWorkflow);
         return "manageWorkflows";
     }

@@ -94,5 +94,44 @@ public class Workflow implements Serializable{
     public void setWorkflowMetadata(String workflowMetadata) {
         this.workflowMetadata = workflowMetadata;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 67 * hash + (this.owner != null ? this.owner.hashCode() : 0);
+        hash = 67 * hash + (this.workflowName != null ? this.workflowName.hashCode() : 0);
+        hash = 67 * hash + (this.workflowDate != null ? this.workflowDate.hashCode() : 0);
+        hash = 67 * hash + (this.workflowTags != null ? this.workflowTags.hashCode() : 0);
+        hash = 67 * hash + (this.workflowMetadata != null ? this.workflowMetadata.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Workflow other = (Workflow) obj;
+        if ((this.owner == null) ? (other.owner != null) : !this.owner.equals(other.owner)) {
+            return false;
+        }
+        if ((this.workflowName == null) ? (other.workflowName != null) : !this.workflowName.equals(other.workflowName)) {
+            return false;
+        }
+        if ((this.workflowDate == null) ? (other.workflowDate != null) : !this.workflowDate.equals(other.workflowDate)) {
+            return false;
+        }
+        if ((this.workflowTags == null) ? (other.workflowTags != null) : !this.workflowTags.equals(other.workflowTags)) {
+            return false;
+        }
+        if ((this.workflowMetadata == null) ? (other.workflowMetadata != null) : !this.workflowMetadata.equals(other.workflowMetadata)) {
+            return false;
+        }
+        return true;
+    }
+    
     
 }
