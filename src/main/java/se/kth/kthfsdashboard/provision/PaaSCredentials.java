@@ -32,8 +32,6 @@ public class PaaSCredentials implements Serializable {
     private String dashboardIP;
     @Column(columnDefinition="text")
     private String publicKey;
-    @Column(columnDefinition="text")
-    private String privateKey;
     private String accountId;
     private String accessKey;
     private String keystoneURL;
@@ -71,14 +69,6 @@ public class PaaSCredentials implements Serializable {
 
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
-    }
-
-    public String getPrivateKey() {
-        return privateKey;
-    }
-
-    public void setPrivateKey(String privateKey) {
-        this.privateKey = privateKey;
     }
 
     public String getAccountId() {
