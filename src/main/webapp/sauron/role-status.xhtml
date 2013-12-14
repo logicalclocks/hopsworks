@@ -91,7 +91,7 @@
                                 <p:menuButton value="Actions">  
                                     <p:menuitem id="restart_role" value="Restart" action="#{hostController.doCommand}" 
                                                 process="@this"
-                                                disabled="#{roleController.disableStart()}" ajax ="true" 
+                                                disabled="#{roleController.disableStop()}" ajax ="true" 
                                                 update=":form_running:commandsinfo"
                                                 oncomplete="dlgAction.show()">
                                         <f:param name="hostid" value="#{roleController.hostId}" />
