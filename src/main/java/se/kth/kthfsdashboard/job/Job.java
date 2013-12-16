@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -37,6 +38,10 @@ public class Job implements Serializable {
     private String name;
     private String dateRun;
     private long completionTime;
+    @Column(columnDefinition="text")
+    private String graphDot;
+    @Column(columnDefinition="text")
+    private String tableJob;
 
     public Job() {
     }
@@ -123,6 +128,22 @@ public class Job implements Serializable {
         this.completionTime = completionTime;
     }
 
+    public String getGraphDot() {
+        return graphDot;
+    }
+
+    public void setGraphDot(String graphDot) {
+        this.graphDot = graphDot;
+    }
+
+    public String getTableJob() {
+        return tableJob;
+    }
+
+    public void setTableJob(String tableJob) {
+        this.tableJob = tableJob;
+    }
+    
     @Override
     public int hashCode() {
         int hash = 3;
