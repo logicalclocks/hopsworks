@@ -215,7 +215,7 @@ public class ScriptBuilder implements Statement {
         this.gitName = (gitName == null || gitName.equals("")) ? "Jim Dowling" : gitName;
         this.gitKey = gitKey; //To do the same
         this.gitRepo = (gitRepo == null || gitRepo.equals(""))
-                ? "https://ghetto.sics.se/jdowling/hops-chef.git" : gitRepo;
+                ? "https://github.com/hopstart/hop-chef.git" : gitRepo;
         filterClients.add("mysqld");
         filterClients.add("datanode");
         filterClients.add("namenode");
@@ -243,17 +243,14 @@ public class ScriptBuilder implements Statement {
                 statements.add(exec("sudo apt-get install -f -y --force-yes make;"));
                 statements.add(exec("sudo apt-get install -f -y -qq --force-yes ruby1.9.1-full;"));
                 statements.add(exec("sudo apt-get install -f -y --force-yes git;"));
-                statements.add(InstallRubyGems.builder()
-                        .version("1.8.10")
-                        .build());
-//                statements.add(
-//                        InstallChefGems.builder()
-//                        .version("10.20.0").build());
-                statements.add(exec("sudo gem install chef -v '10.20.0' --no-rdoc"));
+                statements.add(exec("curl -L https://www.opscode.com/chef/install.sh | sudo bash"));
 
                 statements.add(exec("sudo mkdir /etc/chef;"));
                 statements.add(exec("cd /etc/chef;"));
-                statements.add(exec("sudo wget http://snurran.sics.se/hops/solo.rb;"));
+                List<String> soloLines = new ArrayList<String>();
+                soloLines.add("file_cache_path \"/tmp/chef-solo\"");
+                soloLines.add("cookbook_path \"/tmp/chef-solo/cookbooks\"");
+                statements.add(createOrOverwriteFile("/etc/chef/solo.rb",soloLines));
                 //Setup and fetch git recipes
                 statements.add(exec("git config --global user.name \"" + gitName + "\";"));
                 //statements.add(exec("git config --global user.email \"jdowling@sics.se\";"));
@@ -459,7 +456,7 @@ public class ScriptBuilder implements Statement {
         }
         json.append("]},");
         //Where the hell is this??
-        json.append("\"hopsagent\":{\"server\":\"").append(privateIP).append(":8080\"},");
+        json.append("\"hopagent\":{\"server\":\"").append(privateIP).append(":8080\"},");
         //need to add support for agent_user and agent_pass
 
         json.append("\"mysql\":{\"bind_address\":\"").append(mysql.get(0)).append("\"},");
@@ -467,7 +464,7 @@ public class ScriptBuilder implements Statement {
         /*Generate hops fragment
          /*server ip of the dashboard
          */
-        json.append("\"hops\":{\"server\":\"").append(privateIP).append(":8080").append("\",");
+        json.append("\"hop\":{\"server\":\"").append(privateIP).append(":8080").append("\",");
         //rest url
         //json.append("\"rest_url\":\"").append("http://").append(privateIP)
            //     .append("/kthfs-dashboard").append("\",");
@@ -528,52 +525,53 @@ public class ScriptBuilder implements Statement {
 
     private List<String> createRunList() {
         RunListBuilder builder = new RunListBuilder();
+        builder.addRecipe("apt");
         builder.addRecipe("python::package");
         builder.addRecipe("java");
-        builder.addRecipe("hopsagent");
+        builder.addRecipe("hopagent");
         boolean collectdAdded = false;
 
         //Look at the roles, if it matches add the recipes for that role
         for (String role : roles) {
             if (role.equals("ndb")) {
                 builder.addRecipe("ndb::ndbd");
-                builder.addRecipe("ndb::ndbd-hops");
+                builder.addRecipe("ndb::ndbd-hop");
                 collectdAdded = true;
             }
             if (role.equals("mysqld")) {
                 builder.addRecipe("ndb::mysqld");
-                builder.addRecipe("ndb::mysqld-hops");
+                builder.addRecipe("ndb::mysqld-hop");
                 collectdAdded = true;
             }
             if (role.equals("mgm")) {
                 builder.addRecipe("ndb::mgmd");
-                builder.addRecipe("ndb::mgmd-hops");
+                builder.addRecipe("ndb::mgmd-hop");
                 collectdAdded = true;
             }
             if (role.equals("memcached")) {
                 builder.addRecipe("ndb::memcached");
-                builder.addRecipe("ndb::memcached-hops");
+                builder.addRecipe("ndb::memcached-hop");
             }
 
             //This are for the Hadoop nodes
             if (role.equals("namenode")) {
                 //builder.addRecipe("java");
-                builder.addRecipe("hops::namenode");
+                builder.addRecipe("hop::namenode");
                 collectdAdded = true;
             }
             if (role.equals("datanode")) {
                 //builder.addRecipe("java");
-                builder.addRecipe("hops::datanode");
+                builder.addRecipe("hop::datanode");
                 collectdAdded = true;
             }
             if (role.equals("resourcemanager")) {
                 //builder.addRecipe("java");
-                builder.addRecipe("hops::resourcemanager");
+                builder.addRecipe("hop::resourcemanager");
                 collectdAdded = true;
             }
             if (role.equals("nodemanager")) {
                 // builder.addRecipe("java");
-                builder.addRecipe("hops::nodemanager");
+                builder.addRecipe("hop::nodemanager");
             }
             if (role.equals("spark")) {
                 builder.addRecipe("spark");
@@ -587,7 +585,7 @@ public class ScriptBuilder implements Statement {
             builder.addRecipe("collect::attr-driven");
         }
         //builder.addRecipe("java::openjdk");
-        builder.addRecipe("hopsagent::restart");
+        builder.addRecipe("hopagent::restart");
         return builder.build();
 
 
