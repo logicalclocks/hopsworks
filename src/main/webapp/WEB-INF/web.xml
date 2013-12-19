@@ -99,6 +99,7 @@
         </web-resource-collection>
         <auth-constraint>
             <role-name>BBC_ADMIN</role-name>
+            <role-name>ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
     <security-constraint>
