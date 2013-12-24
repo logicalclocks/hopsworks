@@ -534,6 +534,53 @@ body {
     display: none!important;
 }
 
+.ui-icon-hadoop {
+    background-image: url("#{resource['images/views/hop.png']}") !important;
+}
+
+.ui-icon-wf {
+    background-image: url("#{resource['images/views/wf.png']}") !important;
+}
+
+.ui-icon-lims {
+    background-image: url("#{resource['images/views/lims.png']}") !important;
+}
+
+.BbcSelect {
+    font-size: 20px;
+    color: lightseagreen;
+}
+
+.Bbcview {
+    width: 540px;
+    margin: 0 auto;
+    margin-top: 100px;
+    border-width: 3px; 
+    border-style: solid; 
+    border-color: lightgray; 
+    background-color: #F0F0F0; 
+    border-radius: 6px;  
+    padding: 20px;   
+}
+
+.Bbcview td {
+    padding: 10px 15px;
+}
+
+.Bbcview .ui-button {
+    float: right;
+}
+
+.Bbcview .ui-messages-error-icon {
+    display: none!important;
+}
+
+.ViewButton {
+    background-color: lightblue;
+    font-size:      20px !important;
+}
+
+
 /* DlgNewChar */
 
 .DlgNewChar .ui-selectonemenu{

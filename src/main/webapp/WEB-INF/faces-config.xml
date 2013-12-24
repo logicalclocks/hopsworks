@@ -17,7 +17,7 @@
     <navigation-rule>      
         <navigation-case>
             <from-outcome>wfhome</from-outcome>
-            <to-view-id>wf/index.xhtml</to-view-id>
+            <to-view-id>/bbc-views.xhtml</to-view-id>
             <redirect/>
         </navigation-case>  
         <navigation-case>
@@ -32,7 +32,7 @@
         </navigation-case>
         <navigation-case>
             <from-outcome>bbchome</from-outcome>
-            <to-view-id>bbc/index.xhtml</to-view-id>
+            <to-view-id>/bbc-views.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         <navigation-case>
@@ -87,6 +87,11 @@
         </navigation-case>
         <navigation-case>
             <from-outcome>clusters</from-outcome>
+            <to-view-id>/bbc-views.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>hadoop</from-outcome>
             <to-view-id>/sauron/clusters.xhtml</to-view-id>
             <redirect/>
         </navigation-case>

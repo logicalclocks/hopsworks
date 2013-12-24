@@ -21,7 +21,7 @@ public class SettingsController implements Serializable{
 
    public SettingsController() {
       logger.info("SettingsController");      
-      name = "Hadoop Open PaaS Dashboard";
+      name = "BiobankCloud";
       logLines = 2;
       numOfGraphColumns = 3;
    }

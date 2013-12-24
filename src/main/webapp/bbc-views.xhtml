@@ -22,11 +22,23 @@
         </h:form>
 
         <h:form id="hopviews">                  
-            <div class="Signin">            
+            <div class="Bbcview">            
+                <div class="BbcSelect" align="center">            
+                <h:body>Select a View</h:body>
+            </div>
                 <h:panelGrid columns="3" >  
-                    <p:commandButton id="limsButton" value="LIMS" rendered="#{bbcViewController.renderLims()}" action="#{bbcViewController.loadLims()}" styleClass="MainButton"/>
-                    <p:commandButton id="workflowsButton" value="Workflows" rendered="#{bbcViewController.renderWorfkflows()}" action="#{bbcViewController.loadWorkflows()}" styleClass="MainButton"/>
-                    <p:commandButton id="clusterButton" value="Clusters" rendered="#{bbcViewController.renderClusters()}" action="#{bbcViewController.loadClusters()}" styleClass="MainButton"/>
+                    <p:commandButton id="limsButton" value="Lims" 
+                                     rendered="#{bbcViewController.renderLims()}" 
+                                     action="#{bbcViewController.loadLims()}" 
+                                      styleClass="ViewButton" icon="ui-icon-lims"/>
+                    <p:commandButton id="workflowsButton" value="Workflows" 
+                                     rendered="#{bbcViewController.renderWorfkflows()}" 
+                                     action="#{bbcViewController.loadWorkflows()}" 
+                                      styleClass="ViewButton" icon="ui-icon-wf"/>
+                    <p:commandButton id="clusterButton" value="Hadoop" 
+                                     rendered="#{bbcViewController.renderClusters()}" 
+                                     action="#{bbcViewController.loadClusters()}" 
+                                      styleClass="ViewButton" icon="ui-icon-hadoop"/>
                 </h:panelGrid>
             </div>
         </h:form> 

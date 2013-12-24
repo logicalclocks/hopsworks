@@ -39,14 +39,15 @@ public class BbcViewController implements Serializable{
     }
     public String loadClusters(){
         if(renderClusters()){
-            return "clusters";
+            return "hadoop";
         }
         else{
             return "";
         }
     }
     public boolean renderLims(){
-        return user.getGroups().contains(Group.BBC_ADMIN);
+        return user.getGroups().contains(Group.BBC_ADMIN) ||
+                user.getGroups().contains(Group.ADMIN) ;
     }
     
     public boolean renderWorfkflows(){

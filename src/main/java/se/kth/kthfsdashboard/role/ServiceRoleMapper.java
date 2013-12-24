@@ -11,6 +11,7 @@ import se.kth.kthfsdashboard.struct.ServiceType;
 /**
  *
  * @author Hamidreza Afzali <afzali@kth.se>
+ * @author Jim Dowling
  */
 public class ServiceRoleMapper {
 
@@ -34,6 +35,7 @@ public class ServiceRoleMapper {
         roleFullNames.put(RoleType.memcached, "Memcached");
         roleFullNames.put(RoleType.resourcemanager, "Resource Manager");  
         roleFullNames.put(RoleType.nodemanager, "Node Manager");          
+        roleFullNames.put(RoleType.mrhistoryserver, "MapReduce History Server");          
     }
 
     public static List<RoleType> getRoles(ServiceType serviceType) {
