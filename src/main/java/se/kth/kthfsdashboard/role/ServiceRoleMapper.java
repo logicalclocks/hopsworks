@@ -24,7 +24,8 @@ public class ServiceRoleMapper {
 
         serviceRoleMap.put(ServiceType.HDFS, Arrays.asList(RoleType.namenode, RoleType.datanode));
         serviceRoleMap.put(ServiceType.NDB, Arrays.asList(RoleType.ndb, RoleType.mysqld, RoleType.mgmserver, RoleType.memcached));
-        serviceRoleMap.put(ServiceType.YARN, Arrays.asList(RoleType.resourcemanager, RoleType.nodemanager));
+        serviceRoleMap.put(ServiceType.YARN, Arrays.asList(RoleType.resourcemanager, 
+                RoleType.nodemanager, RoleType.mrhistoryserver, RoleType.proxyserver));
         serviceRoleMap.put(ServiceType.Spark, new ArrayList<RoleType>()); // Empty list
 
         roleFullNames.put(RoleType.namenode, "Name Node");
@@ -36,6 +37,7 @@ public class ServiceRoleMapper {
         roleFullNames.put(RoleType.resourcemanager, "Resource Manager");  
         roleFullNames.put(RoleType.nodemanager, "Node Manager");          
         roleFullNames.put(RoleType.mrhistoryserver, "MapReduce History Server");          
+        roleFullNames.put(RoleType.proxyserver, "YARN Proxy Server");          
     }
 
     public static List<RoleType> getRoles(ServiceType serviceType) {
