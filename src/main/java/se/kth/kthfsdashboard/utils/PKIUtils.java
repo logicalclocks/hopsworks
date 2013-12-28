@@ -35,15 +35,16 @@ import org.bouncycastle.openssl.PEMReader;
 public class PKIUtils {
 
     // TODO this should not be static
-    final static String PASSWORD = "changeit";
     final static String KEYSTORE_FILENAME = "keystore.jks";
     final static String ALIAS = "s1as";
+    final static String PASSWORD = "changeit";
+    final static String GLASSFISH_CONFIG_DIR = "/usr/local/glassfish-3.1.2.2/glassfish/domains/domain1/config/";
     
     final static Logger logger = Logger.getLogger(PKIUtils.class.getName());
     
-//    static {
-//        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-//    }
+    static {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+    }
 
     public static String signWithServerCertificate(String csr) throws CryptoException, IOException,
             KeyStoreException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException,
@@ -70,11 +71,11 @@ public class PKIUtils {
 //            WebappClassLoader unable to load resource [org.bouncycastle.jce.provider.JDKKeyFactory$RSA], 
 //            because it has not yet been started, or was already stopped
             
-//            PKCS10CertificationRequest certificationRequest = (PKCS10CertificationRequest) pemObject;
-//            if (!certificationRequest.verify()) {
-//                logger.info("CSR signature is not correct.");
-//                throw new CryptoException("CSR signature is not correct.");
-//            }
+            PKCS10CertificationRequest certificationRequest = (PKCS10CertificationRequest) pemObject;
+            if (!certificationRequest.verify()) {
+                logger.info("CSR signature is not correct.");
+                throw new CryptoException("CSR signature is not correct.");
+            }
             return;
         }
         throw new CryptoException("Not an instance of PKCS10CertificationRequest.");
@@ -111,7 +112,7 @@ public class PKIUtils {
         File csrFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".csr");
         File generatedCertFile = File.createTempFile(System.getProperty("java.io.tmpdir"), ".cert");
         FileUtils.writeStringToFile(csrFile, csr);
-        logger.info("Signing CSR...");
+        logger.log(Level.INFO, "Signing CSR with {0}", CAKeyPairFile.getCanonicalPath());
         List<String> cmds = new ArrayList<String>();
         cmds.add("openssl");
         cmds.add("x509");
@@ -127,19 +128,21 @@ public class PKIUtils {
         cmds.add("-days");
         cmds.add("3650");
         cmds.add("-CAcreateserial");
-        Process process = new ProcessBuilder(cmds).directory(new File("/usr/bin/")).
+        Process process = new ProcessBuilder(cmds).directory(new File(GLASSFISH_CONFIG_DIR)).
                 redirectErrorStream(true).start();
+        
         BufferedReader br = new BufferedReader(new InputStreamReader(
                 process.getInputStream(), Charset.forName("UTF8")));
         String line;
+        StringBuilder sb = new StringBuilder();
         while ((line = br.readLine()) != null) {
             logger.info(line);
         }
         process.waitFor();
         if (process.exitValue() != 0) {
-            throw new RuntimeException("Failed to sign certificate.");
+            throw new RuntimeException("Failed to sign the certificate. Error code: " + process.exitValue());
         }
-        logger.info("Singned certificate.");
+        logger.info("Signned certificate.");
         return FileUtils.readFileToString(generatedCertFile);
     }
 }

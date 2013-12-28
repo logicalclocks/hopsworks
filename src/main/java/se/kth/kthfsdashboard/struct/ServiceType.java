@@ -6,5 +6,5 @@ package se.kth.kthfsdashboard.struct;
  */
 public enum ServiceType {
 
-   HDFS, NDB, YARN, MapReduce, Spark
+   HDFS, NDB, YARN, MAP_REDUCE, SPARK
 }

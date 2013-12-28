@@ -71,11 +71,13 @@ public class ServiceStatusController {
     public boolean renderTerminalLink() {
         return service.equalsIgnoreCase(ServiceType.HDFS.toString())
                 || service.equalsIgnoreCase(ServiceType.NDB.toString())
-                || service.equalsIgnoreCase(ServiceType.Spark.toString());
+                || service.equalsIgnoreCase(ServiceType.SPARK.toString())
+                || service.equalsIgnoreCase(ServiceType.YARN.toString()
+                );
     }
     
     public boolean renderInstancesLink() {
-        return ! service.equalsIgnoreCase(ServiceType.Spark.toString());
+        return ! service.equalsIgnoreCase(ServiceType.SPARK.toString());
     }    
 
     public boolean renderNdbInfoTable() {

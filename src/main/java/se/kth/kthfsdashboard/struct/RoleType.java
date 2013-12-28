@@ -8,6 +8,6 @@ public enum RoleType {
 
    namenode, datanode,
    mgmserver, mysqld, ndb, memcached,
-   resourcemanager, nodemanager, mrhistoryserver,
+   resourcemanager, nodemanager, historyserver,
    proxyserver
 }

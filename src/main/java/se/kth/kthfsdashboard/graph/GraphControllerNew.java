@@ -192,8 +192,8 @@ public class GraphControllerNew implements Serializable {
         groups = graphEjb.findGroups(graph.getTarget());
         if (graph.ifTargetsService(ServiceType.HDFS.toString())
                 || graph.ifTargetsService(ServiceType.YARN.toString())
-                || graph.ifTargetsService(ServiceType.Spark.toString())
-                || graph.ifTargetsService(ServiceType.MapReduce.toString())) {
+                || graph.ifTargetsService(ServiceType.SPARK.toString())
+                || graph.ifTargetsService(ServiceType.MAP_REDUCE.toString())) {
             plugins.add(CollectdPluginType.GenericJMX.toString());
 
         } else if (graph.ifTargetsRole(ServiceType.NDB.toString(), RoleType.ndb.toString())) {
