@@ -101,6 +101,12 @@ public class TerminalController {
             } else {
                 return "Unknown command. Accepted commands are: mysql, ndb_mgm";
             }
+        } else if (service.equalsIgnoreCase(ServiceType.YARN.toString())) {
+            if (command.equals("yarn")) {
+                roleName = RoleType.resourcemanager.toString();
+            } else {
+                return "Unknown command. Accepted commands are: yarn";
+            }
         } else {
             return null;
         }
@@ -113,7 +119,6 @@ public class TerminalController {
             WebCommunication web = new WebCommunication();
             String result = web.executeRun(hosts.get(0).getPublicOrPrivateIp(), cluster, service, roleName, command, params);
             return result;
-
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
             return "Error: Could not contact a node";
