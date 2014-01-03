@@ -29,6 +29,7 @@ public class PaaSCredentials implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String provider;
+    private String email;
     private String dashboardIP;
     @Column(columnDefinition="text")
     private String publicKey;
@@ -39,6 +40,14 @@ public class PaaSCredentials implements Serializable {
     private String keystoneURL;
 
     public PaaSCredentials() {
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public Long getId() {
@@ -104,7 +113,5 @@ public class PaaSCredentials implements Serializable {
     public void setKeystoneURL(String keystoneURL) {
         this.keystoneURL = keystoneURL;
     }
-    
-    
     
 }
