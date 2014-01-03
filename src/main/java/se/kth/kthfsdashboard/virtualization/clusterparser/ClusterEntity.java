@@ -30,8 +30,11 @@ public class ClusterEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    @Column
     private String clusterName;
     
+    @Column
     private String clusterType;
     
     @Column(columnDefinition = "text")

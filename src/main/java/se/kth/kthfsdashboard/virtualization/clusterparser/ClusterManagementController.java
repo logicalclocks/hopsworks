@@ -21,6 +21,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
+import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -266,7 +267,15 @@ public class ClusterManagementController implements Serializable {
 
     }
 
-    public void handleFileUpload() {
+    public void handleFileUpload(FileUploadEvent event) {
+        file = event.getFile();
+        String response = parseYMLtoCluster();
+        FacesMessage msg = new FacesMessage(response);
+        FacesContext.getCurrentInstance().addMessage(null, msg);
+
+    }
+
+    public void handleFileUploadOld() {
         if (file != null) {
             parseYMLtoCluster();
             FacesMessage msg = new FacesMessage("Successful", file.getFileName() + " is uploaded.");
@@ -287,7 +296,7 @@ public class ClusterManagementController implements Serializable {
 
     }
 
-    private void parseYMLtoCluster() {
+    private String parseYMLtoCluster() {
 
         try {
             Object document = yaml.load(file.getInputstream());
@@ -316,11 +325,13 @@ public class ClusterManagementController implements Serializable {
                     cluster = null;
                     baremetalCluster = null;
                 }
+            } else {
+                return "Failure: document was empty or an invalid YAML file";
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            return "Failure: " + e.toString();
         }
-
+        return "Successful" + file.getFileName() + " is uploaded.";
     }
 
     public List<ClusterEntity> listAvailableClusters() {
@@ -332,9 +343,12 @@ public class ClusterManagementController implements Serializable {
     }
 
     public void removeClusters() {
-        Collection<ClusterEntity> selections = Arrays.asList(selectedClusters);
-        for (ClusterEntity selection : selections) {
-            clusterEJB.removeCluster(selection);
+        if (selectedClusters != null && selectedClusters.length > 0) {
+
+            Collection<ClusterEntity> selections = Arrays.asList(selectedClusters);
+            for (ClusterEntity selection : selections) {
+                clusterEJB.removeCluster(selection);
+            }
         }
     }
 
@@ -377,7 +391,6 @@ public class ClusterManagementController implements Serializable {
         }
 
         return event.getNewStep();
-
 
     }
 
@@ -438,13 +451,25 @@ public class ClusterManagementController implements Serializable {
 //
 //        return "createClusterWizard";
 //    }
+    public String deleteSelection() {
+        if (selectedClusters != null && selectedClusters.length != 0) {
+            Collection<ClusterEntity> selections = Arrays.asList(selectedClusters);
+            for (ClusterEntity selection : selections) {
+                clusterEJB.removeCluster(selection);
+            }
+            return "TO DO";
+        } else {
+            return "No cluster selected";
+        }
+    }
+
     public String editSelection() {
-        if (selectedClusters.length != 0 && editType.equals("editor")) {
+        if (selectedClusters != null && selectedClusters.length != 0 && editType.equals("editor")) {
             edit = selectedClusters[0];
             editorYamlController.setEntity(edit);
             editorYamlController.init();
             return "editClusterEditor";
-        } else if (selectedClusters.length != 0 && editType.equals("wizard")) {
+        } else if (selectedClusters != null && selectedClusters.length != 0 && editType.equals("wizard")) {
             edit = selectedClusters[0];
             clusterType = edit.getClusterType();
             Object document = yaml.load(edit.getYamlContent());
@@ -476,7 +501,7 @@ public class ClusterManagementController implements Serializable {
     }
 
     public String loadSelection() {
-        if (selectedClusters.length != 0) {
+        if (selectedClusters != null && selectedClusters.length != 0) {
             ClusterEntity selection = selectedClusters[0];
             String content = selection.getYamlContent();
             clusterType = selection.getClusterType();
@@ -495,7 +520,7 @@ public class ClusterManagementController implements Serializable {
 
     public StreamedContent exportCluster() {
         DefaultStreamedContent export = null;
-        if (selectedClusters.length != 0) {
+        if (selectedClusters != null && selectedClusters.length != 0) {
             ClusterEntity selection = selectedClusters[0];
             String content = selection.getYamlContent();
 

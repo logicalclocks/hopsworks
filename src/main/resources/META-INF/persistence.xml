@@ -4,7 +4,7 @@
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>jdbc/kthfs</jta-data-source>
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
-    <shared-cache-mode>DISABLE_SELECTIVE</shared-cache-mode>
+    <shared-cache-mode>NONE</shared-cache-mode>
     <properties>
       <property name="eclipselink.target-database" value="MYSQL"/>
       <property name="eclipselink.ddl-generation" value="create-tables"/>

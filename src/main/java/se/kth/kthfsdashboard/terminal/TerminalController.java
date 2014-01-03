@@ -119,7 +119,6 @@ public class TerminalController {
             String result = web.executeRun(hosts.get(0).getPublicOrPrivateIp(), 
                     cluster, service, roleName, command, params);
             return result;
-
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
             return "Error: Could not contact a node";

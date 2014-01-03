@@ -87,14 +87,39 @@
 
                         <p:column headerText="Actions" style="width:10%">
                             <p:menuButton value="Actions" disabled="true">  
-                                <p:menuitem disabled="true" value="Start..." update=":formServices:messages" actionListener="#{serviceController.startService()}" />  
-                                <p:menuitem disabled="true" value="Stop..." update=":formServices:messages" actionListener="#{serviceController.stopService()}" />  
+                                <p:menuitem disabled="false" value="Edit Cluster..." 
+                                            update=":formServices:messages" actionListener="#{editType.show()}" />  
+                                <!--<p:menuitem disabled="false" value="Edit Cluster..." update=":formServices:messages" actionListener="#{serviceController.startService()}" />-->  
+                                <p:menuitem disabled="true" value="Delete cluster" 
+                                            update=":formServices:messages" 
+                                            actionListener="#{serviceController.stopService()}" />  
+                                
+                                <p:menuitem disabled="false" value="Delete cluster" 
+                                                 update=":formServices:messages" 
+                                                 action="#{clusterManagementController.deleteSelection()}"
+                                                 />
+                                
+                                <!--<p:menuitem disabled="true" value="Stop..." update=":formServices:messages" actionListener="#{serviceController.stopService()}" />-->  
                                 <p:menuitem disabled="true" value="Restart..." update=":formServices:messages" actionListener="#{serviceController.restartService()}"/>  
                                 <p:separator />  
                                 <p:menuitem disabled="true" value="Delete..." update=":formServices:messages" actionListener="#{serviceController.deleteService()}"/>  
                             </p:menuButton>  
                         </p:column>
                     </p:dataTable>  
+                    
+                    <p:dialog header="Select Edit Option" widgetVar="editType" resizable="false"
+                              id="editTypeDig"
+                              showEffect="fade" modal="true">
+                        <h:outputText id="editMsg" value="How do you want to edit the cluster?:"/>
+                        <p:selectOneRadio id="editType" 
+                                          value="#{clusterManagementController.editType}">
+                            <f:selectItem itemLabel="Wizard" itemValue="wizard"/>
+                            <f:selectItem itemLabel="Online Editor" itemValue="editor"/>
+                        </p:selectOneRadio>
+                        <p:commandButton id="editTypeSelected" value="Proceed"
+                                         action="#{clusterManagementController.editSelection()}"/>
+                    </p:dialog>                    
+                    
                 </h:form> 
             </p:panel>
             <p:spacer width="1" height="8" />
