@@ -534,6 +534,11 @@ body {
     display: none!important;
 }
 
+.orchLabel .ui-outputlabel {
+    color:blue;
+}
+
+
 /* DlgNewChar */
 
 .DlgNewChar .ui-selectonemenu{
@@ -543,7 +548,6 @@ body {
 .DlgNewChar .ui-inputfield {
     min-width: 342px;  
 }
-
 
 /*.AccordionPanelLink*/
 .AccordionPanelLink {
