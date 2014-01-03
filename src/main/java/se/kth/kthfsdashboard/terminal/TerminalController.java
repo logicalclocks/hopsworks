@@ -116,7 +116,8 @@ public class TerminalController {
                 throw new RuntimeException("No live node available.");
             }
             WebCommunication web = new WebCommunication();
-            String result = web.executeRun(hosts.get(0).getPublicOrPrivateIp(), cluster, service, roleName, command, params);
+            String result = web.executeRun(hosts.get(0).getPublicOrPrivateIp(), 
+                    cluster, service, roleName, command, params);
             return result;
 
         } catch (Exception ex) {
