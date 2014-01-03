@@ -28,6 +28,8 @@
             
             <p:toolbarGroup align="left">              
                <p:menuButton value="Clusters">
+                  <p:menuitem value="New Cluster" action="addcluster"/>
+                  <p:menuitem value="Clusters in Progress" action="progress"/>
                   <p:menuitem value="All Clusters" action="clusters"/>
                   <p:separator rendered="#{not empty clustersLayoutController.clusters}"/>  
                   <c:forEach var="cluster" items="#{clustersLayoutController.clusters}">                          
@@ -36,11 +38,6 @@
                </p:menuButton>
                <p:commandButton value="Hosts" action="hosts"/>
                <p:commandButton value="Alerts" action="alerts"/>
-
-               <p:commandButton value="Manage Clusters" action="addcluster"/>
-               
-               <p:commandButton value="Clusters Progress" action="progress"/>
-
             </p:toolbarGroup>  
 
             <p:toolbarGroup align="right">  
