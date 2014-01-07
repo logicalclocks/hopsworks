@@ -138,19 +138,18 @@
                                 <p:fileUpload value="#{clusterManagementController.file}"
                                               fileUploadListener="#{clusterManagementController.handleFileUpload}"
                                               mode="advanced"
-                                              auto="true"   
+                                              auto="false"
                                               dragDropSupport="true"
                                               sizeLimit="10000"   
                                               allowTypes="/(\.|\/)(yml)$/"
                                               update="messages"
                                               >
-                                    <!--<h:outputLabel  value=" Upload a cluster definition YAML file." />-->
                                 </p:fileUpload>  
                                 <p:growl id="messages" showDetail="true"/>  
-<!--                                <p:commandButton id="load" value="Load Cluster from file" 
+                                <p:commandButton id="load" value="Load Cluster from file" 
                                                  actionListener="#{clusterManagementController.handleFileUploadOld()}" 
                                                  action="#{clusterManagementController.proceedLauncher()}" 
-                                                 ajax="false" disabled="false" />-->
+                                                 ajax="false" disabled="false" />
                             </h:panelGrid>  
                         </p:fieldset>  
 

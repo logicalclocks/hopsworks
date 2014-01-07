@@ -7,8 +7,6 @@ package se.kth.kthfsdashboard.provision;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
 
 /**
  *
@@ -17,15 +15,16 @@ import javax.faces.context.FacesContext;
 @ManagedBean
 @RequestScoped
 public class CredentialsMB {
-        private PaaSCredentials credentials;
+        private PaasCredentials credentials;
         @EJB
         private CredentialsFacade facade;
         
-        public PaaSCredentials getCredentials() {
+        public PaasCredentials getCredentials() {
         if (credentials == null) {
-            ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
+//            ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
             credentials = facade.find();
         }
         return credentials;
+//            return facade.find();
     }
 }

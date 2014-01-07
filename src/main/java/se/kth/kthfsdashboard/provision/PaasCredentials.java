@@ -21,9 +21,9 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "PaasCredentials")
 @NamedQueries({
-    @NamedQuery(name = "PaaSCredentials.findAll", query = "SELECT c FROM PaaSCredentials c")
+    @NamedQuery(name = "PaasCredentials.findAll", query = "SELECT c FROM PaasCredentials c")
 })
-public class PaaSCredentials implements Serializable {
+public class PaasCredentials implements Serializable {
     
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -39,7 +39,7 @@ public class PaaSCredentials implements Serializable {
     private String accessKey;
     private String keystoneURL;
 
-    public PaaSCredentials() {
+    public PaasCredentials() {
     }
 
     public String getEmail() {
