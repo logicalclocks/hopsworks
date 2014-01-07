@@ -32,6 +32,10 @@ import se.kth.kthfsdashboard.utils.ColorUtils;
 @ManagedBean
 @SessionScoped
 public class GraphControllerNew implements Serializable {
+    private static final String COLLECTD_PLUGIN_FILE = "/etc/collectd/collectd.conf";
+    private static final String COLLECTD_DBI_PLUGIN_FILE = "/etc/collectd/plugins/dbi_plugin.conf";
+    private static final String COLLECTD_JMX_PLUGIN_FILE = "/etc/collectd/plugins/jmx_plugin.conf";
+    private static final String VAR_N = "@n";
 
     @EJB
     private GraphEJB graphEjb;
@@ -46,12 +50,8 @@ public class GraphControllerNew implements Serializable {
     private String typeInstanceInfo;
     private Map<String, CollectdPluginInstance> dbiPluginInstances;
     private Map<String, HashMap<String, CollectdPluginInstance>> jmxPluginInstances;
-    private static final String COLLECTD_PLUGIN_FILE = "/etc/collectd/collectd.conf";
-    private static final String COLLECTD_DBI_PLUGIN_FILE = "/etc/collectd/plugins/dbi_plugin.conf";
-    private static final String COLLECTD_JMX_PLUGIN_FILE = "/etc/collectd/plugins/jmx_plugin.conf";
     private static final Logger logger = Logger.getLogger(GraphControllerNew.class.getName());
     private Map<String, String> pluginInstanceTargetMap;
-    private static final String VAR_N = "@n";
 
     public GraphControllerNew() {
     }

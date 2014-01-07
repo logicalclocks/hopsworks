@@ -29,6 +29,88 @@
 ]}
 ],
 
+"HDFS-DATANODE": [
+{"group": "DataNode Activity", "graphs":[
+{"id": "num-heartbeats", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Number of Heartbeats", "vertical-label": "heartbeats/s", "var" : "", "charts": 
+  [{"model": "LINE", "type": "counter", "type-instance": "HeartbeatsNumOps", "ds": "value", "label": "Heartbeats", "color": "green", "format": "%5.2lf %S"}]
+},
+{"id": "avgtime-heartbeats", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Heartbeats Average Time", "vertical-label": "sec", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "HeartbeatsAvgTime", "ds": "value", "label": "Heartbeats Average Time", "color": "green", "format": "%5.2lf %S"}]
+},
+{"id": "bytes", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Bytes Read/Written", "vertical-label": "bytes", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "BytesRead", "ds": "value", "label": "Read", "color": "BLUE", "format": "%5.2lf %S"},
+   {"model": "LINE", "type": "gauge", "type-instance": "BytesWritten", "ds": "value", "label": "Written", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "ops-reads", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Read Operations", "vertical-label": "ops", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "ReadsFromLocalClient", "ds": "value", "label": "Local Client", "color": "BLUE", "format": "%5.2lf %S"},
+   {"model": "LINE", "type": "gauge", "type-instance": "ReadsFromRemoteClient", "ds": "value", "label": "Remote Client", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "ops-writes", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Write Operations", "vertical-label": "ops", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "WritesFromLocalClient", "ds": "value", "label": "Local Client", "color": "BLUE", "format": "%5.2lf %S"},
+   {"model": "LINE", "type": "gauge", "type-instance": "WritesFromRemoteClient", "ds": "value", "label": "Remote Client", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "blocks-read", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Blocks Read", "vertical-label": "blocks", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "BlocksRead", "ds": "value", "label": "Blocks Read", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "blocks-written", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Blocks Written", "vertical-label": "blocks", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "BlocksWritten", "ds": "value", "label": "Blocks Written", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "blocks-removed", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Blocks Removed", "vertical-label": "blocks", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "BlocksRemoved", "ds": "value", "label": "Blocks Removed", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "blocks-replicated", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Blocks Replicated", "vertical-label": "blocks", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "BlocksReplicated", "ds": "value", "label": "Blocks Replicated", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "blocks-verified", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Blocks Verified", "vertical-label": "blocks", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "BlocksVerified", "ds": "value", "label": "Blocks Verified", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "ops-read-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Read Block Operations", "vertical-label": "ops", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "ReadBlockOpNumOps", "ds": "value", "label": "Read Block Operations", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "ops-write-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Write Block Operations", "vertical-label": "ops", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "WriteBlockOpNumOps", "ds": "value", "label": "Write Block Operations", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "ops-copy-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Copy Block Operations", "vertical-label": "ops/s", "var" : "", "charts": 
+  [{"model": "LINE", "type": "counter", "type-instance": "CopyBlockOpNumOps", "ds": "value", "label": "Copy Block Operations", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "ops-replace-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Replace Block Operations", "vertical-label": "ops", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "ReplaceBlockOpNumOps", "ds": "value", "label": "Replace Block Operations", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "avgtime-read-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Read Block Average Time", "vertical-label": "sec", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "ReadBlockOpAvgTime", "ds": "value", "label": "Read Block Average Time", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "avgtime-write-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Write Block Average Time", "vertical-label": "sec", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "WriteBlockOpAvgTime", "ds": "value", "label": "Write Block Average Time", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "avgtime-copy-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Copy Block Average Time", "vertical-label": "sec", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "CopyBlockOpAvgTime", "ds": "value", "label": "Copy Block Average Time", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "avgtime-replace-block", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Replace Block Average Time", "vertical-label": "sec", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "ReplaceBlockOpAvgTime", "ds": "value", "label": "Replace Block Average Time", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "ops-block-checksum", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Block Checksum Operations", "vertical-label": "ops", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "BlockChecksumOpNumOps", "ds": "value", "label": "Block Checksum Operations", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "ops-block-reports", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Block Report Operations", "vertical-label": "ops", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "BlockReportsNumOps", "ds": "value", "label": "Block Report Operations", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "avgtime-block-checksum", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Block Checksum Average Time", "vertical-label": "sec", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "BlockChecksumOpAvgTime", "ds": "value", "label": "Block Checksum Average Time", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "avgtime-block-report", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Block Report Average Time", "vertical-label": "sec", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "BlockReportsAvgTime", "ds": "value", "label": "Block Report Average Time", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "block-verification-failures", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Block Verification Failures", "vertical-label": "ops", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "BlockVerificationFailures", "ds": "value", "label": "Block Verification Failures", "color": "GREEN", "format": "%5.2lf %S"}]
+},
+{"id": "volume-failures", "plugin": "GenericJMX", "plugin-instance": "DataNodeActivity", "title": "Volume Failures", "vertical-label": "failures", "var" : "", "charts": 
+  [{"model": "LINE", "type": "gauge", "type-instance": "VolumeFailures", "ds": "value", "label": "Volume Failures", "color": "GREEN", "format": "%5.2lf %S"}]
+}
+]}
+],
+
+
+
 "HDFS-NAMENODE": [
 {"group": "NameNode Info", "graphs":[
 {"id": "namenode-capacity", "plugin": "GenericJMX", "plugin-instance": "FSNamesystem", "title": "Namenode Capacity", "vertical-label": "GB", "var" : "", "charts": 

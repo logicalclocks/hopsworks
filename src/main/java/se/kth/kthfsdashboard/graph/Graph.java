@@ -69,12 +69,14 @@ public class Graph implements Serializable {
         this.verticalLabel = null;
     }
 
-    public Graph(String target, String group, int groupRank, int rank, String graphId, String var, String plugin, String pluginInstance, String title, String verticalLabel) {
+    public Graph(String target, String group, int groupRank, int rank, 
+            String graphId, String var, String plugin, String pluginInstance, 
+            String title, String verticalLabel) {
         this.target = target;
         this.group = group;
         this.graphId = graphId;
         this.var = var;
-        this.plugin = plugin;
+        this.plugin = (plugin == null) ? "" : plugin;
         this.pluginInstance = pluginInstance;
         this.groupRank = groupRank;
         this.rank = rank;
