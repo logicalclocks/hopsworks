@@ -5,18 +5,17 @@
 package se.kth.kthfsdashboard.job;
 
 import de.huberlin.cuneiform.compiler.local.LocalDispatcher;
+import de.huberlin.logview.graph.GraphOp;
+import de.huberlin.logview.table.TableOp;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.Callable;
 import org.apache.commons.io.FileUtils;
 import se.kth.kthfsdashboard.wf.Workflow;
-import de.huberlin.logview.graph.GraphOp;
-import de.huberlin.logview.table.TableOp;
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 
 /**
  *
@@ -49,24 +48,24 @@ public class WorkflowJobTask implements Callable<Job> {
 
             ld.addInputString(selectedWorkflow.getWorkflowMetadata());
             ld.run();
-
+            
             Date dateFinished = new Date();
 
-            GraphOp graph = new GraphOp();
+//            GraphOp graph = new GraphOp();
             TableOp table = new TableOp();
             FileInputStream log = new FileInputStream(System.getProperty("user.dir")
                     + "/build/log_" + selectedWorkflow.getWorkflowName() + ".csv");
 //            FileOutputStream graphLog = new FileOutputStream(System.getProperty("user.dir") + 
 //                    "/build/"+selectedWorkflow.getWorkflowName()+".dot");
-            ByteArrayOutputStream graphData = new ByteArrayOutputStream();
-//            ByteArrayOutputStream tableData = new ByteArrayOutputStream();
-            graph.process(log, graphData);
-            pending.setGraphDot(graphData.toString());
+//            ByteArrayOutputStream graphData = new ByteArrayOutputStream();
+            ByteArrayOutputStream tableData = new ByteArrayOutputStream();
+//            graph.process(log, graphData);
+//            pending.setGraphDot(graphData.toString());
             
 
-//            table.process(log, tableData);
-//            pending.setTableJob(tableData.toString());
-            
+            table.process(log, tableData);
+            pending.setTableJob(tableData.toString());
+            pending.setCompleted(true);
             pending.setCompletionTime(dateFinished.getTime() - dateStarted.getTime());
         } catch (Exception ex) {
             ex.printStackTrace();

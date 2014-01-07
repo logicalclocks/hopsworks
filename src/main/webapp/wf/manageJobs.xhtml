@@ -86,8 +86,6 @@
                 </p:dataTable>
                 <p:dialog header="Job Detail" widgetVar="jobDialog" resizable="false" 
                           showEffect="explode" hideEffect="explode" >
-                    <p:lineChart id="stacked" value="#{chartBean.categoryModel}" legendPosition="ne" stacked="true" fill="true"
-                                 title="Stacked and Filled" style="height:300px; width:500px" xaxisLabel="Year" yaxisLabel="Births" />
                     <p:spacer height="20px"/>
                     <p:panelGrid id="display" columns="5" >
 
@@ -110,6 +108,15 @@
                             <h:outputText value="#{jobTableController.selectedJob.completionTime}"/>
                         </p:column>
                     </p:panelGrid>
+                    <p:spacer height="20px"/>
+                    <div id="exportBar">
+                        <p:panel header="Job Log Results" >
+                            <h:commandLink>
+                                <p:graphicImage value="#{resource['/images/export/csv.png']}" />
+                                <p:fileDownload value="#{jobTableController.exportTable()}"/>
+                            </h:commandLink>
+                        </p:panel>
+                    </div>
                 </p:dialog>
             </h:form>
         </div>
