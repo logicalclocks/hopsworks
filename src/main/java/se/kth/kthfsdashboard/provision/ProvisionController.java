@@ -168,7 +168,7 @@ public class ProvisionController implements Serializable {
      * retrieves the information from the credentials page
      */
     private void setCredentials() {
-        PaaSCredentials credentials = credentialsEJB.find();
+        PaasCredentials credentials = credentialsEJB.find();
         Provider check = Provider.fromString(credentials.getProvider());
         if (Provider.AWS_EC2.equals(check)) {
             provider = Provider.AWS_EC2.toString();

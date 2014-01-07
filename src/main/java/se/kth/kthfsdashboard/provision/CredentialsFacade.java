@@ -15,7 +15,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @Stateless
-public class CredentialsFacade extends AbstractFacade<PaaSCredentials>{
+public class CredentialsFacade extends AbstractFacade<PaasCredentials>{
     
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
@@ -26,11 +26,14 @@ public class CredentialsFacade extends AbstractFacade<PaaSCredentials>{
     }
     
     public CredentialsFacade(){
-        super(PaaSCredentials.class);
+        super(PaasCredentials.class);
     }
     
-    public PaaSCredentials find() {
-        TypedQuery<PaaSCredentials> query = em.createNamedQuery("PaaSCredentials.findAll", PaaSCredentials.class);
-        return query.getResultList().get(0);
+    public PaasCredentials find() {
+        TypedQuery<PaasCredentials> query = em.createNamedQuery("PaasCredentials.findAll", PaasCredentials.class);
+        if (query.getResultList().size() > 0) {
+            return query.getResultList().get(0);
+        }
+        return new PaasCredentials();
     }
 }

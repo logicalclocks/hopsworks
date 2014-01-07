@@ -259,6 +259,7 @@ body {
     border-radius:  0px;
     border-right:   none;
     border-left:    none;
+    background-color: lightblue;
 }
 
 .MainToolbar .ui-toolbar-group-left     {
@@ -272,6 +273,7 @@ body {
     top: 5px;
     padding-left: 7px;
     padding-right: 20px;
+    background-color: transparent;
 }
 
 /*.SecondToolbarBad*/
