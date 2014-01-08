@@ -42,6 +42,7 @@ public class Job implements Serializable {
     private String graphDot;
     @Column(columnDefinition="text")
     private String tableJob;
+    private boolean completed;
 
     public Job() {
     }
@@ -50,7 +51,7 @@ public class Job implements Serializable {
         byte[] contents = null;
         byte[] digest = null;
         String hashtext="";
-        
+        completed=false;
         try{
             contents = (executedBy+name+dateRun).getBytes("UTF-8");
             digest = MessageDigest.getInstance("MD5").digest(contents);
@@ -143,7 +144,15 @@ public class Job implements Serializable {
     public void setTableJob(String tableJob) {
         this.tableJob = tableJob;
     }
-    
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
+    }
+        
     @Override
     public int hashCode() {
         int hash = 3;

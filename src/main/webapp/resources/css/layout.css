@@ -679,6 +679,11 @@ body {
     color: green;
 }
 
+#exportBar{
+    margin-left: auto;
+    margin-right: auto;
+    width: 150px;
+}
 
 .ui-terminal, .ui-terminal input {
     font-family: Tahoma, monospace;   

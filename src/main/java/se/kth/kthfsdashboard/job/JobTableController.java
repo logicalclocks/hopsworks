@@ -4,7 +4,10 @@
  */
 package se.kth.kthfsdashboard.job;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,6 +16,9 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import javax.faces.model.SelectItem;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
+import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterEntity;
 
 /**
  *
@@ -49,10 +55,10 @@ public class JobTableController implements Serializable {
     public void setJobs(List<Job> jobs) {
         this.jobs = jobs;
     }
-    
-   public SelectItem[] jobNamesAsOptions(){
-       return jobNamesOptions;
-   }
+
+    public SelectItem[] jobNamesAsOptions() {
+        return jobNamesOptions;
+    }
 
     private SelectItem[] createFilterOptions(Job[] data) {
         SelectItem[] options = new SelectItem[data.length + 1];
@@ -71,5 +77,19 @@ public class JobTableController implements Serializable {
 
     public void setSelectedJob(Job selectedJob) {
         this.selectedJob = selectedJob;
+    }
+
+    public StreamedContent exportTable() {
+        DefaultStreamedContent export = null;
+        if (selectedJob != null) {
+            String content = selectedJob.getTableJob();
+            try {
+                InputStream stream = new ByteArrayInputStream(content.getBytes("UTF-8"));
+                export = new DefaultStreamedContent(stream, "text/csv", selectedJob.getName() + "-Table" + ".csv");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        return export;
     }
 }
