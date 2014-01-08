@@ -577,6 +577,19 @@ body {
     display: none!important;
 }
 
+.ClusterLauncher {
+    width: 380px;
+    margin: 0 auto;
+    margin-top: 20px;
+    border-width: 3px; 
+    border-style: solid; 
+    border-color: lightgray; 
+    background-color: #F0F0F0; 
+    border-radius: 6px;  
+    padding: 10px;   
+}
+
+
 .ViewButton {
     background-color: lightblue;
     font-size:      20px !important;
@@ -698,6 +711,15 @@ body {
 .Progressbar-Succeeded .ui-progressbar-value {
     background: lightgreen;
 }
+
+
+.CreateCluster {
+    border-radius:  0px;
+    border-right:   none;
+    border-left:    none;
+    background-color: lightblue;
+}
+
 
 
 

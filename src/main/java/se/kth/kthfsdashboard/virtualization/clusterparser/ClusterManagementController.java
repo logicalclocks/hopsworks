@@ -272,7 +272,6 @@ public class ClusterManagementController implements Serializable {
         String response = parseYMLtoCluster();
         FacesMessage msg = new FacesMessage(response);
         FacesContext.getCurrentInstance().addMessage(null, msg);
-
     }
 
     public void handleFileUploadOld() {
@@ -373,8 +372,18 @@ public class ClusterManagementController implements Serializable {
 
     public String proceedLauncher() {
         if (file != null) {
-            return "proceedLaunchCluster";
+            String response = parseYMLtoCluster();
+            if (response.startsWith("Successful")) {
+                return "proceedLaunchCluster";
+            } else {
+                FacesMessage msg = new FacesMessage(response);
+                FacesContext.getCurrentInstance().addMessage(null, msg);
+                return "";
+            }
         } else {
+            FacesMessage msg = new FacesMessage("Error. You must first select a file, then click the upload button.");
+            FacesContext.getCurrentInstance().addMessage(null, msg);
+
             return "";
         }
     }
