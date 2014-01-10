@@ -250,7 +250,7 @@ public class ScriptBuilder implements Statement {
                 List<String> soloLines = new ArrayList<String>();
                 soloLines.add("file_cache_path \"/tmp/chef-solo\"");
                 soloLines.add("cookbook_path \"/tmp/chef-solo/cookbooks\"");
-                statements.add(createOrOverwriteFile("/etc/chef/solo.rb",soloLines));
+                statements.add(createOrOverwriteFile("/etc/chef/solo.rb", soloLines));
                 //Setup and fetch git recipes
                 statements.add(exec("git config --global user.name \"" + gitName + "\";"));
                 //statements.add(exec("git config --global user.email \"jdowling@sics.se\";"));
@@ -363,11 +363,10 @@ public class ScriptBuilder implements Statement {
         json.append("]}");
         return json;
     }
-    
+
     /*
      * JSON generator for configuration phase with recipes run list
      */
-
     private StringBuilder generateConfigJSON(List<String> runlist) {
         //Start json
         StringBuilder json = new StringBuilder();
@@ -442,10 +441,10 @@ public class ScriptBuilder implements Statement {
                 json.append("\"mysqld\"");
 
             }
-            if (role.equals("datanode")) {
-                json.append("\"dn\"");
-
-            }
+//            if (role.equals("datanode")) {
+//                json.append("\"dn\"");
+//
+//            }
             if (role.equals("namenode")) {
                 json.append("\"nn\"");
 
@@ -459,15 +458,20 @@ public class ScriptBuilder implements Statement {
         json.append("\"hopagent\":{\"server\":\"").append(privateIP).append(":8080\"},");
         //need to add support for agent_user and agent_pass
 
-        json.append("\"mysql\":{\"bind_address\":\"").append(mysql.get(0)).append("\"},");
-        
+        json.append("\"mysql\":{\"bind_address\":\"").append(mysql.get(0)).append("\",");
+        json.append("\"root_network_acl\":\"").append(mysql.get(0)).append("\",");
+        json.append("\"user\":\"kthfs\",\"user_password\":\"kthfs\",\"server_debian_password\":\"kthfs\",");
+        json.append("\"server_repl_password\":\"kthfs\",\"server_root_password\":\"kthfs\"");
+
+        json.append("},");
+
         /*Generate hops fragment
          /*server ip of the dashboard
          */
         json.append("\"hop\":{\"server\":\"").append(privateIP).append(":8080").append("\",");
         //rest url
         //json.append("\"rest_url\":\"").append("http://").append(privateIP)
-           //     .append("/kthfs-dashboard").append("\",");
+        //     .append("/kthfs-dashboard").append("\",");
         //mgm ip
         //TODO ADD SUPPORT FOR MULTIPLE MGMS
         json.append("\"ndb_connectstring\":\"").append(mgms.get(0)).append("\",");
@@ -497,7 +501,7 @@ public class ScriptBuilder implements Statement {
         //My own ip
         json.append("\"ip\":\"").append(ip).append("\"");
         json.append("},");
-        
+
         //Recipe runlist append in the json
         json.append("\"run_list\":[");
         for (int i = 0; i < runlist.size(); i++) {
@@ -519,7 +523,7 @@ public class ScriptBuilder implements Statement {
         RunListBuilder builder = new RunListBuilder();
         builder.addRecipe("ndb::install");
         builder.addRecipe("java");
-       // builder.addRecipe("hops::install");
+        // builder.addRecipe("hops::install");
         return builder.build();
     }
 

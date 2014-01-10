@@ -13,14 +13,15 @@
      - 3321
     git:
       user: Jim Dowling
-      repository: https://ghetto.sics.se/jdowling/hops-chef.git
+      ##repository: https://ghetto.sics.se/jdowling/hops-chef.git
+      repository: https://github.com/hopstart/hop-chef.git
       key: notNull
   provider:
     name: aws-ec2
     instanceType: m1.large
     loginUser: ubuntu
-    image: eu-west-1/ami-35667941 
-    ##image: eu-west-1/ami-ffcdce8b
+    ##image: eu-west-1/ami-c8957bbf 
+    image: eu-west-1/ami-ffcdce8b
     region: eu-west-1
     zones: 
     - eu-west-1a
