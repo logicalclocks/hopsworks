@@ -84,55 +84,14 @@
                         <h:outputText value="#{job.completed?'completed':'working, please wait..'}"/>
                     </p:column>
                     <p:column headerText="Results">
-                        <p:commandButton id="selectButton" disabled="#{!job.completed}" 
-                                         update=":jobForm:display" oncomplete="jobDialog.show()" 
-                                         icon="ui-icon-search" title="View">  
-                            <f:setPropertyActionListener value="#{job}" target="#{jobTableController.selectedJob}"  />  
-                        </p:commandButton>
+                        <h:commandLink disabled="#{!job.completed}">
+                            <p:graphicImage rendered="#{job.completed}" value="#{resource['/images/export/csv.png']}" />
+                                <f:setPropertyActionListener value="#{job}" target="#{jobTableController.selectedJob}"  /> 
+                                <p:fileDownload value="#{jobTableController.exportTable()}"/>
+                        </h:commandLink> 
                     </p:column>
 
                 </p:dataTable>
-                <p:dialog header="Job Detail" widgetVar="jobDialog" resizable="false" 
-                          showEffect="explode" hideEffect="explode" >
-                    <p:spacer height="20px"/>
-                    <p:panelGrid id="display" columns="5" >
-
-                        <p:column headerText="UniqueID" >
-                            <h:outputText value="#{jobTableController.selectedJob.uniqueID}" />
-                        </p:column>
-
-                        <p:column headerText="Name" >
-                            <h:outputText value="#{jobTableController.selectedJob.name}"/>
-                        </p:column>
-
-                        <p:column headerText="ExecutedBy" >
-                            <h:outputText value="#{jobTableController.selectedJob.executedBy}" />
-                        </p:column>
-
-                        <p:column headerText="Date Run" >
-                            <h:outputText value="#{jobTableController.selectedJob.dateRun}" />
-                        </p:column>
-                        <p:column headerText="Time lapse (s)">
-                            <h:outputText value="#{jobTableController.selectedJob.completionTime}"/>
-                        </p:column>
-                    </p:panelGrid>
-                    <p:spacer height="20px"/>
-                    <div id="exportBar">
-                        <p:panel header="Job Log Results" >
-                            <h:commandLink>
-                                <p:graphicImage value="#{resource['/images/export/csv.png']}" />
-                                <p:fileDownload value="#{jobTableController.exportTable()}"/>
-                            </h:commandLink>
-                        </p:panel>
-                    </div>
-                </p:dialog>
-                <p:dialog header="Job Detail" widgetVar="pendingDialog" resizable="false" 
-                          showEffect="explode" hideEffect="explode" >
-                    <p:spacer height="20px"/>
-
-                    <p:spacer height="20px"/>
-
-                </p:dialog>
             </h:form>
         </div>
     </h:body>

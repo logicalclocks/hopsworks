@@ -53,8 +53,7 @@ public class WorkflowJobTask implements Callable<Job> {
 
 //            GraphOp graph = new GraphOp();
             TableOp table = new TableOp();
-            FileInputStream log = new FileInputStream(System.getProperty("user.dir")
-                    + "/build/log_" + selectedWorkflow.getWorkflowName() + ".csv");
+            FileInputStream log = new FileInputStream(ld.getLogFile());
 //            FileOutputStream graphLog = new FileOutputStream(System.getProperty("user.dir") + 
 //                    "/build/"+selectedWorkflow.getWorkflowName()+".dot");
 //            ByteArrayOutputStream graphData = new ByteArrayOutputStream();
