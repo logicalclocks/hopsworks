@@ -5,7 +5,6 @@
 package se.kth.kthfsdashboard.job;
 
 import de.huberlin.cuneiform.compiler.local.LocalDispatcher;
-import de.huberlin.logview.graph.GraphOp;
 import de.huberlin.logview.table.TableOp;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -13,6 +12,7 @@ import java.io.FileInputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import org.apache.commons.io.FileUtils;
 import se.kth.kthfsdashboard.wf.Workflow;
@@ -48,6 +48,8 @@ public class WorkflowJobTask implements Callable<Job> {
 
             ld.addInputString(selectedWorkflow.getWorkflowMetadata());
             ld.run();
+            Set<String> resStr = ld.getComputationResultSet();
+
             
             Date dateFinished = new Date();
 

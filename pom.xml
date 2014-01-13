@@ -59,6 +59,11 @@
         </dependency>
         <dependency>
             <groupId>de.huberlin.cuneiform</groupId>
+            <artifactId>cuneiform</artifactId>
+            <version>0.14.01.1</version>
+        </dependency>
+        <dependency>
+            <groupId>de.huberlin.cuneiform</groupId>
             <artifactId>logview</artifactId>
             <version>0.13</version>
         </dependency>
@@ -245,12 +250,6 @@
         </dependency>
 
         <dependency>
-            <groupId>de.huberlin.cuneiform</groupId>
-            <artifactId>cuneiform</artifactId>
-            <version>0.13</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.ocpsoft.rewrite</groupId>
             <artifactId>rewrite-servlet</artifactId>
             <version>2.0.1.Final</version>
@@ -360,7 +359,6 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-
         <repository>
             <id>maven2-repository.dev.java.net</id>
             <name>Java.net Repository for Maven</name>
