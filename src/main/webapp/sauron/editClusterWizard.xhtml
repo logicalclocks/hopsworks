@@ -6,7 +6,7 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       >
-  
+
     <ui:composition template="layout.xhtml">
 
         <ui:define name="title">
@@ -27,15 +27,15 @@
             </h:form>
             <!--Navigation Bar - End-->
 
- 
+
             <div id="content" align="left">
-                <div class="services-header">Create Cluster Wizard:</div>
+                <div class="services-header">Edit Cluster Wizard:</div>
                 <p:spacer width="1" height="8" />
                 <ui:include src="#{clusterManagementController.baremetal
                                    ?'/sauron/template/createBaremetalClusterForm.xhtml'
-                                    :'/sauron/template/createVirtualClusterForm.xhtml'}" 
+                                   :'/sauron/template/createVirtualClusterForm.xhtml'}" 
                             />
-                
+
             </div>
         </ui:define>
 

@@ -61,6 +61,6 @@ public class EditorYamlController implements Serializable {
     public String saveChanges(){
         entity.setYamlContent(content);
         clusterEJB.updateCluster(entity);
-        return "addcluster";
+        return "editcluster";
     }
 }

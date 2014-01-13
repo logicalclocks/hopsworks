@@ -29,8 +29,9 @@
             <p:toolbarGroup align="left">
                <p:menuButton value="Clusters">
                   <p:menuitem value="New Cluster" action="addcluster"/>
+                  <p:menuitem value="Edit Clusters" action="editcluster"/>
                   <p:menuitem value="Clusters in Progress" action="progress"/>
-                  <p:menuitem value="All Clusters" action="clusters"/>
+                  <p:menuitem value="All Clusters" action="hadoop"/>
                   <p:separator rendered="#{not empty clustersLayoutController.clusters}"/>  
                   <c:forEach var="cluster" items="#{clustersLayoutController.clusters}">                          
                      <p:menuitem value="#{cluster}" action='#{urlController.clusterStatus(cluster)}'/>

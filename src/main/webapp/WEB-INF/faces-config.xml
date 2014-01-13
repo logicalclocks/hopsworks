@@ -107,6 +107,16 @@
             <redirect/>
         </navigation-case>
         <navigation-case>
+            <from-outcome>editcluster</from-outcome>
+            <to-view-id>/sauron/editClusters.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+         <navigation-case>
+            <from-outcome>editClusterWizard</from-outcome>
+            <to-view-id>/sauron/editClusterWizard.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
             <from-outcome>progress</from-outcome>
             <to-view-id>/sauron/clusterProgress.xhtml</to-view-id>
             <redirect/>

@@ -502,9 +502,8 @@ public class ClusterManagementController implements Serializable {
             } else {
                 cluster = null;
             }
-            return "createClusterWizard";
+            return "editClusterWizard";
         } else {
-            System.out.println("hello");
             return "";
         }
     }
