@@ -63,9 +63,7 @@
         <div id="table" style="margin-left: 100px; margin-right: 100px">
             <h:form id="jobForm">
                 <p:dataTable id="jobsWithFilterOptions" var="job" value="#{jobTableController.jobs}" 
-                             rowKey="#{job.uniqueID}" selection="#{jobTableController.selectedJob}" 
-                             selectionMode="single" >
-                    <p:ajax event="rowSelect" update=":jobForm:display" oncomplete="jobDialog.show()" />  
+                             rowKey="#{job.uniqueID}" >
                     <p:column headerText="UniqueID" >
                         <h:outputText value="#{job.uniqueID}" />
                     </p:column>
@@ -81,6 +79,16 @@
                     </p:column>
                     <p:column headerText="Time lapse (s)" >
                         <h:outputText value="#{job.completionTime}" />
+                    </p:column>
+                    <p:column headerText="Status">
+                        <h:outputText value="#{job.completed?'completed':'working, please wait..'}"/>
+                    </p:column>
+                    <p:column headerText="Results">
+                        <p:commandButton id="selectButton" disabled="#{!job.completed}" 
+                                         update=":jobForm:display" oncomplete="jobDialog.show()" 
+                                         icon="ui-icon-search" title="View">  
+                            <f:setPropertyActionListener value="#{job}" target="#{jobTableController.selectedJob}"  />  
+                        </p:commandButton>
                     </p:column>
 
                 </p:dataTable>
@@ -117,6 +125,13 @@
                             </h:commandLink>
                         </p:panel>
                     </div>
+                </p:dialog>
+                <p:dialog header="Job Detail" widgetVar="pendingDialog" resizable="false" 
+                          showEffect="explode" hideEffect="explode" >
+                    <p:spacer height="20px"/>
+
+                    <p:spacer height="20px"/>
+
                 </p:dialog>
             </h:form>
         </div>
