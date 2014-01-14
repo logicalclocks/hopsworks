@@ -482,7 +482,7 @@ public class ScriptBuilder implements Statement {
 
         roleSet = new HashSet<String>(roles);
         if (roleSet.contains("datanode") || roleSet.contains("namenode")) {
-            json.append("\"service\":\"").append("KTHFS").append("\",");
+            json.append("\"service\":\"").append("HDFS").append("\",");
         }
 //        else{
 //            json.append("\"service\":\"").append("MySQLCluster").append("\",");

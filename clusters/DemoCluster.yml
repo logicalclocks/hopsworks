@@ -36,10 +36,11 @@
   - service: mysqld
     number: 1
     recipes: 
-      - resourcemanager
+      - namenode
   - service: namenode
-    number: 2
-   
+    number: 1
+    recipes:
+      - resourcemanager
   - service: datanode
     number: 2
     recipes:
