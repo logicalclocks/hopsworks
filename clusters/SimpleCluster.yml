@@ -1,0 +1,26 @@
+  name: simpleCluster
+  provider:
+    name: aws-ec2
+    ##instanceType: m1.large
+    ##loginUser: ubuntu
+    ##image: eu-west-1/ami-c8957bbf 
+#    image: eu-west-1/ami-ffcdce8b
+#    region: eu-west-1
+#    zones: 
+#    - eu-west-1a
+  ##lists of groups, with the roles the nodes will have and open ports 
+  nodes:
+  - services: [ndb::dn]
+    number: 2
+    
+  - services: [ndb::mgm, ndb::mysqld, hop::namenode]
+    number: 1
+      
+  - services: [hop::namenode, hop::resourcemanager]
+    number: 1
+       
+  - services: [hop::datanode, hop::nodemanager]
+    number: 2
+        
+
+...
