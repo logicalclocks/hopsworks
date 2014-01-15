@@ -31,6 +31,9 @@ public class CredentialsFacade extends AbstractFacade<PaaSCredentials>{
     
     public PaaSCredentials find() {
         TypedQuery<PaaSCredentials> query = em.createNamedQuery("PaaSCredentials.findAll", PaaSCredentials.class);
-        return query.getResultList().get(0);
+        if (query.getResultList().size() > 0) {
+            return query.getResultList().get(0);
+        }
+        return new PaaSCredentials();
     }
 }
