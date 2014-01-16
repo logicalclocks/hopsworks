@@ -147,19 +147,6 @@ public final class VirtualizedClusterProvision implements Provision {
         globalPorts.addAll(Ints.asList(commonTCP.get("ssh")));
         globalPorts.addAll(Ints.asList(commonTCP.get("http&https")));
 
-        /*
-         * To remove this snippet, not used anymore
-         */
-        //For each basic role, we map the ports in that role into a list which we append to the commonPorts
-//        for (String commonRole : cluster.getAuthorizePorts()) {
-//            if (commonTCP.containsKey(commonRole)) {
-//                //Use guava library to transform the array into a list, add all the ports
-//                List<Integer> portsRole = Ints.asList(commonTCP.get(commonRole));
-//                globalPorts.addAll(portsRole);
-//            }
-//        }
-
-
         //If EC2 client
         if (provider.toString().equals(Provider.AWS_EC2.toString())) {
             //Unwrap the compute service context and retrieve a rest context to speak with EC2
@@ -185,9 +172,9 @@ public final class VirtualizedClusterProvision implements Provision {
                 }
                 //Open the ports for that group
                 //Authorize the ports for TCP and UDP roles in cluster file for that group
-                for (String service : group.getServices()) {
-                    if (portsTCP.containsKey(service)) {
-                        for (int port : portsTCP.get(service)) {
+                for (String serviceName : group.getServices()) {
+                    if (portsTCP.containsKey(serviceName)) {
+                        for (int port : portsTCP.get(serviceName)) {
                             if (!openTCP.contains(port)) {
                                 client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
                                         groupName, IpProtocol.TCP, port, port, "0.0.0.0/0");
@@ -195,7 +182,7 @@ public final class VirtualizedClusterProvision implements Provision {
                             }
                         }
 
-                        for (int port : portsUDP.get(service)) {
+                        for (int port : portsUDP.get(serviceName)) {
                             if (!openUDP.contains(port)) {
                                 client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
                                         groupName, IpProtocol.UDP, port, port, "0.0.0.0/0");
@@ -262,9 +249,9 @@ public final class VirtualizedClusterProvision implements Provision {
                         //get the ports
 
                         //Authorize the ports for TCP and UDP
-                        for (String service : group.getServices()) {
-                            if (portsTCP.containsKey(service)) {
-                                for (int port : portsTCP.get(service)) {
+                        for (String serviceName : group.getServices()) {
+                            if (portsTCP.containsKey(serviceName)) {
+                                for (int port : portsTCP.get(serviceName)) {
                                     if (!openTCP.contains(port)) {
                                         Ingress ingress = Ingress.builder()
                                                 .fromPort(port)
@@ -276,7 +263,7 @@ public final class VirtualizedClusterProvision implements Provision {
                                     }
 
                                 }
-                                for (int port : portsUDP.get(service)) {
+                                for (int port : portsUDP.get(serviceName)) {
                                     if (!openUDP.contains(port)) {
                                         Ingress ingress = Ingress.builder()
                                                 .fromPort(port)
@@ -377,9 +364,7 @@ public final class VirtualizedClusterProvision implements Provision {
                 //With actual changes, name is main kthfs service and recipes are optional recipes from the users
                 List<String> services = new LinkedList();
                 services.addAll(group.getServices());
-//                if (group.getServices() != null) {
-//                    services.addAll(group.getServices());
-//                }
+
                 Iterator<? extends NodeMetadata> iter = ready.iterator();
 
                 int i = 0;
@@ -389,30 +374,47 @@ public final class VirtualizedClusterProvision implements Provision {
                     if (services.contains("ndb::mgm")) {
                         //Add private ip to mgm
                         mgmIP.addAll(node.getPrivateAddresses());
-                        mgms.put(node, services);
+                        List<String> mgmRecipes = new LinkedList();
+                        mgmRecipes.addAll(group.getServices());
+                        mgmRecipes.remove("ndb::mysqld");
+                        mgmRecipes.remove("ndb::dn");
+                        mgms.put(node, mgmRecipes);
+                        //filter out mysqld or dn, will be executed later
                     }
                     if (services.contains("ndb::dn")) {
 
                         ndbsIP.addAll(node.getPrivateAddresses());
-                        ndbs.put(node, services);
+                        List<String> ndbRecipes = new LinkedList();
+                        ndbRecipes.addAll(group.getServices());
+                        ndbRecipes.remove("ndb::mgm");
+                        ndbRecipes.remove("ndb::mysqld");
+                        ndbs.put(node, ndbRecipes);
+                        //idem, filter out other mysql cluster conflicts
 
                     }
                     if (services.contains("ndb::mysqld")) {
 
                         mySQLClientsIP.addAll(node.getPrivateAddresses());
-                        //To avoid launching the node in two phases, see if it is sharing a same node
-                        if (!group.getServices().contains("mysqld")) {
-                            mysqlds.put(node, services);
-                        }
+//                        //To avoid launching the node in two phases, see if it is sharing a same node
+//                        if (!group.getServices().contains("mysqld")) {
+                        //For a shared node with mgm, it will run 2 times on it.
+                        List<String> mysqldRecipes = new LinkedList();
+                        mysqldRecipes.addAll(group.getServices());
+                        mysqldRecipes.remove("ndb::mgm");
+                        mysqldRecipes.remove("ndb::dn");
+                        mysqlds.put(node, mysqldRecipes);
+                        //filter out other mysql conflicts
+//                        }
 
                     }
                     if (services.contains("hop::namenode")) {
 
                         namenodesIP.addAll(node.getPrivateAddresses());
                         //avoid relaunching a node in the corresponding 
-                        if (!group.getServices().contains("namenode")) {
-                            namenodes.put(node, services);
-                        }
+//                        if (!group.getServices().contains("namenode")) {
+                        namenodes.put(node, services);
+                        //filter out conflicts
+//                        }
                     }
 
                     if (services.contains("hop::datanode")) {

@@ -18,7 +18,6 @@ import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.StatementList;
 import static org.jclouds.scriptbuilder.domain.Statements.createOrOverwriteFile;
 import static org.jclouds.scriptbuilder.domain.Statements.exec;
-import org.jclouds.scriptbuilder.statements.ruby.InstallRubyGems;
 import org.jclouds.scriptbuilder.statements.ssh.AuthorizeRSAPublicKeys;
 
 /**
@@ -216,9 +215,9 @@ public class ScriptBuilder implements Statement {
         this.gitKey = gitKey; //To do the same
         this.gitRepo = (gitRepo == null || gitRepo.equals(""))
                 ? "https://github.com/hopstart/hop-chef.git" : gitRepo;
-        filterClients.add("mysqld");
-        filterClients.add("datanode");
-        filterClients.add("namenode");
+        filterClients.add("ndb::mysqld");
+        filterClients.add("hop::datanode");
+        filterClients.add("hop::namenode");
     }
 
     @Override
@@ -434,7 +433,7 @@ public class ScriptBuilder implements Statement {
 
             String role = iterRoles.next();
 
-            if (role.equals("mysqld") // JIM: We can just have an empty clients list for mgm and ndb nodes    
+            if (role.equals("ndb::mysqld") // JIM: We can just have an empty clients list for mgm and ndb nodes    
                     //                || group.getSecurityGroup().equals("mgm")
                     //                || group.getSecurityGroup().equals("ndb")
                     ) {
@@ -445,7 +444,7 @@ public class ScriptBuilder implements Statement {
 //                json.append("\"dn\"");
 //
 //            }
-            if (role.equals("namenode")) {
+            if (role.equals("hop::namenode")) {
                 json.append("\"nn\"");
 
             }
@@ -481,7 +480,7 @@ public class ScriptBuilder implements Statement {
         json.append("\"hostid\":\"").append(nodeId).append("\",");
 
         roleSet = new HashSet<String>(roles);
-        if (roleSet.contains("datanode") || roleSet.contains("namenode")) {
+        if (roleSet.contains("hop::datanode") || roleSet.contains("hop::namenode")) {
             json.append("\"service\":\"").append("HDFS").append("\",");
         }
 //        else{
@@ -533,55 +532,64 @@ public class ScriptBuilder implements Statement {
         builder.addRecipe("python::package");
         builder.addRecipe("java");
         builder.addRecipe("hopagent");
-        boolean collectdAdded = false;
-
-        //Look at the roles, if it matches add the recipes for that role
-        for (String role : roles) {
-            if (role.equals("ndb")) {
-                builder.addRecipe("ndb::ndbd");
-                builder.addRecipe("ndb::ndbd-hop");
-                collectdAdded = true;
-            }
-            if (role.equals("mysqld")) {
-                builder.addRecipe("ndb::mysqld");
-                builder.addRecipe("ndb::mysqld-hop");
-                collectdAdded = true;
-            }
-            if (role.equals("mgm")) {
-                builder.addRecipe("ndb::mgmd");
-                builder.addRecipe("ndb::mgmd-hop");
-                collectdAdded = true;
-            }
-            if (role.equals("memcached")) {
-                builder.addRecipe("ndb::memcached");
-                builder.addRecipe("ndb::memcached-hop");
-            }
-
-            //This are for the Hadoop nodes
-            if (role.equals("namenode")) {
-                //builder.addRecipe("java");
-                builder.addRecipe("hop::namenode");
-                collectdAdded = true;
-            }
-            if (role.equals("datanode")) {
-                //builder.addRecipe("java");
-                builder.addRecipe("hop::datanode");
-                collectdAdded = true;
-            }
-            if (role.equals("resourcemanager")) {
-                //builder.addRecipe("java");
-                builder.addRecipe("hop::resourcemanager");
-                collectdAdded = true;
-            }
-            if (role.equals("nodemanager")) {
-                // builder.addRecipe("java");
-                builder.addRecipe("hop::nodemanager");
-            }
-            if (role.equals("spark")) {
-                builder.addRecipe("spark");
-            }
-
+        for(String role: roles){
+            builder.addRecipe(role);
         }
+        boolean collectdAdded = 
+                roles.contains("ndb::dn")||roles.contains("ndb::mysqld")||roles.contains("ndb:mgm")
+                ||roles.contains("hop::namenode")||roles.contains("hop::datanode")
+                        ||roles.contains("hop::resourcemanager");
+        //Look at the roles, if it matches add the recipes for that role
+//        for (String role : roles) {
+//            if (role.equals("ndb")) {
+//                builder.addRecipe("ndb::ndbd");
+//                builder.addRecipe("ndb::ndbd-hop");
+//                collectdAdded = true;
+//            }
+//            if (role.equals("mysqld")) {
+//                builder.addRecipe("ndb::mysqld");
+//                builder.addRecipe("ndb::mysqld-hop");
+//                collectdAdded = true;
+//            }
+//            if (role.equals("mgm")) {
+//                builder.addRecipe("ndb::mgmd");
+//                builder.addRecipe("ndb::mgmd-hop");
+//                collectdAdded = true;
+//            }
+//            if (role.equals("memcached")) {
+//                builder.addRecipe("ndb::memcached");
+//                builder.addRecipe("ndb::memcached-hop");
+//            }
+//
+//            //This are for the Hadoop nodes
+//            if (role.equals("namenode")) {
+//                //builder.addRecipe("java");
+//                builder.addRecipe("hop::namenode");
+//                collectdAdded = true;
+//            }
+//            if (role.equals("datanode")) {
+//                //builder.addRecipe("java");
+//                builder.addRecipe("hop::datanode");
+//                collectdAdded = true;
+//            }
+//            if (role.equals("resourcemanager")) {
+//                //builder.addRecipe("java");
+//                builder.addRecipe("hop::resourcemanager");
+//                collectdAdded = true;
+//            }
+//            if (role.equals("nodemanager")) {
+//                // builder.addRecipe("java");
+//                builder.addRecipe("hop::nodemanager");
+//            }
+//            if (role.equals("spark")) {
+//                builder.addRecipe("spark");
+//            }
+//            //if not meets criterias, then it is a custom recipe of the user;
+//            else{
+//                builder.addRecipe(role);
+//            }
+
+//        }
         // We always need to restart the kthfsagent after we have
         // updated its list of services
         if (collectdAdded) {
