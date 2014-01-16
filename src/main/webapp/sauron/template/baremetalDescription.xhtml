@@ -61,9 +61,9 @@
                                 <h:outputLabel value="Hosts:"/>
                                 <h:outputText value="#{node.hosts}" />
                                 <h:outputLabel value="Recipes:" 
-                                               rendered="#{node.recipes!='' and node.recipes!=null}"/>
-                                <h:outputText value="#{node.recipes}" 
-                                              rendered="#{node.recipes!='' and node.recipes!=null}"/>
+                                               rendered="#{node.services!='' and node.services!=null}"/>
+                                <h:outputText value="#{node.services}" 
+                                              rendered="#{node.services!='' and node.services!=null}"/>
                                 <h:outputLabel value="Chef Attributes:" 
                                                rendered="#{node.chefAttributes!='' and node.chefAttributes!=null}"/>
                                 <h:outputText value="#{node.chefAttributes}" 

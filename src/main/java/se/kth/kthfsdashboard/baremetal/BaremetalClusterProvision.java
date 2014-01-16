@@ -99,7 +99,7 @@ public class BaremetalClusterProvision implements Provision {
         for (final BaremetalGroup group : cluster.getNodes()) {
 
             messages.addMessage("Creating " + group.getNumber()
-                    + "  nodes in Security Group " + group.getService());
+                    + "  nodes in Security Group " + group.getServices().get(0));
             //Identify the biggest group
             max = max < group.getNumber() ? group.getNumber() : max;
             //iterate over the hosts
@@ -119,10 +119,10 @@ public class BaremetalClusterProvision implements Provision {
                 }
                 //Generate function to store results when done
                 List<String> services = new LinkedList<String>();
-                services.add(group.getService());
-                if(group.getRecipes()!=null){
-                    services.addAll(group.getRecipes());
-                }
+                services.addAll(group.getServices());
+//                if(group.getServices()!=null){
+//                    services.addAll(group.getServices());
+//                }
                 final StoreResults results = new StoreResults(services, latch, this);
                 ListenableFuture<Set<NodeMetadata>> groupCreation =
                         pool.submit(new InitializeBaremetalCallable(privateKey, host, cluster.getLoginUser(),
