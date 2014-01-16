@@ -60,7 +60,7 @@
         <dependency>
             <groupId>de.huberlin.cuneiform</groupId>
             <artifactId>cuneiform</artifactId>
-            <version>0.14.01.1</version>
+            <version>0.14.01.2</version>
         </dependency>
         <dependency>
             <groupId>de.huberlin.cuneiform</groupId>
