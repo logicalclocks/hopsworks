@@ -29,7 +29,6 @@ import org.primefaces.model.UploadedFile;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.BeanAccess;
-import org.yaml.snakeyaml.representer.Representer;
 import se.kth.kthfsdashboard.provision.ClusterOptions;
 import se.kth.kthfsdashboard.provision.EditorYamlController;
 

@@ -20,38 +20,22 @@
     loginUser: ubuntu
     image: eu-west-1/ami-35667941
     region: eu-west-1
-    zones: 
-    - eu-west-1a
+
   ##lists of groups, with the roles the nodes will have and open ports 
   nodes:
-  - service: ndb
+  - services: [ndb]
     number: 2
     
-  - service: mgm
+  - services: [mgm]
     number: 1
-    recipes: 
-    authorizePorts: 
-      - 10
-    chefAttributes:
-    bittorrent:
-  - service: mysqld
+    
+  - services: [mysqld]
     number: 1
-    recipes: 
-    authorizePorts: 
-      - 20
-    chefAttributes:
-  - service: namenode
+
+  - services: [namenode]
     number: 2
-    recipes:
-      - namenode
-    authorizePorts:
-     - 30
-    chefAttributes:
-  - service: datanode
+
+  - services: [datanode]
     number: 2
-    recipes: 
-    authorizePorts: 
-     - 40   
-    chefAttributes:
 
 ...

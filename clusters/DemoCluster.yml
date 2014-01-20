@@ -22,8 +22,8 @@
     ##image: eu-west-1/ami-c8957bbf 
     image: eu-west-1/ami-ffcdce8b
     region: eu-west-1
-    zones: 
-    - eu-west-1a
+#    zones: 
+#    - eu-west-1a
   ##lists of groups, with the roles the nodes will have and open ports 
   nodes:
   - service: ndb
