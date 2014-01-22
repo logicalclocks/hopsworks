@@ -35,5 +35,6 @@ public class CredentialsFacade extends AbstractFacade<PaasCredentials>{
             return query.getResultList().get(0);
         }
         return new PaasCredentials();
+
     }
 }

@@ -26,7 +26,7 @@ public class NodeGroupDataModel extends ListDataModel<NodeGroup>
     public NodeGroup getRowData(String rowKey) {
         List<NodeGroup> nodes = (List<NodeGroup>) getWrappedData();
         for (NodeGroup group : nodes) {
-            if (group.getService().equals(rowKey)) {
+            if (group.getServices().get(0).equals(rowKey)) {
                 return group;
             }
         }
@@ -35,6 +35,6 @@ public class NodeGroupDataModel extends ListDataModel<NodeGroup>
 
     @Override
     public Object getRowKey(NodeGroup group) {
-        return group.getService();
+        return group.getServices().get(0);
     }
 }

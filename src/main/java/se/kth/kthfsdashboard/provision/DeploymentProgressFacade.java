@@ -64,10 +64,10 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
             for (int i = 0; i < group.getNumber(); i++) {
                 progress = new NodeProgression();
                 progress.setCluster(cluster.getName());
-                progress.setNodeId(group.getService() + i);
+                progress.setNodeId(group.getServices().get(0) + i);
                 progress.setPhase(DeploymentPhase.WAITING.toString());
                 
-                progress.setRole(group.getService());
+                progress.setRole(group.getServices().toString());
                 persistNodeProgress(progress);
             }
         }
@@ -82,7 +82,7 @@ public class DeploymentProgressFacade extends AbstractFacade<NodeProgression> {
                 progress.setCluster(cluster.getName());
                 progress.setNodeId(group.getHosts().get(i));
                 progress.setPhase(DeploymentPhase.WAITING.toString());
-                progress.setRole(group.getService());
+                progress.setRole(group.getServices().toString());
                 progress.setIp(group.getHosts().get(i));
                 progress.setLoginUser(cluster.getLoginUser());
                 progress.setPrivateKey(privateKey);

@@ -115,23 +115,23 @@ public class ClusterParserTest extends TestCase {
          * check that values are correct
          */
 
-        assertEquals("ndb", ndb.getService());
-        assertEquals(2, ndb.getNumber());
-
-//        assertEquals(10, ndb.getAuthorizePorts().get(0).intValue());
-//        assertNull(ndb.getChefAttributes());
-
-        assertEquals("mgm", mgm.getService());
-        assertEquals(1, mgm.getNumber());
-
-        assertEquals(10, mgm.getAuthorizePorts().get(0).intValue());
-        assertNull(mgm.getChefAttributes());
-
-        assertEquals("mysqld", mysql.getService());
-        assertEquals(1, mysql.getNumber());
-
-        assertEquals(20, mysql.getAuthorizePorts().get(0).intValue());
-        assertNull(mysql.getChefAttributes());
+//        assertEquals("ndb", ndb.getService());
+//        assertEquals(2, ndb.getNumber());
+//
+////        assertEquals(10, ndb.getAuthorizePorts().get(0).intValue());
+////        assertNull(ndb.getChefAttributes());
+//
+//        assertEquals("mgm", mgm.getService());
+//        assertEquals(1, mgm.getNumber());
+//
+//        assertEquals(10, mgm.getAuthorizePorts().get(0).intValue());
+//        assertNull(mgm.getChefAttributes());
+//
+//        assertEquals("mysqld", mysql.getService());
+//        assertEquals(1, mysql.getNumber());
+//
+//        assertEquals(20, mysql.getAuthorizePorts().get(0).intValue());
+//        assertNull(mysql.getChefAttributes());
 
         /*
          * See if dump maintains order and ignores missing or empty properties

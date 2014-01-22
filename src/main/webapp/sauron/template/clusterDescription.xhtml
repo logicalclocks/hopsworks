@@ -62,21 +62,19 @@
                         <h:outputText value="#{clusterManagementController.cluster.provider.image}" />
                         <h:outputLabel value="Region:"/>
                         <h:outputText value="#{clusterManagementController.cluster.provider.region}" />
-                        <h:outputLabel value="Zones:" rendered="false"/>
-                        <h:outputText value="#{clusterManagementController.cluster.provider.zones}" 
-                                      rendered ="false"/>
+
                     </h:panelGrid>
                 </p:tab>
                 <p:tab title="Nodes:" >
                     <p:accordionPanel value="#{clusterManagementController.cluster.nodes}" var="node">
-                        <p:tab title="Service: #{node.service}">
+                        <p:tab title="Service: #{node.services.get(0)}">
                             <h:panelGrid columns="2" cellpadding="10">
                                 <h:outputLabel value="Number:"/>
                                 <h:outputText value="#{node.number}" />
                                 <h:outputLabel value="Recipes:" 
-                                               rendered="#{node.recipes!='' and node.recipes!=null}"/>
-                                <h:outputText value="#{node.recipes}" 
-                                              rendered="#{node.recipes!='' and node.recipes!=null}"/>
+                                               rendered="#{node.services!='' and node.services!=null}"/>
+                                <h:outputText value="#{node.services}" 
+                                              rendered="#{node.services!='' and node.services!=null}"/>
                                 <h:outputLabel value="Authorize Ports:"
                                                rendered="#{node.authorizePorts!='' and node.authorizePorts!=null}"/>
                                 <h:outputText value="#{node.authorizePorts}" 

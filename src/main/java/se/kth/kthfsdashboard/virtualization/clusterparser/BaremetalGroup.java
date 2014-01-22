@@ -14,24 +14,25 @@ import java.util.List;
  */
 public class BaremetalGroup implements Serializable {
 
-    private String service;
+//    private String service;
     private int number;
     private List<String> hosts;
-    private List<String> recipes;
+    private List<String> services;
     private String bittorrent;
     private String chefAttributes;
 
     public BaremetalGroup() {
     }
 
-    public String getService() {
-        return service;
-    }
+//    public String getService() {
+//        return service;
+//    }
+//
+//    public void setService(String service) {
+//        this.service = service;
+//    }
 
-    public void setService(String service) {
-        this.service = service;
-    }
-
+    
     public int getNumber() {
         return number;
     }
@@ -60,12 +61,12 @@ public class BaremetalGroup implements Serializable {
         setHosts(Arrays.asList(splittedHosts));
     }
 
-    public List<String> getRecipes() {
-        return recipes;
+    public List<String> getServices() {
+        return services;
     }
 
-    public void setRecipes(List<String> recipes) {
-        this.recipes = recipes;
+    public void setServices(List<String> recipes) {
+        this.services = recipes;
     }
 
     public String getBittorrent() {
@@ -85,20 +86,20 @@ public class BaremetalGroup implements Serializable {
     }
     
     public String getStringRecipes() {
-        String temp = recipes.toString().replaceAll("\\[", "");
+        String temp = services.toString().replaceAll("\\[", "");
         temp = temp.replaceAll(" ", "");
         return temp.toString().replaceAll("\\]", "");
     }
     
     public void setStringRecipes(String recipes){
         String[] splittedRecipes = recipes.split(",");
-        setRecipes(Arrays.asList(splittedRecipes));
+        setServices(Arrays.asList(splittedRecipes));
     }
     
     @Override
     public String toString() {
-        return "BaremetalGroup{" + "securityGroup=" + service + ", number="
-                + number + ", hosts=" + hosts + ", roles=" + recipes
+        return "BaremetalGroup{" + "securityGroup=" + services.get(0) + ", number="
+                + number + ", hosts=" + hosts + ", roles=" + services
                 + '}';
     }
 }
