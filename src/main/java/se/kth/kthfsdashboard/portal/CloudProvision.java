@@ -58,6 +58,8 @@ import static org.jclouds.scriptbuilder.domain.Statements.exec;
 import org.jclouds.scriptbuilder.statements.git.InstallGit;
 import org.jclouds.scriptbuilder.statements.ssh.AuthorizeRSAPublicKeys;
 import org.jclouds.sshj.config.SshjSshClientModule;
+import se.kth.kthfsdashboard.provision.MessageController;
+import se.kth.kthfsdashboard.provision.ProviderType;
 
 /**
  *
@@ -77,19 +79,19 @@ public class CloudProvision {
     private String group;
     private boolean loginUserEnabled;
     private boolean publicKeyEnabled;
-    private PortalMessageController messages;
+    private MessageController messages;
     private ComputeService service;
 
-    public CloudProvision(PortalMB providerMB, PortalMessageController messages) {
+    public CloudProvision(PortalMB providerMB, MessageController messages) {
         if (providerMB.getProviderName().equals("Amazon-EC2")) {
-            provider = Provider.AWS_EC2.toString();
+            provider = ProviderType.AWS_EC2.toString();
         }
         if (providerMB.getProviderName().equals("OpenStack")) {
-            provider = Provider.OPENSTACK.toString();
+            provider = ProviderType.OPENSTACK.toString();
             keystoneEndpoint = providerMB.getKeystone();
         }
         if (providerMB.getProviderName().equals("Rackspace")) {
-            provider = Provider.RACKSPACE.toString();
+            provider = ProviderType.RACKSPACE.toString();
 
         }
         if (providerMB.isEnableLoginUser()) {
@@ -108,7 +110,7 @@ public class CloudProvision {
     }
 
     public void initComputeService() {
-        Provider check = Provider.fromString(provider);
+        ProviderType check = ProviderType.fromString(provider);
         //We define the properties of our service
         Properties serviceDetails = serviceProperties(check);
 
@@ -235,7 +237,7 @@ public class CloudProvision {
      */
 
     private TemplateBuilder templateKTHFS(TemplateBuilder template) {
-        Provider check = Provider.fromString(provider);
+        ProviderType check = ProviderType.fromString(provider);
         switch (check) {
             case AWS_EC2:
                 template.os64Bit(true);
@@ -263,7 +265,7 @@ public class CloudProvision {
      * Select extra options depending of the provider we selected
      */
     private void selectProviderTemplateOptions(TemplateBuilder kthfsTemplate) {
-        Provider check = Provider.fromString(provider);
+        ProviderType check = ProviderType.fromString(provider);
 
         switch (check) {
             case AWS_EC2:
@@ -291,7 +293,7 @@ public class CloudProvision {
     private void createSecurityGroups(ComputeService service) {
         int[] portsTCP = {443, 22, 80, 3306, 8080, 8181, 8686, 8090, 8983, 4848, 4040, 4000, 40102};
 
-        if (provider.equals(Provider.AWS_EC2.toString())) {
+        if (provider.equals(ProviderType.AWS_EC2.toString())) {
             RestContext<EC2Client, EC2AsyncClient> temp = service.getContext().unwrap();
             EC2Client client = temp.getApi();
             String groupName = "jclouds#" + group;
@@ -324,7 +326,7 @@ public class CloudProvision {
         }
 
 
-        if (provider.equals(Provider.OPENSTACK.toString())) {
+        if (provider.equals(ProviderType.OPENSTACK.toString())) {
             RestContext<NovaApi, NovaAsyncApi> temp = service.getContext().unwrap();
             //+++++++++++++++++
             //This stuff below is weird, founded in a code snippet in a workshop on jclouds. Still it works
@@ -384,7 +386,7 @@ public class CloudProvision {
      * 
      * Includes time using the ports when launching the VM instance executing the script
      */
-    private Properties serviceProperties(Provider provider) {
+    private Properties serviceProperties(ProviderType provider) {
         Properties properties = new Properties();
         long scriptTimeout = TimeUnit.MILLISECONDS.convert(50, TimeUnit.MINUTES);
         properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, scriptTimeout + "");

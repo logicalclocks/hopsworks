@@ -28,6 +28,8 @@ import org.jclouds.compute.events.StatementOnNodeFailure;
 import org.jclouds.compute.events.StatementOnNodeSubmission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import se.kth.kthfsdashboard.provision.MessageController;
+import se.kth.kthfsdashboard.provision.ProviderType;
 
 /**
  *
@@ -37,9 +39,8 @@ import org.slf4j.LoggerFactory;
 @RequestScoped
 public class CloudProviderController implements Serializable {
 
-    private static final URI RUBYGEMS_URI = URI.create("http://production.cf.rubygems.org/rubygems/rubygems-1.8.10.tgz");
-    @ManagedProperty(value = "#{portalMessageController}")
-    private PortalMessageController messages;
+    @ManagedProperty(value = "#{messageController}")
+    private MessageController messages;
     @ManagedProperty(value = "#{portalMB}")
     private PortalMB providerMB;
     @ManagedProperty(value = "#{portalCredentialsMB}")
@@ -47,10 +48,9 @@ public class CloudProviderController implements Serializable {
     private String provider;
     private String id;
     private String key;
-    
     //If Openstack selected, endpoint for keystone API
     private String keystoneEndpoint;
-    
+
     /**
      * Creates a new instance of CloudProviderController
      */
@@ -73,11 +73,11 @@ public class CloudProviderController implements Serializable {
         this.providerMB = providerMB;
     }
 
-    public PortalMessageController getMessages() {
+    public MessageController getMessages() {
         return messages;
     }
 
-    public void setMessages(PortalMessageController messages) {
+    public void setMessages(MessageController messages) {
         this.messages = messages;
     }
 
@@ -89,39 +89,37 @@ public class CloudProviderController implements Serializable {
         providerMB.setEnableLoginUser(!providerMB.getLoginUser().equals(""));
         providerMB.setPublicKeyEnabled(!providerMB.getPublicKey().equals(""));
         if (providerMB.isBaremetal()) {
-            BaremetalProvision baremetal= new BaremetalProvision(providerMB, messages);
+            BaremetalProvision baremetal = new BaremetalProvision(providerMB, messages);
             baremetal.configureBaremetal();
-            
+
         } else {
-            
-            CloudProvision provision = new CloudProvision(providerMB,messages);
+
+            CloudProvision provision = new CloudProvision(providerMB, messages);
             provision.initComputeService();
             provision.launchInstance();
 
         }
     }
-    
+
 
     /*
      * Command to destroy the instances in a group
      */
-
     public void destroyInstance() {
-        
+
         CloudProvision provision = new CloudProvision(providerMB, messages);
         provision.initComputeService();
         provision.destroyInstance(providerMB.getNodeId());
 
     }
 
-   
     /*
      * Define the service properties for the compute service context using
      * Amazon EC2 like Query parameters and regions. Does the same for Openstack and Rackspace
      * 
      * Includes time using the ports when launching the VM instance executing the script
      */
-    private Properties serviceProperties(Provider provider) {
+    private Properties serviceProperties(ProviderType provider) {
         Properties properties = new Properties();
         long scriptTimeout = TimeUnit.MILLISECONDS.convert(50, TimeUnit.MINUTES);
         properties.setProperty(TIMEOUT_SCRIPT_COMPLETE, scriptTimeout + "");
@@ -147,7 +145,6 @@ public class CloudProviderController implements Serializable {
 
         return properties;
     }
-
 
     static enum ScriptLogger {
 

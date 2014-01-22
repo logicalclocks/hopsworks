@@ -61,7 +61,7 @@ import se.kth.kthfsdashboard.provision.DeploymentPhase;
 import se.kth.kthfsdashboard.provision.DeploymentProgressFacade;
 import se.kth.kthfsdashboard.provision.MessageController;
 import se.kth.kthfsdashboard.provision.NodeStatusTracker;
-import se.kth.kthfsdashboard.provision.Provider;
+import se.kth.kthfsdashboard.provision.ProviderType;
 import se.kth.kthfsdashboard.provision.Provision;
 import se.kth.kthfsdashboard.provision.ProvisionController;
 import se.kth.kthfsdashboard.provision.RoleMapPorts;
@@ -83,7 +83,7 @@ public final class VirtualizedClusterProvision implements Provision {
     private DeploymentProgressFacade progressEJB;
     private static final int RETRIES = 5;
     private ComputeService service;
-    private Provider provider;
+    private ProviderType provider;
     private String id;
     private String key;
     private String endpoint;
@@ -112,7 +112,7 @@ public final class VirtualizedClusterProvision implements Provision {
      * Constructor of a VirtualizedClusterProvision
      */
     public VirtualizedClusterProvision(ProvisionController controller) {
-        this.provider = Provider.fromString(controller.getProvider());
+        this.provider = ProviderType.fromString(controller.getProvider());
         this.id = controller.getId();
         this.key = controller.getKey();
         this.endpoint = controller.getKeystoneEndpoint();
@@ -148,7 +148,7 @@ public final class VirtualizedClusterProvision implements Provision {
         globalPorts.addAll(Ints.asList(commonTCP.get("http&https")));
 
         //If EC2 client
-        if (provider.toString().equals(Provider.AWS_EC2.toString())) {
+        if (provider.toString().equals(ProviderType.AWS_EC2.toString())) {
             //Unwrap the compute service context and retrieve a rest context to speak with EC2
             RestContext<EC2Client, EC2AsyncClient> temp = service.getContext().unwrap();
             //Fetch a synchronous rest client
@@ -223,7 +223,7 @@ public final class VirtualizedClusterProvision implements Provision {
 
         //If openstack nova2 client
         //Similar structure to EC2 but changes apis
-        if (provider.toString().equals(Provider.OPENSTACK.toString())) {
+        if (provider.toString().equals(ProviderType.OPENSTACK.toString())) {
             RestContext<NovaApi, NovaAsyncApi> temp = service.getContext().unwrap();
             //+++++++++++++++++
             //This stuff below is weird, founded in a code snippet in a workshop on jclouds. Still it works

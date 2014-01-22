@@ -185,11 +185,11 @@
                               >  
                         <h:panelGrid id="dashboardGridDetails" columns="2">
                             <p:outputLabel for="dashboardURL" value="URL to Dashboard:" />
-                            <h:outputLink id="dashboardURL" value="#{portalMessageController.dashboardURL}" >
-                                #{portalMessageController.dashboardURL}
+                            <h:outputLink id="dashboardURL" value="#{messageController.dashboardURL}" >
+                                #{messageController.dashboardURL}
                             </h:outputLink>
                             <p:outputLabel for="dashboardIP" value="Private IP:" />
-                            <h:outputText id="dashboardIP" value="#{portalMessageController.dashboardPrivateIP}"/>
+                            <h:outputText id="dashboardIP" value="#{messageController.dashboardPrivateIP}"/>
                         </h:panelGrid>
                     </p:dialog>  
                     <p:commandButton id="providerButton" value="Launch Instance" 

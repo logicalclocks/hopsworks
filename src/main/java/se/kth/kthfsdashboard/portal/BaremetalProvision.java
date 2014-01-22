@@ -22,6 +22,7 @@ import org.jclouds.scriptbuilder.domain.StatementList;
 import static org.jclouds.scriptbuilder.domain.Statements.createOrOverwriteFile;
 import static org.jclouds.scriptbuilder.domain.Statements.exec;
 import org.jclouds.scriptbuilder.statements.ssh.AuthorizeRSAPublicKeys;
+import se.kth.kthfsdashboard.provision.MessageController;
 
 /**
  *
@@ -34,9 +35,9 @@ public class BaremetalProvision {
     private String privateKey;
     private String publicKey;
     private boolean publicKeyEnabled;
-    private PortalMessageController messages;
+    private MessageController messages;
 
-    public BaremetalProvision(PortalMB provider, PortalMessageController messages) {
+    public BaremetalProvision(PortalMB provider, MessageController messages) {
         this.host = provider.getHost();
         this.user = provider.getLoginUser();
         this.privateKey = provider.getPrivateKey();

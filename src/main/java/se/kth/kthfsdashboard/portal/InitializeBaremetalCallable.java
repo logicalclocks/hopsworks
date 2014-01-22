@@ -23,6 +23,7 @@ import org.jclouds.domain.LocationScope;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.OsFamily;
 import org.jclouds.scriptbuilder.domain.StatementList;
+import se.kth.kthfsdashboard.provision.MessageController;
 
 /**
  *
@@ -37,12 +38,12 @@ public class InitializeBaremetalCallable implements Callable<Set<NodeMetadata>>{
     private StatementList initScript;
     private Map<String, Set<? extends NodeMetadata>> nodes;
     private String group;
-    private PortalMessageController messages;
+    private MessageController messages;
     private CountDownLatch latch;
 
     public InitializeBaremetalCallable(String privateKey, String host, String loginUser, 
             StatementList initBootstrapScript, 
-            String group, PortalMessageController messages, CountDownLatch latch) {
+            String group, MessageController messages, CountDownLatch latch) {
         this.privateKey = privateKey;
         this.host = host;
         this.loginUser = loginUser;
