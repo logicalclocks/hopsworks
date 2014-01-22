@@ -7,7 +7,7 @@
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
               xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd">
 
-<!--    <lifecycle>
+    <!--    <lifecycle>
         <phase-listener>
             se.kth.kthfsdashboard.user.AuthenticationPhaseListener
         </phase-listener>
@@ -82,6 +82,16 @@
             <redirect/>
         </navigation-case>
         <navigation-case>
+            <from-outcome>editcluster</from-outcome>
+            <to-view-id>/sauron/editClusters.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>editClusterWizard</from-outcome>
+            <to-view-id>/sauron/editClusterWizard.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
             <from-outcome>progress</from-outcome>
             <to-view-id>/sauron/clusterProgress.xhtml</to-view-id>
             <redirect/>
@@ -99,6 +109,11 @@
         <navigation-case>
             <from-outcome>editClusterEditor</from-outcome>
             <to-view-id>/sauron/YAMLEditor.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>      
+        <navigation-case>
+            <from-outcome>mainPage</from-outcome>
+            <to-view-id>/portal/start.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
     </navigation-rule>    
