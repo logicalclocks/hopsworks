@@ -1,3 +1,4 @@
+  !!se.kth.kthfsdashboard.virtualization.clusterparser.Cluster
   name: simpleCluster
   provider:
     name: aws-ec2
@@ -10,16 +11,16 @@
 #    - eu-west-1a
   ##lists of groups, with the roles the nodes will have and open ports 
   nodes:
-  - services: [ndb::dn]
+  - services: ["ndb::dn"]
     number: 2
     
-  - services: [ndb::mgm, ndb::mysqld, hop::namenode]
+  - services: ["ndb::mgm", "ndb::mysqld", "hop::namenode"]
     number: 1
       
-  - services: [hop::namenode, hop::resourcemanager]
+  - services: ["hop::namenode", "hop::resourcemanager"]
     number: 1
        
-  - services: [hop::datanode, hop::nodemanager]
+  - services: ["hop::datanode", "hop::nodemanager"]
     number: 2
         
 

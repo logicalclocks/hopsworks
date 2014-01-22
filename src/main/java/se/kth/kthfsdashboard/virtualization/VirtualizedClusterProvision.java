@@ -305,7 +305,7 @@ public final class VirtualizedClusterProvision implements Provision {
                                 }
                             }
                         }
-                        //This is a delay we must use for EC2. There is a limit on REST requests and if we dont limit the
+                        //This is a delay we must use. There is a limit on REST requests and if we dont limit the
                         //bursts of the requests it will fail
                         try {
                             Thread.sleep(15000);
@@ -331,7 +331,7 @@ public final class VirtualizedClusterProvision implements Provision {
         boolean status = false;
         try {
             TemplateBuilder kthfsTemplate = templateKTHFS(cluster, service.templateBuilder());
-            //Use better Our scriptbuilder abstraction
+            //Generate the init script for the nodes
             ScriptBuilder initScript = ScriptBuilder.builder()
                     .scriptType(ScriptBuilder.ScriptType.INIT)
                     .publicKey(publicKey)
@@ -348,20 +348,19 @@ public final class VirtualizedClusterProvision implements Provision {
                         + "  nodes in Security Group " + group.getServices().get(0));
                 Set<? extends NodeMetadata> ready = service.createNodesInGroup(
                         group.getServices().get(0), group.getNumber(), kthfsTemplate.build());
-                //For the demo, we keep track of the returned set of node Metadata launched and which group 
+                
+                //We keep track of the returned set of node Metadata launched and which group 
                 messages.addMessage("Nodes created in Security Group " + group.getServices().get(0) + " with "
                         + "basic setup");
                 nodes.put(group.getServices().get(0), ready);
+                
                 //Identify the biggest group
                 max = max < group.getNumber() ? group.getNumber() : max;
                 //Fetch the total of nodes
                 totalNodes += group.getNumber();
 
                 //Fetch the nodes info so we can launch first mgm before the rest!
-                //Supposing ideal approach that the users dont mix roles.
-                //Think if it is possible to optimize
-
-                //With actual changes, name is main kthfs service and recipes are optional recipes from the users
+                
                 List<String> services = new LinkedList();
                 services.addAll(group.getServices());
 
@@ -396,7 +395,7 @@ public final class VirtualizedClusterProvision implements Provision {
 
                         mySQLClientsIP.addAll(node.getPrivateAddresses());
 //                        //To avoid launching the node in two phases, see if it is sharing a same node
-//                        if (!group.getServices().contains("mysqld")) {
+
                         //For a shared node with mgm, it will run 2 times on it.
                         List<String> mysqldRecipes = new LinkedList();
                         mysqldRecipes.addAll(group.getServices());
@@ -404,17 +403,14 @@ public final class VirtualizedClusterProvision implements Provision {
                         mysqldRecipes.remove("ndb::dn");
                         mysqlds.put(node, mysqldRecipes);
                         //filter out other mysql conflicts
-//                        }
 
                     }
                     if (services.contains("hop::namenode")) {
 
                         namenodesIP.addAll(node.getPrivateAddresses());
                         //avoid relaunching a node in the corresponding 
-//                        if (!group.getServices().contains("namenode")) {
                         namenodes.put(node, services);
                         //filter out conflicts
-//                        }
                     }
 
                     if (services.contains("hop::datanode")) {
@@ -422,6 +418,7 @@ public final class VirtualizedClusterProvision implements Provision {
                         datanodes.put(node, services);
 
                     }
+                    //update entry on the progression
                     Host host = new Host();
                     if (node != null) {
                         host.setHostname(node.getHostname());
@@ -452,9 +449,10 @@ public final class VirtualizedClusterProvision implements Provision {
     }
 
     /*
-     * In EC2 seems to work, Openstack seems to have issues
-     * This is the procedure we do for baremetal but without the jclouds API
-     *  @beta version
+     * 
+     * This is the based on the procedure we do for baremetal but without the jclouds API, fails due to 
+     * limitations on POST requests
+     *  @alpha version
      */
     public boolean ParallellaunchNodesBasicSetup() {
         boolean status = true;
@@ -485,9 +483,7 @@ public final class VirtualizedClusterProvision implements Provision {
             //Generate function to store results when done
             List<String> services = new LinkedList<String>();
             services.addAll(group.getServices());
-//            if (group.getServices() != null) {
-//                services.addAll(group.getServices());
-//            }
+
             final StoreResults results = new StoreResults(services, latch, this);
             //Generate listenable future that will store the results in the hashmap when done
             ListenableFuture<Set<? extends NodeMetadata>> groupCreation =

@@ -45,7 +45,26 @@ public class ClusterRepresenter extends Representer {
                 && (propertyValue == null || "".equals(propertyValue) || "{}".equals(propertyValue)
                 || "[]".equals(propertyValue))) {
             return null;
-        } else if (name.equals("instanceType") && propertyValue == null) {
+        } else if(name.equals("environment") &&propertyValue==null){
+            return super.representJavaBeanProperty(javaBean, property, "prod", customTag);
+        }
+        else if(name.equals("installPhase")&&propertyValue==null){
+            return super.representJavaBeanProperty(javaBean, property, true, customTag);
+        }
+        else if(name.equals("git")&&propertyValue==null){
+            GitProperties defaultProp = new GitProperties();
+            defaultProp.setUser("default");
+            defaultProp.setRepository("https://github.com/hopstart/hop-chef.git");
+            return super.representJavaBeanProperty(javaBean, property, new GitProperties(), customTag);
+        }
+        else if(name.equals("user") &&propertyValue==null){
+            return super.representJavaBeanProperty(javaBean, property, "default", customTag);
+        }
+         else if(name.equals("repository") &&propertyValue==null){
+            return super.representJavaBeanProperty(javaBean, property, "https://github.com/hopstart/hop-chef.git", customTag);
+        }
+        
+        else if (name.equals("instanceType") && propertyValue == null) {
             if (provider.equals("aws-ec2")) {
                 return super.representJavaBeanProperty(javaBean, property, "m1.large", customTag);
             } else {

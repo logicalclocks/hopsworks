@@ -102,7 +102,7 @@ public class BaremetalClusterProvision implements Provision {
                     + "  nodes in Security Group " + group.getServices().get(0));
             //Identify the biggest group
             max = max < group.getNumber() ? group.getNumber() : max;
-            //iterate over the hosts
+            
             for (final String host : group.getHosts()) {
                 try {
                     progressEJB.initializeHostProgress(host);
@@ -120,9 +120,7 @@ public class BaremetalClusterProvision implements Provision {
                 //Generate function to store results when done
                 List<String> services = new LinkedList<String>();
                 services.addAll(group.getServices());
-//                if(group.getServices()!=null){
-//                    services.addAll(group.getServices());
-//                }
+
                 final StoreResults results = new StoreResults(services, latch, this);
                 ListenableFuture<Set<NodeMetadata>> groupCreation =
                         pool.submit(new InitializeBaremetalCallable(privateKey, host, cluster.getLoginUser(),
@@ -153,10 +151,12 @@ public class BaremetalClusterProvision implements Provision {
         ScriptBuilder.Builder scriptBuilder =
                 ScriptBuilder.builder().scriptType(ScriptBuilder.ScriptType.INSTALLBAREMETAL);
         Set<NodeMetadata> groupLaunch = new HashSet<NodeMetadata>(mgms.keySet());
+        
         groupLaunch.addAll(ndbs.keySet());
         groupLaunch.addAll(mysqlds.keySet());
         groupLaunch.addAll(namenodes.keySet());
         groupLaunch.addAll(datanodes.keySet());
+        
         messages.addMessage("Configuring installation phase in all nodes");
         messages.addMessage("Running install process of software");
         try {
@@ -165,6 +165,7 @@ public class BaremetalClusterProvision implements Provision {
             e.printStackTrace();
             System.out.println("Error updating in the DataBase");
         }
+        
         System.out.println("Starting Install phase on the machines");
         nodeInstall(groupLaunch, scriptBuilder, RETRIES);
     }
@@ -277,8 +278,9 @@ public class BaremetalClusterProvision implements Provision {
 
     private void nodePhase(Set<NodeMetadata> nodes, Map<NodeMetadata, List<String>> map,
             ScriptBuilder.Builder scriptBuilder, int retries) {
-        //Iterative Approach
+
         pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
+        
         while (!pendingNodes.isEmpty() && retries != 0) {
             latch = new CountDownLatch(pendingNodes.size());
             Iterator<NodeMetadata> iter = pendingNodes.iterator();
@@ -286,7 +288,9 @@ public class BaremetalClusterProvision implements Provision {
                 final NodeMetadata node = iter.next();
                 System.out.println(node.toString());
                 List<String> ips = new LinkedList(node.getPrivateAddresses());
-                //Listenable Future
+
+                //launch the nodephase of that node and generate the script to be run. If future succeeds
+                //We will update the Database.
                 String nodeId = node.getId();
                 ScriptBuilder script = scriptBuilder.build(ips.get(0), map.get(node),
                         nodeId);
@@ -329,16 +333,16 @@ public class BaremetalClusterProvision implements Provision {
     }
 
     private void nodeInstall(Set<NodeMetadata> nodes, ScriptBuilder.Builder scriptBuilder, int retries) {
-        //Iterative Approach
         pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
         while (retries != 0 && !pendingNodes.isEmpty()) {
-            //Initialize countdown latch
             latch = new CountDownLatch(pendingNodes.size());
             Iterator<NodeMetadata> iter = pendingNodes.iterator();
             while (iter.hasNext()) {
                 final NodeMetadata node = iter.next();
-                //Listenable Future our own for baremetal
+
                 final ScriptBuilder script = scriptBuilder.build();
+                //Generate install scripts and lauun all the nodes in parallel. If future succeeds we 
+                //update database 
                 ListenableFuture<ExecResponse> future = pool.submit(
                         new SubmitScriptBaremetalCallable(node, script));
 

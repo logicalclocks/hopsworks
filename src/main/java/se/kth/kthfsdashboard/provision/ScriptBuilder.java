@@ -167,7 +167,6 @@ public class ScriptBuilder implements Statement {
          */
 
         public ScriptBuilder build(String ip, List<String> roles, String nodeId) {
-            // System.out.println(this.toString());
             return new ScriptBuilder(scriptType, ndbs, mgms, mysql,
                     namenodes, roles, ip, nodeId, key, privateIP, clusterName, gitName, gitKey, gitRepo);
         }
@@ -234,7 +233,7 @@ public class ScriptBuilder implements Statement {
         ImmutableList.Builder<Statement> statements = ImmutableList.builder();
         switch (scriptType) {
             case INIT:
-                //statements.add(exec("sudo dpkg --configure -a"));
+
                 statements.add(exec("sudo apt-get update;"));
                 List<String> keys = new ArrayList();
                 keys.add(key);
@@ -252,7 +251,7 @@ public class ScriptBuilder implements Statement {
                 statements.add(createOrOverwriteFile("/etc/chef/solo.rb", soloLines));
                 //Setup and fetch git recipes
                 statements.add(exec("git config --global user.name \"" + gitName + "\";"));
-                //statements.add(exec("git config --global user.email \"jdowling@sics.se\";"));
+
                 statements.add(exec("git config --global http.sslVerify false;"));
                 statements.add(exec("git config --global http.postBuffer 524288000;"));
                 statements.add(exec("sudo git clone " + gitRepo + " /tmp/chef-solo/;"));
@@ -424,7 +423,7 @@ public class ScriptBuilder implements Statement {
         //Generate collectd fragment
         json.append("\"collectd\":{\"server\":\"").append(privateIP).append("\",");
         json.append("\"clients\":[");
-        //Depending of the security group name of the demo we specify which collectd config to use
+        //Depending on the services we generate the runlist
         Set<String> roleSet = new HashSet<String>(roles);
         //filter and keep what we want to look for
         roleSet.retainAll(filterClients);
@@ -433,17 +432,11 @@ public class ScriptBuilder implements Statement {
 
             String role = iterRoles.next();
 
-            if (role.equals("ndb::mysqld") // JIM: We can just have an empty clients list for mgm and ndb nodes    
-                    //                || group.getSecurityGroup().equals("mgm")
-                    //                || group.getSecurityGroup().equals("ndb")
-                    ) {
+            if (role.equals("ndb::mysqld")) {
                 json.append("\"mysqld\"");
 
             }
-//            if (role.equals("datanode")) {
-//                json.append("\"dn\"");
-//
-//            }
+
             if (role.equals("hop::namenode")) {
                 json.append("\"nn\"");
 
@@ -461,7 +454,7 @@ public class ScriptBuilder implements Statement {
         json.append("\"root_network_acl\":\"").append(mysql.get(0)).append("\",");
         json.append("\"user\":\"kthfs\",\"user_password\":\"kthfs\",\"server_debian_password\":\"kthfs\",");
         json.append("\"server_repl_password\":\"kthfs\",\"server_root_password\":\"kthfs\"");
-        
+
         json.append("},");
 
         /*Generate hops fragment
@@ -469,10 +462,8 @@ public class ScriptBuilder implements Statement {
          */
         json.append("\"hop\":{\"server\":\"").append(privateIP).append(":8080").append("\",");
         //rest url
-        //json.append("\"rest_url\":\"").append("http://").append(privateIP)
-        //     .append("/kthfs-dashboard").append("\",");
-        //mgm ip
-        //TODO ADD SUPPORT FOR MULTIPLE MGMS
+
+        //TODO ADD SUPPORT FOR MULTIPLE nodes
         json.append("\"ndb_connectstring\":\"").append(mgms.get(0)).append("\",");
         //namenodes ips
 
@@ -483,9 +474,6 @@ public class ScriptBuilder implements Statement {
         if (roleSet.contains("hop::datanode") || roleSet.contains("hop::namenode")) {
             json.append("\"service\":\"").append("HDFS").append("\",");
         }
-//        else{
-//            json.append("\"service\":\"").append("MySQLCluster").append("\",");
-//        }
 
         json.append("\"namenode\":{\"addrs\":[");
 
@@ -532,13 +520,13 @@ public class ScriptBuilder implements Statement {
         builder.addRecipe("python::package");
         builder.addRecipe("java");
         builder.addRecipe("hopagent");
-        for(String role: roles){
+        for (String role : roles) {
             builder.addRecipe(role);
         }
-        boolean collectdAdded = 
-                roles.contains("ndb::dn")||roles.contains("ndb::mysqld")||roles.contains("ndb:mgm")
-                ||roles.contains("hop::namenode")||roles.contains("hop::datanode")
-                        ||roles.contains("hop::resourcemanager");
+        boolean collectdAdded =
+                roles.contains("ndb::dn") || roles.contains("ndb::mysqld") || roles.contains("ndb:mgm")
+                || roles.contains("hop::namenode") || roles.contains("hop::datanode")
+                || roles.contains("hop::resourcemanager");
         //Look at the roles, if it matches add the recipes for that role
 //        for (String role : roles) {
 //            if (role.equals("ndb")) {
