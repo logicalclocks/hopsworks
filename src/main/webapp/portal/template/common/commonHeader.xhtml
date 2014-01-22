@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      xmlns:f="http://java.sun.com/jsf/core">
+    <h:body>
+        <ui:composition>
+            <div id="logo" align="right" />
+            <h:form class="stylelayout" id="formToolbar">  
+            <p:toolbar styleClass="MainToolbar">  
+                <p:toolbarGroup align="left">  
+
+                    <p:commandLink value="KTHFS Dashboard" action="services"/>
+
+                    <p:menuButton value="Services">
+                        <p:menuitem value="All Services" action="services"/>
+                        <p:separator />  
+
+                        <c:forEach var="kthfsInstance" items="#{serviceController.kthfsInstances}">                          
+                           <p:menuitem value="#{kthfsInstance.name}" action='#{serviceController.doGotoService()}'>
+                              <f:param name="kthfsinstance" value="#{kthfsInstance.name}" />
+                           </p:menuitem>
+                        </c:forEach>
+                    </p:menuButton>
+
+                    <p:commandButton value="Hosts" action="hosts"/>
+                    
+                    <p:commandButton value="Alerts" action="alerts"/>
+
+                </p:toolbarGroup>  
+
+                <p:toolbarGroup align="right">  
+                   <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
+                    <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
+                        <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" />  
+                        <p:separator/>
+                        <p:menuitem value="Logout" action='#{authBackingBean.logout()}' update=":formToolbar:messages" ajax="false"/> 
+                    </p:menu>  
+                </p:toolbarGroup>  
+
+            </p:toolbar> 
+
+        </h:form>
+
+        </ui:composition>
+    </h:body>
+</html>
+

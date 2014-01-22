@@ -1,0 +1,112 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      xmlns:pe="http://primefaces.org/ui/extensions">
+
+    <h:body>
+        <ui:composition>
+            <div id="destroyInstancesForm">
+                <br/>
+                <h:panelGroup id="msg2">
+                    <p:messages severity="error" showDetail="true"/>
+                    <p:growl for="success" showDetail="true" sticky="true" />
+                </h:panelGroup>
+                <h:form id="destroyForm" rendered="#{providerMB.showProvider}">
+                    <p:panel id="providerDestroy" header="Destroy Instances in Group">
+                        <h:panelGrid columns="2">
+                            <h:outputLabel for="providerName" value="Provider" />
+                            <h:outputText id="providerName" value="#{providerMB.providerName}" />
+
+
+
+
+                            <h:outputLabel for="nodeId" value="Node id"/>
+                            <p:watermark for="nodeId" value="Destroy instance by id">
+                                <h:inputText id="nodeId" value="#{providerMB.nodeId}" size="30" 
+                                             required="true" />
+                            </p:watermark>
+
+                        </h:panelGrid>
+                    </p:panel>
+                    <p:panel id="providerCredentials" header="Provider Credentials" 
+                             rendered="#{!providerMB.baremetal}">
+                        <h:panelGrid columns="2">
+                            <h:outputLabel for="id" value="id"/>
+                            <p:watermark for="id" value="#{providerMB.openstack
+                                                           ?'id pattern in OpenStack project:user'
+                                                           :'Access Key Id from AWS'}">
+                                <h:inputText id="id" value="#{providerMB.id}" 
+                                             size="30" required="true" 
+                                             disabled="false"/>
+                            </p:watermark>
+
+                            <h:outputLabel for="key" value="Secret Key"/>
+                            <p:watermark for="key" value="#{providerMB.openstack
+                                                            ?'user password'
+                                                            :'Secret Access Key for AWS'}" >
+                                <h:inputSecret id="key" value="#{providerMB.key}" 
+                                               size="30" required="true" 
+                                               disabled="false"/>
+                            </p:watermark>
+
+                            <h:outputLabel for="keystone" value="Keystone url" 
+                                           rendered="#{providerMB.openstack}"/>
+                            <p:watermark for="keystone" value="keystone url of the service point" >
+                                <h:inputSecret id="keystone" value="#{providerMB.keystone}" 
+                                               size="30" 
+                                               disabled="#{!providerMB.openstack}"
+                                               rendered="#{providerMB.openstack}"/>
+                            </p:watermark>
+                        </h:panelGrid>
+                    </p:panel> 
+                    <br/>
+
+                    <p:commandButton id="destroyButton" value="Destroy Instances" 
+                                     action="#{cloudProviderController.destroyInstance()}" 
+                                     update=":instancesTab:msg2"
+                                     onclick="pollDestroy.start();"
+                                     oncomplete="pollDestroy.stop();"
+                                     />
+                    <p:blockUI block=":instancesTab" trigger="destroyForm:destroyButton">
+
+                        <h:panelGrid id="blockContent" columns="2">
+                            <div class="windows8" >
+                                <div class="wBall" id="wBall_1">
+                                    <div class="wInnerBall">
+                                    </div>
+                                </div>
+                                <div class="wBall" id="wBall_2">
+                                    <div class="wInnerBall">
+                                    </div>
+                                </div>
+                                <div class="wBall" id="wBall_3">
+                                    <div class="wInnerBall">
+                                    </div>
+                                </div>
+                                <div class="wBall" id="wBall_4">
+                                    <div class="wInnerBall">
+                                    </div>
+                                </div>
+                                <div class="wBall" id="wBall_5">
+                                    <div class="wInnerBall">
+                                    </div>
+                                </div>
+                            </div>
+                            <h:outputLabel id="statusDestroy" value="#{cloudProviderController.messages.showMessage()}" 
+                                           style="white-space:nowrap;" >
+                            </h:outputLabel>
+
+                            <p:poll widgetVar="pollDestroy" interval="5" autoStart="false" update="statusDestroy" async="true" partialSubmit="true" process="@this"/>
+                        </h:panelGrid>
+                    </p:blockUI>
+                </h:form>
+            </div>
+        </ui:composition>        
+    </h:body>
+</html>
+
