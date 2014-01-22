@@ -29,7 +29,6 @@ import org.primefaces.model.UploadedFile;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.BeanAccess;
-import org.yaml.snakeyaml.representer.Representer;
 import se.kth.kthfsdashboard.provision.ClusterOptions;
 import se.kth.kthfsdashboard.provision.EditorYamlController;
 
@@ -70,12 +69,13 @@ public class ClusterManagementController implements Serializable {
     private List<BaremetalGroup> baremetalGroups;
     private ClusterEntity[] selectedClusters;
     private ClusterEntity edit;
+    private ClusterRepresenter repr;
 
     /**
      * Creates a new instance of ClusterManagementController
      */
     public ClusterManagementController() {
-        Representer repr = new ClusterRepresenter();
+        repr = new ClusterRepresenter();
         repr.setPropertyUtils(new UnsortedPropertyUtils());
 
         DumperOptions dumperOptions = new DumperOptions();
@@ -307,12 +307,18 @@ public class ClusterManagementController implements Serializable {
                 if (document instanceof Cluster) {
 
                     cluster = (Cluster) document;
+                    //we update the representer with the provider name.
+                    //This way, when we dump the cluster back as a string in the db, it will have the missing
+                    //parameters of a simple cluster
+                    repr.setProvider(cluster.getProvider().getName());
                     String yamlContent = yaml.dump(cluster);
                     clusterType = "virtualized";
                     entity.setClusterType("virtualized");
                     entity.setClusterName(cluster.getName());
                     entity.setYamlContent(yamlContent);
                     clusterEJB.persistCluster(entity);
+                    //we refresh again with the missing parameters the cluster
+                    cluster = (Cluster) yaml.load(yamlContent);
                 } else if (document instanceof Baremetal) {
                     baremetalCluster = (Baremetal) document;
                     String yamlContent = yaml.dump(baremetalCluster);
@@ -373,8 +379,18 @@ public class ClusterManagementController implements Serializable {
 
     public String proceedLauncher() {
         if (file != null) {
-            return "proceedLaunchCluster";
+            String response = parseYMLtoCluster();
+            if (response.startsWith("Successful")) {
+                return "proceedLaunchCluster";
+            } else {
+                FacesMessage msg = new FacesMessage(response);
+                FacesContext.getCurrentInstance().addMessage(null, msg);
+                return "";
+            }
         } else {
+            FacesMessage msg = new FacesMessage("Error. You must first select a file, then click the upload button.");
+            FacesContext.getCurrentInstance().addMessage(null, msg);
+
             return "";
         }
     }

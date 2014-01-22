@@ -41,22 +41,24 @@ public class RoleMapPorts {
         int[] chefClient = {4000};
         int[] chefServer = {4000, 443, 4040, 444, 8983};
         int[] httphttps = {80, 443};
+        
+        //TODO add ports for YARN!!
 
         switch (type) {
             case TCP:
 
-                roleMappings.put("namenode", namenodeTCP);
-                roleMappings.put("datanode", datanodeTCP);
-                roleMappings.put("mgm", mgmTCP);
-                roleMappings.put("ndb", ndbdTCP);
-                roleMappings.put("mysqld", mysqldTCP);
+                roleMappings.put("hop::namenode", namenodeTCP);
+                roleMappings.put("hop::datanode", datanodeTCP);
+                roleMappings.put("ndb::mgm", mgmTCP);
+                roleMappings.put("ndb::dn", ndbdTCP);
+                roleMappings.put("ndb::mysqld", mysqldTCP);
                 break;
             case UDP:
-                roleMappings.put("namenode", namenodeUDP);
-                roleMappings.put("datanode", datanodeUDP);
-                roleMappings.put("mgm", mgmUDP);
-                roleMappings.put("ndb", ndbdUDP);
-                roleMappings.put("mysqld", mysqldUDP);
+                roleMappings.put("hop::namenode", namenodeUDP);
+                roleMappings.put("hop::datanode", datanodeUDP);
+                roleMappings.put("ndb::mgm", mgmUDP);
+                roleMappings.put("ndb::dn", ndbdUDP);
+                roleMappings.put("ndb::mysqld", mysqldUDP);
                 break;
             case COMMON:
                 roleMappings.put("hopagent", kthfsagent);

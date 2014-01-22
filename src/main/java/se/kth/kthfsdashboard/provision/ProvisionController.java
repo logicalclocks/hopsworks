@@ -180,7 +180,7 @@ public class ProvisionController implements Serializable {
             key = credentials.getAccessKey();
             keystoneEndpoint = credentials.getKeystoneURL();
         } else if (Provider.BAREMETAL.equals(check)) {
-            privateKey = credentials.getPrivateKey();
+//            privateKey = credentials.getPrivateKey();
             isBaremetal=true;
         }
 

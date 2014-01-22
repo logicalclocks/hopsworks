@@ -147,19 +147,6 @@ public final class VirtualizedClusterProvision implements Provision {
         globalPorts.addAll(Ints.asList(commonTCP.get("ssh")));
         globalPorts.addAll(Ints.asList(commonTCP.get("http&https")));
 
-        /*
-         * To remove this snippet, not used anymore
-         */
-        //For each basic role, we map the ports in that role into a list which we append to the commonPorts
-//        for (String commonRole : cluster.getAuthorizePorts()) {
-//            if (commonTCP.containsKey(commonRole)) {
-//                //Use guava library to transform the array into a list, add all the ports
-//                List<Integer> portsRole = Ints.asList(commonTCP.get(commonRole));
-//                globalPorts.addAll(portsRole);
-//            }
-//        }
-
-
         //If EC2 client
         if (provider.toString().equals(Provider.AWS_EC2.toString())) {
             //Unwrap the compute service context and retrieve a rest context to speak with EC2
@@ -168,16 +155,16 @@ public final class VirtualizedClusterProvision implements Provision {
             EC2Client client = temp.getApi();
             //For each group of the security groups
             for (NodeGroup group : cluster.getNodes()) {
-                String groupName = "jclouds#" + group.getService();// jclouds way of defining groups
+                String groupName = "jclouds#" + group.getServices().get(0);// jclouds way of defining groups
                 Set<Integer> openTCP = new HashSet<Integer>(); //To avoid opening duplicate ports
                 Set<Integer> openUDP = new HashSet<Integer>();// gives exception upon trying to open duplicate ports in a group
                 System.out.printf("%d: creating security group: %s%n", System.currentTimeMillis(),
-                        group.getService());
+                        group.getServices().get(0));
                 //create security group
-                messages.addMessage("Creating Security Group: " + group.getService());
+                messages.addMessage("Creating Security Group: " + group.getServices().get(0));
                 try {
                     client.getSecurityGroupServices().createSecurityGroupInRegion(
-                            region, groupName, group.getService());
+                            region, groupName, group.getServices().get(0));
                 } catch (Exception e) {
 
                     //If group already exists continue to the next group
@@ -185,21 +172,22 @@ public final class VirtualizedClusterProvision implements Provision {
                 }
                 //Open the ports for that group
                 //Authorize the ports for TCP and UDP roles in cluster file for that group
-
-                if (portsTCP.containsKey(group.getService())) {
-                    for (int port : portsTCP.get(group.getService())) {
-                        if (!openTCP.contains(port)) {
-                            client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
-                                    groupName, IpProtocol.TCP, port, port, "0.0.0.0/0");
-                            openTCP.add(port);
+                for (String serviceName : group.getServices()) {
+                    if (portsTCP.containsKey(serviceName)) {
+                        for (int port : portsTCP.get(serviceName)) {
+                            if (!openTCP.contains(port)) {
+                                client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
+                                        groupName, IpProtocol.TCP, port, port, "0.0.0.0/0");
+                                openTCP.add(port);
+                            }
                         }
-                    }
 
-                    for (int port : portsUDP.get(group.getService())) {
-                        if (!openUDP.contains(port)) {
-                            client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
-                                    groupName, IpProtocol.UDP, port, port, "0.0.0.0/0");
-                            openUDP.add(port);
+                        for (int port : portsUDP.get(serviceName)) {
+                            if (!openUDP.contains(port)) {
+                                client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
+                                        groupName, IpProtocol.UDP, port, port, "0.0.0.0/0");
+                                openUDP.add(port);
+                            }
                         }
                     }
                 }
@@ -249,42 +237,44 @@ public final class VirtualizedClusterProvision implements Provision {
                 //+++++++++++++++++    
                 //For each group of the security groups
                 for (NodeGroup group : cluster.getNodes()) {
-                    String groupName = "jclouds-" + group.getService(); //jclouds way of defining groups
+                    String groupName = "jclouds-" + group.getServices().get(0); //jclouds way of defining groups
                     Set<Integer> openTCP = new HashSet<Integer>(); //To avoid opening duplicate ports
                     Set<Integer> openUDP = new HashSet<Integer>();// gives exception upon trying to open duplicate ports in a group
                     System.out.printf("%d: creating security group: %s%n", System.currentTimeMillis(),
-                            group.getService());
+                            group.getServices().get(0));
                     //create security group
                     if (!client.list().anyMatch(nameEquals(groupName))) {
-                        messages.addMessage("Creating security group: " + group.getService());
-                        SecurityGroup created = client.createWithDescription(groupName, group.getService());
+                        messages.addMessage("Creating security group: " + group.getServices().get(0));
+                        SecurityGroup created = client.createWithDescription(groupName, group.getServices().get(0));
                         //get the ports
 
                         //Authorize the ports for TCP and UDP
-                        if (portsTCP.containsKey(group.getService())) {
-                            for (int port : portsTCP.get(group.getService())) {
-                                if (!openTCP.contains(port)) {
-                                    Ingress ingress = Ingress.builder()
-                                            .fromPort(port)
-                                            .toPort(port)
-                                            .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.TCP)
-                                            .build();
-                                    client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
-                                    openTCP.add(port);
-                                }
+                        for (String serviceName : group.getServices()) {
+                            if (portsTCP.containsKey(serviceName)) {
+                                for (int port : portsTCP.get(serviceName)) {
+                                    if (!openTCP.contains(port)) {
+                                        Ingress ingress = Ingress.builder()
+                                                .fromPort(port)
+                                                .toPort(port)
+                                                .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.TCP)
+                                                .build();
+                                        client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
+                                        openTCP.add(port);
+                                    }
 
-                            }
-                            for (int port : portsUDP.get(group.getService())) {
-                                if (!openUDP.contains(port)) {
-                                    Ingress ingress = Ingress.builder()
-                                            .fromPort(port)
-                                            .toPort(port)
-                                            .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.UDP)
-                                            .build();
-                                    client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
-                                    openUDP.add(port);
                                 }
+                                for (int port : portsUDP.get(serviceName)) {
+                                    if (!openUDP.contains(port)) {
+                                        Ingress ingress = Ingress.builder()
+                                                .fromPort(port)
+                                                .toPort(port)
+                                                .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.UDP)
+                                                .build();
+                                        client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
+                                        openUDP.add(port);
+                                    }
 
+                                }
                             }
                         }
 
@@ -315,7 +305,7 @@ public final class VirtualizedClusterProvision implements Provision {
                                 }
                             }
                         }
-                        //This is a delay we must use for EC2. There is a limit on REST requests and if we dont limit the
+                        //This is a delay we must use. There is a limit on REST requests and if we dont limit the
                         //bursts of the requests it will fail
                         try {
                             Thread.sleep(15000);
@@ -341,7 +331,7 @@ public final class VirtualizedClusterProvision implements Provision {
         boolean status = false;
         try {
             TemplateBuilder kthfsTemplate = templateKTHFS(cluster, service.templateBuilder());
-            //Use better Our scriptbuilder abstraction
+            //Generate the init script for the nodes
             ScriptBuilder initScript = ScriptBuilder.builder()
                     .scriptType(ScriptBuilder.ScriptType.INIT)
                     .publicKey(publicKey)
@@ -352,71 +342,83 @@ public final class VirtualizedClusterProvision implements Provision {
 
             for (NodeGroup group : cluster.getNodes()) {
 
-                progressEJB.initializeCreateGroup(group.getService(), group.getNumber());
+                progressEJB.initializeCreateGroup(group.getServices().get(0), group.getNumber());
 
                 messages.addMessage("Creating " + group.getNumber()
-                        + "  nodes in Security Group " + group.getService());
+                        + "  nodes in Security Group " + group.getServices().get(0));
                 Set<? extends NodeMetadata> ready = service.createNodesInGroup(
-                        group.getService(), group.getNumber(), kthfsTemplate.build());
-                //For the demo, we keep track of the returned set of node Metadata launched and which group 
-                messages.addMessage("Nodes created in Security Group " + group.getService() + " with "
+                        group.getServices().get(0), group.getNumber(), kthfsTemplate.build());
+                
+                //We keep track of the returned set of node Metadata launched and which group 
+                messages.addMessage("Nodes created in Security Group " + group.getServices().get(0) + " with "
                         + "basic setup");
-                nodes.put(group.getService(), ready);
+                nodes.put(group.getServices().get(0), ready);
+                
                 //Identify the biggest group
                 max = max < group.getNumber() ? group.getNumber() : max;
                 //Fetch the total of nodes
                 totalNodes += group.getNumber();
 
                 //Fetch the nodes info so we can launch first mgm before the rest!
-                //Supposing ideal approach that the users dont mix roles.
-                //Think if it is possible to optimize
-
-                //With actual changes, name is main kthfs service and recipes are optional recipes from the users
+                
                 List<String> services = new LinkedList();
-                services.add(group.getService());
-                if (group.getRecipes() != null) {
-                    services.addAll(group.getRecipes());
-                }
+                services.addAll(group.getServices());
+
                 Iterator<? extends NodeMetadata> iter = ready.iterator();
 
                 int i = 0;
                 while (iter.hasNext()) {
                     NodeMetadata node = iter.next();
 
-                    if (services.contains("mgm")) {
+                    if (services.contains("ndb::mgm")) {
                         //Add private ip to mgm
                         mgmIP.addAll(node.getPrivateAddresses());
-                        mgms.put(node, services);
+                        List<String> mgmRecipes = new LinkedList();
+                        mgmRecipes.addAll(group.getServices());
+                        mgmRecipes.remove("ndb::mysqld");
+                        mgmRecipes.remove("ndb::dn");
+                        mgms.put(node, mgmRecipes);
+                        //filter out mysqld or dn, will be executed later
                     }
-                    if (services.contains("ndb")) {
+                    if (services.contains("ndb::dn")) {
 
                         ndbsIP.addAll(node.getPrivateAddresses());
-                        ndbs.put(node, services);
+                        List<String> ndbRecipes = new LinkedList();
+                        ndbRecipes.addAll(group.getServices());
+                        ndbRecipes.remove("ndb::mgm");
+                        ndbRecipes.remove("ndb::mysqld");
+                        ndbs.put(node, ndbRecipes);
+                        //idem, filter out other mysql cluster conflicts
 
                     }
-                    if (services.contains("mysqld")) {
+                    if (services.contains("ndb::mysqld")) {
 
                         mySQLClientsIP.addAll(node.getPrivateAddresses());
-                        //To avoid launching the node in two phases, see if it is sharing a same node
-                        if (!group.getRecipes().contains("mysqld")) {
-                            mysqlds.put(node, services);
-                        }
+//                        //To avoid launching the node in two phases, see if it is sharing a same node
+
+                        //For a shared node with mgm, it will run 2 times on it.
+                        List<String> mysqldRecipes = new LinkedList();
+                        mysqldRecipes.addAll(group.getServices());
+                        mysqldRecipes.remove("ndb::mgm");
+                        mysqldRecipes.remove("ndb::dn");
+                        mysqlds.put(node, mysqldRecipes);
+                        //filter out other mysql conflicts
 
                     }
-                    if (services.contains("namenode")) {
+                    if (services.contains("hop::namenode")) {
 
                         namenodesIP.addAll(node.getPrivateAddresses());
                         //avoid relaunching a node in the corresponding 
-                        if (!group.getRecipes().contains("namenode")) {
-                            namenodes.put(node, services);
-                        }
+                        namenodes.put(node, services);
+                        //filter out conflicts
                     }
 
-                    if (services.contains("datanode")) {
+                    if (services.contains("hop::datanode")) {
 
                         datanodes.put(node, services);
 
                     }
+                    //update entry on the progression
                     Host host = new Host();
                     if (node != null) {
                         host.setHostname(node.getHostname());
@@ -431,7 +433,7 @@ public final class VirtualizedClusterProvision implements Provision {
 
                         hostEJB.storeHost(host, true);
                     }
-                    progressEJB.updateCreateProgress(group.getService(), i++, node);
+                    progressEJB.updateCreateProgress(group.getServices().get(0), i++, node);
                 }
 
             }
@@ -447,9 +449,10 @@ public final class VirtualizedClusterProvision implements Provision {
     }
 
     /*
-     * In EC2 seems to work, Openstack seems to have issues
-     * This is the procedure we do for baremetal but without the jclouds API
-     *  @beta version
+     * 
+     * This is the based on the procedure we do for baremetal but without the jclouds API, fails due to 
+     * limitations on POST requests
+     *  @alpha version
      */
     public boolean ParallellaunchNodesBasicSetup() {
         boolean status = true;
@@ -467,22 +470,20 @@ public final class VirtualizedClusterProvision implements Provision {
         selectProviderTemplateOptions(cluster, kthfsTemplate, initScript);
         for (final NodeGroup group : cluster.getNodes()) {
             try {
-                progressEJB.initializeCreateGroup(group.getService(), group.getNumber());
+                progressEJB.initializeCreateGroup(group.getServices().get(0), group.getNumber());
             } catch (Exception e) {
                 e.printStackTrace();
                 System.out.println("Error updating the DataBase");
             }
-            messages.addMessage("Creating " + group.getNumber() + "  nodes in Security Group " + group.getService());
+            messages.addMessage("Creating " + group.getNumber() + "  nodes in Security Group " + group.getServices().get(0));
             max = max < group.getNumber() ? group.getNumber() : max;
             //Fetch the total of nodes
             totalNodes += group.getNumber();
             //Create async provision
             //Generate function to store results when done
             List<String> services = new LinkedList<String>();
-            services.add(group.getService());
-            if (group.getRecipes() != null) {
-                services.addAll(group.getRecipes());
-            }
+            services.addAll(group.getServices());
+
             final StoreResults results = new StoreResults(services, latch, this);
             //Generate listenable future that will store the results in the hashmap when done
             ListenableFuture<Set<? extends NodeMetadata>> groupCreation =

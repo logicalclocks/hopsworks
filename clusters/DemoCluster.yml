@@ -13,17 +13,17 @@
      - 3321
     git:
       user: Jim Dowling
-      repository: https://ghetto.sics.se/jdowling/hops-chef.git
+      repository: https://github.com/hopstart/hop-chef.git
       key: notNull
   provider:
     name: aws-ec2
     instanceType: m1.large
     loginUser: ubuntu
-    image: eu-west-1/ami-35667941 
-    ##image: eu-west-1/ami-ffcdce8b
+    ##image: eu-west-1/ami-c8957bbf 
+    image: eu-west-1/ami-ffcdce8b
     region: eu-west-1
-    zones: 
-    - eu-west-1a
+#    zones: 
+#    - eu-west-1a
   ##lists of groups, with the roles the nodes will have and open ports 
   nodes:
   - service: ndb

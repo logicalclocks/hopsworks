@@ -41,10 +41,10 @@ public class CreateGroupCallable implements Callable<Set<? extends NodeMetadata>
     public Set<? extends NodeMetadata> call() {
         Set<? extends NodeMetadata> ready = null;
         try {
-            ready = service.createNodesInGroup(group.getService(), group.getNumber(),
+            ready = service.createNodesInGroup(group.getServices().get(0), group.getNumber(),
                     kthfsTemplate.build());
-            nodes.put(group.getService(), ready);
-            messages.addMessage("Nodes created in Security Group " + group.getService() + " with "
+            nodes.put(group.getServices().get(0), ready);
+            messages.addMessage("Nodes created in Security Group " + group.getServices().get(0) + " with "
                     + "basic setup");
         } catch (RunNodesException e) {
             System.out.println("error adding nodes to group "

@@ -52,127 +52,146 @@
                 <p:spacer width="1" height="8" />
                 <div id="optionsForm" >
                     <h:form id="clusterForm" enctype="multipart/form-data"> 
-<!--                        <p:fieldset legend="Use an existing Cluster">  
-                            <h:panelGrid columns="2" cellpadding="10"> 
-                                <h:outputText value="You can also select a cluster from the database"/>
-
-                                <p:growl id="messages" showDetail="true"/>
-                                <div class="orchLabel">
-                                <p:dataTable id="clusterList" selectionMode="multiple" var="cluster" widgetVar="list"
-                                             value="#{clusterManagementController.listAvailableClusters()}"
-                                             rowKey="#{cluster.id}"
-                                             selection="#{clusterManagementController.selectedClusters}"
-                                             editable="false">
-
-                                    <f:facet name="header">
-                                        Available cluster configurations
-                                    </f:facet>
-                                    <p:column headerText="Cluster Name">
-                                        <h:outputText value="#{cluster.clusterName}"/>
-                                    </p:column>
-                                    <p:column headerText="Cluster Type">
-                                        <h:outputText value="#{cluster.clusterType}"/>
-                                    </p:column>
-                                    <p:column headerText="Content">
-                                        <h:outputText value="#{cluster.showTrimContent()}"/>
-                                    </p:column>
-
-                                </p:dataTable>
-                                <p:dialog header="Remove Clusters" widgetVar="removeDialog" resizable="false"
-                                          id="clusterRemoveDig"  
-                                          showEffect="fade" hideEffect="explode" modal="true">  
-                                    <h:outputText id="deletemsg" value="Are you sure you want to delete?" />
-                                    <p:commandButton id="acceptDelete" value="Confirm"  
-                                                     action="#{clusterManagementController.removeClusters()}"
-                                                     oncomplete="editLastDataTableRow removeDialog.close()"
-                                                     />
-                                </p:dialog>
-                                <p:dialog header="Select Cluster Type" widgetVar="selectType" resizable="false"
-                                          id="clusterTypeDig"
-                                          showEffect="fade" modal="true">
-                                    <h:outputText id="typeMsg" value="Select the type of cluster to configure:"/>
-                                    <p:selectOneRadio id="clusterType" 
-                                                      value="#{clusterManagementController.clusterType}">
-                                        <f:selectItem itemLabel="Cloud Provider" itemValue="virtualized"/>
-                                        <f:selectItem itemLabel="Baremetal" itemValue="baremetal"/>
-                                    </p:selectOneRadio>
-                                    <p:commandButton id="selectedType" value="Proceed"
-                                                     action="#{clusterManagementController.proceedCreateWizard()}"/>
-                                </p:dialog>
-
-                                <p:commandButton id="deleteClusterButton" value="Delete clusters" 
-                                                 update="clusterForm:deletemsg" 
-                                                 oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
-
-                                <p:commandButton id="editSelection" value="Edit selected cluster"
-                                                 update="clusterForm:editMsg"
-                                                 oncomplete="editType.show()"/>
-                                <p:commandButton id="loadButton" value="Load selected cluster"
-                                                 action="#{clusterManagementController.loadSelection()}"/>
-                                <p:commandButton id="exportButton" value="Export selected cluster"
-                                                 ajax="false" icon="ui-icon-arrowthichk-s" 
-                                                 onclick="Primefaces.monitorDownload(start, stop)">
-                                    <p:fileDownload value="#{clusterManagementController.exportCluster()}"/>
-                                </p:commandButton>
-
-                                <p:dialog header="Select Edit Option" widgetVar="editType" resizable="false"
-                                          id="editTypeDig"
-                                          showEffect="fade" modal="true">
-                                    <h:outputText id="editMsg" value="How do you want to edit the cluster?:"/>
-                                    <p:selectOneRadio id="editType" 
-                                                      value="#{clusterManagementController.editType}">
-                                        <f:selectItem itemLabel="Wizard" itemValue="wizard"/>
-                                        <f:selectItem itemLabel="Online Editor" itemValue="editor"/>
-                                    </p:selectOneRadio>
-                                    <p:commandButton id="editTypeSelected" value="Proceed"
-                                                     action="#{clusterManagementController.editSelection()}"/>
-                                </p:dialog>
-
-                            </h:panelGrid>  
-                        </p:fieldset>  
-
-                        <br/>
-                        <br/>-->
+                        <!--                        <p:fieldset legend="Use an existing Cluster">  
+                                                    <h:panelGrid columns="2" cellpadding="10"> 
+                                                        <h:outputText value="You can also select a cluster from the database"/>
+                        
+                                                        <p:growl id="messages" showDetail="true"/>
+                                                        <div class="orchLabel">
+                                                        <p:dataTable id="clusterList" selectionMode="multiple" var="cluster" widgetVar="list"
+                                                                     value="#{clusterManagementController.listAvailableClusters()}"
+                                                                     rowKey="#{cluster.id}"
+                                                                     selection="#{clusterManagementController.selectedClusters}"
+                                                                     editable="false">
+                        
+                                                            <f:facet name="header">
+                                                                Available cluster configurations
+                                                            </f:facet>
+                                                            <p:column headerText="Cluster Name">
+                                                                <h:outputText value="#{cluster.clusterName}"/>
+                                                            </p:column>
+                                                            <p:column headerText="Cluster Type">
+                                                                <h:outputText value="#{cluster.clusterType}"/>
+                                                            </p:column>
+                                                            <p:column headerText="Content">
+                                                                <h:outputText value="#{cluster.showTrimContent()}"/>
+                                                            </p:column>
+                        
+                                                        </p:dataTable>
+                                                        <p:dialog header="Remove Clusters" widgetVar="removeDialog" resizable="false"
+                                                                  id="clusterRemoveDig"  
+                                                                  showEffect="fade" hideEffect="explode" modal="true">  
+                                                            <h:outputText id="deletemsg" value="Are you sure you want to delete?" />
+                                                            <p:commandButton id="acceptDelete" value="Confirm"  
+                                                                             action="#{clusterManagementController.removeClusters()}"
+                                                                             oncomplete="editLastDataTableRow removeDialog.close()"
+                                                                             />
+                                                        </p:dialog>
+                                                        <p:dialog header="Select Cluster Type" widgetVar="selectType" resizable="false"
+                                                                  id="clusterTypeDig"
+                                                                  showEffect="fade" modal="true">
+                                                            <h:outputText id="typeMsg" value="Select the type of cluster to configure:"/>
+                                                            <p:selectOneRadio id="clusterType" 
+                                                                              value="#{clusterManagementController.clusterType}">
+                                                                <f:selectItem itemLabel="Cloud Provider" itemValue="virtualized"/>
+                                                                <f:selectItem itemLabel="Baremetal" itemValue="baremetal"/>
+                                                            </p:selectOneRadio>
+                                                            <p:commandButton id="selectedType" value="Proceed"
+                                                                             action="#{clusterManagementController.proceedCreateWizard()}"/>
+                                                        </p:dialog>
+                        
+                                                        <p:commandButton id="deleteClusterButton" value="Delete clusters" 
+                                                                         update="clusterForm:deletemsg" 
+                                                                         oncomplete="removeDialog.show()" icon="ui-icon-minusthick" title="View"/>
+                        
+                                                        <p:commandButton id="editSelection" value="Edit selected cluster"
+                                                                         update="clusterForm:editMsg"
+                                                                         oncomplete="editType.show()"/>
+                                                        <p:commandButton id="loadButton" value="Load selected cluster"
+                                                                         action="#{clusterManagementController.loadSelection()}"/>
+                                                        <p:commandButton id="exportButton" value="Export selected cluster"
+                                                                         ajax="false" icon="ui-icon-arrowthichk-s" 
+                                                                         onclick="Primefaces.monitorDownload(start, stop)">
+                                                            <p:fileDownload value="#{clusterManagementController.exportCluster()}"/>
+                                                        </p:commandButton>
+                        
+                                                        <p:dialog header="Select Edit Option" widgetVar="editType" resizable="false"
+                                                                  id="editTypeDig"
+                                                                  showEffect="fade" modal="true">
+                                                            <h:outputText id="editMsg" value="How do you want to edit the cluster?:"/>
+                                                            <p:selectOneRadio id="editType" 
+                                                                              value="#{clusterManagementController.editType}">
+                                                                <f:selectItem itemLabel="Wizard" itemValue="wizard"/>
+                                                                <f:selectItem itemLabel="Online Editor" itemValue="editor"/>
+                                                            </p:selectOneRadio>
+                                                            <p:commandButton id="editTypeSelected" value="Proceed"
+                                                                             action="#{clusterManagementController.editSelection()}"/>
+                                                        </p:dialog>
+                        
+                                                    </h:panelGrid>  
+                                                </p:fieldset>  
+                        
+                                                <br/>
+                                                <br/>-->
                         <p:fieldset legend="Load Cluster Definition File">  
-                            <h:panelGrid columns="2" cellpadding="10"> 
-                                <p:fileUpload value="#{clusterManagementController.file}"
-                                              fileUploadListener="#{clusterManagementController.handleFileUpload}"
-                                              mode="advanced"
-                                              auto="true"   
-                                              dragDropSupport="true"
-                                              sizeLimit="10000"   
-                                              allowTypes="/(\.|\/)(yml)$/"
-                                              update="messages"
-                                              >
-                                    <!--<h:outputLabel  value=" Upload a cluster definition YAML file." />-->
-                                </p:fileUpload>  
-                                <p:growl id="messages" showDetail="true"/>  
-<!--                                <p:commandButton id="load" value="Load Cluster from file" 
-                                                 actionListener="#{clusterManagementController.handleFileUploadOld()}" 
-                                                 action="#{clusterManagementController.proceedLauncher()}" 
-                                                 ajax="false" disabled="false" />-->
-                            </h:panelGrid>  
+                            <!--                            <h:panelGrid columns="2" cellpadding="10"> 
+                                                            <p:fileUpload value="#{clusterManagementController.file}"
+                                                                          fileUploadListener="#{clusterManagementController}"
+                                                                          mode="advanced"
+                                                                          auto="true"   
+                                                                          dragDropSupport="true"
+                                                                          sizeLimit="10000"   
+                                                                          allowTypes="/(\.|\/)(yml)$/"
+                                                                          update="messages"
+                                                                          >
+                                                                <h:outputLabel  value=" Upload a cluster definition YAML file." />
+                                                            </p:fileUpload>  
+                                                            <p:growl id="messages" showDetail="true"/>  
+                                                            <p:commandButton id="load" value="Load Cluster from file" 
+                                                                             actionListener="#{clusterManagementController.handleFileUploadOld()}" 
+                                                                             action="#{clusterManagementController.proceedLauncher()}" 
+                                                                             ajax="false" disabled="false" />
+                                                        </h:panelGrid>  -->
+                            <div class="ClusterLauncher">            
+
+                                <h:panelGrid>
+                                    <p:messages id="yamlMsg" showDetail="true" autoUpdate="true" closable="true" />                              
+                                    <p:fileUpload value="#{clusterManagementController.file}"
+                                                  mode="simple"
+                                                  sizeLimit="10000"   
+                                                  allowTypes="/(\.|\/)(yml)$/"
+                                                  update="messages"/>
+
+                                    <p:commandButton id="loader" value="Load YAML file" 
+                                                     action="#{clusterManagementController.proceedLauncher()}" 
+                                                     ajax="false" disabled="false" 
+                                                     styleClass="ViewButton" 
+
+                                                     />
+                                    <p:message for="loader" display="text" />  
+                                </h:panelGrid>
+                            </div>
                         </p:fieldset>  
 
-                                <p:dialog header="Select Cluster Type" widgetVar="selectType" resizable="false"
-                                          id="clusterTypeDig"
-                                          showEffect="fade" modal="true">
-                                    <h:outputText id="typeMsg" value="Select the type of cluster to configure:"/>
-                                    <p:selectOneRadio id="clusterType" 
-                                                      value="#{clusterManagementController.clusterType}">
-                                        <f:selectItem itemLabel="Cloud Provider" itemValue="virtualized"/>
-                                        <f:selectItem itemLabel="Baremetal" itemValue="baremetal"/>
-                                    </p:selectOneRadio>
-                                    <p:commandButton id="selectedType" value="Proceed"
-                                                     action="#{clusterManagementController.proceedCreateWizard()}"/>
-                                </p:dialog>
+                        <p:dialog header="Select Cluster Type" widgetVar="selectType" resizable="false"
+                                  id="clusterTypeDig"
+                                  showEffect="fade" modal="true">
+                            <h:outputText id="typeMsg" value="Select the type of cluster to configure:"/>
+                            <p:selectOneRadio id="clusterType" 
+                                              value="#{clusterManagementController.clusterType}">
+                                <f:selectItem itemLabel="Cloud Provider" itemValue="virtualized"/>
+                                <f:selectItem itemLabel="Baremetal" itemValue="baremetal"/>
+                            </p:selectOneRadio>
+                            <p:commandButton id="selectedType" value="Proceed"
+                                             action="#{clusterManagementController.proceedCreateWizard()}"/>
+                        </p:dialog>
 
                         <br/>
                         <br/>
                         <p:fieldset legend="Create Cluster using Wizard">  
                             <h:panelGrid columns="1" cellpadding="10"> 
 
-                            <p:commandButton id="createButton" value="Create Cluster" 
+                                <p:commandButton id="createButton" value="Create Cluster" 
                                                  icon="ui-icon-plusthick"
                                                  oncomplete="selectType.show()"
                                                  update="clusterForm:typeMsg"

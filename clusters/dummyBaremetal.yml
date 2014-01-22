@@ -15,36 +15,26 @@
       repository: https://ghetto.sics.se/jdowling/kthfs-pantry.git
   ##lists of service, we define a service with the number of instances and roles?  
   nodes:
-  - service: ndb
+  - services:  [MySQLCluster-ndb]
     number: 2
     hosts: [10.20.0.8, 10.20.0.11]
-    recipes: [MySQLCluster-ndb]
-    chefAttributes: 
-    bittorrent:
-  - service: mgm
+
+  - services: [MySQLCluster-mgm]
     number: 1
     hosts: [10.20.0.6]
-    recipes: [MySQLCluster-mgm]
-    chefAttributes: 
-    bittorrent:
-  - service: mysql
+
+  - services: [MySQLCluster-mysqld]
     number: 1
     hosts: [10.20.0.7]
-    recipes: [MySQLCluster-mysqld]
-    chefAttributes:
-    bittorrent:
-  - service: namenode
+    
+  - services: [KTHFS-namenode]
     number: 2
     hosts: [10.20.0.12, 10.20.0.14]
-    recipes: [KTHFS-namenode]
-    chefAttributes:  
-    bittorrent:  
-  - service: datanode
+
+  - services: [KTHFS-datanode]
     number: 2
     hosts: [10.20.0.16, 10.20.0.17]
-    recipes: [KTHFS-datanode]
-    chefAttributes:
-    bittorrent:
+
   
 
 ...

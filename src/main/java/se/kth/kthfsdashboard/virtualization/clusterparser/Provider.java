@@ -12,15 +12,14 @@ import javax.persistence.*;
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-
-public class Provider implements Serializable{
+public class Provider implements Serializable {
 
     private String name;
     private String instanceType;
     private String loginUser;
     private String image;
     private String region;
-    
+
     public String getLoginUser() {
         return loginUser;
     }
@@ -28,7 +27,7 @@ public class Provider implements Serializable{
     public void setLoginUser(String loginUser) {
         this.loginUser = loginUser;
     }
-        
+
     public String getRegion() {
         return region;
     }
@@ -36,8 +35,7 @@ public class Provider implements Serializable{
     public void setRegion(String region) {
         this.region = region;
     }
-    private List<String> zones;
-   
+
     public String getName() {
         return name;
     }
@@ -52,7 +50,7 @@ public class Provider implements Serializable{
 
     public void setImage(String image) {
         this.image = image;
-    }    
+    }
 
     public String getInstanceType() {
         return instanceType;
@@ -62,17 +60,8 @@ public class Provider implements Serializable{
         this.instanceType = instanceType;
     }
 
-    public List<String> getZones() {
-        return zones;
-    }
-
-    public void setZones(List<String> zones) {
-        this.zones = zones;
-    }     
-
     @Override
     public String toString() {
-        return "Provider{" + "name=" + name + ", instanceType=" + instanceType + ", image=" + image + ", zones=" + zones + '}';
+        return "Provider{" + "name=" + name + ", instanceType=" + instanceType + ", image=" + image + " '}'";
     }
-
 }

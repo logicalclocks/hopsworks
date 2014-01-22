@@ -15,27 +15,14 @@ import java.util.List;
  */
 public class NodeGroup implements Serializable {
 
-    private String service;
+//    private String service;
     private int number;
-    private List<String> recipes;
+    private List<String> services;
     private List<Integer> authorizePorts;
     private String chefAttributes;
     private String bittorrent;
 
     public NodeGroup() {
-    }
-
-    public NodeGroup(String name) {
-        this.service = name;
-
-    }
-
-    public String getService() {
-        return service;
-    }
-
-    public void setService(String name) {
-        this.service = name;
     }
 
     public int getNumber() {
@@ -46,12 +33,12 @@ public class NodeGroup implements Serializable {
         this.number = number;
     }
 
-    public List<String> getRecipes() {
-        return recipes;
+    public List<String> getServices() {
+        return services;
     }
 
-    public void setRecipes(List<String> recipes) {
-        this.recipes = recipes;
+    public void setServices(List<String> recipes) {
+        this.services = recipes;
     }
 
     public List<Integer> getAuthorizePorts() {
@@ -93,18 +80,18 @@ public class NodeGroup implements Serializable {
     }
     
     public String getStringRecipes() {
-        String temp = recipes.toString().replaceAll("\\[", "");
+        String temp = services.toString().replaceAll("\\[", "");
         temp = temp.replaceAll(" ", "");
         return temp.toString().replaceAll("\\]", "");
     }
 
     public void setStringRecipes(String recipes) {
         String[] splittedRecipes = recipes.split(",");
-        setRecipes(Arrays.asList(splittedRecipes));
+        setServices(Arrays.asList(splittedRecipes));
     }
 
     @Override
     public String toString() {
-        return "NodeGroup{" + "securityGroup=" + service + ", number=" + number + ", roles=" + recipes + ", authorizePorts=" + authorizePorts + '}';
+        return "NodeGroup{" + "securityGroup=" + services.get(0) + ", number=" + number + ", roles=" + services + ", authorizePorts=" + authorizePorts + '}';
     }
 }
