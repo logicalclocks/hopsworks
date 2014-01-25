@@ -10,6 +10,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import se.kth.kthfsdashboard.host.Host;
 import se.kth.kthfsdashboard.host.HostEJB;
+import se.kth.kthfsdashboard.role.Role;
 import se.kth.kthfsdashboard.role.RoleEJB;
 import se.kth.kthfsdashboard.service.*;
 import se.kth.kthfsdashboard.struct.NodesTableItem;
@@ -86,7 +87,11 @@ public class CommunicationController {
    }
    
    private String findIpByRole(String cluster, String service, String role) throws Exception {
-      String id = roleEjb.findRoles(cluster, service, role).get(0).getHostId();
+      List<Role> roles = roleEjb.findRoles(cluster, service, role);
+      if (roles.isEmpty()) {
+          return null;
+      }
+      String id = roles.get(0).getHostId();
       return findIpByHostId(id);
    }     
 
@@ -105,6 +110,9 @@ public class CommunicationController {
       // Role=mgmserver , Service=MySQLCluster, Cluster=cluster
       String mgmserverRole = "mgmserver";
       String ip = findIpByRole(cluster, service, mgmserverRole);
+      if (ip == null) {
+          return "mgm server not installed";
+      }
       WebCommunication webComm = new WebCommunication();
       return webComm.getConfig(ip, cluster, service, mgmserverRole);
    }
