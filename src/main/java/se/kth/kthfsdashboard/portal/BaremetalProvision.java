@@ -25,7 +25,11 @@ import org.jclouds.scriptbuilder.statements.ssh.AuthorizeRSAPublicKeys;
 import se.kth.kthfsdashboard.provision.MessageController;
 
 /**
- *
+ * Represents a provisioning process for a baremetal machine in order to install the 
+ * dashboard.
+ * Contains methods that represent this process and generate the scripts to configure the dashboard.
+ * 
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class BaremetalProvision {

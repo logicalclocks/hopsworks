@@ -9,7 +9,8 @@ import javax.faces.model.ListDataModel;
 import org.primefaces.model.SelectableDataModel;
 
 /**
- *
+ * Data model to represent a NodeGroup on the web application interface.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class NodeGroupDataModel extends ListDataModel<NodeGroup>

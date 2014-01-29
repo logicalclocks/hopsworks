@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.kthfsdashboard.portal;
 
 import com.google.common.base.Optional;
@@ -62,7 +58,10 @@ import se.kth.kthfsdashboard.provision.MessageController;
 import se.kth.kthfsdashboard.provision.ProviderType;
 
 /**
- *
+ * Represents a provisioning process for a cloud machine in order to install the dashboard.
+ * Contains methods that represent this process and generate the scripts to configure the dashboard.
+ * 
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class CloudProvision {

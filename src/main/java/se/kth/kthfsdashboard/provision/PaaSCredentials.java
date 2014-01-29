@@ -15,7 +15,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 /**
- *
+ * Persistance java class with the PaaS credentials from the datasource.
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @Entity

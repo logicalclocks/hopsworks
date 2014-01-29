@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.kthfsdashboard.baremetal;
 
 import com.google.common.util.concurrent.Futures;
@@ -37,7 +33,8 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.Baremetal;
 import se.kth.kthfsdashboard.virtualization.clusterparser.BaremetalGroup;
 
 /**
- *
+ *Representation of a Baremetal virtualization process
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class BaremetalClusterProvision implements Provision {

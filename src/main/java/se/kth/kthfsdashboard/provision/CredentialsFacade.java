@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.kthfsdashboard.provision;
 
 import javax.ejb.Stateless;
@@ -11,7 +7,8 @@ import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
- *
+ * Entry point to the data source to query the persisted PaaS Credentials
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @Stateless

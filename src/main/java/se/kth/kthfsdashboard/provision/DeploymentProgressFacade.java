@@ -10,7 +10,6 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import org.jclouds.compute.domain.NodeMetadata;
 import se.kth.kthfsdashboard.user.AbstractFacade;
@@ -20,7 +19,8 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.Cluster;
 import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
 
 /**
- *
+ * Entry point of the data source which handles the progress of all the nodes been 
+ * currently provisioned.
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @Stateless

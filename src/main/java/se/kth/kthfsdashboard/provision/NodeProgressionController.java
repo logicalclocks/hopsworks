@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.kthfsdashboard.provision;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -13,13 +9,14 @@ import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.scriptbuilder.domain.OsFamily;
 
 /**
- *
+ * Controller which manages the functionality to handle the progress
+ * of the nodes in the cluster.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @ManagedBean

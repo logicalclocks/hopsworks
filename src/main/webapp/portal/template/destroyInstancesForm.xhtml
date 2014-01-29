@@ -16,51 +16,51 @@
                     <p:messages severity="error" showDetail="true"/>
                     <p:growl for="success" showDetail="true" sticky="true" />
                 </h:panelGroup>
-                <h:form id="destroyForm" rendered="#{providerMB.showProvider}">
+                <h:form id="destroyForm" rendered="#{portalMB.showProvider}">
                     <p:panel id="providerDestroy" header="Destroy Instances in Group">
                         <h:panelGrid columns="2">
                             <h:outputLabel for="providerName" value="Provider" />
-                            <h:outputText id="providerName" value="#{providerMB.providerName}" />
+                            <h:outputText id="providerName" value="#{portalMB.providerName}" />
 
 
 
 
                             <h:outputLabel for="nodeId" value="Node id"/>
                             <p:watermark for="nodeId" value="Destroy instance by id">
-                                <h:inputText id="nodeId" value="#{providerMB.nodeId}" size="30" 
+                                <h:inputText id="nodeId" value="#{portalMB.nodeId}" size="30" 
                                              required="true" />
                             </p:watermark>
 
                         </h:panelGrid>
                     </p:panel>
                     <p:panel id="providerCredentials" header="Provider Credentials" 
-                             rendered="#{!providerMB.baremetal}">
+                             rendered="#{!portalMB.baremetal}">
                         <h:panelGrid columns="2">
                             <h:outputLabel for="id" value="id"/>
-                            <p:watermark for="id" value="#{providerMB.openstack
+                            <p:watermark for="id" value="#{portalMB.openstack
                                                            ?'id pattern in OpenStack project:user'
                                                            :'Access Key Id from AWS'}">
-                                <h:inputText id="id" value="#{providerMB.id}" 
+                                <h:inputText id="id" value="#{portalMB.id}" 
                                              size="30" required="true" 
                                              disabled="false"/>
                             </p:watermark>
 
                             <h:outputLabel for="key" value="Secret Key"/>
-                            <p:watermark for="key" value="#{providerMB.openstack
+                            <p:watermark for="key" value="#{portalMB.openstack
                                                             ?'user password'
                                                             :'Secret Access Key for AWS'}" >
-                                <h:inputSecret id="key" value="#{providerMB.key}" 
+                                <h:inputSecret id="key" value="#{portalMB.key}" 
                                                size="30" required="true" 
                                                disabled="false"/>
                             </p:watermark>
 
                             <h:outputLabel for="keystone" value="Keystone url" 
-                                           rendered="#{providerMB.openstack}"/>
+                                           rendered="#{portalMB.openstack}"/>
                             <p:watermark for="keystone" value="keystone url of the service point" >
-                                <h:inputSecret id="keystone" value="#{providerMB.keystone}" 
+                                <h:inputSecret id="keystone" value="#{portalMB.keystone}" 
                                                size="30" 
-                                               disabled="#{!providerMB.openstack}"
-                                               rendered="#{providerMB.openstack}"/>
+                                               disabled="#{!portalMB.openstack}"
+                                               rendered="#{portalMB.openstack}"/>
                             </p:watermark>
                         </h:panelGrid>
                     </p:panel> 

@@ -1,13 +1,8 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.kthfsdashboard.portal;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import java.io.Serializable;
-import java.net.URI;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import javax.faces.bean.ManagedBean;
@@ -32,7 +27,9 @@ import se.kth.kthfsdashboard.provision.MessageController;
 import se.kth.kthfsdashboard.provision.ProviderType;
 
 /**
- *
+ * Controller that handles the provision of a node with the dashboard application in 
+ * a baremetal machine or in a cloud machine.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @ManagedBean

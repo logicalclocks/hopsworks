@@ -5,7 +5,7 @@
 package se.kth.kthfsdashboard.provision;
 
 /**
- *
+ * Enum which specifies the different types of providers we currently support (and future)
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public enum ProviderType {

@@ -20,9 +20,14 @@ import se.kth.kthfsdashboard.provision.ScriptBuilder;
 
 
 /**
- *
+ * Asynchronous Thread that handles SSH session to the node and executes the 
+ * given script.
+ * 
+ *  It returns back the ExecResponse which wraps the result of executing the SSH session.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
+
 public class SubmitScriptBaremetalCallable implements Callable<ExecResponse> {
 
     private NodeMetadata node;

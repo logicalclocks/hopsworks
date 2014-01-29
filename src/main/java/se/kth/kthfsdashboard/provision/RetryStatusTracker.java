@@ -9,7 +9,12 @@ import java.util.concurrent.ExecutionException;
 import org.jclouds.compute.domain.ExecResponse;
 
 /**
- *
+ * Thread that handles the retry call to one of the nodes, it listens waiting for the future 
+ * to return the status of the SSH session.
+ * 
+ * If the script executed in the session returns no errors, we indicate that the node recovered by
+ * changing the status into COMPLETE
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class RetryStatusTracker implements Runnable{

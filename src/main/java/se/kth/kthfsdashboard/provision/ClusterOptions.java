@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.kthfsdashboard.provision;
 
 import java.util.ArrayList;
@@ -15,7 +11,9 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.BaremetalGroup;
 import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
 
 /**
- *
+ * Class that defines a collection of options that can be chosen from when defining the
+ * cluster through the cluster wizard.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class ClusterOptions {

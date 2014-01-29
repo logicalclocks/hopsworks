@@ -12,7 +12,10 @@ import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
 
 /**
- *
+ * Thread that listens for the results of the SSH session for the provisioning script.
+ * If there is a problem with the execution of the script, the thread marks the node as invalid in a 
+ * concurrent store.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class NodeStatusTracker implements Runnable {

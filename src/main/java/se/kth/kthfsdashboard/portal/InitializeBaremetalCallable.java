@@ -26,9 +26,14 @@ import org.jclouds.scriptbuilder.domain.StatementList;
 import se.kth.kthfsdashboard.provision.MessageController;
 
 /**
- *
+ * Asynchronous Thread that handles SSH session to the node and executes the 
+ * given initialization script.
+ * 
+ *  It returns back the ExecResponse which wraps the result of executing the SSH session.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
+
 public class InitializeBaremetalCallable implements Callable<Set<NodeMetadata>>{
     private SSHClient client;
     private KeyProvider keys;

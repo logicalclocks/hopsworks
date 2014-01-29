@@ -5,11 +5,14 @@
 package se.kth.kthfsdashboard.virtualization.clusterparser;
 
 import java.io.Serializable;
-import java.util.List;
-import javax.persistence.*;
 
 /**
- *
+ * Represents a cloud provider with the required configuration parameters to configure
+ * all the nodes in the cloud.
+ * 
+ * This includes the name of the provider, the instance type for the VMs, the user to login in them, the 
+ * OS image to request and the region to be deployed in the data center.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class Provider implements Serializable {

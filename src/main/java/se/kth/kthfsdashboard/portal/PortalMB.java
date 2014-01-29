@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.kthfsdashboard.portal;
 
 import java.io.Serializable;
@@ -9,13 +5,13 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 
 /**
- *
+ * Portal managed bean which collects the users input data for deploying the
+ * dashboard on a baremetal or cloud machine.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-//@Named(value = "provider")
 @ManagedBean
 @SessionScoped
-//@RequestScoped
 public class PortalMB implements Serializable {
 
     private static final long serialVersionUID = 7526472295622776147L;

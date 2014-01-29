@@ -9,7 +9,8 @@ import javax.faces.model.ListDataModel;
 import org.primefaces.model.SelectableDataModel;
 
 /**
- *
+ * Data model for the user interface with the progression state of the nodes.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class NodeProgressionDataModel extends ListDataModel<NodeProgression>

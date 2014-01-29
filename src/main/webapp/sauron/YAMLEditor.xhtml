@@ -36,14 +36,14 @@
                                 <pe:codeMirror id="codeMirror" mode="#{editorYamlController.mode}" 
                                                theme="rubyblue" 
                                                value="#{editorYamlController.content}" lineNumbers="true"
-                                               
+
                                                />
 
-                               
+
                             </p:panel> 
                             <p:commandButton  update="codeMirror"
-                                                 value="Save changes"
-                                                 action="#{editorYamlController.saveChanges()}"/>
+                                              value="Save changes"
+                                              action="#{editorYamlController.saveChanges()}"/>
                         </h:form>
                     </h:body>
                 </div>

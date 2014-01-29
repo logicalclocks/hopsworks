@@ -12,7 +12,8 @@ import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterEntity;
 import se.kth.kthfsdashboard.virtualization.clusterparser.ClusterFacade;
 
 /**
- *
+ * Controller that handles edition of YAML cluster files using a code console interface.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @ManagedBean

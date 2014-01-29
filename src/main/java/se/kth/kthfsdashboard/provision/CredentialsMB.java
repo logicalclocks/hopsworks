@@ -11,7 +11,9 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 
 /**
- *
+ * Managed Bean that retrieves the PaaS credentials which are already registered for
+ * this dashboard.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @ManagedBean

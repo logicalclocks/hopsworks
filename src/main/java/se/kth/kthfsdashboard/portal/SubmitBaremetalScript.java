@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.kthfsdashboard.portal;
 
 import java.io.IOException;
@@ -17,7 +13,11 @@ import org.jclouds.scriptbuilder.domain.OsFamily;
 import org.jclouds.scriptbuilder.domain.StatementList;
 
 /**
- *
+ * Asynchronous Thread that handles SSH session to the node and executes the 
+ * given script.
+ * 
+ *  It returns back the ExecResponse which wraps the result of executing the SSH session.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class SubmitBaremetalScript implements Callable<ExecResponse> {

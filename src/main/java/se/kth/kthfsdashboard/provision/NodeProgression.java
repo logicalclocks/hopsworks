@@ -15,7 +15,8 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 /**
- *
+ * Represents the progress of a node been provisioned in the cluster.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @Entity

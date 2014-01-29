@@ -9,7 +9,8 @@ import java.util.Map;
 import org.jclouds.compute.domain.NodeMetadata;
 
 /**
- *
+ * Interface which defines the basic operations that specifies a provisioning context
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public interface Provision {
