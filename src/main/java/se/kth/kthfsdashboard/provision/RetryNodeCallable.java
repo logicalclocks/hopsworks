@@ -17,7 +17,11 @@ import org.jclouds.compute.domain.ExecResponse;
 
 
 /**
- *
+ * Asynchronous Thread, the callback handles the SSH session and submits the script
+ * to be retried on the node.
+ * 
+ * It returns back the ExecResponse which wraps the result of executing the SSH session.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class RetryNodeCallable implements Callable<ExecResponse> {

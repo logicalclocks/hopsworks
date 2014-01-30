@@ -127,6 +127,23 @@ body {
 }
 
 
+/*Portal style*/
+
+#logo{
+    height: 110px;
+    margin-bottom: 8px;
+    background-image: url("#{resource['/logo/HOPS.png']}");
+    background-repeat: no-repeat;
+}
+
+#instancesTab{
+    width: 700px; 
+}
+
+#providerConfigForm, #destroyInstancesForm, #computeCredentialsForm{
+    width: 500px;
+}
+
 /*panelgrid*/
 
 .ui-panelgrid {    

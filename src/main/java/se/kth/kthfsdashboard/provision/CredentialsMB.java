@@ -9,7 +9,9 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 
 /**
- *
+ * Managed Bean that retrieves the PaaS credentials which are already registered for
+ * this dashboard.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @ManagedBean

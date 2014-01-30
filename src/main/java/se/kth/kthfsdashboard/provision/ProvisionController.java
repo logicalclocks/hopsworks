@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.kthfsdashboard.provision;
 
 import com.google.common.eventbus.AllowConcurrentEvents;
@@ -168,18 +164,20 @@ public class ProvisionController implements Serializable {
      * retrieves the information from the credentials page
      */
     private void setCredentials() {
+
         PaasCredentials credentials = credentialsEJB.find();
-        Provider check = Provider.fromString(credentials.getProvider());
-        if (Provider.AWS_EC2.equals(check)) {
-            provider = Provider.AWS_EC2.toString();
+        ProviderType check = ProviderType.fromString(credentials.getProvider());
+        if (ProviderType.AWS_EC2.equals(check)) {
+            provider = ProviderType.AWS_EC2.toString();
+
             id = credentials.getAccountId();
             key = credentials.getAccessKey();
-        } else if (Provider.OPENSTACK.equals(check)) {
-            provider = Provider.OPENSTACK.toString();
+        } else if (ProviderType.OPENSTACK.equals(check)) {
+            provider = ProviderType.OPENSTACK.toString();
             id = credentials.getAccountId();
             key = credentials.getAccessKey();
             keystoneEndpoint = credentials.getKeystoneURL();
-        } else if (Provider.BAREMETAL.equals(check)) {
+        } else if (ProviderType.BAREMETAL.equals(check)) {
 //            privateKey = credentials.getPrivateKey();
             isBaremetal=true;
         }

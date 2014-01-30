@@ -2,17 +2,17 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.kthfsdashboard.baremetal;
+package se.kth.kthfsdashboard.portal;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.connection.channel.direct.Session;
-import net.schmizz.sshj.connection.channel.direct.Session.Command;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -22,9 +22,8 @@ import org.jclouds.domain.LocationBuilder;
 import org.jclouds.domain.LocationScope;
 import org.jclouds.domain.LoginCredentials;
 import org.jclouds.scriptbuilder.domain.OsFamily;
+import org.jclouds.scriptbuilder.domain.StatementList;
 import se.kth.kthfsdashboard.provision.MessageController;
-import se.kth.kthfsdashboard.provision.ScriptBuilder;
-import se.kth.kthfsdashboard.virtualization.clusterparser.BaremetalGroup;
 
 /**
  * Asynchronous Thread that handles SSH session to the node and executes the 
@@ -41,21 +40,22 @@ public class InitializeBaremetalCallable implements Callable<Set<NodeMetadata>>{
     private String privateKey;
     private String host;
     private String loginUser;
-    private ScriptBuilder initScript;
+    private StatementList initScript;
     private Map<String, Set<? extends NodeMetadata>> nodes;
-    private BaremetalGroup group;
+    private String group;
     private MessageController messages;
+    private CountDownLatch latch;
 
     public InitializeBaremetalCallable(String privateKey, String host, String loginUser, 
-            ScriptBuilder initScript, Map<String, Set<? extends NodeMetadata>> nodes, 
-            BaremetalGroup group, MessageController messages) {
+            StatementList initBootstrapScript, 
+            String group, MessageController messages, CountDownLatch latch) {
         this.privateKey = privateKey;
         this.host = host;
         this.loginUser = loginUser;
-        this.initScript = initScript;
-        this.nodes = nodes;
+        this.initScript = initBootstrapScript;
         this.group = group;
         this.messages = messages;
+        this.latch = latch;
     }
     
     
@@ -72,7 +72,7 @@ public class InitializeBaremetalCallable implements Callable<Set<NodeMetadata>>{
                             client.authPublickey(loginUser, keys);
                             final Session session = client.startSession();
                             System.out.println("Starting SSH session on Host: "+host);
-                            final Command cmd = session.exec(initScript.render(OsFamily.UNIX));
+                            final Session.Command cmd = session.exec(initScript.render(OsFamily.UNIX));
                             System.out.println(IOUtils.readFully(cmd.getInputStream()).toString());
                             System.out.println("\n** exit status: " + cmd.getExitStatus());
                             session.close();
@@ -96,12 +96,10 @@ public class InitializeBaremetalCallable implements Callable<Set<NodeMetadata>>{
                             e.printStackTrace();
                             System.out.println("Error loading the private Key");
                         } finally {
-                            nodes.put(group.getServices().get(0), ready);
-                            messages.addMessage("Nodes created in Security Group " + group.getServices().get(0) + " with "
+                            messages.addMessage("Nodes created in Security Group " + group+ " with "
                                     + "basic setup");
+                            latch.countDown();
                             return ready;
                         }
                     }
     }
-    
-

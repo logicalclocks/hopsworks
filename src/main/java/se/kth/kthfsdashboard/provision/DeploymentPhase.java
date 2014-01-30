@@ -5,7 +5,9 @@
 package se.kth.kthfsdashboard.provision;
 
 /**
- *
+ * Enum which contains the different deployment phases that we expect a node to 
+ * go through.
+ * 
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public enum DeploymentPhase {

@@ -21,8 +21,8 @@ import static org.jclouds.scriptbuilder.domain.Statements.exec;
 import org.jclouds.scriptbuilder.statements.ssh.AuthorizeRSAPublicKeys;
 
 /**
- * Setups the script to run on the VM node. For now it has the init script and
- * the generic script for the nodes.
+ * Setups the script to run on the VM node. 
+ * It has multiple options when generating a script depending of the parameters
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
@@ -530,56 +530,7 @@ public class ScriptBuilder implements Statement {
                 || roles.contains("hop::namenode") || roles.contains("hop::datanode")
                 || roles.contains("hop::resourcemanager");
         //Look at the roles, if it matches add the recipes for that role
-//        for (String role : roles) {
-//            if (role.equals("ndb")) {
-//                builder.addRecipe("ndb::ndbd");
-//                builder.addRecipe("ndb::ndbd-hop");
-//                collectdAdded = true;
-//            }
-//            if (role.equals("mysqld")) {
-//                builder.addRecipe("ndb::mysqld");
-//                builder.addRecipe("ndb::mysqld-hop");
-//                collectdAdded = true;
-//            }
-//            if (role.equals("mgm")) {
-//                builder.addRecipe("ndb::mgmd");
-//                builder.addRecipe("ndb::mgmd-hop");
-//                collectdAdded = true;
-//            }
-//            if (role.equals("memcached")) {
-//                builder.addRecipe("ndb::memcached");
-//                builder.addRecipe("ndb::memcached-hop");
-//            }
-//
-//            //This are for the Hadoop nodes
-//            if (role.equals("namenode")) {
-//                //builder.addRecipe("java");
-//                builder.addRecipe("hop::namenode");
-//                collectdAdded = true;
-//            }
-//            if (role.equals("datanode")) {
-//                //builder.addRecipe("java");
-//                builder.addRecipe("hop::datanode");
-//                collectdAdded = true;
-//            }
-//            if (role.equals("resourcemanager")) {
-//                //builder.addRecipe("java");
-//                builder.addRecipe("hop::resourcemanager");
-//                collectdAdded = true;
-//            }
-//            if (role.equals("nodemanager")) {
-//                // builder.addRecipe("java");
-//                builder.addRecipe("hop::nodemanager");
-//            }
-//            if (role.equals("spark")) {
-//                builder.addRecipe("spark");
-//            }
-//            //if not meets criterias, then it is a custom recipe of the user;
-//            else{
-//                builder.addRecipe(role);
-//            }
 
-//        }
         // We always need to restart the kthfsagent after we have
         // updated its list of services
         if (collectdAdded) {

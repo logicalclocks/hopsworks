@@ -111,7 +111,7 @@
             <to-view-id>/sauron/editClusters.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
-         <navigation-case>
+        <navigation-case>
             <from-outcome>editClusterWizard</from-outcome>
             <to-view-id>/sauron/editClusterWizard.xhtml</to-view-id>
             <redirect/>
@@ -134,6 +134,11 @@
         <navigation-case>
             <from-outcome>editClusterEditor</from-outcome>
             <to-view-id>/sauron/YAMLEditor.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>      
+        <navigation-case>
+            <from-outcome>mainPage</from-outcome>
+            <to-view-id>/portal/start.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         <navigation-case>

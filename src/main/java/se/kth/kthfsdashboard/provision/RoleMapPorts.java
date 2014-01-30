@@ -9,6 +9,10 @@ import java.util.HashMap;
 import java.util.Set;
 
 /**
+ * Class that has predefined ports for TCP, UDP of several hops services which
+ * we open when create the security groups.
+ * 
+ * Note: YARN ports are missing still.
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */

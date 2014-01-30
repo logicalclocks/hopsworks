@@ -61,7 +61,7 @@ import se.kth.kthfsdashboard.provision.DeploymentPhase;
 import se.kth.kthfsdashboard.provision.DeploymentProgressFacade;
 import se.kth.kthfsdashboard.provision.MessageController;
 import se.kth.kthfsdashboard.provision.NodeStatusTracker;
-import se.kth.kthfsdashboard.provision.Provider;
+import se.kth.kthfsdashboard.provision.ProviderType;
 import se.kth.kthfsdashboard.provision.Provision;
 import se.kth.kthfsdashboard.provision.ProvisionController;
 import se.kth.kthfsdashboard.provision.RoleMapPorts;
@@ -83,7 +83,7 @@ public final class VirtualizedClusterProvision implements Provision {
     private DeploymentProgressFacade progressEJB;
     private static final int RETRIES = 5;
     private ComputeService service;
-    private Provider provider;
+    private ProviderType provider;
     private String id;
     private String key;
     private String endpoint;
@@ -112,7 +112,7 @@ public final class VirtualizedClusterProvision implements Provision {
      * Constructor of a VirtualizedClusterProvision
      */
     public VirtualizedClusterProvision(ProvisionController controller) {
-        this.provider = Provider.fromString(controller.getProvider());
+        this.provider = ProviderType.fromString(controller.getProvider());
         this.id = controller.getId();
         this.key = controller.getKey();
         this.endpoint = controller.getKeystoneEndpoint();
@@ -148,7 +148,7 @@ public final class VirtualizedClusterProvision implements Provision {
         globalPorts.addAll(Ints.asList(commonTCP.get("http&https")));
 
         //If EC2 client
-        if (provider.toString().equals(Provider.AWS_EC2.toString())) {
+        if (provider.toString().equals(ProviderType.AWS_EC2.toString())) {
             //Unwrap the compute service context and retrieve a rest context to speak with EC2
             RestContext<EC2Client, EC2AsyncClient> temp = service.getContext().unwrap();
             //Fetch a synchronous rest client
@@ -223,7 +223,7 @@ public final class VirtualizedClusterProvision implements Provision {
 
         //If openstack nova2 client
         //Similar structure to EC2 but changes apis
-        if (provider.toString().equals(Provider.OPENSTACK.toString())) {
+        if (provider.toString().equals(ProviderType.OPENSTACK.toString())) {
             RestContext<NovaApi, NovaAsyncApi> temp = service.getContext().unwrap();
             //+++++++++++++++++
             //This stuff below is weird, founded in a code snippet in a workshop on jclouds. Still it works
@@ -348,19 +348,19 @@ public final class VirtualizedClusterProvision implements Provision {
                         + "  nodes in Security Group " + group.getServices().get(0));
                 Set<? extends NodeMetadata> ready = service.createNodesInGroup(
                         group.getServices().get(0), group.getNumber(), kthfsTemplate.build());
-                
+
                 //We keep track of the returned set of node Metadata launched and which group 
                 messages.addMessage("Nodes created in Security Group " + group.getServices().get(0) + " with "
                         + "basic setup");
                 nodes.put(group.getServices().get(0), ready);
-                
+
                 //Identify the biggest group
                 max = max < group.getNumber() ? group.getNumber() : max;
                 //Fetch the total of nodes
                 totalNodes += group.getNumber();
 
                 //Fetch the nodes info so we can launch first mgm before the rest!
-                
+
                 List<String> services = new LinkedList();
                 services.addAll(group.getServices());
 
@@ -457,6 +457,10 @@ public final class VirtualizedClusterProvision implements Provision {
     public boolean ParallellaunchNodesBasicSetup() {
         boolean status = true;
 
+        //Pending groups
+//        ConcurrentHashMap<String, NodeGroup> pendingGroups =
+//                new ConcurrentHashMap<String, NodeGroup>();
+        CopyOnWriteArraySet<NodeGroup> pendingGroups = new CopyOnWriteArraySet<NodeGroup>();
         latch = new CountDownLatch(cluster.getNodes().size());
         pool = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(cluster.getNodes().size()));
         final TemplateBuilder kthfsTemplate = templateKTHFS(cluster, service.templateBuilder());
@@ -475,20 +479,23 @@ public final class VirtualizedClusterProvision implements Provision {
                 e.printStackTrace();
                 System.out.println("Error updating the DataBase");
             }
-            messages.addMessage("Creating " + group.getNumber() + "  nodes in Security Group " + group.getServices().get(0));
+            messages.addMessage("Creating " + group.getNumber()
+                    + "  nodes in Security Group " + group.getServices().get(0));
             max = max < group.getNumber() ? group.getNumber() : max;
             //Fetch the total of nodes
             totalNodes += group.getNumber();
-            //Create async provision
-            //Generate function to store results when done
+
+
             List<String> services = new LinkedList<String>();
             services.addAll(group.getServices());
 
             final StoreResults results = new StoreResults(services, latch, this);
+            //Create async provision
             //Generate listenable future that will store the results in the hashmap when done
             ListenableFuture<Set<? extends NodeMetadata>> groupCreation =
-                    pool.submit(new CreateGroupCallable(service, group, kthfsTemplate, nodes, messages));
-
+                    pool.submit(new CreateGroupCallable(service, group, kthfsTemplate,
+                    nodes, messages, pendingGroups));
+            //Generate function to store results when done
             Futures.transform(groupCreation, results);
             try {
                 Thread.sleep(group.getNumber() * 3500);
@@ -500,26 +507,35 @@ public final class VirtualizedClusterProvision implements Provision {
 
         try {
             latch.await(totalNodes * 30, TimeUnit.MINUTES);
-            //update that all the nodes have been completed
-            for (String group : nodes.keySet()) {
-                Set<? extends NodeMetadata> createdGroup = nodes.get(group);
-                int i = 0;
-                for (NodeMetadata node : createdGroup) {
-                    Host host = new Host();
-                    if (node != null) {
-                        host.setHostname(node.getHostname());
-                        if (node.getPrivateAddresses().iterator().hasNext()) {
-                            host.setPrivateIp(node.getPrivateAddresses().iterator().next());
-                        }
-                        if (node.getPublicAddresses().iterator().hasNext()) {
-                            host.setPublicIp(node.getPublicAddresses().iterator().next());
-                        }
-                        String nodeId = node.getId();
-                        host.setHostId(nodeId.replaceFirst("/", "-"));
 
-                        hostEJB.storeHost(host, true);
+            //check inconsistencies, retry problematic groups
+            if (!pendingGroups.isEmpty()) {
+                //retry inconsistent group of nodes
+                status = retryGroupCreation(service, kthfsTemplate, pool, latch,
+                        messages, nodes, pendingGroups, RETRIES);
+            }
+            if (status) {
+                //update that all the nodes have been completed
+                for (String group : nodes.keySet()) {
+                    Set<? extends NodeMetadata> createdGroup = nodes.get(group);
+                    int i = 0;
+                    for (NodeMetadata node : createdGroup) {
+                        Host host = new Host();
+                        if (node != null) {
+                            host.setHostname(node.getHostname());
+                            if (node.getPrivateAddresses().iterator().hasNext()) {
+                                host.setPrivateIp(node.getPrivateAddresses().iterator().next());
+                            }
+                            if (node.getPublicAddresses().iterator().hasNext()) {
+                                host.setPublicIp(node.getPublicAddresses().iterator().next());
+                            }
+                            String nodeId = node.getId();
+                            host.setHostId(nodeId.replaceFirst("/", "-"));
+
+                            hostEJB.storeHost(host, true);
+                        }
+                        progressEJB.updateCreateProgress(group, i++, node);
                     }
-                    progressEJB.updateCreateProgress(group, i++, node);
                 }
             }
         } catch (InterruptedException e) {
@@ -528,6 +544,48 @@ public final class VirtualizedClusterProvision implements Provision {
         } finally {
             return status;
         }
+    }
+    /*
+     * Mechanism to retry failures during parallel creation of nodes.
+     */
+
+    private boolean retryGroupCreation(ComputeService service, TemplateBuilder kthfsTemplate,
+            ListeningExecutorService pool, CountDownLatch latch, MessageController messages,
+            Map<String, Set<? extends NodeMetadata>> nodes,
+            CopyOnWriteArraySet<NodeGroup> pending, int times) {
+        boolean success = false;
+        int retries = times;
+        while (retries != 0 && !pending.isEmpty()) {
+            latch = new CountDownLatch(pending.size());
+
+
+            for (NodeGroup group : pending) {
+                List<String> services = new LinkedList<String>();
+                services.addAll(group.getServices());
+
+                final StoreResults results = new StoreResults(services, latch, this);
+
+                //Launch purge and create async process, it will purge phantom nodes of the group and
+                //later request for new machines
+                ListenableFuture<Set<? extends NodeMetadata>> groupCreation =
+                        pool.submit(new PurgeCreateGroupCallable(service, group,
+                        kthfsTemplate, nodes, messages, pending));
+                //Generate function to store results when done
+                Futures.transform(groupCreation, results);
+                try {
+                    Thread.sleep(group.getNumber() * 3500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            try {
+                latch.await(pending.size() * 30, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+            } finally {
+                success = true;
+            }
+        }
+        return success;
     }
 
     /*
@@ -816,8 +874,9 @@ public final class VirtualizedClusterProvision implements Provision {
     }
 
     private void nodePhase(Set<NodeMetadata> nodes, Map<NodeMetadata, List<String>> map,
-            ScriptBuilder.Builder scriptBuilder, int retries) {
+            ScriptBuilder.Builder scriptBuilder, int times) {
         //Iterative Approach
+        int retries = times;
         pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
         while (!pendingNodes.isEmpty() && retries != 0) {
             latch = new CountDownLatch(pendingNodes.size());
@@ -864,8 +923,9 @@ public final class VirtualizedClusterProvision implements Provision {
         }
     }
 
-    private void nodeInstall(Set<NodeMetadata> nodes, ScriptBuilder.Builder scriptBuilder, int retries) {
+    private void nodeInstall(Set<NodeMetadata> nodes, ScriptBuilder.Builder scriptBuilder, int times) {
         //Iterative Approach
+        int retries = times;
         pendingNodes = new CopyOnWriteArraySet<NodeMetadata>(nodes);
         while (retries != 0 && !pendingNodes.isEmpty()) {
             //Initialize countdown latch

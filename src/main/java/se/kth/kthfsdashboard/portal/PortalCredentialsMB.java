@@ -1,8 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-package se.kth.kthfsdashboard.provision;
+package se.kth.kthfsdashboard.portal;
 
 import java.io.Serializable;
 import javax.faces.application.FacesMessage;
@@ -16,61 +12,29 @@ import javax.faces.context.FacesContext;
  */
 @ManagedBean
 @SessionScoped
-public class ComputeCredentialsMB implements Serializable {
+public class PortalCredentialsMB implements Serializable{
 
-    private boolean awsec2 = false;
+    private boolean awsec2=false;
     private String awsec2Id;
     private String awsec2Key;
-    private boolean openstack = false;
+    private boolean openstack=false;
     private String openstackId;
     private String openstackKey;
     private String openstackKeystone;
-    private boolean rackspace = false;
+    private boolean rackspace=false;
     private String rackspaceId;
     private String rackspaceKey;
-    private String privateIP;
-    private String publicKey;
-    private boolean baremetal = false;
-    private String privateKey;
-
-    public String getPrivateIP() {
-        return privateIP;
-    }
-
-    public String getPublicKey() {
-        return publicKey;
-    }
-
-    public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
-    }
-
-    public void setPrivateIP(String privateIP) {
-        this.privateIP = privateIP;
-    }
-
-    public boolean isBaremetal() {
-        return baremetal;
-    }
-
-    public void setBaremetal(boolean baremetal) {
-        this.baremetal = baremetal;
-    }
-
-    public String getPrivateKey() {
-        return privateKey;
-    }
-
-    public void setPrivateKey(String privateKey) {
-        this.privateKey = privateKey;
-    }
-    
-    
+    private String hardwareId;
+    private String imageId;
+    private String locationId;
+    private String loginUser;
+    private boolean enableLoginUser;
+      
 
     /**
-     * Creates a new instance of ComputeCredentialsMB
+     * Creates a new instance of PortalCredentialsMB
      */
-    public ComputeCredentialsMB() {
+    public PortalCredentialsMB() {
     }
 
     public boolean isAwsec2() {
@@ -152,9 +116,50 @@ public class ComputeCredentialsMB implements Serializable {
     public void setOpenstackKeystone(String openstackKeystone) {
         this.openstackKeystone = openstackKeystone;
     }
+    
+    public String getHardwareId() {
+        return hardwareId;
+    }
 
-    public void addMessage() {
+    public void setHardwareId(String hardwareId) {
+        this.hardwareId = hardwareId;
+    }
+
+    public String getImageId() {
+        return imageId;
+    }
+
+    public void setImageId(String imageId) {
+        this.imageId = imageId;
+    }
+
+    public String getLocationId() {
+        return locationId;
+    }
+
+    public void setLocationId(String locationId) {
+        this.locationId = locationId;
+    }
+
+    public String getLoginUser() {
+        return loginUser;
+    }
+
+    public void setLoginUser(String loginUser) {
+        this.loginUser = loginUser;
+    }
+
+    public boolean isEnableLoginUser() {
+        return enableLoginUser;
+    }
+
+    public void setEnableLoginUser(boolean enableLoginUser) {
+        this.enableLoginUser = enableLoginUser;
+    }
+        
+    public void addMessage(){
         FacesMessage msg = new FacesMessage("Saved");
         FacesContext.getCurrentInstance().addMessage("success", msg);
     }
+    
 }
