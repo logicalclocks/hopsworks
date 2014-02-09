@@ -13,10 +13,6 @@
      - 3321
     git:
       user: Jim Dowling
-<<<<<<< HEAD
-      ##repository: https://ghetto.sics.se/jdowling/hops-chef.git
-=======
->>>>>>> origin/master
       repository: https://github.com/hopstart/hop-chef.git
       key: notNull
   provider:

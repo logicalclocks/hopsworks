@@ -118,9 +118,9 @@ public class BaremetalProvision {
         bootstrapBuilder.add(exec("git config --global http.postBuffer 524288000;"));
         bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
         bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
-        bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
-        bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
-        bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
+//        bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
+//        bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
+//        bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
 
 
         return new StatementList(bootstrapBuilder.build());

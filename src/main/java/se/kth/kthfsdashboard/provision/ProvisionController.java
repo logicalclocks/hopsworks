@@ -182,7 +182,7 @@ public class ProvisionController implements Serializable {
             isBaremetal=true;
         }
 
-        //Setup the private IP for the nodes to know where is the dashboard
+        //Setup the private IP for the nodes to know where the dashboard is
         //Add public key for managing nodes using ssh.
         privateIP = credentials.getDashboardIP();
         publicKey = credentials.getPublicKey();

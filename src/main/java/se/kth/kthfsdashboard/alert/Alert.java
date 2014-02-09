@@ -23,7 +23,7 @@ import se.kth.kthfsdashboard.utils.FormatUtils;
 public class Alert implements Serializable {
 
    public enum Severity {
-      FAILURE, WARNING, OK
+      FAILURE, WARNING, OKAY
    }
    
    public enum Provider {

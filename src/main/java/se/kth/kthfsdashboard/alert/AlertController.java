@@ -46,7 +46,7 @@ public class AlertController implements Serializable {
 
    static {
       severities = new String[3];
-      severities[0] = Alert.Severity.OK.toString();
+      severities[0] = Alert.Severity.OKAY.toString();
       severities[1] = Alert.Severity.WARNING.toString();
       severities[2] = Alert.Severity.FAILURE.toString();
 

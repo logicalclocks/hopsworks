@@ -11,7 +11,9 @@
     <name>Hop Dashboard</name>
 
     <properties>
-        <jclouds.version>1.6.0</jclouds.version>
+        <jclouds.version>1.7.1-SNAPSHOT</jclouds.version>
+        <jclouds.stable.version>1.6.0</jclouds.stable.version>
+        
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
@@ -140,12 +142,12 @@
         <dependency>
             <groupId>org.jclouds</groupId>
             <artifactId>jclouds-compute</artifactId>
-            <version>1.6.0</version>
+            <version>${jclouds.stable.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jclouds.api</groupId>
             <artifactId>chef</artifactId>
-            <version>1.6.0</version>
+            <version>${jclouds.stable.version}</version>
         </dependency>
         <!--        <dependency>
             <groupId>org.jclouds</groupId>
@@ -156,28 +158,28 @@
         <dependency>
             <groupId>org.jclouds.provider</groupId>
             <artifactId>aws-ec2</artifactId>
-            <version>${jclouds.version}</version>
+            <version>${jclouds.stable.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jclouds.api</groupId>
             <artifactId>openstack-nova</artifactId>
-            <version>${jclouds.version}</version>
+            <version>${jclouds.stable.version}</version>
         </dependency>        
         <dependency>
             <groupId>org.jclouds.api</groupId>
             <artifactId>openstack-nova-ec2</artifactId>
-            <version>${jclouds.version}</version>
+            <version>${jclouds.stable.version}</version>
         </dependency> 
         <dependency>
             <groupId>org.jclouds.api</groupId>
             <artifactId>ec2</artifactId>
-            <version>${jclouds.version}</version>
+            <version>${jclouds.stable.version}</version>
         </dependency>             
                                 
         <dependency>
             <groupId>org.jclouds.labs</groupId>
             <artifactId>joyentcloud</artifactId>
-            <version>${jclouds.version}</version>
+            <version>${jclouds.stable.version}</version>
         </dependency>
         <!--        <dependency>
             <groupId>org.jclouds.labs</groupId>
@@ -193,7 +195,7 @@
         <dependency>
             <groupId>org.jclouds.driver</groupId>
             <artifactId>jclouds-bouncycastle</artifactId>
-            <version>${jclouds.version}</version>
+            <version>${jclouds.stable.version}</version>
             <exclusions><!--
                 bouncy castle is a provider, so
                   it must be signed and used as-is.
@@ -211,12 +213,12 @@
         <dependency>
             <groupId>org.jclouds.driver</groupId>
             <artifactId>jclouds-sshj</artifactId>
-            <version>${jclouds.version}</version>
+            <version>${jclouds.stable.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jclouds.driver</groupId>
             <artifactId>jclouds-enterprise</artifactId>
-            <version>${jclouds.version}</version>
+            <version>${jclouds.stable.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -349,6 +351,14 @@
     </build>
 
     <repositories>
+        
+  <repository>
+    <id>jclouds-snapshots</id>
+    <url>https://repository.apache.org/content/repositories/snapshots</url>
+    <snapshots>
+      <enabled>true</enabled>
+    </snapshots>
+  </repository>        
         <repository>
             <id>sics-release</id>
             <name>SICS Release Repository</name>

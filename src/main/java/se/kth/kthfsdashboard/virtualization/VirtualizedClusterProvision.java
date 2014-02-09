@@ -39,7 +39,7 @@ import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.RunScriptOptions;
-import org.jclouds.ec2.EC2AsyncClient;
+import org.jclouds.ec2.EC2AsyncApi;
 import org.jclouds.ec2.EC2Client;
 import org.jclouds.ec2.compute.options.EC2TemplateOptions;
 import org.jclouds.ec2.domain.IpProtocol;
@@ -150,7 +150,8 @@ public final class VirtualizedClusterProvision implements Provision {
         //If EC2 client
         if (provider.toString().equals(ProviderType.AWS_EC2.toString())) {
             //Unwrap the compute service context and retrieve a rest context to speak with EC2
-            RestContext<EC2Client, EC2AsyncClient> temp = service.getContext().unwrap();
+//            RestContext<EC2Client, EC2AsyncClient> temp = service.getContext().unwrap();
+            RestContext<EC2Client, EC2AsyncApi> temp = service.getContext().unwrap();
             //Fetch a synchronous rest client
             EC2Client client = temp.getApi();
             //For each group of the security groups

@@ -412,13 +412,20 @@ public class ScriptBuilder implements Statement {
         json.append("\"ip\":\"").append(ip).append("\",");
         json.append("\"mysql_ip\":\"").append(mysql.get(0)).append("\",");
         //***
-        json.append("\"data_memory\":\"120\",");
+        json.append("\"data_memory\":\"64\",");
 
         //Generate name of cluster and service for MYSQL
         json.append("\"cluster\":\"").append(clusterName).append("\",");
 
         json.append("\"num_ndb_slots_per_client\":\"2\"},");
-        json.append("\"memcached\":{\"mem_size\":\"128\"},");
+        json.append("\"memcached\":{\"mem_size\":\"64\"},");
+        
+        // dashboard ips
+        json.append("\"dashboard\":{")
+                .append("\"public_ip\":\"").append(ip).append("\",")
+                .append("\"private_ip\":\"").append(privateIP).append("\",");
+        json.append("},");
+        
         //***
         //Generate collectd fragment
         json.append("\"collectd\":{\"server\":\"").append(privateIP).append("\",");
@@ -519,7 +526,7 @@ public class ScriptBuilder implements Statement {
     private List<String> createRunList() {
         RunListBuilder builder = new RunListBuilder();
         builder.addRecipe("apt");
-        builder.addRecipe("python::package");
+        builder.addRecipe("python");
         builder.addRecipe("java");
         builder.addRecipe("hopagent");
         for (String role : roles) {

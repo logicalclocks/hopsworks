@@ -448,9 +448,9 @@ public class CloudProvision {
         bootstrapBuilder.add(exec("git config --global http.postBuffer 524288000;"));
         bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
         bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
-        bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
-        bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
-        bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
+//        bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
+//        bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
+//        bootstrapBuilder.add(exec("sudo git clone https://github.com/hopstart/hop-chef.git /tmp/chef-solo/;"));
 
         return new StatementList(bootstrapBuilder.build());
     }
@@ -523,17 +523,17 @@ public class CloudProvision {
 
     private List<String> createRunList() {
         List<String> list = new ArrayList<String>();
+        list.add("openssh");
+        list.add("openssl");
         list.add("authbind");
         list.add("java");
         list.add("collectd::server");
-//        list.add("mysql::server");
-//        list.add("mysql::client");
         list.add("ndb::install");
         list.add("ndb::mysqld");
-        list.add("openssh");
-        list.add("openssl");
+        list.add("ndb::mysqld-hop");
         list.add("glassfish::populate-dbs");
         list.add("glassfish::kthfs");
+//        list.add("collect::attr-driven");
         return list;
     }
 }
