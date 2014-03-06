@@ -4,7 +4,7 @@
  */
 package se.kth.kthfsdashboard.util;
 
-import se.kth.kthfsdashboard.provision.ScriptBuilder;
+import se.kth.hop.deploy.provision.ScriptBuilder;
 import com.google.common.base.Function;
 import com.google.common.eventbus.EventBus;
 import com.google.common.io.Files;

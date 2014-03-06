@@ -4,7 +4,7 @@
  */
 package se.kth.kthfsdashboard.util;
 
-import se.kth.kthfsdashboard.provision.ScriptBuilder;
+import se.kth.hop.deploy.provision.ScriptBuilder;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

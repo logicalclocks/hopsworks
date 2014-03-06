@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+
+    <ui:composition template="layout.xhtml">
+
+        <ui:define name="title">
+            BiobankCloud Lims
+        </ui:define>
+        <ui:define name="css">
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/bbc.css']}" />
+        </ui:define>
+        <ui:define name="scripts"/>
+
+        <ui:define name="leftmenu">
+            <p:commandLink styleClass="sideMenuItem Home" action="bbchome"/>
+            <p:commandLink styleClass="sideMenuItem New" action="#{bbcController.showNewSampleCollectionDialog()}">
+                <f:setPropertyActionListener value="true" target="#{sampleController.create}" />
+            </p:commandLink>
+            <p:commandLink styleClass="sideMenuItem Find" action="#{bbcController.showFindSampleCollectionDialog()}"/>
+        </ui:define>
+
+
+        <ui:define name="content">
+
+        </ui:define>
+
+
+    </ui:composition>
+</html>

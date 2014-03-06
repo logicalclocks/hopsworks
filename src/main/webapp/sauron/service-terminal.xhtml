@@ -101,7 +101,7 @@
 
                 <p:spacer width="1" height="25" />
 
-                <p:panel header="Terminal" styleClass="TerminalPanel" rendered="#{serviceStatusController.service != 'Spark'}">
+                <p:panel header="Terminal" styleClass="TerminalPanel" rendered="#{serviceStatusController.service != 'SPARK'}">
 
                     <h:form >  
                         <p:focus for="terminal" />  
@@ -111,7 +111,7 @@
                     </h:form>                      
                 </p:panel>
 
-                <p:panel header="Terminal" styleClass="TerminalPanel" rendered="#{serviceStatusController.service == 'Spark'}">
+                <p:panel header="Terminal" styleClass="TerminalPanel" rendered="#{serviceStatusController.service == 'SPARK'}">
                     <h:form id="formterm">  
                         <p:focus for="terminal" />  
                         <p:terminal id="terminal" widgetVar="term" prompt="#{terminalController2.getPrompt(serviceStatusController.cluster, serviceStatusController.service)}" 

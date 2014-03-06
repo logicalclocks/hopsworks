@@ -64,6 +64,9 @@
     <security-role>
         <role-name>BBC_RESEARCHER</role-name>
     </security-role>
+    <security-role>
+        <role-name>BBC_GUEST</role-name>
+    </security-role>    
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>Secured Content</web-resource-name>
@@ -94,14 +97,40 @@
     </security-constraint>
     <security-constraint>
         <web-resource-collection>
-            <web-resource-name>BiobankCloud Admin Researcher Private pages</web-resource-name>
+            <web-resource-name>BiobankCloud Guest pages</web-resource-name>
             <url-pattern>/bbc/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>BBC_ADMIN</role-name>
+            <role-name>BBC_RESEARCHER</role-name>
+            <role-name>BBC_GUEST</role-name>
+            <role-name>ADMIN</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>BiobankCloud Lab Info Mgmt System (LIMS)</web-resource-name>
+            <url-pattern>/bbc/lims/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>BBC_ADMIN</role-name>
+            <role-name>BBC_RESEARCHER</role-name>
+            <role-name>ADMIN</role-name>
+        </auth-constraint>
+    </security-constraint>
+    
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>BiobankCloud Admin Researcher Private pages</web-resource-name>
+            <url-pattern>/bbc/admin/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
             <role-name>BBC_ADMIN</role-name>
             <role-name>ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
+        
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>BiobankCloud Researcher Private pages</web-resource-name>
@@ -124,7 +153,6 @@
         </auth-constraint>
     </security-constraint>
     <login-config>
-        <!--<auth-method>FORM</auth-method>-->
         <auth-method>BASIC</auth-method>
         <realm-name>DBRealm</realm-name>
         <form-login-config>
