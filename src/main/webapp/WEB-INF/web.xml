@@ -2,8 +2,8 @@
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee           http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
     <context-param>
         <param-name>javax.faces.PROJECT_STAGE</param-name>
-        <param-value>Development</param-value>
-        <!--        <param-value>Production</param-value>-->
+        <!--<param-value>Development</param-value>-->
+        <param-value>Production</param-value>
     </context-param>
     <context-param>
         <param-name>com.sun.faces.verifyObjects</param-name>
@@ -66,7 +66,7 @@
     </security-role>
     <security-role>
         <role-name>BBC_GUEST</role-name>
-    </security-role>    
+    </security-role>
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>Secured Content</web-resource-name>
@@ -107,7 +107,6 @@
             <role-name>ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
-
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>BiobankCloud Lab Info Mgmt System (LIMS)</web-resource-name>
@@ -119,7 +118,6 @@
             <role-name>ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
-    
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>BiobankCloud Admin Researcher Private pages</web-resource-name>
@@ -130,7 +128,6 @@
             <role-name>ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
-        
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>BiobankCloud Researcher Private pages</web-resource-name>
@@ -196,4 +193,4 @@
        <param-name>org.ocpsoft.rewrite.config.CONFIG_RELOADING</param-name>
        <param-value>true</param-value>
     </context-param>    -->
-</web-app>
+    </web-app>

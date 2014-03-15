@@ -123,10 +123,15 @@ public class Username implements Serializable {
         return salt;
     }
 
-    public void setSalt(byte[] salt) {
-        this.salt = salt;
-    }
+//  public void setSalt(byte[] salt) {
+//        this.salt = salt;
+//  }
 
+    public void setSalt(String salt){
+        this.salt=salt.getBytes();
+    }
+    
+    
     public String getEmail() {
         return email;
     }
@@ -158,7 +163,8 @@ public class Username implements Serializable {
             Logger.getLogger(Username.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
+    
     public String getName() {
         return name;
     }

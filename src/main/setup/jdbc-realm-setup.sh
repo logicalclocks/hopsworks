@@ -32,8 +32,8 @@
         <property name="serverName" value="localhost"/>
         <property name="portNumber" value="3306"/>
         <property name="databaseName" value="kthfs"/>
-        <property name="User" value="root"/>
-        <property name="Password" value=""/>
+        <property name="User" value="kthfs"/>
+        <property name="Password" value="kthfs"/>
         <property name="URL" value="jdbc:mysql://localhost:3306/kthfs"/>
         <property name="driverClass" value="com.mysql.jdbc.Driver"/>
     </jdbc-connection-pool>

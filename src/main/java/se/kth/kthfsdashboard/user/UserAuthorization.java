@@ -37,6 +37,7 @@ import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -52,13 +53,15 @@ import javax.servlet.http.HttpServletRequest;
 
 @ManagedBean
 @RequestScoped
-public class UserAuthorization  {
+@SessionScoped()
+public class UserAuthorization  { 
 
     /**
      * <p>The key for the session scoped attribute holding the appropriate
      * <code>Wuser</code> instance.</p>
      */
     public static final String USER_SESSION_KEY = "user";
+    
     /**
      * <p>The
      * <code>PersistenceContext</code>.</p>
@@ -81,6 +84,14 @@ public class UserAuthorization  {
     private String password;
     private String mobileNum;
 
+    public String getName(){
+        return name;
+    }
+    
+    public void setName(String name){
+        this.name = name;
+    }
+    
     public String getUsername() {
         return username;
     }
@@ -168,7 +179,7 @@ public class UserAuthorization  {
             sendMessage(reg);
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Successfully registered.", ""));
-            return "finished";
+            return "success";
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Error registering. "
@@ -233,7 +244,7 @@ public class UserAuthorization  {
 
     public void create() {
         Username u = new Username();
-        u.setEmail("jdowling@sics.se");
+        u.setEmail("jdowling1@sics.se");
         u.setPassword("jim");
         u.setMobileNum("022");
         u.setName("jim Dowling");

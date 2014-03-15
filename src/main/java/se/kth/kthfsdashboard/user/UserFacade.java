@@ -6,6 +6,7 @@ package se.kth.kthfsdashboard.user;
 
 import java.util.List;
 import javax.ejb.Stateless;
+import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
@@ -15,6 +16,7 @@ import javax.persistence.TypedQuery;
  * @author Jim Dowling<jdowling@sics.se>
  */
 @Stateless
+@Named
 public class UserFacade extends AbstractFacade<Username> {
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
@@ -62,6 +64,9 @@ public class UserFacade extends AbstractFacade<Username> {
      
     public void detach(Username user) {
         em.detach(user);
-    }    
+    }   
     
+    
+
+
 }

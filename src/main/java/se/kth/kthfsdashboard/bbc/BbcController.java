@@ -33,5 +33,11 @@ public class BbcController implements Serializable {
         RequestContext.getCurrentInstance().reset("formFindSampleCollection");
         RequestContext.getCurrentInstance().execute("dlgFindSampleCollection.show()");
     }
+    
+    public void showNewUserManagementDialog() {
+        RequestContext.getCurrentInstance().update("formNewUserManagement");
+        RequestContext.getCurrentInstance().reset("formNewUserManagement");
+        RequestContext.getCurrentInstance().execute("dlgNewUserManagement.show()");
+    }
 
 }

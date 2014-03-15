@@ -4,6 +4,8 @@
  */
 package se.kth.kthfsdashboard.user;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
@@ -23,7 +25,7 @@ public class UserMB {
     private Username user;
     @EJB
     private UserFacade userFacade;
-
+    
     public Username getUser() {
         if (user == null) {
             ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
@@ -49,4 +51,5 @@ public class UserMB {
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
     }
+      
 }
