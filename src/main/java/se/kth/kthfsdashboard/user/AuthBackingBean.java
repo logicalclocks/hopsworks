@@ -29,7 +29,6 @@ import javax.servlet.http.HttpSession;
  */
 @ManagedBean
 @RequestScoped
-//@SessionScoped
 public class AuthBackingBean {
 
     private static Logger log = Logger.getLogger(AuthBackingBean.class.getName());

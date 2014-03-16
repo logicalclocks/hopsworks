@@ -21,11 +21,11 @@ import org.yaml.snakeyaml.introspector.PropertyUtils;
 import org.yaml.snakeyaml.nodes.NodeTuple;
 import org.yaml.snakeyaml.nodes.Tag;
 import org.yaml.snakeyaml.representer.Representer;
-import se.kth.kthfsdashboard.virtualization.clusterparser.Baremetal;
-import se.kth.kthfsdashboard.virtualization.clusterparser.Cluster;
-import se.kth.kthfsdashboard.virtualization.clusterparser.GitProperties;
-import se.kth.kthfsdashboard.virtualization.clusterparser.GlobalProperties;
-import se.kth.kthfsdashboard.virtualization.clusterparser.NodeGroup;
+import se.kth.hop.deploy.virtualization.parser.Baremetal;
+import se.kth.hop.deploy.virtualization.parser.Cluster;
+import se.kth.hop.deploy.virtualization.parser.GitProperties;
+import se.kth.hop.deploy.virtualization.parser.GlobalProperties;
+import se.kth.hop.deploy.virtualization.parser.NodeGroup;
 
 /**
  *

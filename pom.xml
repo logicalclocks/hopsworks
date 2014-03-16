@@ -12,6 +12,7 @@
 
     <properties>
         <jclouds.version>1.7.0</jclouds.version>
+        <jclouds.stable.version>1.6.0</jclouds.stable.version>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
@@ -31,20 +32,12 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.4</version>
-            <type>jar</type>
         </dependency>       
-        <!--        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>3.8.1</version>
-            <scope>test</scope>
-        </dependency>-->
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>1.11</version>
         </dependency>
-        
         <dependency>
             <groupId>com.sun.jersey.glassfish.v3.osgi</groupId>
             <artifactId>jettison</artifactId>
@@ -55,7 +48,6 @@
             <groupId>org.codehaus.jettison</groupId>
             <artifactId>jettison</artifactId>
             <version>1.1</version>
-            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>de.huberlin.cuneiform</groupId>
@@ -91,47 +83,15 @@
             <version>5.1.6</version>
         </dependency>
         <dependency>
-            <groupId>com.sun.faces</groupId>
-            <artifactId>jsf-api</artifactId>
-            <version>2.1.6</version>
-            <scope>runtime</scope>
-        </dependency>
-        
-        <dependency>
-            <groupId>com.sun.faces</groupId>
-            <artifactId>jsf-impl</artifactId>
-            <version>2.1.6</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.primefaces</groupId>
-            <artifactId>primefaces</artifactId>
-            <version>3.5</version>
-            <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.primefaces.themes</groupId>
-            <artifactId>start</artifactId>
-            <version>1.0.9</version>
-        </dependency>  
-        
-        <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-json</artifactId>
-            <version>1.8</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-core</artifactId>
-            <version>1.8</version>
-            <type>jar</type>
+            <version>1.9.1</version>
         </dependency>
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-client</artifactId>
-            <version>1.8</version>
+            <version>1.9.1</version>
         </dependency>
-
         <dependency>
             <groupId>net.stamfest</groupId>
             <artifactId>java-rrd-hg</artifactId>
@@ -152,7 +112,6 @@
             <artifactId>jclouds-allcompute</artifactId>
             <version>${jclouds.version}</version>
         </dependency>-->
-
         <dependency>
             <groupId>org.apache.jclouds.provider</groupId>
             <artifactId>aws-ec2</artifactId>
@@ -173,7 +132,6 @@
             <artifactId>ec2</artifactId>
             <version>${jclouds.version}</version>
         </dependency>             
-                                
         <dependency>
             <groupId>org.apache.jclouds.labs</groupId>
             <artifactId>joyentcloud</artifactId>
@@ -239,16 +197,25 @@
             <version>2.4</version>
         </dependency>
         <dependency>
+            <groupId>org.primefaces</groupId>
+            <artifactId>primefaces</artifactId>
+            <version>4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.primefaces.themes</groupId>
+            <artifactId>start</artifactId>
+            <version>1.0.10</version>
+        </dependency>  
+        <dependency>
             <groupId>org.primefaces.extensions</groupId>
             <artifactId>primefaces-extensions</artifactId>
-            <version>0.6.3</version>
+            <version>0.7.1</version>
         </dependency>
         <dependency>
             <groupId>org.primefaces.extensions</groupId>
             <artifactId>resources-codemirror</artifactId>
-            <version>0.6.3</version>
+            <version>0.7.1</version>
         </dependency>
-
         <dependency>
             <groupId>org.ocpsoft.rewrite</groupId>
             <artifactId>rewrite-servlet</artifactId>
@@ -259,13 +226,11 @@
             <artifactId>rewrite-config-prettyfaces</artifactId>
             <version>2.0.1.Final</version>
         </dependency>
-
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
             <version>2.1</version>
         </dependency>
-
     </dependencies>
 
     <build>
@@ -349,6 +314,14 @@
     </build>
 
     <repositories>
+        
+  <repository>
+    <id>jclouds-snapshots</id>
+    <url>https://repository.apache.org/content/repositories/snapshots</url>
+    <snapshots>
+      <enabled>true</enabled>
+    </snapshots>
+  </repository>        
         <repository>
             <id>sics-release</id>
             <name>SICS Release Repository</name>

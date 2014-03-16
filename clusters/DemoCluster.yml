@@ -1,9 +1,7 @@
-!!se.kth.kthfsdashboard.virtualization.clusterparser.Cluster
+!!se.kth.hop.deploy.virtualization.parser.Cluster
   name: test2
   installPhase: true
   global:
-    environment:
-    ##user defined recipes
     recipes: 
      - ssh 
      - chefClient
@@ -13,23 +11,15 @@
      - 3321
     git:
       user: Jim Dowling
-<<<<<<< HEAD
-      ##repository: https://ghetto.sics.se/jdowling/hops-chef.git
-=======
->>>>>>> origin/master
       repository: https://github.com/hopstart/hop-chef.git
       key: notNull
   provider:
     name: aws-ec2
     instanceType: m1.large
     loginUser: ubuntu
-    ##image: eu-west-1/ami-c8957bbf 
     image: eu-west-1/ami-ffcdce8b
     region: eu-west-1
-#    zones: 
-#    - eu-west-1a
-  ##lists of groups, with the roles the nodes will have and open ports 
-  nodes:
+  NodeGroup:
   - service: ndb
     number: 2
     
@@ -48,6 +38,4 @@
     number: 2
     recipes:
       - nodemanager
-    
-
 ...
