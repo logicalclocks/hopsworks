@@ -57,83 +57,7 @@
                             <h3>Number of Sample Collections per Diagnosis Group</h3>
                         </p:panel>
                     </p:tab>
-                    
-                    
-                    
-                    
-                 <!--   <p:tab id="userMgmt" title="Manage Users">
-                        
-                   <h:form id="userRegistration">
-                        <p:panel styleClass="BbcPanel" >
-                            <p:spacer width="1" height="20"/>
-                           
-                            
-                           <p:accordionPanel styleClass="BbcAccordion" activeIndex="-1">
-                                    <p:tab id="userRegistration" title="User Registration">
-                                        <p:panelGrid columns="3" styleClass="newSampleContactPanelGrid">   
-                                            <f:facet name="header">
-                                                           Add New User
-                                             </f:facet>
-                                            <p:outputPanel>
-                                                <p:outputLabel value="Name:"/>                                    
-                                                <p:outputLabel value="*" styleClass="RequiredNotice"/>                                        
-                                            </p:outputPanel>
-                                            <p:inputText required="true" value="#{userMB.user.name}"></p:inputText>
-                                            <p:spacer width="1" height="1"/>     
-
-                                            <p:outputPanel>
-                                                <p:outputLabel value="Email Address:"/>                                    
-                                                <p:outputLabel value="*" styleClass="RequiredNotice"/>                                        
-                                            </p:outputPanel>
-                                            <p:inputText required="true" value="#{userMB.user.email}"></p:inputText>
-                                            <p:spacer width="1" height="1"/>     
-
-                                            <p:outputPanel>
-                                                <p:outputLabel value="Password:"/>                                    
-                                                <p:outputLabel value="*" styleClass="RequiredNotice"/>                                        
-                                            </p:outputPanel>
-                                            <p:password id="password" value="#{userMB.user.password}"></p:password>
-                                            <p:spacer width="1" height="1"/>                                                                        
-                                                                                  
-                                            <p:outputPanel>
-                                                <p:outputLabel value="Mobile Phone:"/>  
-                                                 <p:outputLabel styleClass="RequiredNotice"/>
-                                            </p:outputPanel>
-                                            <p:inputText value="#{userMB.user.mobileNum}"></p:inputText>
-                                            <p:spacer width="1" height="1"/> 
-                                            
-                                           <p:outputPanel>
-                                                <p:outputLabel value="Registered Date:"/>  
-                                                 <p:outputLabel styleClass="RequiredNotice"/>
-                                            </p:outputPanel>
-                                            <p:inputText value="#{userMB.user.registeredOn}"></p:inputText>
-                                            <p:spacer width="1" height="1"/> 
-
-                                            <p:outputPanel>
-                                                <p:outputLabel value="Username:"/> 
-                                                 <p:outputLabel value="*" styleClass="RequiredNotice"/>
-                                            </p:outputPanel>
-                                            <p:inputText required="true" value="#{userMB.user.username}"></p:inputText>
-                                            <p:spacer width="1" height="1" />     
-				             
-                                           <f:facet name="footer">  
-                                               <p:commandButton type="button" value="Add" icon="ui-icon-check" style="margin:0" actionListener="#{userMB.addUser()}"></p:commandButton>  
-                                        </f:facet>
-                                        </p:panelGrid>
-                                                                                                                   
-                                  </p:tab>      
-                               <p:tab id="existingUsers" title="Registered Users">
-                                   <p:panelGrid columns="3" styleClass="newSampleContactPanelGrid"> </p:panelGrid>
-                                            
-                               </p:tab>
-                               
-                             </p:accordionPanel>
-                                     </p:panel>
-                                          	
-                             </h:form>
-                             </p:tab>-->          
-                    
-                </p:tabView>
+                   </p:tabView>
                 
                 
      <!-- begin duplicate-->           
@@ -266,7 +190,7 @@
                                                        </f:facet>
                                                         <h:outputText  value="#{user.registeredOn}"/>
                                                    </p:column>
-                                        
+                                                                                       
                                                </p:dataTable>
                                </h:panelGrid>
             
@@ -276,10 +200,10 @@
                         <!-- user view end -->
                         
        <p:tab title="Add New Users">
-         
-              <p:panel styleClass="BbcNewSamplePanel" header="User Data">
-                <p:messages autoUpdate="true"/>
-                     <h:panelGrid id="grid" columns="4" cellpadding="5">                                 
+           <h:form id="userReg">
+               <p:panel styleClass="BbcNewSamplePanel" header="User Data"> 
+                   <p:messages autoUpdate="true"/>
+                   <h:panelGrid id="grid" columns="4" cellpadding="5">                                 
                   
                             <h:outputLabel for="name" value="Name:" style="font-weight:bold"/>					
                             <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}"/>
@@ -299,7 +223,7 @@
                             <h:outputText value="" />
 
                             <h:outputLabel for="password" value="Password:" style="font-weight:bold"/>					
-                            <p:password id="password" label="Password" required="true" value="#{userController.user.password}">
+                            <p:password id="password" label="password" required="true" value="#{userController.user.password}">
                             </p:password>
                             <p:message for="password" />
                             <h:outputText value=""/>
@@ -307,7 +231,7 @@
                             <h:outputLabel for="mobile" value="Mobile Number:" style="font-weight:bold"/>					
                             <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" validatorMessage="Only contain numbers">
                                 <!--<f:validateRegex pattern="(^[+]?[0-9]+$)?"/>-->
-                            </p:inputText>
+                          </p:inputText>
                             <p:message for="mobile" />
                             <h:outputText value="" />
 
@@ -320,22 +244,13 @@
                             
                             <h:outputLabel for="popupCal" value="Registered Date:" style="font-weight:bold"/>
                             <p:calendar id="popupCal" value="#{userController.user.registeredOn}" pattern="yyyy-MM-dd HH:mm:ss"/>
-                            <!--<p:inputText id="date" label="Date" value="#{userController.user.registeredOn}">
-                                <f:convertDateTime pattern="dd/MM/yyyy" />
-                            </p:inputText>-->
-                           <!--<p:message for="date" />
-                            <h:outputText value="">
-                                <f:convertDateTime pattern="dd/MM/yyyy" />
-                            </h:outputText>-->
-                            
-                           
-                            
-
-                       </h:panelGrid>
-                <p:commandButton value="Add" icon="ui-icon-check" validateClient="true" style="margin-right:10px" actionListener="#{userController.addUser()}"/>
+                     </h:panelGrid>
+                   <p:commandButton update="grid" value="Add" icon="ui-icon-check" style="margin-right:10px" actionListener="#{userController.addUser()}"/>
              </p:panel>
-           
-                    </p:tab>
+           </h:form>
+                        
+       
+       </p:tab>
                      </p:tabView>
                 </h:form>
             </p:dialog>

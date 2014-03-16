@@ -1,7 +1,10 @@
 package se.kth.kthfsdashboard.user;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
@@ -18,7 +21,10 @@ import javax.servlet.http.HttpServletRequest;
  */
 @ManagedBean
 @RequestScoped
-public class UserController {
+public class UserController implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+
     
     @EJB
     private UserFacade userFacade;
@@ -44,11 +50,12 @@ public class UserController {
     public List<Username> getAllUsers(){
         return userFacade.findAll();
     }
+   
     
     public String addUser(){
         try{
-            userFacade.persist(user);
-        }catch(EJBException ejb){
+           userFacade.persist(user);
+         }catch(EJBException ejb){
             addErrorMessageToUserAction("Error: Add Operation failed.");
             return null;
         }
@@ -64,6 +71,7 @@ public class UserController {
             addErrorMessageToUserAction("Error: Delete Operation failed.");
             return null;
         }
+            
             addMessage("Delete Operation Completed.");
             return "Success";
     }
@@ -79,6 +87,23 @@ public class UserController {
             addMessage("Update Completed.");
             return "Success";
     }
+    
+    
+    
+//    public void create() {
+//        Username u = new Username();
+//        u.setEmail("roshan@kth.se");
+//        u.setMobileNum("022");
+//        u.setName("Roshan Sedar");
+//        u.setPassword("roshan");
+//        u.setRegisteredOn(new Date());
+//        u.setSalt("011".getBytes());
+//        u.setUsername("admin");
+//        List<Group> g = new ArrayList<Group>();
+//        g.add(Group.USER);
+//        u.setGroups(g);
+//        userFacade.persist(u);
+//    }
     
     public void addMessage(String summary) {
         FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, summary);

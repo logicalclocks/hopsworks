@@ -4,6 +4,7 @@
  */
 package se.kth.kthfsdashboard.user;
 
+import com.mysql.jdbc.Blob;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -30,7 +31,8 @@ import org.apache.commons.codec.digest.DigestUtils;
     @NamedQuery(name = "Username.findAll", query = "SELECT r FROM Username r"),
     @NamedQuery(name = "Username.findByEmail", query = "SELECT r FROM Username r WHERE r.email = :email"),
     @NamedQuery(name = "Username.findByUsername", query = "SELECT r FROM Username r WHERE r.username = :username"),
-    @NamedQuery(name = "Username.findByPassword", query = "SELECT r FROM Username r WHERE r.password = :password")})
+    @NamedQuery(name = "Username.findByPassword", query = "SELECT r FROM Username r WHERE r.password = :password"),
+    @NamedQuery(name = "Username.findByName", query = "SELECT r FROM Username r WHERE r.name like \":name%\" ")})
 public class Username implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -123,14 +125,14 @@ public class Username implements Serializable {
         return salt;
     }
 
-//  public void setSalt(byte[] salt) {
-//        this.salt = salt;
-//  }
-
-    public void setSalt(String salt){
-        this.salt=salt.getBytes();
-    }
-    
+  public void setSalt(byte[] salt) {
+        this.salt = salt;
+  }
+ 
+//    public void setSalt(String salt){
+//        this.salt=salt.getBytes();
+//    }
+//    
     
     public String getEmail() {
         return email;

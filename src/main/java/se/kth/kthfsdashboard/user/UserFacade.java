@@ -31,6 +31,7 @@ public class UserFacade extends AbstractFacade<Username> {
     }
    
      
+    @Override
     public List<Username> findAll() {
         TypedQuery<Username> query = em.createNamedQuery("Username.findAll", Username.class);
         return query.getResultList();
@@ -62,6 +63,12 @@ public class UserFacade extends AbstractFacade<Username> {
         return em.find(Username.class, email);
     }
      
+    
+    public Username findByName(String name) {
+        return em.find(Username.class, name);
+    }
+    
+    
     public void detach(Username user) {
         em.detach(user);
     }   

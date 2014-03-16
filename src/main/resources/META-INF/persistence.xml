@@ -5,6 +5,7 @@
     <jta-data-source>jdbc/kthfs</jta-data-source>
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
+    <validation-mode>NONE</validation-mode>
     <properties>
       <property name="eclipselink.target-database" value="MYSQL"/>
       <property name="eclipselink.ddl-generation" value="create-tables"/>
