@@ -31,12 +31,11 @@ import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.RunScriptOptions;
 import static org.jclouds.compute.predicates.NodePredicates.TERMINATED;
 import static org.jclouds.compute.predicates.NodePredicates.withIds;
-import org.jclouds.ec2.EC2AsyncClient;
-import org.jclouds.ec2.EC2Client;
+import org.jclouds.ec2.EC2Api;
 import org.jclouds.ec2.compute.options.EC2TemplateOptions;
-import org.jclouds.ec2.domain.IpProtocol;
 import org.jclouds.enterprise.config.EnterpriseConfigurationModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
+import org.jclouds.net.domain.IpProtocol;
 import org.jclouds.openstack.nova.v2_0.NovaApi;
 import org.jclouds.openstack.nova.v2_0.NovaAsyncApi;
 import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
@@ -58,10 +57,11 @@ import se.kth.kthfsdashboard.provision.MessageController;
 import se.kth.kthfsdashboard.provision.ProviderType;
 
 /**
- * Represents a provisioning process for a cloud machine in order to install the dashboard.
- * Contains methods that represent this process and generate the scripts to configure the dashboard.
- * 
- * 
+ * Represents a provisioning process for a cloud machine in order to install the
+ * dashboard. Contains methods that represent this process and generate the
+ * scripts to configure the dashboard.
+ *
+ *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 public class CloudProvision {
@@ -293,44 +293,54 @@ public class CloudProvision {
         int[] portsTCP = {443, 22, 80, 3306, 8080, 8181, 8686, 8090, 8983, 4848, 4040, 4000, 40102};
 
         if (provider.equals(ProviderType.AWS_EC2.toString())) {
-            RestContext<EC2Client, EC2AsyncClient> temp = service.getContext().unwrap();
-            EC2Client client = temp.getApi();
-            String groupName = "jclouds#" + group;
-            System.out.printf("%d: creating security group: %s%n", System.currentTimeMillis(), groupName);
+            EC2Api temp = service.getContext().unwrapApi(EC2Api.class);
 
-            //create the group
-            try {
-                client.getSecurityGroupServices().createSecurityGroupInRegion(locationId, groupName, groupName);
-            } catch (Exception e) {
-                //Group already exists
-                System.out.println("Group already exists, continue");
-            }
-            //open the ports
-            for (int i : portsTCP) {
+            Optional<? extends org.jclouds.ec2.features.SecurityGroupApi> securityGroupExt =
+                    temp.getSecurityGroupApiForRegion(locationId);
+            System.out.println("  Security Group Support: " + securityGroupExt.isPresent());
+            String groupName = "jclouds#" + group;
+
+            if (securityGroupExt.isPresent()) {
+                org.jclouds.ec2.features.SecurityGroupApi client = securityGroupExt.get();
+                System.out.printf("%d: creating security group: %s%n", System.currentTimeMillis(), groupName);
+                //create the group
                 try {
-                    client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(locationId,
-                            groupName, IpProtocol.TCP, i, i, "0.0.0.0/0");
+                    client.createSecurityGroupInRegion(groupName, groupName, groupName);
+                } catch (Exception e) {
+                    //Group already exists
+                    System.out.println("Group already exists, continue");
+                }
+
+                //open the ports
+                for (int i : portsTCP) {
+                    try {
+                        client.authorizeSecurityGroupIngressInRegion(locationId,
+                                groupName, IpProtocol.TCP, i, i, "0.0.0.0/0");
+                        
+                    } catch (Exception e) {
+                        System.out.println("Rule already open");
+                        continue;
+                    }
+                }
+
+                try {
+                    client.authorizeSecurityGroupIngressInRegion(locationId,
+                            groupName, IpProtocol.UDP, 25826, 25826, "0.0.0.0/0");
                 } catch (Exception e) {
                     System.out.println("Rule already open");
-                    continue;
                 }
             }
 
-            try {
-                client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(locationId,
-                        groupName, IpProtocol.UDP, 25826, 25826, "0.0.0.0/0");
-            } catch (Exception e) {
-                System.out.println("Rule already open");
-            }
         }
 
 
-        if (provider.equals(ProviderType.OPENSTACK.toString())) {
-            RestContext<NovaApi, NovaAsyncApi> temp = service.getContext().unwrap();
+        if (provider.equals(ProviderType.OPENSTACK.toString())) {        
+            NovaApi temp = service.getContext().unwrapApi(NovaApi.class);
             //+++++++++++++++++
             //This stuff below is weird, founded in a code snippet in a workshop on jclouds. Still it works
             //Code not from documentation
-            Optional<? extends SecurityGroupApi> securityGroupExt = temp.getApi().getSecurityGroupExtensionForZone(locationId);
+            Optional<? extends SecurityGroupApi> securityGroupExt = 
+                    temp.getSecurityGroupExtensionForZone(locationId);
             System.out.println("  Security Group Support: " + securityGroupExt.isPresent());
             String groupName = "jclouds-" + group; //jclouds way of defining groups
             if (securityGroupExt.isPresent()) {
@@ -342,14 +352,14 @@ public class CloudProvision {
                         Ingress ingress = Ingress.builder()
                                 .fromPort(i)
                                 .toPort(i)
-                                .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.TCP)
+                                .ipProtocol(IpProtocol.TCP)
                                 .build();
                         client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
                     }
                     Ingress ingress = Ingress.builder()
                             .fromPort(25826)
                             .toPort(25826)
-                            .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.UDP)
+                            .ipProtocol(IpProtocol.UDP)
                             .build();
                     client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
                 }

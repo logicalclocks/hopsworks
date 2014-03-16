@@ -11,7 +11,7 @@
     <name>Hop Dashboard</name>
 
     <properties>
-        <jclouds.version>1.6.0</jclouds.version>
+        <jclouds.version>1.7.0</jclouds.version>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
@@ -138,15 +138,15 @@
             <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>org.jclouds</groupId>
+            <groupId>org.apache.jclouds</groupId>
             <artifactId>jclouds-compute</artifactId>
-            <version>1.6.0</version>
+            <version>1.7.0</version>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>org.jclouds.api</groupId>
             <artifactId>chef</artifactId>
-            <version>1.6.0</version>
-        </dependency>
+            <version>1.7.0</version>
+        </dependency>-->
         <!--        <dependency>
             <groupId>org.jclouds</groupId>
             <artifactId>jclouds-allcompute</artifactId>
@@ -154,28 +154,28 @@
         </dependency>-->
 
         <dependency>
-            <groupId>org.jclouds.provider</groupId>
+            <groupId>org.apache.jclouds.provider</groupId>
             <artifactId>aws-ec2</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jclouds.api</groupId>
+            <groupId>org.apache.jclouds.api</groupId>
             <artifactId>openstack-nova</artifactId>
             <version>${jclouds.version}</version>
         </dependency>        
         <dependency>
-            <groupId>org.jclouds.api</groupId>
+            <groupId>org.apache.jclouds.api</groupId>
             <artifactId>openstack-nova-ec2</artifactId>
             <version>${jclouds.version}</version>
         </dependency> 
         <dependency>
-            <groupId>org.jclouds.api</groupId>
+            <groupId>org.apache.jclouds.api</groupId>
             <artifactId>ec2</artifactId>
             <version>${jclouds.version}</version>
         </dependency>             
                                 
         <dependency>
-            <groupId>org.jclouds.labs</groupId>
+            <groupId>org.apache.jclouds.labs</groupId>
             <artifactId>joyentcloud</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
@@ -191,7 +191,7 @@
             <!--            <scope>provided</scope>-->
         </dependency>
         <dependency>
-            <groupId>org.jclouds.driver</groupId>
+            <groupId>org.apache.jclouds.driver</groupId>
             <artifactId>jclouds-bouncycastle</artifactId>
             <version>${jclouds.version}</version>
             <exclusions><!--
@@ -209,12 +209,12 @@
         </dependency>
         
         <dependency>
-            <groupId>org.jclouds.driver</groupId>
+            <groupId>org.apache.jclouds.driver</groupId>
             <artifactId>jclouds-sshj</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jclouds.driver</groupId>
+            <groupId>org.apache.jclouds.driver</groupId>
             <artifactId>jclouds-enterprise</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
@@ -226,7 +226,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>14.0.1</version>
+            <version>16.0.1</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>

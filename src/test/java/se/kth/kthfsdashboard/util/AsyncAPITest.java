@@ -6,13 +6,11 @@ package se.kth.kthfsdashboard.util;
 
 import se.kth.kthfsdashboard.provision.ScriptBuilder;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 import java.net.URI;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.jclouds.ContextBuilder;
 import org.jclouds.compute.ComputeService;
@@ -26,8 +24,6 @@ import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.openstack.nova.v2_0.NovaApi;
 import org.jclouds.openstack.nova.v2_0.NovaAsyncApi;
 import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
-import org.jclouds.openstack.nova.v2_0.domain.Server;
-import org.jclouds.openstack.nova.v2_0.features.ServerApi;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import org.jclouds.rest.RestContext;
 import org.jclouds.scriptbuilder.domain.Statement;
@@ -36,15 +32,10 @@ import org.jclouds.sshj.config.SshjSshClientModule;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_PORT_OPEN;
 import static org.jclouds.compute.config.ComputeServiceProperties.TIMEOUT_SCRIPT_COMPLETE;
 import static org.jclouds.Constants.PROPERTY_CONNECTION_TIMEOUT;
-import static org.jclouds.compute.predicates.NodePredicates.TERMINATED;
-import static org.jclouds.compute.predicates.NodePredicates.inGroup;
-import static com.google.common.base.Predicates.not;
 import com.google.common.collect.FluentIterable;
-import static com.google.common.io.Closeables.closeQuietly;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.sun.istack.Pool;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import org.jclouds.compute.domain.ExecResponse;
@@ -197,6 +188,6 @@ public class AsyncAPITest {
     }
 
     public void close() {
-        closeQuietly(compute.getContext());
+       // closeQuietly(compute.getContext());
     }
 }

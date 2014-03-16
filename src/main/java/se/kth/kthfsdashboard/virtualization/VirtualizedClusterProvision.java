@@ -39,12 +39,11 @@ import org.jclouds.compute.domain.ExecResponse;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.RunScriptOptions;
-import org.jclouds.ec2.EC2AsyncClient;
-import org.jclouds.ec2.EC2Client;
+import org.jclouds.ec2.EC2Api;
 import org.jclouds.ec2.compute.options.EC2TemplateOptions;
-import org.jclouds.ec2.domain.IpProtocol;
 import org.jclouds.enterprise.config.EnterpriseConfigurationModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
+import org.jclouds.net.domain.IpProtocol;
 import org.jclouds.openstack.nova.v2_0.NovaApi;
 import org.jclouds.openstack.nova.v2_0.NovaAsyncApi;
 import org.jclouds.openstack.nova.v2_0.compute.options.NovaTemplateOptions;
@@ -149,74 +148,78 @@ public final class VirtualizedClusterProvision implements Provision {
 
         //If EC2 client
         if (provider.toString().equals(ProviderType.AWS_EC2.toString())) {
-            //Unwrap the compute service context and retrieve a rest context to speak with EC2
-            RestContext<EC2Client, EC2AsyncClient> temp = service.getContext().unwrap();
+            //Unwrap the compute service context and retrieve a rest context to speak with EC2            
+            EC2Api temp = service.getContext().unwrapApi(EC2Api.class);
             //Fetch a synchronous rest client
-            EC2Client client = temp.getApi();
-            //For each group of the security groups
-            for (NodeGroup group : cluster.getNodes()) {
-                String groupName = "jclouds#" + group.getServices().get(0);// jclouds way of defining groups
-                Set<Integer> openTCP = new HashSet<Integer>(); //To avoid opening duplicate ports
-                Set<Integer> openUDP = new HashSet<Integer>();// gives exception upon trying to open duplicate ports in a group
-                System.out.printf("%d: creating security group: %s%n", System.currentTimeMillis(),
-                        group.getServices().get(0));
-                //create security group
-                messages.addMessage("Creating Security Group: " + group.getServices().get(0));
-                try {
-                    client.getSecurityGroupServices().createSecurityGroupInRegion(
-                            region, groupName, group.getServices().get(0));
-                } catch (Exception e) {
+            Optional<? extends org.jclouds.ec2.features.SecurityGroupApi> securityGroupExt =
+                    temp.getSecurityGroupApiForRegion(region);
 
-                    //If group already exists continue to the next group
-                    continue;
-                }
-                //Open the ports for that group
-                //Authorize the ports for TCP and UDP roles in cluster file for that group
-                for (String serviceName : group.getServices()) {
-                    if (portsTCP.containsKey(serviceName)) {
-                        for (int port : portsTCP.get(serviceName)) {
-                            if (!openTCP.contains(port)) {
-                                client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
-                                        groupName, IpProtocol.TCP, port, port, "0.0.0.0/0");
-                                openTCP.add(port);
+            if (securityGroupExt.isPresent()) {
+                //For each group of the security groups
+                org.jclouds.ec2.features.SecurityGroupApi client = securityGroupExt.get();
+                for (NodeGroup group : cluster.getNodes()) {
+                    String groupName = "jclouds#" + group.getServices().get(0);// jclouds way of defining groups
+                    Set<Integer> openTCP = new HashSet<Integer>(); //To avoid opening duplicate ports
+                    Set<Integer> openUDP = new HashSet<Integer>();// gives exception upon trying to open duplicate ports in a group
+                    System.out.printf("%d: creating security group: %s%n", System.currentTimeMillis(),
+                            group.getServices().get(0));
+                    //create security group
+                    messages.addMessage("Creating Security Group: " + group.getServices().get(0));
+                    try {
+                        client.createSecurityGroupInRegion(region, groupName, group.getServices().get(0));
+                    } catch (Exception e) {
+
+                        //If group already exists continue to the next group
+                        continue;
+                    }
+                    //Open the ports for that group
+                    //Authorize the ports for TCP and UDP roles in cluster file for that group
+                    for (String serviceName : group.getServices()) {
+                        if (portsTCP.containsKey(serviceName)) {
+                            for (int port : portsTCP.get(serviceName)) {
+                                if (!openTCP.contains(port)) {
+                                    client.authorizeSecurityGroupIngressInRegion(region,
+                                            groupName, IpProtocol.TCP, port, port, "0.0.0.0/0");
+                                    openTCP.add(port);
+                                }
                             }
-                        }
 
-                        for (int port : portsUDP.get(serviceName)) {
-                            if (!openUDP.contains(port)) {
-                                client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
-                                        groupName, IpProtocol.UDP, port, port, "0.0.0.0/0");
-                                openUDP.add(port);
+                            for (int port : portsUDP.get(serviceName)) {
+                                if (!openUDP.contains(port)) {
+                                    client.authorizeSecurityGroupIngressInRegion(region,
+                                            groupName, IpProtocol.UDP, port, port, "0.0.0.0/0");
+                                    openUDP.add(port);
+                                }
                             }
                         }
                     }
-                }
 
-                //Authorize the global ports TCP + extra ports of the group
-                for (Integer port : globalPorts) {
-                    if (!openTCP.contains(port)) {
-                        client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
-                                groupName, IpProtocol.TCP, port.intValue(), port.intValue(), "0.0.0.0/0");
-                        openTCP.add(port);
-                    }
-                }
-
-                if (group.getAuthorizePorts() != null) {
-                    for (Integer port : group.getAuthorizePorts()) {
+                    //Authorize the global ports TCP + extra ports of the group
+                    for (Integer port : globalPorts) {
                         if (!openTCP.contains(port)) {
-                            client.getSecurityGroupServices().authorizeSecurityGroupIngressInRegion(region,
+                            client.authorizeSecurityGroupIngressInRegion(region,
                                     groupName, IpProtocol.TCP, port.intValue(), port.intValue(), "0.0.0.0/0");
                             openTCP.add(port);
                         }
                     }
-                }
 
-                //This is a delay we must use for EC2. There is a limit on REST requests and if we dont limit the
-                //bursts of the requests it will fail
-                try {
-                    Thread.sleep(15000);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    if (group.getAuthorizePorts() != null) {
+                        for (Integer port : group.getAuthorizePorts()) {
+                            if (!openTCP.contains(port)) {
+                                client.authorizeSecurityGroupIngressInRegion(region,
+                                        groupName, IpProtocol.TCP, port.intValue(), port.intValue(), "0.0.0.0/0");
+                                openTCP.add(port);
+                            }
+                        }
+                    }
+
+                    //This is a delay we must use for EC2. There is a limit on REST requests and if we dont limit the
+                    //bursts of the requests it will fail
+                    try {
+                        Thread.sleep(15000);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -224,14 +227,14 @@ public final class VirtualizedClusterProvision implements Provision {
         //If openstack nova2 client
         //Similar structure to EC2 but changes apis
         if (provider.toString().equals(ProviderType.OPENSTACK.toString())) {
-            RestContext<NovaApi, NovaAsyncApi> temp = service.getContext().unwrap();
+            NovaApi temp = service.getContext().unwrapApi(NovaApi.class);
             //+++++++++++++++++
             //This stuff below is weird, founded in a code snippet in a workshop on jclouds. Still it works
             //Code not from documentation
             Optional<? extends SecurityGroupApi> securityGroupExt = temp
-                    .getApi()
                     .getSecurityGroupExtensionForZone(region);
             System.out.println("  Security Group Support: " + securityGroupExt.isPresent());
+            
             if (securityGroupExt.isPresent()) {
                 SecurityGroupApi client = securityGroupExt.get();
                 //+++++++++++++++++    
@@ -256,7 +259,7 @@ public final class VirtualizedClusterProvision implements Provision {
                                         Ingress ingress = Ingress.builder()
                                                 .fromPort(port)
                                                 .toPort(port)
-                                                .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.TCP)
+                                                .ipProtocol(IpProtocol.TCP)
                                                 .build();
                                         client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
                                         openTCP.add(port);
@@ -268,7 +271,7 @@ public final class VirtualizedClusterProvision implements Provision {
                                         Ingress ingress = Ingress.builder()
                                                 .fromPort(port)
                                                 .toPort(port)
-                                                .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.UDP)
+                                                .ipProtocol(IpProtocol.UDP)
                                                 .build();
                                         client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
                                         openUDP.add(port);
@@ -285,7 +288,7 @@ public final class VirtualizedClusterProvision implements Provision {
                                 Ingress ingress = Ingress.builder()
                                         .fromPort(port.intValue())
                                         .toPort(port.intValue())
-                                        .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.TCP)
+                                        .ipProtocol(IpProtocol.TCP)
                                         .build();
                                 client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
                                 openTCP.add(port);
@@ -298,7 +301,7 @@ public final class VirtualizedClusterProvision implements Provision {
                                     Ingress ingress = Ingress.builder()
                                             .fromPort(port.intValue())
                                             .toPort(port.intValue())
-                                            .ipProtocol(org.jclouds.openstack.nova.v2_0.domain.IpProtocol.TCP)
+                                            .ipProtocol(IpProtocol.TCP)
                                             .build();
                                     client.createRuleAllowingCidrBlock(created.getId(), ingress, "0.0.0.0/0");
                                     openTCP.add(port);
