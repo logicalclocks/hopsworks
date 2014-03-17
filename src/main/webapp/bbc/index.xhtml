@@ -245,7 +245,7 @@
                             <h:outputLabel for="popupCal" value="Registered Date:" style="font-weight:bold"/>
                             <p:calendar id="popupCal" value="#{userController.user.registeredOn}" pattern="yyyy-MM-dd HH:mm:ss"/>
                      </h:panelGrid>
-                   <p:commandButton update="grid" value="Add" icon="ui-icon-check" style="margin-right:10px" actionListener="#{userController.addUser()}"/>
+                   <p:commandButton update="grid" value="Add" icon="ui-icon-check" style="margin-right:10px" action="#{userController.addUser()}"/>
              </p:panel>
            </h:form>
                         

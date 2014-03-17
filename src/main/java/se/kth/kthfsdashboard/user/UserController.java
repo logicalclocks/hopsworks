@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.logging.Logger;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
@@ -22,9 +23,10 @@ import javax.servlet.http.HttpServletRequest;
 @ManagedBean
 @RequestScoped
 public class UserController implements Serializable {
+    //private static final Logger logger = Logger.getLogger("se.kth.kthfsdashboard.user.UserController");
     
     private static final long serialVersionUID = 1L;
-
+    
     
     @EJB
     private UserFacade userFacade;
