@@ -72,8 +72,5 @@ public class UserFacade extends AbstractFacade<Username> {
     public void detach(Username user) {
         em.detach(user);
     }   
-    
-    
-
 
 }

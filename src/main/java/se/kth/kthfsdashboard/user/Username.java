@@ -4,16 +4,12 @@
  */
 package se.kth.kthfsdashboard.user;
 
-import com.mysql.jdbc.Blob;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -129,11 +125,7 @@ public class Username implements Serializable {
         this.salt = salt;
   }
  
-//    public void setSalt(String salt){
-//        this.salt=salt.getBytes();
-//    }
-//    
-    
+
     public String getEmail() {
         return email;
     }
@@ -150,20 +142,31 @@ public class Username implements Serializable {
         this.password = DigestUtils.sha512Hex(password);
     }
     
-    public void encodePassword(String password) {
-      try {
+    public boolean encodePassword() {
+        if (password == null) {
+            return false;
+        }
+//      try {
           Random r = new Random(System.currentTimeMillis());
           salt = new byte[8];
           r.nextBytes(salt);
-            MessageDigest digest = MessageDigest.getInstance("SHA-1");
-            digest.reset();
-            digest.update(salt);
-            this.password = digest.digest(password.getBytes("UTF-8")).toString();
-        } catch (UnsupportedEncodingException ex) {
-            Logger.getLogger(Username.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(Username.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//            MessageDigest digest = MessageDigest.getInstance("SHA-1");
+//            digest.reset();
+//            digest.update(salt);
+//            this.password = digest.digest(password.getBytes("UTF-8")).toString();
+          setSalt(salt);
+          String passwordInHex = String.format("%040x", new BigInteger(1, password.getBytes(Charset.defaultCharset())));
+          if (passwordInHex != null) {
+              this.setPassword(passwordInHex);
+          } else {
+              return false;
+          }
+          return true;
+//        } catch (UnsupportedEncodingException ex) {
+//            Logger.getLogger(Username.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (NoSuchAlgorithmException ex) {
+//            Logger.getLogger(Username.class.getName()).log(Level.SEVERE, null, ex);
+//        }
     }
     
     

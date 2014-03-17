@@ -4,8 +4,6 @@
  */
 package se.kth.kthfsdashboard.user;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
@@ -17,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
  *
  * @author Jim Dowling<jdowling@sics.se>
  */
-//@SessionScoped
 @ManagedBean
 @RequestScoped
 public class UserMB {
@@ -41,6 +38,11 @@ public class UserMB {
     
     public boolean isUserAdmin() {
         return getRequest().isUserInRole("ADMIN");
+    }
+    
+     
+    public boolean isUserBbcAdmin() {
+        return getRequest().isUserInRole("BBC_ADMIN");
     }
 
     public String logOut() {

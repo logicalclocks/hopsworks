@@ -34,36 +34,16 @@ public class AuthBackingBean {
     private static Logger log = Logger.getLogger(AuthBackingBean.class.getName());
     private String username;
     private String password;
-    private Username user; // The JPA entity.
     @ManagedProperty(value="#{bbcViewController}")
     private BbcViewController views;
-    @EJB
-    private UserFacade userService;
+
 
     public AuthBackingBean() {
     }
 
-//    private void addUser() {
-//        Username u = new Username();
-//        u.setEmail("basher");
-//        Group g = Group.ADMIN;
-//        List<Group> lg = new ArrayList<Group>();
-//        lg.add(g);
-//        u.setGroups(lg);
-//        u.setMobileNum("000");
-//        u.setName("Linda");
-//        u.setPassword("jim");
-//        u.setRegisteredOn(new Date());
-//        u.setUsername("lindass");
-//        u.setSalt("bl".getBytes());
-//
-//        userService.persist(u);
-//
-//    }
 
     public String login() {
 
-        // addUser();
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletRequest request = (HttpServletRequest) context
                 .getExternalContext().getRequest();
@@ -85,7 +65,6 @@ public class AuthBackingBean {
                 request.logout();
             }
             request.login(username, password);
-            user = userService.findByEmail(username);
         } catch (ServletException e) {
             FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "The username or password is incorrect.");
             context.addMessage(null, msg);
@@ -96,18 +75,12 @@ public class AuthBackingBean {
         Principal principal = request.getUserPrincipal();
         log.log(Level.INFO, "Logging IN Authenticated user: {0}", principal.getName());
 
-        views.setUser(user);
-// TODO Fix this: Role is always ADMIN
-        
-//        if (request.isUserInRole("ADMIN")) {
-////            return "/sauron/clusters.xml?faces-redirect=true";
-//            return "/bbc/index.xml?faces-redirect=true";            
-////        } else if (request.isUserInRole("BBC_RESEARCHER")) {
-////            return "/bbc/index.xml?faces-redirect=true";
-//        } else {
-//            return "/sauron/clusters.xml?faces-redirect=true";
-//        }
-        return "/bbc-views.xhtml";
+        if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER")) {
+            return "/bbc/index.xml?faces-redirect=true";            
+        } else if (request.isUserInRole("ADMIN")) {
+            return "/sauron/clusters.xml?faces-redirect=true";
+        }
+        return "/loginError.xml";
     }
 
     public String logout() {
