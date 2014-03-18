@@ -45,8 +45,7 @@ public class AuthBackingBean {
     public String login() {
 
         FacesContext context = FacesContext.getCurrentInstance();
-        HttpServletRequest request = (HttpServletRequest) context
-                .getExternalContext().getRequest();
+        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 
         if (username.isEmpty()) {
             FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "Enter your username.");
@@ -76,7 +75,7 @@ public class AuthBackingBean {
         log.log(Level.INFO, "Logging IN Authenticated user: {0}", principal.getName());
 
         if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER")) {
-            return "/bbc/index.xml?faces-redirect=true";            
+            return "/bbc/lims/services.xml?faces-redirect=true";            
         } else if (request.isUserInRole("ADMIN")) {
             return "/sauron/clusters.xml?faces-redirect=true";
         }

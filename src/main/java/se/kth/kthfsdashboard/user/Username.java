@@ -7,6 +7,8 @@ package se.kth.kthfsdashboard.user;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import javax.xml.bind.DatatypeConverter;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -14,6 +16,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import org.apache.commons.codec.digest.DigestUtils;
+
 
 /**
  *
@@ -139,7 +142,8 @@ public class Username implements Serializable {
     }
 
     public void setPassword(String password) {
-        this.password = DigestUtils.sha512Hex(password);
+        //this.password = DigestUtils.sha512Hex(password);
+       this.password = DatatypeConverter.printHexBinary(password.getBytes());
     }
     
     public boolean encodePassword() {
@@ -155,13 +159,13 @@ public class Username implements Serializable {
 //            digest.update(salt);
 //            this.password = digest.digest(password.getBytes("UTF-8")).toString();
           setSalt(salt);
-          String passwordInHex = String.format("%040x", new BigInteger(1, password.getBytes(Charset.defaultCharset())));
-          if (passwordInHex != null) {
-              this.setPassword(passwordInHex);
-          } else {
-              return false;
-          }
-          return true;
+//          String passwordInHex = String.format("%0128x", new BigInteger(1, password.getBytes(Charset.defaultCharset())));
+//          if (passwordInHex != null) {
+//              this.setPassword(passwordInHex);
+//          } else {
+//              return false;
+//          }
+         return true;
 //        } catch (UnsupportedEncodingException ex) {
 //            Logger.getLogger(Username.class.getName()).log(Level.SEVERE, null, ex);
 //        } catch (NoSuchAlgorithmException ex) {

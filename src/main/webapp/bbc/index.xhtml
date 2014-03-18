@@ -149,7 +149,7 @@
                         <p:tab title="Registered Users">
                             <p:panel styleClass="BbcNewSamplePanel" style="">
                                 <h:panelGrid columns="10">                                 
-                                    <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" paginator="true" rows="10"
+<!--                                    <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" paginator="true" rows="10"
                                                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
                                                             rowsPerPageTemplate="10,20,50,100">
                                                    <f:facet name="header">
@@ -192,7 +192,7 @@
                                                    </p:column>
                                                                                        
                                                </p:dataTable>
-                               </h:panelGrid>
+                               </h:panelGrid>-->
             
                             </p:panel>
                         </p:tab>
@@ -230,22 +230,15 @@
                                 
                             <h:outputLabel for="mobile" value="Mobile Number:" style="font-weight:bold"/>					
                             <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" validatorMessage="Only contain numbers">
-                                <!--<f:validateRegex pattern="(^[+]?[0-9]+$)?"/>-->
-                          </p:inputText>
-                            <p:message for="mobile" />
-                            <h:outputText value="" />
-
-<!--                             <h:outputLabel for="salt" value="Salt:" style="font-weight:bold"/>					
-                            <p:inputText id="salt" required="true" label="Salt" value="#{userController.user.salt}">
                             </p:inputText>
-                            <p:message for="salt" />
-                            <h:outputText value="" />                      -->
-                            
-                            
-                            <h:outputLabel for="popupCal" value="Registered Date:" style="font-weight:bold"/>
-                            <p:calendar id="popupCal" value="#{userController.user.registeredOn}" pattern="yyyy-MM-dd HH:mm:ss"/>
+                            <p:message for="mobile"/>
+                            <h:outputText value=""/>
+
+                           <!--<h:outputLabel for="popupCal" value="Registered Date:" style="font-weight:bold"/>
+                            <p:calendar id="popupCal" value="#{userController.user.registeredOn}" pattern="yyyy-MM-dd HH:mm:ss"/>-->
+                           
                      </h:panelGrid>
-                   <p:commandButton update="grid" value="Add" icon="ui-icon-check" style="margin-right:10px" action="#{userController.addUser()}"/>
+                   <p:commandButton update="grid" value="Add" icon="ui-icon-person" style="margin-right:10px" action="#{userController.addUser()}"/>
              </p:panel>
            </h:form>
                         

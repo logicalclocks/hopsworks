@@ -21,6 +21,7 @@
     <h:body>
 
         <h:form class="stylelayout" id="formToolbar">  
+           
             <p:toolbar styleClass="MainToolbar">  
                 <p:toolbarGroup align="left">  
                     <p:commandLink value="BiobankCloud" action="bbchome"/>
@@ -34,13 +35,14 @@
                     <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
                     <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
                         <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" />  
+                        <!--<p:menuitem value="User Management" actionListener='#{userController.userManagement()}' update=":formToolbar:messages" ajax="false" />  -->
                         <p:separator/>
                         <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
                     </p:menu>  
                 </p:toolbarGroup>  
 
             </p:toolbar> 
-
+             <p:messages autoUpdate="true"/>
         </h:form>
 
         <p:spacer width="1" height="5" />
@@ -51,7 +53,7 @@
             </p:layoutUnit>  
 
             <p:layoutUnit position="center">  
-                <ui:insert name="content">Default content</ui:insert> 
+                <ui:insert name="content">Welcome to LIMS Services</ui:insert> 
             </p:layoutUnit>  
         </p:layout>  
 

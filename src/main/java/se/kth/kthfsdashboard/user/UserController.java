@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Logger;
 import java.util.List;
+import java.util.logging.Level;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
@@ -23,13 +24,14 @@ import javax.servlet.http.HttpServletRequest;
 @ManagedBean
 @RequestScoped
 public class UserController implements Serializable {
-    //private static final Logger logger = Logger.getLogger("se.kth.kthfsdashboard.user.UserController");
-
+    private static final Logger logger = Logger.getLogger(UserController.class.getName());
+    
     private static final long serialVersionUID = 1L;
     @EJB
     private UserFacade userFacade;
     private Username user;
 
+       
     public UserController() {
     }
 
@@ -47,9 +49,14 @@ public class UserController implements Serializable {
     public List<Username> getAllUsers() {
         return userFacade.findAll();
     }
+    
+    public Group[] groupValues() {
+        return Group.values();
+  }
 
     public String addUser() {
         user.encodePassword();
+        user.setRegisteredOn(new Date());
         try {
             userFacade.persist(user);
         } catch (EJBException ejb) {
@@ -113,6 +120,20 @@ public class UserController implements Serializable {
 
     public void logout() {
         addMessage("Logout not implemented!");
+    }
+    
+    public String userManagement(){
+        FacesContext context = FacesContext.getCurrentInstance();
+        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
+
+        Principal principal = request.getUserPrincipal();
+       
+        if(request.isUserInRole("BBC_ADMIN")){
+            return "bbc/lims/services.xhtml?faces-redirect=true";
+        }else{
+            addErrorMessageToUserAction("Operation is not allowed: " + principal.getName() + " is not a privileged user to perform this action.");
+            return "Failed";
+        }
     }
 
     public String getLoginName() throws IOException {
