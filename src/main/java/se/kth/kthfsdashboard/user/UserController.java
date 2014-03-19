@@ -30,7 +30,8 @@ public class UserController implements Serializable {
     @EJB
     private UserFacade userFacade;
     private Username user;
-
+    
+    List<Group> g = new ArrayList<Group>();
        
     public UserController() {
     }
@@ -50,13 +51,15 @@ public class UserController implements Serializable {
         return userFacade.findAll();
     }
     
-    public Group[] groupValues() {
+    public Group[] getGroups() {
         return Group.values();
   }
 
     public String addUser() {
         user.encodePassword();
         user.setRegisteredOn(new Date());
+        g.add(Group.BBC_RESEARCHER);
+        user.setGroups(g);
         try {
             userFacade.persist(user);
         } catch (EJBException ejb) {
@@ -104,6 +107,7 @@ public class UserController implements Serializable {
 //        u.setGroups(g);
 //        userFacade.persist(u);
 //    }
+    
     public void addMessage(String summary) {
         FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, summary);
         FacesContext.getCurrentInstance().addMessage(null, message);
@@ -128,8 +132,9 @@ public class UserController implements Serializable {
 
         Principal principal = request.getUserPrincipal();
        
-        if(request.isUserInRole("BBC_ADMIN")){
-            return "bbc/lims/services.xhtml?faces-redirect=true";
+       if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER") || request.isUserInRole("ADMIN")){
+            addMessage("Switched to the LIMS user Management Service as :");
+            return "/bbc/lims/services.xml?faces-redirect=true";
         }else{
             addErrorMessageToUserAction("Operation is not allowed: " + principal.getName() + " is not a privileged user to perform this action.");
             return "Failed";

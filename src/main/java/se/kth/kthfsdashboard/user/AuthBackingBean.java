@@ -75,11 +75,11 @@ public class AuthBackingBean {
         log.log(Level.INFO, "Logging IN Authenticated user: {0}", principal.getName());
 
         if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER")) {
-            return "/bbc/lims/services.xml?faces-redirect=true";            
+            return "/bbc/index.xml?faces-redirect=true";            
         } else if (request.isUserInRole("ADMIN")) {
             return "/sauron/clusters.xml?faces-redirect=true";
         }
-        return "/loginError.xml";
+            return "/loginError.xml";
     }
 
     public String logout() {

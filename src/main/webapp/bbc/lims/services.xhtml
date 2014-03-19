@@ -19,11 +19,6 @@
         <ui:define name="scripts"/>
 
         <ui:define name="leftmenu">
-            <p:commandLink styleClass="sideMenuItem Home" action="bbchome"/>
-<!--            <p:commandLink styleClass="sideMenuItem New" action="#{bbcController.showNewSampleCollectionDialog()}">
-                <f:setPropertyActionListener value="true" target="#{sampleController.create}" />
-            </p:commandLink>
-            <p:commandLink styleClass="sideMenuItem Find" action="#{bbcController.showFindSampleCollectionDialog()}"/>-->
             <p:commandLink styleClass="sideMenuItem New" action="#{bbcController.showNewUserManagementDialog()}"/>
         </ui:define>
 
@@ -34,19 +29,19 @@
         <ui:define name="dialogs">
 
            <!--New User Management Dialog-->
-            <p:dialog modal="true" id="newUserManagement" widgetVar="dlgNewUserManagement" header="User Management Service" 
+            <p:dialog modal="true" id="NewUserManagement" widgetVar="dlgNewUserManagement" header="User Management Service" 
                       draggable="true" closable="true" resizable="true" width="825"  height="620">  
 
                 <h:form id="formNewUserManagement" prependId="false">   
                     <p:tabView id="tabViewNew">
                         <p:tab title="Registered Users">
-                            <p:panel styleClass="BbcNewSamplePanel" style="">
-                                <h:panelGrid columns="3">                                 
-                                    <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" widgetVar="usersTable" >
+                            <p:panel styleClass="BbcNewUserPanel" style="">
+                                <h:panelGrid columns="4">                                 
+                                    <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria">
                                                    <f:facet name="header">
                                                        <p:outputPanel>
                                                        <h:outputText value="Search users: " />
-                                                       <p:inputText id="globalFilter" onkeyup="" style="width:150px" />
+                                                       <p:inputText id="globalFilter" onkeyup="usersTable.filter()" style="width:150px" />
                                                        </p:outputPanel>
                                                    </f:facet>
 
@@ -59,11 +54,11 @@
                                                         <h:outputText value="#{user.email}" />
                                                     </p:column>
                                         
-                                                    <p:column id="usernameColumn" filterBy="username" headerText="Username">
+                                                    <p:column id="usernameColumn" headerText="Username">
                                                         <h:outputText value="#{user.username}" />
                                                     </p:column>
                                         
-                                                    <p:column id="mobileNumColumn" filterBy="mobileNum" headerText="Mobile Number">
+                                                    <p:column id="mobileNumColumn" headerText="Mobile Number">
                                                         <h:outputText value="#{user.mobileNum}" />
                                                     </p:column>
                                      </p:dataTable>
@@ -104,13 +99,16 @@
                             <h:outputText value=""/>
                                 
                             <h:outputLabel for="mobile" value="Mobile Number:" style="font-weight:bold"/>					
-                            <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" validatorMessage="Only contain numbers">
+                            <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}">
                             </p:inputText>
                             <p:message for="mobile"/>
                             <h:outputText value=""/>
-
-                           <!--<h:outputLabel for="popupCal" value="Registered Date:" style="font-weight:bold"/>
-                            <p:calendar id="popupCal" value="#{userController.user.registeredOn}" pattern="yyyy-MM-dd HH:mm:ss"/>-->
+                            
+<!--                            <h:outputText value="User group" style="font-weight:bold"/>
+                            <p:selectOneMenu value="" effect="fade">
+                                <f:selectItems value="#{userController.groups}" var="group" itemValue="#{group.group}" itemLabel="#{group.group}"/>
+                            </p:selectOneMenu>-->
+                            
                            
                      </h:panelGrid>
                    <p:commandButton update="grid" value="Add" icon="ui-icon-person" style="margin-right:10px" action="#{userController.addUser()}"/>

@@ -10,20 +10,23 @@ package se.kth.kthfsdashboard.user;
  */
 public enum Group {
     
-    ADMIN("admin"), 
-    USER("user"), 
-    AGENT("agent"), 
-    BBC_RESEARCHER("bbc researcher"), 
-    BBC_ADMIN("bbc admin");
+    ADMIN, USER, AGENT, BBC_RESEARCHER, BBC_ADMIN;
     
-    private final String group;
-
-    private Group(String group) {
-        this.group = group;
-    }
-
-    public String getLabel() {
-        return group;
-    }
+    
+//    ADMIN("admin"), 
+//    USER("user"), 
+//    AGENT("agent"), 
+//    BBC_RESEARCHER("bbc researcher"), 
+//    BBC_ADMIN("bbc admin");
+//    
+//    private final String group;
+//
+//    private Group(String group) {
+//        this.group = group;
+//    }
+//
+//    public String getGroup() {
+//        return group;
+//    }
        
 }

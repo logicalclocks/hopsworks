@@ -34,14 +34,14 @@
                     <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
                     <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
                         <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" />  
-                          <p:menuitem value="User Management" actionListener='#{userController.userManagement()}' update=":formToolbar:messages" ajax="false" /> 
+                        <p:menuitem value="User Management" actionListener='#{userController.userManagement()}' update=":formToolbar:messages" ajax="false" /> 
                         <p:separator/>
                         <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
                     </p:menu>  
                 </p:toolbarGroup>  
 
             </p:toolbar> 
-
+            <p:messages autoUpdate="true"/>
         </h:form>
 
         <p:spacer width="1" height="5" />
