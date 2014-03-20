@@ -32,12 +32,13 @@
             <p:dialog modal="true" id="NewUserManagement" widgetVar="dlgNewUserManagement" header="User Management Service" 
                       draggable="true" closable="true" resizable="true" width="825"  height="620">  
 
-                <h:form id="formNewUserManagement" prependId="false">   
+              <h:form id="formNewUserManagement" prependId="false">  
                     <p:tabView id="tabViewNew">
                         <p:tab title="Registered Users">
+                            <h:form id="showUsers">
                             <p:panel styleClass="BbcNewUserPanel" style="">
                                 <h:panelGrid columns="4">                                 
-                                    <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria">
+                                    <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria">
                                                    <f:facet name="header">
                                                        <p:outputPanel>
                                                        <h:outputText value="Search users: " />
@@ -63,14 +64,56 @@
                                                     </p:column>
                                      </p:dataTable>
                                </h:panelGrid>
-            
-                            </p:panel>
+                        </p:panel>
+                        </h:form>
                         </p:tab>
                         
                         <!-- user view end -->
+               
+            <!-- Add Users-->
                         
-       <p:tab title="Add New Users">
-           <h:form id="userReg">
+      
+            <!-- End add users-->
+            
+            
+            <!-- delete users-->
+              <p:tab title="Delete Users">
+                        <h:form id="delUsers">
+                            <p:panel styleClass="BbcNewUserPanel">
+                                <p:messages autoUpdate="true"/>
+                                <h:panelGrid id="delUserGrid" columns="4" cellpadding="5">                                 
+                                    <p:dataTable id="userTable" var="usr" selectionMode="single" rowKey="#{usr.email}" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="dataTable" emptyMessage="No users found with given criteria">
+                                                   <f:facet name="header">
+                                                       <p:outputPanel>
+                                                       <h:outputText value="Search users: " />
+                                                       <p:inputText id="dataFilter" onkeyup="dataTable.filter()" style="width:150px" />
+                                                       </p:outputPanel>
+                                                   </f:facet>
+
+                                        
+                                                   <p:column id="nameColumn" headerText="Name">
+                                                        <h:outputText value="#{usr.name}" />
+                                                    </p:column>
+                                        
+                                                    <p:column id="emailColumn" headerText="Email">
+                                                        <h:outputText value="#{usr.email}" />
+                                                    </p:column>
+                                        
+                                                    <p:column id="usernameColumn" headerText="Username">
+                                                        <h:outputText value="#{usr.username}" />
+                                                    </p:column>
+                                       </p:dataTable>
+                                    </h:panelGrid>
+                              <p:commandButton update="delUserGrid" id="deleteButton" value="Delete" icon="ui-icon-close" action="#{userController.deleteUser()}" rendered="#{userMB.adminUser}"/>
+                                
+                             </p:panel>
+                        </h:form>
+                        </p:tab>
+                 <!-- End delete users-->
+                 
+                 
+          <p:tab title="Add New Users">
+           <h:form id="addUsers">
                <p:panel styleClass="BbcNewSamplePanel" header="User Data"> 
                    <p:messages autoUpdate="true"/>
                    <h:panelGrid id="grid" columns="4" cellpadding="5">                                 
@@ -102,27 +145,25 @@
                             <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}">
                             </p:inputText>
                             <p:message for="mobile"/>
-                            <h:outputText value=""/>
-                            
-<!--                            <h:outputText value="User group" style="font-weight:bold"/>
-                            <p:selectOneMenu value="" effect="fade">
-                                <f:selectItems value="#{userController.groups}" var="group" itemValue="#{group.group}" itemLabel="#{group.group}"/>
-                            </p:selectOneMenu>-->
-                            
-                           
+                            <h:outputText value=""/>                          
                      </h:panelGrid>
-                   <p:commandButton update="grid" value="Add" icon="ui-icon-person" style="margin-right:10px" action="#{userController.addUser()}"/>
+                   <p:commandButton update="grid" value="Add" icon="ui-icon-person" style="margin-right:10px" action="#{userController.addUser()}" rendered="#{userMB.adminUser}"/>
              </p:panel>
            </h:form>
-                        
-       
-       </p:tab>
-                     </p:tabView>
+          </p:tab>
+         
+                 
+                 
+                    </p:tabView>
                 </h:form>
             </p:dialog>
-
+        </ui:define>
+    </ui:composition>
+</html>
                     
-                                        
+         
+        
+                               
                                     
                                 
                                 
@@ -132,10 +173,4 @@
 
             
             
-            
-        
-
-        </ui:define>
-
-    </ui:composition>
-</html>
+     

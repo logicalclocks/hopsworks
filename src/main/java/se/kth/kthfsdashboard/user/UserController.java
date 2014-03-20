@@ -32,7 +32,9 @@ public class UserController implements Serializable {
     private Username user;
     
     List<Group> g = new ArrayList<Group>();
-       
+    private List<Username> filteredUsers;
+    
+    
     public UserController() {
     }
 
@@ -47,13 +49,22 @@ public class UserController implements Serializable {
         this.user = user;
     }
 
+    public void setFilteredUsers(List<Username> filteredUsers){
+        this.filteredUsers = filteredUsers;
+    }
+    
+     public List<Username> getFilteredUsers(){
+        return filteredUsers;
+     }
+    
     public List<Username> getAllUsers() {
         return userFacade.findAll();
     }
     
+     
     public Group[] getGroups() {
         return Group.values();
-  }
+    }
 
     public String addUser() {
         user.encodePassword();
@@ -73,6 +84,7 @@ public class UserController implements Serializable {
     public String deleteUser() {
         try {
             userFacade.remove(user);
+            //userFacade.removeByEmail(user.getEmail());
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Delete Operation failed.");
             return null;
@@ -134,7 +146,7 @@ public class UserController implements Serializable {
        
        if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER") || request.isUserInRole("ADMIN")){
             addMessage("Switched to the LIMS user Management Service as :");
-            return "/bbc/lims/services.xml?faces-redirect=true";
+            return "/bbc/lims/index.xml?faces-redirect=true";
         }else{
             addErrorMessageToUserAction("Operation is not allowed: " + principal.getName() + " is not a privileged user to perform this action.");
             return "Failed";
