@@ -158,7 +158,7 @@ public class Username implements Serializable {
 //            digest.reset();
 //            digest.update(salt);
 //            this.password = digest.digest(password.getBytes("UTF-8")).toString();
-          setSalt(salt);
+              setSalt(salt);
 //          String passwordInHex = String.format("%0128x", new BigInteger(1, password.getBytes(Charset.defaultCharset())));
 //          if (passwordInHex != null) {
 //              this.setPassword(passwordInHex);

@@ -69,7 +69,7 @@ public class UserController implements Serializable {
     public String addUser() {
         user.encodePassword();
         user.setRegisteredOn(new Date());
-        g.add(Group.BBC_RESEARCHER);
+        g.add(Group.BBC_ADMIN);
         user.setGroups(g);
         try {
             userFacade.persist(user);
@@ -146,7 +146,7 @@ public class UserController implements Serializable {
        
        if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER") || request.isUserInRole("ADMIN")){
             addMessage("Switched to the LIMS user Management Service as :");
-            return "/bbc/lims/index.xml?faces-redirect=true";
+            return "/bbc/lims/userManagement.xml?faces-redirect=true";
         }else{
             addErrorMessageToUserAction("Operation is not allowed: " + principal.getName() + " is not a privileged user to perform this action.");
             return "Failed";

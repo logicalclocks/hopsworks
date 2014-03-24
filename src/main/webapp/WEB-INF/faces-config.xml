@@ -150,8 +150,11 @@
             <to-view-id>/wf/index.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
-    </navigation-rule>    
-
-   
-            
+    </navigation-rule>
+    <application>
+        <resource-bundle>
+            <base-name>/Bundle</base-name>
+            <var>bundle</var>
+        </resource-bundle>
+    </application>
 </faces-config>

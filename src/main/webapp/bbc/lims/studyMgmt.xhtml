@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+
+    <ui:composition template="layout.xhtml">
+
+        <ui:define name="title">
+            BiobankCloud Lims
+        </ui:define>
+        <ui:define name="css">
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/bbc.css']}" />
+        </ui:define>
+        <ui:define name="scripts"/>
+
+<!--        <ui:define name="leftmenu">
+            <p:commandLink styleClass="sideMenuItem New" action="#{bbcController.showNewUserManagementDialog()}"/>
+        </ui:define>-->
+
+
+        
+
+
+        <ui:define name="content">
+
+        <p:spacer width="1" height="10" />
+
+                  
+            
+           
+
+             
+        <h:form id="formStudyManagement"> 
+            <p:panel styleClass="BbcNewUserPanel" style="">
+                <div align="left">
+		<f:facet name="header">
+                    <h:outputLabel value="Study" style="font-weight:bold"/>
+                    <h:outputText value="#{userController.user.email}"/>
+                 </f:facet> 
+                </div>           
+            </p:panel>
+            <p:tabView id="tabViewStudy">
+           <p:tab id="tab1" title="All">
+		<h:panelGrid columns="2">
+                    
+                    <p:panel styleClass="BbcNewUserPanel" style="">
+			
+			<h:outputText id="tabAll" />
+                    </p:panel>
+		</h:panelGrid>
+	</p:tab>
+
+	<p:tab id="tab2" title="Personal">
+		<h:panelGrid columns="2">
+		
+			<h:outputText id="tabPersonal"/>
+		</h:panelGrid>
+	</p:tab>
+
+	<p:tab id="tab3" title="Joined">
+		<h:panelGrid columns="2">
+		
+			<h:outputText id="tabJoined"/>
+		</h:panelGrid>
+	</p:tab>
+
+</p:tabView>
+        </h:form>         
+                    
+                    
+              
+        </ui:define>
+    </ui:composition>
+</html>
+                    
+         
+        
+                               
+                                    
+                                
+                                
+                               
+            
+                            
+
+            
+            
+     

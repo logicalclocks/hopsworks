@@ -47,15 +47,15 @@
                                                    </f:facet>
 
                                         
-                                                   <p:column id="nameColumn" filterBy="name" headerText="Name">
+                                                   <p:column id="nameColumn" filterBy="name" headerText="Name" style="width:120px">
                                                         <h:outputText value="#{user.name}" />
                                                     </p:column>
                                         
-                                                    <p:column id="emailColumn" filterBy="email" headerText="Email">
+                                                    <p:column id="emailColumn" filterBy="email" headerText="Email" style="width:120px">
                                                         <h:outputText value="#{user.email}" />
                                                     </p:column>
                                         
-                                                    <p:column id="usernameColumn" headerText="Username">
+                                                    <p:column id="usernameColumn" headerText="Username" style="width:120px">
                                                         <h:outputText value="#{user.username}" />
                                                     </p:column>
                                         
@@ -72,47 +72,7 @@
                
             <!-- Add Users-->
                         
-      
-            <!-- End add users-->
-            
-            
-            <!-- delete users-->
-              <p:tab title="Delete Users">
-                        <h:form id="delUsers">
-                            <p:panel styleClass="BbcNewUserPanel">
-                                <p:messages autoUpdate="true"/>
-                                <h:panelGrid id="delUserGrid" columns="4" cellpadding="5">                                 
-                                    <p:dataTable id="userTable" var="usr" selectionMode="single" rowKey="#{usr.email}" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="dataTable" emptyMessage="No users found with given criteria">
-                                                   <f:facet name="header">
-                                                       <p:outputPanel>
-                                                       <h:outputText value="Search users: " />
-                                                       <p:inputText id="dataFilter" onkeyup="dataTable.filter()" style="width:150px" />
-                                                       </p:outputPanel>
-                                                   </f:facet>
-
-                                        
-                                                   <p:column id="nameColumn" headerText="Name">
-                                                        <h:outputText value="#{usr.name}" />
-                                                    </p:column>
-                                        
-                                                    <p:column id="emailColumn" headerText="Email">
-                                                        <h:outputText value="#{usr.email}" />
-                                                    </p:column>
-                                        
-                                                    <p:column id="usernameColumn" headerText="Username">
-                                                        <h:outputText value="#{usr.username}" />
-                                                    </p:column>
-                                       </p:dataTable>
-                                    </h:panelGrid>
-                              <p:commandButton update="delUserGrid" id="deleteButton" value="Delete" icon="ui-icon-close" action="#{userController.deleteUser()}" rendered="#{userMB.adminUser}"/>
-                                
-                             </p:panel>
-                        </h:form>
-                        </p:tab>
-                 <!-- End delete users-->
-                 
-                 
-          <p:tab title="Add New Users">
+        <p:tab title="Add New Users">
            <h:form id="addUsers">
                <p:panel styleClass="BbcNewSamplePanel" header="User Data"> 
                    <p:messages autoUpdate="true"/>
@@ -147,14 +107,57 @@
                             <p:message for="mobile"/>
                             <h:outputText value=""/>                          
                      </h:panelGrid>
-                   <p:commandButton update="grid" value="Add" icon="ui-icon-person" style="margin-right:10px" action="#{userController.addUser()}" rendered="#{userMB.adminUser}"/>
+                   
+                        <p:commandButton update="grid" value="Add" icon="ui-icon-plus" style="margin-right:10px" action="#{userController.addUser()}"/>
+                     
              </p:panel>
            </h:form>
           </p:tab>
-         
-                 
-                 
-                    </p:tabView>
+          
+            
+            
+            
+            <!-- End add users-->
+            
+            
+            <!-- delete users-->
+<!--              <p:tab title="Delete Users">
+                        <h:form id="delUsers">
+                            <p:panel styleClass="BbcNewUserPanel">
+                                <p:messages autoUpdate="true"/>
+                                <h:panelGrid id="delUserGrid" columns="4" cellpadding="5">                                 
+                                    <p:dataTable id="userTable" var="usr" selectionMode="single" rowKey="#{usr.email}" selection="#{userController.user}" value="#{userController.allUsers}" widgetVar="dataTable">
+                                                   <f:facet name="header">
+                                                       <p:outputPanel>
+                                                       <h:outputText value="Search users: " />
+                                                       <p:inputText id="dataFilter" onkeyup="dataTable.filter()" style="width:150px" />
+                                                       </p:outputPanel>
+                                                   </f:facet>
+
+                                        
+                                                   <p:column id="nameColumn" headerText="Name">
+                                                        <h:outputText value="#{usr.name}" />
+                                                    </p:column>
+                                        
+                                                    <p:column id="emailColumn" headerText="Email">
+                                                        <h:outputText value="#{usr.email}" />
+                                                    </p:column>
+                                        
+                                                    <p:column id="usernameColumn" headerText="Username">
+                                                        <h:outputText value="#{usr.username}" />
+                                                    </p:column>
+                                       </p:dataTable>
+                                    </h:panelGrid>
+                                <f:facet name="footer">
+                                    <p:commandButton update="delUserGrid" id="deleteButton" value="Delete" icon="ui-icon-close" rendered="#{userMB.adminUser}" action="#{userController.deleteUser()}"/>
+                                </f:facet>
+                             </p:panel>
+                        </h:form>
+                        </p:tab>-->
+                  <!--End delete users-->
+                  
+                  
+                 </p:tabView>
                 </h:form>
             </p:dialog>
         </ui:define>
