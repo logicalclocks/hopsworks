@@ -26,34 +26,27 @@
         
 
 
-        <ui:define name="content">
+<ui:define name="content">
 
-        <p:spacer width="1" height="10" />
-
-                  
-            
+        <p:spacer width="1" height="10" />             
+        <h:form id="header"> 
            
-
-             
-        <h:form id="formStudyManagement"> 
-            <p:panel styleClass="BbcNewUserPanel" style="">
-                <div align="left">
-		<f:facet name="header">
-                    <h:outputLabel value="Study" style="font-weight:bold"/>
-                    <h:outputText value="#{userController.user.email}"/>
-                 </f:facet> 
-                </div>           
-            </p:panel>
-            <p:tabView id="tabViewStudy">
+             <f:facet name="header">
+                     <h:outputLabel value="Study" style="font-weight:bold"/>
+                     <h:outputText value="()"/>
+                      <p:commandButton value="New Study" icon="ui-icon-plus"/>
+                </f:facet> 
+           
+        <p:tabView id="tabViewStudy">
            <p:tab id="tab1" title="All">
-		<h:panelGrid columns="2">
-                    
-                    <p:panel styleClass="BbcNewUserPanel" style="">
-			
-			<h:outputText id="tabAll" />
-                    </p:panel>
-		</h:panelGrid>
-	</p:tab>
+               <h:form id="showAllStudy">
+                <p:panel styleClass="BbcNewUserPanel" style="">
+                    <h:panelGrid columns="2">
+                        <h:commandLink id=""></h:commandLink> 
+                    </h:panelGrid>
+                </p:panel>
+               </h:form>
+           </p:tab>
 
 	<p:tab id="tab2" title="Personal">
 		<h:panelGrid columns="2">
@@ -69,12 +62,11 @@
 		</h:panelGrid>
 	</p:tab>
 
-</p:tabView>
-        </h:form>         
-                    
-                    
-              
-        </ui:define>
+   </p:tabView>
+           
+  </h:form>
+        
+      </ui:define>
     </ui:composition>
 </html>
                     
