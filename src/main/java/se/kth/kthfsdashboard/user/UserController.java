@@ -145,7 +145,7 @@ public class UserController implements Serializable {
         Principal principal = request.getUserPrincipal();
        
        if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER") || request.isUserInRole("ADMIN")){
-            addMessage("Switched to the LIMS user Management Service as :");
+            addMessage("Switched to the LIMS User Management Service!");
             return "/bbc/lims/userManagement.xml?faces-redirect=true";
         }else{
             addErrorMessageToUserAction("Operation is not allowed: " + principal.getName() + " is not a privileged user to perform this action.");

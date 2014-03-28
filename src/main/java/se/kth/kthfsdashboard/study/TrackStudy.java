@@ -11,8 +11,11 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -24,12 +27,14 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @Table(name = "study")
-@XmlRootElement
+//@XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "TrackStudy.findAll", query = "SELECT t FROM TrackStudy t"),
     @NamedQuery(name = "TrackStudy.findById", query = "SELECT t FROM TrackStudy t WHERE t.trackStudyPK.id = :id"),
     @NamedQuery(name = "TrackStudy.findByDatasetId", query = "SELECT t FROM TrackStudy t WHERE t.trackStudyPK.datasetId = :datasetId"),
-    @NamedQuery(name = "TrackStudy.findByName", query = "SELECT t FROM TrackStudy t WHERE t.name = :name")})
+    @NamedQuery(name = "TrackStudy.findByName", query = "SELECT t FROM TrackStudy t WHERE t.name = :name"),
+    @NamedQuery(name = "TrackStudy.countById", query = "SELECT COUNT(DISTINCT t) FROM TrackStudy t")})
+
 public class TrackStudy implements Serializable {
     private static final long serialVersionUID = 1L;
     @EmbeddedId
@@ -39,6 +44,10 @@ public class TrackStudy implements Serializable {
     @Size(min = 1, max = 128)
     @Column(name = "name")
     private String name;
+    
+    
+//    @OneToMany
+//    private DatasetStudy datasetStudy;
 
     public TrackStudy() {
     }
@@ -72,6 +81,14 @@ public class TrackStudy implements Serializable {
         this.name = name;
     }
 
+//    public DatasetStudy getDatasetStudy(){
+//        return datasetStudy;
+//    }
+//    
+//    public void setDatasetStudy(DatasetStudy datasetStudy){
+//        this.datasetStudy =  datasetStudy;
+//    }
+       
     @Override
     public int hashCode() {
         int hash = 0;

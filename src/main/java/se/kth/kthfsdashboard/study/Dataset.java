@@ -7,12 +7,15 @@
 package se.kth.kthfsdashboard.study;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -29,7 +32,10 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Dataset.findAll", query = "SELECT d FROM Dataset d"),
     @NamedQuery(name = "Dataset.findById", query = "SELECT d FROM Dataset d WHERE d.id = :id"),
     @NamedQuery(name = "Dataset.findByOwner", query = "SELECT d FROM Dataset d WHERE d.owner = :owner"),
-    @NamedQuery(name = "Dataset.findByName", query = "SELECT d FROM Dataset d WHERE d.name = :name")})
+    @NamedQuery(name = "Dataset.findByName", query = "SELECT d FROM Dataset d WHERE d.name = :name"),
+    @NamedQuery(name = "Dataset.getIds", query = "SELECT d.id FROM Dataset d")})
+    //@NamedQuery(name = "Dataset.findAllById", query = "SELECT t.name, d.owner FROM Dataset d, TrackStudy t WHERE d.id = :id AND t.trackStudyPK.datasetId = :datasetId"),
+    //@NamedQuery(name = "Dataset.findOwnerById", query = "SELECT d FROM Dataset d JOIN d.datasetStudy ds WHERE ds.datasetStudyPK.datasetid = :id")})
 public class Dataset implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -47,7 +53,11 @@ public class Dataset implements Serializable {
     @Size(min = 1, max = 128)
     @Column(name = "name")
     private String name;
-
+    
+    
+//    @OneToMany
+//    private DatasetStudy datasetStudy;
+//    
     public Dataset() {
     }
 
@@ -85,6 +95,15 @@ public class Dataset implements Serializable {
         this.name = name;
     }
 
+//    public DatasetStudy getDatasetStudy(){
+//        return datasetStudy;
+//    }
+//    
+//    public void setDatasetStudy(DatasetStudy datasetStudy){
+//        this.datasetStudy =  datasetStudy;
+//    }
+    
+    
     @Override
     public int hashCode() {
         int hash = 0;

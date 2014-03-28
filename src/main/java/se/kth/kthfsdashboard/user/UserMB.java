@@ -48,7 +48,11 @@ public class UserMB {
     public boolean isAdminUser(){
         return getRequest().isUserInRole("ADMIN") || getRequest().isUserInRole("BBC_ADMIN");
     }
-
+    
+    public boolean isAnyAdminUser(){
+        return getRequest().isUserInRole("BBC_ADMIN") || getRequest().isUserInRole("BBC_RESEARCHER") || getRequest().isUserInRole("ADMIN");
+    }
+    
     public String logOut() {
         getRequest().getSession().invalidate();
         return "logout";
