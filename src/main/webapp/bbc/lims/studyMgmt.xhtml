@@ -14,7 +14,7 @@
             BiobankCloud Lims
         </ui:define>
         <ui:define name="css">
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/bbc.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
         </ui:define>
         <ui:define name="scripts"/>
 
@@ -34,7 +34,9 @@
              <f:facet name="header">
                      <h:outputLabel value="Study" style="font-weight:bold"/>
                      <h:outputText value="(#{studyMB.allStudy})"/>
-                     <p:commandButton value="New Study" icon="ui-icon-plusthick" onclick="dlgNewStudy.show()" action="#{studyMB.showNewStudyDialog()}" rendered="#{userMB.anyAdminUser}"/>
+                     <p:commandButton value="New Study" icon="ui-icon-plusthick" onclick="dlgNewStudy.show()" action="#{studyMB.showNewStudyDialog()}" rendered="#{userMB.anyAdminUser}">
+                      
+                     </p:commandButton>
                 </f:facet> 
            
                 <p:tabView id="tabViewStudy" cache="false" dynamic="true">
@@ -42,9 +44,9 @@
                         <h:form id="showAllStudy">
                             <p:panel styleClass="BbcNewUserPanel" style="font-size:12px;width:600px">
                               <h:panelGrid columns="2">
-                                  <p:dataList value="#{studyMB.studyList}" var="study">
-                                      <p:commandLink>
-                                          <h:outputText value="#{study.name} / #{study.trackStudyPK.datasetId}" style="font-size:14px"/>
+                                  <p:dataList value="#{studyMB.studyList}" var="stdlist">
+                                      <p:commandLink action="studyInfo">
+                                          <h:outputText value="#{stdlist.username} / #{stdlist.name}" style="font-size:18px"/>
                                       </p:commandLink>
                                   </p:dataList>
                               </h:panelGrid>
@@ -56,9 +58,9 @@
 		<h:form id="showPersonalStudy">
                             <p:panel styleClass="BbcNewUserPanel" style="font-size:12px;width:600px">
                               <h:panelGrid columns="2">
-                                  <p:dataList value="#{studyMB.datasetList}" var="study">
+                                  <p:dataList value="#{studyMB.personalStudy}" var="study">
                                       <p:commandLink>
-                                          <h:outputText value="#{study.id} / #{study.owner}" style="font-size:14px"/>
+                                          <h:outputText value="#{study.name}" style="font-size:18px"/>
                                       </p:commandLink>
                                   </p:dataList>
                               </h:panelGrid>
@@ -81,46 +83,90 @@
         
 <ui:define name="dialogs">       
 <!-- Dialog New Study-->
-    <p:dialog modal="true" widgetVar="dlgNewStudy" header="Create New Study" draggable="true" closable="true" resizable="false">  
+   <p:dialog modal="true" widgetVar="dlgNewStudy" header="Create New Study" draggable="true" closable="true" resizable="false">  
 
-            <h:form id="formNewStudy" prependId="false">
+       <h:form id="formNewStudy" prependId="false">
                <p:messages autoUpdate="true"/>
-                <h:panelGrid id="grid" columns="2" cellpadding="5">
-                        <h:outputText value="Study Id:" style="white-space: nowrap"/>  
-                        <p:inputText id="study" value="#{studyMB.study.trackStudyPK.id}" required="true" style="min-width: 150px">
-                        </p:inputText>
-                        
-                        
-<!--                        <h:outputText value="Dataset Id:" style="white-space: nowrap"/>  
-                        <p:inputText id="dataset" value="#{studyMB.study.trackStudyPK.datasetId}" required="true" style="min-width: 150px">
-                        </p:inputText>-->
-                      
-                        
-                        <h:outputText value="Dataset:" />  
-                        <p:selectOneMenu  id="id" required="true" value=""  style="min-width: 250px">                                
-                            <f:selectItem itemLabel="Select dataset" noSelectionOption="true"/> 
-                            <f:selectItems value="#{studyMB.datasetId}"/>  
-                        </p:selectOneMenu> 
-                        
-                       
-                        <h:outputText value="Study Name:" style="white-space: nowrap"/>  
-                        <p:inputText id="name" value="#{studyMB.study.name}" required="true" style="min-width: 150px">
-                        </p:inputText>
-                      
-                                             
-                    </h:panelGrid>   
-                     <p:spacer width="1" height="30" />   
-                    <p:outputPanel style="float: right">                   
-                       <p:spacer width="1" height="30" /> 
-                       <p:commandButton id="save" value="Create" icon="ui-icon-plusthick" action="#{studyMB.createStudy()}" update="grid"/>                         
-                    </p:outputPanel>
-                      
-                         
-                </h:form>
+               
+               <p:growl id="growl" sticky="true" showDetail="true"/>
+
+               <p:wizard flowListener="#{studyMB.onFlowProcess}" widgetVar="wiz" styleClass="wizard">
+	
+		<p:tab id="study" title="Study">
+
+                    <p:panel header="Study Details">
+			
+				<h:messages errorClass="error"/>
+				
+				
+					<div>
+                                            <p:outputLabel for="study_name" style="font-size:16px">Study name is: </p:outputLabel>
+                                            <h:inputText id="study_name" value="#{studyMB.study.name}" size="40"/>
+                                                                   
+                                        </div>
+                                        
+				
+			</p:panel>
+		</p:tab>
+			
+<!--		<p:tab id="users" title="Users">
+			<p:panel header="Add Users">
+			
+				<h:messages errorClass="error"/>
+				
+				<h:panelGrid columns="2" columnClasses="label, value">
+					
+					
+					
+				</h:panelGrid>
+			</p:panel>
+		</p:tab>-->
+<!--			
+		<p:tab id="data" title="Data">
+			<p:panel header="Select Dataset">
+				
+				<h:messages errorClass="error"/>
+			
+				<h:panelGrid columns="2" columnClasses="label, value">
+					
+					
+				</h:panelGrid>
+			</p:panel>
+		</p:tab>-->
+			
+		<p:tab id="confirm" title="Confirmation">
+			<p:panel header="Confirmation">
+			
+                            <h:panelGrid columns="2" id="confirmation">
+                                
+                                <h:outputText value="Study name: "/>
+                                <h:outputText styleClass="outputLabel" value="#{studyMB.study.name}"/>
+                                                                                                   
+                            </h:panelGrid>
+				
+                            <p:commandButton value="Submit" icon="ui-icon-disk" update="growl" actionListener="#{studyMB.save}"/>
+			
+			</p:panel>
+		</p:tab>
+		
+	</p:wizard>
+</h:form>
+
+                
         </p:dialog>
-   <!-- End of Dialog New Study-->    
+<!-- End of Dialog New Study    -->
         
-        
+
+
+    	
+                        
+
+
+
+
+
+
+
         
         
         

@@ -29,34 +29,37 @@ public class StudyController {
         return query.getResultList();
     }
     
-    public List<Dataset> findAllDataSet(){
-        return em.createNamedQuery("Dataset.findAll").getResultList();
-    }
-    
-    
-    public List<Dataset> findById(){
-        return em.createNamedQuery("Dataset.getIds").getResultList();
+    public List<TrackStudy> findByUser(String username){
+        TypedQuery<TrackStudy> query = em.createNamedQuery("TrackStudy.findByUsername", TrackStudy.class).setParameter("username", username);
+        return query.getResultList();
     }
     
     
     public long getAllStudy(){
-        return (Long)em.createNamedQuery("TrackStudy.countById").getSingleResult();
+        return (Long)em.createNamedQuery("TrackStudy.findAllStudy").getSingleResult();
     }
     
-    public List<DatasetStudy> findNameOwner() {
-        TypedQuery<DatasetStudy> query = em.createNamedQuery("DatasetStudy.findByNameOwner", DatasetStudy.class);
-        return query.getResultList();
+    public List<String> findOwner(String username) {
+        String query = "SELECT t.name, u.name FROM TrackStudy t, Username u WHERE t.username = u.email AND t.username = :username";
+        return em.createQuery(query).setParameter("username", username).getResultList();
     }
     
-     public List<Dataset> findStudyOwner() {
-        TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findOwnerById", Dataset.class);
-        return query.getResultList();
-    }
+    
+    
+//    public List<Object> findOwner() {
+//        String query = "SELECT t.name, u.name FROM TrackStudy t, Username u WHERE t.username = u.email";
+//        return em.createQuery(query).getResultList();
+//    }
+//    
+//     public List<Dataset> findStudyOwner() {
+//        TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findOwnerById", Dataset.class);
+//        return query.getResultList();
+//    }
     
     
 //     public List<Dataset> findAllById() {
-//        //return em.createNamedQuery("Dataset.findOwnerById").getResultList();
-//         return em.createQuery("SELECT d FROM Dataset d JOIN d.study s WHERE s.trackStudyPK.datasetId = :id").getResultList();
+//        //return em.createNamedQuery("DatasetOld.findOwnerById").getResultList();
+//         return em.createQuery("SELECT d FROM DatasetOld d JOIN d.study s WHERE s.trackStudyPK.datasetId = :id").getResultList();
 //     }
 //    
     

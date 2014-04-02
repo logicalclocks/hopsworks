@@ -34,9 +34,9 @@
                     <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
                     <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
                         <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" />  
-                        <p:menuitem value="User Management" actionListener='#{userController.userManagement()}' update=":formToolbar:messages" ajax="false" /> 
-                        <p:menuitem value="Study Management" actionListener='#{studyMB.studyManagement()}' update=":formToolbar:messages" ajax="false"  />
-                        <p:menuitem value="Study Management" actionListener='#{studyMB.dataManagement()}' update=":formToolbar:messages" ajax="false"  />
+                        <p:menuitem value="User Management" action="userMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/> 
+                        <p:menuitem value="Study Management" action="studyMgmt"  update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>
+                        <p:menuitem value="Data Management" action="dataMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>
                         <p:separator/>
                         <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
                     </p:menu>  

@@ -26,37 +26,35 @@
         
 
 
-       <ui:define name="content">
-           
-          
-             
-               <p:panel>
+<ui:define name="content">
+
+             <p:panel>
                    <div align="left">
-                       <h2 class="title">New Dataset</h2>
+                       <h2 class="title">Upload Dataset</h2>
                        <hr/>
-                        <h:form id="frmDataset"> 
+                       <h:form id="frmUpload">
                         
                             <div class="dataset_name_holder">
-                                <p:outputLabel for="dataset_name" style="font-size:16px">Dataset name is </p:outputLabel>
-                          
-                                <h:inputText id="dataset_name" value="#{datasetMB.dataset.name}" size="40"/>
-                                <p:commandButton id="create" icon="ui-icon-plusthick" value="Create dataset" action="#{datasetMB.createDataset()}"/>
+                                <p:outputLabel style="font-size:16px">Owner Information</p:outputLabel>
+                                <p:spacer width="1" height="30" />
+                               
+<!--                                <h3>#{datasetMB.ownerInfo}</h3>
+                                    <h:outputText value="#{datasetMB.dataset.id}" style="white-space: nowrap"/> -->
+<!--                                    <p:outputLabel style="font-size:14px"></p:outputLabel>
+                                    <p:outputLabel style="font-size:14px">#{datasetMB.dataset.name}</p:outputLabel>
+                                    <p:outputLabel style="font-size:14px">#{datasetMB.dataset.owner}</p:outputLabel>-->
                                 
-
-                        
+                                                 
                             </div>
                             <hr/>
                         </h:form>
                    </div>
                    
                </p:panel>
-               
-               
-         
-           
-     
-      </ui:define>
-    </ui:composition>
+
+</ui:define>
+  
+</ui:composition>
 </html>
                     
          

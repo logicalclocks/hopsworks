@@ -18,9 +18,9 @@
         <param-value>client</param-value>
     </context-param>
     <context-param>
-      <param-name>facelets.SKIP_COMMENTS</param-name>
-      <param-value>true</param-value>
-   </context-param>
+        <param-name>facelets.SKIP_COMMENTS</param-name>
+        <param-value>true</param-value>
+    </context-param>
     <servlet>
         <servlet-name>Faces Servlet</servlet-name>
         <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
@@ -197,4 +197,5 @@
        <param-name>org.ocpsoft.rewrite.config.CONFIG_RELOADING</param-name>
        <param-value>true</param-value>
     </context-param>    -->
-    </web-app>
+    
+</web-app>

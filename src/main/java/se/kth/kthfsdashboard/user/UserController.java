@@ -137,20 +137,13 @@ public class UserController implements Serializable {
     public void logout() {
         addMessage("Logout not implemented!");
     }
-    
-    public String userManagement(){
-        FacesContext context = FacesContext.getCurrentInstance();
-        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 
-        Principal principal = request.getUserPrincipal();
+    
+   public String userManagement(){
        
-       if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER") || request.isUserInRole("ADMIN")){
             addMessage("Switched to the LIMS User Management Service!");
-            return "/bbc/lims/userManagement.xml?faces-redirect=true";
-        }else{
-            addErrorMessageToUserAction("Operation is not allowed: " + principal.getName() + " is not a privileged user to perform this action.");
-            return "Failed";
-        }
+            return "userMgmt";
+        
     }
 
     public String getLoginName() throws IOException {

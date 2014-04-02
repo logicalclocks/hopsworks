@@ -9,13 +9,12 @@ package se.kth.kthfsdashboard.study;
 import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -27,50 +26,52 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @Table(name = "study")
-//@XmlRootElement
+@XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "TrackStudy.findAll", query = "SELECT t FROM TrackStudy t"),
-    @NamedQuery(name = "TrackStudy.findById", query = "SELECT t FROM TrackStudy t WHERE t.trackStudyPK.id = :id"),
-    @NamedQuery(name = "TrackStudy.findByDatasetId", query = "SELECT t FROM TrackStudy t WHERE t.trackStudyPK.datasetId = :datasetId"),
+    @NamedQuery(name = "TrackStudy.findById", query = "SELECT t FROM TrackStudy t WHERE t.id = :id"),
     @NamedQuery(name = "TrackStudy.findByName", query = "SELECT t FROM TrackStudy t WHERE t.name = :name"),
-    @NamedQuery(name = "TrackStudy.countById", query = "SELECT COUNT(DISTINCT t) FROM TrackStudy t")})
+    @NamedQuery(name = "TrackStudy.findByUsername", query = "SELECT t FROM TrackStudy t WHERE t.username = :username"),
+    @NamedQuery(name = "TrackStudy.findAllStudy", query = "SELECT COUNT(t.name) FROM TrackStudy t")})
+    //@NamedQuery(name = "TrackStudy.findUsername", query = "SELECT * FROM TrackStudy t, Username u WHERE t.username = u.email AND t.username = :username")})
 
 public class TrackStudy implements Serializable {
     private static final long serialVersionUID = 1L;
-    @EmbeddedId
-    protected TrackStudyPK trackStudyPK;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Basic(optional = false)
+    @Column(name = "id")
+    private Integer id;
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 128)
     @Column(name = "name")
     private String name;
-    
-    
-//    @OneToMany
-//    private DatasetStudy datasetStudy;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "username")
+    private String username;
 
     public TrackStudy() {
     }
 
-    public TrackStudy(TrackStudyPK trackStudyPK) {
-        this.trackStudyPK = trackStudyPK;
+    public TrackStudy(Integer id) {
+        this.id = id;
     }
 
-    public TrackStudy(TrackStudyPK trackStudyPK, String name) {
-        this.trackStudyPK = trackStudyPK;
+    public TrackStudy(Integer id, String name, String username) {
+        this.id = id;
         this.name = name;
+        this.username = username;
     }
 
-    public TrackStudy(int id, int datasetId) {
-        this.trackStudyPK = new TrackStudyPK(id, datasetId);
+    public Integer getId() {
+        return id;
     }
 
-    public TrackStudyPK getTrackStudyPK() {
-        return trackStudyPK;
-    }
-
-    public void setTrackStudyPK(TrackStudyPK trackStudyPK) {
-        this.trackStudyPK = trackStudyPK;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -81,18 +82,18 @@ public class TrackStudy implements Serializable {
         this.name = name;
     }
 
-//    public DatasetStudy getDatasetStudy(){
-//        return datasetStudy;
-//    }
-//    
-//    public void setDatasetStudy(DatasetStudy datasetStudy){
-//        this.datasetStudy =  datasetStudy;
-//    }
-       
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (trackStudyPK != null ? trackStudyPK.hashCode() : 0);
+        hash += (id != null ? id.hashCode() : 0);
         return hash;
     }
 
@@ -103,7 +104,7 @@ public class TrackStudy implements Serializable {
             return false;
         }
         TrackStudy other = (TrackStudy) object;
-        if ((this.trackStudyPK == null && other.trackStudyPK != null) || (this.trackStudyPK != null && !this.trackStudyPK.equals(other.trackStudyPK))) {
+        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
         return true;
@@ -111,7 +112,7 @@ public class TrackStudy implements Serializable {
 
     @Override
     public String toString() {
-        return "se.kth.kthfsdashboard.study.TrackStudy[ trackStudyPK=" + trackStudyPK + " ]";
+        return "se.kth.kthfsdashboard.study.TrackStudy[ id=" + id + " ]";
     }
     
 }

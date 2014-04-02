@@ -18,44 +18,47 @@
         </ui:define>
         <ui:define name="scripts"/>
 
-<!--        <ui:define name="leftmenu">
+        <ui:define name="leftmenu">
             <p:commandLink styleClass="sideMenuItem New" action="#{bbcController.showNewUserManagementDialog()}"/>
-        </ui:define>-->
+        </ui:define>
 
 
         
 
 
-       <ui:define name="content">
-           
-          
-             
-               <p:panel>
-                   <div align="left">
-                       <h2 class="title">New Dataset</h2>
-                       <hr/>
-                        <h:form id="frmDataset"> 
-                        
-                            <div class="dataset_name_holder">
-                                <p:outputLabel for="dataset_name" style="font-size:16px">Dataset name is </p:outputLabel>
-                          
-                                <h:inputText id="dataset_name" value="#{datasetMB.dataset.name}" size="40"/>
-                                <p:commandButton id="create" icon="ui-icon-plusthick" value="Create dataset" action="#{datasetMB.createDataset()}"/>
-                                
+        <ui:define name="dialogs">
 
-                        
-                            </div>
-                            <hr/>
+           <!--New User Management Dialog-->
+            <p:dialog modal="true" id="NewUserManagement" widgetVar="dlgNewUserManagement" header="User Management Service" 
+                      draggable="true" closable="true" resizable="true" width="825"  height="620">  
+
+              <h:form id="formNewUserManagement" prependId="false">  
+                    <p:tabView id="tabViewNew">
+                        <p:tab title="Registered Users">
+                            <h:form id="showUsers">
+                            <p:panel styleClass="BbcNewUserPanel" style="">
+                                <h:panelGrid columns="4">                                 
+                                    
+                               </h:panelGrid>
+                        </p:panel>
                         </h:form>
-                   </div>
-                   
-               </p:panel>
-               
-               
-         
+                        </p:tab>
+                        
+                    
+        
+          
+            
+            
+            
            
-     
-      </ui:define>
+            
+         
+                  
+                  
+                 </p:tabView>
+                </h:form>
+            </p:dialog>
+        </ui:define>
     </ui:composition>
 </html>
                     

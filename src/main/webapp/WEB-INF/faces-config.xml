@@ -10,6 +10,31 @@
     
     <navigation-rule>      
         <navigation-case>
+            <from-outcome>userMgmt</from-outcome>
+            <to-view-id>/bbc/lims/userManagement.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>studyMgmt</from-outcome>
+            <to-view-id>/bbc/lims/studyMgmt.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+         <navigation-case>
+            <from-outcome>dataMgmt</from-outcome>
+            <to-view-id>/bbc/lims/create-Datasets.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>dataUpload</from-outcome>
+            <to-view-id>/bbc/lims/create-Datasets.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>studyInfo</from-outcome>
+            <to-view-id>/bbc/lims/studyInfo.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
             <from-outcome>wfhome</from-outcome>
             <to-view-id>/bbc-views.xhtml</to-view-id>
             <redirect/>

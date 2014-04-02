@@ -9,14 +9,17 @@ package se.kth.kthfsdashboard.study;
 import java.io.Serializable;
 import java.security.Principal;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletRequest;
 import org.primefaces.context.RequestContext;
+import org.primefaces.event.FlowEvent;
 
 
 /**
@@ -24,7 +27,7 @@ import org.primefaces.context.RequestContext;
  * @author roshan
  */
 @ManagedBean
-@RequestScoped
+@SessionScoped
 public class StudyMB implements Serializable{
     
     @EJB
@@ -32,6 +35,10 @@ public class StudyMB implements Serializable{
     private TrackStudy study;
     private DatasetStudy dsStudy;
     private Dataset dataset;
+       
+    
+//    private boolean skip;
+    private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
     
     
     public TrackStudy getStudy() {
@@ -71,13 +78,18 @@ public class StudyMB implements Serializable{
         return studyController.findAll();
     }
     
-    public List<Dataset> getDatasetList(){
-        return studyController.findAllDataSet();
+    
+    public List<TrackStudy> getPersonalStudy(){
+        return studyController.findByUser(getUsername());
     }
     
-    public List<Dataset> getDatasetId(){
-        return studyController.findById();
+    public List<String> getAllStudyList(){
+        return studyController.findOwner(getUsername());
     }
+//    
+//    public List<Dataset> getDatasetId(){
+//        return studyController.findById();
+//    }
     
     
     public  long getAllStudy(){
@@ -103,15 +115,33 @@ public class StudyMB implements Serializable{
 //        return studyController.findAllById();
 //    }
 //    
+    
+    
+    public String getUsername(){
+    
+        FacesContext context = FacesContext.getCurrentInstance();
+        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
+        Principal principal = request.getUserPrincipal();
+        
+        return principal.getName();
+    
+    
+    }
+    
+    
+        
     public String createStudy(){
+        
+        study.setId(Integer.SIZE);
+        study.setUsername(getUsername());
         
         try{
             studyController.persistStudy(study);
         }catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error: Study wasn't created.");
+            addErrorMessageToUserAction("Failed: Study name might have been duplicated!");
             return null;
         }
-        addMessage("Study created.");
+        addMessage("Study created! ["+ study.getName() + "] study is owned by " + study.getUsername());
         return "Success!";
     }
     
@@ -126,41 +156,6 @@ public class StudyMB implements Serializable{
         return "Success!";
     }
     
-    
-    public String studyManagement(){
-        FacesContext context = FacesContext.getCurrentInstance();
-        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-
-        Principal principal = request.getUserPrincipal();
-       
-       if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER") || request.isUserInRole("ADMIN")){
-            addMessage("Switched to the LIMS Study Management Service!");
-            return "/bbc/lims/studyMgmt.xml?faces-redirect=true";
-        }else{
-            addErrorMessageToUserAction("Operation is not allowed: " + principal.getName() + " is not a privileged user to perform this action.");
-            return "Failed";
-        }
-    }
-    
-    
-    
-    public String dataManagement(){
-        FacesContext context = FacesContext.getCurrentInstance();
-        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-
-        Principal principal = request.getUserPrincipal();
-       
-       if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER")|| request.isUserInRole("ADMIN")){
-            addMessage("Switched to the LIMS Data Management Service!");
-            return "/bbc/lims/create-Datasets.xml?faces-redirect=true";
-        }else{
-            addErrorMessageToUserAction("Operation is not allowed: " + principal.getName() + " is not a privileged user to perform this action.");
-            return "Failed";
-        }
-    }
-    
-    
-    
     public void addMessage(String summary) {
         FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, summary);
         FacesContext.getCurrentInstance().addMessage(null, message);
@@ -174,6 +169,16 @@ public class StudyMB implements Serializable{
     
     //Study View Controller
     
+    public void save(ActionEvent actionEvent) {
+               createStudy();               
+    }
+   
+    public String onFlowProcess(FlowEvent event) {
+		logger.info(event.getOldStep());
+		logger.info(event.getNewStep());
+
+                return event.getNewStep();	
+    }    
     
     public void showNewStudyDialog() {
         
