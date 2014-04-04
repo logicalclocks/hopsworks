@@ -13,16 +13,18 @@ import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+
 
 /**
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
 @ManagedBean
-@RequestScoped
+@SessionScoped
 public class UserController implements Serializable {
     private static final Logger logger = Logger.getLogger(UserController.class.getName());
     
@@ -34,6 +36,7 @@ public class UserController implements Serializable {
     List<Group> g = new ArrayList<Group>();
     private List<Username> filteredUsers;
     
+  
     
     public UserController() {
     }
@@ -66,7 +69,9 @@ public class UserController implements Serializable {
         return Group.values();
     }
 
+    
     public String addUser() {
+        
         user.encodePassword();
         user.setRegisteredOn(new Date());
         g.add(Group.BBC_ADMIN);
@@ -84,7 +89,6 @@ public class UserController implements Serializable {
     public String deleteUser() {
         try {
             userFacade.remove(user);
-            //userFacade.removeByEmail(user.getEmail());
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Delete Operation failed.");
             return null;

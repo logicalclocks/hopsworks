@@ -14,14 +14,13 @@
             BiobankCloud Lims
         </ui:define>
         <ui:define name="css">
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/bbc.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
         </ui:define>
         <ui:define name="scripts"/>
 
         <ui:define name="leftmenu">
             <p:commandLink styleClass="sideMenuItem New" action="#{bbcController.showNewUserManagementDialog()}"/>
         </ui:define>
-
 
         
 
@@ -35,8 +34,8 @@
               <h:form id="formNewUserManagement" prependId="false">  
                     <p:tabView id="tabViewNew">
                         <p:tab title="Registered Users">
-                            <h:form id="showUsers">
-                            <p:panel styleClass="BbcNewUserPanel" style="">
+<!--                            <h:form id="showUsers">-->
+<!--                            <p:panel styleClass="BbcNewUserPanel" style="">-->
                                 <h:panelGrid columns="4">                                 
                                     <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria">
                                                    <f:facet name="header">
@@ -64,8 +63,8 @@
                                                     </p:column>
                                      </p:dataTable>
                                </h:panelGrid>
-                        </p:panel>
-                        </h:form>
+<!--                        </p:panel>-->
+<!--                        </h:form>-->
                         </p:tab>
                         
                         <!-- user view end -->
@@ -74,42 +73,47 @@
                         
         <p:tab title="Add New Users">
            <h:form id="addUsers">
-               <p:panel styleClass="BbcNewSamplePanel" header="User Data"> 
+               <p:panel header="User Data"> 
                    <p:messages autoUpdate="true"/>
-                   <h:panelGrid id="grid" columns="4" cellpadding="5">                                 
+                   
+                    <h:panelGrid id="grid" columns="4" cellpadding="5">                                 
                   
                             <h:outputLabel for="name" value="Name:" style="font-weight:bold"/>					
-                            <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}"/>
+                            <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}" validatorMessage="Name cannot be empty"/>
                             <p:message for="name" />
                             <h:outputText value=""/>
 
                             <h:outputLabel for="email" value="Email:" style="font-weight:bold"/>					
-                            <p:inputText id="email"  required="true" label="Email" value="#{userController.user.email}">
+                            <p:inputText id="email"  required="true" label="Email" value="#{userController.user.email}" validatorMessage="Not a valid email">
+                                <f:validateRegex pattern="([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)" />
                             </p:inputText>
                             <p:message for="email" />
-                            <h:outputText value="" />
+                            <h:outputText value=""/>
 
                             <h:outputLabel for="uname" value="Username:" style="font-weight:bold"/>					
-                            <p:inputText id="uname" required="true" label="Username" value="#{userController.user.username}">
+                            <p:inputText id="uname" required="true" label="Username" value="#{userController.user.username}" validatorMessage="Username cannot be empty">
                             </p:inputText>
                             <p:message for="uname" />
-                            <h:outputText value="" />
+                            <h:outputText value=""/>
 
                             <h:outputLabel for="password" value="Password:" style="font-weight:bold"/>					
-                            <p:password id="password" label="password" required="true" value="#{userController.user.password}">
+                            <p:password id="password" label="password" required="true" value="#{userController.user.password}" validatorMessage="password is required">
                             </p:password>
                             <p:message for="password" />
                             <h:outputText value=""/>
                                 
                             <h:outputLabel for="mobile" value="Mobile Number:" style="font-weight:bold"/>					
-                            <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}">
+                            <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" validatorMessage="Only Numbers (at least 10 digits)">
+                                <f:validateRegex pattern="[0-9]{1,10}"/>                                
                             </p:inputText>
                             <p:message for="mobile"/>
-                            <h:outputText value=""/>                          
+                            <h:outputText value=""/>                     
                      </h:panelGrid>
                    
-                        <p:commandButton update="grid" value="Add" icon="ui-icon-plus" style="margin-right:10px" action="#{userController.addUser()}"/>
-                     
+                   <div class="submit">
+                       <hr/>
+                       <p:commandButton update="grid" value="Add" icon="ui-icon-plus" style="margin-right:10px" action="#{userController.addUser()}" validateClient="true"/>
+                   </div>  
              </p:panel>
            </h:form>
           </p:tab>
@@ -118,44 +122,7 @@
             
             
             <!-- End add users-->
-            
-            
-            <!-- delete users-->
-<!--              <p:tab title="Delete Users">
-                        <h:form id="delUsers">
-                            <p:panel styleClass="BbcNewUserPanel">
-                                <p:messages autoUpdate="true"/>
-                                <h:panelGrid id="delUserGrid" columns="4" cellpadding="5">                                 
-                                    <p:dataTable id="userTable" var="usr" selectionMode="single" rowKey="#{usr.email}" selection="#{userController.user}" value="#{userController.allUsers}" widgetVar="dataTable">
-                                                   <f:facet name="header">
-                                                       <p:outputPanel>
-                                                       <h:outputText value="Search users: " />
-                                                       <p:inputText id="dataFilter" onkeyup="dataTable.filter()" style="width:150px" />
-                                                       </p:outputPanel>
-                                                   </f:facet>
-
-                                        
-                                                   <p:column id="nameColumn" headerText="Name">
-                                                        <h:outputText value="#{usr.name}" />
-                                                    </p:column>
-                                        
-                                                    <p:column id="emailColumn" headerText="Email">
-                                                        <h:outputText value="#{usr.email}" />
-                                                    </p:column>
-                                        
-                                                    <p:column id="usernameColumn" headerText="Username">
-                                                        <h:outputText value="#{usr.username}" />
-                                                    </p:column>
-                                       </p:dataTable>
-                                    </h:panelGrid>
-                                <f:facet name="footer">
-                                    <p:commandButton update="delUserGrid" id="deleteButton" value="Delete" icon="ui-icon-close" rendered="#{userMB.adminUser}" action="#{userController.deleteUser()}"/>
-                                </f:facet>
-                             </p:panel>
-                        </h:form>
-                        </p:tab>-->
-                  <!--End delete users-->
-                  
+           
                   
                  </p:tabView>
                 </h:form>
