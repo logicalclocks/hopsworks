@@ -14,6 +14,7 @@ import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 
@@ -22,7 +23,7 @@ import javax.servlet.http.HttpServletRequest;
  * @author roshan
  */
 @ManagedBean
-@RequestScoped
+@SessionScoped
 public class DatasetMB implements Serializable{
     
     @EJB
@@ -64,7 +65,7 @@ public class DatasetMB implements Serializable{
             return null;
         }
         addMessage("Dataset created.");
-        return "/bbc/lims/uploadData.xml?faces-redirect=true";
+        return "dataUpload";
     }
     
     public String deleteDataset(){

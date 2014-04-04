@@ -19,45 +19,32 @@
         <ui:define name="scripts"/>
 
         <ui:define name="leftmenu">
-            <p:commandLink styleClass="sideMenuItem New" action="#{bbcController.showNewUserManagementDialog()}"/>
+<!--            <p:commandLink styleClass="sideMenuItem New" action="#{bbcController.showNewUserManagementDialog()}"/>-->
         </ui:define>
 
 
         
 
 
-        <ui:define name="dialogs">
+        <ui:define name="content">
 
-           <!--New User Management Dialog-->
-            <p:dialog modal="true" id="NewUserManagement" widgetVar="dlgNewUserManagement" header="User Management Service" 
-                      draggable="true" closable="true" resizable="true" width="825"  height="620">  
-
-              <h:form id="formNewUserManagement" prependId="false">  
+            <h:form id="formNewUserManagement" prependId="false">  
                     <p:tabView id="tabViewNew">
-                        <p:tab title="Registered Users">
-                            <h:form id="showUsers">
-                            <p:panel styleClass="BbcNewUserPanel" style="">
-                                <h:panelGrid columns="4">                                 
-                                    
+                        <p:tab title="Team">
+                            <h3>Members of the Study (#{studyMB.NOfMembers})</h3>
+                               
+                         <p:panel styleClass="BbcNewUserPanel" style="">
+                                <h:panelGrid columns="2">  
+                                    <div class="showStudy">
+                                        
+                                    </div>
+                                  
                                </h:panelGrid>
                         </p:panel>
-                        </h:form>
                         </p:tab>
-                        
-                    
-        
-          
+                    </p:tabView>
+           </h:form>
             
-            
-            
-           
-            
-         
-                  
-                  
-                 </p:tabView>
-                </h:form>
-            </p:dialog>
         </ui:define>
     </ui:composition>
 </html>

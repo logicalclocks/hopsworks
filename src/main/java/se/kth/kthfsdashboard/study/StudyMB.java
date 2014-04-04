@@ -6,9 +6,11 @@
 
 package se.kth.kthfsdashboard.study;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
@@ -17,7 +19,9 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
 
@@ -86,50 +90,36 @@ public class StudyMB implements Serializable{
     public List<String> getAllStudyList(){
         return studyController.findOwner(getUsername());
     }
-//    
-//    public List<Dataset> getDatasetId(){
-//        return studyController.findById();
-//    }
-    
-    
-    public  long getAllStudy(){
+
+        
+    public long getAllStudy(){
         return studyController.getAllStudy();
     }
+
+    public long getNOfMembers(){
+        return studyController.getMembers(getStudyName());
+    }
+
+    public String getStudyName(){
+        FacesContext context = FacesContext.getCurrentInstance();
+        Map<String, String> paramMap = context.getExternalContext().getRequestParameterMap();
+        String studyname = paramMap.get("name");
+        //String username = getRequest().getParameter("username");
+        //String studyname = getRequest().getParameter("name");
+        
+        return studyname;
+    }
     
-//    public List<DatasetStudy> getNameOwner(){
-//        return studyController.findNameOwner();
-//    }
-//    
-//    public List<Dataset> getPersonalStudy(){
-//        return studyController.findStudyOwner();
-//    } 
-//    
-//    public List<TrackStudy> getJoinStudy(){
-//        return null;
-//    } 
-//    
-//    
-//    
-//    
-//    public List<Dataset> getNamesById(){
-//        return studyController.findAllById();
-//    }
-//    
+    private HttpServletRequest getRequest() {
+        return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+    }
     
     
     public String getUsername(){
-    
-        FacesContext context = FacesContext.getCurrentInstance();
-        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-        Principal principal = request.getUserPrincipal();
-        
-        return principal.getName();
-    
-    
+          return getRequest().getUserPrincipal().getName();
     }
     
-    
-        
+    //create a study       
     public String createStudy(){
         
         study.setId(Integer.SIZE);
@@ -145,6 +135,8 @@ public class StudyMB implements Serializable{
         return "Success!";
     }
     
+    
+    //delete a study
     public String deleteStudy(){
         try{
             studyController.removeStudy(study);
@@ -179,7 +171,7 @@ public class StudyMB implements Serializable{
 
                 return event.getNewStep();	
     }    
-    
+       
     public void showNewStudyDialog() {
         
         RequestContext.getCurrentInstance().update("formNewStudy");

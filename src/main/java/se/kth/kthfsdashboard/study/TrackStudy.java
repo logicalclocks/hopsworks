@@ -32,7 +32,8 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "TrackStudy.findById", query = "SELECT t FROM TrackStudy t WHERE t.id = :id"),
     @NamedQuery(name = "TrackStudy.findByName", query = "SELECT t FROM TrackStudy t WHERE t.name = :name"),
     @NamedQuery(name = "TrackStudy.findByUsername", query = "SELECT t FROM TrackStudy t WHERE t.username = :username"),
-    @NamedQuery(name = "TrackStudy.findAllStudy", query = "SELECT COUNT(t.name) FROM TrackStudy t")})
+    @NamedQuery(name = "TrackStudy.findAllStudy", query = "SELECT COUNT(t.name) FROM TrackStudy t"),
+    @NamedQuery(name = "TrackStudy.findMembers", query = "SELECT DISTINCT COUNT(t.username) FROM TrackStudy t WHERE t.name = :name")})
     //@NamedQuery(name = "TrackStudy.findUsername", query = "SELECT * FROM TrackStudy t, Username u WHERE t.username = u.email AND t.username = :username")})
 
 public class TrackStudy implements Serializable {

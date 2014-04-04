@@ -44,10 +44,11 @@
                         <h:form id="showAllStudy">
                             <p:panel styleClass="BbcNewUserPanel" style="font-size:12px;width:600px">
                               <h:panelGrid columns="2">
-                                  <p:dataList value="#{studyMB.studyList}" var="stdlist">
-                                      <p:commandLink action="studyInfo">
-                                          <h:outputText value="#{stdlist.username} / #{stdlist.name}" style="font-size:18px"/>
-                                      </p:commandLink>
+                                  <p:dataList value="#{studyMB.studyList}" var="stdlist" styleClass="dataList">
+                                      <div align="left">
+                                          <p:commandLink action="studyInfo?faces-redirect=true" value="#{stdlist.username} / #{stdlist.name}" style="font-size:16px"/>
+                                      </div>
+                                      
                                   </p:dataList>
                               </h:panelGrid>
                             </p:panel>
@@ -58,10 +59,10 @@
 		<h:form id="showPersonalStudy">
                             <p:panel styleClass="BbcNewUserPanel" style="font-size:12px;width:600px">
                               <h:panelGrid columns="2">
-                                  <p:dataList value="#{studyMB.personalStudy}" var="study">
-                                      <p:commandLink>
-                                          <h:outputText value="#{study.name}" style="font-size:18px"/>
-                                      </p:commandLink>
+                                  <p:dataList value="#{studyMB.personalStudy}" var="study" styleClass="dataList">
+                                      <div align="left">
+                                            <p:commandLink value="#{study.name}" style="font-size:16px"/>
+                                      </div>
                                   </p:dataList>
                               </h:panelGrid>
                             </p:panel>
@@ -71,7 +72,7 @@
 	<p:tab id="tab3" title="Joined">
 		<h:panelGrid columns="2">
 		
-			<h:outputText id="tabJoined"/>
+                    <h:outputText id="tabJoined"/>
 		</h:panelGrid>
 	</p:tab>
 

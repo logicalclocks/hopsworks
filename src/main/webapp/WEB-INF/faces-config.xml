@@ -26,7 +26,7 @@
         </navigation-case>
         <navigation-case>
             <from-outcome>dataUpload</from-outcome>
-            <to-view-id>/bbc/lims/create-Datasets.xhtml</to-view-id>
+            <to-view-id>/bbc/lims/uploadData.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         <navigation-case>

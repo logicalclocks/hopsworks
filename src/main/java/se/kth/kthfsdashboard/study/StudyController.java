@@ -39,30 +39,15 @@ public class StudyController {
         return (Long)em.createNamedQuery("TrackStudy.findAllStudy").getSingleResult();
     }
     
+     public long getMembers(String name){
+        return (Long)em.createNamedQuery("TrackStudy.findMembers").setParameter("name", name).getSingleResult();
+    }
+    
     public List<String> findOwner(String username) {
         String query = "SELECT t.name, u.name FROM TrackStudy t, Username u WHERE t.username = u.email AND t.username = :username";
         return em.createQuery(query).setParameter("username", username).getResultList();
     }
-    
-    
-    
-//    public List<Object> findOwner() {
-//        String query = "SELECT t.name, u.name FROM TrackStudy t, Username u WHERE t.username = u.email";
-//        return em.createQuery(query).getResultList();
-//    }
-//    
-//     public List<Dataset> findStudyOwner() {
-//        TypedQuery<Dataset> query = em.createNamedQuery("Dataset.findOwnerById", Dataset.class);
-//        return query.getResultList();
-//    }
-    
-    
-//     public List<Dataset> findAllById() {
-//        //return em.createNamedQuery("DatasetOld.findOwnerById").getResultList();
-//         return em.createQuery("SELECT d FROM DatasetOld d JOIN d.study s WHERE s.trackStudyPK.datasetId = :id").getResultList();
-//     }
-//    
-    
+        
     public void persistStudy(TrackStudy study) {
         em.persist(study);
     }

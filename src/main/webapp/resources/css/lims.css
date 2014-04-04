@@ -156,6 +156,13 @@
     vertical-align: top;    
 }
 
+
+.dataList .ui-datalist-data{
+    border: none;
+    background: transparent;
+    background-image: none;
+}
+
 ui-wizard {
         margin:0;
         padding:0;
