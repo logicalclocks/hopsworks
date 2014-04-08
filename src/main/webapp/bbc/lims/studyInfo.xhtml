@@ -28,21 +28,43 @@
 
         <ui:define name="content">
 
-            <h:form id="formNewUserManagement" prependId="false">  
-                    <p:tabView id="tabViewNew">
-                        <p:tab title="Team">
+            <h:form id="formNewUserManagement" prependId="false"> 
+                    
+                    <p:panel styleClass="BbcNewUserPanel" style="">
+                    <f:facet name="header">
+<!--                            <h:outputLabel value="Study" style="font-weight:bold"/>
+                            <h:outputText value="(#{studyMB.allStudy})"/>-->
                             <h3>Members of the Study (#{studyMB.NOfMembers})</h3>
-                               
-                         <p:panel styleClass="BbcNewUserPanel" style="">
-                                <h:panelGrid columns="2">  
+                     </f:facet> 
+                
+                    <p:tabView id="tabViewNew">
+                        <p:tab title="Show">
+                             <h:panelGrid columns="2">  
                                     <div class="showStudy">
+                                        <span class="author">
+                                            Study <strong>  #{studyMB.studyName} </strong> 
+                                        </span>
+                                        <span class="info">was created by <strong>#{studyMB.creator}</strong> </span>
                                         
                                     </div>
                                   
                                </h:panelGrid>
-                        </p:panel>
+                       
+                        </p:tab>
+                        <p:tab title="Team">
+                            
+                               
+                         
+                                <h:panelGrid columns="2">  
+                                    <div class="teamStudy">
+                                        
+                                    </div>
+                                  
+                               </h:panelGrid>
+                       
                         </p:tab>
                     </p:tabView>
+                         </p:panel>
            </h:form>
             
         </ui:define>

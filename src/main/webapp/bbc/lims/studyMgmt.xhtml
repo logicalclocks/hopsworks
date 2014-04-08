@@ -46,7 +46,10 @@
                               <h:panelGrid columns="2">
                                   <p:dataList value="#{studyMB.studyList}" var="stdlist" styleClass="dataList">
                                       <div align="left">
-                                          <p:commandLink action="studyInfo?faces-redirect=true" value="#{stdlist.username} / #{stdlist.name}" style="font-size:16px"/>
+                                          <p:commandLink action="#{studyMB.fetchStudy()}" value="#{stdlist.username} / #{stdlist.name}" style="font-size:16px">
+                                              <f:param name="studyname" value="#{stdlist.name}"/>
+                                              <f:param name="username" value="#{stdlist.username}"/>
+                                          </p:commandLink>
                                       </div>
                                       
                                   </p:dataList>

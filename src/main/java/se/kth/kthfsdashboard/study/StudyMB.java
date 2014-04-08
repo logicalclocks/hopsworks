@@ -16,6 +16,7 @@ import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
@@ -39,11 +40,29 @@ public class StudyMB implements Serializable{
     private TrackStudy study;
     private DatasetStudy dsStudy;
     private Dataset dataset;
-       
     
-//    private boolean skip;
+    
+    private String studyName;   
+    private String studyCreator;
+
     private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
     
+    
+    public String getStudyName(){
+        return studyName;
+    }
+    
+    public void setStudyName(String studyName){
+        this.studyName = studyName;
+    }
+    
+    public String getCreator(){
+        return studyCreator;
+    }
+    
+    public void setCreator(String studyCreator){
+        this.studyCreator = studyCreator;
+    }
     
     public TrackStudy getStudy() {
         if (study == null) {
@@ -100,16 +119,7 @@ public class StudyMB implements Serializable{
         return studyController.getMembers(getStudyName());
     }
 
-    public String getStudyName(){
-        FacesContext context = FacesContext.getCurrentInstance();
-        Map<String, String> paramMap = context.getExternalContext().getRequestParameterMap();
-        String studyname = paramMap.get("name");
-        //String username = getRequest().getParameter("username");
-        //String studyname = getRequest().getParameter("name");
-        
-        return studyname;
-    }
-    
+      
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
     }
@@ -135,6 +145,17 @@ public class StudyMB implements Serializable{
         return "Success!";
     }
     
+    
+    public String fetchStudy(){
+    
+        FacesContext fc = FacesContext.getCurrentInstance();
+        Map<String,String> params = fc.getExternalContext().getRequestParameterMap();
+        this.studyName =  params.get("studyname"); 
+        this.studyCreator =  params.get("username"); 
+        
+        return "studyInfo";
+    
+    }
     
     //delete a study
     public String deleteStudy(){

@@ -4,7 +4,8 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:composite="http://java.sun.com/jsf/composite"
       xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:ui="http://java.sun.com/jsf/facelets">
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      >
     <h:head>
         <title>File Upload</title>
     </h:head>
@@ -30,21 +31,21 @@
             </f:metadata>-->
 
             <!-- CSS and javascript imports -->
-            <h:outputStylesheet library="plupload/js/jquery.plupload.queue/css" name="jquery.plupload.queue.css" />
+<!--            <h:outputStylesheet library="plupload/js/jquery.plupload.queue/css" name="jquery.plupload.queue.css" />
             <h:outputScript library="plupload" name="jquery.min.js" target="head" />
             <h:outputScript library="plupload" name="browserplus-min.js" target="head" />
             <h:outputScript library="plupload/js" name="plupload.full.js" target="head" />
             <h:outputScript library="plupload/js/jquery.plupload.queue" name="jquery.plupload.queue.js" target="head" />
             <h:outputScript library="plupload/js/i18n" name="#{cc.attrs.language}.js" target="head" rendered="#{not (cc.attrs.language eq 'en')}" />
-            <ui:remove><h:outputScript library="plupload" name="main.js" target="head" /></ui:remove>
+            <ui:remove><h:outputScript library="plupload" name="main.js" target="head" /></ui:remove>-->
             
             <!-- Generate script for Plupload -->
-            <h:outputText value="#{Plupload.script}" escape="false" />
+<!--            <h:outputText value="#{Plupload.script}" escape="false" />-->
 
             <!-- div to be altered. Do not alter its id. -->
-            <div id="uploaderB78EE5DCF63AA7412ECABB99">
+<!--            <div id="uploaderB78EE5DCF63AA7412ECABB99">
                 <p><h:outputText value="#{cc.attrs.loadErrorMsg}" /></p>
-            </div>
+            </div>-->
         </composite:implementation>
         
         
