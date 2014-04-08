@@ -56,6 +56,11 @@
     background-image: url("#{resource['images/bbc/find-sc-light.png']}");
 }
 
+.sideMenuItem.User {
+    background-image: url("#{resource['images/bbc/new-sc-dark.png']}");
+}
+
+
 .ButtonsOnRight {
     float: right; 
     margin-top: 5px; 

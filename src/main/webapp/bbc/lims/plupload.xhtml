@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:composite="http://java.sun.com/jsf/composite"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
+    <h:head>
+        <title>File Upload</title>
+    </h:head>
+    <h:body>
+       <composite:interface>
+            <composite:attribute name="servletPath" required="false" default="plupload" shortDescription="Path to the servlet who handles the plupload component" />
+            <composite:attribute name="runtimePreferences" required="false" default="flash,silverlight,html5,gears,browserplus" shortDescription="List of prefered runtimes separated by comma." />
+            <composite:attribute name="maxFileSize" required="false" default="0" shortDescription="Maximum size per file. Client and server side validation." />
+            <composite:attribute name="allowedTypes" required="false" default="" shortDescription="Allowed file extensions separated by comma. Only server-side validation." />
+            <composite:attribute name="resizingWidth" required="false" default="0" shortDescription="Width for the image resizing. Image won't be resized if width and height are not specified." />
+            <composite:attribute name="resizingHeight" required="false" default="0" shortDescription="Height for the image resizing. Image won't be resized if width and height are not specified." />
+            <composite:attribute name="resizingQuality" required="false" default="100" shortDescription="Quality for the image resizing. Image is not necessary resized, if only quality is set, only quality will be changed." />
+            <composite:attribute name="loadErrorMsg" required="false" default="Your browser doesn't have Flash, Silverlight, Gears, BrowserPlus or HTML5 support." shortDescription="Message for a browser who doesn't support this component." /><!--ok-->
+            <composite:attribute name="language" required="false" default="en" shortDescription="Language used in the component. Examples: pt for portuguese, fr for french, es for spanish." />
+            <composite:attribute name="value" required="true" shortDescription="List of TemporaryFiles" />
+        </composite:interface>
+        <composite:implementation>
+            <!-- Create the session to communicate the component with the servlet -->
+<!--            <f:metadata>
+                 <f:event type="preRenderView" listener="#{Plupload.inicialize(cc.attrs.value, cc.attrs.servletPath, cc.attrs.runtimePreferences,
+                                                           cc.attrs.maxFileSize, cc.attrs.resizingWidth, cc.attrs.resizingHeight,
+                                                           cc.attrs.resizingQuality, cc.attrs.allowedTypes)}" />
+            </f:metadata>-->
+
+            <!-- CSS and javascript imports -->
+            <h:outputStylesheet library="plupload/js/jquery.plupload.queue/css" name="jquery.plupload.queue.css" />
+            <h:outputScript library="plupload" name="jquery.min.js" target="head" />
+            <h:outputScript library="plupload" name="browserplus-min.js" target="head" />
+            <h:outputScript library="plupload/js" name="plupload.full.js" target="head" />
+            <h:outputScript library="plupload/js/jquery.plupload.queue" name="jquery.plupload.queue.js" target="head" />
+            <h:outputScript library="plupload/js/i18n" name="#{cc.attrs.language}.js" target="head" rendered="#{not (cc.attrs.language eq 'en')}" />
+            <ui:remove><h:outputScript library="plupload" name="main.js" target="head" /></ui:remove>
+            
+            <!-- Generate script for Plupload -->
+            <h:outputText value="#{Plupload.script}" escape="false" />
+
+            <!-- div to be altered. Do not alter its id. -->
+            <div id="uploaderB78EE5DCF63AA7412ECABB99">
+                <p><h:outputText value="#{cc.attrs.loadErrorMsg}" /></p>
+            </div>
+        </composite:implementation>
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    </h:body>
+</html>
+

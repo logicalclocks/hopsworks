@@ -28,23 +28,33 @@
                 </p:toolbarGroup> 
 
                 <p:toolbarGroup align="left">              
+                    
+                    
 
+                <p:commandButton value="Study" action="studyMgmt"/>
+               <p:commandButton value="Data" action="dataMgmt"/>
+               <p:commandButton value="Experiments"/>
+            
+                    
+                    
+                    
                 </p:toolbarGroup>  
 
                 <p:toolbarGroup align="right">  
                     <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
                     <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
-                        <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" />  
-                        <p:menuitem value="User Management" action="userMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/> 
+                        <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" /> 
+                        <p:menuitem value="Lims" action="userMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>
+<!--                        <p:menuitem value="User Management" action="userMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/> 
                         <p:menuitem value="Study Management" action="studyMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>
-                        <p:menuitem value="Data Management" action="dataMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>
+                        <p:menuitem value="Data Management" action="dataMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>-->
                         <p:separator/>
                         <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
                     </p:menu>  
                 </p:toolbarGroup>  
 
             </p:toolbar> 
-             <p:messages autoUpdate="true"/>
+<!--             <p:messages autoUpdate="true"/>-->
         </h:form>
 
         <p:spacer width="1" height="5" />

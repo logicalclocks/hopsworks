@@ -19,32 +19,39 @@
         <ui:define name="scripts"/>
 
         <ui:define name="leftmenu">
-            <p:commandLink styleClass="sideMenuItem New" action="#{bbcController.showNewUserManagementDialog()}"/>
+            <p:commandLink action="#{bbcController.showNewUserManagementDialog()}">
+                <p:outputLabel value="Users" style="font-weight:bold"/>
+            </p:commandLink>
         </ui:define>
 
         
 
 
         <ui:define name="dialogs">
-
-           <!--New User Management Dialog-->
-            <p:dialog modal="true" id="NewUserManagement" widgetVar="dlgNewUserManagement" header="User Management Service" 
+       
+<!--           New User Management Dialog-->
+            <p:dialog modal="true" id="userMgmt" widgetVar="dlgUserManagement" header="User Management" 
                       draggable="true" closable="true" resizable="true" width="825"  height="620">  
 
-              <h:form id="formNewUserManagement" prependId="false">  
-                    <p:tabView id="tabViewNew">
-                        <p:tab title="Registered Users">
-<!--                            <h:form id="showUsers">-->
-<!--                            <p:panel styleClass="BbcNewUserPanel" style="">-->
-                                <h:panelGrid columns="4">                                 
-                                    <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria">
+<!--<h:form id="formUser">-->
+<!--    <p:growl id="growl" showDetail="true" />  -->
+    <p:tabView id="tabViewNew" dynamic="true" styleClass="BbcTabView">
+<!--        <p:ajax event="tabChange" listener="#{userController.onTabChange}" update=":formUser:growl"/>  -->
+        <p:tab title="Registered Users" id="Registered">
+                            <p:messages showDetail="true" autoUpdate="true" closable="true"/>
+                            <h:form id="userdataForm">
+                                
+                                     <h:panelGrid id="userdata" columns="4" cellpadding="5">                   
+                                    <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
+                                                 selectionMode="single" rowKey="#{user.email}" selection="#{userController.selectedUser}">
+                                        
                                                    <f:facet name="header">
                                                        <p:outputPanel>
                                                        <h:outputText value="Search users: " />
                                                        <p:inputText id="globalFilter" onkeyup="usersTable.filter()" style="width:150px" />
                                                        </p:outputPanel>
                                                    </f:facet>
-
+                                        
                                         
                                                    <p:column id="nameColumn" filterBy="name" headerText="Name" style="width:120px">
                                                         <h:outputText value="#{user.name}" />
@@ -61,37 +68,67 @@
                                                     <p:column id="mobileNumColumn" headerText="Mobile Number">
                                                         <h:outputText value="#{user.mobileNum}" />
                                                     </p:column>
-                                     </p:dataTable>
-                               </h:panelGrid>
-<!--                        </p:panel>-->
-<!--                        </h:form>-->
-                        </p:tab>
+                                                                                         
+                                         </p:dataTable>
+                                             <f:facet name="footer">
+                                                        <p:commandButton value="Delete" update="userdata" icon="ui-icon-search" style="margin-right:10px" oncomplete="PF('userDialog').show()"/>
+                                             </f:facet>
+                                                                                   
+                                      <p:dialog id="dialog" header="Selected User" widgetVar="userDialog" draggable="true" resizable="false" width="250" showEffect="clip" hideEffect="fold">
+
+                                              <h:panelGrid id="display" columns="2" cellpadding="4">
+
+                                                  <h:outputText value="Name:" />
+                                                  <h:outputText value="#{userController.selectedUser.name}" />
+
+                                                  <h:outputText value="Email:" />
+                                                  <h:outputText value="#{userController.selectedUser.email}" />
+
+                                                  <h:outputText value="Username:" />
+                                                  <h:outputText value="#{userController.selectedUser.username}" />
+
+                                             </h:panelGrid>
+                                         
+                                          <f:facet name="footer">
+                                                      <h:outputText id="deletemsg" value="Are you sure you want to remove this user?" />
+                                                      <p:commandButton value="Confirm" update="display" icon="ui-icon-close" style="margin-right:10px" action="#{userController.deleteUser()}"/>
+                                          </f:facet>
+                                          
+                                    </p:dialog>
+                                </h:panelGrid>
+                                   </h:form>   
+                              </p:tab>                 
+                                      
+                                          
+    
                         
                         <!-- user view end -->
                
             <!-- Add Users-->
                         
-        <p:tab title="Add New Users">
-           <h:form id="addUsers">
-               <p:panel header="User Data"> 
-                   <p:messages autoUpdate="true"/>
+            <p:tab title="Add New Users" id="New">
+                <p:messages  autoUpdate="true" closable="true"/>
+             <h:form id="addUsers">
+                 
+                    <p:panel header="User Data"> 
                    
-                    <h:panelGrid id="grid" columns="4" cellpadding="5">                                 
+                       <h:panelGrid id="grid" columns="4" cellpadding="5">    
+                           
                   
                             <h:outputLabel for="name" value="Name:" style="font-weight:bold"/>					
-                            <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}" validatorMessage="Name cannot be empty"/>
+                            <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}" autocomplete="off" validatorMessage="Name cannot be empty"/>
                             <p:message for="name" />
                             <h:outputText value=""/>
 
                             <h:outputLabel for="email" value="Email:" style="font-weight:bold"/>					
-                            <p:inputText id="email"  required="true" label="Email" value="#{userController.user.email}" validatorMessage="Not a valid email">
+                            <p:inputText id="email"  required="true" label="Email" value="#{userController.user.email}" autocomplete="off" validatorMessage="Not a valid email">
                                 <f:validateRegex pattern="([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)" />
                             </p:inputText>
                             <p:message for="email" />
                             <h:outputText value=""/>
 
                             <h:outputLabel for="uname" value="Username:" style="font-weight:bold"/>					
-                            <p:inputText id="uname" required="true" label="Username" value="#{userController.user.username}" validatorMessage="Username cannot be empty">
+                            <p:inputText id="uname" required="true" label="Username" value="#{userController.user.username}" autocomplete="off" validatorMessage="Username cannot be empty">
                             </p:inputText>
                             <p:message for="uname" />
                             <h:outputText value=""/>
@@ -103,17 +140,17 @@
                             <h:outputText value=""/>
                                 
                             <h:outputLabel for="mobile" value="Mobile Number:" style="font-weight:bold"/>					
-                            <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" validatorMessage="Only Numbers (at least 10 digits)">
+                            <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" autocomplete="off" validatorMessage="Only Numbers (10 digits)">
                                 <f:validateRegex pattern="[0-9]{1,10}"/>                                
                             </p:inputText>
                             <p:message for="mobile"/>
                             <h:outputText value=""/>                     
                      </h:panelGrid>
                    
-                   <div class="submit">
-                       <hr/>
+                   
+                   <f:facet name="footer">
                        <p:commandButton update="grid" value="Add" icon="ui-icon-plus" style="margin-right:10px" action="#{userController.addUser()}" validateClient="true"/>
-                   </div>  
+                   </f:facet> 
              </p:panel>
            </h:form>
           </p:tab>
@@ -125,7 +162,8 @@
            
                   
                  </p:tabView>
-                </h:form>
+<!--</h:form>-->
+
             </p:dialog>
         </ui:define>
     </ui:composition>

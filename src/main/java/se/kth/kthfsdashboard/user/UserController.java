@@ -17,6 +17,8 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+import org.primefaces.event.SelectEvent;
+import org.primefaces.event.TabChangeEvent;
 
 
 /**
@@ -69,6 +71,15 @@ public class UserController implements Serializable {
         return Group.values();
     }
 
+    public Username getSelectedUser(){
+        return user;
+    }
+    
+    public void setSelectedUser(Username user){
+        this.user = user;
+    }
+    
+    
     
     public String addUser() {
         
@@ -88,7 +99,7 @@ public class UserController implements Serializable {
 
     public String deleteUser() {
         try {
-            userFacade.remove(user);
+            userFacade.removeByEmail(user.getEmail());
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Delete Operation failed.");
             return null;
@@ -148,6 +159,12 @@ public class UserController implements Serializable {
             addMessage("Switched to the LIMS User Management Service!");
             return "userMgmt";
         
+    }
+   
+    public void onTabChange(TabChangeEvent event) {
+        FacesMessage msg = new FacesMessage("Tab Changed", "Active Tab: " + event.getTab().getTitle());
+
+        FacesContext.getCurrentInstance().addMessage(null, msg);
     }
 
     public String getLoginName() throws IOException {
