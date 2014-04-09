@@ -43,11 +43,6 @@ public class StudyController {
         return (Long)em.createNamedQuery("TrackStudy.findMembers").setParameter("name", name).getSingleResult();
     }
     
-    public List<String> findOwner(String username) {
-        String query = "SELECT t.name, u.name FROM TrackStudy t, Username u WHERE t.username = u.email AND t.username = :username";
-        return em.createQuery(query).setParameter("username", username).getResultList();
-    }
-        
     public void persistStudy(TrackStudy study) {
         em.persist(study);
     }

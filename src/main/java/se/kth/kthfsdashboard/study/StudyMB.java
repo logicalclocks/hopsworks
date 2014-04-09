@@ -106,11 +106,6 @@ public class StudyMB implements Serializable{
         return studyController.findByUser(getUsername());
     }
     
-    public List<String> getAllStudyList(){
-        return studyController.findOwner(getUsername());
-    }
-
-        
     public long getAllStudy(){
         return studyController.getAllStudy();
     }
@@ -142,7 +137,7 @@ public class StudyMB implements Serializable{
             return null;
         }
         addMessage("Study created! ["+ study.getName() + "] study is owned by " + study.getUsername());
-        return "Success!";
+        return "studyMgmt";
     }
     
     

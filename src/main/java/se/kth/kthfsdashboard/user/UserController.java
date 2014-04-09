@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Logger;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
@@ -37,7 +38,9 @@ public class UserController implements Serializable {
     
     List<Group> g = new ArrayList<Group>();
     private List<Username> filteredUsers;
-    
+    private String email;
+    private String name;
+    private String username;
   
     
     public UserController() {
@@ -66,7 +69,7 @@ public class UserController implements Serializable {
         return userFacade.findAll();
     }
     
-     
+       
     public Group[] getGroups() {
         return Group.values();
     }
@@ -78,6 +81,45 @@ public class UserController implements Serializable {
     public void setSelectedUser(Username user){
         this.user = user;
     }
+    
+    
+    public String getEmail(){
+        return email;
+    }
+    
+    public void setEmail(String email){
+        this.email = email;
+    }
+    
+    public String getName(){
+        return name;
+    }
+    
+    public void setName(String name){
+        this.name = name;
+    }
+    
+    public String getUsername(){
+        return username;
+    }
+    
+    public void setUsername(String username){
+        this.username = username;
+    }
+    
+    
+    public String fetchUser(){
+    
+        FacesContext fc = FacesContext.getCurrentInstance();
+        Map<String,String> params = fc.getExternalContext().getRequestParameterMap();
+        this.email =  params.get("email"); 
+        this.name =  params.get("name"); 
+        this.username = params.get("username");
+        
+        return "studyMember";
+    
+    }
+    
     
     
     
@@ -153,6 +195,15 @@ public class UserController implements Serializable {
         addMessage("Logout not implemented!");
     }
 
+     private HttpServletRequest getRequest() {
+        return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+    }
+    
+    
+    public String getUserLogin(){
+          return getRequest().getUserPrincipal().getName();
+    }
+    
     
    public String userManagement(){
        

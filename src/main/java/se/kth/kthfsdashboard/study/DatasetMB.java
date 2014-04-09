@@ -51,12 +51,9 @@ public class DatasetMB implements Serializable{
     
     public String createDataset(){
         
-        FacesContext context = FacesContext.getCurrentInstance();
-        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-        Principal principal = request.getUserPrincipal();
-        
+             
         dataset.setId(Integer.SIZE);     
-        dataset.setOwner(principal.getName());
+        dataset.setOwner(getUsername());
       
         try{
             datasetController.persistDataset(dataset);
@@ -79,6 +76,14 @@ public class DatasetMB implements Serializable{
         return "Success!";
     }
     
+    private HttpServletRequest getRequest() {
+        return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+    }
+    
+    
+    public String getUsername(){
+          return getRequest().getUserPrincipal().getName();
+    }
    
     public void addMessage(String summary) {
         FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, summary);

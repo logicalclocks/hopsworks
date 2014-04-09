@@ -18,6 +18,7 @@ import javax.validation.constraints.Size;
  * @author roshan
  */
 @Embeddable
+
 public class StudyGroupMembersPK implements Serializable {
     @Basic(optional = false)
     @NotNull
@@ -29,6 +30,7 @@ public class StudyGroupMembersPK implements Serializable {
     @Size(min = 1, max = 255)
     @Column(name = "username")
     private String username;
+    
 
     public StudyGroupMembersPK() {
     }
@@ -82,5 +84,6 @@ public class StudyGroupMembersPK implements Serializable {
     public String toString() {
         return "se.kth.kthfsdashboard.study.StudyGroupMembersPK[ studyname=" + studyname + ", username=" + username + " ]";
     }
+
     
 }

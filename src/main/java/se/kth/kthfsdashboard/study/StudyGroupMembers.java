@@ -18,6 +18,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -31,7 +32,8 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "StudyGroupMembers.findAll", query = "SELECT s FROM StudyGroupMembers s"),
     @NamedQuery(name = "StudyGroupMembers.findByStudyname", query = "SELECT s FROM StudyGroupMembers s WHERE s.studyGroupMembersPK.studyname = :studyname"),
     @NamedQuery(name = "StudyGroupMembers.findByUsername", query = "SELECT s FROM StudyGroupMembers s WHERE s.studyGroupMembersPK.username = :username"),
-    @NamedQuery(name = "StudyGroupMembers.findByTimeadded", query = "SELECT s FROM StudyGroupMembers s WHERE s.timeadded = :timeadded")})
+    @NamedQuery(name = "StudyGroupMembers.findByTimeadded", query = "SELECT s FROM StudyGroupMembers s WHERE s.timeadded = :timeadded"),
+    @NamedQuery(name = "StudyGroupMembers.findByAddedBy", query = "SELECT s FROM StudyGroupMembers s WHERE s.addedBy = :addedBy")})
 public class StudyGroupMembers implements Serializable {
     private static final long serialVersionUID = 1L;
     @EmbeddedId
@@ -41,6 +43,11 @@ public class StudyGroupMembers implements Serializable {
     @Column(name = "timeadded")
     @Temporal(TemporalType.TIMESTAMP)
     private Date timeadded;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "added_by")
+    private String addedBy;
 
     public StudyGroupMembers() {
     }
@@ -49,9 +56,10 @@ public class StudyGroupMembers implements Serializable {
         this.studyGroupMembersPK = studyGroupMembersPK;
     }
 
-    public StudyGroupMembers(StudyGroupMembersPK studyGroupMembersPK, Date timeadded) {
+    public StudyGroupMembers(StudyGroupMembersPK studyGroupMembersPK, Date timeadded, String addedBy) {
         this.studyGroupMembersPK = studyGroupMembersPK;
         this.timeadded = timeadded;
+        this.addedBy = addedBy;
     }
 
     public StudyGroupMembers(String studyname, String username) {
@@ -72,6 +80,14 @@ public class StudyGroupMembers implements Serializable {
 
     public void setTimeadded(Date timeadded) {
         this.timeadded = timeadded;
+    }
+
+    public String getAddedBy() {
+        return addedBy;
+    }
+
+    public void setAddedBy(String addedBy) {
+        this.addedBy = addedBy;
     }
 
     @Override

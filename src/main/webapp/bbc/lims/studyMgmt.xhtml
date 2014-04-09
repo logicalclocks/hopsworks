@@ -34,9 +34,9 @@
              <f:facet name="header">
                      <h:outputLabel value="Study" style="font-weight:bold"/>
                      <h:outputText value="(#{studyMB.allStudy})"/>
-                     <p:commandButton value="New Study" icon="ui-icon-plusthick" onclick="dlgNewStudy.show()" action="#{studyMB.showNewStudyDialog()}" rendered="#{userMB.anyAdminUser}">
+                     <p:commandButton value="New Study" icon="ui-icon-plusthick" onclick="dlgNewStudy.show()" action="#{studyMB.showNewStudyDialog()}" rendered="#{userMB.anyAdminUser}"/>
                       
-                     </p:commandButton>
+                     
                 </f:facet> 
            
                 <p:tabView id="tabViewStudy" cache="false" dynamic="true">
@@ -87,14 +87,15 @@
         
 <ui:define name="dialogs">       
 <!-- Dialog New Study-->
-   <p:dialog modal="true" widgetVar="dlgNewStudy" header="Create New Study" draggable="true" closable="true" resizable="false">  
+   
+   <p:dialog modal="true" widgetVar="dlgNewStudy" header="Create New Study" draggable="true" closable="true" resizable="true">  
 
        <h:form id="formNewStudy" prependId="false">
                <p:messages autoUpdate="true"/>
                
-               <p:growl id="growl" sticky="true" showDetail="true"/>
+<!--               <p:growl id="growl" sticky="true" showDetail="true"/>
 
-               <p:wizard flowListener="#{studyMB.onFlowProcess}" widgetVar="wiz" styleClass="wizard">
+               <p:wizard flowListener="#{studyMB.onFlowProcess}" widgetVar="wiz" styleClass="wizard">-->
 	
 		<p:tab id="study" title="Study">
 
@@ -104,11 +105,13 @@
 				
 				
 					<div>
-                                            <p:outputLabel for="study_name" style="font-size:16px">Study name is: </p:outputLabel>
-                                            <h:inputText id="study_name" value="#{studyMB.study.name}" size="40"/>
+                                            <p:outputLabel for="study_name" style="font-size:18px">Study name is </p:outputLabel>
+                                            <h:inputText id="study_name" value="#{studyMB.study.name}" size="40" validatorMessage="Study name cannot be empty"/>
                                                                    
-                                        </div>
-                                        
+                                       </div>
+                                <f:facet name="footer">
+                                    <p:commandButton value="Create" icon="ui-icon-plusthick" actionListener="#{studyMB.createStudy()}"/>                                    
+                                </f:facet>      
 				
 			</p:panel>
 		</p:tab>
@@ -138,7 +141,7 @@
 			</p:panel>
 		</p:tab>-->
 			
-		<p:tab id="confirm" title="Confirmation">
+<!--		<p:tab id="confirm" title="Confirmation">
 			<p:panel header="Confirmation">
 			
                             <h:panelGrid columns="2" id="confirmation">
@@ -153,7 +156,8 @@
 			</p:panel>
 		</p:tab>
 		
-	</p:wizard>
+	</p:wizard>-->
+               
 </h:form>
 
                 

@@ -30,13 +30,7 @@
 
             <h:form id="formNewUserManagement" prependId="false"> 
                     
-                    <p:panel styleClass="BbcNewUserPanel" style="">
-                    <f:facet name="header">
-<!--                            <h:outputLabel value="Study" style="font-weight:bold"/>
-                            <h:outputText value="(#{studyMB.allStudy})"/>-->
-                            <h3>Members of the Study (#{studyMB.NOfMembers})</h3>
-                     </f:facet> 
-                
+                                   
                     <p:tabView id="tabViewNew">
                         <p:tab title="Show">
                              <h:panelGrid columns="2">  
@@ -44,27 +38,33 @@
                                         <span class="author">
                                             Study <strong>  #{studyMB.studyName} </strong> 
                                         </span>
-                                        <span class="info">was created by <strong>#{studyMB.creator}</strong> </span>
+                                        <span class="info">was created by <strong><p:commandLink value="#{studyMB.creator}" action="#{userController.fetchUser()}">
+                                                    <f:param name="name" value="#{userController.name}"/>
+                                                    <f:param name="email" value="#{studyMB.creator}"/>
+                                                    <f:param name="username" value="#{userController.username}"/>
+                                          </p:commandLink></strong> </span>
                                         
                                     </div>
                                   
                                </h:panelGrid>
                        
                         </p:tab>
+                        
                         <p:tab title="Team">
-                            
-                               
-                         
+                                  <h3>Study Members (#{studyMB.NOfMembers})</h3>
+                                  <p:separator id="separator"/>
                                 <h:panelGrid columns="2">  
-                                    <div class="teamStudy">
-                                        
-                                    </div>
+                                    <div class="team_table"> 
+                                      <div class="user_box">
+                                            <h4>Members</h4>                        
+                                      </div>                 
+                                    </div>                     
                                   
                                </h:panelGrid>
                        
                         </p:tab>
                     </p:tabView>
-                         </p:panel>
+                         
            </h:form>
             
         </ui:define>
