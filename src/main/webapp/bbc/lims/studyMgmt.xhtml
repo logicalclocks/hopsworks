@@ -34,6 +34,7 @@
              <f:facet name="header">
                      <h:outputLabel value="Study" style="font-weight:bold"/>
                      <h:outputText value="(#{studyMB.allStudy})"/>
+                     <p:spacer width="20" height="20" />
                      <p:commandButton value="New Study" icon="ui-icon-plusthick" onclick="dlgNewStudy.show()" action="#{studyMB.showNewStudyDialog()}" rendered="#{userMB.anyAdminUser}"/>
                       
                      

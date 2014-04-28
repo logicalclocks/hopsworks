@@ -18,27 +18,36 @@
         </ui:define>
         <ui:define name="scripts"/>
 
+        
+           
+        
 <!--        <ui:define name="leftmenu">
             <p:commandLink styleClass="sideMenuItem New" action="#{bbcController.showNewUserManagementDialog()}"/>
         </ui:define>-->
 
 <ui:define name="content">
 
+         
              <p:panel>
                    <div align="left">
                        <h2 class="title">Upload Dataset</h2>
                        <hr/>
                        <h:form id="frmUpload">
-                        
+                           <p:messages autoUpdate="true"/>
                             <div class="dataset_name_holder">
-                                <p:outputLabel style="font-size:16px">Owner Information</p:outputLabel>
+                                <p:outputLabel style="font-size:16px">Terminal to copy data</p:outputLabel>
                                 <p:spacer width="1" height="30" />
+                                <p:separator id="sprt"/>
                                
-<!--                                <h3>#{datasetMB.ownerInfo}</h3>
-                                    <h:outputText value="#{datasetMB.dataset.id}" style="white-space: nowrap"/> -->
-<!--                                    <p:outputLabel style="font-size:14px"></p:outputLabel>
-                                    <p:outputLabel style="font-size:14px">#{datasetMB.dataset.name}</p:outputLabel>
-                                    <p:outputLabel style="font-size:14px">#{datasetMB.dataset.owner}</p:outputLabel>-->
+                                <div id="trmnl">
+                                    <p:focus for="trmnl"/>
+                                    <p:terminal id="trmnl" widgetVar="term" prompt="lims@bbc:~$">
+                                        
+                                    </p:terminal>
+                                    <p:commandButton type="button" value="Clear" icon="ui-icon-trash" onclick="PF('term').clear()" style="margin-top:10px"/>
+                                </div>
+                                
+                                
                                 
                                                  
                             </div>

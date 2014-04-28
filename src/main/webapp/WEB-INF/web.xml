@@ -26,6 +26,10 @@
         <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
+<!--    <servlet>
+        <servlet-name>FileUploadServlet</servlet-name>
+        <servlet-class>se.kth.bbc.upload.FileUploadServlet</servlet-class>
+    </servlet>-->
     <servlet-mapping>
         <servlet-name>Faces Servlet</servlet-name>
         <url-pattern>/faces/*</url-pattern>
@@ -51,10 +55,69 @@
         <servlet-name>Jersey REST Service</servlet-name>
         <url-pattern>/rest/*</url-pattern>
     </servlet-mapping>
-    <servlet-mapping>
+<!--    <servlet-mapping>
         <servlet-name>Jersey REST Service</servlet-name>
         <url-pattern>/resources/*</url-pattern>
+    </servlet-mapping>-->
+    
+    
+    
+<!--    <servlet>
+		<servlet-name>MyServlet</servlet-name>
+		<servlet-class>se.kth.bbc.upload.MyServlet</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>MyServlet</servlet-name>
+		<url-pattern>/mysrv</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>downloadServlet</servlet-name>
+		<servlet-class>se.kth.bbc.upload.Download</servlet-class>
+		<init-param>
+			<param-name>gzip</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>downloadServlet</servlet-name>
+		<url-pattern>/downloadsrv</url-pattern>
+	</servlet-mapping>-->
+    
+    
+    
+<!--    <servlet>
+            <servlet-name>FileUploadServlet</servlet-name>
+            <servlet-class>se.kth.bbc.upload.FileUploadServlet</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>FileUploadServlet</servlet-name>
+        <url-pattern>/uploads</url-pattern>
+    </servlet-mapping>-->
+    <!--     <servlet-mapping>
+        <servlet-name>FileUploadJSP</servlet-name>
+        <jsp-file>/plupload/upload.jsp</jsp-file>
+        <init-param>
+            <param-name>plupload</param-name>
+            <param-value>uploading</param-value>
+        </init-param>
     </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>FileUploadJSP</servlet-name>
+        <url-pattern>/plupupload/</url-pattern>
+    </servlet-mapping>-->
+    <!--    <servlet>
+        <servlet-name>FileUploadHandler</servlet-name>
+        <servlet-class>se.kth.bbc.hdfsclient.FileUploadHandler</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FileUploadHandler</servlet-name>
+        <url-pattern>/upload</url-pattern>
+    </servlet-mapping>-->
     <!-- declare the roles relevant for our webapp -->
     <security-role>
         <role-name>ADMIN</role-name>
@@ -169,6 +232,7 @@
        <error-code>500</error-code>
        <location>/error</location>
     </error-page> -->
+    
     <session-config>
         <!-- on production systems you might have another value for the timeout -->
         <session-timeout>20</session-timeout>
@@ -197,5 +261,7 @@
        <param-name>org.ocpsoft.rewrite.config.CONFIG_RELOADING</param-name>
        <param-value>true</param-value>
     </context-param>    -->
-    
+<!--    <welcome-file-list>
+		<welcome-file>upload.html</welcome-file>
+	</welcome-file-list>-->
 </web-app>

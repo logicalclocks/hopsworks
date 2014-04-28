@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="UTF-8" />
+<title>Introduction to Plupload</title>
+ 
+<script type="text/javascript" src="js/plupload.full.js"></script>
+<!--<script type="text/javascript" src="js/plupload.js"></script>
+<script type="text/javascript" src="js/plupload.java.js"></script>
+<script type="text/javascript" src="js/dojo.plupload.queue.js"></script>-->
+
+</head>
+<body>
+ 
+<div id="uploader">
+    <p>Upload Files:</p>
+ 
+    <div id="filelist"> </div>
+    <br />
+     
+    <a id="pickfiles" href="javascript:;">Add Files</a>
+    <a id="uploadfiles" href="javascript:;">Start Upload</a>
+ 
+</div>
+ 
+<script type="text/javascript">
+//<![CDATA[
+ 
+    var uploader = new plupload.Uploader({
+        runtimes: 'flash',
+        flash_swf_url: 'js/plupload.flash.swf',
+        browse_button: 'pickfiles',
+        url: 'upload',
+        max_file_size:'10mb',
+        multipart:'true',
+        urlstream_upload: 'true',
+        //java_applet_url: '/applet/plupload.java.jar',
+        //loader_url: '/img/loader.gif',
+        log_level: 3,
+        chunks:{
+            
+            size: '1mb',
+            send_chunk_number:true
+        }
+    });
+     
+   
+    uploader.init();
+ 
+    uploader.bind('FilesAdded', function(up, files) {
+        // loop through the files array
+        for (var i in files) {
+            document.getElementById('filelist').innerHTML += '<div id="' + files[i].id + '">' + files[i].name + ' (' + plupload.formatSize(files[i].size) + ') <b></b></div>';
+        }
+            //up.refresh();
+    });
+    
+    
+    uploader.bind('ChunkUploaded', function(u,f,r){
+        console.log(r);
+    });
+    
+    uploader.bind('UploadProgress', function(up, file) {
+        document.getElementById(file.id).getElementsByTagName('b')[0].innerHTML = '<span>' + file.percent + "%</span>";
+        console.log(up);
+    });
+     
+    uploader.bind('Error', function(up, args) {
+        alert(args.code + ': ' + args.message);
+    });
+     
+    document.getElementById('uploadfiles').onclick = function() {
+        uploader.start();
+    };
+    
+//]]>
+</script>
+</body>
+</html>

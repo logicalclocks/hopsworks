@@ -19,6 +19,9 @@
   java.security.NoSuchAlgorithmException"%>
 
 
+<!--  Output: <%= getInitParameter("plupload")%> -->
+    
+
 
 <%!
   /* Note: the client really dislikes extraneous whitespace in the response, so we won't give JSP a chance to output that */
