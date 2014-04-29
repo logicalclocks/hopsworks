@@ -55,10 +55,10 @@
         <servlet-name>Jersey REST Service</servlet-name>
         <url-pattern>/rest/*</url-pattern>
     </servlet-mapping>
-<!--    <servlet-mapping>
+    <servlet-mapping>
         <servlet-name>Jersey REST Service</servlet-name>
         <url-pattern>/resources/*</url-pattern>
-    </servlet-mapping>-->
+    </servlet-mapping>
     
     
     
@@ -216,6 +216,18 @@
             <role-name>ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
+    
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Privileged file upload policy</web-resource-name>
+            <url-pattern>/rest/bbcuploader/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>BBC_ADMIN</role-name>
+            <role-name>BBC_RESEARCHER</role-name>
+        </auth-constraint>
+    </security-constraint>
+        
     <login-config>
         <auth-method>BASIC</auth-method>
         <realm-name>DBRealm</realm-name>
@@ -261,7 +273,7 @@
        <param-name>org.ocpsoft.rewrite.config.CONFIG_RELOADING</param-name>
        <param-value>true</param-value>
     </context-param>    -->
-<!--    <welcome-file-list>
+    <welcome-file-list>
 		<welcome-file>upload.html</welcome-file>
-	</welcome-file-list>-->
+	</welcome-file-list>
 </web-app>

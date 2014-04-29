@@ -6,13 +6,19 @@
 
 package se.kth.kthfsdashboard.rest.resources;
 
+
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.Context;
@@ -30,6 +36,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.DFSClient;
+
 
 /**
  * REST Web Service
@@ -44,24 +53,26 @@ public class BbcUploader {
     @Context
     private UriInfo context;
 
+    String nameNURI = "hdfs://";
     /**
      * Creates a new instance of BbcUploader
      */
     public BbcUploader() {
     }
 
-    /**
-     * Retrieves representation of an instance of se.kth.bbc.upload.BbcUploader
-     * @return an instance of java.lang.String
-     */
-    
     @POST
-    @Path("/upload/{fileName}")
+    @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response uploadFile(@FormDataParam("fileName") InputStream fileName, @FormDataParam("fileName") FormDataContentDisposition fileDisposition){
+    public Response uploadFile(@FormDataParam("file") InputStream fileInput, @FormDataParam("file") FormDataContentDisposition fileDisposition){
         
             String filePath = "/home/glassfish/roshan/uploads/" + fileDisposition.getFileName();
-            writeLocal(fileName, filePath);
+            String fileName = fileDisposition.getFileName();
+            
+            //Write to Local Disk
+            writeLocal(fileInput, filePath);
+            
+            //Write to HDFS
+            uploadFileToHDFS(fileInput, fileName);
             
             String message = "Done :" + filePath;
             
@@ -84,34 +95,73 @@ public class BbcUploader {
             } 
                     outstream.flush();
                     outstream.close();
+                    
             }catch(IOException iox){
-                    iox.printStackTrace();
+                    System.err.println("IOException during operation"+ iox.toString());
+                    System.exit(1);
               }
               
               
         
         }
     
+    public void uploadFileToHDFS(InputStream in, String fileToCreate){
+    
+        Configuration conf = new Configuration();
+        OutputStream out;
+                      
+        try {
+            
+            DFSClient dfsClient = new DFSClient(new URI(this.nameNURI),conf);
+            
+            if(dfsClient.exists(fileToCreate)){
+                System.out.println("Error: File exists! "+fileToCreate);
+                return;
+            }
+            
+            out = new BufferedOutputStream(dfsClient.create(fileToCreate, false));
+            
+            byte[] buffer = new byte[10240];
+            int len = 0;
+            while ((len = in.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
+            }
+            
+            dfsClient.close();
+            out.flush();
+            out.close();
+                  
+        }catch(IOException iox) {
+            System.err.println("IOException during operation"+ iox.toString());
+            System.exit(1);
+        }catch(URISyntaxException uri){
+            System.err.println("URISyntaxException during operation"+ uri.toString());
+            System.exit(1);
+        }
+        
+        
+    }
     
     
     
     
-//    @GET
-//    @Produces("text/plain")
-//    public String downloadFile() {
-//        //TODO return proper representation object
-//        throw new UnsupportedOperationException();
-//    }
+    
+    @GET
+    @Produces("text/plain")
+    public String downloadFile() {
+        //TODO return proper representation object
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * PUT method for updating or creating an instance of BbcUploader
      * @param content representation for the resource
      * @return an HTTP response with content of the updated or created resource.
      */
-//    @PUT
-//    @Consumes("text/plain")
-//    public void putText(String content) {
-//    }
+    @PUT
+    @Consumes("text/plain")
+    public void putText(String content) {
+    }
     
     
     
