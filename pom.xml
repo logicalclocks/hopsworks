@@ -21,9 +21,9 @@
         <glassfish.admin>admin</glassfish.admin>
         <glassfish.passwd>admin</glassfish.passwd>-->
             
-        <glassfish.hostname>snurran.sics.se</glassfish.hostname>
+        <glassfish.hostname>localhost</glassfish.hostname>
         <glassfish.admin>admin</glassfish.admin>
-        <glassfish.passwd>dight12</glassfish.passwd>  
+        <glassfish.passwd></glassfish.passwd>  
            
         <netbeans.hint.deploy.server>gfv3ee6</netbeans.hint.deploy.server>
     </properties>

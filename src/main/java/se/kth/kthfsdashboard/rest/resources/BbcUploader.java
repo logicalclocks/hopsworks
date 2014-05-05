@@ -20,6 +20,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
@@ -30,6 +31,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
@@ -38,6 +41,8 @@ import javax.ws.rs.core.Response;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.web.WebHdfsFileSystem;
+
 
 
 /**
@@ -50,10 +55,12 @@ import org.apache.hadoop.hdfs.DFSClient;
 @RolesAllowed({"BBC_ADMIN","BBC_RESEARCHER"})
 public class BbcUploader {
 
+      
+    
     @Context
     private UriInfo context;
 
-    String nameNURI = "hdfs://";
+    private final String nameHost = "http://snurran.sics.se:50070/webhdfs/v1";
     /**
      * Creates a new instance of BbcUploader
      */
@@ -63,94 +70,93 @@ public class BbcUploader {
     @POST
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response uploadFile(@FormDataParam("file") InputStream fileInput, @FormDataParam("file") FormDataContentDisposition fileDisposition){
+    public Response uploadFile(@FormDataParam("fileName") FormDataContentDisposition fileDisposition){
         
-            String filePath = "/home/glassfish/roshan/uploads/" + fileDisposition.getFileName();
             String fileName = fileDisposition.getFileName();
-            
-            //Write to Local Disk
-            writeLocal(fileInput, filePath);
-            
-            //Write to HDFS
-            uploadFileToHDFS(fileInput, fileName);
-            
-            String message = "Done :" + filePath;
-            
-            return Response.status(200).entity(message).build();
+            String url = nameHost+"/user/roshan/"+fileName+"?user.name=glassfish&op=CREATE&data=true";
+                     
+            return Response.status(200).entity("OK").build();
        
     
     }     
     
     
-    public void writeLocal(InputStream incoming, String location) {
+//    public void writeLocal(InputStream incoming, String location) {
+//    
+//        try {
+//        
+//            OutputStream outstream = new FileOutputStream(new File(location));
+//             
+//            int read = 0;
+//            byte[] buffer = new byte[10240];
+//            while((read = incoming.read(buffer)) != -1){
+//                    outstream.write(buffer, 0, read);
+//            } 
+//                    outstream.flush();
+//                    outstream.close();
+//                    
+//            }catch(IOException iox){
+//                    System.err.println("IOException during operation"+ iox.toString());
+//                    System.exit(1);
+//              }
+//              
+//             
+//        
+//        }
     
-        try {
+//    public void uploadFileToHDFS(InputStream in, String fileToCreate){
+//    
+//        Configuration conf = new Configuration();
+//        //conf.addResource(new org.apache.hadoop.fs.Path("/home/glassfish/roshan/hadoop-2.2.0/etc/hadoop/core-site.xml"));
+//        //conf.addResource(new org.apache.hadoop.fs.Path("/home/glassfish/roshan/hadoop-2.2.0/etc/hadoop/hdfs-site.xml"));
+//        
+//        conf.set("fs.defaultFS", this.nameNURI);
+//        OutputStream out;
+//                      
+//        try {
+//            
+//            DFSClient dfsClient = new DFSClient(new URI(this.nameNURI),conf);
+//            
+//            if(dfsClient.exists(fileToCreate)){
+//                System.out.println("Error: File exists! "+fileToCreate);
+//                return;
+//            }
+//            
+//            out = new BufferedOutputStream(dfsClient.create(fileToCreate, false));
+//            
+//            byte[] buffer = new byte[10240];
+//            int len = 0;
+//            while ((len = in.read(buffer)) != -1) {
+//                out.write(buffer, 0, len);
+//            }
+//            
+//            dfsClient.close();
+//            out.flush();
+//            out.close();
+//                  
+//        }catch(IOException iox) {
+//            System.err.println("IOException during operation"+ iox.toString());
+//            System.exit(1);
+//        }catch(URISyntaxException uri){
+//            System.err.println("URISyntaxException during operation"+ uri.toString());
+//            System.exit(1);
+//        }
+//            System.out.println("Copied to HDFS "+ this.nameNURI +"/" +fileToCreate);
+//        
+//    }
+    
         
-            OutputStream outstream = new FileOutputStream(new File(location));
-             
-            int read = 0;
-            byte[] buffer = new byte[10240];
-            while((read = incoming.read(buffer)) != -1){
-                    outstream.write(buffer, 0, read);
-            } 
-                    outstream.flush();
-                    outstream.close();
-                    
-            }catch(IOException iox){
-                    System.err.println("IOException during operation"+ iox.toString());
-                    System.exit(1);
-              }
-              
-              
-        
-        }
-    
-    public void uploadFileToHDFS(InputStream in, String fileToCreate){
-    
-        Configuration conf = new Configuration();
-        OutputStream out;
-                      
-        try {
-            
-            DFSClient dfsClient = new DFSClient(new URI(this.nameNURI),conf);
-            
-            if(dfsClient.exists(fileToCreate)){
-                System.out.println("Error: File exists! "+fileToCreate);
-                return;
-            }
-            
-            out = new BufferedOutputStream(dfsClient.create(fileToCreate, false));
-            
-            byte[] buffer = new byte[10240];
-            int len = 0;
-            while ((len = in.read(buffer)) != -1) {
-                out.write(buffer, 0, len);
-            }
-            
-            dfsClient.close();
-            out.flush();
-            out.close();
-                  
-        }catch(IOException iox) {
-            System.err.println("IOException during operation"+ iox.toString());
-            System.exit(1);
-        }catch(URISyntaxException uri){
-            System.err.println("URISyntaxException during operation"+ uri.toString());
-            System.exit(1);
-        }
-        
-        
-    }
-    
-    
-    
-    
     
     @GET
+    @Path("/read")
     @Produces("text/plain")
     public String downloadFile() {
+        
+        
         //TODO return proper representation object
-        throw new UnsupportedOperationException();
+        //throw new UnsupportedOperationException();
+            return "Invoked. Hello World!";
+    
     }
 
     /**
@@ -159,6 +165,7 @@ public class BbcUploader {
      * @return an HTTP response with content of the updated or created resource.
      */
     @PUT
+    @Path("/update")
     @Consumes("text/plain")
     public void putText(String content) {
     }

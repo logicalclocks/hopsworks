@@ -35,17 +35,13 @@
                        <h:form id="frmUpload">
                            <p:messages autoUpdate="true"/>
                             <div class="dataset_name_holder">
-                                <p:outputLabel style="font-size:16px">Terminal to copy data</p:outputLabel>
+                                <h:messages errorClass="error"/>
+                                <p:outputLabel style="font-size:16px">Upload Dataset</p:outputLabel>
                                 <p:spacer width="1" height="30" />
                                 <p:separator id="sprt"/>
-                               
-                                <div id="trmnl">
-                                    <p:focus for="trmnl"/>
-                                    <p:terminal id="trmnl" widgetVar="term" prompt="lims@bbc:~$">
-                                        
-                                    </p:terminal>
-                                    <p:commandButton type="button" value="Clear" icon="ui-icon-trash" onclick="PF('term').clear()" style="margin-top:10px"/>
-                                </div>
+                                <h3>Owner: #{datasetMB.datasetOwner}</h3>
+                                <br/>
+                                <h3>Dataset Name: #{datasetMB.datasetName}</h3>
                                 
                                 
                                 

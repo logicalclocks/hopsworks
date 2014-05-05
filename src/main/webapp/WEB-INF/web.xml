@@ -21,12 +21,16 @@
         <param-name>facelets.SKIP_COMMENTS</param-name>
         <param-value>true</param-value>
     </context-param>
+    <context-param>
+        <param-name>Webhdfs-http</param-name>
+        <param-value>http://snurran.sics.se:50070/webhdfs/v1</param-value>
+    </context-param>
     <servlet>
         <servlet-name>Faces Servlet</servlet-name>
         <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
-<!--    <servlet>
+    <!--    <servlet>
         <servlet-name>FileUploadServlet</servlet-name>
         <servlet-class>se.kth.bbc.upload.FileUploadServlet</servlet-class>
     </servlet>-->
@@ -59,10 +63,7 @@
         <servlet-name>Jersey REST Service</servlet-name>
         <url-pattern>/resources/*</url-pattern>
     </servlet-mapping>
-    
-    
-    
-<!--    <servlet>
+    <!--    <servlet>
 		<servlet-name>MyServlet</servlet-name>
 		<servlet-class>se.kth.bbc.upload.MyServlet</servlet-class>
 	</servlet>
@@ -85,10 +86,7 @@
 		<servlet-name>downloadServlet</servlet-name>
 		<url-pattern>/downloadsrv</url-pattern>
 	</servlet-mapping>-->
-    
-    
-    
-<!--    <servlet>
+    <!--    <servlet>
             <servlet-name>FileUploadServlet</servlet-name>
             <servlet-class>se.kth.bbc.upload.FileUploadServlet</servlet-class>
     </servlet>
@@ -216,7 +214,7 @@
             <role-name>ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
-    
+    <!-- Authentication for file upload -->
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>Privileged file upload policy</web-resource-name>
@@ -227,7 +225,6 @@
             <role-name>BBC_RESEARCHER</role-name>
         </auth-constraint>
     </security-constraint>
-        
     <login-config>
         <auth-method>BASIC</auth-method>
         <realm-name>DBRealm</realm-name>
@@ -244,7 +241,6 @@
        <error-code>500</error-code>
        <location>/error</location>
     </error-page> -->
-    
     <session-config>
         <!-- on production systems you might have another value for the timeout -->
         <session-timeout>20</session-timeout>
@@ -273,7 +269,8 @@
        <param-name>org.ocpsoft.rewrite.config.CONFIG_RELOADING</param-name>
        <param-value>true</param-value>
     </context-param>    -->
-    <welcome-file-list>
+    <!--        <welcome-file-list>
 		<welcome-file>upload.html</welcome-file>
-	</welcome-file-list>
+	</welcome-file-list>-->
+    
 </web-app>
