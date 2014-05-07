@@ -6,7 +6,13 @@
 
 package se.kth.bbc.study;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
@@ -14,10 +20,14 @@ import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.DFSClient;
 
 /**
  *
@@ -33,6 +43,12 @@ public class DatasetMB implements Serializable{
     
     private String owner;
     private String datasetName;
+    
+    public final String nameNodeURI = "hdfs://localhost:9999";
+    
+//    @ManagedProperty("#{param['formId:dataset_name']}")
+//    private String dataset_name;
+    
     
     
     public String getOwner(){
@@ -95,18 +111,25 @@ public class DatasetMB implements Serializable{
     }
     
     
-    public String fetchOwner(){
+    public String fetchOwner() throws IOException, URISyntaxException{
     
         FacesContext fc = FacesContext.getCurrentInstance();
         Map<String,String> params = fc.getExternalContext().getRequestParameterMap();
         this.owner =  params.get("owner"); 
 //        this.datasetName =  params.get("datasetName"); 
         createDataset();
-        
+        mkDIRS();
         return "dataUpload";
     
     }
     
+    private String getDatasetNameFromParam(){
+    
+        FacesContext fc = FacesContext.getCurrentInstance();
+        return fc.getExternalContext().getRequestParameterMap().get("formId:dataset_name");
+    
+    
+    }
     
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
@@ -125,6 +148,39 @@ public class DatasetMB implements Serializable{
     public void addErrorMessageToUserAction(String message) {
         FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, message, message);
         FacesContext.getCurrentInstance().addMessage(null, errorMessage);
+    }
+       
+    
+    public void mkDIRS() throws IOException, URISyntaxException{
+    
+        Configuration conf = new Configuration();
+        conf.addResource(new File("/home/glassfish/roshan/hadoop-2.2.0/etc/hadoop/core-site.xml").toURI().toURL());
+        conf.addResource(new File("/home/glassfish/roshan/hadoop-2.2.0/etc/hadoop/hdfs-site.xml").toURI().toURL());
+        conf.set("fs.defaultFS", this.nameNodeURI);
+        DFSClient client = new DFSClient(new URI(this.nameNodeURI), conf);
+        
+        String rootDir = getUsername().split("@")[0];
+        String ds_name = getDatasetNameFromParam();
+        
+        
+        try {
+            if (client.exists(rootDir)) {
+                System.out.println("Directory structured is exists! " + rootDir);
+                return;
+            }
+        
+                client.mkdirs("/"+rootDir+"/dataSets/"+ds_name, null, false);
+            
+         } catch(IOException ioe){
+            System.err.println("IOException during operation"+ ioe.toString());
+            System.exit(1);
+         }finally {
+            
+            client.close();
+        
+        }
+        
+        
     }
     
     

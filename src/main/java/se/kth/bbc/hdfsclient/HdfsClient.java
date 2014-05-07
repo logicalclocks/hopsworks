@@ -6,14 +6,14 @@
 
 package se.kth.bbc.hdfsclient;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.FileInputStream;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.RequestScoped;
+import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
 
 
 import org.apache.hadoop.conf.Configuration;
@@ -23,66 +23,48 @@ import org.apache.hadoop.hdfs.DFSClient;
  *
  * @author roshan
  */
+
+@ManagedBean
+@RequestScoped
 public class HdfsClient {
     
-    public final String nameNodeURI = "";
+    public final String nameNodeURI = "hdfs://snurran.sics.se/9999";
     
-    private String srcFile;
-    private String dstFile;
- 
-    public String getSourceFilename() {
-        return srcFile;
-    }
-    public void setSourceFilename(String srcFile) {
-        this.srcFile = srcFile;
-    }
-    public String getDestinationFilename() {
-        return dstFile;
-    }
- 
-    public void setDestinationFilename(String dstFile) {
-        this.dstFile = dstFile;
-    }
-    
-    public void uploadFile() throws IOException, URISyntaxException{
+    public void mkDIRS(String rootDir) throws IOException, URISyntaxException{
     
         Configuration conf = new Configuration();
-        conf.set("fs.defaultfs.name", this.nameNodeURI);
+        conf.set("fs.defaultFS", this.nameNodeURI);
         DFSClient client = new DFSClient(new URI(this.nameNodeURI), conf);
-        OutputStream out = null;
-        InputStream in = null;
         
         try {
-            if (client.exists(dstFile)) {
-                System.out.println("File already exists in the storage: " + dstFile);
+            if (client.exists(rootDir)) {
+                System.out.println("Directory structured is exists! " + rootDir);
                 return;
             }
+        
+            client.mkdirs(rootDir, null, false);
             
-            out = new BufferedOutputStream(client.create(dstFile, false));
-            in = new BufferedInputStream(new FileInputStream(srcFile));
-            byte[] buffer = new byte[10240];
- 
-            int len = 0;
-            while ((len = in.read(buffer)) > 0) {
-                out.write(buffer, 0, len);
-            }
-        } catch(IOException ioe){
+         } catch(IOException ioe){
             System.err.println("IOException during operation"+ ioe.toString());
             System.exit(1);
-        } finally {
+         }finally {
             
             client.close();
         
-            if (in != null) {
-                in.close();
-            }
-            if (out != null) {
-                out.close();
-            }
         }
         
         
     }
+    
+    private HttpServletRequest getRequest() {
+        return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+    }
+    
+    public String getUsername(){
+          return getRequest().getUserPrincipal().getName();
+    }
+    
+    
     
     
 }
