@@ -106,30 +106,49 @@ public class AgentResource {
             JSONObject json = new JSONObject(jsonStrig);
             String hostId = json.getString("host-id");
             Host host = hostEJB.findByHostId(hostId);
+            boolean toRegister = false;
             if (host == null) {
                 logger.log(Level.INFO, "Could not register host with id {0}: unknown host id.", hostId);
-                return Response.status(Response.Status.NOT_FOUND).build();
+//                return Response.status(Response.Status.NOT_FOUND).build();
+                host = new Host();
+                host.setHostId(hostId);
+                toRegister = true;
+                if (json.has("hostname") == false) {
+                    host.setHostname("vagrant");
+                } else {
+                    host.setHostname(json.getString("hostname"));                    
+                }
+            } else {
+                if (host.isRegistered()) {
+                    logger.log(Level.INFO, "Did not register host with id {0}: already registered.", hostId);
+                    return Response.status(Response.Status.NOT_FOUND).build();
+                }
+                host.setHostname(json.getString("hostname"));
             }
-            if (host.isRegistered()) {
-                logger.log(Level.INFO, "Did not register host with id {0}: already registered.", hostId);
-                return Response.status(Response.Status.NOT_FOUND).build();
+            String certificate = "no certificate";
+            if (json.has("csr")) {
+                String csr = json.getString("csr");
+                certificate = PKIUtils.signWithServerCertificate(csr);
             }
-            String csr = json.getString("csr");
-            String certificate = PKIUtils.signWithServerCertificate(csr);
 
             host.setRegistered(true);
             host.setLastHeartbeat((new Date()).getTime());
-            host.setHostname(json.getString("hostname"));
             if (json.has("public-ip")) {
                 host.setPublicIp(json.getString("public-ip"));
             }
             if (json.has("private-ip")) {
                 host.setPrivateIp(json.getString("private-ip"));
             }
-            host.setDiskCapacity(json.getLong("disk-capacity"));
-            host.setMemoryCapacity(json.getLong("memory-capacity"));
-            host.setCores(json.getInt("cores"));
-            hostEJB.storeHost(host, false);
+            if (json.has("disk-capacity")) {
+                host.setDiskCapacity(json.getLong("disk-capacity"));
+            }
+            if (json.has("memory-capacity")) {
+                host.setMemoryCapacity(json.getLong("memory-capacity"));
+            }
+            if (json.has("cores")) {
+                host.setCores(json.getInt("cores"));
+            }
+            hostEJB.storeHost(host, toRegister);
             roleEjb.deleteRolesByHostId(hostId);
             logger.log(Level.INFO, "Host with id {0} registered successfully.", hostId);
             return Response.ok(certificate).build();
@@ -178,6 +197,12 @@ public class AgentResource {
                 }
                 role.setWebPort(s.has("web-port") ? s.getInt("web-port") : null);
                 role.setPid(s.has("pid") ? s.getInt("pid") : 0);
+                String init = s.has("init-script") ? s.getString("init-script") : null;
+                if (init != null && !init.isEmpty()) {
+                    role.setSupportsInit(true);
+                } else {
+                    role.setSupportsInit(false);
+                }
                 if (s.has("status")) {
                     role.setStatus(Status.valueOf(s.getString("status")));
                 } else {

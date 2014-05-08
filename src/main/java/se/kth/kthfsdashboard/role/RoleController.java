@@ -136,4 +136,17 @@ public class RoleController {
         }
         return true;
     }
+    
+    public boolean disableInit() {
+        if (!instanceInfoList.isEmpty() && instanceInfoList.get(0).getStatus() == Status.Stopped) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean supportsInitScript() {
+        return roleEjb.supportsInit(cluster, service, role);
+    }
+    
+    
 }

@@ -26,7 +26,7 @@ public class ServiceRoleMapper {
         serviceRoleMap.put(ServiceType.NDB, Arrays.asList(RoleType.ndb, RoleType.mysqld, RoleType.mgmserver, RoleType.memcached));
         serviceRoleMap.put(ServiceType.YARN, Arrays.asList(RoleType.resourcemanager, 
                 RoleType.nodemanager, RoleType.proxyserver));
-        serviceRoleMap.put(ServiceType.MAP_REDUCE, Arrays.asList(RoleType.jobhistoryserver));        
+        serviceRoleMap.put(ServiceType.MAP_REDUCE, Arrays.asList(RoleType.historyserver));        
         serviceRoleMap.put(ServiceType.SPARK, new ArrayList<RoleType>()); // Empty list
         serviceRoleMap.put(ServiceType.STRATOSPHERE, new ArrayList<RoleType>()); // Empty list
         serviceRoleMap.put(ServiceType.COLLECTD, Arrays.asList(RoleType.collectd, RoleType.collectdserver));
@@ -39,7 +39,7 @@ public class ServiceRoleMapper {
         roleFullNames.put(RoleType.memcached, "Memcached Server");
         roleFullNames.put(RoleType.resourcemanager, "Resource Manager");  
         roleFullNames.put(RoleType.nodemanager, "Node Manager");          
-        roleFullNames.put(RoleType.jobhistoryserver, "MR Job History Server");          
+        roleFullNames.put(RoleType.historyserver, "MR Job History Server");          
         roleFullNames.put(RoleType.proxyserver, "YARN WebProxy Server");          
         roleFullNames.put(RoleType.collectd, "Collectd");          
         roleFullNames.put(RoleType.collectdserver, "Collectd Server");          

@@ -32,6 +32,7 @@ import se.kth.kthfsdashboard.struct.Status;
     @NamedQuery(name = "RoleHost.TotalCores", query="SELECT SUM(h2.cores) FROM Host h2 WHERE h2.hostId IN (SELECT h.hostId FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster GROUP BY h.hostId)"),
     @NamedQuery(name = "RoleHost.TotalMemoryCapacity", query="SELECT SUM(h2.memoryCapacity) FROM Host h2 WHERE h2.hostId IN (SELECT h.hostId FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster GROUP BY h.hostId)"),
     @NamedQuery(name = "RoleHost.TotalDiskCapacity", query="SELECT SUM(h2.diskCapacity) FROM Host h2 WHERE h2.hostId IN (SELECT h.hostId FROM Role r, Host h WHERE r.hostId = h.hostId AND r.cluster = :cluster GROUP BY h.hostId)"),    
+    @NamedQuery(name = "Role.supportsInitBy-Cluster-Service-Role", query = "SELECT r.supportsInit FROM Role r WHERE r.cluster = :cluster AND r.service = :service AND r.role = :role"),
 })
 public class Role implements Serializable {
 
@@ -50,7 +51,13 @@ public class Role implements Serializable {
     @Column(nullable = false)
     private Status status;
     private int pid;
+    private boolean supportsInit;
+    
     private Integer webPort;
+    @Column(length = 31)
+    private String command;
+    @Column(length = 255)
+    private String configFile;
 
     public Role() {
     }
@@ -140,6 +147,30 @@ public class Role implements Serializable {
         return df.format(uptime / 1000);
     }
 
+    public String getConfigFile() {
+        return configFile;
+    }
+    
+    public void setConfigFile(String configFile) {
+        this.configFile = configFile;
+    }
+
+    public String getCommand() {
+        return command;
+    }
+
+    public void setCommand(String command) {
+        this.command = command;
+    }
+
+    public void setSupportsInit(boolean supportsInit) {
+        this.supportsInit = supportsInit;
+    }
+
+    public boolean isSupportsInit() {
+        return supportsInit;
+    }
+    
     @Override
     public String toString() {
         return String.format("%s/%s/%s @ %s", cluster, service, role, hostId);
