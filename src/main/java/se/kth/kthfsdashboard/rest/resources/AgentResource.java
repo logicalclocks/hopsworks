@@ -195,8 +195,8 @@ public class AgentResource {
                 } else {
                     role.setRole("");
                 }
-                role.setWebPort(s.has("web-port") ? s.getInt("web-port") : null);
                 role.setPid(s.has("pid") ? s.getInt("pid") : 0);
+                role.setWebPort(s.has("web-port") ? s.getInt("web-port") : 0);
                 String init = s.has("init-script") ? s.getString("init-script") : null;
                 if (init != null && !init.isEmpty()) {
                     role.setSupportsInit(true);

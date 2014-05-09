@@ -42,9 +42,10 @@ public class TerminalController {
                 + "    / __  / /_/ / ____/   \n"
                 + "   /_/ /_/\\____/_/       \n"
                 + "                                 \n")
-                .replace(" ", "&nbsp;")
-                .replace("\\", "&#92;")
-                .replace("\n", "<br/>");
+//                .replace(" ", "&nbsp;")
+//                .replace("\\", "&#92;")
+//                .replace("\n", "<br/>")
+                ;
     }
 
     public TerminalController() {
@@ -84,7 +85,7 @@ public class TerminalController {
     }
 
     public String handleCommand(String command, String[] params) {
-//      TODO: Check special characters like ";" to avoid injection
+//      TODO: Check special characters like ";" to avoid injection attacks
         String roleName;
         if (service.equalsIgnoreCase(ServiceType.HDFS.toString())) {
             if (command.equals("hdfs")) {

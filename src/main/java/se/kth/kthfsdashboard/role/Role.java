@@ -52,7 +52,6 @@ public class Role implements Serializable {
     private Status status;
     private int pid;
     private boolean supportsInit;
-    
     private Integer webPort;
     @Column(length = 31)
     private String command;

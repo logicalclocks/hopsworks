@@ -39,6 +39,7 @@
                </p:menuButton>
                <p:commandButton value="Hosts" action="hosts"/>
                <p:commandButton value="Alerts" action="alerts"/>
+               <p:commandButton value="Terminal" action="terminal" rendered="#{terminalControllerGeneric.isClusterActive()}"/>
             </p:toolbarGroup>  
 
             <p:toolbarGroup align="right">  

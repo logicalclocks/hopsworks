@@ -209,12 +209,12 @@
         <dependency>
             <groupId>org.primefaces.extensions</groupId>
             <artifactId>primefaces-extensions</artifactId>
-            <version>0.7.1</version>
+            <version>1.2.1</version>
         </dependency>
         <dependency>
             <groupId>org.primefaces.extensions</groupId>
             <artifactId>resources-codemirror</artifactId>
-            <version>0.7.1</version>
+            <version>1.2.1</version>
         </dependency>
         <dependency>
             <groupId>org.ocpsoft.rewrite</groupId>
