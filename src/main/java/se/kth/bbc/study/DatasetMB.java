@@ -116,7 +116,7 @@ public class DatasetMB implements Serializable{
         FacesContext fc = FacesContext.getCurrentInstance();
         Map<String,String> params = fc.getExternalContext().getRequestParameterMap();
         this.owner =  params.get("owner"); 
-//        this.datasetName =  params.get("datasetName"); 
+//       this.datasetName =  params.get("datasetName"); 
         createDataset();
         mkDIRS();
         return "dataUpload";
@@ -154,14 +154,15 @@ public class DatasetMB implements Serializable{
     public void mkDIRS() throws IOException, URISyntaxException{
     
         Configuration conf = new Configuration();
-        conf.addResource(new File("/home/glassfish/roshan/hadoop-2.2.0/etc/hadoop/core-site.xml").toURI().toURL());
-        conf.addResource(new File("/home/glassfish/roshan/hadoop-2.2.0/etc/hadoop/hdfs-site.xml").toURI().toURL());
+//        conf.addResource(new File("/home/glassfish/roshan/hadoop-2.2.0/etc/hadoop/core-site.xml").toURI().toURL());
+//        conf.addResource(new File("/home/glassfish/roshan/hadoop-2.2.0/etc/hadoop/hdfs-site.xml").toURI().toURL());
         conf.set("fs.defaultFS", this.nameNodeURI);
         DFSClient client = new DFSClient(new URI(this.nameNodeURI), conf);
         
-        String rootDir = getUsername().split("@")[0];
+        String rootDir = getUsername().split("@")[0].trim();
+        //String rootDir = getUsername().substring(0, getUsername().indexOf('@')).trim();
         String ds_name = getDatasetNameFromParam();
-        
+        String buildPath = File.separator+rootDir+File.separator+ds_name;
         
         try {
             if (client.exists(rootDir)) {
@@ -169,14 +170,14 @@ public class DatasetMB implements Serializable{
                 return;
             }
         
-                client.mkdirs("/"+rootDir+"/dataSets/"+ds_name, null, false);
+                client.mkdirs(buildPath, null, true);
             
          } catch(IOException ioe){
             System.err.println("IOException during operation"+ ioe.toString());
             System.exit(1);
          }finally {
             
-            client.close();
+              client.close();
         
         }
         

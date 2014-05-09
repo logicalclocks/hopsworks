@@ -7,6 +7,7 @@
 package se.kth.hop.TestServlet;
 
 //import java.io.*;
+import java.io.File;
 import java.math.BigInteger;
 import org.apache.commons.codec.digest.DigestUtils;
 import java.nio.charset.*;
@@ -21,6 +22,16 @@ public class Test {
  public static void main(String args[]){
       String Str1 = "admin";
 
+      String username1 = "roshan@yahoo.com".split("@")[0];
+      String username2 = "roshan@yahoo.com".split("@")[0].trim();
+      String username3 = "roshan@yahoo.com".substring(0, "roshan@yahoo.com".indexOf('@'));
+      String buildpath1 = File.separator+username1+File.separator+"dataset";
+      String buildpath2 = File.separator+username2;
+      String buildpath3 = File.separator+username3;
+      
+      System.out.println(buildpath1);
+      System.out.println(buildpath2);
+      System.out.println(buildpath3);
       //try{
          byte[] Str2 = Str1.getBytes();
          System.out.println("Returned  Value md5: " + DigestUtils.md5Hex(Str2));
