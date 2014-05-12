@@ -11,20 +11,11 @@
     <name>Hop Dashboard</name>
 
     <properties>
+        <java.version>1.7</java.version>
         <jclouds.version>1.7.0</jclouds.version>
         <jclouds.stable.version>1.6.0</jclouds.stable.version>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        
-        <!--        <glassfish.hostname>193.10.64.126</glassfish.hostname>
-        <glassfish.admin>admin</glassfish.admin>
-        <glassfish.passwd>admin</glassfish.passwd>-->
-            
-        <glassfish.hostname>snurran.sics.se</glassfish.hostname>
-        <glassfish.admin>admin</glassfish.admin>
-        <glassfish.passwd>dight12</glassfish.passwd>  
-           
-        <netbeans.hint.deploy.server>gfv3ee6</netbeans.hint.deploy.server>
     </properties>
 
     <dependencies>
@@ -239,10 +230,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>3.1</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <compilerArguments>
                         <endorseddirs>${endorsed.dir}</endorseddirs>
                     </compilerArguments>

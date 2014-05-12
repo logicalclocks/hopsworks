@@ -5,13 +5,14 @@
 package se.kth.hop.deploy.provision;
 
 import java.io.Serializable;
-import javax.ejb.EJB;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
+import org.primefaces.extensions.event.CompleteEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import se.kth.hop.deploy.virtualization.parser.ClusterEntity;
-import se.kth.hop.deploy.virtualization.parser.ClusterFacade;
 
 /**
  * Controller that handles edition of YAML cluster files using a code console
@@ -125,4 +126,38 @@ public class NewEditorYamlController implements Serializable {
         return sb.toString();
 
     }
+
+    public List<String> complete(final CompleteEvent event) {
+        try {
+            return completeEjb(event.getToken());
+        } catch (Exception ex) {
+            java.util.logging.Logger.getLogger(NewEditorYamlController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
+    private static final String[] GIT = {"user", "url"};
+    private static final String[] GIT_URL = {"https://github.com/", "https://github.com/hopstart/"};
+
+    public List<String> completeEjb(String token) throws Exception {
+        if (token == null || token.trim().length() == 0) {
+            return null;
+        } else {
+            List<String> suggestions = new ArrayList<String>();
+
+            switch (token) {
+                case "git":
+                    for (String v : GIT) {
+                        suggestions.add(v);
+                    }
+                case "url":
+                    for (String v : GIT_URL) {
+                        suggestions.add(v);
+                    }
+            }
+            return suggestions;
+        }
+
+    }
+
 }

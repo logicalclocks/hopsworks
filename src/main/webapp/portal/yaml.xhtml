@@ -6,34 +6,36 @@
       xmlns:f="http://java.sun.com/jsf/core"      
       xmlns:p="http://primefaces.org/ui"
       xmlns:pe="http://primefaces.org/ui/extensions">
-    
+
 
     <h:outputStylesheet library="primefaces-extensions" name="codemirror/mode/tiki.css" />
-    
+
     <ui:composition template="yamlLayout.xhtml">
-    <ui:define name="title">
+        <ui:define name="title">
             Launch a Cluster
         </ui:define>
         <ui:define name="css"/>
         <ui:define name="scripts"/>
         <ui:define name="content">
-    
+
 
             <h:outputStylesheet library="primefaces-extensions" name="codemirror/mode/tiki.css" />
 
             <div id="editor" align="left" style="margin-top:10px;">
-                  
+
                 <div id="codeEditor">
                     <h:body>
                         <h:form>
                             <p:panel id="codeEditorPanel" header="Cluster Definition" >
                                 <p:growl id="growl" showDetail="true" />
-                                
+
 
                                 <pe:codeMirror id="codeMirror" 
                                                mode="#{newEditorYamlController.mode}"
                                                theme="eclipse" 
                                                value="#{newEditorYamlController.content}" 
+                                               completeMethod="#{newEditorYamlController.complete}"  
+                                               <!--extraKeys="{ 'Ctrl-Space': function(cm) { PF('myCodeMirror').complete(); }}"-->
                                                />
                             </p:panel> 
                             <p:commandButton  update=":#{p:component('codeMirror')}"
@@ -42,7 +44,7 @@
                                               style="margin-top:10px;"
                                               />
                         </h:form>
-                        
+
                     </h:body>
                 </div>
             </div>
