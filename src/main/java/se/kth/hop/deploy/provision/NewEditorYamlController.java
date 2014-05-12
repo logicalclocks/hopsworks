@@ -16,7 +16,7 @@ import se.kth.hop.deploy.virtualization.parser.ClusterFacade;
 /**
  * Controller that handles edition of YAML cluster files using a code console
  * interface.
- * 
+ *
  * We should be doing the following:
  * http://leonotepad.blogspot.se/2014/01/playing-with-antlr4-primefaces.html
  *
@@ -55,24 +55,24 @@ public class NewEditorYamlController implements Serializable {
         this.mode = mode;
     }
 
-
     public void invokeJclouds() {
 //        return "editcluster";
     }
 
     public String getOneNodeCluster() {
         StringBuilder sb = new StringBuilder();
-        
-        sb.append("!!se.kth.hop.deploy.virtualization.parser.Cluster \n "
-                + "name: test2 \n  installPhase: true\n   global:\n     recipes:\n   - ssh\n - chefClient "
-                + "authorizePorts:  \n      - 3306 \n     - 4343  \n     - 3321 \n    git: \n"
-                + "      user: Jim Dowling \n      repository: https://github.com/hopstart/hop-chef.git \n"
-                + "      key: notNull \n  provider: \n    name: aws-ec2 \n    instanceType: m1.large \n"
-                + "    loginUser: ubuntu \n    image: eu-west-1/ami-ffcdce8b \n    region: eu-west-1 \n"
-                + "  NodeGroup: \n  - service: ndb \n    number: 2 \n  - service: mgm \n    number: 1 \n"
-                + "  - service: mysqld \n    number: 1 \n    recipes:  \n      - namenode \n  - service: namenode \n"
-                + "    number: 1 \n    recipes: \n      - resourcemanager \n  - service: datanode \n"
-                + "    number: 2 \n    recipes: \n      - nodemanager \n... \n"
+
+        sb.append("---\n"
+                + "name: E2ETestCluster\n"
+                + "provider: {name: vagrant}\n"
+                + "git: {url: \"https://github.com/hopstart/ <https://github.com/hopstart/>\", user: jdowling}\n"
+                + "\n"
+                + "group: \n"
+                + "  name: g1\n"
+                + "  size: 1 \n"
+                + "  recipes: [hopagent, ndb/ndbd, ndb/mysqld, ndb/mgmd, hopdashboard, hop/nn, hop/dn, hop/rm, hop/nm, hop/jhs]\n"
+                + "  attr: ndb/ndbapi/private_ips=$private_ips\n"
+                + "  attr: ndb/ndbapi/public_ips=$public_ips\n"
         );
         setContent(sb.toString());
         return sb.toString();
@@ -80,16 +80,26 @@ public class NewEditorYamlController implements Serializable {
 
     public String getThreeNodeCluster() {
         StringBuilder sb = new StringBuilder();
-        sb.append("!!se.kth.hop.deploy.virtualization.parser.Cluster \n "
-                + "name: test2 \n  installPhase: true\n   global:\n     recipes:\n   - ssh\n - chefClient "
-                + "authorizePorts:  \n      - 3306 \n     - 4343  \n     - 3321 \n    git: \n"
-                + "      user: Jim Dowling \n      repository: https://github.com/hopstart/hop-chef.git \n"
-                + "      key: notNull \n  provider: \n    name: aws-ec2 \n    instanceType: m1.large \n"
-                + "    loginUser: ubuntu \n    image: eu-west-1/ami-ffcdce8b \n    region: eu-west-1 \n"
-                + "  NodeGroup: \n  - service: ndb \n    number: 2 \n  - service: mgm \n    number: 1 \n"
-                + "  - service: mysqld \n    number: 1 \n    recipes:  \n      - namenode \n  - service: namenode \n"
-                + "    number: 1 \n    recipes: \n      - resourcemanager \n  - service: datanode \n"
-                + "    number: 2 \n    recipes: \n      - nodemanager \n... \n"
+        sb.append("---\n"
+                + "name: E2ETestCluster\n"
+                + "provider: {name: vagrant}\n"
+                + "git: {url: \"https://github.com/hopstart/ <https://github.com/hopstart/>\",\n"
+                + "user: jdowling}\n"
+                + "attr: ndb/ndbapi/private_ips=$g1.private_ips\n"
+                + "attr: ndb/ndbapi/public_ips=$g1.public_ips\n"
+                + "\n"
+                + "group: \n"
+                + "  name: g1\n"
+                + "  size: 1 \n"
+                + "  recipes: [hopagent, hopdashboard, ndb/mysqld, ndb/mgmd, hop/nn, hop/rm,\n"
+                + "hop/nm, hop/jhs]\n"
+                + "\n"
+                + "group: \n"
+                + "  name: g2\n"
+                + "  size: 2 \n"
+                + "  recipes: [hopagent, ndb/ndbd, hop/dn]"
+                + ""
+                + ""
         );
 
         setContent(sb.toString());
@@ -110,8 +120,7 @@ public class NewEditorYamlController implements Serializable {
                 + "    number: 1 \n    recipes: \n      - resourcemanager \n  - service: datanode \n"
                 + "    number: 2 \n    recipes: \n      - nodemanager \n... \n"
         );
-        
-        
+
         setContent(sb.toString());
         return sb.toString();
 

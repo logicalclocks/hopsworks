@@ -1,16 +1,18 @@
 ---
 name: E2ETestCluster
 provider: {name: vagrant}
-git: {url: "https://github.com/hopstart/ <https://github.com/hopstart/>", user: jdowling}
+git: {url: "https://github.com/hopstart/ <https://github.com/hopstart/>",
+user: jdowling}
+attr: ndb/ndbapi/private_ips=$g1.private_ips
+attr: ndb/ndbapi/public_ips=$g1.public_ips
 
 group: 
-  name: dash
+  name: g1
   size: 1 
-  recipes: [hopagent, ndb/mgmd, ndb/mysqld, hopdashboard, hop/nn, hop/rm, hop/jhs]
-  attr: ndb/ndbapi/private_ips=$private_ips
-  attr: ndb/ndbapi/public_ips=$public_ips
-  name: data
+  recipes: [hopagent, hopdashboard, ndb/mysqld, ndb/mgmd, hop/nn, hop/rm,
+hop/nm, hop/jhs]
+
+group: 
+  name: g2
   size: 2 
-  recipes: [hopagent, ndb/ndbd, hop/dn, hop/nm]
-  attr: ndb/ndbapi/private_ips=$private_ips
-  attr: ndb/ndbapi/public_ips=$public_ips
+  recipes: [hopagent, ndb/ndbd, hop/dn]
