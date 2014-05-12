@@ -57,7 +57,7 @@ body {
 
 /*Code Editor Style*/
 #codeEditor{
-    width: 700px;
+    width: 1000px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -292,6 +292,8 @@ body {
     padding-right: 20px;
     background-color: transparent;
 }
+
+
 
 /*.SecondToolbarBad*/
 .SecondToolbarBad {

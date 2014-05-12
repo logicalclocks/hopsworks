@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core"      
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:pe="http://primefaces.org/ui/extensions">
+    
+
+    <h:outputStylesheet library="primefaces-extensions" name="codemirror/mode/tiki.css" />
+    
+    <ui:composition template="yamlLayout.xhtml">
+    <ui:define name="title">
+            Launch a Cluster
+        </ui:define>
+        <ui:define name="css"/>
+        <ui:define name="scripts"/>
+        <ui:define name="content">
+    
+
+            <h:outputStylesheet library="primefaces-extensions" name="codemirror/mode/tiki.css" />
+
+            <div id="editor" align="left" style="margin-top:10px;">
+                  
+                <div id="codeEditor">
+                    <h:body>
+                        <h:form>
+                            <p:panel id="codeEditorPanel" header="Cluster Definition" >
+                                <p:growl id="growl" showDetail="true" />
+                                
+
+                                <pe:codeMirror id="codeMirror" 
+                                               mode="#{newEditorYamlController.mode}"
+                                               theme="eclipse" 
+                                               value="#{newEditorYamlController.content}" 
+                                               />
+                            </p:panel> 
+                            <p:commandButton  update=":#{p:component('codeMirror')}"
+                                              value="Launch"
+                                              action="#{newEditorYamlController.invokeJclouds()}"
+                                              style="margin-top:10px;"
+                                              />
+                        </h:form>
+                        
+                    </h:body>
+                </div>
+            </div>
+        </ui:define>
+    </ui:composition>
+</html>
+

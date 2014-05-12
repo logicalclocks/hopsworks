@@ -4,16 +4,12 @@ import se.kth.kthfsdashboard.struct.ServiceType;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpServletRequest;
-import static org.ocpsoft.urlbuilder.util.Decoder.path;
+import javax.persistence.Transient;
 import se.kth.kthfsdashboard.communication.WebCommunication;
 import se.kth.kthfsdashboard.host.Host;
 import se.kth.kthfsdashboard.host.HostEJB;
@@ -35,6 +31,7 @@ public class TerminalControllerGeneric {
     @ManagedProperty("#{param.service}")
     private String service;
     @EJB
+    @Transient
     private HostEJB hostEjb;
     private static final Logger logger = Logger.getLogger(TerminalControllerGeneric.class.getName());
     private static final String welcomeMessage;
@@ -77,6 +74,12 @@ public class TerminalControllerGeneric {
         this.cluster = cluster;
     }
 
+    public String clusterName(String cluster) {
+        this.cluster = cluster;
+        ActiveCluster.setCluster(cluster);
+        return "terminal";
+    }
+    
     public String getCluster() {
         return cluster;
     }
@@ -87,8 +90,8 @@ public class TerminalControllerGeneric {
 
     public String handleCommand(String command, String[] params) {
 //      TODO: Check special characters like ";" to avoid injection attacks
+        this.cluster = ActiveCluster.getCluster();
         String roleName;
-        cluster = getClusterFromPath();
         if (command.equals("hdfs")) {
             roleName = RoleType.datanode.toString();
             service = ServiceType.HDFS.toString();
@@ -115,27 +118,11 @@ public class TerminalControllerGeneric {
             return result;
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
-            return "Error: Could not contact a node: " + ex.getMessage();
+            return "Error: Could not contact a node (" + cluster + "/" +  service 
+                    + "/" + roleName + ") : " + ex.getMessage();
         }
     }
 
-    public boolean isClusterActive() {
-        FacesContext context = FacesContext.getCurrentInstance();
-        HttpServletRequest req = (HttpServletRequest) context.getExternalContext().getRequest();
-        String url = req.getRequestURL().toString();
-        Pattern pattern = Pattern.compile("hop-dashboard/sauron/clusters/");
-        Matcher matcher = pattern.matcher(url);
-        return matcher.find();
-    }
+
     
-    private String getClusterFromPath() {
-        FacesContext context = FacesContext.getCurrentInstance();
-        HttpServletRequest req = (HttpServletRequest) context.getExternalContext().getRequest();
-        String url = req.getRequestURL().toString();
-        int pos = url.indexOf("/clusters/");
-        if (pos == -1) {
-            return "No cluster found";
-        }
-        return url.substring(pos+"/clusters/".length());
-    }        
 }

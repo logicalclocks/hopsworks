@@ -10,12 +10,10 @@
       xmlns:c="http://java.sun.com/jsp/jstl/core">
 
     <h:head>
-        <title><ui:insert name="title">BioBankCloud</ui:insert></title>
+        <title><ui:insert name="title">BiobankCloud</ui:insert></title>
         <link type="text/css" rel="stylesheet" href="/project/faces/javax.faces.resource/theme.css?ln=primefaces-le-frog" />
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-
     </h:head>
-
 
     <h:body>
 
@@ -27,7 +25,6 @@
                     <p:toolbar styleClass="MainToolbar">  
                         <p:toolbarGroup align="left">  
                             <!--                            <h:outputLabel value="Selected Provider: "/>-->
-
                             <p:menu overlay="true" trigger="providerBtn" my="left top" at="bottom left">
                                 <p:menuitem value="Amazon-EC2" action ="#{portalMB.updateName}">
                                     <f:setPropertyActionListener target="#{portalMB.providerName}" value="Amazon-EC2"/>
