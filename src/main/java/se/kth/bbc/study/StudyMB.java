@@ -9,6 +9,7 @@ package se.kth.bbc.study;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.Principal;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -40,6 +41,7 @@ public class StudyMB implements Serializable{
     private TrackStudy study;
     private DatasetStudy dsStudy;
     private Dataset dataset;
+    private StudyGroupMembers studyMember;
     
     
     private String studyName;   
@@ -97,6 +99,19 @@ public class StudyMB implements Serializable{
         this.dataset = dataset;
     } 
     
+    
+    public StudyGroupMembers getStudyMember() {
+        if (studyMember == null) {
+            studyMember = new StudyGroupMembers();
+        }
+        return studyMember;
+    }
+    
+    public void setStudyMember(StudyGroupMembers studyMember) {
+        this.studyMember = studyMember;
+    } 
+    
+        
     public List<TrackStudy> getStudyList(){
         return studyController.findAll();
     }
@@ -164,6 +179,27 @@ public class StudyMB implements Serializable{
         return "Success!";
     }
     
+    
+    //add members to study
+    
+    public String addMembers(){
+    
+        studyMember.setTimeadded(new Date());
+        studyMember.setAddedBy(getUsername());
+        
+        try{
+            studyController.addMember(studyMember);
+        }catch(EJBException ejb){
+            addErrorMessageToUserAction("Error: New Member adding failed!");
+            return null;
+        
+        }
+            addMessage("added member successfully!");
+            return "studyMgmt";
+    
+    }
+    
+    
     public void addMessage(String summary) {
         FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, summary);
         FacesContext.getCurrentInstance().addMessage(null, message);
@@ -195,7 +231,12 @@ public class StudyMB implements Serializable{
         RequestContext.getCurrentInstance().execute("dlgNewStudy.show()");
     }
     
-    
+    public void showNewStudyMemberDialog() {
+        
+        RequestContext.getCurrentInstance().update("formNewStudyMember");
+        RequestContext.getCurrentInstance().reset("formNewStudyMember");
+        RequestContext.getCurrentInstance().execute("dlgNewStudyMember.show()");
+    }
     
     
 }

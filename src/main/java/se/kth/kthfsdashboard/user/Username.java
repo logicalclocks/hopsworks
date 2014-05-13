@@ -28,10 +28,11 @@ import org.apache.commons.codec.digest.DigestUtils;
 @Cacheable(false)
 @NamedQueries({
     @NamedQuery(name = "Username.findAll", query = "SELECT r FROM Username r"),
+    @NamedQuery(name = "Username.findAllByName", query = "SELECT r.name FROM Username r"),
     @NamedQuery(name = "Username.findByEmail", query = "SELECT r FROM Username r WHERE r.email = :email"),
     @NamedQuery(name = "Username.findByUsername", query = "SELECT r FROM Username r WHERE r.username = :username"),
     @NamedQuery(name = "Username.findByPassword", query = "SELECT r FROM Username r WHERE r.password = :password"),
-    @NamedQuery(name = "Username.findByName", query = "SELECT r FROM Username r WHERE r.name like \":name%\" ")})
+    @NamedQuery(name = "Username.findByName", query = "SELECT r FROM Username r WHERE r.name = :name")})
 public class Username implements Serializable {
 
     private static final long serialVersionUID = 1L;

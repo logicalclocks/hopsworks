@@ -52,6 +52,8 @@
                         
                         <p:tab title="Team">
                                   <h3>Study Members (#{studyMB.NOfMembers})</h3>
+                                  <p:spacer width="20" height="20" />
+                                  <p:commandButton value="New Study Member" icon="ui-icon-plusthick" onclick="dlgNewStudyMember.show()" action="#{studyMB.showNewStudyMemberDialog()}" rendered="#{userMB.anyAdminUser}"/>
                                   <p:separator id="separator"/>
                                 <h:panelGrid columns="2">  
                                     <div class="team_table"> 
@@ -68,6 +70,48 @@
            </h:form>
             
         </ui:define>
+        
+        <ui:define name="dialogs">  
+         <p:dialog modal="true" widgetVar="dlgNewStudyMember">  
+        
+             
+             <h:form id="formNewStudyMember" prependId="false">
+               <p:messages autoUpdate="true"/>
+             
+               <p:tab id="study" title="Study">
+
+                    <p:panel header="New Member">
+			
+				<h:messages errorClass="error"/>
+				
+				
+                                <div align="left">
+                                            <p:outputLabel for="acName" value="Member :" style="font-size:14px"/>
+                                            <p:autoComplete id="acName" value="#{userController.selectedUsername}" completeMethod="#{userController.completeUsername}" multiple="true"/>
+                                            <br/>
+                                            <hr/>
+                                            <p:outputLabel for="acStudyname" value="Study :" style="font-size:14px"/>
+                                            <p:autoComplete id="acStudyname" value="#{studyMB.studyMember.studyGroupMembersPK.studyname}" completeMethod="#{studyMB.studyList}"/>
+                                </div>
+                                <f:facet name="footer">
+                                    <p:commandButton value="Create" icon="ui-icon-plusthick" actionListener="#{studyMB.addMembers()}"/>                                    
+                                </f:facet>      
+				
+			</p:panel>
+		</p:tab>
+               
+               
+               
+             </h:form>
+             
+             
+         </p:dialog>
+        
+        
+        
+        
+        </ui:define>
+        
     </ui:composition>
 </html>
                     

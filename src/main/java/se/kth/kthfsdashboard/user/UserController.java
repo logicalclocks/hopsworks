@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
@@ -38,14 +39,22 @@ public class UserController implements Serializable {
     
     List<Group> g = new ArrayList<Group>();
     private List<Username> filteredUsers;
+    private List<Username> usernames;
+    private List<Username> selectedUsername;
     private String email;
     private String name;
     private String username;
   
     
     public UserController() {
+        
     }
 
+    @PostConstruct
+    protected void init(){
+        usernames = getAllUsersName();
+    }
+    
     public Username getUser() {
         if (user == null) {
             user = new Username();
@@ -69,7 +78,36 @@ public class UserController implements Serializable {
         return userFacade.findAll();
     }
     
+    public List<Username> getAllUsersName() {
+        return userFacade.findAllByName();
+    }
+    
+    public List<Username> completeUsername(String name) {
+        
+        if(usernames == null)
+            init();
+
+        List<Username> suggestions = new ArrayList<Username>();
+        for(Username un : usernames) {
+            if(un.getName().startsWith(name))
+                suggestions.add(un);
+        }
+            return suggestions;
+    }
        
+    public List<Username> getUsersname() {
+        return usernames;
+    }
+ 
+    public List<Username> getSelectedUsername() {
+        return selectedUsername;
+    }
+ 
+    public void setSelectedUsername(List<Username> selectedUsername) {
+        this.selectedUsername = selectedUsername;
+    }
+       
+    
     public Group[] getGroups() {
         return Group.values();
     }
@@ -119,10 +157,7 @@ public class UserController implements Serializable {
         return "studyMember";
     
     }
-    
-    
-    
-    
+
     public String addUser() {
         
         user.encodePassword();

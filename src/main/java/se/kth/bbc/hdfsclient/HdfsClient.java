@@ -7,17 +7,27 @@
 package se.kth.bbc.hdfsclient;
 
 
+import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletRequest;
 
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.viewfs.ViewFileSystem;
 
 /**
  *
@@ -26,34 +36,56 @@ import org.apache.hadoop.hdfs.DFSClient;
 
 @ManagedBean
 @RequestScoped
-public class HdfsClient {
+public class HdfsClient implements Serializable{
     
-    public final String nameNodeURI = "hdfs://snurran.sics.se/9999";
+    public final String nameNodeURI = "hdfs://localhost:9999";
+    private final String SET_DEFAULT_FS = "fs.defaultFS";
+    public static final String DEFAULT_TYPE = "folder";
     
-    public void mkDIRS(String rootDir) throws IOException, URISyntaxException{
+    private TreeFiles root;
+    private TreeFiles[] treeFile;
+    private TreeFiles selectedFile;
     
+    
+    //private List<TreeFiles> dirTree;
+    
+    
+    public void fetchFiles() throws URISyntaxException, IOException, InterruptedException {
+        
+        root = new TreeFiles("Root", null);
+        
+        String currentUser = getUsername();
         Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", this.nameNodeURI);
-        DFSClient client = new DFSClient(new URI(this.nameNodeURI), conf);
+        conf.set(SET_DEFAULT_FS, this.nameNodeURI+File.separator+currentUser);
+        Path userPath = new Path(conf.get(SET_DEFAULT_FS)); 
+        FileSystem fs = FileSystem.get(conf);    
         
-        try {
-            if (client.exists(rootDir)) {
-                System.out.println("Directory structured is exists! " + rootDir);
-                return;
+        FileStatus[] files = fs.listStatus(userPath);
+        int i = 0;    
+        for(FileStatus file: files){
+               if(i < files.length) {
+                    treeFile[i] = new TreeFiles(DEFAULT_TYPE, file, root);
+                    root = treeFile[i];
+                    i++;
+               }
             }
-        
-            client.mkdirs(rootDir, null, false);
-            
-         } catch(IOException ioe){
-            System.err.println("IOException during operation"+ ioe.toString());
-            System.exit(1);
-         }finally {
-            
-            client.close();
-        
-        }
-        
-        
+    }
+    
+    public TreeFiles getRoot(){
+        return root;
+    }
+    
+    public void setRoot(TreeFiles root){
+        this.root = root;
+    }
+    
+    
+    public TreeFiles getSelectedFile(){
+        return selectedFile;
+    }
+    
+    public void setSelectedFile(TreeFiles selectedFile){
+        this.selectedFile = selectedFile;
     }
     
     private HttpServletRequest getRequest() {

@@ -36,6 +36,17 @@ public class DatasetController {
         return query.getResultList();
     }
     
+    public void removeByName(String dsname) {
+        Dataset ds = findByName(dsname);
+        if (ds != null) {
+            em.remove(ds);
+        }
+    }
+    
+    public Dataset findByName(String dsname){
+        return em.find(Dataset.class, dsname);
+    }
+    
     
     public void persistDataset(Dataset dataset) {
         em.persist(dataset);

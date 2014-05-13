@@ -34,8 +34,16 @@ public class UserFacade extends AbstractFacade<Username> {
         TypedQuery<Username> query = em.createNamedQuery("Username.findAll", Username.class);
         return query.getResultList();
     }
+    
+    public List<Username> findAllByName() {
+        TypedQuery<Username> query = em.createNamedQuery("Username.findAllByName", Username.class);
+        return query.getResultList();
+    }
   
-   
+    public List<Username> findAllUsers(String name){
+        TypedQuery<Username> query = em.createNamedQuery("Username.findByName", Username.class).setParameter("name", name);
+        return query.getResultList();
+    }
     
     public void persist(Username user) {
         em.persist(user);

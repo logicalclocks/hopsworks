@@ -35,6 +35,7 @@
                        <h2 class="title">New Dataset</h2>
                        <hr/>
                         <h:form id="frmDataset">
+                            <p:growl id="messages" showDetail="true" />
                               <p:messages autoUpdate="true"/>
                             <p:panel>
                                 <h:messages errorClass="error"/>
@@ -45,10 +46,9 @@
 
                                     <h:inputText id="dataset_name" value="#{datasetMB.dataset.name}" size="40" validatorMessage="Dataset name cannot be empty"/>
                                     <p:spacer width="20" height="20"/>
-                                    <p:commandButton id="create" icon="ui-icon-plusthick" value="Create dataset" action="#{datasetMB.fetchOwner()}">
-                                       <f:param name="owner" value="#{datasetMB.datasetOwner}"/>
-                                       <!--  <f:param name="datasetName" value="#{datasetMB.dataset.name}"/> -->
-                                    </p:commandButton>
+                                    <p:commandButton id="create" icon="ui-icon-plusthick" value="Create dataset" 
+                                                     action="#{datasetMB.createDataset()}" update="messages">
+                                     </p:commandButton>
                                 
 
                         

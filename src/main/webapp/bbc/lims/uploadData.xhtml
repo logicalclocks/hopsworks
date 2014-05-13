@@ -28,31 +28,72 @@
 <ui:define name="content">
 
          
-             <p:panel>
-                   <div align="left">
-                       <h2 class="title">Upload Dataset</h2>
+<!--             <p:panel>-->
+                 <h:form id="frmUpload">   
+                 <div align="left">
+                       <h2 class="title">Dataset</h2>
                        <hr/>
-                       <h:form id="frmUpload">
+                       
+                           <p:growl id="messages" showDetail="true" />
                            <p:messages autoUpdate="true"/>
                             <div class="dataset_name_holder">
                                 <h:messages errorClass="error"/>
                                 <p:outputLabel style="font-size:16px">Upload Dataset</p:outputLabel>
                                 <p:spacer width="1" height="30" />
                                 <p:separator id="sprt"/>
-                                <h3>Owner: #{datasetMB.datasetOwner}</h3>
+                                <h3>Owner: </h3> #{datasetMB.username}
                                 <br/>
-                                
-                                
-                                
-                                
-                                                 
+                                <h3>Dataset: </h3> #{datasetMB.dataset.name}
+                                <br/>
+                                <h3>Path: </h3> ...............
                             </div>
                             <hr/>
+                        </div>
+                     
+                     <div align="center">
+                         
+                         
+                         <p:tree id="treeSingle">
+ 
+                             <p:treeNode>
+                                    <h:outputText value="Node Tree" />
+                            </p:treeNode>
+                         </p:tree>   
+                         
+                         
+                     </div>
+<!--                            <p:treeTable id="treeTable" value="#{hdfsClient.root}" var="node" resizableColumns="true" selectionMode="single"
+                                    selection="#{hdfsClient.selectedFile}">
+                                 <p:column headerText="Name">
+                                    <h:outputText value="#{document.name}" />
+                                </p:column>
+                                <p:column headerText="Size">
+                                     <h:outputText value="#{document.name}" />
+                                </p:column>
+                                <p:column headerText="Owner">
+                                    <h:outputText value="#{document.name}" />
+                                </p:column>
+                                <p:column headerText="Type">
+                                    <h:outputText value="#{document.name}" />
+                                </p:column>
+                            </p:treeTable>-->
+                                                     
                         </h:form>
-                   </div>
                    
-               </p:panel>
+                   
+<!--               </p:panel>-->
 
+    
+                             
+                  
+
+        
+   
+    
+    
+    
+    
+    
 </ui:define>
   
 </ui:composition>

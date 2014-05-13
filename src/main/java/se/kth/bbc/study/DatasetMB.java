@@ -27,7 +27,11 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.fs.FileContext;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.server.namenode.NameNode;
 
 /**
  *
@@ -83,7 +87,7 @@ public class DatasetMB implements Serializable{
     }
     
     
-    public String createDataset(){
+    public String createDataset()throws IOException, URISyntaxException{
         
              
         dataset.setId(Integer.SIZE);     
@@ -92,11 +96,12 @@ public class DatasetMB implements Serializable{
         try{
             datasetController.persistDataset(dataset);
         }catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error: Dataset wasn't created.");
+            addErrorMessageToUserAction("Error: Dataset wasn't created. Dataset name might have been duplicated!");
             return null;
         }
-        addMessage("Dataset created.");
-        return "Success!";
+        addMessage("Dataset created! ["+ dataset.getName() + "] dataset is owned by " + dataset.getOwner());
+        mkDIRS(dataset.getOwner(),dataset.getName());
+        return "dataUpload";
     }
     
     public String deleteDataset(){
@@ -109,27 +114,7 @@ public class DatasetMB implements Serializable{
         addMessage("Dataset removed.");
         return "Success!";
     }
-    
-    
-    public String fetchOwner() throws IOException, URISyntaxException{
-    
-        FacesContext fc = FacesContext.getCurrentInstance();
-        Map<String,String> params = fc.getExternalContext().getRequestParameterMap();
-        this.owner =  params.get("owner"); 
-//       this.datasetName =  params.get("datasetName"); 
-        createDataset();
-        mkDIRS();
-        return "dataUpload";
-    
-    }
-    
-    private String getDatasetNameFromParam(){
-    
-        FacesContext fc = FacesContext.getCurrentInstance();
-        return fc.getExternalContext().getRequestParameterMap().get("formId:dataset_name");
-    
-    
-    }
+   
     
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
@@ -151,35 +136,37 @@ public class DatasetMB implements Serializable{
     }
        
     
-    public void mkDIRS() throws IOException, URISyntaxException{
+    public void mkDIRS(String dsOwner, String dsName) throws IOException, URISyntaxException{
     
         Configuration conf = new Configuration();
-//        conf.addResource(new File("/home/glassfish/roshan/hadoop-2.2.0/etc/hadoop/core-site.xml").toURI().toURL());
-//        conf.addResource(new File("/home/glassfish/roshan/hadoop-2.2.0/etc/hadoop/hdfs-site.xml").toURI().toURL());
         conf.set("fs.defaultFS", this.nameNodeURI);
-        DFSClient client = new DFSClient(new URI(this.nameNodeURI), conf);
+        String rootDir = dsOwner.split("@")[0].trim();
         
-        String rootDir = getUsername().split("@")[0].trim();
-        //String rootDir = getUsername().substring(0, getUsername().indexOf('@')).trim();
-        String ds_name = getDatasetNameFromParam();
-        String buildPath = File.separator+rootDir+File.separator+ds_name;
-        
+        String buildPath = File.separator+rootDir+File.separator+"dataSets";
+        //System.out.println("Creating: " + buildPath);
+        FileSystem fs = FileSystem.get(conf);
+        Path path = new Path(buildPath);
+               
         try {
-            if (client.exists(rootDir)) {
-                System.out.println("Directory structured is exists! " + rootDir);
-                return;
+            if (fs.exists(path.getParent())) {
+                Path.mergePaths(path, new Path(File.separator+dsName));
+                addMessage("Dataset directory created!" + "/"+dsName);
             }
-        
-                client.mkdirs(buildPath, null, true);
+                fs.mkdirs(path.suffix(File.separator+dsName), null);
+                addMessage("Dataset directory created!" + buildPath);
+//                FileStatus[] files = fs.listStatus(path);
+//                    for(FileStatus file: files){
+//                        System.out.println(file.getPath().getName());
+//                }
             
          } catch(IOException ioe){
             System.err.println("IOException during operation"+ ioe.toString());
             System.exit(1);
          }finally {
-            
-              client.close();
-        
+                fs.close();
         }
+        
+        
         
         
     }
