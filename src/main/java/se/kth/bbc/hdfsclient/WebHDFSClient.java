@@ -42,17 +42,14 @@ public class WebHDFSClient {
       
     }
     
-    
     public WebResource getWebResource(String relativeUrl){
-    
         if(client == null)
             init();
-        
+
         return client.resource(HDFS_HTTP_URL+relativeUrl);
     }
     
      public ClientResponse clientGetResponse(String relativeUrl) throws UniformInterfaceException {
-            
             return webResource.accept("application/json").get(ClientResponse.class);
      }
      

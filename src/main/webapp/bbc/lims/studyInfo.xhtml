@@ -31,14 +31,14 @@
             <h:form id="formNewUserManagement" prependId="false"> 
                     
                                    
-                    <p:tabView id="tabViewNew">
+                <p:tabView id="tabViewNew" dynamic="true">
                         <p:tab title="Show">
-                             <h:panelGrid columns="2">  
+                            <h:panelGrid columns="2" id="display">  
                                     <div class="showStudy">
                                         <span class="author">
                                             Study <strong>  #{studyMB.studyName} </strong> 
                                         </span>
-                                        <span class="info">was created by <strong><p:commandLink value="#{studyMB.creator}" action="#{userController.fetchUser()}">
+                                        <span class="info">was created by <strong><p:commandLink value="#{studyMB.creator}" action="#{userController.fetchUser()}" update="display">
                                                     <f:param name="name" value="#{userController.name}"/>
                                                     <f:param name="email" value="#{studyMB.creator}"/>
                                                     <f:param name="username" value="#{userController.username}"/>
@@ -72,35 +72,36 @@
         </ui:define>
         
         <ui:define name="dialogs">  
-         <p:dialog modal="true" widgetVar="dlgNewStudyMember">  
+         <p:dialog modal="true" widgetVar="dlgNewStudyMember" draggable="true" closable="true" resizable="true" width="620"  height="310">  
         
              
              <h:form id="formNewStudyMember" prependId="false">
+                 <p:growl id="messages" showDetail="true" />
                <p:messages autoUpdate="true"/>
-             
-               <p:tab id="study" title="Study">
+               <p:panel>
+<!--               <p:tab id="study" title="New Member">-->
 
-                    <p:panel header="New Member">
+                    <!--<p:panel header="New Member">-->
 			
 				<h:messages errorClass="error"/>
 				
 				
                                 <div align="left">
                                             <p:outputLabel for="acName" value="Member :" style="font-size:14px"/>
-                                            <p:autoComplete id="acName" value="#{userController.selectedUsername}" completeMethod="#{userController.completeUsername}" multiple="true"/>
+                                            <p:autoComplete id="acName" value="#{userController.selectedUsername}" completeMethod="#{userController.completeUsername}" var="u"
+                                                            itemLabel="#{u.name}" itemValue="#{u}" converter="name" multiple="true"/>
                                             <br/>
                                             <hr/>
-                                            <p:outputLabel for="acStudyname" value="Study :" style="font-size:14px"/>
-                                            <p:autoComplete id="acStudyname" value="#{studyMB.studyMember.studyGroupMembersPK.studyname}" completeMethod="#{studyMB.studyList}"/>
+                                         <p:commandButton id="save" icon="ui-icon-plusthick" value="Save" 
+                                                          action="#{studyMB.addMembers()}" update="messages">
+                                        </p:commandButton>
+                                
                                 </div>
-                                <f:facet name="footer">
-                                    <p:commandButton value="Create" icon="ui-icon-plusthick" actionListener="#{studyMB.addMembers()}"/>                                    
-                                </f:facet>      
-				
 			</p:panel>
-		</p:tab>
-               
-               
+
+<!--                        </p:tab>-->
+
+            
                
              </h:form>
              

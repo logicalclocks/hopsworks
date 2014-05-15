@@ -18,6 +18,7 @@ import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
@@ -36,8 +37,13 @@ import org.primefaces.event.FlowEvent;
 @SessionScoped
 public class StudyMB implements Serializable{
     
+    private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
+    private static final long serialVersionUID = 1L;
+    
     @EJB
     private StudyController studyController;
+    
+    
     private TrackStudy study;
     private DatasetStudy dsStudy;
     private Dataset dataset;
@@ -47,7 +53,6 @@ public class StudyMB implements Serializable{
     private String studyName;   
     private String studyCreator;
 
-    private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
     
     
     public String getStudyName(){
@@ -186,6 +191,7 @@ public class StudyMB implements Serializable{
     
         studyMember.setTimeadded(new Date());
         studyMember.setAddedBy(getUsername());
+        studyMember.studyGroupMembersPK.setStudyname(this.studyName);
         
         try{
             studyController.addMember(studyMember);

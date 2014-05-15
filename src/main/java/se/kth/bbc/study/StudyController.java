@@ -21,6 +21,10 @@ public class StudyController {
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
 
+    protected EntityManager getEntityManager() {
+        return em;
+    }
+        
     public StudyController() {
     }
       

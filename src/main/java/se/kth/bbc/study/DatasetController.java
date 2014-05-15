@@ -21,7 +21,10 @@ public class DatasetController {
      
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
-    
+       
+    protected EntityManager getEntityManager() {
+        return em;
+    }
    
     public DatasetController() {
     }

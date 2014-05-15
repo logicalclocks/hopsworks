@@ -52,7 +52,7 @@ public class UserController implements Serializable {
 
     @PostConstruct
     protected void init(){
-        usernames = getAllUsersName();
+        usernames = getAllUsers();
     }
     
     public Username getUser() {
