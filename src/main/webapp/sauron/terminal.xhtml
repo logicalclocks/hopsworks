@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+
+    <ui:composition template="layout.xhtml">
+
+        <ui:define name="title">
+            #{settingsController.name} - Terminal
+        </ui:define>
+        <ui:define name="content">
+
+            <!--Navigation Bar - Begin -->
+            <h:form styleClass="styleNav">
+                <p:panelGrid>  
+                    <p:row>  
+                        <p:column>
+                            <h:outputText value="Terminal"/>
+                        </p:column>
+                    </p:row>
+                </p:panelGrid>
+            </h:form>
+            <!--Navigation Bar - End-->
+
+            <h:form id="formMsg">
+                <p:growl id="msgGrowl" showDetail="true"/>  
+            </h:form>         
+
+            <p:spacer width="1" height="25" />
+
+            <p:panel header="Terminal" styleClass="TerminalPanel">
+
+                <h:form >  
+                    <p:focus for="terminal" />  
+                    <p:terminal id="terminal" widgetVar="term" prompt="client:~$" 
+                                commandHandler="#{terminalControllerGeneric.handleCommand}"  
+                                welcomeMessage="#{terminalControllerGeneric.welcomeMessage}"  />  
+                </h:form>                      
+
+                <p:commandButton type="button" value="Clear" icon="ui-icon-trash" 
+                                 onclick="PF('term').clear()" style="margin-top:10px"/>
+            </p:panel>
+
+            <p:spacer width="1" height="25" />
+
+        </ui:define>
+
+    </ui:composition>
+
+</html>

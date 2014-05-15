@@ -21,7 +21,7 @@ import se.kth.hop.deploy.virtualization.parser.ClusterFacade;
 public class EditorYamlController implements Serializable {
 
     private static final long serialVersionUID = 20131126L;
-    private ClusterEntity entity;
+    private ClusterEntity entity = new ClusterEntity();
     private String content;
     private String mode = "yaml";
     @EJB
@@ -32,7 +32,6 @@ public class EditorYamlController implements Serializable {
 
     
     public void init() {
-        this.content = entity.getYamlContent();
     }
 
     public String getContent() {
@@ -61,6 +60,7 @@ public class EditorYamlController implements Serializable {
     
     public String saveChanges(){
         entity.setYamlContent(content);
+        
         clusterEJB.updateCluster(entity);
         return "editcluster";
     }

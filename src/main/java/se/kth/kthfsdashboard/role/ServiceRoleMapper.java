@@ -28,19 +28,21 @@ public class ServiceRoleMapper {
                 RoleType.nodemanager, RoleType.proxyserver));
         serviceRoleMap.put(ServiceType.MAP_REDUCE, Arrays.asList(RoleType.historyserver));        
         serviceRoleMap.put(ServiceType.SPARK, new ArrayList<RoleType>()); // Empty list
-        serviceRoleMap.put(ServiceType.COLLECTD, Arrays.asList(RoleType.collectd));
+        serviceRoleMap.put(ServiceType.STRATOSPHERE, new ArrayList<RoleType>()); // Empty list
+        serviceRoleMap.put(ServiceType.COLLECTD, Arrays.asList(RoleType.collectd, RoleType.collectdserver));
 
         roleFullNames.put(RoleType.namenode, "Name Node");
         roleFullNames.put(RoleType.datanode, "Data Node");     
-        roleFullNames.put(RoleType.ndb, "MySQL Cluster NDB");
+        roleFullNames.put(RoleType.ndb, "MySQL Cluster Data Node");
         roleFullNames.put(RoleType.mysqld, "MySQL Server");
-        roleFullNames.put(RoleType.mgmserver, "MGM Server");
-        roleFullNames.put(RoleType.memcached, "Memcached");
+        roleFullNames.put(RoleType.mgmserver, "MySQL Cluster Mmgt Server");
+        roleFullNames.put(RoleType.memcached, "Memcached Server");
         roleFullNames.put(RoleType.resourcemanager, "Resource Manager");  
         roleFullNames.put(RoleType.nodemanager, "Node Manager");          
-        roleFullNames.put(RoleType.historyserver, "MapReduce History Server");          
+        roleFullNames.put(RoleType.historyserver, "MR Job History Server");          
         roleFullNames.put(RoleType.proxyserver, "YARN WebProxy Server");          
         roleFullNames.put(RoleType.collectd, "Collectd");          
+        roleFullNames.put(RoleType.collectdserver, "Collectd Server");          
     }
 
     public static List<RoleType> getRoles(ServiceType serviceType) {

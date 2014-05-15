@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -8,57 +8,62 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:c="http://java.sun.com/jsp/jstl/core">
 
-   <h:head>
-      <title><ui:insert name="title">Default title</ui:insert></title>
-      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <h:head>
+        <title><ui:insert name="title">Default title</ui:insert></title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
 
-      <ui:insert name="css"> </ui:insert>
-   </h:head>
+        <ui:insert name="css"> </ui:insert>
+    </h:head>
 
-   <!--    moved hear from head-->
-   <ui:insert name="scripts"> </ui:insert>
+    <!--    moved hear from head-->
+    <ui:insert name="scripts"> </ui:insert>
 
-   <h:body>
+    <h:body>
 
-      <h:form class="stylelayout" id="formToolbar">  
-         <p:toolbar styleClass="MainToolbar">  
-            <p:toolbarGroup align="left">  
-               <p:commandLink value="#{settingsController.name}" action="clusters"/>
-            </p:toolbarGroup> 
-            
-            <p:toolbarGroup align="left">
-               <p:menuButton value="Clusters">
-                  <p:menuitem value="New Cluster" action="addcluster"/>
-                  <p:menuitem value="Edit Clusters" action="editcluster"/>
-                  <p:menuitem value="Clusters in Progress" action="progress"/>
-                  <p:menuitem value="All Clusters" action="hadoop"/>
-                  <p:separator rendered="#{not empty clustersLayoutController.clusters}"/>  
-                  <c:forEach var="cluster" items="#{clustersLayoutController.clusters}">                          
-                     <p:menuitem value="#{cluster}" action='#{urlController.clusterStatus(cluster)}'/>
-                  </c:forEach>
-               </p:menuButton>
-               <p:commandButton value="Hosts" action="hosts"/>
-               <p:commandButton value="Alerts" action="alerts"/>
-            </p:toolbarGroup>  
+        <h:form class="stylelayout" id="formToolbar">  
+            <p:toolbar styleClass="MainToolbar">  
+                <p:toolbarGroup align="left">  
+                    <p:commandLink value="#{settingsController.name}" action="clusters"/>
+                </p:toolbarGroup> 
 
-            <p:toolbarGroup align="right">  
-               <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
-               <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
-                  <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" />  
-                  <p:menuitem value="Edit Graphs" action="edit-graphs" />                      
-                  <p:menuitem value="Backup / Restore" action="backuprestore" /> 
-                  <p:menuitem value="Credentials" action="setupCredentials" />
-                  <p:separator/>
-                  <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
-               </p:menu>  
-            </p:toolbarGroup>  
+                <p:toolbarGroup align="left">
+                    <p:menuButton value="Clusters">
+                        <!--<p:menuitem value="New Cluster" action="addcluster"/>-->
+                        <!--<p:menuitem value="Edit Clusters" action="editcluster"/>-->
+                        <!--<p:menuitem value="Clusters in Progress" action="progress"/>-->
+                        <!--<p:menuitem value="All Clusters" action="hadoop"/>-->
+                        <!--<p:separator rendered="#{not empty clustersLayoutController.clusters}"/>-->  
+                        <c:forEach var="cluster" items="#{clustersLayoutController.clusters}">                          
+                            <p:menuitem value="#{cluster}" action='#{urlController.clusterStatus(cluster)}'/>
+                        </c:forEach>
+                    </p:menuButton>
+                    <p:commandButton value="Hosts" action="hosts"/>
+                    <p:commandButton value="Alerts" action="alerts"/>
+                    <p:menuButton value="Terminal">
+                        <c:forEach var="cluster" items="#{clustersLayoutController.clusters}">                          
+                            <p:menuitem value="#{cluster}" action="#{terminalControllerGeneric.clusterName(cluster)}"/>
+                        </c:forEach>
+                    </p:menuButton>
+                </p:toolbarGroup>  
 
-         </p:toolbar> 
+                <p:toolbarGroup align="right">  
+                    <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
+                    <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
+                        <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" />  
+                        <p:menuitem value="Edit Graphs" action="edit-graphs" />                      
+                        <p:menuitem value="Backup / Restore" action="backuprestore" /> 
+                        <p:menuitem value="Credentials" action="setupCredentials" />
+                        <p:separator/>
+                        <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
+                    </p:menu>  
+                </p:toolbarGroup>  
 
-      </h:form>
+            </p:toolbar> 
 
-      <ui:insert name="content">Default content</ui:insert>
+        </h:form>
 
-   </h:body>
+        <ui:insert name="content">Default content</ui:insert>
+
+    </h:body>
 
 </html>
