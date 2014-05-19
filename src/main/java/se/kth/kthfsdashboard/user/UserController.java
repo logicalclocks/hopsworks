@@ -230,7 +230,7 @@ public class UserController implements Serializable {
         addMessage("Logout not implemented!");
     }
 
-     private HttpServletRequest getRequest() {
+    private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
     }
     
@@ -244,7 +244,6 @@ public class UserController implements Serializable {
        
             addMessage("Switched to the LIMS User Management Service!");
             return "userMgmt";
-        
     }
    
     public void onTabChange(TabChangeEvent event) {

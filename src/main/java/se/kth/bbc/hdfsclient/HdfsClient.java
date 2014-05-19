@@ -22,6 +22,8 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletRequest;
 
+import org.primefaces.model.TreeNode;
+import org.primefaces.model.DefaultTreeNode;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -42,17 +44,14 @@ public class HdfsClient implements Serializable{
     private final String SET_DEFAULT_FS = "fs.defaultFS";
     public static final String DEFAULT_TYPE = "folder";
     
-    private TreeFiles root;
-    private TreeFiles[] treeFile;
-    private TreeFiles selectedFile;
-    
-    
-    //private List<TreeFiles> dirTree;
-    
+     
+    private TreeNode root;
+    private TreeNode[] treeNodes;
+    private TreeNode selectedNode;
     
     public void fetchFiles() throws URISyntaxException, IOException, InterruptedException {
         
-        root = new TreeFiles("Root", null);
+        root = new DefaultTreeNode("Root", null);
         
         String currentUser = getUsername();
         Configuration conf = new Configuration();
@@ -64,30 +63,29 @@ public class HdfsClient implements Serializable{
         int i = 0;    
         for(FileStatus file: files){
                if(i < files.length) {
-                    treeFile[i] = new TreeFiles(DEFAULT_TYPE, file, root);
-                    root = treeFile[i];
-                    i++;
+//                    treeNodes[i] = new DefaultTreeNode(DEFAULT_TYPE, file, root);
+//                    root = treeNodes[i];
+//                    i++;
                }
             }
     }
     
-    public TreeFiles getRoot(){
+    public TreeNode getRoot() {
         return root;
     }
-    
-    public void setRoot(TreeFiles root){
+ 
+    public void setRoot(TreeNode root) {
         this.root = root;
     }
-    
-    
-    public TreeFiles getSelectedFile(){
-        return selectedFile;
+ 
+    public TreeNode getSelectedNode() {
+        return selectedNode;
     }
-    
-    public void setSelectedFile(TreeFiles selectedFile){
-        this.selectedFile = selectedFile;
+ 
+    public void setSelectedNode(TreeNode selectedNode) {
+        this.selectedNode = selectedNode;
     }
-    
+      
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
     }

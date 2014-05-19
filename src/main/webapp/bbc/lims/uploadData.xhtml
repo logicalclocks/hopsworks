@@ -50,22 +50,11 @@
                             <hr/>
                         </div>
                      
-                     <div align="center">
-                         
-                         
-                         <p:tree id="treeSingle">
- 
-                             <p:treeNode>
-                                    <h:outputText value="Node Tree" />
-                            </p:treeNode>
-                         </p:tree>   
-                         
-                         
-                     </div>
-<!--                            <p:treeTable id="treeTable" value="#{hdfsClient.root}" var="node" resizableColumns="true" selectionMode="single"
-                                    selection="#{hdfsClient.selectedFile}">
+                
+                            <p:treeTable value="#{hdfsClient.root}" var="node" selectionMode="single"
+                                         selection="#{hdfsClient.selectedNode}">
                                  <p:column headerText="Name">
-                                    <h:outputText value="#{document.name}" />
+                                     <h:outputText value="#{node}" />
                                 </p:column>
                                 <p:column headerText="Size">
                                      <h:outputText value="#{document.name}" />
@@ -76,7 +65,7 @@
                                 <p:column headerText="Type">
                                     <h:outputText value="#{document.name}" />
                                 </p:column>
-                            </p:treeTable>-->
+                            </p:treeTable>
                                                      
                         </h:form>
                    
