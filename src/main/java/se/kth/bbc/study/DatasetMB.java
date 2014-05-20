@@ -8,6 +8,7 @@ package se.kth.bbc.study;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -27,11 +28,14 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
+import org.apache.hadoop.io.IOUtils;
+import org.primefaces.event.FileUploadEvent;
 
 /**
  *
@@ -170,7 +174,25 @@ public class DatasetMB implements Serializable{
         
         
     }
-    
+        
+    public void fileUploadEvent(FileUploadEvent event) throws IOException, URISyntaxException{
+        
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", this.nameNodeURI);
+        FileSystem fs = FileSystem.get(conf);
+        Path outputPath = new Path("/user/upload"+File.separator+event.getFile().getFileName());
+        
+        if(fs.exists(outputPath)){
+            System.err.println("Path exists: "+outputPath);
+            System.exit(1);
+        }
+        
+        InputStream is = event.getFile().getInputstream();
+        FSDataOutputStream os = fs.create(outputPath, false);
+        IOUtils.copyBytes(is, os, 8096, true);
+       
+        addMessage("File copied to "+ outputPath + " of size "+ fs.getFileStatus(outputPath).getLen()/(1024*1024*1024) + " GiB");
+    }
     
     
 }

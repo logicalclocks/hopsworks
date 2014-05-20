@@ -29,7 +29,7 @@
 
          
 <!--             <p:panel>-->
-                 <h:form id="frmUpload">   
+<h:form id="frmUpload" enctype="multipart/form-data">   
                  <div align="left">
                        <h2 class="title">Dataset</h2>
                        <hr/>
@@ -51,7 +51,7 @@
                         </div>
                      
                 
-                            <p:treeTable value="#{hdfsClient.root}" var="node" selectionMode="single"
+<!--                            <p:treeTable value="#{hdfsClient.root}" var="node" selectionMode="single"
                                          selection="#{hdfsClient.selectedNode}">
                                  <p:column headerText="Name">
                                      <h:outputText value="#{node}" />
@@ -65,9 +65,16 @@
                                 <p:column headerText="Type">
                                     <h:outputText value="#{document.name}" />
                                 </p:column>
-                            </p:treeTable>
-                                                     
-                        </h:form>
+                            </p:treeTable>-->
+    
+    <p:fileUpload mode="advanced" value="Browse" fileUploadListener="#{datasetMB.fileUploadEvent}" multiple="true" update="messages"/>
+    <p:growl id="messages" showDetail="true" />
+        
+    
+    
+    
+    
+</h:form>
                    
                    
 <!--               </p:panel>-->
