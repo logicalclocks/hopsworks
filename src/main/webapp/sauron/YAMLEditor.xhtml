@@ -5,6 +5,10 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       xmlns:pe="http://primefaces.org/ui/extensions">
+    
+
+    <h:outputStylesheet library="primefaces-extensions" name="codemirror/mode/tiki.css" />
+    
     <ui:composition template="layout.xhtml">
 
         <ui:define name="title">
@@ -34,12 +38,9 @@
                                 <p:growl id="growl" showDetail="true" />
 
                                 <pe:codeMirror id="codeMirror" mode="#{editorYamlController.mode}" 
-                                               theme="rubyblue" 
+                                               theme="eclipse" 
                                                value="#{editorYamlController.content}" lineNumbers="true"
-
                                                />
-
-
                             </p:panel> 
                             <p:commandButton  update="codeMirror"
                                               value="Save changes"

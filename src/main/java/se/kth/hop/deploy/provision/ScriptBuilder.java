@@ -12,12 +12,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import org.jclouds.chef.util.RunListBuilder;
 import org.jclouds.scriptbuilder.domain.OsFamily;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.StatementList;
 import static org.jclouds.scriptbuilder.domain.Statements.createOrOverwriteFile;
 import static org.jclouds.scriptbuilder.domain.Statements.exec;
+import org.jclouds.scriptbuilder.domain.chef.RunList;
 import org.jclouds.scriptbuilder.statements.ssh.AuthorizeRSAPublicKeys;
 
 /**
@@ -516,21 +516,22 @@ public class ScriptBuilder implements Statement {
      * Chef runlist generation
      */
     private List<String> createInstallList() {
-        RunListBuilder builder = new RunListBuilder();
-        builder.addRecipe("ndb::install");
-        builder.addRecipe("java");
+       ArrayList<String> recipes = new ArrayList<String>();
+       recipes.add("ndb::install");
+       recipes.add("java");
         // builder.addRecipe("hops::install");
-        return builder.build();
+        return new RunList.Builder().recipes(recipes).build().getRunlist();
     }
 
     private List<String> createRunList() {
-        RunListBuilder builder = new RunListBuilder();
-        builder.addRecipe("apt");
-        builder.addRecipe("python");
-        builder.addRecipe("java");
-        builder.addRecipe("hopagent");
+        ArrayList<String> recipes = new ArrayList<String>();
+        recipes.add("apt");
+        recipes.add("python::package");
+        recipes.add("java");
+        recipes.add("hopagent");
+
         for (String role : roles) {
-            builder.addRecipe(role);
+            recipes.add(role);
         }
         boolean collectdAdded =
                 roles.contains("ndb::dn") || roles.contains("ndb::mysqld") || roles.contains("ndb:mgm")
@@ -542,11 +543,11 @@ public class ScriptBuilder implements Statement {
         // updated its list of services
         if (collectdAdded) {
             //builder.addRecipe("kthfsagent");
-            builder.addRecipe("collect::attr-driven");
+            recipes.add("collect::attr-driven");
         }
         //builder.addRecipe("java::openjdk");
-        builder.addRecipe("hopagent::restart");
-        return builder.build();
+        recipes.add("hopagent::restart");
+        return new RunList.Builder().recipes(recipes).build().getRunlist();
 
 
     }

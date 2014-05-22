@@ -12,21 +12,11 @@
     <name>Hop Dashboard</name>
 
     <properties>
-        <jclouds.version>1.7.1-SNAPSHOT</jclouds.version>
+        <java.version>1.7</java.version>
+        <jclouds.version>1.7.0</jclouds.version>
         <jclouds.stable.version>1.6.0</jclouds.stable.version>
-        
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        
-        <!--        <glassfish.hostname>193.10.64.126</glassfish.hostname>
-        <glassfish.admin>admin</glassfish.admin>
-        <glassfish.passwd>admin</glassfish.passwd>-->
-            
-        <glassfish.hostname>localhost</glassfish.hostname>
-        <glassfish.admin>admin</glassfish.admin>
-        <glassfish.passwd></glassfish.passwd>  
-           
-        <netbeans.hint.deploy.server>gfv3ee6</netbeans.hint.deploy.server>
     </properties>
 
     <dependencies>
@@ -116,34 +106,44 @@
             <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>org.jclouds</groupId>
+            <groupId>org.apache.jclouds</groupId>
             <artifactId>jclouds-compute</artifactId>
-            <version>${jclouds.stable.version}</version>
+            <version>1.7.0</version>
         </dependency>
-        <dependency>
+        <!--        <dependency>
             <groupId>org.jclouds.api</groupId>
             <artifactId>chef</artifactId>
-            <version>${jclouds.stable.version}</version>
-        </dependency>
+            <version>1.7.0</version>
+        </dependency>-->
+        <!--        <dependency>
+            <groupId>org.jclouds</groupId>
+            <artifactId>jclouds-allcompute</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>-->
         <dependency>
-            <groupId>org.jclouds.provider</groupId>
+            <groupId>org.apache.jclouds.provider</groupId>
             <artifactId>aws-ec2</artifactId>
-            <version>${jclouds.stable.version}</version>
+            <version>${jclouds.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jclouds.api</groupId>
+            <groupId>org.apache.jclouds.api</groupId>
+            <artifactId>openstack-nova</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>        
+        <dependency>
+            <groupId>org.apache.jclouds.api</groupId>
             <artifactId>openstack-nova-ec2</artifactId>
-            <version>${jclouds.stable.version}</version>
+            <version>${jclouds.version}</version>
         </dependency> 
         <dependency>
-            <groupId>org.jclouds.api</groupId>
+            <groupId>org.apache.jclouds.api</groupId>
             <artifactId>ec2</artifactId>
-            <version>${jclouds.stable.version}</version>
+            <version>${jclouds.version}</version>
         </dependency>             
         <dependency>
-            <groupId>org.jclouds.labs</groupId>
+            <groupId>org.apache.jclouds.labs</groupId>
             <artifactId>joyentcloud</artifactId>
-            <version>${jclouds.stable.version}</version>
+            <version>${jclouds.version}</version>
         </dependency>
         <!--        <dependency>
             <groupId>org.jclouds.labs</groupId>
@@ -157,9 +157,9 @@
             <!--            <scope>provided</scope>-->
         </dependency>
         <dependency>
-            <groupId>org.jclouds.driver</groupId>
+            <groupId>org.apache.jclouds.driver</groupId>
             <artifactId>jclouds-bouncycastle</artifactId>
-            <version>${jclouds.stable.version}</version>
+            <version>${jclouds.version}</version>
             <exclusions><!--
                 bouncy castle is a provider, so
                   it must be signed and used as-is.
@@ -175,14 +175,14 @@
         </dependency>
         
         <dependency>
-            <groupId>org.jclouds.driver</groupId>
+            <groupId>org.apache.jclouds.driver</groupId>
             <artifactId>jclouds-sshj</artifactId>
-            <version>${jclouds.stable.version}</version>
+            <version>${jclouds.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.jclouds.driver</groupId>
+            <groupId>org.apache.jclouds.driver</groupId>
             <artifactId>jclouds-enterprise</artifactId>
-            <version>${jclouds.stable.version}</version>
+            <version>${jclouds.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -192,7 +192,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>14.0.1</version>
+            <version>16.0.1</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
@@ -223,12 +223,12 @@
         <dependency>
             <groupId>org.primefaces.extensions</groupId>
             <artifactId>primefaces-extensions</artifactId>
-            <version>0.7.1</version>
+            <version>1.2.1</version>
         </dependency>
         <dependency>
             <groupId>org.primefaces.extensions</groupId>
             <artifactId>resources-codemirror</artifactId>
-            <version>0.7.1</version>
+            <version>1.2.1</version>
         </dependency>
         <dependency>
             <groupId>org.ocpsoft.rewrite</groupId>
@@ -258,10 +258,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>3.1</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <compilerArguments>
                         <endorseddirs>${endorsed.dir}</endorseddirs>
                     </compilerArguments>
@@ -333,14 +333,19 @@
     </build>
 
     <repositories>
-        
-  <repository>
-    <id>jclouds-snapshots</id>
-    <url>https://repository.apache.org/content/repositories/snapshots</url>
-    <snapshots>
-      <enabled>true</enabled>
-    </snapshots>
-  </repository>        
+        <repository>
+            <id>prime-repo</id>
+            <name>PrimeFaces Maven Repository</name>
+            <url>http://repository.primefaces.org</url>
+            <layout>default</layout>
+        </repository>        
+        <repository>
+            <id>jclouds-snapshots</id>
+            <url>https://repository.apache.org/content/repositories/snapshots</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>        
         <repository>
             <id>sics-release</id>
             <name>SICS Release Repository</name>
@@ -356,18 +361,11 @@
             <name>Java.net Repository for Maven</name>
             <url>http://download.java.net/maven/2</url>
         </repository>
-        <repository>  
-            <id>prime-repo</id>  
-            <name>PrimeFaces Maven Repository</name>  
-            <url>http://repository.primefaces.org</url>  
-            <layout>default</layout>  
-        </repository> 
         <repository>
             <id>glassfish</id>
             <url>http://download.java.net/maven/glassfish</url>
         </repository>
     </repositories>
-    
     <pluginRepositories>
         <pluginRepository>
             <id>glassfish</id>

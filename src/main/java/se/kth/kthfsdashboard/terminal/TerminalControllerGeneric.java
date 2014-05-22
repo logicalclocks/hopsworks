@@ -9,6 +9,7 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
+import javax.persistence.Transient;
 import se.kth.kthfsdashboard.communication.WebCommunication;
 import se.kth.kthfsdashboard.host.Host;
 import se.kth.kthfsdashboard.host.HostEJB;
@@ -17,11 +18,11 @@ import se.kth.kthfsdashboard.struct.Status;
 
 /**
  *
- * @author Hamidreza Afzali <afzali@kth.se>
+ * @author Jim Dowling
  */
 @ManagedBean
 @RequestScoped
-public class TerminalController {
+public class TerminalControllerGeneric {
 
     @ManagedProperty("#{param.cluster}")
     private String cluster;
@@ -30,25 +31,22 @@ public class TerminalController {
     @ManagedProperty("#{param.service}")
     private String service;
     @EJB
+    @Transient
     private HostEJB hostEjb;
-    private static final Logger logger = Logger.getLogger(TerminalController.class.getName());
+    private static final Logger logger = Logger.getLogger(TerminalControllerGeneric.class.getName());
     private static final String welcomeMessage;
 
     static {
-        welcomeMessage = ("Welcome to \n"
-                + "       __  ______  ______  \n"
-                + "      / / / / __ \\/ __ /\n"
-                + "     / /_/ / / / / /_/ /\n"
-                + "    / __  / /_/ / ____/   \n"
-                + "   /_/ /_/\\____/_/       \n"
-                + "                                 \n")
-//                .replace(" ", "&nbsp;")
-//                .replace("\\", "&#92;")
-//                .replace("\n", "<br/>")
-                ;
+        welcomeMessage = ("Hop commands: hdfs, yarn, mysql, ndb_mgm\n" //                + "       __  ______  ______  \n"
+                //                + "      / / / / __ \\/ __ /\n"
+                //                + "     / /_/ / / / / /_/ /\n"
+                //                + "    / __  / /_/ / ____/   \n"
+                //                + "   /_/ /_/\\____/_/       \n"
+                //                + "                                 \n"
+                );
     }
 
-    public TerminalController() {
+    public TerminalControllerGeneric() {
     }
 
     @PostConstruct
@@ -76,6 +74,12 @@ public class TerminalController {
         this.cluster = cluster;
     }
 
+    public String clusterName(String cluster) {
+        this.cluster = cluster;
+        ActiveCluster.setCluster(cluster);
+        return "terminal";
+    }
+    
     public String getCluster() {
         return cluster;
     }
@@ -86,43 +90,39 @@ public class TerminalController {
 
     public String handleCommand(String command, String[] params) {
 //      TODO: Check special characters like ";" to avoid injection attacks
+        this.cluster = ActiveCluster.getCluster();
         String roleName;
-        if (service.equalsIgnoreCase(ServiceType.HDFS.toString())) {
-            if (command.equals("hdfs")) {
-                roleName = RoleType.datanode.toString();
-            } else {
-                return "Unknown command. Accepted commands are: hdfs";
-            }
-        } else if (service.equalsIgnoreCase(ServiceType.NDB.toString())) {
-            if (command.equals("mysql")) {
-                roleName = RoleType.mysqld.toString();
-            } else if (command.equals("ndb_mgm")) {
-                roleName = RoleType.mgmserver.toString();
-            } else {
-                return "Unknown command. Accepted commands are: mysql, ndb_mgm";
-            }
-        } else if (service.equalsIgnoreCase(ServiceType.YARN.toString())) {
-            if (command.equals("yarn")) {
-                roleName = RoleType.resourcemanager.toString();
-            } else {
-                return "Unknown command. Accepted commands are: yarn";
-            }
+        if (command.equals("hdfs")) {
+            roleName = RoleType.datanode.toString();
+            service = ServiceType.HDFS.toString();
+        } else if (command.equals("mysql")) {
+            roleName = RoleType.mysqld.toString();
+            service = ServiceType.NDB.toString();
+        } else if (command.equals("ndb_mgm")) {
+            roleName = RoleType.mgmserver.toString();
+            service = ServiceType.NDB.toString();
+        } else if (command.equals("yarn")) {
+            service = ServiceType.YARN.toString();
+            roleName = RoleType.resourcemanager.toString();
         } else {
-            return null;
+            return "Unknown command. Accepted commands are: hdfs, yarn, mysql, ndb_mgm";
         }
         try {
-//          TODO: get only one host
             List<Host> hosts = hostEjb.find(cluster, service, roleName, Status.Started);
             if (hosts.isEmpty()) {
                 throw new RuntimeException("No live node available.");
             }
             WebCommunication web = new WebCommunication();
-            String result = web.executeRun(hosts.get(0).getPublicOrPrivateIp(), 
+            String result = web.executeRun(hosts.get(0).getPublicOrPrivateIp(),
                     cluster, service, roleName, command, params);
             return result;
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
-            return "Error: Could not contact a node";
+            return "Error: Could not contact a node (" + cluster + "/" +  service 
+                    + "/" + roleName + ") : " + ex.getMessage();
         }
     }
+
+
+    
 }

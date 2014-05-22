@@ -39,7 +39,6 @@ public class ClusterFacade extends AbstractFacade<ClusterEntity> {
     
     @Override
      public List<ClusterEntity> findAll() {
-
         TypedQuery<ClusterEntity> query = em.createNamedQuery("ClustersEntity.findAll", ClusterEntity.class);
         return query.getResultList();
     }

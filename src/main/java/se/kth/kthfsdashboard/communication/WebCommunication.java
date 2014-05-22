@@ -114,7 +114,8 @@ public class WebCommunication {
         return execute("execute/continue", hostAddress, cluster, service, role, command, params);
     }
 
-    private String execute(String path, String hostAddress, String cluster, String service, String role, String command, String[] params) throws Exception {
+    private String execute(String path, String hostAddress, String cluster, String service, 
+            String role, String command, String[] params) throws Exception {
         String url = createUrl(path, hostAddress, cluster, service, role, command);
         String optionsAndParams = "";
         for (String param : params) {
@@ -129,6 +130,10 @@ public class WebCommunication {
             }
             return FormatUtils.stdoutToHtml(responseString);
         }
+        logger.log(Level.INFO,"Executing: " + "/{0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}", 
+                new Object[]{path, hostAddress, cluster, service, role, command, 
+                    params.toString(), response.getClientResponseStatus().getFamily()});
+        
         throw new RuntimeException("Did not succeed to execute command.");
     }
 

@@ -165,4 +165,12 @@ public class RoleEJB {
        em.createNamedQuery("Role.DeleteBy-HostId").setParameter("hostId", hostId).executeUpdate();
    }
 
+   
+   public boolean supportsInit(String cluster, String service, String role) {
+      TypedQuery<Boolean> query = 
+              em.createNamedQuery("Role.supportsInitBy-Cluster-Service-Role", Boolean.class)
+              .setParameter("cluster", cluster).setParameter("service", service)
+              .setParameter("role", role);
+      return query.getSingleResult();
+   }   
 }

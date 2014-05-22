@@ -31,7 +31,7 @@
             #{hostsController.hosts.size()} Host<h:outputText value ="s" rendered="#{hostsController.hosts.size()>1}"/> Under Management:
          </h:form>
 
-         <h:form id="form_add_host_cmd" style="text-align: right">
+<!--         <h:form id="form_add_host_cmd" style="text-align: right">
             <p:commandLink value="Add Host" onclick="dlgAddHost.show()"/>
          </h:form>
 
@@ -52,7 +52,7 @@
                                 oncomplete="if (args  &amp;&amp; args.hostadded){dlgAddHost.hide()}"/>
             </h:form>      
          </p:dialog> 
-
+-->
          <p:panel header="Hosts">  
             <h:form id="form_hosts">  
                <p:dataTable id="hosts" var="host" value="#{hostsController.hosts}">

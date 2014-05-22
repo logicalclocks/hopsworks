@@ -6,6 +6,10 @@
         <param-value>Production</param-value>
     </context-param>
     <context-param>
+       <param-name>facelets.SKIP_COMMENTS</param-name>
+       <param-value>true</param-value>
+    </context-param>    
+    <context-param>
         <param-name>com.sun.faces.verifyObjects</param-name>
         <param-value>false</param-value>
     </context-param>
