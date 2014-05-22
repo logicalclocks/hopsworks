@@ -14,8 +14,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
@@ -36,39 +38,44 @@ import org.apache.hadoop.fs.viewfs.ViewFileSystem;
  * @author roshan
  */
 
-@ManagedBean
-@RequestScoped
+@ManagedBean(name = "hdfsClientView")
+@SessionScoped
 public class HdfsClient implements Serializable{
     
-    public final String nameNodeURI = "hdfs://localhost:9999";
-    private final String SET_DEFAULT_FS = "fs.defaultFS";
-    public static final String DEFAULT_TYPE = "folder";
+//    public final String nameNodeURI = "hdfs://localhost:9999";
+//    private final String SET_DEFAULT_FS = "fs.defaultFS";
+//    public static final String DEFAULT_TYPE = "folder";
     
      
     private TreeNode root;
-    private TreeNode[] treeNodes;
     private TreeNode selectedNode;
     
-    public void fetchFiles() throws URISyntaxException, IOException, InterruptedException {
-        
-        root = new DefaultTreeNode("Root", null);
-        
-        String currentUser = getUsername();
-        Configuration conf = new Configuration();
-        conf.set(SET_DEFAULT_FS, this.nameNodeURI+File.separator+currentUser);
-        Path userPath = new Path(conf.get(SET_DEFAULT_FS)); 
-        FileSystem fs = FileSystem.get(conf);    
-        
-        FileStatus[] files = fs.listStatus(userPath);
-        int i = 0;    
-        for(FileStatus file: files){
-               if(i < files.length) {
-//                    treeNodes[i] = new DefaultTreeNode(DEFAULT_TYPE, file, root);
-//                    root = treeNodes[i];
-//                    i++;
-               }
-            }
+    @ManagedProperty("#{fileService}")
+    private FileService service;
+    
+    @PostConstruct
+    public void init() throws URISyntaxException, IOException, InterruptedException{
+        root = service.createFiles();
     }
+    
+//    public void fetchFiles() throws URISyntaxException, IOException, InterruptedException {
+//        
+//        String currentUser = getUsername();
+//        Configuration conf = new Configuration();
+//        conf.set(SET_DEFAULT_FS, this.nameNodeURI+File.separator+currentUser);
+//        Path userPath = new Path(conf.get(SET_DEFAULT_FS)); 
+//        FileSystem fs = FileSystem.get(conf);    
+//        
+//        FileStatus[] files = fs.listStatus(userPath);
+//        int i = 0;    
+//        for(FileStatus file: files){
+//               if(i < files.length) {
+////                    treeNodes[i] = new DefaultTreeNode(DEFAULT_TYPE, file, root);
+////                    root = treeNodes[i];
+////                    i++;
+//               }
+//            }
+//    }
     
     public TreeNode getRoot() {
         return root;
@@ -86,6 +93,10 @@ public class HdfsClient implements Serializable{
         this.selectedNode = selectedNode;
     }
       
+    public void setService(FileService service) {
+        this.service = service;
+    }
+    
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
     }

@@ -9,6 +9,7 @@ package se.kth.bbc.study;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -25,9 +26,11 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileStatus;
@@ -36,6 +39,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.io.IOUtils;
 import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 
 /**
  *
@@ -53,6 +58,7 @@ public class DatasetMB implements Serializable{
     private String datasetName;
     
     public final String nameNodeURI = "hdfs://localhost:9999";
+    private StreamedContent file;
     
 //    @ManagedProperty("#{param['formId:dataset_name']}")
 //    private String dataset_name;
@@ -170,9 +176,6 @@ public class DatasetMB implements Serializable{
                 fs.close();
         }
         
-        
-        
-        
     }
         
     public void fileUploadEvent(FileUploadEvent event) throws IOException, URISyntaxException{
@@ -189,10 +192,45 @@ public class DatasetMB implements Serializable{
         
         InputStream is = event.getFile().getInputstream();
         FSDataOutputStream os = fs.create(outputPath, false);
-        IOUtils.copyBytes(is, os, 8096, true);
-       
-        addMessage("File copied to "+ outputPath + " of size "+ fs.getFileStatus(outputPath).getLen()/(1024*1024*1024) + " GiB");
+        IOUtils.copyBytes(is, os, 10248576, true);
+        
+        addMessage("File copied to "+ outputPath);
     }
     
     
+    
+    public void fileDownloadEvent() throws IOException, URISyntaxException{
+        
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", this.nameNodeURI);
+        FileSystem fs = FileSystem.get(conf);
+        Path outputPath = new Path("/user/upload/Real.Steel[2011].mp4");
+        String fileName = outputPath.getName();
+        
+        try {
+        
+                if(!fs.exists(outputPath)){
+                      System.err.println("File not found. Invalid Path!");
+                      System.exit(1);
+                }
+           
+                   InputStream inStream = fs.open(outputPath, 10248576);    
+                   file = new DefaultStreamedContent(inStream, "VCF/BAM/ADAM", fileName);
+        } finally {
+                   //inStream.close();
+        }  
+           
+    }
+    
+    public StreamedContent getFile() {
+        return file;
+    }
+            
+    public void setFile(StreamedContent file){
+        this.file = file;
+    }
+    
+    public String getContentType() {
+        return file.getContentType();
+    }
 }

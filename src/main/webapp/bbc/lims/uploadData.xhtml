@@ -51,32 +51,39 @@
                         </div>
                      
                 
-<!--                            <p:treeTable value="#{hdfsClient.root}" var="node" selectionMode="single"
-                                         selection="#{hdfsClient.selectedNode}">
+    <p:treeTable value="#{hdfsClientView.root}" var="file" selectionMode="single"
+                 selection="#{hdfsClientView.selectedNode}">
                                  <p:column headerText="Name">
-                                     <h:outputText value="#{node}" />
+                                     <h:outputText value="#{file.name}" />
                                 </p:column>
                                 <p:column headerText="Size">
-                                     <h:outputText value="#{document.name}" />
-                                </p:column>
-                                <p:column headerText="Owner">
-                                    <h:outputText value="#{document.name}" />
+                                     <h:outputText value="#{file.size}" />
                                 </p:column>
                                 <p:column headerText="Type">
-                                    <h:outputText value="#{document.name}" />
+                                    <h:outputText value="#{file.type}" />
                                 </p:column>
-                            </p:treeTable>-->
+    </p:treeTable>
     
-    <p:fileUpload mode="advanced" value="Browse" fileUploadListener="#{datasetMB.fileUploadEvent}" multiple="true" update="messages"/>
-    <p:growl id="messages" showDetail="true" />
+    <p:fileUpload mode="advanced" value="Browse" fileUploadListener="#{datasetMB.fileUploadEvent}" multiple="true"/>
+<!--    <p:growl id="uploadmsgs" showDetail="true" />-->
         
     
-    
+<p:commandButton value="Download" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon-arrowthick-1-s" actionListener="#{datasetMB.fileDownloadEvent}">
+        <p:fileDownload value="#{datasetMB.file}" />
+    </p:commandButton>
     
     
 </h:form>
                    
-                   
+ <script type="text/javascript">
+function start() {
+    PF('statusDialog').show();
+}
+ 
+function stop() {
+    PF('statusDialog').hide();
+}
+</script>                  
 <!--               </p:panel>-->
 
     
