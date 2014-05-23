@@ -9,6 +9,8 @@ package se.kth.bbc.hdfsclient;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
@@ -39,37 +41,35 @@ public class FileService {
     TreeNode dataSets = null;
     TreeNode datasetName = null;
     TreeNode file = null;
+    private List<TreeNode> children = new ArrayList<TreeNode>();
     
     public TreeNode createFiles() throws URISyntaxException, IOException, InterruptedException{
     
-        String currentUser = getUsername();
-        String rootDir = currentUser.split("@")[0].trim();
+        String rootDir = getUsername().split("@")[0].trim();
         Configuration conf = new Configuration();
-        conf.set(SET_DEFAULT_FS, this.nameNodeURI+File.separator+rootDir);
-        Path userPath = new Path(conf.get(SET_DEFAULT_FS)); 
+        conf.set(SET_DEFAULT_FS, this.nameNodeURI);
+        String buildPath = File.separator+rootDir+File.separator+"dataSets";
         FileSystem fs = FileSystem.get(conf);    
-        String parent = userPath.getParent().getName();
+        Path path = new Path(buildPath);       
+
+        String parent = path.getParent().getName();
         root = new DefaultTreeNode(new TreeFiles(parent, "-" , "Folder"), null);
         
-        FileStatus[] files = fs.listStatus(userPath);
+        FileStatus[] files = fs.listStatus(path);
         
                   
         for(int i = 0; i<files.length; i++){
-              if(files[i].isDirectory()) {
-                    if(dataSets == null) {  
-                        dataSets = new DefaultTreeNode(new TreeFiles(files[i].getPath().getName(), "-" , "Folder"), root);
-                    } else if(datasetName == null && dataSets != null) {
-                        datasetName = new DefaultTreeNode(new TreeFiles(files[i].getPath().getName(), "-" , "Folder"), dataSets);
-                    } else{
-                        return null;
-                    }
-            } else {
-                      file = new DefaultTreeNode(new TreeFiles(files[i].getPath().getName(), "-" , "File"), datasetName);
-              }
-           }
-    
-        return root;
-    }
+                //System.out.println(files[i].getPath().getName());
+                
+                        datasetName = new DefaultTreeNode(new TreeFiles(files[i].getPath().getName(), "-" , "Folder"), root);
+                        if(datasetName.getChildCount() > 0) {
+                                //for(int j=0;j<datasetName.getChildCount();j++)
+                                     file = new DefaultTreeNode("File", new TreeFiles("Common Type", "-" , "Folder"), datasetName);
+                        }
+            }
+        
+                return root;
+  }
     
      private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
