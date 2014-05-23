@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 
 
@@ -41,7 +42,7 @@ public class FileService {
     TreeNode dataSets = null;
     TreeNode datasetName = null;
     TreeNode file = null;
-    private List<TreeNode> children = new ArrayList<TreeNode>();
+    private List<TreeNode> children;
     
     public TreeNode createFiles() throws URISyntaxException, IOException, InterruptedException{
     
@@ -56,18 +57,17 @@ public class FileService {
         root = new DefaultTreeNode(new TreeFiles(parent, "-" , "Folder"), null);
         
         FileStatus[] files = fs.listStatus(path);
+        Path[] paths = FileUtil.stat2Paths(files);
         
-                  
-        for(int i = 0; i<files.length; i++){
+        for(int i = 0; i<paths.length; i++){
                 //System.out.println(files[i].getPath().getName());
                 
-                        datasetName = new DefaultTreeNode(new TreeFiles(files[i].getPath().getName(), "-" , "Folder"), root);
-                        if(datasetName.getChildCount() > 0) {
-                                //for(int j=0;j<datasetName.getChildCount();j++)
-                                     file = new DefaultTreeNode("File", new TreeFiles("Common Type", "-" , "Folder"), datasetName);
+                        datasetName = new DefaultTreeNode(new TreeFiles(paths[i].getName(), "-" , "Folder"), root);
+                        if(!datasetName.getChildren().isEmpty()) {
+                            for(int j=0;j<datasetName.getChildren().size();j++)
+                                file = new DefaultTreeNode("File", new TreeFiles("File", "--" , datasetName.getChildren().get(j).getType()), datasetName);
                         }
-            }
-        
+                 }
                 return root;
   }
     

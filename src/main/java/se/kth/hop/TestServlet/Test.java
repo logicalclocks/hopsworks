@@ -45,6 +45,9 @@ public class Test {
          Str2 = Str1.getBytes(StandardCharsets.UTF_16BE);
          System.out.println("Returned  Value BE " + DigestUtils.sha512Hex(Str2));
          
+         
+         System.out.println(System.getProperty("user.dir"));
+         
          //Str2 = Str1.getBytes(Charset.defaultCharset());
          //String passwordInHex = String.format("%02x", new BigInteger(1, Str1.getBytes(Charset.defaultCharset())));
          System.out.println("Returned  Value DTYPE: " + DatatypeConverter.printHexBinary(Str1.getBytes()));

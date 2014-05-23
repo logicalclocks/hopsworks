@@ -7,6 +7,9 @@
 package se.kth.bbc.study;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -14,6 +17,7 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.security.Principal;
 import java.util.List;
@@ -145,7 +149,8 @@ public class DatasetMB implements Serializable{
         FacesContext.getCurrentInstance().addMessage(null, errorMessage);
     }
        
-    
+
+    //Creating directory structure in HDFS
     public void mkDIRS(String dsOwner, String dsName) throws IOException, URISyntaxException{
     
         Configuration conf = new Configuration();
@@ -153,7 +158,6 @@ public class DatasetMB implements Serializable{
         String rootDir = dsOwner.split("@")[0].trim();
         
         String buildPath = File.separator+rootDir+File.separator+"dataSets";
-        //System.out.println("Creating: " + buildPath);
         FileSystem fs = FileSystem.get(conf);
         Path path = new Path(buildPath);
                
@@ -177,45 +181,87 @@ public class DatasetMB implements Serializable{
         }
         
     }
+
+    
+    //Staging 
+    
+    public void stagingToGlassfish(InputStream is, String filename){
+    
+        try{
+            //URL uri = new URL("http://snurran.sics.se/hop");
+            OutputStream os = new FileOutputStream(new File("/home/glassfish/roshan/samples/staging"+File.separator+filename));
+            
+            byte[] buffer = new byte[10248576]; 
+            int readBytes = 0;
+         
+            while((readBytes=is.read(buffer)) > 0){
+                os.write(buffer,0,readBytes);
+            }
+                os.close();
+                is.close();
+                //addMessage("File staging completed... and is transferring to hdfs...."+filename);
+        } catch(FileNotFoundException fnf){
+            addErrorMessageToUserAction("File not found! "+ fnf.toString());    
+        } catch(IOException ioe){
+            addErrorMessageToUserAction("I/O Exception "+ ioe.toString());    
+        }
         
-    public void fileUploadEvent(FileUploadEvent event) throws IOException, URISyntaxException{
-        
+    }
+    
+    
+    public void copyFromLocal(String filename) throws IOException, URISyntaxException {
+    
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
-        Path outputPath = new Path("/user/upload"+File.separator+event.getFile().getFileName());
+        
+        String rootDir = getUsername().split("@")[0].trim();
+        String buildPath = File.separator+rootDir+File.separator+"dataSets";
+        
+        Path outputPath = new Path(buildPath+File.separator+dataset.getName()+File.separator+filename);
         
         if(fs.exists(outputPath)){
-            System.err.println("Path exists: "+outputPath);
-            System.exit(1);
-        }
-        
-        InputStream is = event.getFile().getInputstream();
+            addErrorMessageToUserAction("Error: "+filename+" File exists!");
+            return;
+        } 
+    
+        InputStream is = new FileInputStream(new File("/home/glassfish/roshan/samples/staging"+File.separator+filename));
         FSDataOutputStream os = fs.create(outputPath, false);
         IOUtils.copyBytes(is, os, 10248576, true);
-        
-        addMessage("File copied to "+ outputPath);
+        addMessage("File copied to hdfs  :"+ outputPath);
     }
     
     
     
+    //Streaming data through dashboard to HDFS
+    public void fileUploadEvent(FileUploadEvent event) throws IOException, URISyntaxException{
+        
+        InputStream is = event.getFile().getInputstream();
+        stagingToGlassfish(is, event.getFile().getFileName());
+        copyFromLocal(event.getFile().getFileName());
+
+    }
+    
+    
+    //Download file from HDFS
     public void fileDownloadEvent() throws IOException, URISyntaxException{
         
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
-        Path outputPath = new Path("/user/upload/Real.Steel[2011].mp4");
+        Path outputPath = new Path("/roshan/dataSets/Five/dmd-tsit.avi");
         String fileName = outputPath.getName();
         
         try {
         
                 if(!fs.exists(outputPath)){
-                      System.err.println("File not found. Invalid Path!");
-                      System.exit(1);
+                      addErrorMessageToUserAction("Error: File does not exist!" + fileName);
+                      return;
                 }
            
                    InputStream inStream = fs.open(outputPath, 10248576);    
                    file = new DefaultStreamedContent(inStream, "VCF/BAM/ADAM", fileName);
+                   
         } finally {
                    //inStream.close();
         }  

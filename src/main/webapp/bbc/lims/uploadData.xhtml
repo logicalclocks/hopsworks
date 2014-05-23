@@ -54,7 +54,7 @@
     <p:treeTable value="#{hdfsClientView.root}" var="file" selectionMode="single"
                  selection="#{hdfsClientView.selectedNode}">
                                  <p:column headerText="Name">
-                                     <h:outputText value="#{file.name}" />
+                                     <h:outputText value="#{file.name}"/>
                                 </p:column>
                                 <p:column headerText="Size (bytes)">
                                      <h:outputText value="#{file.size}" />
@@ -64,12 +64,12 @@
                                 </p:column>
     </p:treeTable>
     
-    <p:fileUpload mode="advanced" value="Browse" fileUploadListener="#{datasetMB.fileUploadEvent}" multiple="true"/>
+    <p:fileUpload mode="advanced" label="Browse" fileUploadListener="#{datasetMB.fileUploadEvent}" multiple="true"/>
 <!--    <p:growl id="uploadmsgs" showDetail="true" />-->
         
     
 <p:commandButton value="Download" ajax="false" onclick="PrimeFaces.monitorDownload(start, stop);" icon="ui-icon-arrowthick-1-s" actionListener="#{datasetMB.fileDownloadEvent}">
-        <p:fileDownload value="#{datasetMB.file}" />
+        <p:fileDownload value="#{datasetMB.file}"/>
     </p:commandButton>
     
     
