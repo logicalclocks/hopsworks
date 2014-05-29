@@ -65,7 +65,7 @@ public class FileService {
                         datasetName = new DefaultTreeNode(new TreeFiles(paths[i].getName(), "-" , "Folder"), root);
                         if(!datasetName.getChildren().isEmpty()) {
                             for(int j=0;j<datasetName.getChildren().size();j++)
-                                file = new DefaultTreeNode("File", new TreeFiles("File", "--" , datasetName.getChildren().get(j).getType()), datasetName);
+                                file = new DefaultTreeNode("File", datasetName.getChildren().get(j), datasetName);
                         }
                  }
                 return root;

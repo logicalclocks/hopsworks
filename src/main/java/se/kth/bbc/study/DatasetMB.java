@@ -61,7 +61,7 @@ public class DatasetMB implements Serializable{
     private String owner;
     private String datasetName;
     
-    public final String nameNodeURI = "hdfs://localhost:9999";
+    public final String nameNodeURI = "hdfs://cloud7.sics.se:13121";
     private StreamedContent file;
     
 //    @ManagedProperty("#{param['formId:dataset_name']}")
@@ -193,13 +193,17 @@ public class DatasetMB implements Serializable{
             
             byte[] buffer = new byte[10248576]; 
             int readBytes = 0;
-         
+                        
+            long start = System.currentTimeMillis();
             while((readBytes=is.read(buffer)) > 0){
                 os.write(buffer,0,readBytes);
+                os.flush();
             }
                 os.close();
                 is.close();
-                //addMessage("File staging completed... and is transferring to hdfs...."+filename);
+                
+            long time = System.currentTimeMillis() - start;
+            addMessage("File Transfer time "+ time+ " ms");
         } catch(FileNotFoundException fnf){
             addErrorMessageToUserAction("File not found! "+ fnf.toString());    
         } catch(IOException ioe){
@@ -208,7 +212,7 @@ public class DatasetMB implements Serializable{
         
     }
     
-    
+    //Copy file to HDFS as a stream
     public void copyFromLocal(String filename) throws IOException, URISyntaxException {
     
         Configuration conf = new Configuration();
@@ -228,7 +232,7 @@ public class DatasetMB implements Serializable{
         InputStream is = new FileInputStream(new File("/home/glassfish/roshan/samples/staging"+File.separator+filename));
         FSDataOutputStream os = fs.create(outputPath, false);
         IOUtils.copyBytes(is, os, 10248576, true);
-        addMessage("File copied to hdfs  :"+ outputPath);
+        addMessage("File copied to hdfs  : "+ outputPath);
     }
     
     
@@ -249,7 +253,7 @@ public class DatasetMB implements Serializable{
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
-        Path outputPath = new Path("/roshan/dataSets/Five/dmd-tsit.avi");
+        Path outputPath = new Path("/user/roshan/NA12878.unmapped.ILLUMINA.bwa.CEU.high_coverage.20100311.bam");
         String fileName = outputPath.getName();
         
         try {
@@ -260,7 +264,7 @@ public class DatasetMB implements Serializable{
                 }
            
                    InputStream inStream = fs.open(outputPath, 10248576);    
-                   file = new DefaultStreamedContent(inStream, "VCF/BAM/ADAM", fileName);
+                   file = new DefaultStreamedContent(inStream, "VCF/BAM/SAM/ADAM", fileName);
                    
         } finally {
                    //inStream.close();
