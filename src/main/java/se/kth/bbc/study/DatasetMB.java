@@ -6,6 +6,8 @@
 
 package se.kth.bbc.study;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -32,6 +34,7 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.io.FileUtils;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -188,27 +191,35 @@ public class DatasetMB implements Serializable{
     public void stagingToGlassfish(InputStream is, String filename){
     
         try{
-            //URL uri = new URL("http://snurran.sics.se/hop");
-            OutputStream os = new FileOutputStream(new File("/home/glassfish/roshan/samples/staging"+File.separator+filename));
+             
             
-            byte[] buffer = new byte[10248576]; 
-            int readBytes = 0;
+            File fileToCreate = new File("/disk/samples"+File.separator+filename);
+//            if(fileToCreate.exists()){
+//                copyFromLocal(filename);
+//                return;
+//            }
+            
+            OutputStream os = new FileOutputStream(fileToCreate);
+            byte[] buffer = new byte[131072]; 
+            int readBytes;
                         
-            long start = System.currentTimeMillis();
-            while((readBytes=is.read(buffer)) > 0){
+            
+            while((readBytes=is.read(buffer)) != -1){
                 os.write(buffer,0,readBytes);
                 os.flush();
             }
-                os.close();
+                os.flush();
                 is.close();
-                
-            long time = System.currentTimeMillis() - start;
-            addMessage("File Transfer time "+ time+ " ms");
+                os.close();
+            //addMessage("File Transfer time "+ time+ " ms");
         } catch(FileNotFoundException fnf){
             addErrorMessageToUserAction("File not found! "+ fnf.toString());    
         } catch(IOException ioe){
             addErrorMessageToUserAction("I/O Exception "+ ioe.toString());    
-        }
+        } 
+//        catch(URISyntaxException uri){
+//            addErrorMessageToUserAction("URI Syntax Exception "+ uri.toString());    
+//        }
         
     }
     
@@ -222,6 +233,9 @@ public class DatasetMB implements Serializable{
         String rootDir = getUsername().split("@")[0].trim();
         String buildPath = File.separator+rootDir+File.separator+"dataSets";
         
+        File fileToRead = new File("/disk/samples"+File.separator+filename);
+        
+        
         Path outputPath = new Path(buildPath+File.separator+dataset.getName()+File.separator+filename);
         
         if(fs.exists(outputPath)){
@@ -229,20 +243,44 @@ public class DatasetMB implements Serializable{
             return;
         } 
     
-        InputStream is = new FileInputStream(new File("/home/glassfish/roshan/samples/staging"+File.separator+filename));
+        addMessage("File is being copied to hdfs.....!");
+        InputStream is = new FileInputStream(fileToRead);
         FSDataOutputStream os = fs.create(outputPath, false);
-        IOUtils.copyBytes(is, os, 10248576, true);
+        IOUtils.copyBytes(is, os, 131072, true);
         addMessage("File copied to hdfs  : "+ outputPath);
+        //FileUtils.cleanDirectory(new File("/disk/samples/staging"));
     }
     
     
     
     //Streaming data through dashboard to HDFS
     public void fileUploadEvent(FileUploadEvent event) throws IOException, URISyntaxException{
+       
+         //System.out.println(System.getProperty("java.io.tmpdir"));  
+        System.setProperty("java.io.tmpdir", "/disk/samples/temp");
+        if(!System.getProperty("java.io.tmpdir").isEmpty()){
+            FileUtils.cleanDirectory(new File(System.getProperty("java.io.tmpdir")));
+        }
+         
+         String fileName = event.getFile().getFileName();
+         File fileToCreate = new File("/disk/samples"+File.separator+fileName);
+            if(fileToCreate.exists()){
+                addErrorMessageToUserAction("File exists in snurran....."+fileName);
+                long start = System.currentTimeMillis();
+                 copyFromLocal(fileName);
+                 System.out.println("Time in millis for staging ="+ (System.currentTimeMillis() - start));
+                
+                 return;
+         }
+        
         
         InputStream is = event.getFile().getInputstream();
         stagingToGlassfish(is, event.getFile().getFileName());
+        
+        long start = System.currentTimeMillis();
         copyFromLocal(event.getFile().getFileName());
+        System.out.println("Time in millis for staging ="+ (System.currentTimeMillis() - start));
+        is.close();
 
     }
     
@@ -263,7 +301,7 @@ public class DatasetMB implements Serializable{
                       return;
                 }
            
-                   InputStream inStream = fs.open(outputPath, 10248576);    
+                   InputStream inStream = fs.open(outputPath, 1048576);    
                    file = new DefaultStreamedContent(inStream, "VCF/BAM/SAM/ADAM", fileName);
                    
         } finally {
