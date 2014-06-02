@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.file.Paths;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
@@ -192,11 +193,10 @@ public class DatasetMB implements Serializable{
     
         try{
              
-            
+            long start = System.currentTimeMillis();
             File fileToCreate = new File("/disk/samples"+File.separator+filename);
 //            if(fileToCreate.exists()){
-//                copyFromLocal(filename);
-//                return;
+//                fileToCreate.delete();
 //            }
             
             OutputStream os = new FileOutputStream(fileToCreate);
@@ -211,7 +211,8 @@ public class DatasetMB implements Serializable{
                 os.flush();
                 is.close();
                 os.close();
-            //addMessage("File Transfer time "+ time+ " ms");
+            System.out.println("Time in millis for staging ="+ (System.currentTimeMillis() - start));
+            addMessage("File staged ......"+ (System.currentTimeMillis() - start));
         } catch(FileNotFoundException fnf){
             addErrorMessageToUserAction("File not found! "+ fnf.toString());    
         } catch(IOException ioe){
@@ -226,6 +227,7 @@ public class DatasetMB implements Serializable{
     //Copy file to HDFS as a stream
     public void copyFromLocal(String filename) throws IOException, URISyntaxException {
     
+       
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
@@ -247,8 +249,9 @@ public class DatasetMB implements Serializable{
         InputStream is = new FileInputStream(fileToRead);
         FSDataOutputStream os = fs.create(outputPath, false);
         IOUtils.copyBytes(is, os, 131072, true);
-        addMessage("File copied to hdfs  : "+ outputPath);
-        //FileUtils.cleanDirectory(new File("/disk/samples/staging"));
+        System.out.println("Copied to hdfs "+ outputPath);
+        //addMessage("File copied to hdfs  : "+ outputPath);
+       
     }
     
     
@@ -258,21 +261,17 @@ public class DatasetMB implements Serializable{
        
          //System.out.println(System.getProperty("java.io.tmpdir"));  
         System.setProperty("java.io.tmpdir", "/disk/samples/temp");
-        if(!System.getProperty("java.io.tmpdir").isEmpty()){
-            FileUtils.cleanDirectory(new File(System.getProperty("java.io.tmpdir")));
-        }
+       
          
-         String fileName = event.getFile().getFileName();
-         File fileToCreate = new File("/disk/samples"+File.separator+fileName);
-            if(fileToCreate.exists()){
-                addErrorMessageToUserAction("File exists in snurran....."+fileName);
-                long start = System.currentTimeMillis();
-                 copyFromLocal(fileName);
-                 System.out.println("Time in millis for staging ="+ (System.currentTimeMillis() - start));
-                
-                 return;
-         }
-        
+        // String fileName = event.getFile().getFileName();
+ //        File fileToCreate = new File("/disk/samples"+File.separator+fileName);
+      
+//         if(fileToCreate.exists()){
+//                addErrorMessageToUserAction("File exists in snurran....."+fileName);
+//                 copyFromLocal(fileName);
+//                 return;
+//         }
+//        
         
         InputStream is = event.getFile().getInputstream();
         stagingToGlassfish(is, event.getFile().getFileName());
@@ -281,6 +280,10 @@ public class DatasetMB implements Serializable{
         copyFromLocal(event.getFile().getFileName());
         System.out.println("Time in millis for staging ="+ (System.currentTimeMillis() - start));
         is.close();
+        
+        if(!System.getProperty("java.io.tmpdir").isEmpty()){
+            FileUtils.cleanDirectory(new File(System.getProperty("java.io.tmpdir")));
+        }
 
     }
     
