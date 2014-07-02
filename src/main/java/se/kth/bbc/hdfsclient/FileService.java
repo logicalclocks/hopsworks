@@ -56,18 +56,27 @@ public class FileService {
         Path[] paths = FileUtil.stat2Paths(files);
         
         String parent = path.getParent().getName();
-        TreeNode root = new DefaultTreeNode(new TreeFiles(parent, "-" , "Folder"), null);
+        TreeNode root = new DefaultTreeNode(new TreeFiles("Files", "-" , rootDir), null);
         
         
         
-        for(int i = 0; i<paths.length; i++){
+        for(int i = 0; i<files.length; i++){
                 //System.out.println(files[i].getPath().getName());
                 
-                        datasetName = new DefaultTreeNode(new TreeFiles(paths[i].getName(), "-" , "Folder"), root);
-                        if(!datasetName.getChildren().isEmpty()) {
-                            for(int j=0;j<datasetName.getChildren().size();j++)
-                                file = new DefaultTreeNode("File", datasetName.getChildren().get(j), datasetName);
-                        }
+                if(files[i].isDirectory()){
+                            datasetName = new DefaultTreeNode(new TreeFiles(files[i].getPath().getName(), "-" , rootDir), root);
+                            if(datasetName.getChildCount()>0){
+                                for(int j=0; j<datasetName.getChildCount();j++)
+                                      file = new DefaultTreeNode("File", new TreeFiles(datasetName.getChildren().get(j).toString(),"-",rootDir), datasetName);
+                            }
+                }
+                           file = new DefaultTreeNode("File", new TreeFiles(datasetName.getData().toString(),"-",rootDir), datasetName);
+            
+                
+//                        if(!datasetName.getChildren().isEmpty()) {
+//                            for(int j=0;j<datasetName.getChildren().size();j++)
+//                                file = new DefaultTreeNode("File", datasetName.getChildren().get(j), datasetName);
+//                        }
                  }
                 return root;
   }

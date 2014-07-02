@@ -18,12 +18,12 @@ public class TreeFiles implements Serializable, Comparable<TreeFiles> {
      
     private String size;
      
-    private String type;
+    private String owner;
      
-    public TreeFiles(String name, String size, String type) {
+    public TreeFiles(String name, String size, String owner) {
         this.name = name;
         this.size = size;
-        this.type = type;
+        this.owner = owner;
     }
  
     public String getName() {
@@ -43,11 +43,11 @@ public class TreeFiles implements Serializable, Comparable<TreeFiles> {
     }
  
     public String getType() {
-        return type;
+        return owner;
     }
  
-    public void setType(String type) {
-        this.type = type;
+    public void setType(String owner) {
+        this.owner = owner;
     }
  
     //Eclipse Generated hashCode and equals
@@ -57,7 +57,7 @@ public class TreeFiles implements Serializable, Comparable<TreeFiles> {
         int result = 1;
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((size == null) ? 0 : size.hashCode());
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        result = prime * result + ((owner == null) ? 0 : owner.hashCode());
         return result;
     }
  
@@ -80,10 +80,10 @@ public class TreeFiles implements Serializable, Comparable<TreeFiles> {
                 return false;
         } else if (!size.equals(other.size))
             return false;
-        if (type == null) {
-            if (other.type != null)
+        if (owner == null) {
+            if (other.owner != null)
                 return false;
-        } else if (!type.equals(other.type))
+        } else if (!owner.equals(other.owner))
             return false;
         return true;
     }
