@@ -37,12 +37,11 @@ public class FileService {
     private final String SET_DEFAULT_FS = "fs.defaultFS";
     public static final String DEFAULT_TYPE = "folder";
     
-    TreeNode root = null;
     TreeNode researcher = null;
     TreeNode dataSets = null;
     TreeNode datasetName = null;
     TreeNode file = null;
-    private List<TreeNode> children;
+    //private List<TreeNode> children;
     
     public TreeNode createFiles() throws URISyntaxException, IOException, InterruptedException{
     
@@ -53,11 +52,13 @@ public class FileService {
         FileSystem fs = FileSystem.get(conf);    
         Path path = new Path(buildPath);       
 
-        String parent = path.getParent().getName();
-        root = new DefaultTreeNode(new TreeFiles(parent, "-" , "Folder"), null);
-        
         FileStatus[] files = fs.listStatus(path);
         Path[] paths = FileUtil.stat2Paths(files);
+        
+        String parent = path.getParent().getName();
+        TreeNode root = new DefaultTreeNode(new TreeFiles(parent, "-" , "Folder"), null);
+        
+        
         
         for(int i = 0; i<paths.length; i++){
                 //System.out.println(files[i].getPath().getName());

@@ -45,14 +45,13 @@
                                 <br/>
                                 <h3>Dataset: </h3> #{datasetMB.dataset.name}
                                 <br/>
-                                <h3>Path: </h3> ...............
+<!--                                <h3>Path: </h3> ...............-->
                             </div>
                             <hr/>
                         </div>
                      
                 
-    <p:treeTable value="#{hdfsClientView.root}" var="file" selectionMode="single"
-                 selection="#{hdfsClientView.selectedNode}">
+    <p:treeTable value="#{hdfsClientView.root}" var="file" selectionMode="single" selection="#{hdfsClientView.selectedNode}">
                                  <p:column headerText="Name">
                                      <h:outputText value="#{file.name}"/>
                                 </p:column>

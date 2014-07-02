@@ -65,7 +65,7 @@ public class DatasetMB implements Serializable{
     private String owner;
     private String datasetName;
     
-    public final String nameNodeURI = "hdfs://cloud7.sics.se:13121";
+    public final String nameNodeURI = "hdfs://localhost:9999";
     private StreamedContent file;
     
 //    @ManagedProperty("#{param['formId:dataset_name']}")
@@ -210,9 +210,9 @@ public class DatasetMB implements Serializable{
                 os.close();
                 is.close();
                 
-            System.out.println("Time in millis for staging ="+ (System.currentTimeMillis() - start));
-            addMessage("File staged ......"+ (System.currentTimeMillis() - start));
-            
+            //System.out.println("Time in millis for staging ="+ (System.currentTimeMillis() - start));
+            //addMessage("File staged ......"+ (System.currentTimeMillis() - start));
+            addMessage("File staged ......");
            
             
         } catch(FileNotFoundException fnf){
@@ -268,15 +268,9 @@ public class DatasetMB implements Serializable{
         stagingToGlassfish(is, event.getFile().getFileName());
         is.close();
          
-        long start2 = System.currentTimeMillis();
+        //long start2 = System.currentTimeMillis();
         copyFromLocal(event.getFile().getFileName());
-        System.out.println("Time in millis for staging ="+ (System.currentTimeMillis() - start2));
-            
-        
-//        long start = System.currentTimeMillis();
-//        copyFromLocal(event.getFile().getFileName());
-//        System.out.println("Time in millis for staging ="+ (System.currentTimeMillis() - start));
-        //is.close();
+        //System.out.println("Time in millis for staging ="+ (System.currentTimeMillis() - start2));
         
 //        if(!System.getProperty("java.io.tmpdir").isEmpty()){
 //            FileUtils.cleanDirectory(new File(System.getProperty("java.io.tmpdir")));
