@@ -25,8 +25,10 @@ import javax.faces.event.ActionEvent;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.primefaces.component.tabview.TabView;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
+import org.primefaces.event.TabChangeEvent;
 
 
 /**
@@ -52,7 +54,7 @@ public class StudyMB implements Serializable{
     
     private String studyName;   
     private String studyCreator;
-
+    
     
     
     public String getStudyName(){
@@ -202,7 +204,6 @@ public class StudyMB implements Serializable{
         }
             addMessage("added member successfully!");
             return "studyMgmt";
-    
     }
     
     
@@ -222,6 +223,8 @@ public class StudyMB implements Serializable{
     public void save(ActionEvent actionEvent) {
                createStudy();               
     }
+    
+   
    
     public String onFlowProcess(FlowEvent event) {
 		logger.info(event.getOldStep());

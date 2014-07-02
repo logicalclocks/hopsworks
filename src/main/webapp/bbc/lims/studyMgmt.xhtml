@@ -8,6 +8,8 @@
       xmlns:p="http://primefaces.org/ui"
       >
 
+    
+    
     <ui:composition template="layout.xhtml">
 
         <ui:define name="title">
@@ -15,12 +17,13 @@
         </ui:define>
         <ui:define name="css">
             <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+            
         </ui:define>
         <ui:define name="scripts"/>
 
 <!--        <ui:define name="leftmenu">
-            <p:commandLink styleClass="sideMenuItem New" action="#{bbcController.showNewUserManagementDialog()}"/>
         </ui:define>-->
+
 
 
         
@@ -40,9 +43,9 @@
                      
                 </f:facet> 
            
+               
                 <p:tabView id="tabViewStudy" cache="false" dynamic="true">
-                    <p:tab id="tab1" title="All">
-                        <h:form id="showAllStudy">
+                    <p:tab id="tab1" title="All" >
                             <p:panel styleClass="BbcNewUserPanel" style="font-size:12px;width:600px">
                               <h:panelGrid columns="2">
                                   <p:dataList value="#{studyMB.studyList}" var="stdlist" styleClass="dataList">
@@ -56,11 +59,9 @@
                                   </p:dataList>
                               </h:panelGrid>
                             </p:panel>
-                        </h:form>
                     </p:tab>
 
-	<p:tab id="tab2" title="Personal"> 
-		<h:form id="showPersonalStudy">
+                    <p:tab id="tab2" title="Personal"> 
                             <p:panel styleClass="BbcNewUserPanel" style="font-size:12px;width:600px">
                               <h:panelGrid columns="2">
                                   <p:dataList value="#{studyMB.personalStudy}" var="study" styleClass="dataList">
@@ -70,10 +71,9 @@
                                   </p:dataList>
                               </h:panelGrid>
                             </p:panel>
-                </h:form>
 	</p:tab>
 
-	<p:tab id="tab3" title="Joined">
+                    <p:tab id="tab3" title="Joined">
 		<h:panelGrid columns="2">
 		
                     <h:outputText id="tabJoined"/>
@@ -81,6 +81,7 @@
 	</p:tab>
 
    </p:tabView>
+                   
             </p:panel>      
   </h:form>
 </ui:define>    

@@ -18,6 +18,7 @@ import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletRequest;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
@@ -37,13 +38,14 @@ public class UserController implements Serializable {
     private UserFacade userFacade;
     private Username user;
     
-    List<Group> g = new ArrayList<Group>();
+    List<Group> g = new ArrayList<>();
     private List<Username> filteredUsers;
     private List<Username> usernames;
     private List<Username> selectedUsername;
     private String email;
     private String name;
     private String username;
+   
   
     
     public UserController() {
@@ -52,7 +54,10 @@ public class UserController implements Serializable {
 
     @PostConstruct
     protected void init(){
+//        usernames = new ArrayList<>();
+//        usernames.add(new Username());
         usernames = getAllUsers();
+        
     }
     
     public Username getUser() {
@@ -87,7 +92,7 @@ public class UserController implements Serializable {
         if(usernames == null)
             init();
 
-        List<Username> suggestions = new ArrayList<Username>();
+        List<Username> suggestions = new ArrayList<>();
         for(Username un : usernames) {
             if(un.getName().startsWith(name))
                 suggestions.add(un);
@@ -111,7 +116,7 @@ public class UserController implements Serializable {
     public Group[] getGroups() {
         return Group.values();
     }
-
+    
     public Username getSelectedUser(){
         return user;
     }
@@ -158,7 +163,7 @@ public class UserController implements Serializable {
     
     }
 
-    public String addUser() {
+    public void addUser() {
         
         user.encodePassword();
         user.setRegisteredOn(new Date());
@@ -167,34 +172,34 @@ public class UserController implements Serializable {
         try {
             userFacade.persist(user);
         } catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error: Add Operation failed.");
-            return null;
+            addErrorMessageToUserAction("Error: Operation failed!");
+            return;
         }
-        addMessage("Add Operation Completed.");
-        return "Success";
+        addMessage("Successfully added: " + user.getName());
+        
     }
 
-    public String deleteUser() {
+    public void deleteUser() {
         try {
             userFacade.removeByEmail(user.getEmail());
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Delete Operation failed.");
-            return null;
+            //return;
         }
 
-        addMessage("Delete Operation Completed.");
-        return "Success";
+           //addMessage("Delete Operation Completed.");
+        
     }
 
-    public String updateUser() {
+    public void updateUser() {
         try {
             userFacade.update(user);
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Update action failed.");
-            return null;
+            return;
         }
         addMessage("Update Completed.");
-        return "Success";
+       
     }
 
 //    public void create() {
@@ -246,11 +251,19 @@ public class UserController implements Serializable {
             return "userMgmt";
     }
    
-    public void onTabChange(TabChangeEvent event) {
-        FacesMessage msg = new FacesMessage("Tab Changed", "Active Tab: " + event.getTab().getTitle());
-
-        FacesContext.getCurrentInstance().addMessage(null, msg);
-    }
+//    public void onTabChange(TabChangeEvent event) {
+//        FacesMessage msg = new FacesMessage("Tab Changed", "Active Tab: " + event.getTab().getTitle());
+//        FacesContext.getCurrentInstance().addMessage(null, msg);
+//    }
+   
+   
+   public void confirmMessage(ActionEvent actionEvent){
+   
+       FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Deletion Successful!",  null);
+       FacesContext.getCurrentInstance().addMessage(null, message);
+   }
+   
+   
 
     public String getLoginName() throws IOException {
         FacesContext context = FacesContext.getCurrentInstance();

@@ -28,7 +28,7 @@ public class InputConverter implements Converter {
     
     @EJB
     private UserFacade userFacade;
-    private List<Username> username = new ArrayList<Username>();
+    private List<Username> username = new ArrayList<>();
     
     @PostConstruct
     protected void init(){
@@ -49,8 +49,6 @@ public class InputConverter implements Converter {
             return null;
         } else {
             try {
-                //int number = Integer.parseInt(submittedValue);
- 
                 for (Username un : username) {
                     if (un.getName().equalsIgnoreCase(name)) {
                         return un;
@@ -58,7 +56,7 @@ public class InputConverter implements Converter {
                 }
                  
             } catch(Exception exception) {
-                throw new ConverterException(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Conversion Error", "Not a valid player"));
+                throw new ConverterException(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Conversion Error", "Not a valid user"));
             }
         }
                 return null;

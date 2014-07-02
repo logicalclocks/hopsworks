@@ -213,19 +213,16 @@ public class DatasetMB implements Serializable{
             System.out.println("Time in millis for staging ="+ (System.currentTimeMillis() - start));
             addMessage("File staged ......"+ (System.currentTimeMillis() - start));
             
-            long start2 = System.currentTimeMillis();
-            copyFromLocal(filename);
-            System.out.println("Time in millis for staging ="+ (System.currentTimeMillis() - start2));
-            
+           
             
         } catch(FileNotFoundException fnf){
             addErrorMessageToUserAction("File not found! "+ fnf.toString());    
         } catch(IOException ioe){
             addErrorMessageToUserAction("I/O Exception "+ ioe.toString());    
         } 
-        catch(URISyntaxException uri){
-            addErrorMessageToUserAction("URI Syntax Exception "+ uri.toString());    
-        }
+//        catch(URISyntaxException uri){
+//            addErrorMessageToUserAction("URI Syntax Exception "+ uri.toString());    
+//        }
         
     }
     
@@ -269,6 +266,12 @@ public class DatasetMB implements Serializable{
         
         InputStream is = event.getFile().getInputstream();
         stagingToGlassfish(is, event.getFile().getFileName());
+        is.close();
+         
+        long start2 = System.currentTimeMillis();
+        copyFromLocal(event.getFile().getFileName());
+        System.out.println("Time in millis for staging ="+ (System.currentTimeMillis() - start2));
+            
         
 //        long start = System.currentTimeMillis();
 //        copyFromLocal(event.getFile().getFileName());

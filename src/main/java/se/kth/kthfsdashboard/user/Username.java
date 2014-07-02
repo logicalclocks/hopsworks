@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import javax.xml.bind.DatatypeConverter;
 import java.util.Date;
 import java.util.List;
@@ -152,9 +153,10 @@ public class Username implements Serializable {
             return false;
         }
 //      try {
-          Random r = new Random(System.currentTimeMillis());
-          salt = new byte[8];
-          r.nextBytes(salt);
+          //Random r = new Random(System.currentTimeMillis());
+            Random r = new SecureRandom();
+            salt = new byte[8];
+            r.nextBytes(salt);
 //            MessageDigest digest = MessageDigest.getInstance("SHA-1");
 //            digest.reset();
 //            digest.update(salt);

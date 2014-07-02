@@ -19,5 +19,12 @@ Any value defined here will override the pom.xml file value but is only applicab
         <org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_j2eeVersion>1.6-web</org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_j2eeVersion>
         <org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_deploy_2e_server>gfv3ee6</org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_deploy_2e_server>
         <netbeans.hint.j2eeVersion>1.7-web</netbeans.hint.j2eeVersion>
+        <org-netbeans-modules-css-prep.sass_2e_compiler_2e_options/>
+        <org-netbeans-modules-css-prep.less_2e_mappings>/less:/css</org-netbeans-modules-css-prep.less_2e_mappings>
+        <org-netbeans-modules-css-prep.less_2e_enabled>false</org-netbeans-modules-css-prep.less_2e_enabled>
+        <org-netbeans-modules-css-prep.sass_2e_mappings>/scss:/css</org-netbeans-modules-css-prep.sass_2e_mappings>
+        <org-netbeans-modules-css-prep.sass_2e_enabled>false</org-netbeans-modules-css-prep.sass_2e_enabled>
+        <org-netbeans-modules-css-prep.less_2e_compiler_2e_options/>
+        <org-netbeans-modules-web-clientproject-api.js_2e_libs_2e_folder>plupload/js</org-netbeans-modules-web-clientproject-api.js_2e_libs_2e_folder>
     </properties>
 </project-shared-configuration>

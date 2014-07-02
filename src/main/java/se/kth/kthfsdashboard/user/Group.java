@@ -10,14 +10,14 @@ package se.kth.kthfsdashboard.user;
  */
 public enum Group {
     
-    ADMIN, USER, AGENT, BBC_RESEARCHER, BBC_ADMIN;
+   ADMIN, USER, AGENT, BBC_RESEARCHER, BBC_ADMIN;
     
     
-//    ADMIN("admin"), 
-//    USER("user"), 
-//    AGENT("agent"), 
-//    BBC_RESEARCHER("bbc researcher"), 
-//    BBC_ADMIN("bbc admin");
+//    ADMIN("Admin"), 
+//    USER("User"), 
+//    AGENT("Agent"), 
+//    BBC_RESEARCHER("BBC Researcher"), 
+//    BBC_ADMIN("BBC Admin");
 //    
 //    private final String group;
 //

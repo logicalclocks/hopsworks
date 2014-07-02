@@ -38,9 +38,10 @@
     <p:tabView id="tabViewNew" dynamic="true" styleClass="BbcTabView">
 <!--        <p:ajax event="tabChange" listener="#{userController.onTabChange}" update=":formUser:growl"/>  -->
         <p:tab title="Registered Users" id="Registered">
-                            <p:messages showDetail="true" autoUpdate="true" closable="true"/>
+
+           
                             <h:form id="userdataForm">
-                                
+                                 <p:growl id="growl" life="2000"/>
                                      <h:panelGrid id="userdata" columns="4" cellpadding="5">                   
                                     <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
                                                  selectionMode="single" rowKey="#{user.email}" selection="#{userController.selectedUser}">
@@ -74,7 +75,7 @@
                                                         <p:commandButton value="Delete" update="userdata" icon="ui-icon-search" style="margin-right:10px" oncomplete="PF('userDialog').show()"/>
                                              </f:facet>
                                                                                    
-                                      <p:dialog id="dialog" header="Selected User" widgetVar="userDialog" draggable="true" resizable="false" width="250" showEffect="clip" hideEffect="fold">
+                                      <p:dialog id="dialog" header="Selected User" widgetVar="userDialog" draggable="true" resizable="false" width="350" showEffect="clip" hideEffect="fold">
 
                                               <h:panelGrid id="display" columns="2" cellpadding="4">
 
@@ -86,12 +87,16 @@
 
                                                   <h:outputText value="Username:" />
                                                   <h:outputText value="#{userController.selectedUser.username}" />
+                                                  
+                                                  <h:outputText value="Registered On:" />
+                                                  <h:outputText value="#{userController.selectedUser.registeredOn}" />
 
                                              </h:panelGrid>
                                          
                                           <f:facet name="footer">
                                                       <h:outputText id="deletemsg" value="Are you sure you want to remove this user?" />
-                                                      <p:commandButton value="Confirm" update="display" icon="ui-icon-close" style="margin-right:10px" action="#{userController.deleteUser()}"/>
+                                                      <p:commandButton value="Confirm" update="growl" icon="ui-icon-close" style="margin-right:10px" action="#{userController.deleteUser()}"
+                                                                       actionListener="#{userController.confirmMessage}" oncomplete="PF('userDialog').hide()"/>
                                           </f:facet>
                                           
                                     </p:dialog>
@@ -168,17 +173,3 @@
         </ui:define>
     </ui:composition>
 </html>
-                    
-         
-        
-                               
-                                    
-                                
-                                
-                               
-            
-                            
-
-            
-            
-     
