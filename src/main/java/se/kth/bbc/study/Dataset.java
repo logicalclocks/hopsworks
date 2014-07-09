@@ -7,15 +7,16 @@
 package se.kth.bbc.study;
 
 import java.io.Serializable;
+import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -29,46 +30,39 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "Dataset.findAll", query = "SELECT d FROM Dataset d"),
-    @NamedQuery(name = "Dataset.findById", query = "SELECT d FROM Dataset d WHERE d.id = :id"),
     @NamedQuery(name = "Dataset.findByOwner", query = "SELECT d FROM Dataset d WHERE d.owner = :owner"),
-    @NamedQuery(name = "Dataset.findByName", query = "SELECT d FROM Dataset d WHERE d.name = :name")})
+    @NamedQuery(name = "Dataset.findByName", query = "SELECT d FROM Dataset d WHERE d.name = :name"),
+    @NamedQuery(name = "Dataset.findByTimestamp", query = "SELECT d FROM Dataset d WHERE d.timestamp = :timestamp")})
 public class Dataset implements Serializable {
     private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Basic(optional = false)
-    @Column(name = "id")
-    private Integer id;
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 128)
     @Column(name = "owner")
     private String owner;
+    @Id
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 128)
     @Column(name = "name")
     private String name;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "timestamp")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date timestamp;
 
     public Dataset() {
     }
 
-    public Dataset(Integer id) {
-        this.id = id;
-    }
-
-    public Dataset(Integer id, String owner, String name) {
-        this.id = id;
-        this.owner = owner;
+    public Dataset(String name) {
         this.name = name;
     }
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
+    public Dataset(String name, String owner, Date timestamp) {
+        this.name = name;
+        this.owner = owner;
+        this.timestamp = timestamp;
     }
 
     public String getOwner() {
@@ -87,10 +81,18 @@ public class Dataset implements Serializable {
         this.name = name;
     }
 
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
+    }
+
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (id != null ? id.hashCode() : 0);
+        hash += (name != null ? name.hashCode() : 0);
         return hash;
     }
 
@@ -101,7 +103,7 @@ public class Dataset implements Serializable {
             return false;
         }
         Dataset other = (Dataset) object;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+        if ((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name))) {
             return false;
         }
         return true;
@@ -109,7 +111,7 @@ public class Dataset implements Serializable {
 
     @Override
     public String toString() {
-        return "se.kth.kthfsdashboard.study.Dataset[ id=" + id + " ]";
+        return "se.kth.bbc.study.Dataset[ name=" + name + " ]";
     }
     
 }

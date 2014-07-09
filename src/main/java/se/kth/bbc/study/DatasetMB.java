@@ -23,6 +23,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.file.Paths;
 import java.security.Principal;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.ejb.EJB;
@@ -108,8 +110,9 @@ public class DatasetMB implements Serializable{
     public String createDataset()throws IOException, URISyntaxException{
         
              
-        dataset.setId(Integer.SIZE);     
+        //dataset.setId(Integer.SIZE);     
         dataset.setOwner(getUsername());
+        dataset.setTimestamp(new Timestamp(new Date().getTime()));
       
         try{
             datasetController.persistDataset(dataset);

@@ -55,11 +55,11 @@ public class StudyController {
        em.remove(study);
     }
     
-    public void addMember(StudyGroupMembers studyMember){
-        em.persist(studyMember);
-    }
-    
-    public void removeMember(StudyGroupMembers studyMember){
-        em.remove(studyMember);
-    }
+//    public void addMember(StudyGroupMembersOld studyMember){
+//        em.persist(studyMember);
+//    }
+//    
+//    public void removeMember(StudyGroupMembersOld studyMember){
+//        em.remove(studyMember);
+//    }
 }

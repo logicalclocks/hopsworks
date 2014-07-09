@@ -7,18 +7,24 @@
 package se.kth.bbc.study;
 
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.Date;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  *
@@ -29,20 +35,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "TrackStudy.findAll", query = "SELECT t FROM TrackStudy t"),
-    @NamedQuery(name = "TrackStudy.findById", query = "SELECT t FROM TrackStudy t WHERE t.id = :id"),
     @NamedQuery(name = "TrackStudy.findByName", query = "SELECT t FROM TrackStudy t WHERE t.name = :name"),
     @NamedQuery(name = "TrackStudy.findByUsername", query = "SELECT t FROM TrackStudy t WHERE t.username = :username"),
-    @NamedQuery(name = "TrackStudy.findAllStudy", query = "SELECT COUNT(t.name) FROM TrackStudy t"),
-    @NamedQuery(name = "TrackStudy.findMembers", query = "SELECT DISTINCT COUNT(t.username) FROM TrackStudy t WHERE t.name = :name")})
-    //@NamedQuery(name = "TrackStudy.findUsername", query = "SELECT * FROM TrackStudy t, Username u WHERE t.username = u.email AND t.username = :username")})
-
+    @NamedQuery(name = "TrackStudy.findByTimestamp", query = "SELECT t FROM TrackStudy t WHERE t.timestamp = :timestamp")})
 public class TrackStudy implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Basic(optional = false)
-    @Column(name = "id")
-    private Integer id;
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 128)
@@ -53,26 +51,25 @@ public class TrackStudy implements Serializable {
     @Size(min = 1, max = 255)
     @Column(name = "username")
     private String username;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "timestamp")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date timestamp;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "trackStudy")
+    private Collection<StudyGroups> studyGroupsCollection;
 
     public TrackStudy() {
     }
 
-    public TrackStudy(Integer id) {
-        this.id = id;
+    public TrackStudy(String name) {
+        this.name = name;
     }
 
-    public TrackStudy(Integer id, String name, String username) {
-        this.id = id;
+    public TrackStudy(String name, String username, Date timestamp) {
         this.name = name;
         this.username = username;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
+        this.timestamp = timestamp;
     }
 
     public String getName() {
@@ -91,10 +88,28 @@ public class TrackStudy implements Serializable {
         this.username = username;
     }
 
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<StudyGroups> getStudyGroupsCollection() {
+        return studyGroupsCollection;
+    }
+
+    public void setStudyGroupsCollection(Collection<StudyGroups> studyGroupsCollection) {
+        this.studyGroupsCollection = studyGroupsCollection;
+    }
+
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (id != null ? id.hashCode() : 0);
+        hash += (name != null ? name.hashCode() : 0);
         return hash;
     }
 
@@ -105,7 +120,7 @@ public class TrackStudy implements Serializable {
             return false;
         }
         TrackStudy other = (TrackStudy) object;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+        if ((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name))) {
             return false;
         }
         return true;
@@ -113,7 +128,7 @@ public class TrackStudy implements Serializable {
 
     @Override
     public String toString() {
-        return "se.kth.kthfsdashboard.study.TrackStudy[ id=" + id + " ]";
+        return "se.kth.bbc.study.TrackStudy[ name=" + name + " ]";
     }
     
 }

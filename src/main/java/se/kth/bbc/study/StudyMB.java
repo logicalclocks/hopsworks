@@ -49,8 +49,7 @@ public class StudyMB implements Serializable{
     private TrackStudy study;
     private DatasetStudy dsStudy;
     private Dataset dataset;
-    private StudyGroupMembers studyMember;
-    
+    private Activity activity;
     
     private String studyName;   
     private String studyCreator;
@@ -107,15 +106,16 @@ public class StudyMB implements Serializable{
     } 
     
     
-    public StudyGroupMembers getStudyMember() {
-        if (studyMember == null) {
-            studyMember = new StudyGroupMembers();
+    public Activity getActivity() {
+        if (activity == null) {
+            activity = new Activity();
         }
-        return studyMember;
+        return activity;
     }
     
-    public void setStudyMember(StudyGroupMembers studyMember) {
-        this.studyMember = studyMember;
+    
+    public void setActivity(Activity activity) {
+        this.activity = activity;
     } 
     
         
@@ -149,7 +149,6 @@ public class StudyMB implements Serializable{
     //create a study       
     public String createStudy(){
         
-        study.setId(Integer.SIZE);
         study.setUsername(getUsername());
         
         try{
@@ -189,22 +188,22 @@ public class StudyMB implements Serializable{
     
     //add members to study
     
-    public String addMembers(){
-    
-        studyMember.setTimeadded(new Date());
-        studyMember.setAddedBy(getUsername());
-        studyMember.studyGroupMembersPK.setStudyname(this.studyName);
-        
-        try{
-            studyController.addMember(studyMember);
-        }catch(EJBException ejb){
-            addErrorMessageToUserAction("Error: New Member adding failed!");
-            return null;
-        
-        }
-            addMessage("added member successfully!");
-            return "studyMgmt";
-    }
+//    public String addMembers(){
+//    
+//        studyMember.setTimeadded(new Date());
+//        studyMember.setAddedBy(getUsername());
+//        studyMember.studyGroupMembersPK.setStudyname(this.studyName);
+//        
+//        try{
+//            studyController.addMember(studyMember);
+//        }catch(EJBException ejb){
+//            addErrorMessageToUserAction("Error: New Member adding failed!");
+//            return null;
+//        
+//        }
+//            addMessage("added member successfully!");
+//            return "studyMgmt";
+//    }
     
     
     public void addMessage(String summary) {

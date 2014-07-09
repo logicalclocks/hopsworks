@@ -18,8 +18,7 @@ import javax.validation.constraints.Size;
  * @author roshan
  */
 @Embeddable
-
-public class StudyGroupMembersPK implements Serializable {
+public class StudyGroupsPK implements Serializable {
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 255)
@@ -30,12 +29,11 @@ public class StudyGroupMembersPK implements Serializable {
     @Size(min = 1, max = 255)
     @Column(name = "username")
     private String username;
-    
 
-    public StudyGroupMembersPK() {
+    public StudyGroupsPK() {
     }
 
-    public StudyGroupMembersPK(String studyname, String username) {
+    public StudyGroupsPK(String studyname, String username) {
         this.studyname = studyname;
         this.username = username;
     }
@@ -67,10 +65,10 @@ public class StudyGroupMembersPK implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof StudyGroupMembersPK)) {
+        if (!(object instanceof StudyGroupsPK)) {
             return false;
         }
-        StudyGroupMembersPK other = (StudyGroupMembersPK) object;
+        StudyGroupsPK other = (StudyGroupsPK) object;
         if ((this.studyname == null && other.studyname != null) || (this.studyname != null && !this.studyname.equals(other.studyname))) {
             return false;
         }
@@ -82,8 +80,7 @@ public class StudyGroupMembersPK implements Serializable {
 
     @Override
     public String toString() {
-        return "se.kth.kthfsdashboard.study.StudyGroupMembersPK[ studyname=" + studyname + ", username=" + username + " ]";
+        return "se.kth.bbc.study.StudyGroupsPK[ studyname=" + studyname + ", username=" + username + " ]";
     }
-
     
 }

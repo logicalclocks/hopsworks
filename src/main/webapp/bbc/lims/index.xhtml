@@ -14,7 +14,8 @@
             BiobankCloud Lims
         </ui:define>
         <ui:define name="css">
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/bbc.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+            
         </ui:define>
         <ui:define name="scripts"/>
 
@@ -23,10 +24,32 @@
         </ui:define>
 
 
-        <ui:define name="content">
-            
-
-        </ui:define>
+<ui:define name="content">
+     
+<h:form id="limsForm">
+         
+    <div class="StudyBlock" style="float: right;">
+        <h3 align="left">Study
+            <p:spacer width="270" height="10"/>
+    <span><button class="styled-button-10" style="float: top">New Study</button></span></h3>
+      
+     <hr/>
+<!--            <h:panelGrid columns="1">-->
+              
+      
+                 <ul class="nav nav-tabs">
+                    <li><a href="#home" data-toggle="tab">All</a></li>
+                    <li><a href="#profile" data-toggle="tab">Personal</a></li>
+                    <li><a href="#messages" data-toggle="tab">Joined</a></li>
+                  
+                 </ul>
+                  
+              
+<!--            </h:panelGrid>-->
+    </div>
+   
+</h:form>   
+</ui:define>
 
     </ui:composition>
 </html>
