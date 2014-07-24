@@ -19,6 +19,11 @@
             <to-view-id>/bbc/lims/studyMgmt.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+        <navigation-case>
+            <from-outcome>newStudy</from-outcome>
+            <to-view-id>/bbc/lims/newStudy.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
          <navigation-case>
             <from-outcome>dataMgmt</from-outcome>
             <to-view-id>/bbc/lims/create-Datasets.xhtml</to-view-id>

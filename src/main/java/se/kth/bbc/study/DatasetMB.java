@@ -27,6 +27,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
@@ -51,13 +52,14 @@ import org.apache.hadoop.io.IOUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
+import se.kth.bbc.activity.ActivityMB;
 
 /**
  *
  * @author roshan
  */
 @ManagedBean
-@SessionScoped
+@RequestScoped
 public class DatasetMB implements Serializable{
     
     @EJB
@@ -70,10 +72,18 @@ public class DatasetMB implements Serializable{
     public final String nameNodeURI = "hdfs://localhost:9999";
     private StreamedContent file;
     
-//    @ManagedProperty("#{param['formId:dataset_name']}")
-//    private String dataset_name;
+    @ManagedProperty(value="#{activityBean}")
+    private ActivityMB activity;
     
+    @PostConstruct
+    public void init(){
+       activity.getActivity();
+    }
     
+    public void setActivity(ActivityMB activity) {
+        this.activity = activity;
+    } 
+
     
     public String getOwner(){
         return owner;
@@ -109,8 +119,6 @@ public class DatasetMB implements Serializable{
     
     public String createDataset()throws IOException, URISyntaxException{
         
-             
-        //dataset.setId(Integer.SIZE);     
         dataset.setOwner(getUsername());
         dataset.setTimestamp(new Timestamp(new Date().getTime()));
       
@@ -121,6 +129,7 @@ public class DatasetMB implements Serializable{
             return null;
         }
         addMessage("Dataset created! ["+ dataset.getName() + "] dataset is owned by " + dataset.getOwner());
+        activity.addActivity("New Dataset Created", dataset.getName(), "DATA");
         mkDIRS(dataset.getOwner(),dataset.getName());
         return "dataUpload";
     }

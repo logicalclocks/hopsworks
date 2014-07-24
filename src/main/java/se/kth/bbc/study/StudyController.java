@@ -6,11 +6,17 @@
 
 package se.kth.bbc.study;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
+import org.apache.commons.lang3.time.DateUtils;
+
 /**
  *
  * @author roshan
@@ -47,6 +53,31 @@ public class StudyController {
         return (Long)em.createNamedQuery("TrackStudy.findMembers").setParameter("name", name).getSingleResult();
     }
     
+    public List<TrackStudy> filterLatestStudy(){
+    
+//        Calendar cal = Calendar.getInstance();
+//        cal.setTime(new Date());
+//        cal.add(Calendar.DATE, -2);
+//        
+//        Query query = 
+//                em.createQuery("SELECT t FROM TrackStudy t WHERE t.timestamp BETWEEN ?1 AND ?2",TrackStudy.class).setParameter(1, new Date(), TemporalType.DATE)
+//                        .setParameter(2, cal, TemporalType.DATE);
+        
+        
+        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE timestamp > now() - interval 3 day", TrackStudy.class);
+        return query.getResultList();
+    
+    } 
+     
+     
+//     public List<TrackStudy> filterLatestStudy(){
+//     
+//         Date now = new Date();
+//         Date oneMonth = new Date(now.getTime() - );
+//         Query query = em.createQuery(null);
+//     
+//     }
+//     
     public void persistStudy(TrackStudy study) {
         em.persist(study);
     }
@@ -55,11 +86,4 @@ public class StudyController {
        em.remove(study);
     }
     
-//    public void addMember(StudyGroupMembersOld studyMember){
-//        em.persist(studyMember);
-//    }
-//    
-//    public void removeMember(StudyGroupMembersOld studyMember){
-//        em.remove(studyMember);
-//    }
 }

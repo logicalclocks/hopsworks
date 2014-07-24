@@ -17,6 +17,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import org.apache.commons.codec.digest.DigestUtils;
+import se.kth.bbc.activity.UserActivity;
 
 
 /**
@@ -25,6 +26,9 @@ import org.apache.commons.codec.digest.DigestUtils;
  */
 @Entity
 @Table(name = "USERS")
+//@SqlResultSetMappings( { @SqlResultSetMapping(name = "activityList", entities = {
+//    @EntityResult(entityClass = UserActivity.class), @EntityResult(entityClass = Username.class) })
+//})
 //@XmlRootElement
 @Cacheable(false)
 @NamedQueries({

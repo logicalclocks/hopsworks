@@ -6,8 +6,9 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-      >
-
+          
+      xmlns:c="http://java.sun.com/jsp/jstl/core">
+    <meta name="viewport" content="width=device-width; initial-scale=1.0"/>
     <ui:composition template="layout.xhtml">
 
         <ui:define name="title">
@@ -15,40 +16,147 @@
         </ui:define>
         <ui:define name="css">
             <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-            
-        </ui:define>
+         </ui:define>
         <ui:define name="scripts"/>
 
         <ui:define name="leftmenu">
 
         </ui:define>
 
-
+        
+       
 <ui:define name="content">
      
-<h:form id="limsForm">
-         
-    <div class="StudyBlock" style="float: right;">
-        <h3 align="left">Study
-            <p:spacer width="270" height="10"/>
-    <span><button class="styled-button-10" style="float: top">New Study</button></span></h3>
-      
-     <hr/>
-<!--            <h:panelGrid columns="1">-->
-              
-      
-                 <ul class="nav nav-tabs">
-                    <li><a href="#home" data-toggle="tab">All</a></li>
-                    <li><a href="#profile" data-toggle="tab">Personal</a></li>
-                    <li><a href="#messages" data-toggle="tab">Joined</a></li>
-                  
-                 </ul>
-                  
-              
-<!--            </h:panelGrid>-->
+<!--<h:form id="limsForm">-->
+    
+<!--    <div class="container">
+        <div class="content">
+            <div class="projects">
+                <div class="span8">
+                    <div class="event_filter"></div>
+                    <div class="content_list"></div>
+                </div>
+                    
+    <div class="span4">
+        <div class="projects_box">
+            <h5 class="title">Study
+                <small>(10)</small>
+                <span class="right"><a href="#home" class="styled-button-10"><i class="icon-plus">New Study</i></a></span>
+            </h5>
+            
+            <ul class="nav nav-projects-tabs">
+                <li class="active">All</li>
+                <li class="active">Personal</li>
+                <li class="active">Joined</li>
+            </ul>
+            <ul class="well-list">
+                <li><a href="" class="projects">kth-dashboard/Roshan</a></li>
+                <li><a href="" class="projects">kth-dashboard/Jim</a></li>
+            </ul>
+            <div class="bottom"></div>
+        </div>
     </div>
-   
-</h:form>   
+                </div>
+            </div>
+    </div>-->
+<div class="container"> 
+    <ul class="main_menu"></ul>
+<div class="content">    
+    <div class="study">
+        <div class="span8">
+            <div class="event_filter">
+                
+                <div class="filter-icon">
+                    
+                    <a href="/dashboard" class="has_tooltip event_filter_link" data-original-title="Push events" id="push_event_filter"><i class="icon-upload-alt"></i></a>
+                    
+                </div>
+            </div>
+            <div class="content_list">
+                <c:forEach var="act" items="#{activityBean.acvitiyList}">
+                <div class="event-item">
+                    <span class="cgray right">3 months ago.</span>
+                    <img class="avatar s24" src="#{activityBean.gravatar}"/>
+                <div class="event-title">
+                        <span class="author_name"><h:link> #{act.performedBy}</h:link></span>
+                        <span class="event_label merged">#{act.activity}</span>
+                            
+                        <h:link>
+                            <strong>at #{act.performedBy} / #{act.activityOn}</strong>
+                                <f:param name="name" value="#{act.activityOn}"/>
+                                <f:param name="owner" value="#{act.performedBy}"/>
+                            </h:link>
+<!--                    <span class="author_name"><a href="/jdowling/hop/team_members/198">Roshan Sedar</a></span>
+                    <span class="event_label merged">merged merge request</span>
+                    <a href="/jdowling/hop/merge_requests/138"><strong>Maven test provile</strong></a> at 
+                    <a href="/jdowling/hop"><span class="tiny">Jim Dowling / </span><strong>kth-dashboard</strong></a>-->
+               </div>
+              </div>
+                    </c:forEach>
+            </div>
+        </div>  
+            
+        <div class="span4">  
+    <div class="study_box">         
+        <h3 class="title" align="left">Study<small>(#{studyMB.allStudy})</small>
+            <span class="right">
+                <h:commandButton id="newStd" value="New Study" type="button" rendered="#{userMB.anyAdminUser}"  class="styled-button-10" onclick="window.location.href='newStudy.xhtml'"/>
+            </span>
+        </h3>
+        <ul>
+                     <li class="active"><a href="#home">All</a></li>
+                     <li class="active"><a href="#personal">Personal</a></li>
+                     <li class="active"><a href="#joined">Joined</a></li>
+                 </ul>
+        
+        <ul class="well_list">
+       
+<!--             <li>-->
+<!--            <ui:repeat value="#{studyMB.latestStudyList}" var="list" varStatus="listStatus" id="lstRepeat">-->
+          
+<!--                <a href="#project"><span class="tiny">#{list.username} </span>/ <strong>#{list.name}</strong></a>-->
+<!--                <h:link><span class="tiny">#{list.username} </span>/ <strong>#{list.name}</strong> </h:link>
+                  <f:param name="#{list.name}" value="#{list.name}"/>-->
+           
+<!--            </ui:repeat>-->
+<!--                  </li>-->
+<!--          <h:link>-->
+        
+          
+            <c:forEach var="list" items="#{studyMB.latestStudyList}" begin="0" end="3">
+        <li>
+            <h:link>
+                <span class="tiny">#{list.username}</span> / <strong>#{list.name}</strong>
+                    <f:param name="name" value="#{list.name}"/>
+                    <f:param name="username" value="#{list.username}"/>
+            </h:link>
+        </li>
+            </c:forEach>
+                
+            
+
+<!--           </h:link> -->
+            
+                        
+                        
+                        
+<!--            <li>
+               <a href="#project"><span class="tiny">Roshan Sedar / </span><strong>kth-dashboard</strong></a>
+            </li>
+            <li>
+               <a href="#project"><span class="tiny">jdowling/ </span><strong>kth-dashboard</strong></a>
+            </li>
+            <li>
+               <a href="#project"><span class="tiny">roselk/ </span><strong>kth-dashboard</strong></a>
+            </li>-->
+        </ul>
+        <div class="bottom"></div>
+    </div>
+            </div>
+</div>
+</div>
+</div>
+<!--</h:form>   -->
 </ui:define>
 
     </ui:composition>

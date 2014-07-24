@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+
+    <ui:composition template="layout.xhtml">
+
+        <ui:define name="title">
+            BiobankCloud Lims
+        </ui:define>
+        <ui:define name="css">
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+        </ui:define>
+        <ui:define name="scripts"/>
+
+        <ui:define name="leftmenu">
+
+        </ui:define>
+
+
+        <ui:define name="content">
+            <div class="container">
+                <ul class="main_menu"></ul>  
+                <div class="content">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#show"></a>Show</li>
+                        <li class="active"><a href="#team"></a>Team</li>
+                    </ul>
+                    <div class="study_content_list">
+                        <div class="event-item">
+                            <span class="cgray right">
+                                13 days ago.
+                            </span>
+                            <div class="event-title">
+                                    <span class="author_name"><a href="/jdowling/kthfs-dashboard/team_members/97">Jim Dowling</a></span>
+                                            <span class="event_label opened">opened issue</span>
+                                                <strong><a href="/jdowling/kthfs-dashboard/issues/57">gravatar images</a></strong> at
+                                            <a href="/jdowling/kthfs-dashboard"><span class="tiny">Jim Dowling / </span><strong>kthfs-dashboard</strong></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+
+        </ui:define>
+
+    </ui:composition>
+</html>

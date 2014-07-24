@@ -63,9 +63,9 @@
 
         <p:spacer width="1" height="5" />
 
-        <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
-            <p:layoutUnit position="west" size="140">  
-<!--                <ui:insert name="leftmenu">Side Menu</ui:insert>-->
+<!--            <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+            <p:layoutUnit position="west" size="140">  -->
+<!--                <ui:insert name="leftmenu">Side Menu</ui:insert>
         </p:layoutUnit>  
 
             <p:layoutUnit position="center">  
@@ -73,7 +73,31 @@
             </p:layoutUnit>  
         </p:layout>  
 
+        <ui:insert name="dialogs"/>-->
+
+<p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+            
+            <p:layoutUnit position="west" size="100"> 
+
+            </p:layoutUnit>  
+    
+    
+    
+            <p:layoutUnit position="center">  
+                <ui:insert name="content"></ui:insert>
+            </p:layoutUnit> 
+            
+            <p:layoutUnit position="east" size="100"> 
+
+            </p:layoutUnit>  
+    
+    
+        </p:layout>  
+
         <ui:insert name="dialogs"/>
+
+
+
     </h:body>
 
 </html>

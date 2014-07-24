@@ -6,13 +6,16 @@
 
 package se.kth.bbc.study;
 
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.Principal;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
@@ -29,6 +32,9 @@ import org.primefaces.component.tabview.TabView;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.event.TabChangeEvent;
+import se.kth.bbc.activity.ActivityMB;
+import se.kth.bbc.activity.UserActivity;
+
 
 
 /**
@@ -36,8 +42,8 @@ import org.primefaces.event.TabChangeEvent;
  * @author roshan
  */
 @ManagedBean
-@SessionScoped
-public class StudyMB implements Serializable{
+@RequestScoped
+public class StudyMB implements Serializable {
     
     private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
     private static final long serialVersionUID = 1L;
@@ -45,16 +51,28 @@ public class StudyMB implements Serializable{
     @EJB
     private StudyController studyController;
     
+    @ManagedProperty(value="#{activityBean}")
+    private ActivityMB activity;
+    
+
     
     private TrackStudy study;
     private DatasetStudy dsStudy;
     private Dataset dataset;
-    private Activity activity;
+    //private UserActivity userActivity;
     
     private String studyName;   
     private String studyCreator;
     
+    @PostConstruct
+    public void init(){
+       activity.getActivity();
+    }
     
+    public void setActivity(ActivityMB activity) {
+        this.activity = activity;
+    } 
+
     
     public String getStudyName(){
         return studyName;
@@ -104,21 +122,7 @@ public class StudyMB implements Serializable{
     public void setDataset(Dataset dataset) {
         this.dataset = dataset;
     } 
-    
-    
-    public Activity getActivity() {
-        if (activity == null) {
-            activity = new Activity();
-        }
-        return activity;
-    }
-    
-    
-    public void setActivity(Activity activity) {
-        this.activity = activity;
-    } 
-    
-        
+
     public List<TrackStudy> getStudyList(){
         return studyController.findAll();
     }
@@ -136,6 +140,10 @@ public class StudyMB implements Serializable{
         return studyController.getMembers(getStudyName());
     }
 
+    public List<TrackStudy> getLatestStudyList(){
+        return studyController.filterLatestStudy();
+    }
+    
       
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
@@ -150,6 +158,7 @@ public class StudyMB implements Serializable{
     public String createStudy(){
         
         study.setUsername(getUsername());
+        study.setTimestamp(new Date());
         
         try{
             studyController.persistStudy(study);
@@ -158,9 +167,9 @@ public class StudyMB implements Serializable{
             return null;
         }
         addMessage("Study created! ["+ study.getName() + "] study is owned by " + study.getUsername());
-        return "studyMgmt";
+        activity.addActivity("New Study Created", study.getName(),"STUDY");
+        return "Success!";
     }
-    
     
     public String fetchStudy(){
     
@@ -222,8 +231,6 @@ public class StudyMB implements Serializable{
     public void save(ActionEvent actionEvent) {
                createStudy();               
     }
-    
-   
    
     public String onFlowProcess(FlowEvent event) {
 		logger.info(event.getOldStep());
