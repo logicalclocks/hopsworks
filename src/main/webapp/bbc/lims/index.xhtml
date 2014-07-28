@@ -23,6 +23,7 @@
 
         </ui:define>
 
+        <script src="../js/sizzles.js" type="text/javascript"></script>
         
        
 <ui:define name="content">
@@ -73,86 +74,52 @@
                 </div>
             </div>
             <div class="content_list">
-                <c:forEach var="act" items="#{activityBean.acvitiyList}">
-                <div class="event-item">
+                <c:forEach var="act" items="#{activityBean.acvitiyList}" begin="1" end="#{studyMB.allStudy}">
+                    <div class="event-item" align="left">
                     <span class="cgray right">3 months ago.</span>
-                    <img class="avatar s24" src="#{activityBean.gravatar}"/>
-                <div class="event-title">
-                        <span class="author_name"><h:link> #{act.performedBy}</h:link></span>
-                        <span class="event_label merged">#{act.activity}</span>
+                    <img class="avatar s24" src="#{activityBean.getGravatar(act.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                        <div class="event-title">
+                                <span class="author_name"><h:link> #{act.performedBy}</h:link></span>
+                                <span class="event_label merged">#{act.activity}</span>
                             
-                        <h:link>
-                            <strong>at #{act.performedBy} / #{act.activityOn}</strong>
-                                <f:param name="name" value="#{act.activityOn}"/>
-                                <f:param name="owner" value="#{act.performedBy}"/>
-                            </h:link>
-<!--                    <span class="author_name"><a href="/jdowling/hop/team_members/198">Roshan Sedar</a></span>
-                    <span class="event_label merged">merged merge request</span>
-                    <a href="/jdowling/hop/merge_requests/138"><strong>Maven test provile</strong></a> at 
-                    <a href="/jdowling/hop"><span class="tiny">Jim Dowling / </span><strong>kth-dashboard</strong></a>-->
+                                        <h:link>
+                                            <strong>at #{act.performedBy} / #{act.activityOn}</strong>
+            <!--                                <f:param name="name" value="#{act.activityOn}"/>
+                                            <f:param name="owner" value="#{act.performedBy}"/>-->
+                                        </h:link>
                </div>
               </div>
                     </c:forEach>
             </div>
         </div>  
             
-        <div class="span4">  
+<div class="span4">  
     <div class="study_box">         
         <h3 class="title" align="left">Study<small>(#{studyMB.allStudy})</small>
             <span class="right">
                 <h:commandButton id="newStd" value="New Study" type="button" rendered="#{userMB.anyAdminUser}"  class="styled-button-10" onclick="window.location.href='newStudy.xhtml'"/>
             </span>
         </h3>
-        <ul>
+        <ul class="nav nav-projects-tabs">
                      <li class="active"><a href="#home">All</a></li>
                      <li class="active"><a href="#personal">Personal</a></li>
                      <li class="active"><a href="#joined">Joined</a></li>
                  </ul>
         
         <ul class="well_list">
-       
-<!--             <li>-->
-<!--            <ui:repeat value="#{studyMB.latestStudyList}" var="list" varStatus="listStatus" id="lstRepeat">-->
-          
-<!--                <a href="#project"><span class="tiny">#{list.username} </span>/ <strong>#{list.name}</strong></a>-->
-<!--                <h:link><span class="tiny">#{list.username} </span>/ <strong>#{list.name}</strong> </h:link>
-                  <f:param name="#{list.name}" value="#{list.name}"/>-->
-           
-<!--            </ui:repeat>-->
-<!--                  </li>-->
-<!--          <h:link>-->
-        
-          
-            <c:forEach var="list" items="#{studyMB.latestStudyList}" begin="0" end="3">
-        <li>
-            <h:link>
+            <c:forEach var="list" items="#{studyMB.latestStudyList}" begin="0" end="#{studyMB.latestStudyList.size()-1}">
+          <li>
+            <h:link outcome="studyPage">
                 <span class="tiny">#{list.username}</span> / <strong>#{list.name}</strong>
                     <f:param name="name" value="#{list.name}"/>
                     <f:param name="username" value="#{list.username}"/>
             </h:link>
         </li>
             </c:forEach>
-                
-            
-
-<!--           </h:link> -->
-            
-                        
-                        
-                        
-<!--            <li>
-               <a href="#project"><span class="tiny">Roshan Sedar / </span><strong>kth-dashboard</strong></a>
-            </li>
-            <li>
-               <a href="#project"><span class="tiny">jdowling/ </span><strong>kth-dashboard</strong></a>
-            </li>
-            <li>
-               <a href="#project"><span class="tiny">roselk/ </span><strong>kth-dashboard</strong></a>
-            </li>-->
         </ul>
         <div class="bottom"></div>
     </div>
-            </div>
+</div>
 </div>
 </div>
 </div>

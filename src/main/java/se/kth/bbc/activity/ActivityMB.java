@@ -91,13 +91,13 @@ public class ActivityMB implements Serializable {
           return getRequest().getUserPrincipal().getName();
     }
      
-    public String getGravatar(){
+    public String getGravatar(String email){
     
          Gravatar gravatar = new Gravatar();
          //gravatar.setSize(28);
          gravatar.setRating(GravatarRating.GENERAL_AUDIENCES);
 //         gravatar.setDefaultImage(GravatarDefaultImage.IDENTICON);
-         String url = gravatar.getUrl(getUsername());
+         String url = gravatar.getUrl(email);
          //byte[] jpg = gravatar.download("info@ralfebert.de");
     
          return url;

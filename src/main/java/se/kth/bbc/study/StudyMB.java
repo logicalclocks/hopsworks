@@ -133,7 +133,7 @@ public class StudyMB implements Serializable {
     }
     
     public long getAllStudy(){
-        return studyController.getAllStudy();
+        return studyController.getAllStudy(getUsername());
     }
 
     public long getNOfMembers(){
@@ -141,7 +141,7 @@ public class StudyMB implements Serializable {
     }
 
     public List<TrackStudy> getLatestStudyList(){
-        return studyController.filterLatestStudy();
+        return studyController.filterLatestStudy(getUsername());
     }
     
       

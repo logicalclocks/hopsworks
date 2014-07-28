@@ -45,15 +45,15 @@ public class StudyController {
     }
     
     
-    public long getAllStudy(){
-        return (Long)em.createNamedQuery("TrackStudy.findAllStudy").getSingleResult();
+    public long getAllStudy(String username){
+        return (Long)em.createNamedQuery("TrackStudy.findAllStudy").setParameter("username", username).getSingleResult();
     }
     
      public long getMembers(String name){
         return (Long)em.createNamedQuery("TrackStudy.findMembers").setParameter("name", name).getSingleResult();
     }
     
-    public List<TrackStudy> filterLatestStudy(){
+    public List<TrackStudy> filterLatestStudy(String username){
     
 //        Calendar cal = Calendar.getInstance();
 //        cal.setTime(new Date());
@@ -64,7 +64,7 @@ public class StudyController {
 //                        .setParameter(2, cal, TemporalType.DATE);
         
         
-        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE timestamp > now() - interval 3 day", TrackStudy.class);
+        Query query = em.createNamedQuery("TrackStudy.findByUsername", TrackStudy.class).setParameter("username", username);
         return query.getResultList();
     
     } 
