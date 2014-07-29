@@ -39,24 +39,25 @@ import se.kth.kthfsdashboard.user.Username;
 //@SqlResultSetMappings( { @SqlResultSetMapping(name = "activityList", entities = {
 //    @EntityResult(entityClass = UserActivity.class), @EntityResult(entityClass = Username.class) })
 //})
-@NamedNativeQuery(name="nativeActivity", query="SELECT act.id, act.activity, act.performed_by, act.activity_on, u.EMAIL, u.NAME FROM activity act, USERS u WHERE act.performed_By = u.EMAIL", resultSetMapping = "allActivityList")
-@SqlResultSetMapping(name="allActivityList", entities = {@EntityResult(entityClass = UserActivity.class, fields = {
-                                                                                     @FieldResult(name="id", column = "id"),
-                                                                                     @FieldResult(name="activity", column = "activity"),
-                                                                                     @FieldResult(name="performed_by",column = "performed_by"),
-                                                                                     @FieldResult(name="timestamp",column = "timestamp"),
-                                                                                     @FieldResult(name="activity_on",column = "activity_on")}),
-    
-                                                         @EntityResult(entityClass = Username.class, fields = {
-                                                                                     @FieldResult(name="name",column = "NAME"),
-                                                                                     @FieldResult(name="email",column = "EMAIL")}) 
-                                                                                     })
+//@NamedNativeQuery(name="nativeActivity", query="SELECT act.id, act.activity, act.performed_by, act.activity_on, u.EMAIL, u.NAME FROM activity act, USERS u WHERE act.performed_By = u.EMAIL", resultSetMapping = "allActivityList")
+//@SqlResultSetMapping(name="allActivityList", entities = {@EntityResult(entityClass = UserActivity.class, fields = {
+//                                                                                     @FieldResult(name="id", column = "id"),
+//                                                                                     @FieldResult(name="activity", column = "activity"),
+//                                                                                     @FieldResult(name="performed_by",column = "performed_by"),
+//                                                                                     @FieldResult(name="timestamp",column = "timestamp"),
+//                                                                                     @FieldResult(name="activity_on",column = "activity_on")}),
+//    
+//                                                         @EntityResult(entityClass = Username.class, fields = {
+//                                                                                     @FieldResult(name="name",column = "NAME"),
+//                                                                                     @FieldResult(name="email",column = "EMAIL")}) 
+//                                                                                     })
 @NamedQueries({
     @NamedQuery(name = "UserActivity.findAll", query = "SELECT u FROM UserActivity u"),
     @NamedQuery(name = "UserActivity.findById", query = "SELECT u FROM UserActivity u WHERE u.id = :id"),
     @NamedQuery(name = "UserActivity.findByActivity", query = "SELECT u FROM UserActivity u WHERE u.activity = :activity"),
     @NamedQuery(name = "UserActivity.findByPerformedBy", query = "SELECT u FROM UserActivity u WHERE u.performedBy = :performedBy"),
-    @NamedQuery(name = "UserActivity.findByTimestamp", query = "SELECT u FROM UserActivity u WHERE u.timestamp = :timestamp")})
+    @NamedQuery(name = "UserActivity.findByTimestamp", query = "SELECT u FROM UserActivity u WHERE u.timestamp = :timestamp"),
+    @NamedQuery(name = "UserActivity.findByActivityOn", query = "SELECT u FROM UserActivity u WHERE u.activityOn = :activityOn")})
 public class UserActivity implements Serializable {
     @Basic(optional = false)
     @NotNull

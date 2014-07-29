@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+          
+      xmlns:c="http://java.sun.com/jsp/jstl/core">
+    <ui:composition template="layout.xhtml">
+
+        <ui:define name="title">
+            BiobankCloud Lims
+        </ui:define>
+        <ui:define name="css">
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+         </ui:define>
+        <ui:define name="scripts"/>
+
+        <ui:define name="leftmenu">
+
+        </ui:define>
+        
+        <ui:define name="content">
+            
+            <div class="container">
+                <ul class="main_menu"></ul>
+                <div class="content">
+                     <ul class="nav nav-projects-tabs">
+                         <li class="active"><a href="studyPage.xhtml" class="activities_tab">
+                                <i class="icon_home"/>
+                                Show</a></li>
+                        <li class="active"><a href="team.xhtml" class="activities_tab">Team</a></li>
+                    </ul>
+                    <h3 class="page_title" align="left">
+                        Team Members (10)
+                        <span class="right_button">
+                            <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit"/>
+                        </span>
+                    </h3>
+                    <hr/>
+                </div>
+                
+            </div> 
+            
+            
+            
+            
+        </ui:define>
+        
+        
+        
+        
+        
+        
+    </ui:composition>
+</html>
+

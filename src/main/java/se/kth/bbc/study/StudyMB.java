@@ -42,7 +42,7 @@ import se.kth.bbc.activity.UserActivity;
  * @author roshan
  */
 @ManagedBean
-@RequestScoped
+@SessionScoped
 public class StudyMB implements Serializable {
     
     private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
@@ -154,6 +154,12 @@ public class StudyMB implements Serializable {
           return getRequest().getUserPrincipal().getName();
     }
     
+    public void gravatarAccess(){
+        activity.getGravatar(studyCreator);
+    }
+    
+    
+    
     //create a study       
     public String createStudy(){
         
@@ -178,7 +184,7 @@ public class StudyMB implements Serializable {
         this.studyName =  params.get("studyname"); 
         this.studyCreator =  params.get("username"); 
         
-        return "studyInfo";
+        return "studyPage";
     
     }
     

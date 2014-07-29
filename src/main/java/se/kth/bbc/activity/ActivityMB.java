@@ -46,6 +46,26 @@ public class ActivityMB implements Serializable {
    private UserActivity activity;
    
    
+   private String username;
+   private String studyName;
+   
+   
+   public void setEmail(String username) {
+       this.username = username;
+   }
+   
+   public String getEmail(){
+       return username;
+   }
+   
+   public void setStudyname(String studyName) {
+       this.studyName = studyName;
+   }
+   
+   public String getStudyname(){
+       return studyName;
+   }
+   
    public UserActivity getActivity() {
         if (activity == null) {
             activity = new UserActivity();
@@ -62,6 +82,10 @@ public class ActivityMB implements Serializable {
             return activityController.filterActivity();
     }
     
+    
+    public List<UserActivity> getActivityOnstudy(String activityOn){
+        return activityController.activityOnstudy(activityOn);
+    }
     
     public void addActivity(String message, String activityAbout, String flag){
         

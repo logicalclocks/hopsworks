@@ -48,5 +48,12 @@ public class ActivityController {
         //act.id, act.activity, act.performed_by, act.activity_on, u.NAME 
     }
     
+    public List<UserActivity> activityOnstudy(String activityOn){
+    
+        Query query = em.createNamedQuery("UserActivity.findByActivityOn", UserActivity.class).setParameter("activityOn", activityOn);
+        return query.getResultList();
+    }
+    
+    
     
 }

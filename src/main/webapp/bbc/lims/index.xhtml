@@ -107,17 +107,23 @@
                  </ul>
         
         <ul class="well_list">
-            <c:forEach var="list" items="#{studyMB.latestStudyList}" begin="0" end="#{studyMB.latestStudyList.size()-1}">
+            <c:forEach var="list" items="#{studyMB.latestStudyList}">
+<!--                begin="0" end="#{studyMB.latestStudyList.size()-1}"-->
           <li>
-            <h:link outcome="studyPage">
+<!--              <f:metadata>
+                  <f:viewParam id="name" name="Name" value="#{list.name}"/>
+                  <f:viewParam id="username" name="User" value="#{list.username}"/>
+                </f:metadata>-->
+             
+            <p:commandLink action="#{studyMB.fetchStudy()}">
                 <span class="tiny">#{list.username}</span> / <strong>#{list.name}</strong>
-                    <f:param name="name" value="#{list.name}"/>
-                    <f:param name="username" value="#{list.username}"/>
-            </h:link>
-        </li>
+                        <f:param id="studyName" name="studyname" value="#{list.name}"/>
+                        <f:param id="username" name="username" value="#{list.username}"/>
+          </p:commandLink>
+          </li>
             </c:forEach>
         </ul>
-        <div class="bottom"></div>
+        <div class="bottom"></div> 
     </div>
 </div>
 </div>
