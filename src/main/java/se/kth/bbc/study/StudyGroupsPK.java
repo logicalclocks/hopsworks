@@ -29,6 +29,7 @@ public class StudyGroupsPK implements Serializable {
     @Size(min = 1, max = 255)
     @Column(name = "username")
     private String username;
+    
 
     public StudyGroupsPK() {
     }
@@ -82,5 +83,6 @@ public class StudyGroupsPK implements Serializable {
     public String toString() {
         return "se.kth.bbc.study.StudyGroupsPK[ studyname=" + studyname + ", username=" + username + " ]";
     }
+
     
 }

@@ -39,6 +39,36 @@
                         </span>
                     </h3>
                     <hr/>
+                    <div class="clear_fixing"></div>
+                    
+                    
+                    <div class="team_table">
+                        
+                        <div class="ui_box">
+                            <h5 class="title" align="left">Masters
+                                <small>#{studyMB.countTeamMembers()}</small></h5>
+                            <ul class="well-list">
+                                <li class="team_member_row">
+                                    <div class="row">
+                                        <div class="span6"></div>
+                                        <div class="span5 right">
+                                          
+                                            <div class="left">
+                                                  <h:form id="frmTeamMember">
+<!--                                                    <select id="team_member" class="study_role_assign">-->
+                                                          <h:selectOneMenu value="#{studyMB.studyGroups.teamMember}" styleClass="study_role_assign">
+                                                              <f:selectItems value="#{studyMB.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
+                                                         </h:selectOneMenu>
+<!--                                                    </select>-->
+                                                </h:form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                    </div>
                 </div>
                 
             </div> 

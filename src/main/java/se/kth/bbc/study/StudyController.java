@@ -49,7 +49,7 @@ public class StudyController {
         return (Long)em.createNamedQuery("TrackStudy.findAllStudy").setParameter("username", username).getSingleResult();
     }
     
-     public long getMembers(String name){
+    public long getMembers(String name){
         return (Long)em.createNamedQuery("TrackStudy.findMembers").setParameter("name", name).getSingleResult();
     }
     

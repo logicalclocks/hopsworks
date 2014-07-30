@@ -356,12 +356,90 @@ hr {
     display: table;
 }
 
+
+.clear_fixing{
+    width: 1170px;
+    height: 2px;
+    
+}
+
+.team_table{
+    
+    display: block;
+    width: 1170px;
+    height: auto;
+}
+
+.ui_box{
+    display: block;
+    border-top-color: rgb(204, 204, 204);
+    border-top-style: solid;
+    border-top-width: 1px;
+    border-right-color: rgb(204, 204, 204);
+    border-right-style: solid;
+    border-right-width: 1px;
+    border-bottom-color: rgb(204, 204, 204);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-left-color: rgb(204, 204, 204);
+    border-left-style: solid;
+    border-left-width: 1px;
+    box-shadow: 0 0 0 3px #f1f1f1;
+    background: #F9F9F9;
+    margin-bottom: 25px;
+    min-height: 440px;
+    height: auto;
+}
+
+
+
+.ui_box > .title {
+     width: 1148px;
+     height: 36px;
+     padding: 0 10px 0 10px;
+     border-bottom: 1px solid #ccc;
+     margin: 0 0 0 0;
+}
 .study_name_holder{
     
     display: block;
     width: 1170px;
     height: 45px;
 }
+
+.ui_box > .well-list {
+    
+    display: inline-block;
+    width: 1168px;
+    min-height: 401px;
+    height: auto;
+    padding: 0 0 0 0;
+    margin: 0 0 0 0;
+}
+
+.team_member_row{
+    
+    width: 1148px;
+    height: 46px;
+    background-color: #FFF;
+    padding: 10px 10px 10px 10px;
+    min-height: 20px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: rgba(0, 0, 0, 0.0470588);
+    list-style: none;
+    display: list-item;
+    text-align: -webkit-match-parent;
+    float: left;
+    
+    
+}
+
+.team_member_row:hover{
+    background:#afd9ee;
+}
+
 
 .new_study {
     width: 1170px;
@@ -564,6 +642,14 @@ img .avatar .s24 {
     margin-right: 8px;
     float: left;
 }
+
+img .avatar .s32 {
+    width: 32px;
+    height: 32px;
+    margin-right: 10px;
+    float: left;
+}
+
 
 .event-item img .avatar {
     float: left;
@@ -837,6 +923,26 @@ img .avatar .s24 {
     float: right;
     width: 89px;
     height: 36px;
+}
+
+.left{
+    //float: left;
+    display: block;
+    width: 170px;
+    height: 46px;
+    position: relative !important;
+}
+
+
+.study_role_assign{
+    
+    width: 170px;
+    height: 28px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    display: inline-block;
+    margin-bottom: 0;
+    vertical-align: middle;
 }
 
 .span8{
@@ -1199,6 +1305,39 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
     border-radius: 4px;
     background-color: #eee;
     background-image: -webkit-linear-gradient(#eee 6.6%, #dfdfdf);
+}
+
+
+.team_member_row > .row {
+    display: block;
+    margin-left: -30px;
+    height: 46px;
+    width: 1178px;
+}
+
+.team_member_row > .row:before, .row:after{
+    display: table;
+    content: "";
+    line-height: 0;
+    clear: both;
+    
+}
+
+.span6{
+    display: block;
+    float: left;
+    width: 570px;
+    height: 46px;
+    margin-left: 30px;
+}
+
+.span5{
+    
+    display: block;
+    float: right;
+    width: 470px;
+    height: 46px;
+    margin-left: 30px;
 }
 
 .row {

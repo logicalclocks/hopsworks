@@ -36,7 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "StudyGroups.findByUsername", query = "SELECT s FROM StudyGroups s WHERE s.studyGroupsPK.username = :username"),
     @NamedQuery(name = "StudyGroups.findByTimeadded", query = "SELECT s FROM StudyGroups s WHERE s.timeadded = :timeadded"),
     @NamedQuery(name = "StudyGroups.findByAddedBy", query = "SELECT s FROM StudyGroups s WHERE s.addedBy = :addedBy"),
-    @NamedQuery(name = "StudyGroups.findByRole", query = "SELECT s FROM StudyGroups s WHERE s.role = :role")})
+    @NamedQuery(name = "StudyGroups.findByTeamRole", query = "SELECT s FROM StudyGroups s WHERE s.teamRole = :teamRole")})
 public class StudyGroups implements Serializable {
     private static final long serialVersionUID = 1L;
     @EmbeddedId
@@ -51,9 +51,11 @@ public class StudyGroups implements Serializable {
     @Size(min = 1, max = 255)
     @Column(name = "added_by")
     private String addedBy;
-    @Size(max = 10)
-    @Column(name = "role")
-    private String role;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 10)
+    @Column(name = "team_role")
+    private String teamRole;
     @JoinColumn(name = "studyname", referencedColumnName = "name", insertable = false, updatable = false)
     @ManyToOne(optional = false)
     private TrackStudy trackStudy;
@@ -65,10 +67,11 @@ public class StudyGroups implements Serializable {
         this.studyGroupsPK = studyGroupsPK;
     }
 
-    public StudyGroups(StudyGroupsPK studyGroupsPK, Date timeadded, String addedBy) {
+    public StudyGroups(StudyGroupsPK studyGroupsPK, Date timeadded, String addedBy, String teamRole) {
         this.studyGroupsPK = studyGroupsPK;
         this.timeadded = timeadded;
         this.addedBy = addedBy;
+        this.teamRole = teamRole;
     }
 
     public StudyGroups(String studyname, String username) {
@@ -99,12 +102,12 @@ public class StudyGroups implements Serializable {
         this.addedBy = addedBy;
     }
 
-    public String getRole() {
-        return role;
+    public String getTeamRole() {
+        return teamRole;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setTeamRole(String teamRole) {
+        this.teamRole = teamRole;
     }
 
     public TrackStudy getTrackStudy() {

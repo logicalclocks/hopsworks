@@ -51,6 +51,12 @@ public class StudyMB implements Serializable {
     @EJB
     private StudyController studyController;
     
+    
+    @EJB
+    private StudyTeamController studyTeamController;
+    
+    
+    
     @ManagedProperty(value="#{activityBean}")
     private ActivityMB activity;
     
@@ -59,10 +65,13 @@ public class StudyMB implements Serializable {
     private TrackStudy study;
     private DatasetStudy dsStudy;
     private Dataset dataset;
-    //private UserActivity userActivity;
+    private TeamMembers studyTeam;
+    private StudyTeam teamMem;
+   
     
     private String studyName;   
     private String studyCreator;
+    
     
     @PostConstruct
     public void init(){
@@ -123,6 +132,18 @@ public class StudyMB implements Serializable {
         this.dataset = dataset;
     } 
 
+    
+    public TeamMembers getStudyGroups() {
+        if (studyTeam == null) {
+            studyTeam = new TeamMembers();
+        }
+        return studyTeam;
+    }
+        
+    public void setStudyGroup(TeamMembers studyTeam){
+        this.studyTeam = studyTeam;
+    }
+    
     public List<TrackStudy> getStudyList(){
         return studyController.findAll();
     }
@@ -158,7 +179,18 @@ public class StudyMB implements Serializable {
         activity.getGravatar(studyCreator);
     }
     
+//    public void setTeam(StudyTeam teamem){
+//        this.teamMem = teamem;
+//    }
     
+    public StudyTeam[] getTeam() {
+        return StudyTeam.values();
+    }
+    
+    
+    public long countTeamMembers(){
+        return studyTeamController.countTeamMembers(studyName);
+    }
     
     //create a study       
     public String createStudy(){
@@ -199,6 +231,15 @@ public class StudyMB implements Serializable {
         addMessage("Study removed.");
         return "Success!";
     }
+    
+    
+    //add member to a team 
+    public void addToTeam(){
+       
+    }
+    
+    
+    
     
     
     //add members to study
