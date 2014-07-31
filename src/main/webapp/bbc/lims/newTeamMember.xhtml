@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+          
+      xmlns:c="http://java.sun.com/jsp/jstl/core">
+    <ui:composition template="layout.xhtml">
+
+        <ui:define name="title">
+            BiobankCloud Lims
+        </ui:define>
+        <ui:define name="css">
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+         </ui:define>
+        <ui:define name="scripts"/>
+           
+
+        <ui:define name="leftmenu">
+
+        </ui:define>
+        
+        
+        <ui:define name="content">
+            
+            <div class="container">
+                <ul class="main_menu"></ul>
+                <div class="content">
+                     <ul class="nav nav-projects-tabs">
+                         <li class="active"><h:link id="show" outcome="studyPage" styleClass="activities_tab">
+                                <i class="icon_home"/>
+                                Show</h:link></li>
+                         <li class="active"><h:link id="team" outcome="teamPage" styleClass="activities_tab">Team</h:link></li>
+                    </ul>
+                    <h3 class="page_title" align="left">
+                        New Team Member(s)
+                    </h3>
+                    <hr/>
+                    
+                    <h:form styleClass="new_member_content" id="frmNewTeamMember">
+                       
+                         <h6 align="left">1. Choose people you want in the team</h6>
+                        <div class="clear_fixing">
+                            <label for="team_member_user_ids">People</label>
+                            <div class="input">
+<!--                                <ul class="ui-autocomplete-multiple-container ui-widget ui-inputfield ui-state-default ui-corner-all">
+                                    <li class="ui-autocomplete-input-token">
+                                        <input type="text" autocomplete="off" aria-autocomplete="listbox"/>
+                                                
+                                        </li>
+                                </ul>-->
+                            </div>
+                        </div>
+                        <h6 align="left">2. Set access level for them</h6>
+                        <div class="clear_fixing">
+                             <label for="team_member_user_ids">Study Access</label>
+                             <div class="input">
+                                  <h:selectOneMenu value="#{studyMB.studyGroups.teamMember}" styleClass="study_role_assign">
+                                                              <f:selectItems value="#{studyMB.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
+                                  </h:selectOneMenu>
+                             </div>
+                            
+                        </div>
+                   
+                        <div class="actions">
+                            <h:commandButton styleClass="team_button button-save" type="submit" value="Save"/>
+                            <h:commandButton styleClass="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href='team.xhtml'"/>
+                        </div>
+                        
+                        
+                    </h:form>
+                </div>
+                
+            </div> 
+            
+            
+        </ui:define>
+        
+        
+        
+        
+        
+        
+    </ui:composition>
+</html>
+

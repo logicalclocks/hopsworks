@@ -50,6 +50,16 @@
             <redirect/>
         </navigation-case>
         <navigation-case>
+            <from-outcome>teamPage</from-outcome>
+            <to-view-id>/bbc/lims/team.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>newTeamMemb</from-outcome>
+            <to-view-id>/bbc/lims/newTeamMember.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
             <from-outcome>indexPage</from-outcome>
             <to-view-id>/bbc/lims/index.xhtml</to-view-id>
             <redirect/>
