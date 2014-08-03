@@ -9,16 +9,16 @@
       xmlns:c="http://java.sun.com/jsp/jstl/core">
 
     <h:head>
-        <title><ui:insert name="title">Default title</ui:insert></title>
+        <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
 
-        <ui:insert name="css"> 
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/bootstrap-theme.css']}"/>
-        </ui:insert>
+<!--        <ui:insert name="css"> 
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}"/>
+        </ui:insert>-->
     </h:head>
 
     <!--    moved here from head-->
-    <ui:insert name="scripts"> </ui:insert>
+<!--    <ui:insert name="scripts"> </ui:insert>-->
 
     <h:body>
 
@@ -30,35 +30,18 @@
                 </p:toolbarGroup> 
 
                 <p:toolbarGroup align="left">              
-<!--                    
-                    <p:menuButton value="Studies">
-                        <p:menuitem value="Study List" action="studyMgmt"/>
-                        <p:menuitem value="Experiments"/>
-                    </p:menuButton>
-
-                  <p:commandButton value="Data" action="dataMgmt"/>-->
-             
-            
-                    
-                    
-                    
                 </p:toolbarGroup>  
 
                 <p:toolbarGroup align="right">  
                     <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
                     <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
                         <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" /> 
-<!--                        <p:menuitem value="BBC Services" action="userMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>-->
-<!--                        <p:menuitem value="User Management" action="userMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/> 
-                        <p:menuitem value="Study Management" action="studyMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>
-                        <p:menuitem value="Data Management" action="dataMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>-->
                         <p:separator/>
                         <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
                     </p:menu>  
                 </p:toolbarGroup>  
 
             </p:toolbar> 
-<!--             <p:messages autoUpdate="true"/>-->
         </h:form>
 
         <p:spacer width="1" height="5" />
@@ -76,7 +59,6 @@
         <ui:insert name="dialogs"/>-->
 
 <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
-            
             <p:layoutUnit position="west" size="100"> 
 
             </p:layoutUnit>  

@@ -5,28 +5,42 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-          
       xmlns:c="http://java.sun.com/jsp/jstl/core">
-    <ui:composition template="layout.xhtml">
+   <f:view contentType="text/html">
+    
+    <h:head>
+        <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+    </h:head>
+    
+<h:body>
+    <h:form class="stylelayout" id="formToolbar">  
+            <p:toolbar styleClass="MainToolbar">  
+                <p:toolbarGroup align="left">  
+                    <p:commandLink value="BiobankCloud" action="indexPage"/>
+                </p:toolbarGroup> 
 
-        <ui:define name="title">
-            BiobankCloud Lims
-        </ui:define>
-        <ui:define name="css">
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-         </ui:define>
-        <ui:define name="scripts"/>
-           
+                <p:toolbarGroup align="left">              
+                </p:toolbarGroup>  
 
-        <ui:define name="leftmenu">
+                <p:toolbarGroup align="right">  
+                    <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
+                    <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
+                        <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" /> 
+                        <p:separator/>
+                        <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
+                    </p:menu>  
+                </p:toolbarGroup>  
 
-        </ui:define>
-        
-        
-        <ui:define name="content">
-            
+            </p:toolbar> 
+        </h:form>
+
+<p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+
+<p:layoutUnit position="center">
             <div class="container">
-                <ul class="main_menu"></ul>
+          <ul class="main_menu"></ul>
                 <div class="content">
                      <ul class="nav nav-projects-tabs">
                          <li class="active"><h:link id="show" outcome="studyPage" styleClass="activities_tab">
@@ -38,10 +52,8 @@
                         New Team Member(s)
                     </h3>
                     <hr/>
-                    
-                    <h:form styleClass="new_member_content" id="frmNewTeamMember">
-                       
-                         <h6 align="left">1. Choose people you want in the team</h6>
+        <h:form styleClass="new_member_content" id="frmNewTeamMember">
+                 <h6 align="left">1. Choose people you want in the team</h6>
                         <div class="clear_fixing">
                             <label for="team_member_user_ids">People</label>
                             <div class="input">
@@ -61,28 +73,18 @@
                                                               <f:selectItems value="#{studyMB.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
                                   </h:selectOneMenu>
                              </div>
-                            
                         </div>
-                   
                         <div class="actions">
                             <h:commandButton styleClass="team_button button-save" type="submit" value="Save"/>
                             <h:commandButton styleClass="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href='team.xhtml'"/>
                         </div>
-                        
-                        
-                    </h:form>
+      </h:form>     
                 </div>
-                
             </div> 
-            
-            
-        </ui:define>
-        
-        
-        
-        
-        
-        
-    </ui:composition>
+
+</p:layoutUnit>
+</p:layout>
+</h:body>
+   </f:view>
 </html>
 

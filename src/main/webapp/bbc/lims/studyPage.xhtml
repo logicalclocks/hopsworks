@@ -8,38 +8,49 @@
       xmlns:p="http://primefaces.org/ui"
        xmlns:c="http://java.sun.com/jsp/jstl/core">
 
-    <ui:composition template="layout.xhtml">
+<f:view contentType="text/html">
+    <h:head>
+        <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+    </h:head>
+<h:body>
+    <h:form class="stylelayout" id="formToolbar">  
+            <p:toolbar styleClass="MainToolbar">  
+                <p:toolbarGroup align="left">  
+                    <p:commandLink value="BiobankCloud" action="indexPage"/>
+                </p:toolbarGroup> 
 
-        <ui:define name="title">
-            BiobankCloud Lims
-        </ui:define>
-        <ui:define name="css">
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-        </ui:define>
-        <ui:define name="scripts"/>
+                <p:toolbarGroup align="left">              
+                </p:toolbarGroup>  
 
-        <ui:define name="leftmenu">
-
-        </ui:define>
-
-
-        <ui:define name="content">
+                <p:toolbarGroup align="right">  
+                    <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
+                    <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
+                        <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" /> 
+                        <p:separator/>
+                        <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
+                    </p:menu>  
+                </p:toolbarGroup>  
+            </p:toolbar> 
+        </h:form>
+    
+<p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+<p:layoutUnit position="center">
             <div class="container">
                 <ul class="main_menu"></ul>  
                 <div class="content">
                     <ul class="nav nav-projects-tabs">
-                        <li class="active"><a href="#show" class="activities_tab">
-                                <i class="icon_home">
-                                    
-                                </i>
-                                Show</a></li>
-                        <li class="active"><a href="team.xhtml" class="activities_tab">Team</a></li>
+                        <li class="active"><h:link styleClass="activities_tab" outcome="studyPage">
+                                <i class="icon_home"></i>
+                                Show</h:link></li>
+                        <li class="active"><h:link styleClass="activities_tab" outcome="teamPage">Team</h:link></li>
                     </ul>
                     <div class="study_operation_panel">
+                        <h:form id="frmPanel">
                         <div class="row">
                             <div class="span7">
                                 <div class="study_download_holder">
-<!--                                    <h:outputText class="input-xxlarge">#{studyMB.studyName}</h:outputText>-->
                                     <input type="text" class="input-xxlarge" id="stdName" value="#{studyMB.studyName}"/>
                                 </div>
                             </div>
@@ -49,10 +60,11 @@
                                     <h:commandButton value="Download" type="button" class="styled-button-10"/>
                                 </div>
                             </div>
-                            
                         </div>
+                      </h:form>
                     </div>
-                    <div class="study_content_list">
+       <div class="study_content_list">
+            <h:form id="frmStudyContentList"> 
                         <c:forEach var="lstActivity" items="#{activityBean.getActivityOnstudy(studyMB.studyName)}">
                         <div class="event-item" align="left">
                             <span class="cgray right">
@@ -62,17 +74,17 @@
                             <div class="event-title">
                                 <span class="author_name"><h:link>#{lstActivity.performedBy}</h:link></span>
                                 <span class="event_label opened">#{lstActivity.activity}</span>
-<!--                                                <strong><a href="/jdowling/kthfs-dashboard/issues/57">gravatar images</a></strong> at--> at
+                                     at
                                         <h:link><span class="tiny">#{lstActivity.performedBy}  /  </span><strong>#{lstActivity.activityOn}</strong></h:link>
                             </div>
                         </div>
                             </c:forEach>
+                         </h:form>
                     </div>
                 </div>
-                
             </div>
-
-        </ui:define>
-
-    </ui:composition>
+</p:layoutUnit>
+</p:layout>
+</h:body>
+</f:view>
 </html>

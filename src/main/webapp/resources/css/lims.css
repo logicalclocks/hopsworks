@@ -973,9 +973,10 @@ img .avatar .s32 {
 }
 
 .content{
-    display: block;
+    display: inline-block;
     width:1170px;
-    min-height: 2802px;
+    //min-height: 2802px;
+    min-height: 100%;
     height: auto !important;
     margin-top: 0px;
     margin-right: 0px;
@@ -1172,15 +1173,11 @@ event_filter .filter_icon a {
 }
 
 .study_box {
-    display: block;
+    display: inline-block;
     background: #F9F9F9;
     width:368px;
-    width: auto;
-/*    height: auto;*/
-    min-height: 2802px;
-    //min-height: 100px; 
-    height: auto !important; 
-    //height: 100px;
+    min-height: 368px;
+    height: auto !important;
     margin-bottom: 25px;
     border-bottom-width: 1px;
     border-bottom-style: solid;
@@ -1398,11 +1395,11 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
 
 .span4 {
     width: 370px;
-    min-height: 2802px;;
-    height: auto;
+    min-height: 475px;
+    height: auto !important;
     float: right !important;
-    min-height: 1px;
     margin-left: 30px;
+    display: inline-block;
     //clear: both;
 }
 

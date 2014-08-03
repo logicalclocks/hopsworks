@@ -6,71 +6,51 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-          
-      xmlns:c="http://java.sun.com/jsp/jstl/core">
-    <meta name="viewport" content="width=device-width; initial-scale=1.0"/>
-    <ui:composition template="layout.xhtml">
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      >
 
-        <ui:define name="title">
-            BiobankCloud Lims
-        </ui:define>
-        <ui:define name="css">
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-         </ui:define>
-        <ui:define name="scripts"/>
-
-        <ui:define name="leftmenu">
-
-        </ui:define>
-
-        <script src="../js/sizzles.js" type="text/javascript"></script>
-        
-       
-<ui:define name="content">
-     
-<!--<h:form id="limsForm">-->
+<f:view contentType="text/html">
     
-<!--    <div class="container">
-        <div class="content">
-            <div class="projects">
-                <div class="span8">
-                    <div class="event_filter"></div>
-                    <div class="content_list"></div>
-                </div>
-                    
-    <div class="span4">
-        <div class="projects_box">
-            <h5 class="title">Study
-                <small>(10)</small>
-                <span class="right"><a href="#home" class="styled-button-10"><i class="icon-plus">New Study</i></a></span>
-            </h5>
-            
-            <ul class="nav nav-projects-tabs">
-                <li class="active">All</li>
-                <li class="active">Personal</li>
-                <li class="active">Joined</li>
-            </ul>
-            <ul class="well-list">
-                <li><a href="" class="projects">kth-dashboard/Roshan</a></li>
-                <li><a href="" class="projects">kth-dashboard/Jim</a></li>
-            </ul>
-            <div class="bottom"></div>
-        </div>
-    </div>
-                </div>
-            </div>
-    </div>-->
+    <h:head>
+        <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+    </h:head>
+    
+<h:body>
+    <h:form class="stylelayout" id="formToolbar">  
+            <p:toolbar styleClass="MainToolbar">  
+                <p:toolbarGroup align="left">  
+                    <p:commandLink value="BiobankCloud" action="indexPage"/>
+                </p:toolbarGroup> 
+
+                <p:toolbarGroup align="left">              
+                </p:toolbarGroup>  
+
+                <p:toolbarGroup align="right">  
+                    <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
+                    <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
+                        <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" /> 
+                        <p:separator/>
+                        <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
+                    </p:menu>  
+                </p:toolbarGroup>  
+
+            </p:toolbar> 
+        </h:form>
+    
+    
+<p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+
+<p:layoutUnit position="center">
+<h:form id="frmIndexPage">
 <div class="container"> 
     <ul class="main_menu"></ul>
 <div class="content">    
     <div class="study">
         <div class="span8">
             <div class="event_filter">
-                
                 <div class="filter-icon">
-                    
-                    <a href="/dashboard" class="has_tooltip event_filter_link" data-original-title="Push events" id="push_event_filter"><i class="icon-upload-alt"></i></a>
-                    
                 </div>
             </div>
             <div class="content_list">
@@ -81,18 +61,14 @@
                         <div class="event-title">
                                 <span class="author_name"><h:link> #{act.performedBy}</h:link></span>
                                 <span class="event_label merged">#{act.activity}</span>
-                            
                                         <h:link>
                                             <strong>at #{act.performedBy} / #{act.activityOn}</strong>
-            <!--                                <f:param name="name" value="#{act.activityOn}"/>
-                                            <f:param name="owner" value="#{act.performedBy}"/>-->
                                         </h:link>
                </div>
               </div>
                     </c:forEach>
             </div>
         </div>  
-            
 <div class="span4">  
     <div class="study_box">         
         <h3 class="title" align="left">Study<small>(#{studyMB.allStudy})</small>
@@ -101,25 +77,18 @@
             </span>
         </h3>
         <ul class="nav nav-projects-tabs">
-                     <li class="active"><a href="#home">All</a></li>
-                     <li class="active"><a href="#personal">Personal</a></li>
-                     <li class="active"><a href="#joined">Joined</a></li>
+                     <li class="active"><h:link>All</h:link></li>
+                     <li class="active"><h:link>Personal</h:link></li>
+                     <li class="active"><h:link>Joined</h:link></li>
                  </ul>
-        
         <ul class="well_list">
             <c:forEach var="list" items="#{studyMB.latestStudyList}">
-<!--                begin="0" end="#{studyMB.latestStudyList.size()-1}"-->
           <li>
-<!--              <f:metadata>
-                  <f:viewParam id="name" name="Name" value="#{list.name}"/>
-                  <f:viewParam id="username" name="User" value="#{list.username}"/>
-                </f:metadata>-->
-             
-            <p:commandLink action="#{studyMB.fetchStudy()}">
+            <h:commandLink action="#{studyMB.fetchStudy()}">
                 <span class="tiny">#{list.username}</span> / <strong>#{list.name}</strong>
                         <f:param id="studyName" name="studyname" value="#{list.name}"/>
                         <f:param id="username" name="username" value="#{list.username}"/>
-          </p:commandLink>
+          </h:commandLink>
           </li>
             </c:forEach>
         </ul>
@@ -129,8 +98,9 @@
 </div>
 </div>
 </div>
-<!--</h:form>   -->
-</ui:define>
-
-    </ui:composition>
+</h:form>
+    </p:layoutUnit>
+</p:layout>
+</h:body>
+</f:view>
 </html>
