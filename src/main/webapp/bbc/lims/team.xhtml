@@ -41,7 +41,7 @@
             <div class="container">
                 <ul class="main_menu"></ul>
                 <div class="content">
-                     <ul class="nav nav-projects-tabs">
+                     <ul class="nav">
                          <li class="active"><h:link id="show" outcome="studyPage" styleClass="activities_tab">
                                 <i class="icon_home"/>
                                 Show</h:link></li>
@@ -62,12 +62,12 @@
                         <h:form id="frmTeamTable">     
                         <div class="ui_box">
                             <h5 class="title" align="left">Masters
-                                <small>#{studyMB.countTeamMembers()}</small></h5>
+                                <small>#{studyManagedBean.countTeamMembers()}</small></h5>
                             <ul class="well-list">
                                 <li class="team_member_row">
                                     <div class="row">
                                         <div class="span6">
-                                            <img class="avatar s32" src="#{activityBean.getGravatar(studyMB.creator)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                            <img class="avatar s32" src="#{activityBean.getGravatar(studyManagedBean.creator)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
                                             <h:link styleClass="dark">
                                                 <strong>Full Name</strong>
                                                 <br/>
@@ -81,8 +81,8 @@
                                             <div class="left">
                                                 <h:form id="frmTeamMember" styleClass="edit_team_members">
                                                       <div style="margin:0;padding:0;display:inline">
-                                                          <h:selectOneMenu value="#{studyMB.studyGroups.teamMember}" styleClass="study_role_assign">
-                                                              <f:selectItems value="#{studyMB.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
+                                                          <h:selectOneMenu value="#{studyManagedBean.studyGroups.teamMember}" styleClass="study_role_assign">
+                                                              <f:selectItems value="#{studyManagedBean.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
                                                          </h:selectOneMenu>
                                                        </div>
                                                 </h:form>

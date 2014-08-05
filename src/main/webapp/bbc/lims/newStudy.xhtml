@@ -54,9 +54,9 @@
            <div class="clear_fix study_name_holder">
                <label for="study_name" class="study_name" style="float: left;">Study name is</label>
                <div class="input">
-                   <h:inputText  styleClass="xxlarge" id="studyName" value="#{studyMB.study.name}" validatorMessage="Study name must be unique and cannot be empty!" onclick="(this.value='')">
+                   <h:inputText  styleClass="xxlarge" id="studyName" value="#{studyManagedBean.study.name}" validatorMessage="Study name must be unique and cannot be empty!" onclick="(this.value='')">
                    </h:inputText>
-                   <h:commandButton id="addStudy" class="styled-button" value="Create Study" type="submit" action="#{studyMB.createStudy}"/>
+                   <h:commandButton id="addStudy" class="styled-button" value="Create Study" type="submit" action="#{studyManagedBean.createStudy}"/>
                     
                </div>
            </div>

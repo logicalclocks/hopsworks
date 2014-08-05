@@ -8,6 +8,7 @@ import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 /**
@@ -40,8 +41,8 @@ public class UserFacade extends AbstractFacade<Username> {
         return query.getResultList();
     }
   
-    public List<Username> findAllUsers(String name){
-        TypedQuery<Username> query = em.createNamedQuery("Username.findByName", Username.class).setParameter("name", name);
+    public List<Username> findAllUsers(){
+        Query query = em.createNativeQuery("SELECT * FROM USERS",Username.class);
         return query.getResultList();
     }
     

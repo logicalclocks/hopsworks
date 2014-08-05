@@ -10,6 +10,7 @@ package se.kth.bbc.study;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
@@ -34,6 +36,9 @@ import org.primefaces.event.FlowEvent;
 import org.primefaces.event.TabChangeEvent;
 import se.kth.bbc.activity.ActivityMB;
 import se.kth.bbc.activity.UserActivity;
+import se.kth.kthfsdashboard.user.AutocompleteMB;
+import se.kth.kthfsdashboard.user.UserFacade;
+import se.kth.kthfsdashboard.user.Username;
 
 
 
@@ -41,8 +46,8 @@ import se.kth.bbc.activity.UserActivity;
  *
  * @author roshan
  */
-@ManagedBean
-@SessionScoped
+@ManagedBean(name="studyManagedBean", eager = true)
+@ApplicationScoped
 public class StudyMB implements Serializable {
     
     private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
@@ -55,19 +60,24 @@ public class StudyMB implements Serializable {
     @EJB
     private StudyTeamController studyTeamController;
     
+    @EJB
+    private UserFacade userFacade;
+
     
     
     @ManagedProperty(value="#{activityBean}")
     private ActivityMB activity;
     
-
+//    @ManagedProperty(value="#{autoCompleteBean}")
+//    private AutocompleteMB autoComplete;
     
     private TrackStudy study;
     private DatasetStudy dsStudy;
     private Dataset dataset;
     private TeamMembers studyTeam;
-    private StudyTeam teamMem;
-   
+    private List<Username> usernames;
+    private List<Username> selectedUsername;
+    private StudyTeam teamem;
     
     private String studyName;   
     private String studyCreator;
@@ -76,12 +86,29 @@ public class StudyMB implements Serializable {
     @PostConstruct
     public void init(){
        activity.getActivity();
+       usernames = getUsersNameList();
     }
     
     public void setActivity(ActivityMB activity) {
         this.activity = activity;
     } 
 
+//    public AutocompleteMB getAutocompleteMB(){
+//        return autoComplete;
+//    }
+//    
+//    public void setAutocompleteMB(AutocompleteMB autoComplete) {
+//        this.autoComplete = autoComplete;
+//     }
+    
+    
+    public List<Username> getUsersNameList() {
+        return userFacade.findAllUsers();
+    }
+    
+    public List<Username> getUsersname() {
+        return usernames;
+    }
     
     public String getStudyName(){
         return studyName;
@@ -165,6 +192,24 @@ public class StudyMB implements Serializable {
         return studyController.filterLatestStudy(getUsername());
     }
     
+    public List<Username> completeUsername(String name) {
+
+        List<Username> suggestions = new ArrayList<>();
+        for(Username names : usernames) {
+            if(names.getName().toLowerCase().startsWith(name))
+                suggestions.add(names);
+        }
+            return suggestions;
+    }
+    
+    public List<Username> getSelectedUsersname() {
+        return selectedUsername;
+    }
+ 
+    public void setSelectedUsersname(List<Username> selectedUsername) {
+        this.selectedUsername = selectedUsername;
+    }
+    
       
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
@@ -180,7 +225,7 @@ public class StudyMB implements Serializable {
     }
     
 //    public void setTeam(StudyTeam teamem){
-//        this.teamMem = teamem;
+//        this.teamem = teamem;
 //    }
     
     public StudyTeam[] getTeam() {
@@ -234,8 +279,20 @@ public class StudyMB implements Serializable {
     
     
     //add member to a team 
-    public void addToTeam(){
+    public String addToTeam(){
+           
+           studyTeam.setName(studyName);
+           studyTeam.setTeamMember(getSelectedUsersname().toString());
+//           studyTeam.setTeamRole(studyTeam.setTeamRole(s));
        
+       try{
+           studyTeamController.persistStudyTeam(studyTeam);
+       }catch (EJBException ejb) {
+            addErrorMessageToUserAction("Error: Study wasn't removed.");
+            return null;
+        }
+            addMessage("added.");
+            return "Success!";
     }
     
     

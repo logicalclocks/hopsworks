@@ -14,6 +14,7 @@ import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
@@ -42,23 +43,23 @@ public class UserController implements Serializable {
     private List<Username> filteredUsers;
     private List<Username> usernames;
     private List<Username> selectedUsername;
+    
     private String email;
     private String name;
     private String username;
-   
-  
     
     public UserController() {
         
     }
-
-    @PostConstruct
-    protected void init(){
-//        usernames = new ArrayList<>();
-//        usernames.add(new Username());
-        usernames = getAllUsers();
-        
-    }
+    
+//    @ManagedProperty(value="#{autoComplete}")
+//    private AutocompleteMB autoComplete;
+//    
+    
+//    @PostConstruct
+//    protected void init(){
+//        usernames = getUsersNameList();
+//    }
     
     public Username getUser() {
         if (user == null) {
@@ -83,34 +84,41 @@ public class UserController implements Serializable {
         return userFacade.findAll();
     }
     
+    public List<Username> getUsersNameList() {
+        return userFacade.findAllUsers();
+    }
+    
     public List<Username> getAllUsersName() {
         return userFacade.findAllByName();
     }
     
-    public List<Username> completeUsername(String name) {
-        
-        if(usernames == null)
-            init();
-
-        List<Username> suggestions = new ArrayList<>();
-        for(Username un : usernames) {
-            if(un.getName().startsWith(name))
-                suggestions.add(un);
-        }
-            return suggestions;
-    }
-       
-    public List<Username> getUsersname() {
-        return usernames;
-    }
- 
-    public List<Username> getSelectedUsername() {
-        return selectedUsername;
-    }
- 
-    public void setSelectedUsername(List<Username> selectedUsername) {
-        this.selectedUsername = selectedUsername;
-    }
+//    public AutocompleteMB getAutocompleteMB(){
+//        return this.aCompleteMB;
+//    }
+    
+//    public void setAutocomplete(AutocompleteMB autoComplete) {
+//        this.autoComplete = autoComplete;
+//     }
+//    
+//    //Autocomplete
+//    public List<Username> completeUsername(String name) {
+//
+//        usernames = autoComplete.getUsersname();
+//        List<Username> suggestions = new ArrayList<Username>();
+//        for(Username names : usernames) {
+//            if(names.getName().toLowerCase().startsWith(name))
+//                suggestions.add(names);
+//        }
+//            return suggestions;
+//    }
+//    
+//    public List<Username> getSelectedUsersname() {
+//        return selectedUsername;
+//    }
+// 
+//    public void setSelectedUsersname(List<Username> selectedUsername) {
+//        this.selectedUsername = selectedUsername;
+//    }
        
     
     public Group[] getGroups() {

@@ -40,7 +40,7 @@
             <div class="container">
                 <ul class="main_menu"></ul>  
                 <div class="content">
-                    <ul class="nav nav-projects-tabs">
+                    <ul class="nav">
                         <li class="active"><h:link styleClass="activities_tab" outcome="studyPage">
                                 <i class="icon_home"></i>
                                 Show</h:link></li>
@@ -51,7 +51,7 @@
                         <div class="row">
                             <div class="span7">
                                 <div class="study_download_holder">
-                                    <input type="text" class="input-xxlarge" id="stdName" value="#{studyMB.studyName}"/>
+                                    <input type="text" class="input-xxlarge" id="stdName" value="#{studyManagedBean.studyName}"/>
                                 </div>
                             </div>
                             
@@ -65,12 +65,12 @@
                     </div>
        <div class="study_content_list">
             <h:form id="frmStudyContentList"> 
-                        <c:forEach var="lstActivity" items="#{activityBean.getActivityOnstudy(studyMB.studyName)}">
+                        <c:forEach var="lstActivity" items="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}">
                         <div class="event-item" align="left">
                             <span class="cgray right">
                                 13 days ago.
                             </span>
-                            <img class="avatar s24" src="#{activityBean.getGravatar(studyMB.creator)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                            <img class="avatar s24" src="#{activityBean.getGravatar(studyManagedBean.creator)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
                             <div class="event-title">
                                 <span class="author_name"><h:link>#{lstActivity.performedBy}</h:link></span>
                                 <span class="event_label opened">#{lstActivity.activity}</span>

@@ -31,15 +31,15 @@ public class StudyTeamController {
         return (Long)em.createNamedQuery("TeamMembers.countByStudy").setParameter("name", name).getSingleResult();
     }
     
-    public void persistStudyTeam(StudyTeam team){
+    public void persistStudyTeam(TeamMembers team){
             em.persist(team);
     }
     
-    public void removeStudyTeam(StudyTeam team){
+    public void removeStudyTeam(TeamMembers team){
             em.remove(team);
     }
     
-    public void updateTeam(StudyTeam team){
+    public void updateTeam(TeamMembers team){
             em.merge(team);
     }
 }

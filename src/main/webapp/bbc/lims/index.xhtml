@@ -54,7 +54,7 @@
                 </div>
             </div>
             <div class="content_list">
-                <c:forEach var="act" items="#{activityBean.acvitiyList}" begin="1" end="#{studyMB.allStudy}">
+                <c:forEach var="act" items="#{activityBean.acvitiyList}" begin="1" end="#{studyManagedBean.allStudy}">
                     <div class="event-item" align="left">
                     <span class="cgray right">3 months ago.</span>
                     <img class="avatar s24" src="#{activityBean.getGravatar(act.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
@@ -71,20 +71,20 @@
         </div>  
 <div class="span4">  
     <div class="study_box">         
-        <h3 class="title" align="left">Study<small>(#{studyMB.allStudy})</small>
+        <h3 class="title" align="left">Study<small>(#{studyManagedBean.allStudy})</small>
             <span class="right">
                 <h:commandButton id="newStd" value="New Study" type="button" rendered="#{userMB.anyAdminUser}"  class="styled-button-10" onclick="window.location.href='newStudy.xhtml'"/>
             </span>
         </h3>
-        <ul class="nav nav-projects-tabs">
-                     <li class="active"><h:link>All</h:link></li>
+        <ul class="nav">
+                     <li class="active"><h:link outcome="indexPage">All</h:link></li>
                      <li class="active"><h:link>Personal</h:link></li>
                      <li class="active"><h:link>Joined</h:link></li>
-                 </ul>
+         </ul>
         <ul class="well_list">
-            <c:forEach var="list" items="#{studyMB.latestStudyList}">
-          <li>
-            <h:commandLink action="#{studyMB.fetchStudy()}">
+            <c:forEach var="list" items="#{studyManagedBean.latestStudyList}">
+                <li class="listItem">
+            <h:commandLink action="#{studyManagedBean.fetchStudy()}">
                 <span class="tiny">#{list.username}</span> / <strong>#{list.name}</strong>
                         <f:param id="studyName" name="studyname" value="#{list.name}"/>
                         <f:param id="username" name="username" value="#{list.username}"/>

@@ -16,6 +16,8 @@ import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
 import javax.faces.convert.ConverterException;
 import javax.faces.convert.FacesConverter;
+import se.kth.kthfsdashboard.user.AutocompleteMB;
+import se.kth.kthfsdashboard.user.UserController;
 import se.kth.kthfsdashboard.user.UserFacade;
 
 import se.kth.kthfsdashboard.user.Username;
@@ -23,52 +25,38 @@ import se.kth.kthfsdashboard.user.Username;
  *
  * @author roshan
  */
-@FacesConverter("name")
+@FacesConverter("nameConverter")
 public class InputConverter implements Converter {
     
-    @EJB
-    private UserFacade userFacade;
-    private List<Username> username = new ArrayList<>();
-    
-    @PostConstruct
-    protected void init(){
-        username = getAllUsers();
-    }
-    
-    public List<Username> getAllUsers() {
-        return userFacade.findAll();
-    }
-        
     @Override
-    public Object getAsObject(FacesContext facesContext, UIComponent component, String name) {
-        
-        if(username == null)
-            init();
-        
-        if (name.trim().equals("")) {
-            return null;
-        } else {
-            try {
-                for (Username un : username) {
-                    if (un.getName().equalsIgnoreCase(name)) {
-                        return un;
-                    }
-                }
-                 
-            } catch(Exception exception) {
-                throw new ConverterException(new FacesMessage(FacesMessage.SEVERITY_ERROR, "Conversion Error", "Not a valid user"));
-            }
-        }
-                return null;
+    public Object getAsObject(FacesContext facesContext, UIComponent component, String value) {
     
-}
+         if(value != null && value.trim().length() > 0) {
+            StudyMB aComplete = (StudyMB) facesContext.getExternalContext().getApplicationMap().get("studyManagedBean");
+            List<Username> list= aComplete.getUsersname();
+            String convertedVal = null;
+            
+            for(Username u: list){
+                if(u.getName().startsWith(value))
+                    convertedVal = value;
+            }
+                    return convertedVal;
+        }
+        else {
+            return null;
+        }
+    }
  
     @Override
-    public String getAsString(FacesContext facesContext, UIComponent component, Object value) {
-        if (value == null || value.equals("")) {
-            return "";
+    public String getAsString(FacesContext facesContext, UIComponent component, Object object) {
+        if (object != null) {
+            return String.valueOf(object);
+            //String inputVal = (String)object;
+//            char[] email = inputVal.toCharArray();
+            //return inputVal;
+            
         } else {
-            return String.valueOf(((Username) value).getName());
+            return null;
         }
     }
     

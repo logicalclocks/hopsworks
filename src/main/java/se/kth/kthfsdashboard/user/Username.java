@@ -37,7 +37,7 @@ import se.kth.bbc.activity.UserActivity;
     @NamedQuery(name = "Username.findByEmail", query = "SELECT r FROM Username r WHERE r.email = :email"),
     @NamedQuery(name = "Username.findByUsername", query = "SELECT r FROM Username r WHERE r.username = :username"),
     @NamedQuery(name = "Username.findByPassword", query = "SELECT r FROM Username r WHERE r.password = :password"),
-    @NamedQuery(name = "Username.findByName", query = "SELECT r FROM Username r WHERE r.name = :name")})
+    @NamedQuery(name = "Username.findByName", query = "SELECT r.email FROM Username r")})
 public class Username implements Serializable {
 
     private static final long serialVersionUID = 1L;
