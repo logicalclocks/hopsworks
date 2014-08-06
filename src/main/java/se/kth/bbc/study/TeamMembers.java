@@ -7,13 +7,17 @@
 package se.kth.bbc.study;
 
 import java.io.Serializable;
+import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -32,6 +36,11 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "TeamMembers.findByTeamRole", query = "SELECT t FROM TeamMembers t WHERE t.teamRole = :teamRole"),
     @NamedQuery(name = "TeamMembers.countByStudy", query = "SELECT COUNT(DISTINCT t.teamMember) FROM TeamMembers t WHERE t.name = :name")})
 public class TeamMembers implements Serializable {
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "timestamp")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date timestamp;
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -110,6 +119,15 @@ public class TeamMembers implements Serializable {
     @Override
     public String toString() {
         return "se.kth.bbc.study.TeamMembers[ name=" + name + " ]";
+    }
+  
+
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
     }
     
 }

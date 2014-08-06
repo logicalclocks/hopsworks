@@ -74,8 +74,8 @@
                         <div class="side-by-side clearfix">
                             <label for="team_member_user_ids">People</label>
                             <div>
-                                <p:autoComplete id="autoName" value="#{studyManagedBean.selectedUsersname}" completeMethod="#{studyManagedBean.completeUsername}" var="u"
-                                                itemLabel="#{u.name}" itemValue="#{u.email.toString}" multiple="true" forceSelection="true" converter="nameConverter"/>
+                                <p:autoComplete id="autoName" value="#{studyManagedBean.selectedUsersname}" completeMethod="#{studyManagedBean.completeUsername}" var="user"
+                                                itemLabel="#{user.displayName}" itemValue="#{user}" multiple="true" forceSelection="true" converter="nameConverter" dropdown="true"></p:autoComplete>
                                 
 <!--                                    <select class="chzn-select" multiple="true" style="width: 350px;" tabindex="4">
                                         <option value="United States" >United States</option>

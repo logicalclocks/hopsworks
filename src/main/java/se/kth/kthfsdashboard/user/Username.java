@@ -95,6 +95,11 @@ public class Username implements Serializable {
     public Username() {
     }
 
+    
+    public Username(String name, String email){
+        this.name = name;
+        this.email = email;
+    }
 
     public Username(UserDTO dto) {
         

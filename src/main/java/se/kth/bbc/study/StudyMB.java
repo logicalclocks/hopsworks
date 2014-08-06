@@ -25,6 +25,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.servlet.ServletException;
@@ -47,7 +48,7 @@ import se.kth.kthfsdashboard.user.Username;
  * @author roshan
  */
 @ManagedBean(name="studyManagedBean", eager = true)
-@ApplicationScoped
+@SessionScoped
 public class StudyMB implements Serializable {
     
     private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
@@ -71,12 +72,17 @@ public class StudyMB implements Serializable {
 //    @ManagedProperty(value="#{autoCompleteBean}")
 //    private AutocompleteMB autoComplete;
     
+    
+    @ManagedProperty("#{themeService}")
+    private ThemeService service;
+    
+    
     private TrackStudy study;
     private DatasetStudy dsStudy;
     private Dataset dataset;
     private TeamMembers studyTeam;
     private List<Username> usernames;
-    private List<Username> selectedUsername;
+    private List<Theme> selectedUsername;
     private StudyTeam teamem;
     
     private String studyName;   
@@ -86,7 +92,6 @@ public class StudyMB implements Serializable {
     @PostConstruct
     public void init(){
        activity.getActivity();
-       usernames = getUsersNameList();
     }
     
     public void setActivity(ActivityMB activity) {
@@ -159,7 +164,6 @@ public class StudyMB implements Serializable {
         this.dataset = dataset;
     } 
 
-    
     public TeamMembers getStudyGroups() {
         if (studyTeam == null) {
             studyTeam = new TeamMembers();
@@ -192,21 +196,46 @@ public class StudyMB implements Serializable {
         return studyController.filterLatestStudy(getUsername());
     }
     
-    public List<Username> completeUsername(String name) {
-
-        List<Username> suggestions = new ArrayList<>();
-        for(Username names : usernames) {
-            if(names.getName().toLowerCase().startsWith(name))
-                suggestions.add(names);
+    public List<Theme> completeUsername(String query) {
+         List<Theme> allThemes = service.getThemes();
+         List<Theme> filteredThemes = new ArrayList<Theme>();
+         
+        for (int i = 0; i < allThemes.size(); i++) {
+            Theme skin = allThemes.get(i);
+            if(skin.getName().toLowerCase().contains(query)) {
+                filteredThemes.add(skin);
+            }
         }
-            return suggestions;
+            return filteredThemes;
+    }   
+    
+    public void setService(ThemeService service) {
+        this.service = service;
     }
     
-    public List<Username> getSelectedUsersname() {
+    
+//    public List<Username> completeUsername(String name) {
+//        usernames = getUsersNameList();
+//        List<Username> suggestions = new ArrayList<>();
+//        for(Username names : usernames) {
+//            if(names.getName().toLowerCase().startsWith(name))
+//                suggestions.add(names);
+//        }
+//            return suggestions;
+//    }
+    
+    public List<Theme> getSelectedUsersname() {
         return selectedUsername;
     }
  
-    public void setSelectedUsersname(List<Username> selectedUsername) {
+    public List<Theme> getSelectedTheme() {
+        return new ArrayList<Theme>();
+    }
+    public void setSelectedTheme(List<Theme> t) {
+        return;
+    }
+ 
+    public void setSelectedUsersname(List<Theme> selectedUsername) {
         this.selectedUsername = selectedUsername;
     }
     
@@ -250,7 +279,7 @@ public class StudyMB implements Serializable {
             return null;
         }
         addMessage("Study created! ["+ study.getName() + "] study is owned by " + study.getUsername());
-        activity.addActivity("New Study Created", study.getName(),"STUDY");
+        activity.addActivity("new study created", study.getName(),"STUDY");
         return "Success!";
     }
     
@@ -283,6 +312,7 @@ public class StudyMB implements Serializable {
            
            studyTeam.setName(studyName);
            studyTeam.setTeamMember(getSelectedUsersname().toString());
+           studyTeam.setTimestamp(new Date());
 //           studyTeam.setTeamRole(studyTeam.setTeamRole(s));
        
        try{
@@ -292,6 +322,7 @@ public class StudyMB implements Serializable {
             return null;
         }
             addMessage("added.");
+            activity.addActivity("new team member added", studyName,"STUDY");
             return "Success!";
     }
     
