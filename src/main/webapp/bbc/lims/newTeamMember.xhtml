@@ -71,25 +71,11 @@
                 </script>
    -->
                  <h6 align="left">1. Choose people you want in the team</h6>
-                        <div class="side-by-side clearfix">
+                        <div class="clearfix">
                             <label for="team_member_user_ids">People</label>
-                            <div>
                                 <p:autoComplete id="autoName" value="#{studyManagedBean.selectedUsersname}" completeMethod="#{studyManagedBean.completeUsername}" var="user"
-                                                itemLabel="#{user.displayName}" itemValue="#{user}" multiple="true" forceSelection="true" converter="nameConverter" dropdown="true"></p:autoComplete>
-                                
-<!--                                    <select class="chzn-select" multiple="true" style="width: 350px;" tabindex="4">
-                                        <option value="United States" >United States</option>
-                                                <option value="United Kingdom">United Kingdom</option>
-                                                <option value="Afghanistan">Afghanistan</option>
-                                                <option value="Aland Islands">Aland Islands</option>
-                                                <option value="Albania">Albania</option>
-                                                <option value="Algeria">Algeria</option>
-                                                <option value="American Samoa">American Samoa</option>
-                                                <option value="Andorra" selected="selected">Andorra</option>
-                                                <option value="Angola">Angola</option>
-                                     </select>-->
-                                
-                            </div>
+                                                itemLabel="#{user.displayName}" itemValue="#{user}" multiple="true" forceSelection="true" 
+                                                converter="nameConverter" dropdown="true" emptyMessage="Select users" cache="false" styleClass="input"/>
                         </div>
                         <h6 align="left">2. Set access level for them</h6>
                         <div class="clearfix">

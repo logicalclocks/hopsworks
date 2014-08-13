@@ -43,10 +43,11 @@
 <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
 
 <p:layoutUnit position="center">
-<h:form id="frmIndexPage">
+
 <div class="container"> 
     <ul class="main_menu"></ul>
-<div class="content">    
+<div class="content"> 
+      <h:form id="frmIndexPage">
     <div class="study">
         <div class="span8">
             <div class="event_filter">
@@ -69,19 +70,36 @@
                     </c:forEach>
             </div>
         </div>  
-<div class="span4">  
-    <div class="study_box">         
+<div class="span4">
+    <div class="study_box"> 
         <h3 class="title" align="left">Study<small>(#{studyManagedBean.allStudy})</small>
             <span class="right">
                 <h:commandButton id="newStd" value="New Study" type="button" rendered="#{userMB.anyAdminUser}"  class="styled-button-10" onclick="window.location.href='newStudy.xhtml'"/>
             </span>
         </h3>
-        <ul class="nav">
-                     <li class="active"><h:link outcome="indexPage">All</h:link></li>
+    
+<!--        <ul class="nav">-->
+
+<p:tabView id="tabViewSummary">
+    <p:tab id="allTab" titleStyleClass="active" title="All">
+        <p:dataList value="#{studyManagedBean.latestStudyList}" var="list" itemType="none" styleClass="well_list">
+                        <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                                    <span class="tiny">#{list.username}</span> / <strong>#{list.name}</strong>
+                                            <f:param id="studyName" name="studyname" value="#{list.name}"/>
+                                            <f:param id="username" name="username" value="#{list.username}"/>
+                            </p:commandLink>
+                        </p:dataList>
+                </p:tab>
+                    <p:tab id="personalTab" titleStyleClass="active" title="Personal"></p:tab>
+                    <p:tab id="joinedTab" titleStyleClass="active" title="Joined"></p:tab>
+</p:tabView>
+
+
+            <!--                     <li class="active"><h:link outcome="indexPage">All</h:link></li>
                      <li class="active"><h:link>Personal</h:link></li>
-                     <li class="active"><h:link>Joined</h:link></li>
-         </ul>
-        <ul class="well_list">
+                     <li class="active"><h:link>Joined</h:link></li>-->
+<!--         </ul>-->
+<!--        <ul class="well_list">
             <c:forEach var="list" items="#{studyManagedBean.latestStudyList}">
                 <li class="listItem">
             <h:commandLink action="#{studyManagedBean.fetchStudy()}">
@@ -91,14 +109,16 @@
           </h:commandLink>
           </li>
             </c:forEach>
-        </ul>
-        <div class="bottom"></div> 
+        </ul>-->
+     
     </div>
+        
+</div>
+
+</div>
+      </h:form>
 </div>
 </div>
-</div>
-</div>
-</h:form>
     </p:layoutUnit>
 </p:layout>
 </h:body>

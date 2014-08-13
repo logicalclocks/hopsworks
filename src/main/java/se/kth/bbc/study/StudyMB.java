@@ -12,6 +12,7 @@ import java.io.Serializable;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -87,6 +88,7 @@ public class StudyMB implements Serializable {
     
     private String studyName;   
     private String studyCreator;
+    
     
     
     @PostConstruct
@@ -228,13 +230,6 @@ public class StudyMB implements Serializable {
         return selectedUsername;
     }
  
-    public List<Theme> getSelectedTheme() {
-        return new ArrayList<Theme>();
-    }
-    public void setSelectedTheme(List<Theme> t) {
-        return;
-    }
- 
     public void setSelectedUsersname(List<Theme> selectedUsername) {
         this.selectedUsername = selectedUsername;
     }
@@ -262,10 +257,52 @@ public class StudyMB implements Serializable {
     }
     
     
-    public long countTeamMembers(){
-        return studyTeamController.countTeamMembers(studyName);
+    public long countAllMembersPerStudy(){
+            return studyTeamController.countMembersPerStudy(studyName).size();
     }
     
+    public long countMasters(){
+        return studyTeamController.countTeamMembers(studyName,"Master");
+    }
+    
+    public long countResearchers(){
+        return studyTeamController.countTeamMembers(studyName,"Researcher");
+    }
+    
+    public long countGuests(){
+        return studyTeamController.countTeamMembers(studyName,"Guest");
+    }
+    
+    public List<TeamMembers> getMastersList(){
+        return studyTeamController.findMembersByRole(studyName,"Master");
+        
+//           Iterator<TeamMembers> itr = studyTeamController.findMembersByRole(studyName).listIterator();
+//           List<TeamMembers> fetched = new ArrayList<TeamMembers>();
+//           while(itr.hasNext()){ 
+//               fetched.add(itr.next());
+//           }
+//        
+//           return fetched;
+        
+    } 
+    
+//    public long getSizeMastersList(){
+//        return studyTeamController.findMembersByRole(studyName,"Master");
+//    } 
+    
+     
+    public List<TeamMembers> getResearchersList(){
+        return studyTeamController.findMembersByRole(studyName, "Researcher");
+    }
+    
+    public List<TeamMembers> getGuestsList(){
+        List<TeamMembers> list = studyTeamController.findMembersByRole(studyName, "Guest");
+        for(TeamMembers tm:list)
+            System.out.println("fetched "+tm.getTeamMember() + "size "+list.size());
+        
+        return list;
+    }
+     
     //create a study       
     public String createStudy(){
         
@@ -307,23 +344,32 @@ public class StudyMB implements Serializable {
     }
     
     
-    //add member to a team 
+    //add member to a team - batch persist 
     public String addToTeam(){
-           
-           studyTeam.setName(studyName);
-           studyTeam.setTeamMember(getSelectedUsersname().toString());
-           studyTeam.setTimestamp(new Date());
-//           studyTeam.setTeamRole(studyTeam.setTeamRole(s));
-       
+
+           Iterator<Theme> itr = getSelectedUsersname().listIterator();
+           List<String> selected = new ArrayList<String>();
+           while(itr.hasNext()){ 
+               selected.add(itr.next().getName());
+           }
+        
        try{
-           studyTeamController.persistStudyTeam(studyTeam);
+                for(String str: selected){
+                        studyTeam.setName(studyName);
+                        studyTeam.setTeamMember(str);
+                        studyTeam.setTimestamp(new Date());
+                        //System.out.println("batch fetched "+str);
+                        studyTeamController.persistStudyTeam(studyTeam);
+                        activity.addActivity("added new member "+ str + " ", studyName,"STUDY");
+           }
+           
+               
        }catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Study wasn't removed.");
             return null;
         }
-            addMessage("added.");
-            activity.addActivity("new team member added", studyName,"STUDY");
-            return "Success!";
+            addMessage("New Member Added!");
+            return "teamPage";
     }
     
     

@@ -34,7 +34,7 @@ public class ThemeService {
         
         for(int i=0;i<username.size();i++){
             Username un = username.get(i);
-            themes.add(new Theme(i, un.getName(), un.getEmail()));
+                themes.add(new Theme(i, un.getName(), un.getEmail()));
         }
     }
      

@@ -29,6 +29,10 @@
         <param-name>Webhdfs-http</param-name>
         <param-value>http://snurran.sics.se:50070/webhdfs/v1</param-value>
     </context-param>
+    <context-param>
+        <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
+        <param-value>true</param-value>
+    </context-param>
     <servlet>
         <servlet-name>Faces Servlet</servlet-name>
         <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
