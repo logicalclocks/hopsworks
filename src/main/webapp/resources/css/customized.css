@@ -8,10 +8,95 @@ and open the template in the editor.
     Author     : roshan
 */
 
-.ui-widget, .ui-widget .ui-widget {
-    font-size: 70% !important;
+.ui-widget, .ui-widget .ui-widget .ui-widget-content {
+    //font-size: 70% !important;
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-    //font-size: 13px;
+    font-size: 12px;
+}
+
+.ui-tabs .ui-tabs-nav{
+    
+    width: auto;
+    height: auto;
+    display: block;
+    border-bottom: 1px solid #ddd;
+    margin: 0 0 0 0;
+    padding-left: 8px;
+    list-style:none;
+    list-style-type: none;
+    list-style-position: outside;
+    list-style-image: none; 
+}
+
+.ui-tabs .ui-tabs-panel .ui-widget-content li{
+    
+    
+     width: 364px;
+     line-height: 20px;
+     float: left;
+     display: block;
+     height: auto;
+     margin-bottom: -1px;
+    
+
+
+
+}
+.ui-tabs .ui-tabs-nav li.ui-tabs-selected { 
+    padding-bottom: 0; 
+    border-right-width: 1px; 
+    border-right-width: 1px; 
 }
 
 
+.ui-tabs .ui-tabs-panels{
+     display: inline-block;
+     width: 364px;
+     min-height: 100%;
+     height: auto; 
+     margin: 0 0 0 0;
+     padding: 0 0 0 0;
+     float: left;
+}
+
+.ui-tabs .ui-tabs-panel{
+
+    float: left;
+    display: list-item;
+    text-align: left;
+    background-color: #FFF;
+    padding: 15px 15px 15px 15px;
+    line-height: 18px;
+    width: 338px;
+    height: 42px;
+    list-style: none;
+    //min-height: 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.0470588);
+}
+
+
+.ui-tabs .ui-widget-content{
+    
+     display: block;
+     width: 368px;
+     height: auto !important; 
+     margin: 0 0 0 0;
+     padding: 0 0 0 0;
+    
+}
+
+
+.ui-tabs-panel.disabled{color:#888;}
+.ui-tabs-panel.smoke{background-color:#f5f5f5;}
+.ui-tabs-panel:hover{background:#d9edf7;border-bottom:1px solid #adf;}
+/*.ui-tabs-panel:last-child{
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: rgba(0, 0, 0, 0.0470588);
+}*/
+
+/*.ui-tabs-vertical .ui-tabs-nav { padding: .2em .1em .2em .2em; float: left; width: 12em; }
+.ui-tabs-vertical .ui-tabs-nav li { clear: left; width: 100%; border-bottom-width: 1px !important; border-right-width: 0 !important; margin: 0 -1px .2em 0; }
+.ui-tabs-vertical .ui-tabs-nav li a { display:block; }
+.ui-tabs-vertical .ui-tabs-nav li.ui-tabs-selected { padding-bottom: 0; padding-right: .1em; border-right-width: 1px; border-right-width: 1px; }
+.ui-tabs-vertical .ui-tabs-panel { padding: 1em; float: right; width: 40em;}*/

@@ -13,6 +13,7 @@
         <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
         <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
     </h:head>
 <h:body>
     <h:form class="stylelayout" id="formToolbar">  
@@ -40,6 +41,41 @@
             <div class="container">
                 <ul class="main_menu"></ul>  
                 <div class="content">
+<!--                    <p:tabView id="tabStudyPage" dynamic="true" styleClass="ui-tabs" cache="false">
+                     <p:tab id="showTab" title="Show">
+                        <div class="study_content_list">
+                      <h:form id="frmStudyContentList"> 
+                        <c:forEach var="lstActivity" items="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}">
+                        <div class="event-item" align="left">
+                            <span class="cgray right">
+                                13 days ago.
+                            </span>
+                            <img class="avatar s24" src="#{activityBean.getGravatar(studyManagedBean.creator)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                            <div class="event-title">
+                                <span class="author_name"><h:link>#{lstActivity.performedBy}</h:link></span>
+                                <span class="event_label opened">#{lstActivity.activity}</span>
+                                     at
+                                        <h:link><span class="tiny">#{lstActivity.performedBy}  /  </span><strong>#{lstActivity.activityOn}</strong></h:link>
+                            </div>
+                        </div>
+                            </c:forEach>
+                      </h:form>
+                    </div>
+                    </p:tab>
+                        <p:tab id="teamTab" title="Team">
+                            
+                            <h3 class="page_title">
+                        Team Members (#{studyManagedBean.countAllMembersPerStudy()})
+                        <span class="right_button">
+                            <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" rendered="#{userMB.anyAdminUser}"
+                                             onclick="window.location.href='newTeamMember.xhtml'" style="float:right; position: relative;"/>
+                        </span>
+                    </h3>
+                            
+                        </p:tab>
+                        
+                        
+                    </p:tabView>-->
                     <ul class="nav">
                         <li class="active"><h:link styleClass="activities_tab" outcome="studyPage">
                                 <i class="icon_home"></i>

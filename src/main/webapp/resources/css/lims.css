@@ -171,7 +171,7 @@
 /*        -webkit-border-radius: 3px;
         -moz-border-radius: 3px;
         -ms-border-radius: 3px;
-        -o-border-radius: 3px;
+        -o-border-radius: 3px;ui-tabs-panel
         border-radius: 3px;   */
         -webkit-box-shadow: none;
         -moz-box-shadow: none;
@@ -200,7 +200,7 @@
         text-decoration: none;
         text-align: center;
         display: inline-block;   
-        float: right !important;
+        //float: right !important;
         vertical-align: middle;
         border-color: rgba(0,0,0,0.1) rgba(0,0,0,0.1) rgba(0,0,0,0.25);
         background-image: linear-gradient(to bottom, #62c462, #51a351);
@@ -274,7 +274,7 @@
 }
 
 
-#tabViewSummary .ui-tabs-nav{
+.ui-tabs-nav .nav{
     
     width: 360px;
     height: 35px;
@@ -1290,6 +1290,42 @@ event_filter .filter_icon a {
     
 }
 
+.ui-tabs .study_box{
+    
+     display: inline-block;
+    background: #F9F9F9;
+    width:368px;
+/*    min-height: 368px;*/
+    min-height: 100%;
+    height: auto !important;
+    margin-bottom: 25px;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: rgb(204, 204, 204);
+    border-top-color: rgb(204, 204, 204);
+    border-right-color: rgb(204, 204, 204);
+    border-left-color: rgb(204, 204, 204);
+    border-left-style: solid;
+    border-left-width: 1px;
+    border-top-style: solid;
+    border-top-width: 1px;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 0 3px #f1f1f1;
+    //float: left;
+    position:initial;
+    background-position-x: initial;
+    background-position-y: initial;
+    background-size: initial;
+/*    background-repeat-x: initial;
+    background-repeat-y: initial;*/
+    background-attachment: initial;
+    background-origin: initial;
+    background-clip: initial;
+    background-color: rgb(249, 249, 249);
+    background-repeat: initial;
+}
+
+
 .title{
     
     width: 338px;
@@ -1390,9 +1426,36 @@ a {
      padding: 0 0 0 0;
 }
 
+/*.ui-tabs-panels {
+    
+     display: block;
+     width: 368px;
+     height: auto !important; 
+     margin: 0 0 0 0;
+     padding: 0 0 0 0;
+    
+}*/
+
+/*.ui-tabs-panel .well-list{
+     display: block;
+     width: 368px;
+     height: auto !important; 
+     margin: 0 0 0 0;
+     padding: 0 0 0 0;
+}
 
 
-#tabViewSummary .ui-datalist .ui-datalist-title {
+.ui-tabs .ui-tabs-nav .nav{
+    
+     display: block;
+     width: 368px;
+     height: auto !important; 
+     margin: 0 0 0 0;
+     padding: 0 0 0 0;
+}*/
+
+
+/*#tabViewSummary .ui-datalist .ui-datalist-title {
      display: block;
      width: 368px;
      height: auto !important; 
@@ -1415,16 +1478,29 @@ a {
     
 }
 
-/*#tabViewSummary .ui-tabs-panel .ui-widget-content .ui-corner-bottom {
+.ui-tabs-panel {
+    width: 1170px;
+    float: left;
+    color: #456;
+    font-size: 20px;
+    font-weight: normal;
+    line-height: 28px;
+    margin-bottom: 0;
+    margin-left: 0;
+    margin-top: 0;
+    margin-right: 0;
     
-     display: block;
-     width: 368px;
-     height: auto !important; 
-     margin: 0 0 0 0;
-     padding: 0 0 0 0;
-    
-}*/
+}
 
+.ui-panel .ui-panel-titlebar {
+    
+     min-width: 76px;
+     line-height: 20px;
+     float: left;
+     display: block;
+     width: auto;
+     margin-bottom: -1px;
+}*/
 
 /*.well-list li{
     background-color:#FFF;

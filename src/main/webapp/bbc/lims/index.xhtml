@@ -15,9 +15,11 @@
         <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
         <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
     </h:head>
     
 <h:body>
+    
     <h:form class="stylelayout" id="formToolbar">  
             <p:toolbar styleClass="MainToolbar">  
                 <p:toolbarGroup align="left">  
@@ -55,7 +57,7 @@
                 </div>
             </div>
             <div class="content_list">
-                <c:forEach var="act" items="#{activityBean.acvitiyList}" begin="1" end="#{studyManagedBean.allStudy}">
+                <c:forEach var="act" items="#{activityBean.acvitiyList}" begin="0" end="#{studyManagedBean.allStudy}">
                     <div class="event-item" align="left">
                     <span class="cgray right">3 months ago.</span>
                     <img class="avatar s24" src="#{activityBean.getGravatar(act.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
@@ -78,39 +80,25 @@
             </span>
         </h3>
     
-<!--        <ul class="nav">-->
-
-<p:tabView id="tabViewSummary">
-    <p:tab id="allTab" titleStyleClass="active" title="All">
-        <p:dataList value="#{studyManagedBean.latestStudyList}" var="list" itemType="none" styleClass="well_list">
-                        <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                                    <span class="tiny">#{list.username}</span> / <strong>#{list.name}</strong>
-                                            <f:param id="studyName" name="studyname" value="#{list.name}"/>
-                                            <f:param id="username" name="username" value="#{list.username}"/>
-                            </p:commandLink>
-                        </p:dataList>
-                </p:tab>
-                    <p:tab id="personalTab" titleStyleClass="active" title="Personal"></p:tab>
-                    <p:tab id="joinedTab" titleStyleClass="active" title="Joined"></p:tab>
-</p:tabView>
-
-
-            <!--                     <li class="active"><h:link outcome="indexPage">All</h:link></li>
-                     <li class="active"><h:link>Personal</h:link></li>
-                     <li class="active"><h:link>Joined</h:link></li>-->
-<!--         </ul>-->
-<!--        <ul class="well_list">
+<p:tabView id="tabViewSummary" dynamic="true" styleClass="ui-tabs" cache="false">
+ <p:tab id="allTab" title="All">
+  
             <c:forEach var="list" items="#{studyManagedBean.latestStudyList}">
-                <li class="listItem">
+                <li class="ui-tabs-panel">
             <h:commandLink action="#{studyManagedBean.fetchStudy()}">
                 <span class="tiny">#{list.username}</span> / <strong>#{list.name}</strong>
                         <f:param id="studyName" name="studyname" value="#{list.name}"/>
                         <f:param id="username" name="username" value="#{list.username}"/>
           </h:commandLink>
-          </li>
+                </li>
             </c:forEach>
-        </ul>-->
-     
+    </p:tab>
+    <p:tab id="personalTab" title="Personal">
+         
+         
+     </p:tab>
+                    <p:tab id="joinedTab" title="Joined"></p:tab>
+</p:tabView>
     </div>
         
 </div>
