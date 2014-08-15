@@ -57,7 +57,7 @@
                 </div>
             </div>
             <div class="content_list">
-                <c:forEach var="act" items="#{activityBean.acvitiyList}" begin="0" end="#{studyManagedBean.allStudy}">
+                <c:forEach var="act" items="#{activityBean.acvitiyList}" begin="0" end="#{activityBean.acvitiyList.size()}">
                     <div class="event-item" align="left">
                     <span class="cgray right">3 months ago.</span>
                     <img class="avatar s24" src="#{activityBean.getGravatar(act.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>

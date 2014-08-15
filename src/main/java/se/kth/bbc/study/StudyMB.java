@@ -256,6 +256,15 @@ public class StudyMB implements Serializable {
         return StudyTeam.values();
     }
     
+    public List<String> getRoles(){
+        List<String> list = new ArrayList<String>();    
+        
+        list.add("Master");
+        list.add("Researcher");
+        list.add("Guest");
+        
+        return list;
+    }
     
     public long countAllMembersPerStudy(){
             return studyTeamController.countMembersPerStudy(studyName).size();
@@ -286,9 +295,9 @@ public class StudyMB implements Serializable {
         
     } 
     
-//    public long getSizeMastersList(){
-//        return studyTeamController.findMembersByRole(studyName,"Master");
-//    } 
+    public List<TeamMembers> getAllStudyUserTypesList(){
+        return studyTeamController.findMembersByStudy(studyName);
+    }
     
      
     public List<TeamMembers> getResearchersList(){
@@ -369,7 +378,7 @@ public class StudyMB implements Serializable {
             return null;
         }
             addMessage("New Member Added!");
-            return "teamPage";
+            return "studyPage";
     }
     
     

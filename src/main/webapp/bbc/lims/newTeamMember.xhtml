@@ -13,12 +13,7 @@
         <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}"/>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}"/>
-<!--        <link rel="stylesheet" type="text/css" href="#{resource['/css/chosen.css']}"/>
-        <script src="../js/chosen.js"></script>
-        <script src="../js/mootools-more-1.4.js"></script>
-        <script src="../js/mootools-yui-compressed.js"></script>-->
-       
-        
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/newTeamMem.css']}"/>
     </h:head>
     
 <h:body>
@@ -45,31 +40,49 @@
 
  
 <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
-
 <p:layoutUnit position="center">
           
           <div class="container">
           <ul class="main_menu"></ul>
                 <div class="content">
-                     <ul class="nav">
+<!--                     <ul class="nav">
                          <li class="active"><h:link id="show" outcome="studyPage" styleClass="activities_tab">
                                 <i class="icon_home"/>
                                 Show</h:link></li>
                          <li class="active"><h:link id="team" outcome="teamPage" styleClass="activities_tab">Team</h:link></li>
-                    </ul>
-                    <h3 class="page_title" align="left">
-                        New Team Member(s)
-                    </h3>
-                    <hr/>
-        <h:form styleClass="new_member_content" id="frmNewTeamMember">
-<!--                <script> 
-//                        $$(".chzn-select").chosen(); 
-//                        $$(".chzn-select-deselect").chosen({allow_single_deselect:true});
-                            jQuery(document).ready(function(){
-                                    jQuery(".chzn-select").chosen();
-                            });
-                </script>
-   -->
+                    </ul>-->
+                    <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs">
+                        <p:tab id="showTab" title="Team">
+                             <h3 class="page_title" align="left">
+                                     New Team Member(s)
+                              </h3>
+                            <hr/>
+                            <h:form styleClass="new_member_content" id="frmNewTeamMember">
+                                    <h6 align="left">1. Choose people you want in the team</h6>
+                                           <div class="clearfix">
+                                               <label for="team_member_user_ids">People</label>
+                                                   <p:autoComplete id="autoName" value="#{studyManagedBean.selectedUsersname}" completeMethod="#{studyManagedBean.completeUsername}" var="user"
+                                                                   itemLabel="#{user.displayName}" itemValue="#{user}" multiple="true" forceSelection="true" 
+                                                                   converter="nameConverter" dropdown="true" emptyMessage="Select users" cache="false" styleClass="input"/>
+                                           </div>
+                                           <h6 align="left">2. Set access level for them</h6>
+                                           <div class="clearfix">
+                                                <label for="team_member_user_ids">Study Access</label>
+                                                <div class="input">
+                                                    <h:selectOneMenu value="#{studyManagedBean.studyGroups.teamRole}" styleClass="study_role_assign">
+                                                        <f:selectItems value="#{studyManagedBean.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
+                                                     </h:selectOneMenu>
+                                                </div>
+                                           </div>
+                                           <div class="actions">
+                                               <h:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addToTeam()}"/>
+                                               <h:commandButton styleClass="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href='studyPage.xhtml'"/>
+                                           </div>
+                         </h:form>     
+                        </p:tab>
+                    </p:tabView>
+                   
+<!--        <h:form styleClass="new_member_content" id="frmNewTeamMember">
                  <h6 align="left">1. Choose people you want in the team</h6>
                         <div class="clearfix">
                             <label for="team_member_user_ids">People</label>
@@ -90,7 +103,7 @@
                             <h:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addToTeam()}"/>
                             <h:commandButton styleClass="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href='team.xhtml'"/>
                         </div>
-      </h:form>     
+      </h:form>     -->
                 </div>
             </div> 
 

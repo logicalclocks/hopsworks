@@ -359,7 +359,7 @@
 }
 
 .page_title {
-    width: 1170px;
+    width: 1166px;
     float: left;
     color: #456;
     font-size: 20px;
@@ -516,11 +516,11 @@ h6{
 .team_table{
     
     display: block;
-    width: 1170px;
+    width: 1170px !important;
     height: auto;
 }
 
-.ui_box{
+.team_table .ui_box{
     display: block;
     border-top-color: rgb(204, 204, 204);
     border-top-style: solid;
@@ -539,6 +539,7 @@ h6{
     margin-bottom: 25px;
 /*    min-height: 440px;*/
     height: auto;
+    width: 1168px !important;
 }
 
 
@@ -557,14 +558,15 @@ h6{
     height: 45px;
 }
 
-.ui_box > .well-list {
+.ui_box .well-list {
     
     display: inline-block;
-    width: 1168px;
+    width: 1168px !important;
 /*    min-height: 401px;*/
     height: auto;
     padding: 0 0 0 0;
     margin: 0 0 0 0;
+    
 }
 
 .team_member_row{
@@ -1115,7 +1117,8 @@ img .avatar .s32 {
 .right_button {
     width: auto;
     line-height: 24px;
-    float: right !important;
+    float: right;
+    position: relative;
     
 }
 

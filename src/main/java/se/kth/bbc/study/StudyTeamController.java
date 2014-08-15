@@ -47,6 +47,13 @@ public class StudyTeamController {
     
     }
     
+     public List<TeamMembers> findMembersByStudy(String name){
+        Query query = em.createNamedQuery("TeamMembers.findMembersByName", TeamMembers.class).setParameter("name", name);
+        return query.getResultList();
+    
+    }
+    
+    
     public void persistStudyTeam(TeamMembers team){
             em.persist(team);
     }

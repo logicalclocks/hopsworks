@@ -6,14 +6,15 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-       xmlns:c="http://java.sun.com/jsp/jstl/core">
+       xmlns:c="http://java.sun.com/jsp/jstl/core"
+       xmlns:fn="http://java.sun.com/jsp/jstl/functions">
 
 <f:view contentType="text/html">
     <h:head>
         <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
         <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/studyPage.css']}" />
     </h:head>
 <h:body>
     <h:form class="stylelayout" id="formToolbar">  
@@ -41,10 +42,9 @@
             <div class="container">
                 <ul class="main_menu"></ul>  
                 <div class="content">
-<!--                    <p:tabView id="tabStudyPage" dynamic="true" styleClass="ui-tabs" cache="false">
-                     <p:tab id="showTab" title="Show">
-                        <div class="study_content_list">
-                      <h:form id="frmStudyContentList"> 
+                    <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs">
+                        <p:tab id="showTab" title="Show">
+                    <div class="study_content_list">
                         <c:forEach var="lstActivity" items="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}">
                         <div class="event-item" align="left">
                             <span class="cgray right">
@@ -59,24 +59,142 @@
                             </div>
                         </div>
                             </c:forEach>
-                      </h:form>
                     </div>
                     </p:tab>
-                        <p:tab id="teamTab" title="Team">
+                        
+                    
+                     <p:tab id="teamTab" title="Team">
                             
-                            <h3 class="page_title">
-                        Team Members (#{studyManagedBean.countAllMembersPerStudy()})
-                        <span class="right_button">
-                            <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" rendered="#{userMB.anyAdminUser}"
-                                             onclick="window.location.href='newTeamMember.xhtml'" style="float:right; position: relative;"/>
-                        </span>
-                    </h3>
+                         <h3 class="page_title" align="left">
+                                    Team Members (#{studyManagedBean.countAllMembersPerStudy()})
+                                        <span class="right_button">
+                                            <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" rendered="#{userMB.anyAdminUser}"
+                                                             onclick="window.location.href='newTeamMember.xhtml'"/>
+                                        </span>
+                            </h3>
+                            <hr/>
+                            <div class="clear_fixing"></div>
                             
+                            <div class="team_table">
+                            <div class="ui_box">
+                                <c:forEach var="uList" items="${studyManagedBean.roles}" varStatus="rowId">
+<!--                                    <c:choose>-->
+                                        <c:if test="${fn:contains(uList, 'Master')}">
+                                            <h5 class="title" align="left">Masters
+                                                <small>#{studyManagedBean.countMasters()}</small></h5>
+                                                    <ul class="well-list">
+                                                        <c:forEach items="${studyManagedBean.mastersList}" var="sub" begin="0" end="${studyManagedBean.countMasters()}">
+                                                        <li class="team_member_row" id="userMst ${rowId.count}">
+                                                <div class="row">
+                                                <div class="span6">
+                                                    <img class="avatar s32" src="#{activityBean.getGravatar(sub.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                    <p:commandLink styleClass="dark" immediate="true">
+                                                        <strong>${sub.teamMember}</strong>
+                                                        <br/>
+                                                        <small class="cgray">
+                                                            ${sub.teamRole}
+                                                        </small>
+                                                    </p:commandLink>
+                                                </div>
+                                                <div class="span5 right">
+
+                                                    <div class="left">
+                                                        <h:form id="frmMasterMembers" prependId="false">
+                                                                <div style="margin:0;padding:0;display:inline"></div>
+                                                                  <h:selectOneMenu value="#{studyManagedBean.studyGroups.teamMember}" styleClass="study_role_assign">
+                                                                      <f:selectItems value="#{studyManagedBean.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
+                                                                 </h:selectOneMenu>
+
+                                                        </h:form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                                  </c:forEach>
+                                            </ul>
+                                    </c:if>
+                                    
+                                    <c:if test="${fn:contains(uList, 'Researcher')}">
+                                            <h5 class="title" align="left">Researchers
+                                                <small>#{studyManagedBean.countResearchers()}</small></h5>
+                                                    <ul class="well-list">
+                                                        <c:forEach items="${studyManagedBean.researchersList}" var="sub" begin="0" end="${studyManagedBean.countResearchers()}">
+                                                        <li class="team_member_row" id="userMst ${rowId.count}">
+                                            <div class="row">
+                                                <div class="span6">
+                                                    <img class="avatar s32" src="#{activityBean.getGravatar(sub.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                    <p:commandLink styleClass="dark" immediate="true">
+                                                        <strong>${sub.teamMember}</strong>
+                                                        <br/>
+                                                        <small class="cgray">
+                                                            ${sub.teamRole}
+                                                        </small>
+                                                    </p:commandLink>
+                                                </div>
+                                                <div class="span5 right">
+
+                                                    <div class="left">
+                                                        <h:form id="frmMasterMembers" prependId="false">
+                                                                <div style="margin:0;padding:0;display:inline"></div>
+                                                                  <h:selectOneMenu value="#{studyManagedBean.studyGroups.teamMember}" styleClass="study_role_assign">
+                                                                      <f:selectItems value="#{studyManagedBean.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
+                                                                 </h:selectOneMenu>
+
+                                                        </h:form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                                         </c:forEach>
+                                            </ul>
+                                    </c:if>
+                                        
+                                    <c:if test="${fn:contains(uList,'Guest')}">
+                                            <h5 class="title" align="left">Guests
+                                                <small>#{studyManagedBean.countGuests()}</small></h5>
+                                                    <ul class="well-list">
+                                                        <c:forEach items="${studyManagedBean.guestsList}" var="sub" begin="0" end="${studyManagedBean.countGuests()}">
+                                                        <li class="team_member_row" id="userMst ${rowId.count}">
+                                            <div class="row">
+                                                <div class="span6">
+                                                    <img class="avatar s32" src="#{activityBean.getGravatar(sub.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                    <p:commandLink styleClass="dark" immediate="true">
+                                                        <strong>${sub.teamMember}</strong>
+                                                        <br/>
+                                                        <small class="cgray">
+                                                            ${sub.teamRole}
+                                                        </small>
+                                                    </p:commandLink>
+                                                </div>
+                                                <div class="span5 right">
+
+                                                    <div class="left">
+                                                        <h:form id="frmMasterMembers" prependId="false">
+                                                                <div style="margin:0;padding:0;display:inline"></div>
+                                                                  <h:selectOneMenu value="#{studyManagedBean.studyGroups.teamMember}" styleClass="study_role_assign">
+                                                                      <f:selectItems value="#{studyManagedBean.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
+                                                                 </h:selectOneMenu>
+
+                                                        </h:form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                                            </c:forEach>
+                                            </ul>
+                                    </c:if>
+<!--                                        <c:otherwise/>-->
+<!--                                    </c:choose>-->
+                                </c:forEach>
+                           
+                                
+
+                                
+                        </div>
+                            </div> 
                         </p:tab>
-                        
-                        
-                    </p:tabView>-->
-                    <ul class="nav">
+                    </p:tabView>
+<!--                    <ul class="nav">
                         <li class="active"><h:link styleClass="activities_tab" outcome="studyPage">
                                 <i class="icon_home"></i>
                                 Show</h:link></li>
@@ -98,8 +216,8 @@
                             </div>
                         </div>
                       </h:form>
-                    </div>
-       <div class="study_content_list">
+                    </div>-->
+<!--       <div class="study_content_list">
             <h:form id="frmStudyContentList"> 
                         <c:forEach var="lstActivity" items="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}">
                         <div class="event-item" align="left">
@@ -116,7 +234,7 @@
                         </div>
                             </c:forEach>
                          </h:form>
-                    </div>
+                    </div>-->
                 </div>
             </div>
 </p:layoutUnit>

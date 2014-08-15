@@ -40,12 +40,8 @@ public class ActivityController {
 
     public List<UserActivity> filterActivity(){
     
-//        return em.createNamedQuery("nativeActivity").getResultList().toArray();
-        
-        Query query = em.createNativeQuery("SELECT id, activity, performed_by, activity_on FROM activity", UserActivity.class);
-        //Query query = em.createNativeQuery("SELECT * FROM activity act, USERS u WHERE act.performed_By = u.EMAIL","activityList");
+        Query query = em.createNamedQuery("UserActivity.findAll", UserActivity.class);
         return query.getResultList();
-        //act.id, act.activity, act.performed_by, act.activity_on, u.NAME 
     }
     
     public List<UserActivity> activityOnstudy(String activityOn){
