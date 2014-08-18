@@ -22,6 +22,7 @@ import javax.faces.context.FacesContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import se.kth.bbc.study.StudyTeamController;
 
 /**
  *
@@ -37,7 +38,11 @@ public class AuthBackingBean {
     @ManagedProperty(value="#{bbcViewController}")
     private BbcViewController views;
 
+    
+    @EJB
+    private StudyTeamController studyTeamController;
 
+    
     public AuthBackingBean() {
     }
 
@@ -74,6 +79,11 @@ public class AuthBackingBean {
         Principal principal = request.getUserPrincipal();
         log.log(Level.INFO, "Logging IN Authenticated user: {0}", principal.getName());
 
+        // delete from USERS_GROUPS where USER like principal.getName();
+        // Remove the user from all groups.
+        studyTeamController.login(principal.getName());
+                
+        
         if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER") || request.isUserInRole("ADMIN")) {
             return "/bbc/lims/index.xml?faces-redirect=true";            
 //        } else if (request.isUserInRole("ADMIN")) {
