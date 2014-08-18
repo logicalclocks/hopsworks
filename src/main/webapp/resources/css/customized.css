@@ -85,3 +85,9 @@ and open the template in the editor.
 .ui-tabs-panel.smoke{background-color:#f5f5f5;}
 .ui-tabs-panel:hover{background:#d9edf7;border-bottom:1px solid #adf;}
 
+/*.ui-layout-unit-content .ui-widget-content{
+    
+    position: relative;
+    height: auto !important; 
+    visibility: visible;
+}*/

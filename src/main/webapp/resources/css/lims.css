@@ -12,7 +12,9 @@
 
 .BbcMainLayout {
     text-align: center;
-    height: 640px;
+    //height: 640px;
+    height: auto !important;
+    
 /*    display: -webkit-box;
     display: -moz-box;
     display: -webkit-flex;
@@ -29,6 +31,7 @@
     border-width: 0px;  
     overflow-y: hidden;
     overflow-x: hidden;
+    //overflow-y: auto;
     //////////////////////
 /*    display: -webkit-box;
     display: -moz-box;
@@ -129,6 +132,12 @@
 
         .button-secondary {
             background: rgb(66, 184, 221); /* this is a light blue */
+}
+
+.ui-datatable-tablewrapper{
+    
+    border: 1px solid #DDD;
+    height: auto !important;
 }
 
 .styled-button-10 {

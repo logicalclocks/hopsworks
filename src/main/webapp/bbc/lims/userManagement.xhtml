@@ -7,44 +7,49 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       >
+<f:view contentType="text/html">
+    
+    <h:head>
+        <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+         <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+    </h:head>
 
-    <ui:composition template="layout.xhtml">
+<h:body>
+     <h:form class="stylelayout" id="formToolbar">  
+            <p:toolbar styleClass="MainToolbar">  
+                <p:toolbarGroup align="left">  
+                    <p:commandLink value="BiobankCloud" action="indexPage"/>
+                </p:toolbarGroup> 
 
-        <ui:define name="title">
-            BiobankCloud Lims
-        </ui:define>
-        <ui:define name="css">
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-        </ui:define>
-        <ui:define name="scripts"/>
+                <p:toolbarGroup align="left">              
+                </p:toolbarGroup>  
 
-        <ui:define name="leftmenu">
-            <p:commandLink action="#{bbcController.showNewUserManagementDialog()}">
-                <p:outputLabel value="Users" style="font-weight:bold"/>
-            </p:commandLink>
-        </ui:define>
+                <p:toolbarGroup align="right">  
+                    <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
+                    <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
+                        <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" /> 
+                        <p:separator/>
+                        <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
+                    </p:menu>  
+                </p:toolbarGroup>  
 
-        
+            </p:toolbar> 
+ </h:form>
 
+<p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
 
-        <ui:define name="dialogs">
-       
-<!--           New User Management Dialog-->
-            <p:dialog modal="true" id="userMgmt" widgetVar="dlgUserManagement" header="User Management" 
-                      draggable="true" closable="true" resizable="true" width="825"  height="620">  
-
-<!--<h:form id="formUser">-->
-<!--    <p:growl id="growl" showDetail="true" />  -->
-    <p:tabView id="tabViewNew" dynamic="true" styleClass="BbcTabView">
-<!--        <p:ajax event="tabChange" listener="#{userController.onTabChange}" update=":formUser:growl"/>  -->
+<p:layoutUnit position="center">
+    <div class="container">
+          <ul class="main_menu"></ul>
+                <div class="content">
+                    <p:tabView id="tabViewNew" dynamic="true" styleClass="ui-tabs">
         <p:tab title="Registered Users" id="Registered">
-
-           
-                            <h:form id="userdataForm">
-                                 <p:growl id="growl" life="2000"/>
-                                     <h:panelGrid id="userdata" columns="4" cellpadding="5">                   
-                                    <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
-                                                 selectionMode="single" rowKey="#{user.email}" selection="#{userController.selectedUser}">
+          <p:growl id="growl" life="2000"/>
+<!--               <h:panelGrid id="userdata" columns="4">                   -->
+                        <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
+                                     selectionMode="single" rowKey="#{user.email}" selection="#{userController.selectedUser}" styleClass="ui-datatable">
                                         
                                                    <f:facet name="header">
                                                        <p:outputPanel>
@@ -100,23 +105,13 @@
                                           </f:facet>
                                           
                                     </p:dialog>
-                                </h:panelGrid>
-                                   </h:form>   
+<!--                                </h:panelGrid>-->
+<!--                                   </h:form>   -->
                               </p:tab>                 
-                                      
-                                          
-    
-                        
-                        <!-- user view end -->
-               
-            <!-- Add Users-->
+  
                         
             <p:tab title="Add New Users" id="New">
                 <p:messages  autoUpdate="true" closable="true"/>
-             <h:form id="addUsers">
-                 
-                    <p:panel header="User Data"> 
-                   
                        <h:panelGrid id="grid" columns="4" cellpadding="5">    
                            
                   
@@ -152,24 +147,17 @@
                             <h:outputText value=""/>                     
                      </h:panelGrid>
                    
-                   
+            <p:panel>           
                    <f:facet name="footer">
                        <p:commandButton update="grid" value="Add" icon="ui-icon-plus" style="margin-right:10px" action="#{userController.addUser()}" validateClient="true"/>
                    </f:facet> 
              </p:panel>
-           </h:form>
           </p:tab>
-          
-            
-            
-            
-            <!-- End add users-->
-           
-                  
                  </p:tabView>
-<!--</h:form>-->
-
-            </p:dialog>
-        </ui:define>
-    </ui:composition>
+  </div>
+            </div> 
+       </p:layoutUnit>
+</p:layout>
+</h:body>
+</f:view>
 </html>

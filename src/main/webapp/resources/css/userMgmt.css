@@ -1,0 +1,172 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Aug 15, 2014, 2:39:43 PM
+    Author     : roshan
+*/
+
+.ui-widget, .ui-widget .ui-widget .ui-widget-content {
+    //font-size: 70% !important;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 12px;
+    
+    
+}
+
+.ui-tabs{
+    
+     width: 1170px !important;
+     display: block;
+     height: auto;
+     padding: 0em !important;
+}
+
+.ui-tabs .ui-tabs-nav{
+    width: 1162px !important;
+    height: auto;
+    display: block;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 8px;
+    padding-left: 8px;
+    padding-bottom: 0px;
+    padding-right: 0px;
+    padding-top: 0px;
+    list-style: none;
+    list-style-type: none;
+    list-style-position: outside;
+    list-style-image: none; 
+}
+
+.ui-tabs .ui-tabs-panel .ui-widget-content{
+     width: 1170px !important;
+     line-height: 20px;
+     float: left;
+     display: block;
+     height: auto;
+     margin-bottom: -1px;
+     
+ }
+ 
+.ui-tabs .ui-tabs-nav li.ui-tabs-selected { 
+    padding-bottom: 0; 
+    border-right-width: 1px; 
+    border-right-width: 1px; 
+}
+
+.ui-tabs .ui-tabs-panels{
+     display: block;
+     width: 1170px !important;
+     min-height: 100%;
+     height: auto; 
+     margin: 0 0 0 0 !important;
+     padding-bottom: 0px !important;
+     padding-left: 0px !important;
+     padding-right: 0px !important;
+     padding-top: 0px !important;
+}
+
+.ui-tabs .ui-tabs-panel{
+     position: relative; 
+     display: block;
+     width: 1170px !important;
+     min-height: 100%;
+     height: auto; 
+     margin: 0 !important;
+     padding: 0 !important;
+     zoom:1;
+    
+}
+
+.ui-tabs .ui-widget-content{
+    
+     display: block;
+     width: 1170px !important;
+     min-height: 100%;
+     height: auto; 
+     margin: 0 0 0 0 !important;
+     padding: 0 !important;
+    
+}
+
+.ui-tabs-panel.disabled{color:#888;}
+.ui-tabs-panel.smoke{background-color:#f5f5f5;}
+
+.ui-datatable table  {
+    border-collapse: collapse;
+    width: 100% !important;
+    font-family: Arial,sans-serif;
+    height: auto !important;
+    font-size: 12px;
+}
+
+
+.ui-datatable .ui-widget{
+    
+    //border-collapse: collapse;
+    width: 1170px !important;
+    font-family: Arial,sans-serif;
+    height: auto !important;
+    font-size: 12px;
+}
+
+
+.ui-datatable .ui-widget-content {
+    width: 1170px !important;
+    font-family: Arial,sans-serif;
+    height: auto !important;
+    font-size: 12px;
+    
+}
+
+.ui-datatable .ui-datatable-data {
+    border-collapse: collapse;
+    width: 1170px !important;
+    font-family: Arial,sans-serif;
+    height: auto !important;
+    
+}
+
+.ui-datatable .ui-datatable-header {
+    border-bottom: 0px none;
+    display: table-header-group;
+    vertical-align: middle;
+    border-color: inherit;
+    width: 1170px !important;
+    height: auto;
+}
+
+ui-datatable .ui-datatable-header,
+.ui-datatable .ui-datatable-footer {
+    text-align:center;
+    padding:4px 10px;
+}
+
+.ui-datatable .ui-column-filter {
+    display: block;
+    width:100px;
+    margin:auto;
+}
+
+.ui-datatable th, .ui-datatable tfoot td {
+        text-align: left;
+        white-space: nowrap;
+        padding: 0px;
+        margin: 0px;
+        overflow: hidden;
+        font-size: 12px;
+}
+
+.ui-datatable .ui-datatable-data{
+    
+    width: 1170px !important;
+    height: auto;
+}
+
+.ui-datatable .ui-column-filter {
+    display: block;
+    width:100px;
+    margin:auto;
+}

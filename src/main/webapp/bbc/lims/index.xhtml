@@ -30,6 +30,7 @@
                 </p:toolbarGroup>  
 
                 <p:toolbarGroup align="right">  
+                    <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{userMB.adminUser}"/>
                     <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
                     <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
                         <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" /> 
@@ -57,7 +58,7 @@
                 </div>
             </div>
             <div class="content_list">
-                <c:forEach var="act" items="#{activityBean.acvitiyList}" begin="0" end="#{activityBean.acvitiyList.size()}">
+                <c:forEach var="act" items="#{activityBean.acvitiyList}">
                     <div class="event-item" align="left">
                     <span class="cgray right">3 months ago.</span>
                     <img class="avatar s24" src="#{activityBean.getGravatar(act.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>

@@ -81,10 +81,10 @@ public class StudyMB implements Serializable {
     private TrackStudy study;
     private DatasetStudy dsStudy;
     private Dataset dataset;
-    private TeamMembers studyTeam;
+    private StudyTeam studyTeam;
     private List<Username> usernames;
     private List<Theme> selectedUsername;
-    private StudyTeam teamem;
+    private StudyRoleTypes teamem;
     
     private String studyName;   
     private String studyCreator;
@@ -166,14 +166,14 @@ public class StudyMB implements Serializable {
         this.dataset = dataset;
     } 
 
-    public TeamMembers getStudyGroups() {
+    public StudyTeam getStudyGroups() {
         if (studyTeam == null) {
-            studyTeam = new TeamMembers();
+            studyTeam = new StudyTeam();
         }
         return studyTeam;
     }
         
-    public void setStudyGroup(TeamMembers studyTeam){
+    public void setStudyGroup(StudyTeam studyTeam){
         this.studyTeam = studyTeam;
     }
     
@@ -248,12 +248,12 @@ public class StudyMB implements Serializable {
         activity.getGravatar(studyCreator);
     }
     
-//    public void setTeam(StudyTeam teamem){
+//    public void setTeam(StudyRoleTypes teamem){
 //        this.teamem = teamem;
 //    }
     
-    public StudyTeam[] getTeam() {
-        return StudyTeam.values();
+    public StudyRoleTypes[] getTeam() {
+        return StudyRoleTypes.values();
     }
     
     public List<String> getRoles(){
@@ -271,46 +271,39 @@ public class StudyMB implements Serializable {
     }
     
     public long countMasters(){
-        return studyTeamController.countTeamMembers(studyName,"Master");
+        return studyTeamController.countStudyTeam(studyName,"Master");
     }
     
     public long countResearchers(){
-        return studyTeamController.countTeamMembers(studyName,"Researcher");
+        return studyTeamController.countStudyTeam(studyName,"Researcher");
     }
     
     public long countGuests(){
-        return studyTeamController.countTeamMembers(studyName,"Guest");
+        return studyTeamController.countStudyTeam(studyName,"Guest");
     }
     
-    public List<TeamMembers> getMastersList(){
+    public List<StudyTeam> getMastersList(){
         return studyTeamController.findMembersByRole(studyName,"Master");
-        
-//           Iterator<TeamMembers> itr = studyTeamController.findMembersByRole(studyName).listIterator();
-//           List<TeamMembers> fetched = new ArrayList<TeamMembers>();
-//           while(itr.hasNext()){ 
-//               fetched.add(itr.next());
-//           }
-//        
-//           return fetched;
-        
     } 
-    
-    public List<TeamMembers> getAllStudyUserTypesList(){
-        return studyTeamController.findMembersByStudy(studyName);
-    }
-    
-     
-    public List<TeamMembers> getResearchersList(){
+         
+    public List<StudyTeam> getResearchersList(){
         return studyTeamController.findMembersByRole(studyName, "Researcher");
     }
     
-    public List<TeamMembers> getGuestsList(){
-        List<TeamMembers> list = studyTeamController.findMembersByRole(studyName, "Guest");
-        for(TeamMembers tm:list)
-            System.out.println("fetched "+tm.getTeamMember() + "size "+list.size());
-        
-        return list;
+    public List<StudyTeam> getGuestsList(){
+        return studyTeamController.findMembersByRole(studyName, "Guest");
     }
+
+
+    public int getAllStudyUserTypesListSize(){
+        return studyTeamController.findMembersByStudy(studyName).size();
+    }
+    
+    public List<StudyTeam> getAllStudyUserTypesList(){
+        return studyTeamController.findMembersByStudy(studyName);
+    }
+    
+    
      
     //create a study       
     public String createStudy(){
@@ -364,8 +357,10 @@ public class StudyMB implements Serializable {
         
        try{
                 for(String str: selected){
-                        studyTeam.setName(studyName);
-                        studyTeam.setTeamMember(str);
+                        //studyTeam.setName(studyName);
+                        //studyTeam.setTeamMember(str);
+                        studyTeam.studyTeamPK.setName(studyName);
+                        studyTeam.studyTeamPK.setTeamMember(str);
                         studyTeam.setTimestamp(new Date());
                         //System.out.println("batch fetched "+str);
                         studyTeamController.persistStudyTeam(studyTeam);
