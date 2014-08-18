@@ -529,7 +529,7 @@ h6{
     height: auto;
 }
 
-.team_table .ui_box{
+.ui_box{
     display: block;
     border-top-color: rgb(204, 204, 204);
     border-top-style: solid;
@@ -571,8 +571,8 @@ h6{
     
     display: inline-block;
     width: 1168px !important;
-/*    min-height: 401px;*/
-    height: auto;
+    //min-height: 401px;
+    height: auto !important;
     padding: 0 0 0 0;
     margin: 0 0 0 0;
     

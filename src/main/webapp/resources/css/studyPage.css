@@ -70,14 +70,28 @@ and open the template in the editor.
 }
 
 .ui-tabs .ui-tabs-panel{
-     position: relative; 
+/*     position: relative; 
      display: block;
      width: 1170px !important;
      min-height: 100%;
      height: auto; 
      margin: 0 !important;
      padding: 0 !important;
-     zoom:1;
+     zoom:1;*/
+     
+     width: 1148px;
+    height: 46px;
+    background-color: #FFF;
+    padding: 10px 10px 10px 10px;
+    min-height: 20px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: rgba(0, 0, 0, 0.0470588);
+    list-style: none;
+    display: list-item;
+    text-align: -webkit-match-parent;
+    float: left;
     
 }
 

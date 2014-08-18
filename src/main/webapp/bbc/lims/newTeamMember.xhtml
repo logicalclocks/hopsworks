@@ -57,7 +57,7 @@
                                      New Team Member(s)
                               </h3>
                             <hr/>
-                            <h:form styleClass="new_member_content" id="frmNewTeamMember">
+                            <h:form styleClass="new_member_content">
                                     <h6 align="left">1. Choose people you want in the team</h6>
                                            <div class="clearfix">
                                                <label for="team_member_user_ids">People</label>
@@ -75,7 +75,7 @@
                                                 </div>
                                            </div>
                                            <div class="actions">
-                                               <h:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addToTeam()}"/>
+                                               <h:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addToTeam}"/>
                                                <h:commandButton styleClass="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href='studyPage.xhtml'"/>
                                            </div>
                          </h:form>     

@@ -283,7 +283,11 @@ public class StudyMB implements Serializable {
     }
     
     public List<StudyTeam> getMastersList(){
-        return studyTeamController.findMembersByRole(studyName,"Master");
+        List<StudyTeam> list = studyTeamController.findMembersByRole(studyName,"Master");
+        for(StudyTeam st:list)
+            System.out.println("print - "+ list.size() +" - "+st.studyTeamPK.getName()+" - "+ st.studyTeamPK.getTeamMember() +" - " +st.getTeamRole());
+        
+        return list;
     } 
          
     public List<StudyTeam> getResearchersList(){
@@ -362,7 +366,7 @@ public class StudyMB implements Serializable {
                         studyTeam.studyTeamPK.setName(studyName);
                         studyTeam.studyTeamPK.setTeamMember(str);
                         studyTeam.setTimestamp(new Date());
-                        //System.out.println("batch fetched "+str);
+                        System.out.println("batch fetched "+str);
                         studyTeamController.persistStudyTeam(studyTeam);
                         activity.addActivity("added new member "+ str + " ", studyName,"STUDY");
            }
