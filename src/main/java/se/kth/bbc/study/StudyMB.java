@@ -329,7 +329,8 @@ public class StudyMB implements Serializable {
         this.studyName =  params.get("studyname"); 
         this.studyCreator =  params.get("username"); 
         
-        studyTeamController.setRoleForActiveStudy(studyName, studyCreator);
+        System.out.println("Studyname: " + this.studyName + " - user: " + getUsername() + " - creator: " + this.studyCreator);
+        studyTeamController.setRoleForActiveStudy(studyName, getUsername());
         
         return "studyPage";
     

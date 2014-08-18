@@ -81,7 +81,7 @@ public class AuthBackingBean {
 
         // delete from USERS_GROUPS where USER like principal.getName();
         // Remove the user from all groups.
-        studyTeamController.login(principal.getName());
+        studyTeamController.clearGroups(principal.getName());
                 
         
         if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER") || request.isUserInRole("ADMIN")) {
@@ -104,6 +104,7 @@ public class AuthBackingBean {
         HttpSession s = request.getSession(false);
         log.log(Level.INFO, "Logging OUT Authenticated user: {0}", principal.getName());
 
+        studyTeamController.clearGroups(principal.getName());
         if (s != null) {
             try {
                 s.invalidate();
