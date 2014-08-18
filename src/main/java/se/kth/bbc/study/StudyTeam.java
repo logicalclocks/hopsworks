@@ -37,7 +37,9 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "StudyTeam.countMastersByStudy", query = "SELECT COUNT(DISTINCT s.studyTeamPK.teamMember) FROM StudyTeam s WHERE s.studyTeamPK.name=:name AND s.teamRole = :teamRole"),
     @NamedQuery(name = "StudyTeam.countAllMembers", query = "SELECT s.studyTeamPK.teamMember FROM StudyTeam s WHERE s.studyTeamPK.name = :name"),
     @NamedQuery(name = "StudyTeam.findMembersByRole", query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name AND s.teamRole = :teamRole"),
-    @NamedQuery(name = "StudyTeam.findMembersByName", query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name")})
+    @NamedQuery(name = "StudyTeam.findMembersByName", query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name"),
+    @NamedQuery(name = "StudyTeam.findByNameAndTeamMember", query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name AND s.studyTeamPK.teamMember :teamMember")
+})
 
 public class StudyTeam implements Serializable {
     private static final long serialVersionUID = 1L;

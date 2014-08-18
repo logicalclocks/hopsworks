@@ -69,4 +69,22 @@ public class StudyTeamController {
     public void updateTeam(StudyTeam team){
             em.merge(team);
     }
+    
+    
+    /**
+     * Deletes all roles for the user on login, except ADMIN
+     * @param username 
+     */
+    public void clearGroups(String username){
+        em.createNamedQuery("UsersGroups.deleteGroupsForEmail", StudyTeam.class).setParameter("email", username).executeUpdate();
+    }    
+        
+    public void setRoleForActiveStudy(String username, String studyname){
+        // TODO
+//        Query query = em.createNamedQuery("StudyTeam.findByNameAndTeamMember", StudyTeam.class).setParameter("name", studyname).setParameter("teamMember", username);
+//        List<StudyTeam> res = query.getResultList();
+//        assert(res.size()==1);
+//        StudyTeam t = res.iterator().next();
+//        em.createQuery("insert into USERS_GROUPS values('" + username + "'," + t.getTeamRole() + ")").executeUpdate();
+    }    
 }
