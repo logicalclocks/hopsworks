@@ -37,7 +37,8 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "TeamMembers.countMastersByStudy", query = "SELECT COUNT(DISTINCT t.teamMember) FROM TeamMembers t WHERE t.name=:name AND t.teamRole = :teamRole"),
     @NamedQuery(name = "TeamMembers.countAllMembers", query = "SELECT t.teamMember FROM TeamMembers t WHERE t.name = :name"),
     @NamedQuery(name = "TeamMembers.findMembersByRole", query = "SELECT t FROM TeamMembers t WHERE t.name=:name AND t.teamRole = :teamRole"),
-    @NamedQuery(name = "TeamMembers.findMembersByName", query = "SELECT t FROM TeamMembers t WHERE t.name=:name")})
+    @NamedQuery(name = "TeamMembers.findMembersByName", query = "SELECT t FROM TeamMembers t WHERE t.name=:name"),
+    @NamedQuery(name = "TeamMembers.findByNameAndTeamMember", query = "SELECT t FROM TeamMembers t WHERE t.name = :name AND t.teamMember = :teamMember")})
 public class TeamMembers implements Serializable {
     @Basic(optional = false)
     @NotNull
