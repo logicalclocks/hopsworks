@@ -7,38 +7,28 @@
 package se.kth.bbc.study;
 
 
-import java.io.IOException;
 import java.io.Serializable;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
+import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import org.primefaces.component.tabview.TabView;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
-import org.primefaces.event.TabChangeEvent;
 import se.kth.bbc.activity.ActivityMB;
-import se.kth.bbc.activity.UserActivity;
-import se.kth.kthfsdashboard.user.AutocompleteMB;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
 
@@ -283,7 +273,7 @@ public class StudyMB implements Serializable {
     }
     
     public List<StudyTeam> getMastersList(){
-        List<StudyTeam> list = studyTeamController.findMembersByRole(studyName,"Master");
+        List<StudyTeam> list = studyTeamController.findMasterMembersByName(studyName);
         for(StudyTeam st:list)
             System.out.println("print - "+ list.size() +" - "+st.studyTeamPK.getName()+" - "+ st.studyTeamPK.getTeamMember() +" - " +st.getTeamRole());
         
@@ -291,11 +281,21 @@ public class StudyMB implements Serializable {
     } 
          
     public List<StudyTeam> getResearchersList(){
-        return studyTeamController.findMembersByRole(studyName, "Researcher");
+         List<StudyTeam> list = studyTeamController.findResearchMembersByName(studyName);
+        for(StudyTeam st:list)
+            System.out.println("print - "+ list.size() +" - "+st.studyTeamPK.getName()+" - "+ st.studyTeamPK.getTeamMember() +" - " +st.getTeamRole());
+        
+        
+        return list;
     }
     
     public List<StudyTeam> getGuestsList(){
-        return studyTeamController.findMembersByRole(studyName, "Guest");
+        
+        List<StudyTeam> list = studyTeamController.findGuestMembersByName(studyName);
+        for(StudyTeam st:list)
+            System.out.println("print - "+ list.size() +" - "+st.studyTeamPK.getName()+" - "+ st.studyTeamPK.getTeamMember() +" - " +st.getTeamRole());
+        
+        return list;
     }
 
 
@@ -355,25 +355,18 @@ public class StudyMB implements Serializable {
     
     //add member to a team - batch persist 
     public String addToTeam(){
-
-           Iterator<Theme> itr = getSelectedUsersname().listIterator();
-           List<String> selected = new ArrayList<String>();
-           while(itr.hasNext()){ 
-               selected.add(itr.next().getName());
-           }
-        
        try{
-                for(String str: selected){
-                        //studyTeam.setName(studyName);
-                        //studyTeam.setTeamMember(str);
-                        studyTeam.studyTeamPK.setName(studyName);
-                        studyTeam.studyTeamPK.setTeamMember(str);
-                        studyTeam.setTimestamp(new Date());
-                        System.out.println("batch fetched "+str);
-                        studyTeamController.persistStudyTeam(studyTeam);
-                        activity.addActivity("added new member "+ str + " ", studyName,"STUDY");
-           }
            
+           Iterator<Theme> itr = getSelectedUsersname().listIterator();
+           while(itr.hasNext()){ 
+               Theme t = itr.next();
+               StudyTeamPK stp = new StudyTeamPK(studyName, t.getName());
+               StudyTeam st = new StudyTeam(stp);
+               st.setTimestamp(new Date());
+               st.setTeamRole(studyTeam.getTeamRole());
+               studyTeamController.persistStudyTeam(st);
+               activity.addActivity("added new member "+ t.getName() + " ", studyName, "STUDY");
+           }
                
        }catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Study wasn't removed.");

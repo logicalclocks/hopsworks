@@ -423,7 +423,7 @@ hr {
 
 .clear_fixing{
     width: 1170px;
-    height: 2px;
+     height: auto !important;
     
 }
 
@@ -522,14 +522,83 @@ h6{
     margin-bottom: 18px;
     
 }
-.team_table{
+/*.team_table{
     
     display: block;
     width: 1170px !important;
-    height: auto;
+    height: auto !important;
 }
 
-.ui_box{
+.team_table .ui_box{
+    display: block;
+    border-top-color: rgb(204, 204, 204);
+    border-top-style: solid;
+    border-top-width: 1px;
+    border-right-color: rgb(204, 204, 204);
+    border-right-style: solid;
+    border-right-width: 1px;
+    border-bottom-color: rgb(204, 204, 204);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-left-color: rgb(204, 204, 204);
+    border-left-style: solid;
+    border-left-width: 1px;
+    box-shadow: 0 0 0 3px #f1f1f1;
+    background: #F9F9F9;
+    margin-bottom: 25px;
+    min-height: 440px;
+    height: auto !important;
+    width: 1168px !important;
+}
+
+
+
+.ui_box .title {
+     width: 1148px;
+     height: 36px;
+     padding: 0 10px 0 10px;
+     border-bottom: 1px solid #ccc;
+     margin: 0 0 0 0;
+}
+.study_name_holder{
+    
+    display: block;
+    width: 1170px;
+    height: 45px;
+}
+
+.well-list {
+    
+    display: inline-block;
+    width: 1168px !important;
+    //min-height: 401px;
+    height: auto !important;
+    padding: 0 0 0 0;
+    margin: 0 0 0 0;
+    list-style: none;
+}
+
+.ui_box .team_member_row{
+    
+    width: 1148px;
+    height: 46px;
+    background-color: #FFF;
+    padding: 10px 10px 10px 10px;
+    min-height: 20px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: rgba(0, 0, 0, 0.0470588);
+    list-style: none;
+    display: list-item;
+    text-align: -webkit-match-parent;
+    float: left;
+    
+    
+}
+*/
+
+.team_table .ui_box{
     display: block;
     border-top-color: rgb(204, 204, 204);
     border-top-style: solid;
@@ -571,8 +640,8 @@ h6{
     
     display: inline-block;
     width: 1168px !important;
-    //min-height: 401px;
-    height: auto !important;
+/*    min-height: 401px;*/
+    height: auto;
     padding: 0 0 0 0;
     margin: 0 0 0 0;
     
@@ -627,6 +696,16 @@ label{
     margin-left: 0px;
     display: block;
     
+}
+
+
+.clear_fixing .input{
+   
+   display: block;
+   margin-left: 180px;
+   width: 990px;
+   height: auto !important;
+   
 }
 
 .input{
@@ -1150,7 +1229,24 @@ img .avatar .s32 {
 .new_member_content{
     
     width: 1170px;
-    height: 358px;
+    height: auto !important;
+    margin-bottom: 18px;
+    
+}
+
+.new_user_content{
+    
+    width: 1170px;
+    min-height: 800px;
+    height: auto !important;
+    margin-bottom: 18px;
+    
+}
+
+.new_user_content .clear_fixing{
+    
+    width: 1170px;
+    height: auto !important;
     margin-bottom: 18px;
     
 }
@@ -1301,6 +1397,17 @@ event_filter .filter_icon a {
     
     
 }
+
+.study_panelGrid {
+    display: block;
+    //background: #F9F9F9;
+    width:470px;
+/*    min-height: 368px;*/
+    min-height: 100%;
+    height: auto !important;
+}
+
+
 
 .ui-tabs .study_box{
     

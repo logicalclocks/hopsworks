@@ -94,62 +94,43 @@ and open the template in the editor.
 .ui-tabs-panel.disabled{color:#888;}
 .ui-tabs-panel.smoke{background-color:#f5f5f5;}
 
-.ui-datatable table  {
-    border-collapse: collapse;
-    width: 100% !important;
-    font-family: Arial,sans-serif;
-    height: auto !important;
-    font-size: 12px;
-}
 
+.ui-datatable table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+}
 
 .ui-datatable .ui-widget{
     
-    //border-collapse: collapse;
     width: 1170px !important;
     font-family: Arial,sans-serif;
     height: auto !important;
     font-size: 12px;
 }
 
-
-.ui-datatable .ui-widget-content {
-    width: 1170px !important;
+.ui-datatable .ui-datatable-header .ui-inputfield {
+    
+    width: auto !important;
     font-family: Arial,sans-serif;
     height: auto !important;
     font-size: 12px;
     
 }
 
-.ui-datatable .ui-datatable-data {
-    border-collapse: collapse;
-    width: 1170px !important;
-    font-family: Arial,sans-serif;
-    height: auto !important;
+.ui-outputpanel .ui-widget{
     
+     display: block;
+     width: 1168px !important;
+     min-height: 100%;
+     height: auto; 
+     margin: 0 0 0 0 !important;
+     padding: 0 !important;
 }
 
-.ui-datatable .ui-datatable-header {
-    border-bottom: 0px none;
-    display: table-header-group;
-    vertical-align: middle;
-    border-color: inherit;
-    width: 1170px !important;
-    height: auto;
+.ui-widget:active {
+    outline: none;
 }
-
-ui-datatable .ui-datatable-header,
-.ui-datatable .ui-datatable-footer {
-    text-align:center;
-    padding:4px 10px;
-}
-
-.ui-datatable .ui-column-filter {
-    display: block;
-    width:100px;
-    margin:auto;
-}
-
 .ui-datatable th, .ui-datatable tfoot td {
         text-align: left;
         white-space: nowrap;
@@ -157,16 +138,4 @@ ui-datatable .ui-datatable-header,
         margin: 0px;
         overflow: hidden;
         font-size: 12px;
-}
-
-.ui-datatable .ui-datatable-data{
-    
-    width: 1170px !important;
-    height: auto;
-}
-
-.ui-datatable .ui-column-filter {
-    display: block;
-    width:100px;
-    margin:auto;
 }

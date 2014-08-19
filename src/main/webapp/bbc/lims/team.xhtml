@@ -70,9 +70,9 @@
                                     <li class="team_member_row" id="userMst ${rowId.index}">
                                     <div class="row">
                                         <div class="span6">
-                                            <img class="avatar s32" src="#{activityBean.getGravatar(mList.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                            <img class="avatar s32" src="#{activityBean.getGravatar(mList.studyTeamPK.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
                                             <p:commandLink styleClass="dark" immediate="true">
-                                                <strong>${mList.teamMember}</strong>
+                                                <strong>${mList.studyTeamPK.teamMember}</strong>
                                                 <br/>
                                                 <small class="cgray">
                                                     ${mList.teamRole}
@@ -84,7 +84,7 @@
                                             <div class="left">
                                                 <h:form id="frmMasterMembers" prependId="false">
                                                         <div style="margin:0;padding:0;display:inline"></div>
-                                                          <h:selectOneMenu value="#{studyManagedBean.studyGroups.teamMember}" styleClass="study_role_assign">
+                                                          <h:selectOneMenu value="#{studyManagedBean.studyGroups.studyTeamPK.teamMember}" styleClass="study_role_assign">
                                                               <f:selectItems value="#{studyManagedBean.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
                                                          </h:selectOneMenu>
                                                       
@@ -109,9 +109,9 @@
                                     <li class="team_member_row" id="userRech">
                                     <div class="row">
                                         <div class="span6">
-                                            <img class="avatar s32" src="#{activityBean.getGravatar(rList.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                            <img class="avatar s32" src="#{activityBean.getGravatar(rList.studyTeamPK.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
                                             <p:commandLink styleClass="dark">
-                                                <strong>#{rList.teamMember}</strong>
+                                                <strong>#{rList.studyTeamPK.teamMember}</strong>
                                                 <br/>
                                                 <small class="cgray">
                                                     #{rList.teamRole}
@@ -123,7 +123,7 @@
                                             <div class="left">
                                                 <h:form id="frmResearchMembers" prependId="false">
                                                         <div style="margin:0;padding:0;display:inline"></div>
-                                                          <h:selectOneMenu value="#{studyManagedBean.studyGroups.teamMember}" styleClass="study_role_assign">
+                                                          <h:selectOneMenu value="#{studyManagedBean.studyGroups.studyTeamPK.teamMember}" styleClass="study_role_assign">
                                                               <f:selectItems value="#{studyManagedBean.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
                                                          </h:selectOneMenu>
                                                      
@@ -149,7 +149,7 @@
                                         <div class="span6">
                                             <img class="avatar s32" src="#{activityBean.getGravatar(gList.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
                                             <p:commandLink styleClass="dark">
-                                                <strong>#{gList.teamMember}</strong>
+                                                <strong>#{gList.studyTeamPK.teamMember}</strong>
                                                 <br/>
                                                 <small class="cgray">
                                                     #{gList.teamRole}
@@ -161,7 +161,7 @@
                                             <div class="left">
                                                 <h:form id="frmGuestMembers" prependId="false">
                                                       <div style="margin:0;padding:0;display:inline">
-                                                          <h:selectOneMenu value="#{studyManagedBean.studyGroups.teamMember}" styleClass="study_role_assign">
+                                                          <h:selectOneMenu value="#{studyManagedBean.studyGroups.studyTeamPK.teamMember}" styleClass="study_role_assign">
                                                               <f:selectItems value="#{studyManagedBean.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
                                                          </h:selectOneMenu>
                                                        </div>

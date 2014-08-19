@@ -41,7 +41,7 @@ and open the template in the editor.
     list-style-image: none; 
 }
 
-.ui-tabs .ui-tabs-panel .ui-widget-content{
+.ui-tabs .ui-tabs-panel .ui-widget-content li{
      width: 1170px !important;
      line-height: 20px;
      float: left;
@@ -61,25 +61,49 @@ and open the template in the editor.
      display: block;
      width: 1170px !important;
      min-height: 100%;
-     height: auto; 
+     height: auto !important; 
      margin: 0 0 0 0 !important;
      padding-bottom: 0px !important;
      padding-left: 0px !important;
      padding-right: 0px !important;
      padding-top: 0px !important;
+
+/*    display: inline-block;
+    width: 1170px !important;
+    min-height: 100%;
+    height: auto;
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+    float: left;*/
+
+
 }
 
 .ui-tabs .ui-tabs-panel{
-/*     position: relative; 
+     position: relative; 
      display: block;
      width: 1170px !important;
      min-height: 100%;
      height: auto; 
      margin: 0 !important;
      padding: 0 !important;
-     zoom:1;*/
-     
-     width: 1148px;
+     zoom:1;
+
+/*    float: left;
+    display: list-item;
+    text-align: left;
+    background-color: #FFF;
+    padding: 10px 10px 10px 10px;
+    min-height: 18px;
+    width: 1148px;
+    height: 42px;
+    list-style: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.0470588);
+    text-align: -webkit-match-parent;*/
+
+
+
+/*     width: 1148px;
     height: 46px;
     background-color: #FFF;
     padding: 10px 10px 10px 10px;
@@ -92,19 +116,21 @@ and open the template in the editor.
     display: list-item;
     text-align: -webkit-match-parent;
     float: left;
+    */
     
 }
 
 .ui-tabs .ui-widget-content{
     
      display: block;
-     width: 1170px !important;
-     min-height: 100%;
-     height: auto; 
-     margin: 0 0 0 0 !important;
-     padding: 0 !important;
+     width: 1170px;
+/*     min-height: 100%;*/
+     height: auto  !important; 
+     margin: 0 0 0 0;
+     padding: 0 0 0 0;
     
 }
 
 .ui-tabs-panel.disabled{color:#888;}
 .ui-tabs-panel.smoke{background-color:#f5f5f5;}
+//.ui-tabs-panel:hover{background:#d9edf7;border-bottom:1px solid #adf;}

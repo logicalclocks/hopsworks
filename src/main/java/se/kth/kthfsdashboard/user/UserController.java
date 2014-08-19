@@ -195,7 +195,7 @@ public class UserController implements Serializable {
             //return;
         }
 
-           //addMessage("Delete Operation Completed.");
+           addMessage("Delete Operation Completed.");
         
     }
 

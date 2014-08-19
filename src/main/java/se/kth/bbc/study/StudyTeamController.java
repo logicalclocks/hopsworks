@@ -41,9 +41,24 @@ public class StudyTeamController {
         return query.getResultList();
     }
     
-    public List<StudyTeam> findMembersByRole(String name, String role){
+    public List<StudyTeam> findMasterMembersByName(String name){
         //Query query = em.createNamedQuery("StudyTeam.findMembersByRole", StudyTeam.class).setParameter("name", name).setParameter("teamRole", role);
-        Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_role=?" , StudyTeam.class).setParameter(1, name).setParameter(2, role);
+        Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_role=?" , StudyTeam.class).setParameter(1, name).setParameter(2, "Master");
+        return query.getResultList();
+    
+    }
+    
+    
+    public List<StudyTeam> findResearchMembersByName(String name){
+        //Query query = em.createNamedQuery("StudyTeam.findMembersByRole", StudyTeam.class).setParameter("name", name).setParameter("teamRole", role);
+        Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_role=?" , StudyTeam.class).setParameter(1, name).setParameter(2, "Researcher");
+        return query.getResultList();
+    
+    }
+    
+    public List<StudyTeam> findGuestMembersByName(String name){
+        //Query query = em.createNamedQuery("StudyTeam.findMembersByRole", StudyTeam.class).setParameter("name", name).setParameter("teamRole", role);
+        Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_role=?" , StudyTeam.class).setParameter(1, name).setParameter(2, "Guest");
         return query.getResultList();
     
     }
@@ -82,9 +97,12 @@ public class StudyTeamController {
     public void setRoleForActiveStudy(String username, String studyname){
         // TODO
 //        Query query = em.createNamedQuery("StudyTeam.findByNameAndTeamMember", StudyTeam.class).setParameter("name", studyname).setParameter("teamMember", username);
-//        List<StudyTeam> res = query.getResultList();
-//        assert(res.size()==1);
-//        StudyTeam t = res.iterator().next();
-//        em.createQuery("insert into USERS_GROUPS values('" + username + "'," + t.getTeamRole() + ")").executeUpdate();
+        Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_member=?", StudyTeam.class).setParameter(1, studyname).setParameter(2, username);
+        List<StudyTeam> res = query.getResultList();
+        //System.out.println("Returned " + res.size() + " answers!!");
+        if (res.iterator().hasNext()) {
+            StudyTeam t = res.iterator().next();
+            em.createQuery("insert into USERS_GROUPS values('" + username + "'," + t.getTeamRole() + ")").executeUpdate();
+        }
     }    
 }

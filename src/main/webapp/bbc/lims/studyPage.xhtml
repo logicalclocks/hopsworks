@@ -41,11 +41,12 @@
 <p:layoutUnit position="center">
             <div class="container">
                 <ul class="main_menu"></ul>  
-                <div class="content">
-                    <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs">
+                <div class="content"> 
+<!--                    <h:form id="frmStudyPage">-->
+            <p:tabView id="tabStudyPage">
                         <p:tab id="showTab" title="Show">
                     <div class="study_content_list">
-                        <c:forEach var="lstActivity" items="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}">
+                        <ui:repeat var="lstActivity" value="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}">
                         <div class="event-item" align="left">
                             <span class="cgray right">
                                 13 days ago.
@@ -58,43 +59,43 @@
                                         <h:link><span class="tiny">#{lstActivity.performedBy}  /  </span><strong>#{lstActivity.activityOn}</strong></h:link>
                             </div>
                         </div>
-                            </c:forEach>
+                            </ui:repeat>
                     </div>
                     </p:tab>
                         
-                    
                      <p:tab id="teamTab" title="Team">
                          <h3 class="page_title" align="left">
                                     Team Members (#{studyManagedBean.countAllMembersPerStudy()})
                                         <span class="right_button">
+                                            <h:form id="frmBtn">
                                             <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" rendered="#{userMB.anyAdminUser}"
-                                                             onclick="window.location.href='newTeamMember.xhtml'"/>
+                                                           action="newTeamMemb"/>
+<!--                                            //onclick="window.location.href='newTeamMember.xhtml'"-->
+                                            </h:form>
                                         </span>
                             </h3>
                             <hr/>
                             <div class="clear_fixing"></div>
                             
-                            <div class="team_table">
+                            <div class="team_table"> 
                             <div class="ui_box">
                                       <h5 class="title" align="left">Masters
                                                 <small>#{studyManagedBean.countMasters()}</small></h5>
-                                                  
-                                                    <ul class="well-list">
-                                                      <c:forEach var="mlist" items="${studyManagedBean.mastersList}" begin="1" end="${studyManagedBean.countMasters()}">
-                                                        <li class="team_member_row">
+                               <ul class="well-list">
+                                  <ui:repeat var="mlist" value="#{studyManagedBean.mastersList}" varStatus="mst">
+                                   <li class="team_member_row">
                                                 <div class="row">
                                                 <div class="span6">
                                                     <img class="avatar s32" src="#{activityBean.getGravatar(mlist.studyTeamPK.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
-                                                    <p:commandLink styleClass="dark" immediate="true">
-                                                        <strong>${mlist.studyTeamPK.teamMember}</strong>
+                                                    <p:commandLink styleClass="dark">
+                                                        <strong>#{mlist.studyTeamPK.teamMember}</strong>
                                                         <br/>
                                                         <small class="cgray">
-                                                            ${mlist.teamRole}
+                                                            #{mlist.teamRole}
                                                         </small>
                                                     </p:commandLink>
                                                 </div>
                                                 <div class="span5 right">
-
                                                     <div class="left">
                                                         <h:form  class="edit_team_members">
                                                                 <div style="margin:0;padding:0;display:inline"></div>
@@ -105,27 +106,26 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </li>
-                                 </c:forEach>
-                                            </ul>
-                                                      
-                            </div>
-                                
-                                <div class="ui_box">
+                                   </li>
+                                 </ui:repeat>
+                             </ul>
+                            </div>    
+                            
+                             <div class="ui_box">
                                             <h5 class="title" align="left">Researchers
                                                 <small>#{studyManagedBean.countResearchers()}</small></h5>
                                                     
                                     <ul class="well-list">
-                                            <c:forEach var="rlist" items="${studyManagedBean.researchersList}" begin="1" end="${studyManagedBean.countResearchers()}">
-                                                 <li class="team_member_row">
+                                        <ui:repeat var="rlist" value="#{studyManagedBean.researchersList}" varStatus="rchs">
+                                            <li class="team_member_row">
                                             <div class="row">
                                                 <div class="span6">
                                                     <img class="avatar s32" src="#{activityBean.getGravatar(rlist.studyTeamPK.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
-                                                    <p:commandLink styleClass="dark" immediate="true">
-                                                        <strong>${rlist.studyTeamPK.teamMember}</strong>
+                                                    <p:commandLink styleClass="dark">
+                                                        <strong>#{rlist.studyTeamPK.teamMember}</strong>
                                                         <br/>
                                                         <small class="cgray">
-                                                            ${rlist.teamRole}
+                                                            #{rlist.teamRole}
                                                         </small>
                                                     </p:commandLink>
                                                 </div>
@@ -141,28 +141,29 @@
                                                 </div>
                                             </div>
                                         </li>
-                                            </c:forEach>
+                                            </ui:repeat>
                                     </ul>
-                                  </div> 
-
+                                  </div>  
+                           
+                            
                                 <div class="ui_box">
                                             <h5 class="title" align="left">Guests
                                                 <small>#{studyManagedBean.countGuests()}</small></h5>
                                                     <ul class="well-list">
-                                                        <c:forEach var="glist" items="${studyManagedBean.guestsList}" begin="1" end="${studyManagedBean.countGuests()}">
+                                                        <ui:repeat var="glist" value="#{studyManagedBean.guestsList}" varStatus="gut">
                                                         <li class="team_member_row">
                                             <div class="row">
                                                 <div class="span6">
                                                     <img class="avatar s32" src="#{activityBean.getGravatar(glist.studyTeamPK.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
-                                                    <p:commandLink styleClass="dark" immediate="true">
-                                                        <strong>${glist.studyTeamPK.teamMember}</strong>
+                                                    <p:commandLink styleClass="dark">
+                                                        <strong>#{glist.studyTeamPK.teamMember}</strong>
                                                         <br/>
                                                         <small class="cgray">
-                                                            ${glist.teamRole}
+                                                           #{glist.teamRole}
                                                         </small>
                                                     </p:commandLink>
-                                                </div>
-                                                <div class="span5 right">
+                                                </div> 
+                                                <div class="span5 right"> 
 
                                                     <div class="left">
                                                         <h:form class="edit_team_members">
@@ -173,15 +174,15 @@
                                                         </h:form>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </div> 
                                         </li>
-                                                            </c:forEach>
+                                                            </ui:repeat>
                                             </ul>
-                        </div>
-                            </div> 
-                        </p:tab>
+                                </div>
+                            </div>
+                     </p:tab>
                     </p:tabView>
-
+<!--                </h:form>-->
                 </div>
             </div>
 </p:layoutUnit>

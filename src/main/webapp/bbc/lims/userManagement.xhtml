@@ -13,7 +13,7 @@
         <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
         <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-         <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+<!--         <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />-->
     </h:head>
 
 <h:body>
@@ -46,10 +46,14 @@
                 <div class="content">
                     <p:tabView id="tabViewNew" dynamic="true" styleClass="ui-tabs">
         <p:tab title="Registered Users" id="Registered">
+            <h:form id="userdataForm">
+                <p:contextMenu for="userdataTable">
+                    <p:menuitem value="View" update="userDetail" icon="ui-icon-search" oncomplete="PF('userDialog').show()"/>
+                    <p:menuitem value="Delete" update="userdataTable" icon="ui-icon-close" actionListener="#{userController.deleteUser()}"/>
+                </p:contextMenu>
           <p:growl id="growl" life="2000"/>
-<!--               <h:panelGrid id="userdata" columns="4">                   -->
                         <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
-                                     selectionMode="single" rowKey="#{user.email}" selection="#{userController.selectedUser}" styleClass="ui-datatable">
+                                     selectionMode="single" rowKey="#{user.email}" selection="#{userController.selectedUser}">
                                         
                                                    <f:facet name="header">
                                                        <p:outputPanel>
@@ -58,30 +62,29 @@
                                                        </p:outputPanel>
                                                    </f:facet>
                                         
-                                        
-                                                   <p:column id="nameColumn" filterBy="name" headerText="Name" style="width:120px">
+                                                   <p:column id="nameColumn" filterBy="name" headerText="Name" style="width:120px; font-size: 12px;">
                                                         <h:outputText value="#{user.name}" />
                                                     </p:column>
                                         
-                                                    <p:column id="emailColumn" filterBy="email" headerText="Email" style="width:120px">
+                                                    <p:column id="emailColumn" filterBy="email" headerText="Email" style="width:120px;font-size: 12px;">
                                                         <h:outputText value="#{user.email}" />
                                                     </p:column>
                                         
-                                                    <p:column id="usernameColumn" headerText="Username" style="width:120px">
+                                                    <p:column id="usernameColumn" headerText="Username" style="width:120px;font-size: 12px;">
                                                         <h:outputText value="#{user.username}" />
                                                     </p:column>
                                         
-                                                    <p:column id="mobileNumColumn" headerText="Mobile Number">
+                                                    <p:column id="mobileNumColumn" headerText="Mobile Number" style="width:120px;font-size: 12px;">
                                                         <h:outputText value="#{user.mobileNum}" />
                                                     </p:column>
                                                                                          
                                          </p:dataTable>
-                                             <f:facet name="footer">
+<!--                                             <f:facet name="footer">
                                                         <p:commandButton value="Delete" update="userdata" icon="ui-icon-search" style="margin-right:10px" oncomplete="PF('userDialog').show()"/>
-                                             </f:facet>
+                                             </f:facet>-->
                                                                                    
                                       <p:dialog id="dialog" header="Selected User" widgetVar="userDialog" draggable="true" resizable="false" width="350" showEffect="clip" hideEffect="fold">
-
+                                            <p:outputPanel id="userDetail" style="text-align:center;">
                                               <h:panelGrid id="display" columns="2" cellpadding="4">
 
                                                   <h:outputText value="Name:" />
@@ -97,61 +100,69 @@
                                                   <h:outputText value="#{userController.selectedUser.registeredOn}" />
 
                                              </h:panelGrid>
-                                         
-                                          <f:facet name="footer">
+                                            </p:outputPanel>
+<!--                                          <f:facet name="footer">
                                                       <h:outputText id="deletemsg" value="Are you sure you want to remove this user?" />
                                                       <p:commandButton value="Confirm" update="growl" icon="ui-icon-close" style="margin-right:10px" action="#{userController.deleteUser()}"
                                                                        actionListener="#{userController.confirmMessage}" oncomplete="PF('userDialog').hide()"/>
-                                          </f:facet>
-                                          
+                                          </f:facet>-->
                                     </p:dialog>
-<!--                                </h:panelGrid>-->
-<!--                                   </h:form>   -->
+                                   </h:form>   
                               </p:tab>                 
-  
                         
             <p:tab title="Add New Users" id="New">
-                <p:messages  autoUpdate="true" closable="true"/>
-                       <h:panelGrid id="grid" columns="4" cellpadding="5">    
-                           
-                  
-                            <h:outputLabel for="name" value="Name:" style="font-weight:bold"/>					
-                            <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}" autocomplete="off" validatorMessage="Name cannot be empty"/>
-                            <p:message for="name" />
-                            <h:outputText value=""/>
-
-                            <h:outputLabel for="email" value="Email:" style="font-weight:bold"/>					
-                            <p:inputText id="email"  required="true" label="Email" value="#{userController.user.email}" autocomplete="off" validatorMessage="Not a valid email">
-                                <f:validateRegex pattern="([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)" />
-                            </p:inputText>
-                            <p:message for="email" />
-                            <h:outputText value=""/>
-
-                            <h:outputLabel for="uname" value="Username:" style="font-weight:bold"/>					
-                            <p:inputText id="uname" required="true" label="Username" value="#{userController.user.username}" autocomplete="off" validatorMessage="Username cannot be empty">
-                            </p:inputText>
-                            <p:message for="uname" />
-                            <h:outputText value=""/>
-
-                            <h:outputLabel for="password" value="Password:" style="font-weight:bold"/>					
-                            <p:password id="password" label="password" required="true" value="#{userController.user.password}" validatorMessage="password is required">
-                            </p:password>
-                            <p:message for="password" />
-                            <h:outputText value=""/>
+                 <h3 class="page_title" align="left">
+                                     Add New User
+                              </h3>
+                            <hr/>
+                            <h:form id="frmUserData" class="new_user_content">
+                                           <div class="clear_fix">
+                                               <label for="team_member_user_ids">Name</label>
+<!--                                                <div class="input">-->
+                                                    <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}" autocomplete="off" validatorMessage="Name cannot be empty" style="font-size: 12px;"/>
+<!--                                                 </div>-->
+                                                </div>
                                 
-                            <h:outputLabel for="mobile" value="Mobile Number:" style="font-weight:bold"/>					
-                            <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" autocomplete="off" validatorMessage="Only Numbers (10 digits)">
-                                <f:validateRegex pattern="[0-9]{1,10}"/>                                
-                            </p:inputText>
-                            <p:message for="mobile"/>
-                            <h:outputText value=""/>                     
-                     </h:panelGrid>
-                   
-            <p:panel>           
-                   <f:facet name="footer">
-                       <p:commandButton update="grid" value="Add" icon="ui-icon-plus" style="margin-right:10px" action="#{userController.addUser()}" validateClient="true"/>
-                   </f:facet> 
-             </p:panel>
+                                           <div class="clear_fix">
+                                               <label for="team_member_user_ids">Email</label>
+<!--                                               <div class="input">-->
+                                                <p:inputText id="email"  required="true" label="Email" value="#{userController.user.email}" autocomplete="off" validatorMessage="Not a valid email" style="font-size: 12px;">
+                                                        <f:validateRegex pattern="([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)" />
+                                                </p:inputText>
+<!--                                                 </div>   -->
+                                           </div>
+                                
+                                           <div class="clear_fix">
+                                                <label for="team_member_user_ids">Username</label>
+<!--                                                <div class="input">-->
+                                                <p:inputText id="uname" required="true" label="Username" value="#{userController.user.username}" autocomplete="off" validatorMessage="Username cannot be empty" style="font-size: 12px;">
+                                                 </p:inputText>
+<!--                                                </div>    -->
+                                           </div>
+                                
+                                           <div class="clear_fix">
+                                                <label for="team_member_user_ids">Password</label>
+<!--                                                <div class="input">-->
+                                                <p:password id="password" label="password" required="true" value="#{userController.user.password}" validatorMessage="password is required">
+                                                </p:password>
+<!--                                                </div>    -->
+                                           </div>
+                                
+                                             <div class="clear_fix">
+                                                <label for="team_member_user_ids">Mobile Number</label>
+<!--                                                <div class="input">-->
+                                                <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" autocomplete="off" validatorMessage="Only Numbers (10 digits)" style="font-size: 12px;">
+                                                    <f:validateRegex pattern="[0-9]{1,10}"/>                                
+                                                </p:inputText>
+<!--                                                </div>    -->
+                                           </div>
+                                
+                                
+                                           <div class="actions">
+                                               <h:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{userController.addUser()}"/>
+                                           </div>
+                         </h:form>     
+          
           </p:tab>
                  </p:tabView>
   </div>
