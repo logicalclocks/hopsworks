@@ -78,6 +78,14 @@ public class StudyController {
 //     
 //     }
 //     
+    
+    public List<TrackStudy> findAllStudies(String user){
+    
+        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE username=? UNION SELECT name, team_member FROM StudyTeam WHERE team_member=?",TrackStudy.class).setParameter(1, user).setParameter(2, user);
+        return query.getResultList();
+    }
+    
+    
     public void persistStudy(TrackStudy study) {
         em.persist(study);
     }

@@ -44,7 +44,7 @@
     <div class="container">
           <ul class="main_menu"></ul>
                 <div class="content">
-                    <p:tabView id="tabViewNew" dynamic="true" styleClass="ui-tabs">
+                    <p:tabView id="tabViewNew" dynamic="true" cache="false" styleClass="ui-tabs">
         <p:tab title="Registered Users" id="Registered">
             <h:form id="userdataForm">
                 <p:contextMenu for="userdataTable">
@@ -115,54 +115,88 @@
                                      Add New User
                               </h3>
                             <hr/>
-                            <h:form id="frmUserData" class="new_user_content">
-                                           <div class="clear_fix">
+<!--                            <div class="span9">-->
+<!--                            <h:form id="frmUserData" class="new_user_content">-->
+<!--                                           <div class="clear_fix">
                                                <label for="team_member_user_ids">Name</label>
-<!--                                                <div class="input">-->
+                                                <div class="input">
                                                     <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}" autocomplete="off" validatorMessage="Name cannot be empty" style="font-size: 12px;"/>
-<!--                                                 </div>-->
+                                                 </div>
                                                 </div>
-                                
                                            <div class="clear_fix">
                                                <label for="team_member_user_ids">Email</label>
-<!--                                               <div class="input">-->
+                                               <div class="input">
                                                 <p:inputText id="email"  required="true" label="Email" value="#{userController.user.email}" autocomplete="off" validatorMessage="Not a valid email" style="font-size: 12px;">
                                                         <f:validateRegex pattern="([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)" />
                                                 </p:inputText>
-<!--                                                 </div>   -->
+                                                 </div>   
                                            </div>
                                 
                                            <div class="clear_fix">
                                                 <label for="team_member_user_ids">Username</label>
-<!--                                                <div class="input">-->
+                                                <div class="input">
                                                 <p:inputText id="uname" required="true" label="Username" value="#{userController.user.username}" autocomplete="off" validatorMessage="Username cannot be empty" style="font-size: 12px;">
                                                  </p:inputText>
-<!--                                                </div>    -->
+                                                </div>    
                                            </div>
                                 
                                            <div class="clear_fix">
                                                 <label for="team_member_user_ids">Password</label>
-<!--                                                <div class="input">-->
+                                                <div class="input">
                                                 <p:password id="password" label="password" required="true" value="#{userController.user.password}" validatorMessage="password is required">
                                                 </p:password>
-<!--                                                </div>    -->
+                                                </div>    
                                            </div>
                                 
                                              <div class="clear_fix">
                                                 <label for="team_member_user_ids">Mobile Number</label>
-<!--                                                <div class="input">-->
+                                                <div class="input">
                                                 <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" autocomplete="off" validatorMessage="Only Numbers (10 digits)" style="font-size: 12px;">
                                                     <f:validateRegex pattern="[0-9]{1,10}"/>                                
                                                 </p:inputText>
-<!--                                                </div>    -->
+                                                </div>    
                                            </div>
+                                -->
+                                <h:form id="frmUserData" class="new_user_content">
+                                    <h:panelGrid id="grid" columns="2" style="height: auto !important; width: 480px; font-size: 12px;" styleClass="ui-tabs-panel">    
+                                        <h:outputLabel for="name" value="Name:" style="font-weight:bold"/>					
+                                        <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}" autocomplete="off" validatorMessage="Name cannot be empty"/>
+                                        <p:message for="name" />
+                                        <h:outputText value=""/>
+
+                                        <h:outputLabel for="email" value="Email:" style="font-weight:bold"/>					
+                                        <p:inputText id="email"  required="true" label="Email" value="#{userController.user.email}" autocomplete="off" validatorMessage="Not a valid email">
+                                            <f:validateRegex pattern="([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)" />
+                                        </p:inputText>
+                                        <p:message for="email" />
+                                        <h:outputText value=""/>
+
+                                        <h:outputLabel for="uname" value="Username:" style="font-weight:bold"/>					
+                                        <p:inputText id="uname" required="true" label="Username" value="#{userController.user.username}" autocomplete="off" validatorMessage="Username cannot be empty">
+                                        </p:inputText>
+                                        <p:message for="uname" />
+                                        <h:outputText value=""/>
+
+                                        <h:outputLabel for="password" value="Password:" style="font-weight:bold"/>					
+                                        <p:password id="password" label="password" required="true" value="#{userController.user.password}" validatorMessage="password is required">
+                                        </p:password>
+                                        <p:message for="password" />
+                                        <h:outputText value=""/>
+
+                                        <h:outputLabel for="mobile" value="Mobile Number:" style="font-weight:bold"/>					
+                                        <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" autocomplete="off" validatorMessage="Only Numbers (10 digits)">
+                                            <f:validateRegex pattern="[0-9]{1,10}"/>                                
+                                        </p:inputText>
+                                        <p:message for="mobile"/>
+                                        <h:outputText value=""/> 
+                                </h:panelGrid>
                                 
                                 
                                            <div class="actions">
                                                <h:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{userController.addUser()}"/>
                                            </div>
-                         </h:form>     
-          
+                             </h:form>     
+<!--                            </div>-->
           </p:tab>
                  </p:tabView>
   </div>

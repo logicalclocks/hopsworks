@@ -188,6 +188,10 @@ public class StudyMB implements Serializable {
         return studyController.filterLatestStudy(getUsername());
     }
     
+     public int getLatestStudyListSize(){
+        return studyController.filterLatestStudy(getUsername()).size();
+    }
+    
     public List<Theme> completeUsername(String query) {
          List<Theme> allThemes = service.getThemes();
          List<Theme> filteredThemes = new ArrayList<Theme>();
@@ -307,6 +311,14 @@ public class StudyMB implements Serializable {
         return studyTeamController.findMembersByStudy(studyName);
     }
     
+    
+    public List<TrackStudy> getAllStudiesPerUser(){
+        return studyController.findAllStudies(getUsername());
+    }
+
+    public List<StudyTeam> getJoinedStudies(){
+        return studyTeamController.findByMember(getUsername());
+    }
     
      
     //create a study       

@@ -11,7 +11,7 @@
 }
 
 .BbcMainLayout {
-    text-align: center;
+    //text-align: center;
     //height: 640px;
     height: auto !important;
     
@@ -1322,6 +1322,17 @@ img .avatar .s32 {
     margin-left: 30px;
 }
 
+.span9{
+    display: block;
+    width: 1140px;
+    //min-height: 2802px;
+    min-height: 600px;
+    height: auto !important;
+    float: left;
+    min-height: 1px;
+    margin-left: 30px;
+}
+
 .event_filter {
     display: block;
     position: absolute;
@@ -1403,7 +1414,7 @@ event_filter .filter_icon a {
     //background: #F9F9F9;
     width:470px;
 /*    min-height: 368px;*/
-    min-height: 100%;
+    min-height: 470px;
     height: auto !important;
 }
 

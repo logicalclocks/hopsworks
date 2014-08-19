@@ -19,7 +19,11 @@
     </h:head>
     
 <h:body>
-    
+    <script>
+            $( "h3" ).click(function() {
+              $( this ).slideUp();
+            });
+</script>
     <h:form class="stylelayout" id="formToolbar">  
             <p:toolbar styleClass="MainToolbar">  
                 <p:toolbarGroup align="left">  
@@ -50,7 +54,7 @@
 <div class="container"> 
     <ul class="main_menu"></ul>
 <div class="content"> 
-      <h:form id="frmIndexPage">
+<!--      <h:form id="frmIndexPage">-->
     <div class="study">
         <div class="span8">
             <div class="event_filter">
@@ -81,31 +85,55 @@
             </span>
         </h3>
     
-<p:tabView id="tabViewSummary" dynamic="true" styleClass="ui-tabs" cache="false">
+        
+        
+        
+        <p:tabView id="tabViewSummary" styleClass="ui-tabs" dynamic="true" cache="false">
  <p:tab id="allTab" title="All">
-  
-            <c:forEach var="list" items="#{studyManagedBean.latestStudyList}">
+<!--     <h:form id="all" prependId="false">-->
+<ui:repeat var="aList" value="#{studyManagedBean.allStudiesPerUser}" varStatus="allStatus">
                 <li class="ui-tabs-panel">
-            <h:commandLink action="#{studyManagedBean.fetchStudy()}">
-                <span class="tiny">#{list.username}</span> / <strong>#{list.name}</strong>
-                        <f:param id="studyName" name="studyname" value="#{list.name}"/>
-                        <f:param id="username" name="username" value="#{list.username}"/>
-          </h:commandLink>
+            <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                <span class="tiny">#{aList.username}</span> / <strong>#{aList.name}</strong>
+                <f:param id="studyName_${allStatus.count}" name="studyname" value="#{aList.name}"/>
+                <f:param id="username_${allStatus.count}" name="username" value="#{aList.username}"/>
+          </p:commandLink>
                 </li> 
-            </c:forEach>
+            </ui:repeat>
+<!--     </h:form>-->
     </p:tab>
     <p:tab id="personalTab" title="Personal">
-         
-         
+<!--        <h:form id="personel" prependId="false">-->
+<ui:repeat var="pList" value="#{studyManagedBean.latestStudyList}" varStatus="personalStatus">
+                <li class="ui-tabs-panel">
+            <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                <span class="tiny">#{pList.username}</span> / <strong>#{pList.name}</strong>
+                        <f:param id="studyName_${personalStatus.count}" name="studyname" value="#{pList.name}"/>
+                        <f:param id="username_${personalStatus.count}" name="username" value="#{pList.username}"/>
+          </p:commandLink>
+                </li> 
+            </ui:repeat>
+<!--         </h:form>-->
      </p:tab>
-     <p:tab id="joinedTab" title="Joined"></p:tab>
+            <p:tab id="joinedTab" title="Joined">
+                <ui:repeat var="jList" value="#{studyManagedBean.joinedStudies}" varStatus="joinStatus">
+                <li class="ui-tabs-panel">
+                    <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                        <span class="tiny">#{jList.studyTeamPK.teamMember}</span> / <strong>#{jList.studyTeamPK.name}</strong>
+                        <f:param id="studyName_${joinStatus.count}" name="studyname" value="#{jList.studyTeamPK.name}"/>
+                        <f:param id="username_${joinStatus.count}" name="username" value="#{jList.studyTeamPK.teamMember}"/>
+                  </p:commandLink>
+                </li> 
+            </ui:repeat>
+                
+            </p:tab>
 </p:tabView>
     </div>
         
 </div>
 
 </div>
-      </h:form>
+<!--      </h:form>-->
 </div>
 </div>
     </p:layoutUnit>
