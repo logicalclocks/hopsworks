@@ -37,16 +37,25 @@
             </p:toolbar> 
         </h:form>
     
+<!--    <script>
+        $("#tabStudyPage teamTab(#{currentData.SP_Index})").click();
+    </script>-->
+    
+    
 <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
 <p:layoutUnit position="center">
+   
             <div class="container">
                 <ul class="main_menu"></ul>  
                 <div class="content"> 
-<!--                    <h:form id="frmStudyPage">-->
-            <p:tabView id="tabStudyPage">
-                        <p:tab id="showTab" title="Show">
+<!--                                 <h:form id="shit" prependId="false"> -->
+                    <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs">
+<!--    <p:ajax event="tabChange" listener="#{studyManagedBean.onTabChange}" update=":teamTab"/>-->
+<!--     <p:ajax event="tabChange" update="@(.ui_box)" process="@(.ui_box)"/>-->
+<!--<f:ajax event="tabChange" execute=":tabStudyPage:teamTab" render=":tabStudyPage:teamTab"/>-->
+    <p:tab id="showTab" title="Show">
                     <div class="study_content_list">
-                        <ui:repeat var="lstActivity" value="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}">
+                        <ui:repeat var="lstActivity" value="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}" varStatus="showAll">
                         <div class="event-item" align="left">
                             <span class="cgray right">
                                 13 days ago.
@@ -61,10 +70,11 @@
                         </div>
                             </ui:repeat>
                     </div>
-                    </p:tab>
+            </p:tab>
                         
-                     <p:tab id="teamTab" title="Team">
-                         <h3 class="page_title" align="left">
+     <p:tab id="teamTab" title="Team">
+       
+         <h3 class="page_title" align="left">
                                     Team Members (#{studyManagedBean.countAllMembersPerStudy()})
                                         <span class="right_button">
                                             <h:form id="frmBtn">
@@ -77,13 +87,14 @@
                             <hr/>
                             <div class="clear_fixing"></div>
                             
-                            <div class="team_table"> 
-                            <div class="ui_box">
+                            <div id="divTeam" class="team_table"> 
+                                <h:panelGroup id="divMaster" styleClass="ui_box">
+<!--                            <div id="divMaster" class="ui_box">-->
                                       <h5 class="title" align="left">Masters
                                                 <small>#{studyManagedBean.countMasters()}</small></h5>
                                <ul class="well-list">
                                   <ui:repeat var="mlist" value="#{studyManagedBean.mastersList}" varStatus="mst">
-                                   <li class="team_member_row">
+                                      <li id="team_member_row_${mst.count}" class="team_member_row">
                                                 <div class="row">
                                                 <div class="span6">
                                                     <img class="avatar s32" src="#{activityBean.getGravatar(mlist.studyTeamPK.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
@@ -97,7 +108,7 @@
                                                 </div>
                                                 <div class="span5 right">
                                                     <div class="left">
-                                                        <h:form  class="edit_team_members">
+                                                        <h:form id="frmMaster_${mst.count}" class="edit_team_members">
                                                                 <div style="margin:0;padding:0;display:inline"></div>
                                                                 <h:selectOneMenu value="#{studyManagedBean.studyGroups.studyTeamPK.teamMember}" styleClass="study_role_assign">
                                                                     <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms.team}"/>
@@ -109,15 +120,17 @@
                                    </li>
                                  </ui:repeat>
                              </ul>
-                            </div>    
+                                </h:panelGroup>
+<!--                            </div>    -->
                             
-                             <div class="ui_box">
+<!--                                <div id="divRech" class="ui_box">-->
+                                    <h:panelGroup id="divRech" styleClass="ui_box">
                                             <h5 class="title" align="left">Researchers
                                                 <small>#{studyManagedBean.countResearchers()}</small></h5>
                                                     
                                     <ul class="well-list">
                                         <ui:repeat var="rlist" value="#{studyManagedBean.researchersList}" varStatus="rchs">
-                                            <li class="team_member_row">
+                                            <li id="researchers_${rchs.count}" class="team_member_row">
                                             <div class="row">
                                                 <div class="span6">
                                                     <img class="avatar s32" src="#{activityBean.getGravatar(rlist.studyTeamPK.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
@@ -131,7 +144,7 @@
                                                 </div>
                                                 <div class="span5 right">
                                                     <div class="left">
-                                                        <h:form class="edit_team_members">
+                                                        <h:form id="frmRchs_${rchs.count}" class="edit_team_members">
                                                                 <div style="margin:0;padding:0;display:inline"></div>
                                                                   <h:selectOneMenu value="#{studyManagedBean.studyGroups.studyTeamPK.teamMember}" styleClass="study_role_assign">
                                                                       <f:selectItems value="#{studyManagedBean.team}" var="rc" itemLabel="#{rc.team}" itemValue="#{rc.team}"/>
@@ -143,15 +156,17 @@
                                         </li>
                                             </ui:repeat>
                                     </ul>
-                                  </div>  
+                                    </h:panelGroup>
+<!--                                  </div>  -->
                            
                             
-                                <div class="ui_box">
-                                            <h5 class="title" align="left">Guests
+<!--                                <div id="divGust" class="ui_box">-->
+                                    <h:panelGroup id="divGust" styleClass="ui_box">
+                                    <h5 class="title" align="left">Guests
                                                 <small>#{studyManagedBean.countGuests()}</small></h5>
                                                     <ul class="well-list">
                                                         <ui:repeat var="glist" value="#{studyManagedBean.guestsList}" varStatus="gut">
-                                                        <li class="team_member_row">
+                                                        <li id="guests_${gut.count}" class="team_member_row">
                                             <div class="row">
                                                 <div class="span6">
                                                     <img class="avatar s32" src="#{activityBean.getGravatar(glist.studyTeamPK.teamMember)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
@@ -166,7 +181,7 @@
                                                 <div class="span5 right"> 
 
                                                     <div class="left">
-                                                        <h:form class="edit_team_members">
+                                                        <h:form id="frm_${gut.count}" class="edit_team_members">
                                                                 <div style="margin:0;padding:0;display:inline"></div>
                                                                   <h:selectOneMenu value="#{studyManagedBean.studyGroups.studyTeamPK.teamMember}" styleClass="study_role_assign">
                                                                       <f:selectItems value="#{studyManagedBean.team}" var="gs" itemLabel="#{gs.team}" itemValue="#{gs.team}"/>
@@ -176,15 +191,17 @@
                                                 </div>
                                             </div> 
                                         </li>
-                                                            </ui:repeat>
+                                        </ui:repeat>
                                             </ul>
-                                </div>
+<!--                                </div>-->
+                                    </h:panelGroup>
                             </div>
                      </p:tab>
                     </p:tabView>
-<!--                </h:form>-->
+<!--                      </h:form>      -->
                 </div>
             </div>
+
 </p:layoutUnit>
 </p:layout>
 </h:body>

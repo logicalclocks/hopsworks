@@ -66,8 +66,6 @@ public class StudyTeamController {
     //filter all members based on study name
     public List<StudyTeam> findMembersByStudy(String name){
         Query query = em.createNamedQuery("StudyTeam.findMembersByName", StudyTeam.class).setParameter("name", name);
-        //Query query = em.createNativeQuery("select * from StudyTeam where name like \"BB%\"", StudyTeam.class); 
-       
         return query.getResultList();
     
     }

@@ -23,11 +23,14 @@ import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletRequest;
+import org.primefaces.component.tabview.TabView;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
+import org.primefaces.event.TabChangeEvent;
 import se.kth.bbc.activity.ActivityMB;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
@@ -320,13 +323,19 @@ public class StudyMB implements Serializable {
         return studyTeamController.findByMember(getUsername());
     }
     
-     
+    
+    public List<StudyTeam> getTeamList(){
+        return studyTeamController.findMembersByStudy(studyName);
+    }
+    
+    
+    
+    
     //create a study       
     public String createStudy(){
         
         study.setUsername(getUsername());
         study.setTimestamp(new Date());
-        
         try{
             studyController.persistStudy(study);
         }catch (EJBException ejb) {
@@ -335,6 +344,7 @@ public class StudyMB implements Serializable {
         }
         addMessage("Study created! ["+ study.getName() + "] study is owned by " + study.getUsername());
         activity.addActivity("new study created", study.getName(),"STUDY");
+        addStudyMaster(study.getName());
         return "Success!";
     }
     
@@ -351,6 +361,23 @@ public class StudyMB implements Serializable {
         return "studyPage";
     
     }
+    
+    
+    public void addStudyMaster(String study_name){
+    
+        StudyTeamPK stp = new StudyTeamPK(study_name, getUsername());
+        StudyTeam st = new StudyTeam(stp);
+        st.setTeamRole("Master");
+        st.setTimestamp(new Date());
+        
+        try{
+            studyTeamController.persistStudyTeam(st);
+        }catch (EJBException ejb) {
+            System.out.println("Add study master failed"+ejb.getMessage());
+        }
+            System.out.println("Add study master success!");
+    }
+    
     
     //delete a study
     public String deleteStudy(){
@@ -424,6 +451,57 @@ public class StudyMB implements Serializable {
     
     
     //Study View Controller
+    
+    
+    private Integer activeTabIndex = 0;
+    
+    public Integer getActiveTabIndex() {
+       return activeTabIndex;
+    }
+    public void setActiveTabIndex(Integer activeTabIndex) {
+        this.activeTabIndex = activeTabIndex;
+    }
+    
+    
+    
+//    public void onTabChange(TabChangeEvent event) {  
+//     
+//        TabView tabView = (TabView) event.getComponent();
+//        currentData.setSP_Index(tabView.getChildren().indexOf(event.getTab())+1);
+//    } 
+    
+//    public void onTabChange(TabChangeEvent event) 
+//    {   
+//        TabView tabView = (TabView) event.getComponent();
+//        activeTabIndex = tabView.getChildren().indexOf(event.getTab());
+//    }
+    
+//    public void onTabChange(TabChangeEvent event) {
+//        FacesMessage msg = new FacesMessage("Tab Changed", "Active Tab: " + event.getTab().getTitle());
+//        FacesContext.getCurrentInstance().addMessage(null, msg);
+//    }
+//    
+    
+    
+    private int tabIndex = 1;
+    
+    public boolean handleTabChange() {
+        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+        String index = externalContext.getRequestParameterMap().get("tabIndex");
+        setTabIndex(Integer.parseInt(index));
+        return true;
+    }
+    
+    public int getTabIndex() {
+        return tabIndex;
+    }
+    public void setTabIndex(int tabIndex) {
+        this.tabIndex = tabIndex;
+    }
+    
+    
+    
+    
     
     public void save(ActionEvent actionEvent) {
                createStudy();               

@@ -13,7 +13,12 @@
         <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
         <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-<!--         <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />-->
+         <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+<!--        <style type="text/css">
+        .ui-layout, .ui-layout-doc, .ui-layout-unit, .ui-layout-wrap, .ui-layout-bd, .ui-layout-hd{
+             border: none;
+        }
+    </style>-->
     </h:head>
 
 <h:body>
@@ -38,9 +43,9 @@
             </p:toolbar> 
  </h:form>
 
-<p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+    <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser">  
 
-<p:layoutUnit position="center">
+    <p:layoutUnit position="center">
     <div class="container">
           <ul class="main_menu"></ul>
                 <div class="content">
@@ -62,19 +67,19 @@
                                                        </p:outputPanel>
                                                    </f:facet>
                                         
-                                                   <p:column id="nameColumn" filterBy="name" headerText="Name" style="width:120px; font-size: 12px;">
+                                                   <p:column id="nameColumn" filterBy="name" headerText="Name" style="width:273px; font-size: 12px; text-align: left;">
                                                         <h:outputText value="#{user.name}" />
                                                     </p:column>
                                         
-                                                    <p:column id="emailColumn" filterBy="email" headerText="Email" style="width:120px;font-size: 12px;">
+                                                    <p:column id="emailColumn" filterBy="email" headerText="Email" style="width:273px;font-size: 12px;text-align: left;">
                                                         <h:outputText value="#{user.email}" />
                                                     </p:column>
                                         
-                                                    <p:column id="usernameColumn" headerText="Username" style="width:120px;font-size: 12px;">
+                                                    <p:column id="usernameColumn" headerText="Username" style="width:273px;font-size: 12px;text-align: left;">
                                                         <h:outputText value="#{user.username}" />
                                                     </p:column>
                                         
-                                                    <p:column id="mobileNumColumn" headerText="Mobile Number" style="width:120px;font-size: 12px;">
+                                                    <p:column id="mobileNumColumn" headerText="Mobile Number" style="width:273px;font-size: 12px;text-align: left;">
                                                         <h:outputText value="#{user.mobileNum}" />
                                                     </p:column>
                                                                                          
@@ -87,16 +92,16 @@
                                             <p:outputPanel id="userDetail" style="text-align:center;">
                                               <h:panelGrid id="display" columns="2" cellpadding="4">
 
-                                                  <h:outputText value="Name:" />
+                                                  <h:outputText value="Name:" style="font-size: 12px;font-weight: bold;text-align: left;" />
                                                   <h:outputText value="#{userController.selectedUser.name}" />
 
-                                                  <h:outputText value="Email:" />
+                                                  <h:outputText value="Email:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
                                                   <h:outputText value="#{userController.selectedUser.email}" />
 
-                                                  <h:outputText value="Username:" />
+                                                  <h:outputText value="Username:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
                                                   <h:outputText value="#{userController.selectedUser.username}" />
                                                   
-                                                  <h:outputText value="Registered On:" />
+                                                  <h:outputText value="Registered On:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
                                                   <h:outputText value="#{userController.selectedUser.registeredOn}" />
 
                                              </h:panelGrid>
@@ -158,7 +163,7 @@
                                            </div>
                                 -->
                                 <h:form id="frmUserData" class="new_user_content">
-                                    <h:panelGrid id="grid" columns="2" style="height: auto !important; width: 480px; font-size: 12px;" styleClass="ui-tabs-panel">    
+                                    <h:panelGrid id="grid" columns="2" style="font-size: 12px;">    
                                         <h:outputLabel for="name" value="Name:" style="font-weight:bold"/>					
                                         <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}" autocomplete="off" validatorMessage="Name cannot be empty"/>
                                         <p:message for="name" />

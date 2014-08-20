@@ -11,9 +11,9 @@
 }
 
 .BbcMainLayout {
-    //text-align: center;
-    //height: 640px;
-    height: auto !important;
+    text-align: center;
+    min-height: 100%;
+    //height: auto !important;
     
 /*    display: -webkit-box;
     display: -moz-box;
