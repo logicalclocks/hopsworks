@@ -237,6 +237,40 @@
             <role-name>BBC_RESEARCHER</role-name>
         </auth-constraint>
     </security-constraint>
+    
+    
+    <!-- Security role definitions and access control for study users -->
+    
+    <security-role>
+        <role-name>MASTER</role-name>
+    </security-role>
+    <security-role>
+        <role-name>RESEARCH_ADMIN</role-name>
+    </security-role>
+    <security-role>
+        <role-name>RESEARCHER</role-name>
+    </security-role>
+    <security-role>
+        <role-name>GUEST</role-name>
+    </security-role>
+    <security-role>
+        <role-name>AUDITOR</role-name>
+    </security-role>
+    
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Policy for adding new members for a study</web-resource-name>
+            <url-pattern>/bbc/lims/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>MASTER</role-name>
+        </auth-constraint>
+    </security-constraint>
+    
+    
+    
+    
+    
     <login-config>
         <auth-method>BASIC</auth-method>
         <realm-name>DBRealm</realm-name>

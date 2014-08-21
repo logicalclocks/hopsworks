@@ -49,11 +49,11 @@
                 <ul class="main_menu"></ul>  
                 <div class="content"> 
 <!--                                 <h:form id="shit" prependId="false"> -->
-<p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs">
+<p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs" binding="#{studyManagedBean.messagesTab}">
 <!--    <p:ajax event="tabChange" listener="#{studyManagedBean.onTabChange}" update=":teamTab"/>-->
-<!--     <p:ajax event="tabChange" update=":tabStudyPage:teamTab" process="@this"/>-->
+    <p:ajax event="tabChange" listener="#{studyManagedBean.onTabChange}"/>
 <!--<f:ajax event="tabChange" execute=":tabStudyPage:teamTab" render=":tabStudyPage:teamTab"/>-->
-    <p:tab id="showTab" title="Show">
+    <p:tab id="showTab1" title="Show">
                     <div class="study_content_list">
                         <ui:repeat var="lstActivity" value="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}" varStatus="showAll">
                         <div class="event-item" align="left">
@@ -72,7 +72,7 @@
                     </div>
             </p:tab>
                         
-<p:tab id="teamTab" title="Team">
+<p:tab id="teamTab1" title="Team">
        
          <h3 class="page_title" align="left">
                                     Team Members (#{studyManagedBean.countAllMembersPerStudy()})

@@ -59,6 +59,15 @@
         <div class="span8">
             <div class="event_filter">
                 <div class="filter-icon">
+                    <p:commandLink>
+                       <i class="icon-delete icon-white"/>
+                    </p:commandLink>
+                </div>
+                <div class="filter-icon">
+                    <p:commandLink/>
+                </div>
+                <div class="filter-icon">
+                    <p:commandLink/>
                 </div>
             </div>
             <div class="content_list">
@@ -119,9 +128,9 @@
                 <ui:repeat var="jList" value="#{studyManagedBean.joinedStudies}" varStatus="joinStatus">
                 <li class="ui-tabs-panel">
                     <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                        <span class="tiny">#{jList.studyTeamPK.teamMember}</span> / <strong>#{jList.studyTeamPK.name}</strong>
-                        <f:param id="studyName_${joinStatus.count}" name="studyname" value="#{jList.studyTeamPK.name}"/>
-                        <f:param id="username_${joinStatus.count}" name="username" value="#{jList.studyTeamPK.teamMember}"/>
+                        <span class="tiny">#{jList.username}</span> / <strong>#{jList.name}</strong>
+                        <f:param id="studyName_${joinStatus.count}" name="studyname" value="#{jList.name}"/>
+                        <f:param id="username_${joinStatus.count}" name="username" value="#{jList.username}"/>
                   </p:commandLink>
                 </li> 
             </ui:repeat>

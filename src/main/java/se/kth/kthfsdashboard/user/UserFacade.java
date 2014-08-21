@@ -46,6 +46,14 @@ public class UserFacade extends AbstractFacade<Username> {
         return query.getResultList();
     }
     
+    public List<Username> filterUsersBasedOnStudy(String name){
+    
+        Query query = em.createNativeQuery("SELECT name, email FROM USERS WHERE email NOT IN (SELECT team_member FROM StudyTeam WHERE name=?)", Username.class).setParameter(1, name);
+        return query.getResultList();
+    }
+    
+    
+    
     public void persist(Username user) {
         em.persist(user);
     }

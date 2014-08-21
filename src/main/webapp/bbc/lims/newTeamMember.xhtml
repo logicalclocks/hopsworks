@@ -58,12 +58,13 @@
                               </h3>
                             <hr/>
                             <h:form class="new_member_content">
-                                    <h6 align="left">1. Choose people you want in the team</h6>
+                                <h:messages errorClass="error"/>
+                                  <h6 align="left">1. Choose people you want in the team</h6>
                                            <div class="clearfix">
                                                <label for="team_member_user_ids">People</label>
                                                    <p:autoComplete id="autoName" value="#{studyManagedBean.selectedUsersname}" completeMethod="#{studyManagedBean.completeUsername}" var="user"
                                                                    itemLabel="#{user.displayName}" itemValue="#{user}" multiple="true" forceSelection="true" 
-                                                                   converter="nameConverter" dropdown="true" emptyMessage="Select users" cache="false" styleClass="input"/>
+                                                                   converter="nameConverter" dropdown="true" emptyMessage="Select users" cache="false" styleClass="input" validatorMessage="People field cannot be empty"/>
                                            </div>
                                            <h6 align="left">2. Set access level for them</h6>
                                            <div class="clearfix">
@@ -75,8 +76,8 @@
                                                 </div>
                                            </div>
                                            <div class="actions">
-                                               <h:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addToTeam}"/>
-                                               <h:commandButton styleClass="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href='studyPage.xhtml'"/>
+                                               <h:commandButton class="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addToTeam}" />
+                                               <h:commandButton class="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href='studyPage.xhtml'"/>
                                            </div>
                          </h:form>     
                         </p:tab>

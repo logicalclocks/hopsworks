@@ -23,6 +23,7 @@ import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletRequest;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
+import se.kth.bbc.study.StudyMB;
 
 
 /**
@@ -52,6 +53,8 @@ public class UserController implements Serializable {
         
     }
     
+    
+   
 //    @ManagedProperty(value="#{autoComplete}")
 //    private AutocompleteMB autoComplete;
 //    
@@ -91,6 +94,8 @@ public class UserController implements Serializable {
     public List<Username> getAllUsersName() {
         return userFacade.findAllByName();
     }
+    
+   
     
 //    public AutocompleteMB getAutocompleteMB(){
 //        return this.aCompleteMB;
