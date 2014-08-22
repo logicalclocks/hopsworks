@@ -46,6 +46,6 @@ public class Theme {
      
     @Override
     public String toString() {
-        return name;
+        return name + " (" + displayName + ")";
     }
 }

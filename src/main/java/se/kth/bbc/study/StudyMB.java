@@ -66,7 +66,6 @@ public class StudyMB implements Serializable {
     private Dataset dataset;
     private StudyTeam studyTeam;
     private List<Username> usernames;
-    private List<Theme> selectedUsername;
     private List<StudyRoleTypes> study_groups = new ArrayList<>();
 
     private String studyName;
@@ -181,13 +180,12 @@ public class StudyMB implements Serializable {
     }
 
     public List<Theme> completeUsername(String query) {
-        List<Theme> allThemes = service.getThemes();
-        List<Theme> filteredThemes = new ArrayList<Theme>();
+        List<Theme> allThemes = userFacade.filterUsersBasedOnStudy(studyName);
+        List<Theme> filteredThemes = new ArrayList<>();
 
-        for (int i = 0; i < allThemes.size(); i++) {
-            Theme skin = allThemes.get(i);
-            if (skin.getName().toLowerCase().contains(query)) {
-                filteredThemes.add(skin);
+        for (Theme t : allThemes) {
+            if (t.getName().toLowerCase().contains(query)) {
+                filteredThemes.add(t);
             }
         }
         return filteredThemes;
@@ -207,12 +205,13 @@ public class StudyMB implements Serializable {
 //            return suggestions;
 //    }
     public List<Theme> getSelectedUsersname() {
-        return selectedUsername;
+//          return userFacade.filterUsersBasedOnStudy(studyName);
+        return new ArrayList<>();
     }
 
-    public void setSelectedUsersname(List<Theme> selectedUsername) {
-        this.selectedUsername = selectedUsername;
-    }
+//    public void setSelectedUsersname(List<Theme> selectedUsername) {
+//        this.selectedUsername = selectedUsername;
+//    }
 
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
@@ -350,7 +349,7 @@ public class StudyMB implements Serializable {
     public String addToTeam() {
         try {
 
-            Iterator<Theme> itr = getSelectedUsersname().listIterator();
+            Iterator<Theme> itr = userFacade.filterUsersBasedOnStudy(studyName).listIterator();
             while (itr.hasNext()) {
                 Theme t = itr.next();
                 StudyTeamPK stp = new StudyTeamPK(studyName, t.getName());

@@ -13,6 +13,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.NoneScoped;
 import se.kth.bbc.study.StudyMB;
+import se.kth.bbc.study.Theme;
 
 /**
  *
@@ -33,7 +34,7 @@ public class FilterUserBean implements Serializable{
         this.study = study;
     }
     
-    public List<Username> findUsersToAddStudyTeam(){
+    public List<Theme> findUsersToAddStudyTeam(){
         return userFacade.filterUsersBasedOnStudy(study.getStudyName());
     }
     

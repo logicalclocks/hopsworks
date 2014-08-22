@@ -5,9 +5,6 @@
 package se.kth.kthfsdashboard.user;
 
 import java.io.Serializable;
-import java.math.BigInteger;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import javax.xml.bind.DatatypeConverter;
 import java.util.Date;
@@ -16,8 +13,6 @@ import java.util.Random;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import org.apache.commons.codec.digest.DigestUtils;
-import se.kth.bbc.activity.UserActivity;
 
 
 /**
