@@ -246,30 +246,28 @@ public class StudyMB implements Serializable {
         return studyTeamController.countStudyTeam(studyName, "Guest");
     }
 
-    public List<StudyTeam> getMastersList() {
-//        List<StudyTeam> list = studyTeamController.findMasterMembersByName(studyName);
-//        for(StudyTeam st:list)
-//            System.out.println("print - "+ list.size() +" - "+st.studyTeamPK.getName()+" - "+ st.studyTeamPK.getTeamMember() +" - " +st.getTeamRole());
-
-        return studyTeamController.findMasterMembersByName(studyName);
+    public List<Username> getMastersList() {
+        return studyTeamController.findTeamMembersByName(studyName,"Master");
     }
 
-    public List<StudyTeam> getResearchersList() {
-//         List<StudyTeam> list = studyTeamController.findResearchMembersByName(studyName);
-//        for(StudyTeam st:list)
-//            System.out.println("print - "+ list.size() +" - "+st.studyTeamPK.getName()+" - "+ st.studyTeamPK.getTeamMember() +" - " +st.getTeamRole());
-
-        return studyTeamController.findResearchMembersByName(studyName);
+    public List<Username> getResearchersList() {
+        return studyTeamController.findTeamMembersByName(studyName,"Researcher");
     }
 
-    public List<StudyTeam> getGuestsList() {
-
-//        List<StudyTeam> list = studyTeamController.findGuestMembersByName(studyName);
-//        for(StudyTeam st:list)
-//            System.out.println("print - "+ list.size() +" - "+st.studyTeamPK.getName()+" - "+ st.studyTeamPK.getTeamMember() +" - " +st.getTeamRole());
-        return studyTeamController.findGuestMembersByName(studyName);
+    public List<Username> getGuestsList() {
+        return studyTeamController.findTeamMembersByName(studyName,"Guest");
     }
 
+    public boolean checkStudyOwner(String email){
+        boolean flag = false;
+        List<TrackStudy> lst = studyTeamController.findStudyMaster(email);
+        for(TrackStudy tr:lst) {
+            if(tr.getUsername().equals(email))
+                flag = true;
+        }
+                return flag;
+    }
+    
     public int getAllStudyUserTypesListSize() {
         return studyTeamController.findMembersByStudy(studyName).size();
     }

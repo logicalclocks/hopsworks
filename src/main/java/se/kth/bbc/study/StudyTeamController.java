@@ -11,6 +11,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import se.kth.kthfsdashboard.user.Username;
 
 /**
  *
@@ -31,8 +32,6 @@ public class StudyTeamController {
     
     public long countStudyTeam(String name, String teamRole){
         return (Long)em.createNamedQuery("StudyTeam.countMastersByStudy").setParameter("name", name).setParameter("teamRole", teamRole).getSingleResult();
-//        return (Long) em.createNativeQuery("SELECT COUNT(*) AS count FROM StudyTeam st WHERE st.name=? AND st.team_role=?",StudyTeam.class)
-//                .setParameter(1, name).setParameter(2, "Guest").getSingleResult();
     }
     
     public List<StudyTeam> countMembersPerStudy(String name){
@@ -41,9 +40,19 @@ public class StudyTeamController {
         return query.getResultList();
     }
     
-    public List<StudyTeam> findMasterMembersByName(String name){
+    public List<Username> findMasterMembersByName(String name, String role){
         //Query query = em.createNamedQuery("StudyTeam.findMembersByRole", StudyTeam.class).setParameter("name", name).setParameter("teamRole", role);
-        Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_role=?" , StudyTeam.class).setParameter(1, name).setParameter(2, "Master");
+        // select NAME, EMAIL from USERS where EMAIL in (select team_member from StudyTeam where name='BBC' and team_role='Guests')
+        //SELECT * FROM StudyTeam WHERE name =? AND team_role=?
+        Query query = em.createNativeQuery("SELECT NAME, EMAIL FROM USERS WHERE EMAIL IN (SELECT team_member FROM StudyTeam WHERE name=? AND team_role=?)" , Username.class).setParameter(1, name).setParameter(2, role);
+        return query.getResultList();
+    
+    }
+    
+    
+    public List<Username> findTeamMembersByName(String name, String role){
+        Query query = em.createNativeQuery("SELECT NAME, EMAIL FROM USERS WHERE EMAIL IN (SELECT team_member FROM StudyTeam WHERE name=? AND team_role=?)" , Username.class)
+                    .setParameter(1, name).setParameter(2, role);
         return query.getResultList();
     
     }
@@ -70,6 +79,12 @@ public class StudyTeamController {
     
     }
     
+    
+    public List<TrackStudy> findStudyMaster(String email){
+    
+        Query query = em.createNativeQuery("SELECT * FROM study WHERE username=?", TrackStudy.class).setParameter(1, email);
+        return query.getResultList();
+    }
     
     public List<StudyTeam> findByMember(String teamMember){
     

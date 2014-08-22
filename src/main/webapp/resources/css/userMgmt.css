@@ -234,14 +234,14 @@ and open the template in the editor.
     display: table-row;
 }
 
-#tabViewNew:frmUserData:grid tbody{
+/*#tabViewNew:frmUserData:grid tbody{
     
     height: auto !important;
-}
+}*/
 
 .BbcMainLayoutUser {
     text-align: center;
-    min-height: 640px;
+    min-height: 900px;
     height: auto !important;
     
 /*    display: -webkit-box;
@@ -251,10 +251,10 @@ and open the template in the editor.
     display: flex;*/
 }
 
-.BbcMainLayoutUser .BbcPanel {
+/*.BbcMainLayoutUser .BbcPanel {
     width: 700px; 
     margin: 0 auto;
-}
+}*/
 
 .BbcMainLayoutUser .ui-widget-content {
     border-width: 0px;  
