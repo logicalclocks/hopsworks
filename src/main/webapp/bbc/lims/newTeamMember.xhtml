@@ -62,7 +62,7 @@
                                   <h6 align="left">1. Choose people you want in the team</h6>
                                            <div class="clearfix">
                                                <label for="team_member_user_ids">People</label>
-                                                   <p:autoComplete id="autoName" value="#{studyManagedBean.selectedUsersname}" completeMethod="#{studyManagedBean.completeUsername}" var="user"
+                                                   <p:autoComplete id="autoName" value="#{studyManagedBean.selectedUsernames}" completeMethod="#{studyManagedBean.completeUsername}" var="user"
                                                                    itemLabel="#{user.displayName}" itemValue="#{user}" multiple="true" forceSelection="true" 
                                                                    converter="nameConverter" dropdown="true" emptyMessage="Select users" cache="false" styleClass="input" validatorMessage="People field cannot be empty"/>
                                            </div>

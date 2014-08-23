@@ -10,9 +10,32 @@
     border-width: 0px;
 }
 
-.BbcMainLayout {
+
+
+.BbcMainLayoutTeam .ui-widget-content {
+    border-width: 0px;  
+    overflow-y: hidden;
+    overflow-x: hidden;
+    height: auto !important;
+}
+.BbcMainLayoutTeam::-webkit-scrollbar {
+ display: none;
+}
+.BbcMainLayout .BbcPanel {
+    width: 700px; 
+    margin: 0 auto;
+}
+
+.BbcMainLayoutTeam {
     text-align: center;
     min-height: 100%;
+   height: auto !important;
+}
+
+
+.BbcMainLayout {
+    text-align: center;
+    /*min-height: 100%;*/
     //height: auto !important;
     
 /*    display: -webkit-box;
@@ -21,16 +44,11 @@
     display: -ms-flexbox;
     display: flex;*/
 }
-
-.BbcMainLayout .BbcPanel {
-    width: 700px; 
-    margin: 0 auto;
-}
-
 .BbcMainLayout .ui-widget-content {
     border-width: 0px;  
     overflow-y: hidden;
     overflow-x: hidden;
+    /*height: auto !important;*/
     //overflow-y: auto;
     //////////////////////
 /*    display: -webkit-box;

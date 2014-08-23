@@ -70,6 +70,7 @@ public class StudyMB implements Serializable {
 
     private String studyName;
     private String studyCreator;
+    private List<Theme> selectedUsernames;
 
     @PostConstruct
     public void init() {
@@ -204,14 +205,13 @@ public class StudyMB implements Serializable {
 //        }
 //            return suggestions;
 //    }
-    public List<Theme> getSelectedUsersname() {
-//          return userFacade.filterUsersBasedOnStudy(studyName);
-        return new ArrayList<>();
+    public List<Theme> getSelectedUsernames() {
+        return this.selectedUsernames;
     }
 
-//    public void setSelectedUsersname(List<Theme> selectedUsername) {
-//        this.selectedUsername = selectedUsername;
-//    }
+    public void setSelectedUsernames(List<Theme> selectedUsernames) {
+        this.selectedUsernames = selectedUsernames;
+    }
 
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();

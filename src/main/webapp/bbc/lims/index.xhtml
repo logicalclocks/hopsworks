@@ -9,143 +9,143 @@
       xmlns:c="http://java.sun.com/jsp/jstl/core"
       >
 
-<f:view contentType="text/html">
-    
-    <h:head>
-        <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
-    </h:head>
-    
-<h:body>
-    <script>
-            $( "h3" ).click(function() {
-              $( this ).slideUp();
-            });
-</script>
-    <h:form class="stylelayout" id="formToolbar">  
-            <p:toolbar styleClass="MainToolbar">  
-                <p:toolbarGroup align="left">  
-                    <p:commandLink value="BiobankCloud" action="indexPage"/>
-                </p:toolbarGroup> 
+    <f:view contentType="text/html">
 
-                <p:toolbarGroup align="left">              
-                </p:toolbarGroup>  
+        <h:head>
+            <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
+        </h:head>
 
-                <p:toolbarGroup align="right">  
-                    <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{userMB.adminUser}"/>
-                    <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
-                    <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
-                        <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" /> 
-                        <p:separator/>
-                        <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
-                    </p:menu>  
-                </p:toolbarGroup>  
+        <h:body>
+            <script>
+                $("h3").click(function() {
+                    $(this).slideUp();
+                });
+            </script>
+            <h:form class="stylelayout" id="formToolbar">  
+                <p:toolbar styleClass="MainToolbar">  
+                    <p:toolbarGroup align="left">  
+                        <p:commandLink value="BiobankCloud" action="indexPage"/>
+                    </p:toolbarGroup> 
 
-            </p:toolbar> 
-        </h:form>
-    
-    
-<p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+                    <p:toolbarGroup align="left">              
+                    </p:toolbarGroup>  
 
-<p:layoutUnit position="center">
+                    <p:toolbarGroup align="right">  
+                        <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{userMB.adminUser}"/>
+                        <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
+                        <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
+                            <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" /> 
+                            <p:separator/>
+                            <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
+                        </p:menu>  
+                    </p:toolbarGroup>  
 
-<div class="container"> 
-    <ul class="main_menu"></ul>
-<div class="content"> 
-<!--      <h:form id="frmIndexPage">-->
-    <div class="study">
-        <div class="span8">
-            <div class="event_filter">
-                <div class="filter-icon">
-                    <p:commandLink>
-                       <i class="icon-delete icon-white"/>
-                    </p:commandLink>
-                </div>
-                <div class="filter-icon">
-                    <p:commandLink/>
-                </div>
-                <div class="filter-icon">
-                    <p:commandLink/>
-                </div>
-            </div>
-            <div class="content_list">
-                <c:forEach var="act" items="#{activityBean.acvitiyList}">
-                    <div class="event-item" align="left">
-                    <span class="cgray right">3 months ago.</span>
-                    <img class="avatar s24" src="#{activityBean.getGravatar(act.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
-                        <div class="event-title">
-                                <span class="author_name"><h:link> #{act.performedBy}</h:link></span>
-                                <span class="event_label merged">#{act.activity}</span>
-                                        <h:link>
-                                            <strong>at #{act.performedBy} / #{act.activityOn}</strong>
-                                        </h:link>
-               </div>
-              </div>
-                    </c:forEach>
-            </div>
-        </div>  
-<div class="span4">
-    <div class="study_box"> 
-        <h3 class="title" align="left">Study<small>(#{studyManagedBean.allStudy})</small>
-            <span class="right">
-                <h:commandButton id="newStd" value="New Study" type="button" rendered="#{userMB.anyAdminUser}"  class="styled-button-10" onclick="window.location.href='newStudy.xhtml'"/>
-            </span>
-        </h3>
-    
-        
-        
-        
-<p:tabView id="tabViewSummary" styleClass="ui-tabs" dynamic="true" cache="false">
- <p:tab id="allTab" title="All">
-<!--     <h:form id="all" prependId="false">-->
-<ui:repeat var="aList" value="#{studyManagedBean.allStudiesPerUser}" varStatus="allStatus">
-                <li class="ui-tabs-panel">
-            <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                <span class="tiny">#{aList.username}</span> / <strong>#{aList.name}</strong>
-                <f:param id="studyName_${allStatus.count}" name="studyname" value="#{aList.name}"/>
-                <f:param id="username_${allStatus.count}" name="username" value="#{aList.username}"/>
-          </p:commandLink>
-                </li> 
-            </ui:repeat>
-<!--     </h:form>-->
-    </p:tab>
-    <p:tab id="personalTab" title="Personal">
-<!--        <h:form id="personel" prependId="false">-->
-<ui:repeat var="pList" value="#{studyManagedBean.latestStudyList}" varStatus="personalStatus">
-                <li class="ui-tabs-panel">
-            <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                <span class="tiny">#{pList.username}</span> / <strong>#{pList.name}</strong>
-                        <f:param id="studyName_${personalStatus.count}" name="studyname" value="#{pList.name}"/>
-                        <f:param id="username_${personalStatus.count}" name="username" value="#{pList.username}"/>
-          </p:commandLink>
-                </li> 
-            </ui:repeat>
-<!--         </h:form>-->
-     </p:tab>
-            <p:tab id="joinedTab" title="Joined">
-                <ui:repeat var="jList" value="#{studyManagedBean.joinedStudies}" varStatus="joinStatus">
-                <li class="ui-tabs-panel">
-                    <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                        <span class="tiny">#{jList.username}</span> / <strong>#{jList.name}</strong>
-                        <f:param id="studyName_${joinStatus.count}" name="studyname" value="#{jList.name}"/>
-                        <f:param id="username_${joinStatus.count}" name="username" value="#{jList.username}"/>
-                  </p:commandLink>
-                </li> 
-            </ui:repeat>
-                
-            </p:tab>
-</p:tabView>
-    </div>
-</div>
+                </p:toolbar> 
+            </h:form>
 
-</div>
-<!--      </h:form>-->
-</div>
-</div>
-    </p:layoutUnit>
-</p:layout>
-</h:body>
-</f:view>
+
+            <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+
+                <p:layoutUnit position="center">
+
+                    <div class="container"> 
+                        <ul class="main_menu"></ul>
+                        <div class="content"> 
+                            <!--      <h:form id="frmIndexPage">-->
+                            <div class="study">
+                                <div class="span8">
+                                    <div class="event_filter">
+                                        <div class="filter-icon">
+                                            <p:commandLink>
+                                                <i class="icon-delete icon-white"/>
+                                            </p:commandLink>
+                                        </div>
+                                        <div class="filter-icon">
+                                            <p:commandLink/>
+                                        </div>
+                                        <div class="filter-icon">
+                                            <p:commandLink/>
+                                        </div>
+                                    </div>
+                                    <div class="content_list">
+                                        <c:forEach var="act" items="#{activityBean.acvitiyList}">
+                                            <div class="event-item" align="left">
+                                                <span class="cgray right">3 months ago.</span>
+                                                <img class="avatar s24" src="#{activityBean.getGravatar(act.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                <div class="event-title">
+                                                    <span class="author_name"><h:link> #{act.performedBy}</h:link></span>
+                                                    <span class="event_label merged">#{act.activity}</span>
+                                                    <h:link>
+                                                        <strong>at #{act.performedBy} / #{act.activityOn}</strong>
+                                                    </h:link>
+                                                </div>
+                                            </div>
+                                        </c:forEach>
+                                    </div>
+                                </div>  
+                                <div class="span4">
+                                    <div class="study_box"> 
+                                        <h3 class="title" align="left">Study<small>(#{studyManagedBean.allStudy})</small>
+                                            <span class="right">
+                                                <h:commandButton id="newStd" value="New Study" type="button" rendered="#{userMB.anyAdminUser}"  class="styled-button-10" onclick="window.location.href = 'newStudy.xhtml'"/>
+                                            </span>
+                                        </h3>
+
+
+
+
+                                        <p:tabView id="tabViewSummary" styleClass="ui-tabs" dynamic="true" cache="false">
+                                            <p:tab id="allTab" title="All">
+                                                <!--     <h:form id="all" prependId="false">-->
+                                                <ui:repeat var="aList" value="#{studyManagedBean.allStudiesPerUser}" varStatus="allStatus">
+                                                    <li class="ui-tabs-panel">
+                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                                                            <span class="tiny">#{aList.username}</span> / <strong>#{aList.name}</strong>
+                                                            <f:param id="studyName_${allStatus.count}" name="studyname" value="#{aList.name}"/>
+                                                            <f:param id="username_${allStatus.count}" name="username" value="#{aList.username}"/>
+                                                        </p:commandLink>
+                                                    </li> 
+                                                </ui:repeat>
+                                                <!--     </h:form>-->
+                                            </p:tab>
+                                            <p:tab id="personalTab" title="Personal">
+                                                <!--        <h:form id="personel" prependId="false">-->
+                                                <ui:repeat var="pList" value="#{studyManagedBean.latestStudyList}" varStatus="personalStatus">
+                                                    <li class="ui-tabs-panel">
+                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                                                            <span class="tiny">#{pList.username}</span> / <strong>#{pList.name}</strong>
+                                                            <f:param id="studyName_${personalStatus.count}" name="studyname" value="#{pList.name}"/>
+                                                            <f:param id="username_${personalStatus.count}" name="username" value="#{pList.username}"/>
+                                                        </p:commandLink>
+                                                    </li> 
+                                                </ui:repeat>
+                                                <!--         </h:form>-->
+                                            </p:tab>
+                                            <p:tab id="joinedTab" title="Joined">
+                                                <ui:repeat var="jList" value="#{studyManagedBean.joinedStudies}" varStatus="joinStatus">
+                                                    <li class="ui-tabs-panel">
+                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                                                            <span class="tiny">#{jList.username}</span> / <strong>#{jList.name}</strong>
+                                                            <f:param id="studyName_${joinStatus.count}" name="studyname" value="#{jList.name}"/>
+                                                            <f:param id="username_${joinStatus.count}" name="username" value="#{jList.username}"/>
+                                                        </p:commandLink>
+                                                    </li> 
+                                                </ui:repeat>
+
+                                            </p:tab>
+                                        </p:tabView>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <!--      </h:form>-->
+                        </div>
+                    </div>
+                </p:layoutUnit>
+            </p:layout>
+        </h:body>
+    </f:view>
 </html>
