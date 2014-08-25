@@ -6,6 +6,7 @@
 
 package se.kth.bbc.study;
 
+import javax.faces.bean.ManagedProperty;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
@@ -17,11 +18,19 @@ import javax.faces.convert.FacesConverter;
 @FacesConverter("nameConverter")
 public class InputConverter implements Converter {
 
+//    @ManagedProperty("#{studyManagedBean}")
+//    private StudyMB name;
+//    
+//    
+//    public void setService(StudyMB name){
+//        this.name = name;
+//    }
+    
     @Override
     public Object getAsObject(FacesContext facesContext, UIComponent component, String value) {
         if(value != null && value.trim().length() > 0) {
-            ThemeService service = (ThemeService) facesContext.getExternalContext().getApplicationMap().get("themeService");
-            return service.getThemes("").get(Integer.parseInt(value));
+            StudyMB service = (StudyMB) facesContext.getExternalContext().getApplicationMap().get("studyManagedBean");
+            return service.getThemes().get(Integer.parseInt(value));
         }
         else {
             return null;

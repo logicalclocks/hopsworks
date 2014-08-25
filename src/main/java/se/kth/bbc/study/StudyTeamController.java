@@ -80,9 +80,8 @@ public class StudyTeamController {
     }
     
     
-    public List<TrackStudy> findStudyMaster(String email){
-    
-        Query query = em.createNativeQuery("SELECT * FROM study WHERE username=?", TrackStudy.class).setParameter(1, email);
+    public List<TrackStudy> findStudyMaster(String name){
+        Query query = em.createNativeQuery("SELECT * FROM study WHERE name IN (SELECT name FROM StudyTeam WHERE name=?)", TrackStudy.class).setParameter(1, name);
         return query.getResultList();
     }
     
@@ -93,18 +92,31 @@ public class StudyTeamController {
     }
     
     
+    public List<StudyTeam> findCurrentRole(String name, String username){
+    
+        Query query = em.createNativeQuery("SELECT * FROM StudyTeam where name=? AND team_member=?",StudyTeam.class).setParameter(1, name).setParameter(2, username);
+        return query.getResultList();
+    
+    }
+    
     public void persistStudyTeam(StudyTeam team){
             em.persist(team);
     }
     
-    public void removeStudyTeam(StudyTeam team){
-            em.remove(team);
+    public void removeStudyTeam(String name, String email){
+        StudyTeam team = findByPrimaryKey(name, email);
+            if(team != null)
+                em.remove(team);
     }
     
     public void updateTeam(StudyTeam team){
             em.merge(team);
     }
     
+    
+    public StudyTeam findByPrimaryKey(String name, String email) {
+        return em.find(StudyTeam.class, new StudyTeam(new StudyTeamPK(name, email)).getStudyTeamPK());
+    }
     
     /**
      * Deletes all roles for the user on login, except ADMIN

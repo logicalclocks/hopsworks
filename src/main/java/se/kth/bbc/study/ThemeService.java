@@ -11,6 +11,9 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.NoneScoped;
+import javax.faces.bean.SessionScoped;
 import se.kth.kthfsdashboard.user.UserFacade;
  
  
@@ -19,14 +22,24 @@ import se.kth.kthfsdashboard.user.UserFacade;
 public class ThemeService {
      
      @EJB
-    private UserFacade userFacade;
+     private UserFacade userFacade;
+      
+//    @ManagedProperty("#{studyManagedBean}")
+//    private StudyMB service;
+//   
+//    private List<Theme> themes;
+//    
+//    @PostConstruct
+//    public void init() {
+//        themes = service.processThemes();
+//    }
+//    
+//    public List<Theme> getThemes(String studyName) {
+//           return userFacade.filterUsersBasedOnStudy(studyName);
+//    } 
     
-    @PostConstruct
-    public void init() {
-    }
-     
-    public List<Theme> getThemes(String studyName) {
-        return userFacade.filterUsersBasedOnStudy(studyName);
-    } 
+//    public void setService(StudyMB service){
+//        this.service = service;
+//    }
     
 }

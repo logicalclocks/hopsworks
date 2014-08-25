@@ -22,13 +22,8 @@ public enum StudyRoleTypes {
       this.role = role;
   }
   
-//  @Override
-//  public String toString(){
-//      return role;
-//  }
-  
   public String getTeam() {
-        return role;
+      return this.role;
   }
        
 }

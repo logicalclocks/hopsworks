@@ -48,18 +48,18 @@ public class UserFacade extends AbstractFacade<Username> {
         return query.getResultList();
     }
 
-    public List<Theme> filterUsersBasedOnStudy(String name) {
+    public List<Username> filterUsersBasedOnStudy(String name) {
 
         Query query = em.createNativeQuery("SELECT * FROM USERS WHERE email NOT IN (SELECT team_member FROM StudyTeam WHERE name=?)", Username.class).setParameter(1, name);
-        List<Username> users = query.getResultList();
-        List<Theme> t = new ArrayList<>();
-        int i = 0;
-        for (Username u : users) {
-            Theme nt = new Theme(i, u.getName(), u.getEmail());
-            t.add(nt);
-            System.out.println(nt + ", ");
-        }
-        return t;
+        return query.getResultList();
+//        List<Username> users = query.getResultList();
+//        List<Theme> themes = new ArrayList<>();
+//        int i = 0;
+//        for (Username u : users) {
+//            themes.add(new Theme(i, u.getName(), u.getEmail()));
+//            System.out.println(themes + ", ");
+//        }
+//        return themes;
     }
 
     public void persist(Username user) {

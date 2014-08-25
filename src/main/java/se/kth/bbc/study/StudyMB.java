@@ -18,6 +18,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
@@ -38,7 +39,7 @@ import se.kth.kthfsdashboard.user.Username;
  * @author roshan
  */
 @ManagedBean(name = "studyManagedBean", eager = true)
-@SessionScoped
+@ApplicationScoped
 public class StudyMB implements Serializable {
 
     private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
@@ -58,8 +59,8 @@ public class StudyMB implements Serializable {
 
 //    @ManagedProperty(value="#{autoCompleteBean}")
 //    private AutocompleteMB autoComplete;
-    @ManagedProperty("#{themeService}")
-    private ThemeService service;
+//    @ManagedProperty("#{themeService}")
+//    private ThemeService service;
 
     private TrackStudy study;
     private DatasetStudy dsStudy;
@@ -71,6 +72,8 @@ public class StudyMB implements Serializable {
     private String studyName;
     private String studyCreator;
     private List<Theme> selectedUsernames;
+    private List<Theme> themes;
+   
 
     @PostConstruct
     public void init() {
@@ -145,14 +148,14 @@ public class StudyMB implements Serializable {
         this.dataset = dataset;
     }
 
-    public StudyTeam getStudyGroups() {
+    public StudyTeam getStudyTeam() {
         if (studyTeam == null) {
             studyTeam = new StudyTeam();
         }
         return studyTeam;
     }
 
-    public void setStudyGroup(StudyTeam studyTeam) {
+    public void setStudyTeam(StudyTeam studyTeam) {
         this.studyTeam = studyTeam;
     }
 
@@ -180,8 +183,26 @@ public class StudyMB implements Serializable {
         return studyController.filterLatestStudy(getUsername()).size();
     }
 
+    public List<Theme> addThemes(){
+        List<Username> list = userFacade.filterUsersBasedOnStudy(getStudyName());
+        themes = new ArrayList<>();
+        int i=0;
+        for(Username user:list) {
+            themes.add(new Theme(i, user.getName(), user.getEmail()));
+            i++;
+            //System.out.println("themes - " + user.getName() + " - "+user.getEmail());
+        }
+        
+        return themes;
+    }
+    
+    public List<Theme> getThemes(){
+        return themes;
+    }
+    
     public List<Theme> completeUsername(String query) {
-        List<Theme> allThemes = userFacade.filterUsersBasedOnStudy(studyName);
+        //List<Theme> allThemes = userFacade.filterUsersBasedOnStudy(studyName);
+        List<Theme> allThemes = addThemes();
         List<Theme> filteredThemes = new ArrayList<>();
 
         for (Theme t : allThemes) {
@@ -192,9 +213,9 @@ public class StudyMB implements Serializable {
         return filteredThemes;
     }
 
-    public void setService(ThemeService service) {
-        this.service = service;
-    }
+//    public void setService(ThemeService service) {
+//        this.service = service;
+//    }
 
 //    public List<Username> completeUsername(String name) {
 //        usernames = getUsersNameList();
@@ -226,9 +247,32 @@ public class StudyMB implements Serializable {
     }
 
     public StudyRoleTypes[] getTeam() {
-        return StudyRoleTypes.values();
+       return StudyRoleTypes.values();
     }
 
+    public List<StudyRoleTypes> getTeamForResearchList(){
+    
+       List<StudyRoleTypes> reOrder = new ArrayList<>(); 
+       //for(StudyRoleTypes role: StudyRoleTypes.values()){
+           reOrder.add(StudyRoleTypes.RESEARCHER);
+           reOrder.add(StudyRoleTypes.MASTER);
+           reOrder.add(StudyRoleTypes.GUEST);
+       //}
+            return reOrder;
+    }
+    
+    
+     public List<StudyRoleTypes> getTeamForGuestList(){
+    
+       List<StudyRoleTypes> reOrder = new ArrayList<>(); 
+       //for(StudyRoleTypes role: StudyRoleTypes.values()){
+           reOrder.add(StudyRoleTypes.GUEST);
+           reOrder.add(StudyRoleTypes.MASTER);
+           reOrder.add(StudyRoleTypes.RESEARCHER);
+       //}
+            return reOrder;
+    }
+    
     public long countAllMembersPerStudy() {
         return studyTeamController.countMembersPerStudy(studyName).size();
     }
@@ -257,15 +301,45 @@ public class StudyMB implements Serializable {
         return studyTeamController.findTeamMembersByName(studyName,"Guest");
     }
 
-    public boolean checkStudyOwner(String email){
-        boolean flag = false;
-        List<TrackStudy> lst = studyTeamController.findStudyMaster(email);
+    public String checkStudyOwner(String email){
+        //boolean flag = false;
+        String owner = null;
+        List<TrackStudy> lst = studyTeamController.findStudyMaster(studyName);
         for(TrackStudy tr:lst) {
             if(tr.getUsername().equals(email))
-                flag = true;
+                owner = email;
         }
-                return flag;
+                return owner;
     }
+    
+//    public List<StudyRoleTypes> getCurrentRole(String email){
+//        List<StudyTeam> team = studyTeamController.findCurrentRole(studyName, email);
+//        for(StudyTeam st: team) 
+//            System.out.println(" printed "+st.getTeamRole());
+//        
+//        
+//        List<StudyRoleTypes> list = new ArrayList<>();
+//        
+//        for(StudyTeam st: team){
+//            if(st.getTeamRole().toLowerCase().equals(StudyRoleTypes.RESEARCHER.toString())){
+//                for(StudyRoleTypes role: StudyRoleTypes.values()) {
+//                        list.add(role.RESEARCHER);
+//                        list.add(role.MASTER);
+//                        list.add(role.GUEST);
+//                }
+//                        //return list;
+////            } else {
+////                for(StudyRoleTypes role: StudyRoleTypes.values()) {
+////                        list.add(role.GUEST);
+////                        list.add(role.MASTER);
+////                        list.add(role.RESEARCHER);
+////                }
+//                        //return list;
+//            }
+//        }
+//                        return list;
+//    }
+    
     
     public int getAllStudyUserTypesListSize() {
         return studyTeamController.findMembersByStudy(studyName).size();
@@ -294,12 +368,12 @@ public class StudyMB implements Serializable {
         study.setTimestamp(new Date());
         try {
             studyController.persistStudy(study);
+            activity.addActivity("new study created", study.getName(), "STUDY");
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Failed: Study name might have been duplicated!");
             return null;
         }
         addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
-        activity.addActivity("new study created", study.getName(), "STUDY");
         addStudyMaster(study.getName());
         return "Success!";
     }
@@ -348,8 +422,7 @@ public class StudyMB implements Serializable {
     //add member to a team - batch persist 
     public String addToTeam() {
         try {
-
-            Iterator<Theme> itr = userFacade.filterUsersBasedOnStudy(studyName).listIterator();
+            Iterator<Theme> itr = getSelectedUsernames().listIterator();
             while (itr.hasNext()) {
                 Theme t = itr.next();
                 StudyTeamPK stp = new StudyTeamPK(studyName, t.getName());
@@ -369,23 +442,24 @@ public class StudyMB implements Serializable {
         return "studyPage";
     }
 
-    //add members to study
-//    public String addMembers(){
-//    
-//        studyMember.setTimeadded(new Date());
-//        studyMember.setAddedBy(getUsername());
-//        studyMember.studyGroupMembersPK.setStudyname(this.studyName);
-//        
-//        try{
-//            studyController.addMember(studyMember);
-//        }catch(EJBException ejb){
-//            addErrorMessageToUserAction("Error: New Member adding failed!");
-//            return null;
-//        
-//        }
-//            addMessage("added member successfully!");
-//            return "studyMgmt";
-//    }
+
+    public String deleteMemberFromTeam(String email){
+    
+        try{
+            
+             studyTeamController.removeStudyTeam(studyName, email);
+             activity.addActivity("team member "+ email+ " deleted ", studyName, "TEAM");
+                
+        }   catch (EJBException ejb) {
+            addErrorMessageToUserAction("Error: Deleting team member failed.");
+            return null;
+        }
+        addMessage("Team member "+ email + " deleted from study "+ studyName);
+        return "studyPage";
+    
+    }
+    
+    
     public void addMessage(String summary) {
         FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, summary);
         FacesContext.getCurrentInstance().addMessage(null, message);

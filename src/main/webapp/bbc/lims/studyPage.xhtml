@@ -93,8 +93,9 @@
                                             <h5 class="title" align="left">Masters
                                                 <small>#{studyManagedBean.countMasters()}</small></h5>
                                             <ul class="well-list">
-                                                <ui:repeat var="mlist" value="#{studyManagedBean.mastersList}" varStatus="mst">
-                                                    <c:if test="${studyManagedBean.checkStudyOwner(mlist.email)}">
+                                                <c:forEach var="mlist" items="${studyManagedBean.mastersList}" varStatus="mst">
+                                                    
+                                                    <c:if test="${studyManagedBean.checkStudyOwner(mlist.email) == mlist.email}">
                                                         <li id="team_member_row_${mst.count}" class="team_member_row">
                                                             <div class="row">
                                                                 <div class="span6">
@@ -109,21 +110,21 @@
                                                                 </div>
                                                                 <div class="span5 right">
                                                                     <div class="left">
-                                                                        <h:form id="frmMaster_${mst.count}" class="edit_team_members">
+                                                                        <h:form id="frmStudyMaster_${mst.count}" class="edit_team_members">
                                                                             <div style="margin:0;padding:0;display:inline"></div>
-                                                                            <h:selectOneMenu id="masterList" value="#{studyManagedBean.studyGroups.studyTeamPK.teamMember}" styleClass="study_role_assign">
+                                                                            <h:selectOneMenu id="masterList" value="#{studyManagedBean.studyTeam.teamRole}" styleClass="study_role_assign" disabled="true">
                                                                                 <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
                                                                             </h:selectOneMenu>
                                                                         </h:form>
                                                                     </div>
-                                                                    <div class="right">
-                                                                        <h:commandButton class="btn owner"/>
+                                                                    <div class="right" align="right">
+                                                                        <h:commandButton class="button-success" value="Owner" disabled="true"/>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </li>
                                                     </c:if>
-
+                                                    <c:if test="${studyManagedBean.checkStudyOwner(mlist.email) ne mlist.email}">
                                                     <li id="team_member_row_${mst.count}" class="team_member_row">
                                                         <div class="row">
                                                             <div class="span6">
@@ -140,19 +141,21 @@
                                                                 <div class="left">
                                                                     <h:form id="frmMaster_${mst.count}" class="edit_team_members">
                                                                         <div style="margin:0;padding:0;display:inline"></div>
-                                                                        <h:selectOneMenu id="masterList" value="#{studyManagedBean.studyGroups.studyTeamPK.teamMember}" styleClass="study_role_assign">
+                                                                        <h:selectOneMenu id="masterList" value="#{studyManagedBean.studyTeam.teamRole}" styleClass="study_role_assign">
                                                                             <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
                                                                         </h:selectOneMenu>
                                                                     </h:form>
                                                                 </div>
-                                                                <div class="right">
-                                                                    <h:commandButton class="btn owner"/>
+                                                                <div class="right" align="right">
+                                                                    <h:form id="frmMBtnDelete_${mst.count}">
+                                                                        <h:commandButton class="btn btn-delete" type="submit" action="#{studyManagedBean.deleteMemberFromTeam(mlist.email)}"/>
+                                                                    </h:form>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </li>
-
-                                                </ui:repeat>
+                                                    </c:if>
+                                                </c:forEach>
                                             </ul>
                                         </h:panelGroup>
                                         <!--                            </div>    -->
@@ -180,13 +183,15 @@
                                                                 <div class="left">
                                                                     <h:form id="frmRchs_${rchs.count}" class="edit_team_members">
                                                                         <div style="margin:0;padding:0;display:inline"></div>
-                                                                        <h:selectOneMenu id="researcherList" value="#{studyManagedBean.studyGroups.studyTeamPK.teamMember}" styleClass="study_role_assign">
-                                                                            <f:selectItems value="#{studyManagedBean.team}" var="rc" itemLabel="#{rc.team}" itemValue="#{rc}"/>
+                                                                        <h:selectOneMenu id="researcherList" value="#{studyManagedBean.studyTeam.teamRole}" styleClass="study_role_assign">
+                                                                            <f:selectItems value="#{studyManagedBean.teamForResearchList}" var="rc" itemLabel="#{rc.team}" itemValue="#{rc}"/>
                                                                         </h:selectOneMenu>
                                                                     </h:form>
                                                                 </div>
-                                                                <div class="right">
-                                                                    <h:commandButton class="btn danger"/>
+                                                                <div class="right" align="right">
+                                                                   <h:form id="frmRBtnDelete_${rchs.count}">
+                                                                       <h:commandButton class="btn btn-delete" type="submit" action="#{studyManagedBean.deleteMemberFromTeam(rlist.email)}"/>
+                                                                   </h:form>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -220,13 +225,15 @@
                                                                 <div class="left">
                                                                     <h:form id="frm_${gut.count}" class="edit_team_members">
                                                                         <div style="margin:0;padding:0;display:inline"></div>
-                                                                        <h:selectOneMenu id="guestsList" value="#{studyManagedBean.studyGroups.studyTeamPK.teamMember}" styleClass="study_role_assign">
-                                                                            <f:selectItems value="#{studyManagedBean.team}" var="gs" itemLabel="#{gs.team}" itemValue="#{gs}"/>
+                                                                        <h:selectOneMenu id="guestsList" value="#{studyManagedBean.studyTeam.teamRole}" styleClass="study_role_assign">
+                                                                            <f:selectItems value="#{studyManagedBean.teamForGuestList}" var="gs" itemLabel="#{gs.team}" itemValue="#{gs}"/>
                                                                         </h:selectOneMenu>
                                                                     </h:form>
                                                                 </div>
-                                                                <div class="right">
-                                                                    <h:commandButton class="btn danger"/>
+                                                                <div class="right" align="right">
+                                                                   <h:form id="frmGBtnDelete_${gut.count}">
+                                                                        <h:commandButton class="btn btn-delete" type="submit" action="#{studyManagedBean.deleteMemberFromTeam(glist.email)}"/>
+                                                                   </h:form>
                                                                 </div>
                                                             </div>
                                                         </div> 
