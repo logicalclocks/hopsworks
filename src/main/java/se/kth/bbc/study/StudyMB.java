@@ -25,6 +25,7 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
+import javax.faces.event.ValueChangeEvent;
 import javax.servlet.http.HttpServletRequest;
 import org.primefaces.component.tabview.TabView;
 import org.primefaces.context.RequestContext;
@@ -67,12 +68,14 @@ public class StudyMB implements Serializable {
     private Dataset dataset;
     private StudyTeam studyTeam;
     private List<Username> usernames;
-    private List<StudyRoleTypes> study_groups = new ArrayList<>();
+    private List<Theme> selectedUsernames;
+    private List<Theme> themes;
 
     private String studyName;
     private String studyCreator;
-    private List<Theme> selectedUsernames;
-    private List<Theme> themes;
+    private String newTeamRole;
+    private String selectedUser;
+    
    
 
     @PostConstruct
@@ -115,6 +118,30 @@ public class StudyMB implements Serializable {
         this.studyCreator = studyCreator;
     }
 
+    public String getNewTeamRole(){
+        return newTeamRole;
+    }
+    
+    public void setNewTeamRole(String newTeamRole){
+        this.newTeamRole = newTeamRole;
+    }
+    
+    public String getSelectedUser(){
+        return selectedUser;
+    }
+    
+    public void setSelectedUser(String selectedUser){
+        this.selectedUser = selectedUser;
+    }
+    
+    public void teamRoleChanged(ValueChangeEvent e){
+      this.newTeamRole = e.getNewValue().toString();
+      System.out.println(" new value - "+ getNewTeamRole());
+    
+//      if(!selectedTeamRole.equals(e.getOldValue().toString()))
+//            updateStudyTeamRole();
+   }
+    
     public TrackStudy getStudy() {
         if (study == null) {
             study = new TrackStudy();
@@ -438,14 +465,14 @@ public class StudyMB implements Serializable {
             addErrorMessageToUserAction("Error: Adding team member failed.");
             return null;
         }
-        addMessage("New Member Added!");
-        return "studyPage";
+            addMessage("New Member Added!");
+            return "studyPage";
     }
 
 
     public String deleteMemberFromTeam(String email){
     
-        try{
+        try {
             
              studyTeamController.removeStudyTeam(studyName, email);
              activity.addActivity("team member "+ email+ " deleted ", studyName, "TEAM");
@@ -454,11 +481,23 @@ public class StudyMB implements Serializable {
             addErrorMessageToUserAction("Error: Deleting team member failed.");
             return null;
         }
-        addMessage("Team member "+ email + " deleted from study "+ studyName);
-        return "studyPage";
+            addMessage("Team member "+ email + " deleted from study "+ studyName);
+            return "studyPage";
     
     }
     
+    
+    public String updateStudyTeamRole(String email){
+    
+        try{
+            studyTeamController.updateTeamRole(studyName, email, getNewTeamRole());
+        } catch(EJBException ejb){
+            addErrorMessageToUserAction("Error: Update failed.");
+            return null;
+        }
+            addMessage("Team role updated successful "+ email + " "+ studyName);
+            return "studyPage";
+    }
     
     public void addMessage(String summary) {
         FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, summary);

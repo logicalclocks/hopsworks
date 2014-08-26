@@ -6,6 +6,7 @@
 
 package se.kth.bbc.study;
 
+import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -109,8 +110,13 @@ public class StudyTeamController {
                 em.remove(team);
     }
     
-    public void updateTeam(StudyTeam team){
-            em.merge(team);
+    public void updateTeamRole(String name, String email, String teamRole){
+        StudyTeam team = findByPrimaryKey(name, email);
+            if(team != null){
+                team.setTeamRole(teamRole);
+                team.setTimestamp(new Date());
+                em.merge(team);
+            }
     }
     
     

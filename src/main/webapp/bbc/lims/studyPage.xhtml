@@ -112,7 +112,7 @@
                                                                     <div class="left">
                                                                         <h:form id="frmStudyMaster_${mst.count}" class="edit_team_members">
                                                                             <div style="margin:0;padding:0;display:inline"></div>
-                                                                            <h:selectOneMenu id="masterList" value="#{studyManagedBean.studyTeam.teamRole}" styleClass="study_role_assign" disabled="true">
+                                                                            <h:selectOneMenu id="masterList" value="#{studyManagedBean.studyTeam.teamRole}" styleClass="study_role_assign" disabled="true" >
                                                                                 <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
                                                                             </h:selectOneMenu>
                                                                         </h:form>
@@ -181,12 +181,18 @@
                                                             </div>
                                                             <div class="span5 right">
                                                                 <div class="left">
-                                                                    <h:form id="frmRchs_${rchs.count}" class="edit_team_members">
+<!--                                                                    <h:form id="frmRchs_${rchs.count}" class="edit_team_members">-->
                                                                         <div style="margin:0;padding:0;display:inline"></div>
-                                                                        <h:selectOneMenu id="researcherList" value="#{studyManagedBean.studyTeam.teamRole}" styleClass="study_role_assign">
+                                                                        <h:selectOneMenu id="researcherList" value="#{studyManagedBean.studyTeam.teamRole}" valueChangeListener="#{valueChangeMB.teamRoleChanged}" styleClass="study_role_assign" 
+                                                                                         onchange="#{valueChangeMB.print(rlist.email)}">
+                                                                            <f:ajax execute="@this" event="change"/>
+<!--                                                                                         onchange="#{studyManagedBean.updateStudyTeamRole(rlist.email)}">-->
+<!--                                                                            <f:valueChangeListener type="se.kth.bbc.study.ChangeListener"/>-->
                                                                             <f:selectItems value="#{studyManagedBean.teamForResearchList}" var="rc" itemLabel="#{rc.team}" itemValue="#{rc}"/>
+<!--                                                                          valueChangeListener="#{studyManagedBean.teamRoleChanged}"
+                                                                            valueChangeListener="#{valueChangeMB.teamRoleChanged}"-->
                                                                         </h:selectOneMenu>
-                                                                    </h:form>
+<!--                                                                    </h:form>-->
                                                                 </div>
                                                                 <div class="right" align="right">
                                                                    <h:form id="frmRBtnDelete_${rchs.count}">
