@@ -11,8 +11,10 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.NoneScoped;
 import javax.faces.bean.SessionScoped;
+import javax.faces.component.UIOutput;
+import javax.faces.event.AjaxBehaviorEvent;
 import javax.faces.event.ValueChangeEvent;
-import se.kth.bbc.activity.ActivityMB;
+
 
 /**
  *
@@ -54,9 +56,17 @@ public class ValueChangeMB implements Serializable{
     
     public void print(String email){
     
-            System.out.println(" new value - "+ email);
+            System.out.println(" print - "+ email + " - " +getNewTeamRole());
     
     }
      
+    
+//    public void changeTeamRole(AjaxBehaviorEvent event) {
+//       
+//        String updatedRole = (String) ((UIOutput)event.getSource()).getValue();
+//    }
      
+    
+    
+    
 }

@@ -2008,7 +2008,7 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
     line-height: 18px;
     float: left;
     position: relative;
-    
+    text-align: left;
 }
 
 .bottom{

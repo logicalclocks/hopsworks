@@ -21,6 +21,7 @@ import javax.faces.application.FacesMessage;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
@@ -135,8 +136,9 @@ public class StudyMB implements Serializable {
     }
     
     public void teamRoleChanged(ValueChangeEvent e){
-      this.newTeamRole = e.getNewValue().toString();
-      System.out.println(" new value - "+ getNewTeamRole());
+      //this.newTeamRole = e.getNewValue().toString();
+      setNewTeamRole(e.getNewValue().toString());
+      System.out.println(" new value here - "+ getNewTeamRole());
     
 //      if(!selectedTeamRole.equals(e.getOldValue().toString()))
 //            updateStudyTeamRole();
@@ -490,13 +492,20 @@ public class StudyMB implements Serializable {
     public String updateStudyTeamRole(String email){
     
         try{
-            studyTeamController.updateTeamRole(studyName, email, getNewTeamRole());
+             studyTeamController.updateTeamRole(studyName, email, getNewTeamRole());
+             activity.addActivity("changed team role of "+ email+ " to "+ getNewTeamRole(), studyName, "TEAM");
         } catch(EJBException ejb){
             addErrorMessageToUserAction("Error: Update failed.");
             return null;
         }
-            addMessage("Team role updated successful "+ email + " "+ studyName);
-            return "studyPage";
+            //addMessage("Team role updated successful "+ email + " "+ studyName);
+            return "studyPage?faces-redirect=true";
+            //return "OK";
+    }
+    
+    
+    public String onComplete(){
+        return "studyPage";
     }
     
     public void addMessage(String summary) {

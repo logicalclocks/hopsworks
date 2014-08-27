@@ -168,7 +168,7 @@
                                             <ul class="well-list">
                                                 <ui:repeat var="rlist" value="#{studyManagedBean.researchersList}" varStatus="rchs">
                                                     <li id="researchers_${rchs.count}" class="team_member_row">
-                                                        <div class="row">
+                                                        <div id="divRow" class="row">
                                                             <div class="span6">
                                                                 <img class="avatar s32" src="#{activityBean.getGravatar(rlist.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
                                                                 <p:commandLink styleClass="dark">
@@ -179,20 +179,22 @@
                                                                     </small>
                                                                 </p:commandLink>
                                                             </div>
-                                                            <div class="span5 right">
+                                                            <div id="userBlock" class="span5 right">
                                                                 <div class="left">
-<!--                                                                    <h:form id="frmRchs_${rchs.count}" class="edit_team_members">-->
+                                                                    <h:form id="frmRchs" class="edit_team_members">
                                                                         <div style="margin:0;padding:0;display:inline"></div>
-                                                                        <h:selectOneMenu id="researcherList" value="#{studyManagedBean.studyTeam.teamRole}" valueChangeListener="#{valueChangeMB.teamRoleChanged}" styleClass="study_role_assign" 
-                                                                                         onchange="#{valueChangeMB.print(rlist.email)}">
-                                                                            <f:ajax execute="@this" event="change"/>
+                                                                        <h:selectOneMenu id="researcherList" value="#{studyManagedBean.studyTeam.teamRole}" 
+                                                                                         valueChangeListener="#{studyManagedBean.teamRoleChanged}" styleClass="study_role_assign" onselect="#{studyManagedBean.onComplete()}">
+                                                                            
 <!--                                                                                         onchange="#{studyManagedBean.updateStudyTeamRole(rlist.email)}">-->
 <!--                                                                            <f:valueChangeListener type="se.kth.bbc.study.ChangeListener"/>-->
                                                                             <f:selectItems value="#{studyManagedBean.teamForResearchList}" var="rc" itemLabel="#{rc.team}" itemValue="#{rc}"/>
 <!--                                                                          valueChangeListener="#{studyManagedBean.teamRoleChanged}"
                                                                             valueChangeListener="#{valueChangeMB.teamRoleChanged}"-->
+                                                                            <p:ajax event="change" process="researcherList" update="@all"
+                                                                                    listener="#{studyManagedBean.updateStudyTeamRole(rlist.email)}" async="true"/>
                                                                         </h:selectOneMenu>
-<!--                                                                    </h:form>-->
+                                                                    </h:form>
                                                                 </div>
                                                                 <div class="right" align="right">
                                                                    <h:form id="frmRBtnDelete_${rchs.count}">
@@ -200,7 +202,7 @@
                                                                    </h:form>
                                                                 </div>
                                                             </div>
-                                                        </div>
+                                                        </div> 
                                                     </li>
                                                 </ui:repeat>
                                             </ul>
@@ -249,6 +251,8 @@
                                         </h:panelGroup>
                                     </div>
                                 </p:tab>
+                                <p:tab id="genomes" title="Genomes"></p:tab>
+                                <p:tab id="workflows" title="Workflows"></p:tab>
                             </p:tabView>
                         </div>
                     </div>
