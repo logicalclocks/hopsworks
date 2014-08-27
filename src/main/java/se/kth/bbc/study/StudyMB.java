@@ -67,7 +67,6 @@ public class StudyMB implements Serializable {
     private TrackStudy study;
     private DatasetStudy dsStudy;
     private Dataset dataset;
-    private StudyTeam studyTeam;
     private List<Username> usernames;
     private List<Theme> selectedUsernames;
     private List<Theme> themes;
@@ -177,16 +176,31 @@ public class StudyMB implements Serializable {
         this.dataset = dataset;
     }
 
-    public StudyTeam getStudyTeam() {
-        if (studyTeam == null) {
-            studyTeam = new StudyTeam();
+    public String getStudyTeamRole(String email) {
+//        StudyTeam st = studyTeamController.getStudyTeam(email, studyName);
+//        assert (st != null);
+//        return st.getTeamRole();
+        try{
+             studyTeamController.updateTeamRole(studyName, email, getNewTeamRole());
+             activity.addActivity("changed team role of "+ email+ " to "+ getNewTeamRole(), studyName, "TEAM");
+        } catch(EJBException ejb){
+            addErrorMessageToUserAction("Error: Update failed.");
+            return null;
         }
-        return studyTeam;
+            return "studyPage?faces-redirect=true";
     }
 
-    public void setStudyTeam(StudyTeam studyTeam) {
-        this.studyTeam = studyTeam;
+    public void setStudyTeamRole(String email, String role) {
+        StudyTeamPK pk = new StudyTeamPK(email, studyName);
+        StudyTeam st = new StudyTeam(pk);
+        st.setTeamRole(role);
+        assert (st != null);
+        studyTeamController.persistStudyTeam(st);
     }
+
+//    public void setStudyTeam(StudyTeam studyTeam) {
+////        this.studyTeam = studyTeam;
+//    }
 
     public List<TrackStudy> getStudyList() {
         return studyController.findAll();
@@ -449,7 +463,7 @@ public class StudyMB implements Serializable {
     }
 
     //add member to a team - batch persist 
-    public String addToTeam() {
+    public String addToTeam(String role) {
         try {
             Iterator<Theme> itr = getSelectedUsernames().listIterator();
             while (itr.hasNext()) {
@@ -457,7 +471,8 @@ public class StudyMB implements Serializable {
                 StudyTeamPK stp = new StudyTeamPK(studyName, t.getName());
                 StudyTeam st = new StudyTeam(stp);
                 st.setTimestamp(new Date());
-                st.setTeamRole(studyTeam.getTeamRole());
+                st.setTeamRole(role); // studyTeam.getTeamRole()
+                
                 
                 studyTeamController.persistStudyTeam(st);
                 activity.addActivity("added new member " + t.getName() + " ", studyName, "STUDY");

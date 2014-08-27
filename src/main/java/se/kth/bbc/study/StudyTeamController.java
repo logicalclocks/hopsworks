@@ -143,4 +143,15 @@ public class StudyTeamController {
             em.createQuery("insert into USERS_GROUPS values('" + username + "'," + t.getTeamRole() + ")").executeUpdate();
         }
     }    
+    
+    public StudyTeam getStudyTeam(String username, String studyname){
+        Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_member=?", StudyTeam.class).setParameter(1, studyname).setParameter(2, username);
+        List<StudyTeam> res = query.getResultList();
+        if (res.iterator().hasNext()) {
+            StudyTeam t = res.iterator().next();
+            return t;
+        }
+        return null;
+    }        
+      
 }

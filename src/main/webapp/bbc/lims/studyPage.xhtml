@@ -183,7 +183,7 @@
                                                                 <div class="left">
                                                                     <h:form id="frmRchs" class="edit_team_members">
                                                                         <div style="margin:0;padding:0;display:inline"></div>
-                                                                        <h:selectOneMenu id="researcherList" value="#{studyManagedBean.studyTeam.teamRole}" 
+                                                                        <h:selectOneMenu id="researcherList" value="#{studyManagedBean.studyTeamRole(rlist.email)}" 
                                                                                          valueChangeListener="#{studyManagedBean.teamRoleChanged}" styleClass="study_role_assign" onselect="#{studyManagedBean.onComplete()}">
                                                                             
 <!--                                                                                         onchange="#{studyManagedBean.updateStudyTeamRole(rlist.email)}">-->
