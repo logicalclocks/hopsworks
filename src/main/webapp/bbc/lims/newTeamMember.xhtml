@@ -70,7 +70,7 @@
                                            <div class="clearfix">
                                                 <label for="team_member_user_ids">Study Access</label>
                                                 <div class="input">
-                                                    <h:selectOneMenu value="#{studyManagedBean.studyTeam.teamRole}" styleClass="study_role_assign">
+                                                    <h:selectOneMenu value="#{studyManagedBean.studyTeamEntry.teamRole}" styleClass="study_role_assign">
                                                         <f:selectItems value="#{studyManagedBean.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
                                                      </h:selectOneMenu>
                                                 </div>
@@ -82,29 +82,6 @@
                          </h:form>     
                         </p:tab>
                     </p:tabView>
-                   
-<!--        <h:form styleClass="new_member_content" id="frmNewTeamMember">
-                 <h6 align="left">1. Choose people you want in the team</h6>
-                        <div class="clearfix">
-                            <label for="team_member_user_ids">People</label>
-                                <p:autoComplete id="autoName" value="#{studyManagedBean.selectedUsersname}" completeMethod="#{studyManagedBean.completeUsername}" var="user"
-                                                itemLabel="#{user.displayName}" itemValue="#{user}" multiple="true" forceSelection="true" 
-                                                converter="nameConverter" dropdown="true" emptyMessage="Select users" cache="false" styleClass="input"/>
-                        </div>
-                        <h6 align="left">2. Set access level for them</h6>
-                        <div class="clearfix">
-                             <label for="team_member_user_ids">Study Access</label>
-                             <div class="input">
-                                 <h:selectOneMenu value="#{studyManagedBean.studyGroups.teamRole}" styleClass="study_role_assign">
-                                     <f:selectItems value="#{studyManagedBean.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
-                                  </h:selectOneMenu>
-                             </div>
-                        </div>
-                        <div class="actions">
-                            <h:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addToTeam()}"/>
-                            <h:commandButton styleClass="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href='team.xhtml'"/>
-                        </div>
-      </h:form>     -->
                 </div>
             </div> 
 

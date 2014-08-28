@@ -68,6 +68,7 @@ public class StudyMB implements Serializable {
     private DatasetStudy dsStudy;
     private Dataset dataset;
     private List<Username> usernames;
+    private StudyTeam studyTeamEntry;
     private List<Theme> selectedUsernames;
     private List<Theme> themes;
 
@@ -75,6 +76,7 @@ public class StudyMB implements Serializable {
     private String studyCreator;
     private String newTeamRole;
     private String selectedUser;
+    private String setTeamRole;
     
    
 
@@ -87,13 +89,6 @@ public class StudyMB implements Serializable {
         this.activity = activity;
     }
 
-//    public AutocompleteMB getAutocompleteMB(){
-//        return autoComplete;
-//    }
-//    
-//    public void setAutocompleteMB(AutocompleteMB autoComplete) {
-//        this.autoComplete = autoComplete;
-//     }
     public List<Username> getUsersNameList() {
         return userFacade.findAllUsers();
     }
@@ -135,11 +130,11 @@ public class StudyMB implements Serializable {
     }
     
     public void teamRoleChanged(ValueChangeEvent e){
-      //this.newTeamRole = e.getNewValue().toString();
       setNewTeamRole(e.getNewValue().toString());
-      System.out.println(" new value here - "+ getNewTeamRole());
+      System.out.println(" New role selected : "+ getNewTeamRole());
+     
     
-//      if(!selectedTeamRole.equals(e.getOldValue().toString()))
+//     if(!newTeamRole.equals(e.getOldValue().toString()))
 //            updateStudyTeamRole();
    }
     
@@ -176,27 +171,36 @@ public class StudyMB implements Serializable {
         this.dataset = dataset;
     }
 
-    public String getStudyTeamRole(String email) {
-//        StudyTeam st = studyTeamController.getStudyTeam(email, studyName);
-//        assert (st != null);
-//        return st.getTeamRole();
-        try{
-             studyTeamController.updateTeamRole(studyName, email, getNewTeamRole());
-             activity.addActivity("changed team role of "+ email+ " to "+ getNewTeamRole(), studyName, "TEAM");
-        } catch(EJBException ejb){
-            addErrorMessageToUserAction("Error: Update failed.");
-            return null;
+    public StudyTeam getStudyTeamEntry() {
+        if (studyTeamEntry == null) {
+            studyTeamEntry = new StudyTeam();
         }
-            return "studyPage?faces-redirect=true";
+        return studyTeamEntry;
     }
 
-    public void setStudyTeamRole(String email, String role) {
-        StudyTeamPK pk = new StudyTeamPK(email, studyName);
-        StudyTeam st = new StudyTeam(pk);
-        st.setTeamRole(role);
-        assert (st != null);
-        studyTeamController.persistStudyTeam(st);
+    public void setStudyTeamEntry(StudyTeam studyTeamEntry) {
+        this.studyTeamEntry = studyTeamEntry;
     }
+
+    public String getStudyTeamRole(String email) {
+//        StudyTeamPK pk = new StudyTeamPK(email, studyName);
+//        StudyTeam st = new StudyTeam(pk);
+//        this.setTeamRole = st.getTeamRole();
+//        return setTeamRole;
+
+          StudyTeam team = studyTeamController.findByPrimaryKey(studyName, email);
+          if( team != null){
+              setTeamRole = team.getTeamRole();
+              return setTeamRole;
+          }
+           return null;
+        
+    }
+    
+//    public void setStudyTeamRole(String email) {
+//        studyTeamEntry = studyTeamController.findByPrimaryKey(studyName, email);
+//        this.setTeamRole = studyTeamEntry.getTeamRole();
+//    }
 
 //    public void setStudyTeam(StudyTeam studyTeam) {
 ////        this.studyTeam = studyTeam;
@@ -463,7 +467,7 @@ public class StudyMB implements Serializable {
     }
 
     //add member to a team - batch persist 
-    public String addToTeam(String role) {
+    public String addToTeam() {
         try {
             Iterator<Theme> itr = getSelectedUsernames().listIterator();
             while (itr.hasNext()) {
@@ -471,8 +475,7 @@ public class StudyMB implements Serializable {
                 StudyTeamPK stp = new StudyTeamPK(studyName, t.getName());
                 StudyTeam st = new StudyTeam(stp);
                 st.setTimestamp(new Date());
-                st.setTeamRole(role); // studyTeam.getTeamRole()
-                
+                st.setTeamRole(studyTeamEntry.getTeamRole()); 
                 
                 studyTeamController.persistStudyTeam(st);
                 activity.addActivity("added new member " + t.getName() + " ", studyName, "STUDY");

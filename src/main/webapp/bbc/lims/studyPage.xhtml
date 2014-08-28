@@ -112,7 +112,7 @@
                                                                     <div class="left">
                                                                         <h:form id="frmStudyMaster_${mst.count}" class="edit_team_members">
                                                                             <div style="margin:0;padding:0;display:inline"></div>
-                                                                            <h:selectOneMenu id="masterList" value="#{studyManagedBean.studyTeam.teamRole}" styleClass="study_role_assign" disabled="true" >
+                                                                            <h:selectOneMenu id="masterList" value="#{studyManagedBean.getStudyTeamRole(mlist.email)}" styleClass="study_role_assign" disabled="true" >
                                                                                 <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
                                                                             </h:selectOneMenu>
                                                                         </h:form>
@@ -141,7 +141,7 @@
                                                                 <div class="left">
                                                                     <h:form id="frmMaster_${mst.count}" class="edit_team_members">
                                                                         <div style="margin:0;padding:0;display:inline"></div>
-                                                                        <h:selectOneMenu id="masterList" value="#{studyManagedBean.studyTeam.teamRole}" styleClass="study_role_assign">
+                                                                        <h:selectOneMenu id="masterList" value="#{studyManagedBean.getStudyTeamRole(mlist.email)}" styleClass="study_role_assign">
                                                                             <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
                                                                         </h:selectOneMenu>
                                                                     </h:form>
@@ -183,7 +183,7 @@
                                                                 <div class="left">
                                                                     <h:form id="frmRchs" class="edit_team_members">
                                                                         <div style="margin:0;padding:0;display:inline"></div>
-                                                                        <h:selectOneMenu id="researcherList" value="#{studyManagedBean.studyTeamRole(rlist.email)}" 
+                                                                        <h:selectOneMenu id="researcherList" value="#{studyManagedBean.getStudyTeamRole(rlist.email)}"
                                                                                          valueChangeListener="#{studyManagedBean.teamRoleChanged}" styleClass="study_role_assign" onselect="#{studyManagedBean.onComplete()}">
                                                                             
 <!--                                                                                         onchange="#{studyManagedBean.updateStudyTeamRole(rlist.email)}">-->
@@ -233,7 +233,7 @@
                                                                 <div class="left">
                                                                     <h:form id="frm_${gut.count}" class="edit_team_members">
                                                                         <div style="margin:0;padding:0;display:inline"></div>
-                                                                        <h:selectOneMenu id="guestsList" value="#{studyManagedBean.studyTeam.teamRole}" styleClass="study_role_assign">
+                                                                        <h:selectOneMenu id="guestsList" value="#{studyManagedBean.getStudyTeamRole(glist.email)}" styleClass="study_role_assign">
                                                                             <f:selectItems value="#{studyManagedBean.teamForGuestList}" var="gs" itemLabel="#{gs.team}" itemValue="#{gs}"/>
                                                                         </h:selectOneMenu>
                                                                     </h:form>
