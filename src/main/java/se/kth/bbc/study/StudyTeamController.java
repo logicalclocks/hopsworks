@@ -145,19 +145,19 @@ public class StudyTeamController {
     }    
     
     public StudyTeam getStudyTeam(String studyname, String username){
-//        Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_member=?", StudyTeam.class).setParameter(1, studyname).setParameter(2, username);
-//        List<StudyTeam> res = query.getResultList();
-//        if (res.iterator().hasNext()) {
-//            StudyTeam t = res.iterator().next();
-//            return t;
-//        }
-//        return null;
-        
-        StudyTeam team = findByPrimaryKey(studyname, username);
-        if(team != null)
-            return team;
-        
+        Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_member=?", StudyTeam.class).setParameter(1, studyname).setParameter(2, username);
+        List<StudyTeam> res = query.getResultList();
+        if (res.iterator().hasNext()) {
+            StudyTeam t = res.iterator().next();
+            return t;
+        }
         return null;
+//        
+//        StudyTeam team = findByPrimaryKey(studyname, username);
+//        if(team != null)
+//            return team;
+//        
+//        return null;
     }  
       
 }

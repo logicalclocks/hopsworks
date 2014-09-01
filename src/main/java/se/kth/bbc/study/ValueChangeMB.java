@@ -46,27 +46,12 @@ public class ValueChangeMB implements Serializable{
     }
     
      public void teamRoleChanged(ValueChangeEvent e){
-      this.newTeamRole = e.getNewValue().toString();
-      System.out.println(" new value for team role - "+ newTeamRole);
+
+        System.out.println(" new value for team role - "+ newTeamRole);
       
     
 //      if(!selectedTeamRole.equals(e.getOldValue().toString()))
 //            updateStudyTeamRole();
    }
-    
-    public void print(String email){
-    
-            System.out.println(" print - "+ email + " - " +getNewTeamRole());
-    
-    }
-     
-    
-//    public void changeTeamRole(AjaxBehaviorEvent event) {
-//       
-//        String updatedRole = (String) ((UIOutput)event.getSource()).getValue();
-//    }
-     
-    
-    
     
 }

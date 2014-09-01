@@ -8,6 +8,7 @@ package se.kth.bbc.study;
 
 import java.io.Serializable;
 import java.util.Date;
+import javax.faces.bean.ManagedProperty;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
@@ -20,6 +21,7 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.activity.ActivityMB;
 
 /**
  *
@@ -54,7 +56,7 @@ public class StudyTeam implements Serializable {
     @Column(name = "timestamp")
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
-
+    
     public StudyTeam() {
     }
 

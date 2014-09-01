@@ -37,22 +37,13 @@
                 </p:toolbar> 
             </h:form>
 
-            <!--    <script>
-                    $("#tabStudyPage teamTab(#{currentData.SP_Index})").click();
-                </script>-->
-
-
             <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutStudy">  
                 <p:layoutUnit position="center">
 
                     <div class="container">
                         <ul class="main_menu"></ul>  
                         <div class="content"> 
-                            <!--                                 <h:form id="shit" prependId="false"> -->
                             <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs">
-                            <!--    <p:ajax event="tabChange" listener="#{studyManagedBean.onTabChange}" update=":teamTab"/>-->
-                                <!--     <p:ajax event="tabChange" update=":tabStudyPage:teamTab" process="@this"/>-->
-                                <!--<f:ajax event="tabChange" execute=":tabStudyPage:teamTab" render=":tabStudyPage:teamTab"/>-->
                                 <p:tab id="showTab" title="Show">
                                     <div class="study_content_list">
                                         <ui:repeat var="lstActivity" value="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}" varStatus="showAll">
@@ -80,7 +71,6 @@
                                             <h:form id="frmBtn">
                                                 <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" rendered="#{userMB.anyAdminUser}"
                                                                  action="newTeamMemb"/>
-                                                <!--                                            //onclick="window.location.href='newTeamMember.xhtml'"-->
                                             </h:form>
                                         </span>
                                     </h3>
@@ -111,10 +101,14 @@
                                                                 <div class="span5 right">
                                                                     <div class="left">
                                                                         <h:form id="frmStudyMaster_${mst.count}" class="edit_team_members">
-                                                                            <div style="margin:0;padding:0;display:inline"></div>
-                                                                            <h:selectOneMenu id="masterList" value="#{studyManagedBean.getStudyTeamRole(mlist.email)}" styleClass="study_role_assign" disabled="true" >
-                                                                                <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
+                                                                            <div style="margin:0;padding:0;display:inline">
+                                                                                <h:selectOneMenu id="Owner" value="#{studyManagedBean.ownerRole}" styleClass="study_role_assign" disabled="true">
+<!--                                                                                <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>-->
+                                                                                     <f:selectItem itemLabel="Master" itemValue="Master"/>
+                                                                                     <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
+                                                                                     <f:selectItem itemLabel="Guest" itemValue="Guest"/>
                                                                             </h:selectOneMenu>
+                                                                           </div>
                                                                         </h:form>
                                                                     </div>
                                                                     <div class="right" align="right">
@@ -140,10 +134,16 @@
                                                             <div class="span5 right">
                                                                 <div class="left">
                                                                     <h:form id="frmMaster_${mst.count}" class="edit_team_members">
-                                                                        <div style="margin:0;padding:0;display:inline"></div>
-                                                                        <h:selectOneMenu id="masterList" value="#{studyManagedBean.getStudyTeamRole(mlist.email)}" styleClass="study_role_assign">
-                                                                            <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
+                                                                        <div style="margin:0;padding:0;display:inline">
+                                                                        <h:selectOneMenu id="masterList_${mst.count}" value="#{studyManagedBean.newTeamRole}" styleClass="study_role_assign"
+                                                                                         onchange="window.location.replace('studyPage.xhtml')">
+<!--                                                                            <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>-->
+                                                                                     <f:selectItem itemLabel="Master" itemValue="Master"/>
+                                                                                     <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
+                                                                                     <f:selectItem itemLabel="Guest" itemValue="Guest"/>
+                                                                            <f:ajax event="change" execute="@this" listener="#{studyManagedBean.updateStudyTeamRole(mlist.email)}"/>
                                                                         </h:selectOneMenu>
+                                                                         </div>
                                                                     </h:form>
                                                                 </div>
                                                                 <div class="right" align="right">
@@ -158,15 +158,14 @@
                                                 </c:forEach>
                                             </ul>
                                         </h:panelGroup>
-                                        <!--                            </div>    -->
-
-                                        <!--                                <div id="divRech" class="ui_box">-->
+                                       
                                         <h:panelGroup id="divRech" styleClass="ui_box">
                                             <h5 class="title" align="left">Researchers
                                                 <small>#{studyManagedBean.countResearchers()}</small></h5>
 
                                             <ul class="well-list">
-                                                <ui:repeat var="rlist" value="#{studyManagedBean.researchersList}" varStatus="rchs">
+                                                <c:forEach var="rlist" items="#{studyManagedBean.researchersList}" varStatus="rchs">
+                                                   
                                                     <li id="researchers_${rchs.count}" class="team_member_row">
                                                         <div id="divRow" class="row">
                                                             <div class="span6">
@@ -181,19 +180,19 @@
                                                             </div>
                                                             <div id="userBlock" class="span5 right">
                                                                 <div class="left">
-                                                                    <h:form id="frmRchs" class="edit_team_members">
-                                                                        <div style="margin:0;padding:0;display:inline"></div>
-                                                                        <h:selectOneMenu id="researcherList" value="#{studyManagedBean.getStudyTeamRole(rlist.email)}"
-                                                                                         valueChangeListener="#{studyManagedBean.teamRoleChanged}" styleClass="study_role_assign" onselect="#{studyManagedBean.onComplete()}">
-                                                                            
-<!--                                                                                         onchange="#{studyManagedBean.updateStudyTeamRole(rlist.email)}">-->
-<!--                                                                            <f:valueChangeListener type="se.kth.bbc.study.ChangeListener"/>-->
-                                                                            <f:selectItems value="#{studyManagedBean.teamForResearchList}" var="rc" itemLabel="#{rc.team}" itemValue="#{rc}"/>
-<!--                                                                          valueChangeListener="#{studyManagedBean.teamRoleChanged}"
-                                                                            valueChangeListener="#{valueChangeMB.teamRoleChanged}"-->
-                                                                            <p:ajax event="change" process="researcherList" update="@all"
-                                                                                    listener="#{studyManagedBean.updateStudyTeamRole(rlist.email)}" async="true"/>
-                                                                        </h:selectOneMenu>
+                                                                    <h:form id="frmRchs_${rchs.count}" class="edit_team_members">
+                                                                        <div style="margin:0;padding:0;display:inline">
+                                                                            <p:selectOneMenu id="researcherList_${rchs.count}" value="#{studyManagedBean.changedRole}" styleClass="study_role_assign" 
+                                                                                          onchange="window.location.replace('studyPage.xhtml')" >
+<!--                                                                            <f:selectItem itemLabel="Researcher"/>-->
+<!--                                                                            <f:selectItems value="#{studyManagedBean.teamForResearchList}" var="rc" itemLabel="#{rc.team}" itemValue="#{rc}"/>-->
+<!--                                                                                           rendered="#{studyManagedBean.getCurrentRole(rlist.email)== 'Researcher'}"/>-->
+                                                                              <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
+                                                                              <f:selectItem itemLabel="Master" itemValue="Master"/>
+                                                                              <f:selectItem itemLabel="Guest" itemValue="Guest"/>
+                                                                            <f:ajax event="change" execute="@this" render="@all" listener="#{studyManagedBean.updateStudyTeamRole(rlist.email)}"/>
+                                                                        </p:selectOneMenu>
+                                                                            </div>
                                                                     </h:form>
                                                                 </div>
                                                                 <div class="right" align="right">
@@ -204,18 +203,17 @@
                                                             </div>
                                                         </div> 
                                                     </li>
-                                                </ui:repeat>
+                                                       
+                                                </c:forEach>
                                             </ul>
                                         </h:panelGroup>
-                                        <!--                                  </div>  -->
-
-
-                                        <!--                                <div id="divGust" class="ui_box">-->
+                                        
                                         <h:panelGroup id="divGust" styleClass="ui_box">
                                             <h5 class="title" align="left">Guests
                                                 <small>#{studyManagedBean.countGuests()}</small></h5>
                                             <ul class="well-list">
-                                                <ui:repeat var="glist" value="#{studyManagedBean.guestsList}" varStatus="gut">
+                                                <c:forEach var="glist" items="#{studyManagedBean.guestsList}" varStatus="gut">
+                                                  
                                                     <li id="guests_${gut.count}" class="team_member_row">
                                                         <div class="row">
                                                             <div class="span6">
@@ -231,11 +229,20 @@
                                                             <div class="span5 right"> 
 
                                                                 <div class="left">
-                                                                    <h:form id="frm_${gut.count}" class="edit_team_members">
-                                                                        <div style="margin:0;padding:0;display:inline"></div>
-                                                                        <h:selectOneMenu id="guestsList" value="#{studyManagedBean.getStudyTeamRole(glist.email)}" styleClass="study_role_assign">
-                                                                            <f:selectItems value="#{studyManagedBean.teamForGuestList}" var="gs" itemLabel="#{gs.team}" itemValue="#{gs}"/>
+                                                                    <h:form id="frmGuest_${gut.count}" class="edit_team_members">
+                                                                        <div style="margin:0;padding:0;display:inline">
+                                                                            <h:selectOneMenu id="guestsList_${gut.count}" value="#{studyManagedBean.newRole}" styleClass="study_role_assign" 
+                                                                                         onchange="window.location.replace('studyPage.xhtml')">
+<!--                                                                            <f:selectItem itemLabel="Guest"/>-->
+<!--                                                                            <f:selectItems value="#{studyManagedBean.teamForGuestList}" var="gs" itemLabel="#{gs.team}" itemValue="#{gs}"/> -->
+<!--                                                                            rendered="#{studyManagedBean.getCurrentRole(glist.email) == 'Guest'}"/>-->
+                                                                              <f:selectItem itemLabel="Guest" itemValue="Guest"/>
+                                                                              <f:selectItem itemLabel="Master" itemValue="Master"/>
+                                                                              <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
+                                                                            <f:ajax event="change" execute="@this" render="@all" listener="#{studyManagedBean.updateStudyTeamRole(glist.email)}"/>
+                                                                            
                                                                         </h:selectOneMenu>
+                                                                        </div>
                                                                     </h:form>
                                                                 </div>
                                                                 <div class="right" align="right">
@@ -246,7 +253,7 @@
                                                             </div>
                                                         </div> 
                                                     </li>
-                                                </ui:repeat>
+                                                </c:forEach>
                                             </ul>
                                         </h:panelGroup>
                                     </div>
