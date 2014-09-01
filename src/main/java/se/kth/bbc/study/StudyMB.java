@@ -43,7 +43,7 @@ import se.kth.kthfsdashboard.user.Username;
  *
  */
 @ManagedBean(name = "studyManagedBean", eager = true)
-@ApplicationScoped
+@SessionScoped
 public class StudyMB implements Serializable {
 
     private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
@@ -533,13 +533,13 @@ public class StudyMB implements Serializable {
     public String updateStudyTeamRole(String email) {
 
         try {
-           if(getNewTeamRole() != null){
+           if(getNewTeamRole() != null && newTeamRole != null){
                 studyTeamController.updateTeamRole(studyName, email, getNewTeamRole());
                 activity.addActivity("changed team role of " + email + " to " + getNewTeamRole(), studyName, "TEAM");
-             } else if(getChangedRole() != null){
+             } else if(getChangedRole() != null && newChangedRole != null){
                 studyTeamController.updateTeamRole(studyName, email, getChangedRole());
                 activity.addActivity("changed team role of " + email + " to " + getChangedRole(), studyName, "TEAM");
-             } else{
+             } else {
                 studyTeamController.updateTeamRole(studyName, email, getNewRole());
                 activity.addActivity("changed team role of " + email + " to " + getNewRole(), studyName, "TEAM");
              }

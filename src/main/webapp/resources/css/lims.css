@@ -63,6 +63,11 @@
  display: none;
 }
 
+.BbcMainLayout .ui-layout-unit-content{
+    
+    height: auto !important;
+    
+}
 
 /*.flex-init-setup {
      display: -webkit-box;
@@ -1250,7 +1255,7 @@ img .avatar .s32 {
     display: block;
     width:1170px;
     //min-height: 2880px;
-    min-height: 100%;
+    //min-height: 100%;
     height: auto !important;
 /*    margin-left: 300px;
     margin-right: 367.5px;*/
@@ -1273,7 +1278,7 @@ img .avatar .s32 {
     display: inline-block;
     width:1170px;
     //min-height: 2802px;
-    min-height: 100%;
+    //min-height: 100%;
     height: auto !important;
     margin-top: 0px;
     margin-right: 0px;
@@ -1401,7 +1406,7 @@ img .avatar .s32 {
     zoom: 1;
     margin-bottom: 0;
     vertical-align: middle;
-    text-align: center;
+    text-align: left;
     overflow: hidden;
     overflow-x: hidden;
     overflow-y: hidden;
@@ -1409,7 +1414,6 @@ img .avatar .s32 {
     -o-text-overflow: ellipsis;
     -ms-text-overflow: ellipsis;
     text-overflow: ellipsis;
-    
 }
 
 .input .study_role_assign{
@@ -1438,6 +1442,22 @@ img .avatar .s32 {
     
 }
 
+
+
+.study_role_assign label{
+    
+    float: left;
+    width: 160px;
+    padding-top: 5px;
+    text-align: left;
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
+    font-weight: normal;
+    line-height: 18px;
+    cursor: default;
+    
+}
 
 .span8{
     display: block;

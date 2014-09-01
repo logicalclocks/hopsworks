@@ -52,12 +52,12 @@ import se.kth.kthfsdashboard.user.Username;
 //                                                                                     @FieldResult(name="email",column = "EMAIL")}) 
 //                                                                                     })
 @NamedQueries({
-    @NamedQuery(name = "UserActivity.findAll", query = "SELECT u FROM UserActivity u"),
+    @NamedQuery(name = "UserActivity.findAll", query = "SELECT u FROM UserActivity u ORDER BY u.timestamp DESC"),
     @NamedQuery(name = "UserActivity.findById", query = "SELECT u FROM UserActivity u WHERE u.id = :id"),
     @NamedQuery(name = "UserActivity.findByActivity", query = "SELECT u FROM UserActivity u WHERE u.activity = :activity"),
     @NamedQuery(name = "UserActivity.findByPerformedBy", query = "SELECT u FROM UserActivity u WHERE u.performedBy = :performedBy"),
     @NamedQuery(name = "UserActivity.findByTimestamp", query = "SELECT u FROM UserActivity u WHERE u.timestamp = :timestamp"),
-    @NamedQuery(name = "UserActivity.findByActivityOn", query = "SELECT u FROM UserActivity u WHERE u.activityOn = :activityOn")})
+    @NamedQuery(name = "UserActivity.findByActivityOn", query = "SELECT u FROM UserActivity u WHERE u.activityOn = :activityOn ORDER BY u.timestamp DESC")})
 public class UserActivity implements Serializable {
     @Basic(optional = false)
     @NotNull

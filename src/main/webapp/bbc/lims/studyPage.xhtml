@@ -37,9 +37,8 @@
                 </p:toolbar> 
             </h:form>
 
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutStudy">  
+            <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
                 <p:layoutUnit position="center">
-
                     <div class="container">
                         <ul class="main_menu"></ul>  
                         <div class="content"> 
@@ -102,12 +101,12 @@
                                                                     <div class="left">
                                                                         <h:form id="frmStudyMaster_${mst.count}" class="edit_team_members">
                                                                             <div style="margin:0;padding:0;display:inline">
-                                                                                <h:selectOneMenu id="Owner" value="#{studyManagedBean.ownerRole}" styleClass="study_role_assign" disabled="true">
+                                                                                <p:selectOneMenu id="Owner" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign" disabled="true" style="width:170px;">
 <!--                                                                                <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>-->
                                                                                      <f:selectItem itemLabel="Master" itemValue="Master"/>
                                                                                      <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
                                                                                      <f:selectItem itemLabel="Guest" itemValue="Guest"/>
-                                                                            </h:selectOneMenu>
+                                                                            </p:selectOneMenu>
                                                                            </div>
                                                                         </h:form>
                                                                     </div>
@@ -135,14 +134,14 @@
                                                                 <div class="left">
                                                                     <h:form id="frmMaster_${mst.count}" class="edit_team_members">
                                                                         <div style="margin:0;padding:0;display:inline">
-                                                                        <h:selectOneMenu id="masterList_${mst.count}" value="#{studyManagedBean.newTeamRole}" styleClass="study_role_assign"
+                                                                        <p:selectOneMenu id="masterList_${mst.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign"  style="width:170px;"
                                                                                          onchange="window.location.replace('studyPage.xhtml')">
+                                                                            <p:ajax update="@this" listener="#{valueChangeMB.updateStudyTeamRole(mlist.email)}"/>
 <!--                                                                            <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>-->
                                                                                      <f:selectItem itemLabel="Master" itemValue="Master"/>
                                                                                      <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
                                                                                      <f:selectItem itemLabel="Guest" itemValue="Guest"/>
-                                                                            <f:ajax event="change" execute="@this" listener="#{studyManagedBean.updateStudyTeamRole(mlist.email)}"/>
-                                                                        </h:selectOneMenu>
+                                                                        </p:selectOneMenu>
                                                                          </div>
                                                                     </h:form>
                                                                 </div>
@@ -182,17 +181,18 @@
                                                                 <div class="left">
                                                                     <h:form id="frmRchs_${rchs.count}" class="edit_team_members">
                                                                         <div style="margin:0;padding:0;display:inline">
-                                                                            <p:selectOneMenu id="researcherList_${rchs.count}" value="#{studyManagedBean.changedRole}" styleClass="study_role_assign" 
-                                                                                          onchange="window.location.replace('studyPage.xhtml')" >
+                                                                            <p:selectOneMenu id="researcherList_${rchs.count}" value="#{valueChangeMB.newTeamRole}" 
+                                                                                             onchange="window.location.replace('studyPage.xhtml')"                                                                                           styleClass="study_role_assign"  style="width:170px;">
+                                                                                 <p:ajax update="@this" listener="#{valueChangeMB.updateStudyTeamRole(rlist.email)}"/>
 <!--                                                                            <f:selectItem itemLabel="Researcher"/>-->
 <!--                                                                            <f:selectItems value="#{studyManagedBean.teamForResearchList}" var="rc" itemLabel="#{rc.team}" itemValue="#{rc}"/>-->
 <!--                                                                                           rendered="#{studyManagedBean.getCurrentRole(rlist.email)== 'Researcher'}"/>-->
                                                                               <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
                                                                               <f:selectItem itemLabel="Master" itemValue="Master"/>
                                                                               <f:selectItem itemLabel="Guest" itemValue="Guest"/>
-                                                                            <f:ajax event="change" execute="@this" render="@all" listener="#{studyManagedBean.updateStudyTeamRole(rlist.email)}"/>
+<!--                                                                               <f:ajax event="change" execute="@this" listener="#{studyManagedBean.updateStudyTeamRole(rlist.email)}"/>-->
                                                                         </p:selectOneMenu>
-                                                                            </div>
+                                                                       </div>
                                                                     </h:form>
                                                                 </div>
                                                                 <div class="right" align="right">
@@ -231,17 +231,18 @@
                                                                 <div class="left">
                                                                     <h:form id="frmGuest_${gut.count}" class="edit_team_members">
                                                                         <div style="margin:0;padding:0;display:inline">
-                                                                            <h:selectOneMenu id="guestsList_${gut.count}" value="#{studyManagedBean.newRole}" styleClass="study_role_assign" 
-                                                                                         onchange="window.location.replace('studyPage.xhtml')">
+                                                                            <p:selectOneMenu id="guestsList_${gut.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign" 
+                                                                                         onchange="window.location.replace('studyPage.xhtml')"  style="width:170px;">
+                                                                                 <p:ajax update="@this" listener="#{valueChangeMB.updateStudyTeamRole(glist.email)}"/>
 <!--                                                                            <f:selectItem itemLabel="Guest"/>-->
 <!--                                                                            <f:selectItems value="#{studyManagedBean.teamForGuestList}" var="gs" itemLabel="#{gs.team}" itemValue="#{gs}"/> -->
 <!--                                                                            rendered="#{studyManagedBean.getCurrentRole(glist.email) == 'Guest'}"/>-->
                                                                               <f:selectItem itemLabel="Guest" itemValue="Guest"/>
                                                                               <f:selectItem itemLabel="Master" itemValue="Master"/>
                                                                               <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
-                                                                            <f:ajax event="change" execute="@this" render="@all" listener="#{studyManagedBean.updateStudyTeamRole(glist.email)}"/>
+<!--                                                                            <f:ajax event="change" execute="@this" listener="#{studyManagedBean.updateStudyTeamRole(glist.email)}"/>-->
                                                                             
-                                                                        </h:selectOneMenu>
+                                                                        </p:selectOneMenu>
                                                                         </div>
                                                                     </h:form>
                                                                 </div>

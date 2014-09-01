@@ -17,19 +17,11 @@ import javax.faces.convert.FacesConverter;
  */
 @FacesConverter("nameConverter")
 public class InputConverter implements Converter {
-
-//    @ManagedProperty("#{studyManagedBean}")
-//    private StudyMB name;
-//    
-//    
-//    public void setService(StudyMB name){
-//        this.name = name;
-//    }
     
     @Override
     public Object getAsObject(FacesContext facesContext, UIComponent component, String value) {
         if(value != null && value.trim().length() > 0) {
-            StudyMB service = (StudyMB) facesContext.getExternalContext().getApplicationMap().get("studyManagedBean");
+            StudyMB service = (StudyMB) facesContext.getExternalContext().getSessionMap().get("studyManagedBean");
             return service.getThemes().get(Integer.parseInt(value));
         }
         else {
