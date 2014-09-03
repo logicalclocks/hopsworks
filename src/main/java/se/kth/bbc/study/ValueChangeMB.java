@@ -78,7 +78,8 @@ public class ValueChangeMB implements Serializable {
             return "Failed";
         }
             //addMessage("Team role updated successful "+ email + " at "+ studyMB.getStudyName());
-            return "studyPage?faces-redirect=true";
+            //return "studyPage?faces-redirect=true";
+            return "OK";
     }
     
     

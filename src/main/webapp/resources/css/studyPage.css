@@ -159,3 +159,67 @@ and open the template in the editor.
  display: none;
 }
 
+.span5 .ui-button{
+    background: linear-gradient(rgb(252, 141, 131) 5%, rgb(228, 104, 93) 100%) rgb(252, 141, 131);
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    border: 1px solid rgb(216, 53, 38);
+    background-image: initial;
+    background-position-x: initial;
+    background-position-y: initial;
+    background-size: initial;
+    background-repeat-x: initial;
+    background-repeat-y: initial;
+    background-attachment: initial;
+    background-origin: initial;
+    background-clip: initial;
+    background: #da4f49;
+    text-decoration: none;
+    text-shadow: rgb(178, 62, 53) 0px 1px 0px;
+    line-height: 14px;
+    margin: 2px;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+    -webkit-transition-property: background;
+    -moz-transition-property: background;
+    -o-transition-property: background;
+    transition-property: background;
+    -webkit-transition-duration: 0.3s;
+    -moz-transition-duration: 0.3s;
+    -o-transition-duration: 0.3s;
+    transition-duration: 0.3s;
+    
+
+}
+
+.span5 .ui-button .ui-widget-content{
+    color: #ffffff;
+}
+
+.span5 .ui-button:hover {
+       //color:#333;
+        background: #FF530D;
+}
+
+.ui-dialog .ui-widget-content {
+    background: #ffffff;
+    color: #4f4f4f;
+}
+
+.ui-dialog .ui-dialog-buttonpane {
+    text-align: right;
+    border-width: 1px 0 0 0;
+    background-image: none;
+    margin: .5em 0 0 0;
+    padding: .3em 1em .5em .4em;
+    
+}
+
+.ui-dialog .ui-dialog-titlebar {
+    padding: .4em .4em .4em 1em;
+    position: relative;
+    border: 0px;
+}

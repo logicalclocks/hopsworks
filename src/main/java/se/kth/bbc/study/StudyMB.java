@@ -302,6 +302,8 @@ public class StudyMB implements Serializable {
         activity.getGravatar(studyCreator);
     }
 
+    
+    
     public StudyRoleTypes[] getTeam() {
         return StudyRoleTypes.values();
     }
@@ -357,15 +359,22 @@ public class StudyMB implements Serializable {
     }
 
     public String checkStudyOwner(String email) {
-        //boolean flag = false;
-        String owner = null;
+       
         List<TrackStudy> lst = studyTeamController.findStudyMaster(studyName);
         for (TrackStudy tr : lst) {
             if (tr.getUsername().equals(email)) {
-                owner = email;
+                    return email;
             }
         }
-        return owner;
+        return null;
+    }
+    
+    public String checkCurrentUser(String email) {
+       
+        if(email.equals(getUsername()))
+                return email;
+        
+        return null;
     }
 
     public String renderList(String email) {
