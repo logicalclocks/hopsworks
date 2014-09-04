@@ -73,7 +73,7 @@
                                     <div class="content_list">
                                         <c:forEach var="act" items="#{activityBean.acvitiyList}">
                                             <div class="event-item" align="left">
-                                                <span class="cgray right">3 months ago.</span>
+                                                <span class="cgray right">#{activityBean.findLastActivity(act.id)}</span>
                                                 <img class="avatar s24" src="#{activityBean.getGravatar(act.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
                                                 <div class="event-title">
                                                     <span class="author_name"><h:link> #{act.performedBy}</h:link></span>
@@ -90,7 +90,7 @@
                                     <div class="study_box"> 
                                         <h3 class="title" align="left">Study<small>(#{studyManagedBean.allStudy})</small>
                                             <span class="right">
-                                                <h:commandButton id="newStd" value="New Study" type="button" rendered="#{userMB.anyAdminUser}"  class="styled-button-10" onclick="window.location.href = 'newStudy.xhtml'"/>
+                                                <p:commandButton id="newStd" value="New Study" type="button" rendered="#{userMB.anyAdminUser}" icon="ui-icon-plus" onclick="window.location.href = 'newStudy.xhtml'"/>
                                             </span>
                                         </h3>
 
@@ -107,6 +107,10 @@
                                                             <f:param id="studyName_${allStatus.count}" name="studyname" value="#{aList.name}"/>
                                                             <f:param id="username_${allStatus.count}" name="username" value="#{aList.username}"/>
                                                         </p:commandLink>
+                                                        <span class="last_activity">
+                                                            <strong style="font-size: 12px;color: #666;">Last activity:</strong>
+                                                            <span>#{activityBean.findLastActivityOnStudy(aList.name)}</span>
+                                                        </span>
                                                     </li> 
                                                 </ui:repeat>
                                                 <!--     </h:form>-->
@@ -120,6 +124,10 @@
                                                             <f:param id="studyName_${personalStatus.count}" name="studyname" value="#{pList.name}"/>
                                                             <f:param id="username_${personalStatus.count}" name="username" value="#{pList.username}"/>
                                                         </p:commandLink>
+                                                        <span class="last_activity">
+                                                            <strong style="font-size: 12px;color: #666;">Last activity:</strong>
+                                                            <span>#{activityBean.findLastActivityOnStudy(pList.name)}</span>
+                                                        </span>
                                                     </li> 
                                                 </ui:repeat>
                                                 <!--         </h:form>-->
@@ -132,6 +140,10 @@
                                                             <f:param id="studyName_${joinStatus.count}" name="studyname" value="#{jList.name}"/>
                                                             <f:param id="username_${joinStatus.count}" name="username" value="#{jList.username}"/>
                                                         </p:commandLink>
+                                                        <span class="last_activity">
+                                                            <strong style="font-size: 12px;color: #666;">Last activity:</strong>
+                                                            <span>#{activityBean.findLastActivityOnStudy(jList.name)}</span>
+                                                        </span>
                                                     </li> 
                                                 </ui:repeat>
 

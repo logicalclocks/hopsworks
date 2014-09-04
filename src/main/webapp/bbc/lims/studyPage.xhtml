@@ -37,7 +37,7 @@
                 </p:toolbar> 
             </h:form>
 
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutStudy">  
                 <p:layoutUnit position="center">
                     <div class="container">
                         <ul class="main_menu"></ul>  
@@ -48,7 +48,7 @@
                                         <c:forEach var="lstActivity" items="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}" varStatus="showAll">
                                             <div class="event-item" align="left">
                                                 <span class="cgray right">
-                                                    13 days ago.
+                                                    #{activityBean.findLastActivity(lstActivity.id)}
                                                 </span>
                                                 <img class="avatar s24" src="#{activityBean.getGravatar(lstActivity.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
                                                 <div class="event-title">

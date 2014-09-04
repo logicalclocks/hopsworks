@@ -50,6 +50,15 @@ public class ActivityController {
         return query.getResultList();
     }
     
+    public List<UserActivity> activityOnID(int id){
+    
+        Query query = em.createNamedQuery("UserActivity.findById", UserActivity.class).setParameter("id", id);
+        return query.getResultList();
+    }
     
     
+    public List<UserActivity> lastActivityOnStudy(String name){
+        Query query = em.createNativeQuery("SELECT * FROM activity WHERE activity_on=? ORDER BY timestamp DESC LIMIT 1", UserActivity.class).setParameter(1, name);
+        return query.getResultList();
+    }
 }

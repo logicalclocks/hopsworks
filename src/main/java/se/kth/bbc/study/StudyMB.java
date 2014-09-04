@@ -453,7 +453,7 @@ public class StudyMB implements Serializable {
         }
         addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
         addStudyMaster(study.getName());
-        return "Success!";
+        return "indexPage";
     }
 
     /**

@@ -1374,6 +1374,13 @@ img .avatar .s32 {
     
 }
 
+.event-item .right {
+    
+    float: right !important;
+    width: 112px;
+    height: 36px;
+}
+
 .right{
     
     float: right !important;
@@ -1387,6 +1394,13 @@ img .avatar .s32 {
     width: 170px;
     height: 46px;
     
+}
+
+.last_activity{
+    padding-top: 5px;
+    display: block;
+    line-height: 18px;
+    width: 338px;
 }
 
 
