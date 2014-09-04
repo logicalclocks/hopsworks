@@ -10,8 +10,10 @@ import com.timgroup.jgravatar.Gravatar;
 import com.timgroup.jgravatar.GravatarDefaultImage;
 import com.timgroup.jgravatar.GravatarRating;
 import java.io.Serializable;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -87,6 +89,13 @@ public class ActivityMB implements Serializable {
         return activityController.activityOnstudy(activityOn);
     }
     
+//    public long findLastActivity(String activityOn){
+//        Iterator<UserActivity> itr = activityController.activityOnstudy(activityOn).listIterator();
+//        while(itr.hasNext()){
+//              return itr.next().getTimestamp().getTime();
+//        }
+//    }
+    
     public void addActivity(String message, String activityAbout, String flag){
         
         activity.setId(Integer.SIZE);
@@ -118,11 +127,8 @@ public class ActivityMB implements Serializable {
     public String getGravatar(String email){
     
          Gravatar gravatar = new Gravatar();
-         //gravatar.setSize(28);
          gravatar.setRating(GravatarRating.GENERAL_AUDIENCES);
-//         gravatar.setDefaultImage(GravatarDefaultImage.IDENTICON);
          String url = gravatar.getUrl(email);
-         //byte[] jpg = gravatar.download("info@ralfebert.de");
     
          return url;
     }

@@ -45,12 +45,12 @@
                             <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs">
                                 <p:tab id="showTab" title="Show">
                                     <div class="study_content_list">
-                                        <ui:repeat var="lstActivity" value="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}" varStatus="showAll">
+                                        <c:forEach var="lstActivity" items="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}" varStatus="showAll">
                                             <div class="event-item" align="left">
                                                 <span class="cgray right">
                                                     13 days ago.
                                                 </span>
-                                                <img class="avatar s24" src="#{activityBean.getGravatar(studyManagedBean.creator)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                <img class="avatar s24" src="#{activityBean.getGravatar(lstActivity.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
                                                 <div class="event-title">
                                                     <span class="author_name"><h:link>#{lstActivity.performedBy}</h:link></span>
                                                     <span class="event_label opened">#{lstActivity.activity}</span>
@@ -58,7 +58,7 @@
                                                     <h:link><span class="tiny">#{lstActivity.performedBy}  /  </span><strong>#{lstActivity.activityOn}</strong></h:link>
                                                 </div>
                                             </div>
-                                        </ui:repeat>
+                                        </c:forEach>
                                     </div>
                                 </p:tab>
 
@@ -77,6 +77,7 @@
                                     <div class="clear_fixing"></div>
 
                                     <div id="divTeam" class="team_table"> 
+                                      <c:if test="#{studyManagedBean.countMasters() > 0}">
                                         <h:panelGroup id="divMaster" styleClass="ui_box">
                                             <h5 class="title" align="left">Masters
                                                 <small>#{studyManagedBean.countMasters()}</small></h5>
@@ -238,7 +239,10 @@
                                                 </c:forEach>
                                             </ul>
                                         </h:panelGroup>
-                                       
+                                        </c:if>
+    <!-- End of Master Panel Group and starting of Researcher Panel Group-->   
+    
+                                        <c:if test="#{studyManagedBean.countResearchers() > 0}">
                                         <h:panelGroup id="divRech" styleClass="ui_box">
                                             <h5 class="title" align="left">Researchers
                                                 <small>#{studyManagedBean.countResearchers()}</small></h5>
@@ -337,7 +341,10 @@
                                                 </c:forEach>
                                             </ul>
                                         </h:panelGroup>
+                                      </c:if>
+  <!-- End of Researcher Panel Group and starting of Guest Panel Group-->                                    
                                         
+                                      <c:if test="#{studyManagedBean.countGuests() > 0}">
                                         <h:panelGroup id="divGust" styleClass="ui_box">
                                             <h5 class="title" align="left">Guests
                                                 <small>#{studyManagedBean.countGuests()}</small></h5>
@@ -439,6 +446,7 @@
                                                 </c:forEach>
                                             </ul>
                                         </h:panelGroup>
+                                      </c:if>
                                     </div>
                                 </p:tab>
 <!--                                <p:tab id="genomes" title="Genomes"></p:tab>
