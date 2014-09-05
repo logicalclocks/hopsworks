@@ -687,13 +687,13 @@ h6{
 .icon-minus:before{width: 9px;height: 6px;}
 
 
-/*.team_table{
+.team_table{
     display: block;
     width: 1170px !important;
     height: auto !important;
 }
 
-.team_table .ui_box{
+/*.team_table .ui_box{
     display: block;
     border-top-color: rgb(204, 204, 204);
     border-top-style: solid;
@@ -780,7 +780,7 @@ h6{
     background: #F9F9F9;
     margin-bottom: 25px;
 /*    min-height: 440px;*/
-    height: auto;
+    height: auto !important;
     width: 1168px !important;
 }
 
@@ -1552,7 +1552,7 @@ img .avatar .s32 {
     display: block;
 }
 
-.event_filter .filter_icon a {
+.event_filter .filter_icon .link_a {
     text-align: center;
     border-left: 3px solid #29b;
     background: #f9f9f9;
@@ -1561,10 +1561,27 @@ img .avatar .s32 {
     padding: 9px 7px;
     font-size: 18px;
     width: 26px;
+    height: 19px;
     outline: none;
     color: #3a89a3;
     text-decoration: none;
 }
+
+.event_filter .filter_icon .link_a:focus {
+    text-align: center;
+    border-left: 3px solid #29b;
+    background: #f9f9f9;
+    margin-bottom: 10px;
+    float: left;
+    padding: 9px 7px;
+    font-size: 18px;
+    width: 26px;
+    height: 19px;
+    outline: none;
+    color: #3a89a3;
+    text-decoration: none;
+}
+
 
 .study_box {
     display: inline-block;

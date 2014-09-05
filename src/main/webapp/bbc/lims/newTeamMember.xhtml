@@ -76,8 +76,12 @@
                                                 </div>
                                            </div>
                                            <div class="actions">
-                                               <h:commandButton class="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addToTeam}" />
+                                               <h:commandButton class="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addToTeam}"/>
                                                <h:commandButton class="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href='studyPage.xhtml'"/>
+<!--                                               <p:commandButton id="addMsgButton" value="Add message" action="#{dataTableController.addMessage}"  
+                                                        process="messageDetailGroup" update="messageDetail dataTable messages"  
+                                                        style="margin-top: 20px;" icon="ui-icon-plusthick"  
+                                                        onstart="PF('blockUIWidget1').block()" oncomplete="PF('blockUIWidget1').unblock()"/>  -->
                                            </div>
                          </h:form>     
                         </p:tab>

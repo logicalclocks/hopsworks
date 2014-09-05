@@ -447,13 +447,13 @@ public class StudyMB implements Serializable {
         try {
             studyController.persistStudy(study);
             activity.addActivity("new study created", study.getName(), "STUDY");
+             addStudyMaster(study.getName());
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Failed: Study name might have been duplicated!");
             return null;
         }
         addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
-        addStudyMaster(study.getName());
-        return "indexPage";
+        return "Success!";
     }
 
     /**

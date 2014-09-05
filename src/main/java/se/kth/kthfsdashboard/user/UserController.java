@@ -23,6 +23,7 @@ import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletRequest;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
+import se.kth.bbc.activity.ActivityMB;
 import se.kth.bbc.study.StudyMB;
 
 
@@ -52,17 +53,6 @@ public class UserController implements Serializable {
     public UserController() {
         
     }
-    
-    
-   
-//    @ManagedProperty(value="#{autoComplete}")
-//    private AutocompleteMB autoComplete;
-//    
-    
-//    @PostConstruct
-//    protected void init(){
-//        usernames = getUsersNameList();
-//    }
     
     public Username getUser() {
         if (user == null) {
@@ -180,7 +170,7 @@ public class UserController implements Serializable {
         
         user.encodePassword();
         user.setRegisteredOn(new Date());
-        g.add(Group.BBC_ADMIN);
+        //g.add(Group.BBC_ADMIN);
         user.setGroups(g);
         try {
             userFacade.persist(user);

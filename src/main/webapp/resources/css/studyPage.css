@@ -137,8 +137,8 @@ and open the template in the editor.
 
 
 .BbcMainLayoutStudy {
-    text-align: center;
-    //min-height: 900px;
+    //text-align: center;
+    min-height: 1500px;
 }
 
 .BbcMainLayoutStudy .ui-widget-content {
@@ -148,7 +148,7 @@ and open the template in the editor.
 }
 
 .BbcMainLayoutStudy .ui-layout-unit-content{
-    min-height: 1000px;
+    min-height: 1500px;
     height: auto !important;
     
 }

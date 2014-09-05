@@ -56,7 +56,7 @@
                     <p:menuitem value="View" update="userDetail" icon="ui-icon-search" oncomplete="PF('userDialog').show()"/>
                     <p:menuitem value="Delete" update="userdataTable" icon="ui-icon-close" actionListener="#{userController.deleteUser()}"/>
                 </p:contextMenu>
-          <p:growl id="growl" life="2000"/>
+                <p:growl id="growl" life="2000"/>
                         <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
                                      selectionMode="single" rowKey="#{user.email}" selection="#{userController.selectedUser}">
                                         
@@ -198,7 +198,7 @@
                                 
                                 
                                            <div class="actions">
-                                               <h:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{userController.addUser()}"/>
+                                               <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{userController.addUser()}"/>
                                            </div>
                              </h:form>     
 <!--                            </div>-->
