@@ -58,30 +58,34 @@
                               </h3>
                             <hr/>
                             <h:form class="new_member_content">
-                                <h:messages errorClass="error"/>
+                                <p:messages autoUpdate="true" closable="true"/>
                                   <h6 align="left">1. Choose people you want in the team</h6>
                                            <div class="clearfix">
                                                <label for="team_member_user_ids">People</label>
                                                    <p:autoComplete id="autoName" value="#{studyManagedBean.selectedUsernames}" completeMethod="#{studyManagedBean.completeUsername}" var="user"
                                                                    itemLabel="#{user.displayName}" itemValue="#{user}" multiple="true" forceSelection="true" 
-                                                                   converter="nameConverter" dropdown="true" emptyMessage="Select users" cache="false" styleClass="input" validatorMessage="People field cannot be empty"/>
+                                                                   converter="nameConverter" dropdown="true" emptyMessage="Select users" cache="false" styleClass="input" 
+                                                                   required="true" requiredMessage="Error: People field cannot be empty">
+                                                   </p:autoComplete>
                                            </div>
                                            <h6 align="left">2. Set access level for them</h6>
                                            <div class="clearfix">
                                                 <label for="team_member_user_ids">Study Access</label>
                                                 <div class="input">
-                                                    <h:selectOneMenu value="#{studyManagedBean.studyTeamEntry.teamRole}" styleClass="study_role_assign">
+                                                    <p:selectOneMenu value="#{studyManagedBean.studyTeamEntry.teamRole}" styleClass="study_role_assign" style="width:170px;">
                                                         <f:selectItems value="#{studyManagedBean.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
-                                                     </h:selectOneMenu>
+                                                     </p:selectOneMenu>
                                                 </div>
                                            </div>
                                            <div class="actions">
                                                <h:commandButton class="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addToTeam}"/>
                                                <h:commandButton class="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href='studyPage.xhtml'"/>
-<!--                                               <p:commandButton id="addMsgButton" value="Add message" action="#{dataTableController.addMessage}"  
-                                                        process="messageDetailGroup" update="messageDetail dataTable messages"  
-                                                        style="margin-top: 20px;" icon="ui-icon-plusthick"  
-                                                        onstart="PF('blockUIWidget1').block()" oncomplete="PF('blockUIWidget1').unblock()"/>  -->
+<!--                                        <p:blockUI widgetVar="blockUIWidget1">  
+                                            <h:panelGrid columns="2" style="display:none;">  
+                                                        <p:graphicImage value="#{resource['/images/ajax-loader.GIF']}" style="vertical-align: middle; position: relative;"/>  
+                                                        <h:outputText value="Please wait, new members are being added......" style="white-space: nowrap;"/>  
+                                            </h:panelGrid>  
+                                        </p:blockUI> -->
                                            </div>
                          </h:form>     
                         </p:tab>

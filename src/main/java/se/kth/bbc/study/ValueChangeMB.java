@@ -67,13 +67,12 @@ public class ValueChangeMB implements Serializable {
         this.newTeamRole = newTeamRole;
     }
     
-    public String updateStudyTeamRole(String email) {
+    public synchronized String updateStudyTeamRole(String email) {
 
         try {
             studyTeamController.updateTeamRole(studyMB.getStudyName(), email, getNewTeamRole());
             activity.addActivity("changed team role of " + email + " to " + getNewTeamRole(), studyMB.getStudyName(), "TEAM");
-            
-        } catch (EJBException ejb) {
+        } catch (Exception ejb) {
             //addErrorMessageToUserAction("Error: Update failed.");
             return "Failed";
         }
@@ -82,6 +81,21 @@ public class ValueChangeMB implements Serializable {
             return "OK";
     }
     
+    public synchronized String deleteMemberFromTeam(String email) {
+
+        try {
+
+            studyTeamController.removeStudyTeam(studyMB.getStudyName(), email);
+            activity.addActivity("team member " + email + " deleted ", studyMB.getStudyName(), "TEAM");
+
+        } catch (EJBException ejb) {
+            addErrorMessageToUserAction("Error: Deleting team member failed.");
+            return null;
+        }
+            addMessage("Team member " + email + " deleted from study " + studyMB.getStudyName());
+            return "studyPage";
+
+    }
     
     
     public void addMessage(String summary) {

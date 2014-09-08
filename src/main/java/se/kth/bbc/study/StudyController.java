@@ -53,7 +53,7 @@ public class StudyController {
         return (Long)em.createNamedQuery("TrackStudy.findMembers").setParameter("name", name).getSingleResult();
     }
     
-    public List<TrackStudy> filterLatestStudy(String username){
+    public List<TrackStudy> filterPersonalStudy(String username){
     
 //        Calendar cal = Calendar.getInstance();
 //        cal.setTime(new Date());

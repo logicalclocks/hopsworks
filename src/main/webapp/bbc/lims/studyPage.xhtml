@@ -77,13 +77,13 @@
                                     <div class="clear_fixing"></div>
 
                                     <div id="divTeam" class="team_table"> 
-                                      <c:if test="#{studyManagedBean.countMasters() > 0}">
+                                        <c:if id="masterBlock" test="${studyManagedBean.countMasters() > 0}">
                                         <h:panelGroup id="divMaster" styleClass="ui_box">
                                             <h5 class="title" align="left">Masters
                                                 <small>#{studyManagedBean.countMasters()}</small></h5>
                                             <ul class="well-list">
                                                 <c:forEach var="mlist" items="${studyManagedBean.mastersList}" varStatus="mst">
-                                                    <c:if test="${(studyManagedBean.checkStudyOwner(mlist.email) eq mlist.email) and (studyManagedBean.checkCurrentUser(mlist.email) ne mlist.email)}">
+                                                    <c:if id="ownerOnly_master" test="${(studyManagedBean.checkStudyOwner(mlist.email) eq mlist.email) and (studyManagedBean.checkCurrentUser(mlist.email) ne mlist.email)}">
                                                         <li id="team_member_row_${mst.count}" class="team_member_row">
                                                             <div class="row">
                                                                 <div class="span6">
@@ -116,7 +116,7 @@
                                                             </div>
                                                         </li>
                                                     </c:if>
-                                                    <c:if test="${(studyManagedBean.checkStudyOwner(mlist.email) ne mlist.email) and (studyManagedBean.checkCurrentUser(mlist.email) eq mlist.email)}">
+                                                    <c:if id="currentUser_master" test="${(studyManagedBean.checkStudyOwner(mlist.email) ne mlist.email) and (studyManagedBean.checkCurrentUser(mlist.email) eq mlist.email)}">
                                                                 <li id="team_member_row_${mst.count}" class="team_member_row">
                                                                    <div class="row">
                                                                        <div class="span6">
@@ -145,20 +145,20 @@
                                                                                </h:form>
                                                                            </div>
                                                                            <div class="right" align="right">
-                                                                                <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                                               <p:commandButton icon="ui-icon-minus" onclick="confirmation.show()">
-                                                                                    <p:confirm header="Removing a team member" message="Are you sure you want to remove,  #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert" />
-                                                                               </p:commandButton>
-                                                                               <p:confirmDialog global="true" severity="alert" showEffect="fade"> 
-                                                                                     <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" action="#{studyManagedBean.deleteMemberFromTeam(mlist.email)}"/>  
-                                                                                     <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
-                                                                                </p:confirmDialog> 
+                                                                                        <h:commandButton class="btn" value="This is you!" disabled="true"/>
+                                                                                        <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}">
+                                                                                             <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert" />
+                                                                                        </p:commandButton>
+                                                                                        <p:confirmDialog id="currentUser_master_${mst.count}" global="true" severity="alert" showEffect="fade"> 
+                                                                                                <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
+                                                                                                <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/> 
+                                                                                         </p:confirmDialog> 
                                                                            </div>
                                                                        </div>
                                                                    </div>
                                                                </li>
-                                                        </c:if>
-                                                    <c:if test="${(studyManagedBean.checkStudyOwner(mlist.email) eq mlist.email) and (studyManagedBean.checkCurrentUser(mlist.email) eq mlist.email)}">
+                                                     </c:if>
+                                                    <c:if id="ownerNcurrentUser_master" test="${(studyManagedBean.checkStudyOwner(mlist.email) eq mlist.email) and (studyManagedBean.checkCurrentUser(mlist.email) eq mlist.email)}">
                                                                 <li id="team_member_row_${mst.count}" class="team_member_row">
                                                                    <div class="row">
                                                                        <div class="span6">
@@ -194,7 +194,7 @@
                                                                    </div>
                                                                </li>
                                                         </c:if>
-                                                        <c:if test="${studyManagedBean.checkStudyOwner(mlist.email) ne mlist.email and (studyManagedBean.checkCurrentUser(mlist.email) ne mlist.email)}">
+                                                        <c:if id="notCurrentUserNOwner_master" test="${studyManagedBean.checkStudyOwner(mlist.email) ne mlist.email and (studyManagedBean.checkCurrentUser(mlist.email) ne mlist.email)}">
                                                                 <li id="team_member_row_${mst.count}" class="team_member_row">
                                                                    <div class="row">
                                                                        <div class="span6">
@@ -223,14 +223,13 @@
                                                                                </h:form>
                                                                            </div>
                                                                            <div class="right" align="right">
-<!--                                                                                <h:commandButton class="btn" value="This is you!" disabled="true"/>-->
-                                                                               <p:commandButton icon="ui-icon-minus" onclick="confirmation.show()">
-                                                                                    <p:confirm header="Removing a team member" message="Are you sure you want to remove,  #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert" />
-                                                                               </p:commandButton>
-                                                                               <p:confirmDialog global="true" severity="alert" showEffect="fade"> 
-                                                                                     <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" action="#{studyManagedBean.deleteMemberFromTeam(mlist.email)}"/>  
-                                                                                     <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
-                                                                                </p:confirmDialog> 
+                                                                                    <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}">
+                                                                                         <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert" />
+                                                                                    </p:commandButton>
+                                                                               <p:confirmDialog id="notCurrentUserNOwner_master_${mst.count}" global="true" severity="alert" showEffect="fade"> 
+                                                                                          <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" />   
+                                                                                          <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
+                                                                               </p:confirmDialog> 
                                                                            </div>
                                                                        </div>
                                                                    </div>
@@ -242,14 +241,14 @@
                                         </c:if>
     <!-- End of Master Panel Group and starting of Researcher Panel Group-->   
     
-                                        <c:if test="#{studyManagedBean.countResearchers() > 0}">
+                                    <c:if id="researcherBlock"  test="${studyManagedBean.countResearchers() > 0}">
                                         <h:panelGroup id="divRech" styleClass="ui_box">
                                             <h5 class="title" align="left">Researchers
                                                 <small>#{studyManagedBean.countResearchers()}</small></h5>
 
                                             <ul class="well-list">
-                                                <c:forEach var="rlist" items="#{studyManagedBean.researchersList}" varStatus="rchs">
-                                                    <c:if test="${studyManagedBean.checkCurrentUser(rlist.email) ne rlist.email}">
+                                                <c:forEach var="rlist" items="${studyManagedBean.researchersList}" varStatus="rchs">
+                                                    <c:if id="notCurrentUser_researcher" test="${studyManagedBean.checkCurrentUser(rlist.email) ne rlist.email}">
                                                         <li id="researchers_${rchs.count}" class="team_member_row">
                                                             <div id="divRow" class="row">
                                                                 <div class="span6">
@@ -275,25 +274,24 @@
                                                                                   <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
                                                                                   <f:selectItem itemLabel="Master" itemValue="Master"/>
                                                                                   <f:selectItem itemLabel="Guest" itemValue="Guest"/>
-    <!--                                                                               <f:ajax event="change" execute="@this" listener="#{studyManagedBean.updateStudyTeamRole(rlist.email)}"/>-->
                                                                             </p:selectOneMenu>
                                                                            </div>
                                                                         </h:form>
                                                                     </div>
                                                                     <div class="right" align="right">
-                                                                        <p:commandButton icon="ui-icon-minus" onclick="confirmation.show()">
-                                                                             <p:confirm header="Removing a team member" message="Are you sure you want to remove,  #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert" />
-                                                                        </p:commandButton>
-                                                                        <p:confirmDialog global="true" severity="alert" showEffect="fade"> 
-                                                                              <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" action="#{studyManagedBean.deleteMemberFromTeam(rlist.email)}"/>  
-                                                                              <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
-                                                                         </p:confirmDialog> 
+                                                                                <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}">
+                                                                                     <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
+                                                                                </p:commandButton>
+                                                                                <p:confirmDialog id="notCurrentUser_researcher_${rchs.count}"  global="true" severity="alert" showEffect="fade"> 
+                                                                                      <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" />   
+                                                                                      <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
+                                                                                 </p:confirmDialog>
                                                                     </div>
                                                                 </div>
                                                             </div> 
                                                         </li>
                                                 </c:if> 
-                                                <c:if test="${studyManagedBean.checkCurrentUser(rlist.email) eq rlist.email}">
+                                                <c:if id="currentUser_researcher" test="${studyManagedBean.checkCurrentUser(rlist.email) eq rlist.email}">
                                                         <li id="researchers_${rchs.count}" class="team_member_row">
                                                             <div id="divRow" class="row">
                                                                 <div class="span6">
@@ -319,38 +317,37 @@
                                                                                   <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
                                                                                   <f:selectItem itemLabel="Master" itemValue="Master"/>
                                                                                   <f:selectItem itemLabel="Guest" itemValue="Guest"/>
-    <!--                                                                               <f:ajax event="change" execute="@this" listener="#{studyManagedBean.updateStudyTeamRole(rlist.email)}"/>-->
                                                                             </p:selectOneMenu>
                                                                            </div>
                                                                         </h:form>
                                                                     </div>
                                                                     <div class="right" align="right">
-                                                                        <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                                        <p:commandButton styleClass="ui-button" icon="ui-icon-minus" onclick="confirmation.show()">
-                                                                             <p:confirm header="Removing a team member" message="Are you sure you want to remove,  #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert" />
-                                                                        </p:commandButton>
-                                                                        <p:confirmDialog global="true" severity="alert" showEffect="fade"> 
-                                                                              <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" action="#{studyManagedBean.deleteMemberFromTeam(rlist.email)}"/>  
-                                                                              <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
-                                                                         </p:confirmDialog> 
+                                                                            <h:commandButton class="btn" value="This is you!" disabled="true"/>
+                                                                            <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}">
+                                                                                 <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert" />
+                                                                            </p:commandButton>
+                                                                            <p:confirmDialog id="currentUser_researcher_${rchs.count}" global="true" severity="alert" showEffect="fade"> 
+                                                                                  <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
+                                                                                  <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
+                                                                             </p:confirmDialog> 
                                                                     </div>
                                                                 </div>
                                                             </div> 
                                                         </li>
                                                 </c:if> 
-                                                </c:forEach>
+                                             </c:forEach>
                                             </ul>
                                         </h:panelGroup>
                                       </c:if>
   <!-- End of Researcher Panel Group and starting of Guest Panel Group-->                                    
                                         
-                                      <c:if test="#{studyManagedBean.countGuests() > 0}">
+                            <c:if id="guestBlock" test="${studyManagedBean.countGuests() > 0}">
                                         <h:panelGroup id="divGust" styleClass="ui_box">
                                             <h5 class="title" align="left">Guests
                                                 <small>#{studyManagedBean.countGuests()}</small></h5>
                                             <ul class="well-list">
-                                                <c:forEach var="glist" items="#{studyManagedBean.guestsList}" varStatus="gut">
-                                                    <c:if test="${studyManagedBean.checkCurrentUser(glist.email) ne glist.email}">
+                                                <c:forEach var="glist" items="${studyManagedBean.guestsList}" varStatus="gut">
+                                                    <c:if id="notCurrentUser_guest" test="${studyManagedBean.checkCurrentUser(glist.email) ne glist.email}">
                                                         <li id="guests_${gut.count}" class="team_member_row">
                                                             <div class="row">
                                                                 <div class="span6">
@@ -376,27 +373,24 @@
                                                                                   <f:selectItem itemLabel="Guest" itemValue="Guest"/>
                                                                                   <f:selectItem itemLabel="Master" itemValue="Master"/>
                                                                                   <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
-    <!--                                                                            <f:ajax event="change" execute="@this" listener="#{studyManagedBean.updateStudyTeamRole(glist.email)}"/>-->
-
                                                                             </p:selectOneMenu>
                                                                             </div>
                                                                         </h:form>
                                                                     </div>
                                                                     <div class="right" align="right">
-                                                                        <p:commandButton styleClass="ui-button" icon="ui-icon-minus" onclick="confirmation.show()">
-                                                                            <p:confirm header="Removing a team member" message="Are you sure you want to remove,  #{glist.name} [#{glist.email}]?" icon="ui-icon-alert" />
-                                                                        </p:commandButton>
-                                                                        <p:confirmDialog global="true" severity="alert" showEffect="fade"> 
-                                                                              <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" action="#{studyManagedBean.deleteMemberFromTeam(glist.email)}"/>  
-                                                                              <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
-                                                                         </p:confirmDialog>  
-
+                                                                                <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(glist.email)}">
+                                                                                    <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{glist.name} [#{glist.email}]?" icon="ui-icon-alert"/>
+                                                                                </p:commandButton>
+                                                                                <p:confirmDialog id="notCurrentUser_guest_${gut.count}" global="true" severity="alert" showEffect="fade"> 
+                                                                                      <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
+                                                                                      <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
+                                                                                 </p:confirmDialog>  
                                                                     </div>
                                                                 </div>
                                                             </div> 
                                                         </li>
-                                                </c:if>
-                                                <c:if test="${studyManagedBean.checkCurrentUser(glist.email) eq glist.email}">
+                                                </c:if> 
+                                                <c:if id="currentUser_guest" test="${studyManagedBean.checkCurrentUser(glist.email) eq glist.email}">
                                                         <li id="guests_${gut.count}" class="team_member_row">
                                                             <div class="row">
                                                                 <div class="span6">
@@ -416,28 +410,25 @@
                                                                             <div style="margin:0;padding:0;display:inline">
                                                                                 <p:selectOneMenu id="guestsList_${gut.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign" 
                                                                                             style="width:170px;">
-                                                                                     <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(glist.email)}"/>
+                                                                                    <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(glist.email)}"/>
     <!--                                                                            <f:selectItems value="#{studyManagedBean.teamForGuestList}" var="gs" itemLabel="#{gs.team}" itemValue="#{gs}"/> -->
     <!--                                                                            rendered="#{studyManagedBean.getCurrentRole(glist.email) == 'Guest'}"/>-->
                                                                                   <f:selectItem itemLabel="Guest" itemValue="Guest"/>
                                                                                   <f:selectItem itemLabel="Master" itemValue="Master"/>
                                                                                   <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
-    <!--                                                                            <f:ajax event="change" execute="@this" listener="#{studyManagedBean.updateStudyTeamRole(glist.email)}"/>-->
-
                                                                             </p:selectOneMenu>
                                                                             </div>
                                                                         </h:form>
                                                                     </div>
                                                                     <div class="right" align="right">
-                                                                        <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                                        <p:commandButton styleClass="ui-button" icon="ui-icon-minus" onclick="confirmation.show()">
-                                                                            <p:confirm header="Removing a team member" message="Are you sure you want to remove,  #{glist.name} [#{glist.email}]?" icon="ui-icon-alert" />
-                                                                        </p:commandButton>
-                                                                        <p:confirmDialog global="true" severity="alert" showEffect="fade"> 
-                                                                              <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" action="#{studyManagedBean.deleteMemberFromTeam(glist.email)}"/>  
-                                                                              <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
-                                                                         </p:confirmDialog>  
-
+                                                                            <h:commandButton class="btn" value="This is you!" disabled="true"/>
+                                                                            <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(glist.email)}">
+                                                                                <p:confirm  header="Removing a team member" message="Are you sure you want to remove the user #{glist.name} [#{glist.email}]?" icon="ui-icon-alert" />
+                                                                            </p:commandButton>
+                                                                            <p:confirmDialog id="currentUser_guest_${gut.count}" global="true" severity="alert" showEffect="fade"> 
+                                                                                  <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
+                                                                                  <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
+                                                                             </p:confirmDialog>  
                                                                     </div>
                                                                 </div>
                                                             </div> 
@@ -446,6 +437,7 @@
                                                 </c:forEach>
                                             </ul>
                                         </h:panelGroup>
+
                                       </c:if>
                                     </div>
                                 </p:tab>

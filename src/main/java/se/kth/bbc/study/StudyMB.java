@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.primefaces.component.tabview.TabView;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
+import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import se.kth.bbc.activity.ActivityMB;
 import se.kth.kthfsdashboard.user.UserFacade;
@@ -76,6 +77,7 @@ public class StudyMB implements Serializable {
     private String setTeamRole;
     private String newRole;
     private String owner;
+    private int tabIndex;
 
     //private UIInput newTeamRole;
     
@@ -232,12 +234,12 @@ public class StudyMB implements Serializable {
         return studyController.getMembers(getStudyName());
     }
 
-    public List<TrackStudy> getLatestStudyList() {
-        return studyController.filterLatestStudy(getUsername());
+    public List<TrackStudy> getPersonalStudyList() {
+        return studyController.filterPersonalStudy(getUsername());
     }
 
     public int getLatestStudyListSize() {
-        return studyController.filterLatestStudy(getUsername()).size();
+        return studyController.filterPersonalStudy(getUsername()).size();
     }
 
     public List<Theme> addThemes() {
@@ -433,6 +435,19 @@ public class StudyMB implements Serializable {
         return studyTeamController.findMembersByStudy(studyName);
     }
 
+    public int countAllStudiesPerUser(){
+        return studyController.findAllStudies(getUsername()).size();
+    }
+    
+    public int countPersonalStudy(){
+        return  studyController.findByUser(getUsername()).size();
+    }
+    
+    
+     public int countJoinedStudy(){
+        return  studyController.findJoinedStudies(getUsername()).size();
+    }
+    
     /**
      * Get the current username from session and
      * sets it as the creator of the study,
@@ -447,13 +462,13 @@ public class StudyMB implements Serializable {
         try {
             studyController.persistStudy(study);
             activity.addActivity("new study created", study.getName(), "STUDY");
-             addStudyMaster(study.getName());
+            addStudyMaster(study.getName());
         } catch (EJBException ejb) {
-            addErrorMessageToUserAction("Failed: Study name might have been duplicated!");
+            addErrorMessageToUserAction("Failed: Study already exists!");
             return null;
         }
-        addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
-        return "Success!";
+            addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
+            return "Success!";
     }
 
     /**
@@ -489,19 +504,19 @@ public class StudyMB implements Serializable {
     }
 
     //delete a study
-    public String deleteStudy() {
+    public synchronized String deleteStudy() {
         try {
             studyController.removeStudy(study);
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Study wasn't removed.");
             return null;
         }
-        addMessage("Study removed.");
-        return "Success!";
+            addMessage("Study removed.");
+            return "Success!";
     }
 
     //add member to a team - batch persist 
-    public String addToTeam() {
+    public synchronized String addToTeam() {
         try {
             Iterator<Theme> itr = getSelectedUsernames().listIterator();
             while (itr.hasNext()) {
@@ -510,62 +525,25 @@ public class StudyMB implements Serializable {
                 StudyTeam st = new StudyTeam(stp);
                 st.setTimestamp(new Date());
                 st.setTeamRole(studyTeamEntry.getTeamRole());
-
                 studyTeamController.persistStudyTeam(st);
                 activity.addActivity("added new member " + t.getName() + " ", studyName, "STUDY");
             }
-
+                
+                 if(!getSelectedUsernames().isEmpty())
+                       getSelectedUsernames().clear();
+            
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Adding team member failed.");
             return null;
         }
-        addMessage("New Member Added!");
-        return "studyPage";
-    }
-
-    public String deleteMemberFromTeam(String email) {
-
-        try {
-
-            studyTeamController.removeStudyTeam(studyName, email);
-            activity.addActivity("team member " + email + " deleted ", studyName, "TEAM");
-
-        } catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error: Deleting team member failed.");
-            return null;
-        }
-        addMessage("Team member " + email + " deleted from study " + studyName);
-        return "studyPage";
-
-    }
-
-    public String updateStudyTeamRole(String email) {
-
-        try {
-           if(getNewTeamRole() != null && newTeamRole != null){
-                studyTeamController.updateTeamRole(studyName, email, getNewTeamRole());
-                activity.addActivity("changed team role of " + email + " to " + getNewTeamRole(), studyName, "TEAM");
-             } else if(getChangedRole() != null && newChangedRole != null){
-                studyTeamController.updateTeamRole(studyName, email, getChangedRole());
-                activity.addActivity("changed team role of " + email + " to " + getChangedRole(), studyName, "TEAM");
-             } else {
-                studyTeamController.updateTeamRole(studyName, email, getNewRole());
-                activity.addActivity("changed team role of " + email + " to " + getNewRole(), studyName, "TEAM");
-             }
-//            studyTeamController.updateTeamRole(studyName, email, getNewTeamRole());
-//            activity.addActivity("changed team role of " + email + " to " + getNewTeamRole(), studyName, "TEAM");
             
-        } catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error: Update failed.");
-            return null;
-        }
-        //addMessage("Team role updated successful "+ email + " "+ studyName);
-        return "studyPage?faces-redirect=true";
-        //return "OK";
+            addMessage("New Member Added!");
+            return "studyPage";
     }
-
-    public String onComplete() {
-        return "studyPage";
+    
+    public void itemSelect(SelectEvent e) {
+         if(getSelectedUsernames().isEmpty())
+             addErrorMessageToUserAction("Error: People field cannot be empty.");
     }
 
     public void addMessage(String summary) {
@@ -588,22 +566,36 @@ public class StudyMB implements Serializable {
 //    public void setActiveTabIndex(Integer activeTabIndex) {
 //        this.activeTabIndex = activeTabIndex;
 //    }
-    private TabView messagesTab = new TabView();
+//    private TabView messagesTab = new TabView();
+//
+//    public TabView getMessagesTab() {
+//        return messagesTab;
+//    }
+//
+//    public void setMessagesTab(TabView messagesTab) {
+//        this.messagesTab = messagesTab;
+//    }
 
-    public TabView getMessagesTab() {
-        return messagesTab;
+    
+    public int getTabIndex() {
+        return tabIndex;
     }
 
-    public void setMessagesTab(TabView messagesTab) {
-        this.messagesTab = messagesTab;
+    public void setTabIndex(int tabIndex) {
+        this.tabIndex = tabIndex;
     }
 
+    
     public void onTabChange(TabChangeEvent event) {
-        TabView tabView = (TabView) event.getComponent();
-
-        int activeIndex = tabView.getChildren().indexOf(event.getTab());
-
-        this.messagesTab.setActiveIndex(activeIndex);
+        //TabView tabView = (TabView) event.getComponent();
+        //tabView.getChildren().indexOf(event.getTab());
+        if(event.getTab().getId().equals("allTab")){
+            setTabIndex(1);
+        } else if(event.getTab().getId().equals("personalTab")){
+            setTabIndex(2);
+        } else {
+            setTabIndex(3);
+        }
 
     }
 
@@ -622,23 +614,16 @@ public class StudyMB implements Serializable {
 //        FacesContext.getCurrentInstance().addMessage(null, msg);
 //    }
 //    
-    private int tabIndex = 1;
-
-    public boolean handleTabChange() {
-        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-        String index = externalContext.getRequestParameterMap().get("tabIndex");
-        setTabIndex(Integer.parseInt(index));
-        return true;
-    }
-
-    public int getTabIndex() {
-        return tabIndex;
-    }
-
-    public void setTabIndex(int tabIndex) {
-        this.tabIndex = tabIndex;
-    }
-
+//    private int tabIndex = 1;
+//
+//    public boolean handleTabChange() {
+//        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+//        String index = externalContext.getRequestParameterMap().get("tabIndex");
+//        setTabIndex(Integer.parseInt(index));
+//        return true;
+//    }
+//
+    
     public void save(ActionEvent actionEvent) {
         createStudy();
     }
