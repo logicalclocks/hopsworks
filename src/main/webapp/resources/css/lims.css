@@ -786,6 +786,8 @@ h6{
 
 
 
+
+
 .ui_box > .title {
      width: 1148px;
      height: 36px;
@@ -1703,8 +1705,21 @@ form {
     margin-right: 0px;
     margin-bottom: 0px;
     margin-left: 0px;
+    border-bottom: 1px solid #ccc;
+    text-align: left;
+    font-size: 12px;
+}
+
+.study_box > .title_panelGrid{
+    
+    width: 338px;
+    height: 36px;
+    padding: 2px 15px;
+    border-bottom: 1px solid #ccc;
     
 }
+
+
 
 /*.study_box > ul{
     

@@ -555,27 +555,6 @@ public class StudyMB implements Serializable {
         FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, message, message);
         FacesContext.getCurrentInstance().addMessage(null, errorMessage);
     }
-
-    //Study View Controller
-//    
-//    private Integer activeTabIndex = 0;
-//    
-//    public Integer getActiveTabIndex() {
-//       return activeTabIndex;
-//    }
-//    public void setActiveTabIndex(Integer activeTabIndex) {
-//        this.activeTabIndex = activeTabIndex;
-//    }
-//    private TabView messagesTab = new TabView();
-//
-//    public TabView getMessagesTab() {
-//        return messagesTab;
-//    }
-//
-//    public void setMessagesTab(TabView messagesTab) {
-//        this.messagesTab = messagesTab;
-//    }
-
     
     public int getTabIndex() {
         return tabIndex;
@@ -587,42 +566,24 @@ public class StudyMB implements Serializable {
 
     
     public void onTabChange(TabChangeEvent event) {
-        //TabView tabView = (TabView) event.getComponent();
-        //tabView.getChildren().indexOf(event.getTab());
-        if(event.getTab().getId().equals("allTab")){
+        if(event.getTab().getTitle().equals("All")){
+            setTabIndex(0);
+            //System.out.println("All - " + getTabIndex());
+        } else if(event.getTab().getTitle().equals("Personal")){
             setTabIndex(1);
-        } else if(event.getTab().getId().equals("personalTab")){
+            //System.out.println("Personal - " + getTabIndex());
+        } else if(event.getTab().getTitle().equals("Joined")){
             setTabIndex(2);
+             //System.out.println("Joined - " + getTabIndex());
         } else {
-            setTabIndex(3);
+            //do nothing at the moment
         }
 
     }
-
-//    public void onTabChange(TabChangeEvent event) {  
-//     
-//        TabView tabView = (TabView) event.getComponent();
-//        currentData.setSP_Index(tabView.getChildren().indexOf(event.getTab())+1);
-//    } 
-//    public void onTabChange(TabChangeEvent event) 
-//    {   
-//        TabView tabView = (TabView) event.getComponent();
-//        activeTabIndex = tabView.getChildren().indexOf(event.getTab());
-//    }
-//    public void onTabChange(TabChangeEvent event) {
-//        FacesMessage msg = new FacesMessage("Tab Changed", "Active Tab: " + event.getTab().getTitle());
-//        FacesContext.getCurrentInstance().addMessage(null, msg);
-//    }
-//    
-//    private int tabIndex = 1;
-//
-//    public boolean handleTabChange() {
-//        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-//        String index = externalContext.getRequestParameterMap().get("tabIndex");
-//        setTabIndex(Integer.parseInt(index));
-//        return true;
-//    }
-//
+    
+    public String onComplete(){
+        return "indexPage";
+    }
     
     public void save(ActionEvent actionEvent) {
         createStudy();

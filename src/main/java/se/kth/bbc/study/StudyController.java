@@ -82,9 +82,9 @@ public class StudyController {
     public List<TrackStudy> findAllStudies(String user){
     
         //Query query = em.createNativeQuery("SELECT name, username FROM study WHERE username=? UNION SELECT name, team_member FROM StudyTeam WHERE team_member=?",TrackStudy.class).setParameter(1, user).setParameter(2, user);
-        //select name, username from study where username='roshan@yahoo.com' UNION ALL select name, username from study where name IN (select name from StudyTeam where team_member='roshan@yahoo.com' AND team_role != 'Master');
+        //select name, username from study where username='roshan@yahoo.com' UNION ALL select name, username from study where name IN (select name from StudyTeam where team_member='roshan@yahoo.com');
 
-        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE username=? UNION ALL SELECT name, username FROM study WHERE name IN (SELECT name FROM StudyTeam WHERE team_member=? AND team_role != 'Master')",TrackStudy.class)
+        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE username=? UNION SELECT name, username FROM study WHERE name IN (SELECT name FROM StudyTeam WHERE team_member=?)",TrackStudy.class)
                 .setParameter(1, user).setParameter(2, user);
         
         return query.getResultList();
@@ -94,8 +94,8 @@ public class StudyController {
     public List<TrackStudy> findJoinedStudies(String user){
     
         //SELECT name, username FROM study WHERE NOT EXISTS (SELECT * FROM StudyTeam WHERE StudyTeam.team_member=? AND study.username=?)
-        //select name, username from study where name IN (select name from StudyTeam where team_member='roshan@yahoo.com' and team_role != 'Master');
-        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE name IN (SELECT name FROM StudyTeam WHERE team_member=? AND team_role != 'Master')", TrackStudy.class)
+        //select name, username from study where name IN (select distinct name from StudyTeam where name NOT IN (select name from study where username like 'roshan%'))
+        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE name IN (SELECT DISTINCT name FROM StudyTeam WHERE name NOT IN (SELECT name FROM study WHERE username=?))", TrackStudy.class)
                 .setParameter(1, user);
         return query.getResultList();
     }
