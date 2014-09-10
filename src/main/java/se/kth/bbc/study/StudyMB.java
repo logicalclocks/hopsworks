@@ -35,6 +35,9 @@ import org.primefaces.event.FlowEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import se.kth.bbc.activity.ActivityMB;
+import se.kth.bbc.activity.UserGroupsController;
+import se.kth.bbc.activity.UsersGroups;
+import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
 
@@ -58,6 +61,9 @@ public class StudyMB implements Serializable {
 
     @EJB
     private UserFacade userFacade;
+    
+    @EJB
+    private UserGroupsController userGroupsController;
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
@@ -303,8 +309,6 @@ public class StudyMB implements Serializable {
     public void gravatarAccess() {
         activity.getGravatar(studyCreator);
     }
-
-    
     
     public StudyRoleTypes[] getTeam() {
         return StudyRoleTypes.values();
@@ -481,10 +485,18 @@ public class StudyMB implements Serializable {
         this.studyName = params.get("studyname");
         this.studyCreator = params.get("username");
 
-        System.out.println("Studyname: " + this.studyName + " - user: " + getUsername() + " - creator: " + this.studyCreator);
-        studyTeamController.setRoleForActiveStudy(studyName, getUsername());
-
-        return "studyPage";
+        //System.out.println("Studyname: " + this.studyName + " - user: " + getUsername() + " - creator: " + this.studyCreator);
+        List<StudyTeam> stList = studyTeamController.findUserForActiveStudy(studyName, getUsername());
+        if (stList.iterator().hasNext()){
+              StudyTeam t = stList.iterator().next();
+              if(getRequest().getRequestedSessionId() != null && getRequest().isRequestedSessionIdValid()){
+                    userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(t.getStudyTeamPK().getTeamMember(), t.getTeamRole())));
+              } else {
+                    userGroupsController.removeUserGroups(t.getStudyTeamPK().getTeamMember(), t.getTeamRole());
+              }
+        }
+        
+            return "studyPage";
 
     }
 

@@ -78,7 +78,7 @@
 
                                     <div id="divTeam" class="team_table"> 
                                         <c:if id="masterBlock" test="${studyManagedBean.countMasters() > 0}">
-                                        <h:panelGroup id="divMaster" styleClass="ui_box">
+                                        <div id="divMaster" class="ui_box">
                                             <h5 class="title" align="left">Masters
                                                 <small>#{studyManagedBean.countMasters()}</small></h5>
                                             <ul class="well-list">
@@ -237,12 +237,12 @@
                                                         </c:if>
                                                 </c:forEach>
                                             </ul>
-                                        </h:panelGroup>
+                                        </div>
                                         </c:if>
     <!-- End of Master Panel Group and starting of Researcher Panel Group-->   
     
                                     <c:if id="researcherBlock"  test="${studyManagedBean.countResearchers() > 0}">
-                                        <h:panelGroup id="divRech" styleClass="ui_box">
+                                        <div id="divRech" class="ui_box">
                                             <h5 class="title" align="left">Researchers
                                                 <small>#{studyManagedBean.countResearchers()}</small></h5>
 
@@ -337,12 +337,12 @@
                                                 </c:if> 
                                              </c:forEach>
                                             </ul>
-                                        </h:panelGroup>
+                                        </div>
                                       </c:if>
   <!-- End of Researcher Panel Group and starting of Guest Panel Group-->                                    
                                         
-                            <c:if id="guestBlock" test="${studyManagedBean.countGuests() > 0}">
-                                        <h:panelGroup id="divGust" styleClass="ui_box">
+                                    <c:if id="guestBlock" test="${studyManagedBean.countGuests() > 0}">
+                                        <div id="divGust" class="ui_box">
                                             <h5 class="title" align="left">Guests
                                                 <small>#{studyManagedBean.countGuests()}</small></h5>
                                             <ul class="well-list">
@@ -433,10 +433,10 @@
                                                                 </div>
                                                             </div> 
                                                         </li>
-                                                </c:if>    
+                                                    </c:if>    
                                                 </c:forEach>
                                             </ul>
-                                        </h:panelGroup>
+                                        </div>
 
                                       </c:if>
                                     </div>

@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -46,26 +47,23 @@ public class ActivityMB implements Serializable {
    private ActivityController activityController;
    
    private UserActivity activity;
+
+   private String flag;
    
    
-   private String username;
-   private String studyName;
-   
-   
-   public void setEmail(String username) {
-       this.username = username;
+   public String getFlag(){
+       return flag;
+   }
+  
+   public void setFlag(String flag){
+       this.flag = flag;
    }
    
-   public String getEmail(){
-       return username;
-   }
-   
-   public void setStudyname(String studyName) {
-       this.studyName = studyName;
-   }
-   
-   public String getStudyname(){
-       return studyName;
+   public void fetchFlag() {
+
+        FacesContext fc = FacesContext.getCurrentInstance();
+        Map<String, String> params = fc.getExternalContext().getRequestParameterMap();
+        this.flag = params.get("teamFlag");
    }
    
    public UserActivity getActivity() {
@@ -167,7 +165,11 @@ public class ActivityMB implements Serializable {
     }
     
     
-     private HttpServletRequest getRequest() {
+    public List<UserActivity> getAllTeamActivity(){
+        return activityController.findAllTeamActivity(getFlag());
+    }
+    
+    private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
     }
     

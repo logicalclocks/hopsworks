@@ -687,9 +687,10 @@ h6{
 .icon-minus:before{width: 9px;height: 6px;}
 
 
-.team_table{
+.content > .team_table{
     display: block;
     width: 1170px !important;
+    min-height: 1170px;
     height: auto !important;
 }
 
@@ -762,7 +763,7 @@ h6{
 }
 */
 
-.team_table .ui_box{
+.team_table > .ui_box{
     display: block;
     border-top-color: rgb(204, 204, 204);
     border-top-style: solid;

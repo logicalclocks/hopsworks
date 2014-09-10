@@ -12,6 +12,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import se.kth.bbc.activity.UsersGroups;
 import se.kth.kthfsdashboard.user.Username;
 
 /**
@@ -132,16 +133,19 @@ public class StudyTeamController {
         em.createNamedQuery("UsersGroups.deleteGroupsForEmail", StudyTeam.class).setParameter("email", username).executeUpdate();
     }    
         
-    public void setRoleForActiveStudy(String username, String studyname){
+    public List<StudyTeam> findUserForActiveStudy(String studyname, String username){
         // TODO
 //        Query query = em.createNamedQuery("StudyTeam.findByNameAndTeamMember", StudyTeam.class).setParameter("name", studyname).setParameter("teamMember", username);
         Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_member=?", StudyTeam.class).setParameter(1, studyname).setParameter(2, username);
-        List<StudyTeam> res = query.getResultList();
-        //System.out.println("Returned " + res.size() + " answers!!");
-        if (res.iterator().hasNext()) {
-            StudyTeam t = res.iterator().next();
-            em.createQuery("insert into USERS_GROUPS values('" + username + "'," + t.getTeamRole() + ")").executeUpdate();
-        }
+        //List<StudyTeam> res = query.getResultList();
+        return query.getResultList();
+//        //System.out.println("Returned " + res.size() + " answers!!");
+//        if (res.iterator().hasNext()) {
+//            StudyTeam t = res.iterator().next();
+//                //em.createQuery("insert into USERS_GROUPS values('" + username + "'," + t.getTeamRole() + ")").executeUpdate();
+//                  Query update = em.createNativeQuery("INSERT INTO USERS_GROUPS VALUES(?,?)", UsersGroups.class).setParameter(1, t.studyTeamPK.getTeamMember()).setParameter(2, t.getTeamRole());
+//                  em.persist(update);
+//        }
     }    
     
     public StudyTeam getStudyTeam(String studyname, String username){
@@ -151,13 +155,7 @@ public class StudyTeamController {
             StudyTeam t = res.iterator().next();
             return t;
         }
-        return null;
-//        
-//        StudyTeam team = findByPrimaryKey(studyname, username);
-//        if(team != null)
-//            return team;
-//        
-//        return null;
+            return null;
     }  
       
 }

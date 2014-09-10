@@ -60,7 +60,7 @@ public class StudyController {
 //        cal.add(Calendar.DATE, -2);
 //        
 //        Query query = 
-//                em.createQuery("SELECT t FROM TrackStudy t WHERE t.timestamp BETWEEN ?1 AND ?2",TrackStudy.class).setParameter(1, new Date(), TemporalType.DATE)
+//                em.createQuery("SELECT t FROM TrackStudy t WHERE t.timestamp BETWEEN ? AND ?",TrackStudy.class).setParameter(1, new Date(), TemporalType.DATE)
 //                        .setParameter(2, cal, TemporalType.DATE);
         
         
@@ -99,7 +99,6 @@ public class StudyController {
                 .setParameter(1, user);
         return query.getResultList();
     }
-    
     
     public void persistStudy(TrackStudy study) {
         em.persist(study);

@@ -53,8 +53,10 @@
                                 <div class="span8">
                                     <div class="event_filter">
                                         <div class="filter_icon">
-                                            <p:commandLink id="usrLink" styleClass="link_a" update="bbcMainLayout">
+                                            <p:commandLink id="usrLink" styleClass="link_a" process="@all">
+                                                    <p:ajax event="click" update=":#{p:component('contentList')}"/>
                                                     <p:graphicImage value="#{resource['/images/icons/user.png']}"/>
+                                                    <f:param name="teamFlag" value="TEAM"/>
                                             </p:commandLink>
                                             <p:tooltip id="userRelated" for="usrLink" value="Team activity filtering" 
                                                        showEffect="slide"
@@ -67,23 +69,42 @@
                                             <p:commandLink styleClass="link_a"/>
                                         </div>
                                     </div>
-                                    <div class="content_list">
-                                        <c:forEach var="act" items="#{activityBean.acvitiyList}">
-                                            <div class="event-item" align="left">
-                                                <span class="cgray right">#{activityBean.findLastActivity(act.id)}</span>
-                                                <img class="avatar s24" src="#{activityBean.getGravatar(act.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
-                                                <div class="event-title">
-                                                    <span class="author_name"><p:commandLink> #{act.performedBy}</p:commandLink></span>
-                                                    <span class="event_label merged">#{act.activity}</span>
-                                                    <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                                                        <strong>at #{act.performedBy} / #{act.activityOn}</strong>
-                                                        <f:param name="studyname" value="#{act.activityOn}"/>
-                                                        <f:param name="username" value="#{act.performedBy}"/>
-                                                    </p:commandLink>
+                                    <h:panelGroup id="contentList" styleClass="content_list">
+                                        <c:if test="${activityBean.flag ne 'TEAM'}">
+                                            <c:forEach var="act" items="#{activityBean.acvitiyList}">
+                                                <div class="event-item" align="left">
+                                                    <span class="cgray right">#{activityBean.findLastActivity(act.id)}</span>
+                                                    <img class="avatar s24" src="#{activityBean.getGravatar(act.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                    <div class="event-title">
+                                                        <span class="author_name"><p:commandLink> #{act.performedBy}</p:commandLink></span>
+                                                        <span class="event_label merged">#{act.activity}</span>
+                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                                                            <strong>at #{act.performedBy} / #{act.activityOn}</strong>
+                                                            <f:param name="studyname" value="#{act.activityOn}"/>
+                                                            <f:param name="username" value="#{act.performedBy}"/>
+                                                        </p:commandLink>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </c:forEach>
-                                    </div>
+                                            </c:forEach>
+                                        </c:if>
+                                        <c:if test="${activityBean.flag eq 'TEAM'}">
+                                            <c:forEach var="team" items="#{activityBean.allTeamActivity}">
+                                                <div class="event-item" align="left">
+                                                    <span class="cgray right">#{activityBean.findLastActivity(team.id)}</span>
+                                                    <img class="avatar s24" src="#{activityBean.getGravatar(team.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                    <div class="event-title">
+                                                        <span class="author_name"><p:commandLink> #{team.performedBy}</p:commandLink></span>
+                                                        <span class="event_label merged">#{team.activity}</span>
+                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                                                            <strong>at #{team.performedBy} / #{team.activityOn}</strong>
+                                                            <f:param name="studyname" value="#{team.activityOn}"/>
+                                                            <f:param name="username" value="#{team.performedBy}"/>
+                                                        </p:commandLink>
+                                                    </div>
+                                                </div>
+                                            </c:forEach>
+                                        </c:if>
+                                    </h:panelGroup>
                                 </div>  
                                 <div id="divSpan4" class="span4">
                                     <div class="study_box">

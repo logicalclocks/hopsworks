@@ -28,7 +28,7 @@ import se.kth.kthfsdashboard.user.Username;
     @NamedQuery(name = "UsersGroups.findAll", query = "SELECT u FROM UsersGroups u"),
     @NamedQuery(name = "UsersGroups.findByEmail", query = "SELECT u FROM UsersGroups u WHERE u.usersGroupsPK.email = :email"),
     @NamedQuery(name = "UsersGroups.findByGroupname", query = "SELECT u FROM UsersGroups u WHERE u.usersGroupsPK.groupname = :groupname"),
-    @NamedQuery(name = "UsersGroups.deleteGroupsForEmail", query = "DELETE FROM UsersGroups u WHERE u.usersGroupsPK.email = :email AND u.usersGroupsPK.groupname != 'ADMIN'")})
+    @NamedQuery(name = "UsersGroups.deleteGroupsForEmail", query = "DELETE FROM UsersGroups u WHERE u.usersGroupsPK.email = :email AND u.usersGroupsPK.groupname <> 'ADMIN'")})
 public class UsersGroups implements Serializable {
     private static final long serialVersionUID = 1L;
     @EmbeddedId
