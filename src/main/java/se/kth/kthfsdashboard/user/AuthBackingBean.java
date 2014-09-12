@@ -22,7 +22,7 @@ import javax.faces.context.FacesContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import se.kth.bbc.study.StudyTeamController;
+import se.kth.bbc.activity.UserGroupsController;
 
 /**
  *
@@ -40,7 +40,7 @@ public class AuthBackingBean {
 
     
     @EJB
-    private StudyTeamController studyTeamController;
+    private UserGroupsController userGroupsController;
 
     
     public AuthBackingBean() {
@@ -81,7 +81,7 @@ public class AuthBackingBean {
 
         // delete from USERS_GROUPS where USER like principal.getName();
         // Remove the user from all groups.
-        studyTeamController.clearGroups(principal.getName());
+        userGroupsController.clearGroups(principal.getName());
                 
         
         if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER") || request.isUserInRole("ADMIN")) {
@@ -104,7 +104,7 @@ public class AuthBackingBean {
         HttpSession s = request.getSession(false);
         log.log(Level.INFO, "Logging OUT Authenticated user: {0}", principal.getName());
 
-        studyTeamController.clearGroups(principal.getName());
+        userGroupsController.clearGroups(principal.getName());
         if (s != null) {
             try {
                 s.invalidate();

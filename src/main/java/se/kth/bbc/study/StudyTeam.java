@@ -8,7 +8,6 @@ package se.kth.bbc.study;
 
 import java.io.Serializable;
 import java.util.Date;
-import javax.faces.bean.ManagedProperty;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
@@ -21,7 +20,6 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.activity.ActivityMB;
 
 /**
  *
@@ -41,14 +39,12 @@ import se.kth.bbc.activity.ActivityMB;
     @NamedQuery(name = "StudyTeam.findMembersByRole", query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name AND s.teamRole = :teamRole"),
     @NamedQuery(name = "StudyTeam.findMembersByName", query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name"),
     @NamedQuery(name = "StudyTeam.findByNameAndTeamMember", query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name AND s.studyTeamPK.teamMember = :teamMember")})
-
+//    @NamedQuery(name = "StudyTeam.updateTeamRole", query = "UPDATE StudyTeam SET s.teamRole = :teamRole, s.timestamp = :timestamp WHERE s.studyTeamPK.name = :name AND s.studyTeamPK.teamMember = :teamMember")})
 public class StudyTeam implements Serializable {
     private static final long serialVersionUID = 1L;
     @EmbeddedId
     protected StudyTeamPK studyTeamPK;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 10)
+    //@Size(min = 1, max = 16)
     @Column(name = "team_role")
     private String teamRole;
     @Basic(optional = false)
@@ -56,7 +52,7 @@ public class StudyTeam implements Serializable {
     @Column(name = "timestamp")
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
-    
+
     public StudyTeam() {
     }
 
@@ -64,9 +60,8 @@ public class StudyTeam implements Serializable {
         this.studyTeamPK = studyTeamPK;
     }
 
-    public StudyTeam(StudyTeamPK studyTeamPK, String teamRole, Date timestamp) {
+    public StudyTeam(StudyTeamPK studyTeamPK, Date timestamp) {
         this.studyTeamPK = studyTeamPK;
-        this.teamRole = teamRole;
         this.timestamp = timestamp;
     }
 

@@ -131,6 +131,11 @@
                                          <p:tabView id="tabViewSummary" styleClass="ui-tabs" dynamic="true" cache="false" activeIndex="#{studyManagedBean.tabIndex}">
                                             <p:ajax event="tabChange" listener="#{studyManagedBean.onTabChange}" update=":#{p:component('studyBoxHeader')}"/>
                                             <p:tab id="allTab" title="All">
+                                                        <c:if test="${studyManagedBean.countAllStudiesPerUser() eq 0}">
+                                                                <li class="nothing_here_message">
+                                                                    There are no studies here.
+                                                                </li>
+                                                        </c:if>
                                                     <c:forEach var="aList" items="${studyManagedBean.allStudiesPerUser}" varStatus="allStatus">
                                                         <li class="ui-tabs-panel">
                                                             <p:commandLink action="#{studyManagedBean.fetchStudy()}">
@@ -146,7 +151,11 @@
                                                     </c:forEach>
                                             </p:tab>
                                             <p:tab id="personalTab" title="Personal">
-                                                <!--        <h:form id="personel" prependId="false">-->
+                                                <c:if test="${studyManagedBean.countPersonalStudy() eq 0}">
+                                                                <li class="nothing_here_message">
+                                                                    There are no studies here.
+                                                                </li>
+                                                </c:if>
                                                 <c:forEach var="pList" items="${studyManagedBean.personalStudy}" varStatus="personalStatus">
                                                     <li class="ui-tabs-panel">
                                                         <p:commandLink action="#{studyManagedBean.fetchStudy()}">
@@ -163,6 +172,11 @@
                                                 <!--         </h:form>-->
                                             </p:tab>
                                             <p:tab id="joinedTab" title="Joined">
+                                                <c:if test="${studyManagedBean.countJoinedStudy() eq 0}">
+                                                                <li class="nothing_here_message">
+                                                                    There are no studies here.
+                                                                </li>
+                                                </c:if>
                                                 <c:forEach var="jList" items="${studyManagedBean.joinedStudies}" varStatus="joinStatus">
                                                     <li class="ui-tabs-panel">
                                                         <p:commandLink action="#{studyManagedBean.fetchStudy()}">

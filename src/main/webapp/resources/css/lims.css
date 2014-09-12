@@ -584,6 +584,15 @@ h6{
 }
 
 
+.nothing_here_message {
+    text-align: center;
+    padding: 12px;
+    color: #666;
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 28px;
+}
+
 .very_small {
     font-size: 11px;
     padding: 2px 6px;

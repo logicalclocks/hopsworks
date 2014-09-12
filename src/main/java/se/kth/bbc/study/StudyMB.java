@@ -315,27 +315,28 @@ public class StudyMB implements Serializable {
         return StudyRoleTypes.values();
     }
 
-    public List<StudyRoleTypes> getTeamForResearchList() {
-
-        List<StudyRoleTypes> reOrder = new ArrayList<>();
-        //for(StudyRoleTypes role: StudyRoleTypes.values()){
-        reOrder.add(StudyRoleTypes.RESEARCHER);
-        reOrder.add(StudyRoleTypes.MASTER);
-        reOrder.add(StudyRoleTypes.GUEST);
-        //}
-        return reOrder;
-    }
-
-    public  List<StudyRoleTypes> getTeamForGuestList() {
-
-        List<StudyRoleTypes> reOrder = new ArrayList<>();
-        //for(StudyRoleTypes role: StudyRoleTypes.values()){
-        reOrder.add(StudyRoleTypes.GUEST);
-        reOrder.add(StudyRoleTypes.MASTER);
-        reOrder.add(StudyRoleTypes.RESEARCHER);
-        //}
-        return reOrder;
-    }
+//    public List<StudyRoleTypes> getTeamForResearcherList() {
+//
+//        List<StudyRoleTypes> reOrder = new ArrayList<>();
+//        //for(StudyRoleTypes role: StudyRoleTypes.values()){
+//        reOrder.add(StudyRoleTypes.RESEARCHER);
+//        reOrder.add(StudyRoleTypes.RESEARCHADMIN);
+//        reOrder.add(StudyRoleTypes.MASTER);
+//        reOrder.add(StudyRoleTypes.AUDITOR);
+//        //}
+//        return reOrder;
+//    }
+//
+//    public  List<StudyRoleTypes> getTeamForResearchAdminList() {
+//
+//        List<StudyRoleTypes> reOrder = new ArrayList<>();
+//        //for(StudyRoleTypes role: StudyRoleTypes.values()){
+//        reOrder.add(StudyRoleTypes.RESEARCHADMIN);
+//        reOrder.add(StudyRoleTypes.MASTER);
+//        reOrder.add(StudyRoleTypes.RESEARCHER);
+//        //}
+//        return reOrder;
+//    }
 
     public long countAllMembersPerStudy() {
         return studyTeamController.countMembersPerStudy(studyName).size();
@@ -349,10 +350,15 @@ public class StudyMB implements Serializable {
         return studyTeamController.countStudyTeam(studyName, "Researcher");
     }
 
-    public long countGuests() {
-        return studyTeamController.countStudyTeam(studyName, "Guest");
+    public long countResearchAdmins() {
+        return studyTeamController.countStudyTeam(studyName, "Research Admin");
     }
 
+    public long countAuditors() {
+        return studyTeamController.countStudyTeam(studyName, "Auditor");
+    }
+    
+    
     public List<Username> getMastersList() {
         return studyTeamController.findTeamMembersByName(studyName, "Master");
     }
@@ -361,9 +367,14 @@ public class StudyMB implements Serializable {
         return studyTeamController.findTeamMembersByName(studyName, "Researcher");
     }
 
-    public List<Username> getGuestsList() {
-        return studyTeamController.findTeamMembersByName(studyName, "Guest");
+    public List<Username> getResearchAdminList() {
+        return studyTeamController.findTeamMembersByName(studyName, "Research Admin");
     }
+    
+    public List<Username> getAuditorsList() {
+        return studyTeamController.findTeamMembersByName(studyName, "Auditor");
+    }
+    
 
     public String checkStudyOwner(String email) {
        
@@ -395,30 +406,41 @@ public class StudyMB implements Serializable {
         return role;
     }
 
-//    public List<StudyRoleTypes> getCurrentRole(String email) {
-//
-//        String team = studyTeamController.findByPrimaryKey(studyName, email).getTeamRole();
-//        List<StudyRoleTypes> reOrder = new ArrayList<>();
-//
-//        if (team.equals("Researcher")) {
-////                for(StudyRoleTypes role: StudyRoleTypes.values()) {
-//            reOrder.add(StudyRoleTypes.RESEARCHER);
-//            reOrder.add(StudyRoleTypes.MASTER);
-//            reOrder.add(StudyRoleTypes.GUEST);
-////                }
-//            return reOrder;
-//
-//        } else if (team.equals("Guest")) {
-//
-//            reOrder.add(StudyRoleTypes.GUEST);
-//            reOrder.add(StudyRoleTypes.MASTER);
-//            reOrder.add(StudyRoleTypes.RESEARCHER);
-//
-//            return reOrder;
-//        } else {
-//            return null;
-//        }
-//    }
+    public List<StudyRoleTypes> getListBasedOnCurrentRole(String email) {
+
+        String team = studyTeamController.findByPrimaryKey(studyName, email).getTeamRole();
+        List<StudyRoleTypes> reOrder = new ArrayList<>();
+
+        if (team.equals("Researcher")) {
+//                for(StudyRoleTypes role: StudyRoleTypes.values()) {
+            reOrder.add(StudyRoleTypes.RESEARCHER);
+            reOrder.add(StudyRoleTypes.AUDITOR);
+            reOrder.add(StudyRoleTypes.RESEARCH_ADMIN);
+            reOrder.add(StudyRoleTypes.MASTER);
+           
+//                }
+            return reOrder;
+
+        } else if (team.equals("Research Admin")) {
+
+            reOrder.add(StudyRoleTypes.RESEARCH_ADMIN);
+            reOrder.add(StudyRoleTypes.AUDITOR);
+            reOrder.add(StudyRoleTypes.RESEARCHER);
+            reOrder.add(StudyRoleTypes.MASTER);
+
+            return reOrder;
+            
+        } else if (team.equals("Auditor")) {
+
+            reOrder.add(StudyRoleTypes.AUDITOR);
+            reOrder.add(StudyRoleTypes.RESEARCH_ADMIN);
+            reOrder.add(StudyRoleTypes.RESEARCHER);
+            reOrder.add(StudyRoleTypes.MASTER);
+            
+            return reOrder;
+        } else 
+            return null;
+    }
 
     public int getAllStudyUserTypesListSize() {
         return studyTeamController.findMembersByStudy(studyName).size();
@@ -480,35 +502,38 @@ public class StudyMB implements Serializable {
      *  @return  
      */
     public String fetchStudy() {
-
+        
         FacesContext fc = FacesContext.getCurrentInstance();
         Map<String, String> params = fc.getExternalContext().getRequestParameterMap();
         this.studyName = params.get("studyname");
         this.studyCreator = params.get("username");
 
         //System.out.println("Studyname: " + this.studyName + " - user: " + getUsername() + " - creator: " + this.studyCreator);
-     
-        FacesContext facesContext = FacesContext.getCurrentInstance(); 
-        Map<String,Object> sessionMap = facesContext.getExternalContext().getSessionMap();
         
-        List<StudyTeam> stList = studyTeamController.findUserForActiveStudy(studyName, getUsername());
-        sessionMap.put("currentStudy", studyName);
+//        FacesContext facesContext = FacesContext.getCurrentInstance(); 
+//        Map<String,Object> sessionMap = facesContext.getExternalContext().getSessionMap();
+//        sessionMap.put("currentStudy", studyName);
         
-        if (stList.iterator().hasNext()){
-            StudyTeam t = stList.iterator().next();
-//            if(getRequest().getRequestedSessionId() != null && getRequest().isRequestedSessionIdValid()){
-                if(sessionMap.get("currentStudy").equals(t.getStudyTeamPK().getName())){
-                    System.out.println("Session set - "+ sessionMap.get("currentStudy").toString());
-                    userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(t.getStudyTeamPK().getTeamMember(), t.getTeamRole())));
+        boolean res = studyTeamController.findUserForActiveStudy(studyName, getUsername());
+           if (!res){
+                    userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(getUsername(), "GUEST")));
                     return "studyPage";
-            }
-        }
-                    return null;
-    }
+           }
         
-            
-
-    
+              return "studyPage";
+//        if (stList.iterator().hasNext()){
+//            StudyTeam t = stList.iterator().next();
+////            if(getRequest().getRequestedSessionId() != null && getRequest().isRequestedSessionIdValid()){
+//                if(sessionMap.get("currentStudy").equals(t.getStudyTeamPK().getName())){
+//                    System.out.println("Session set - "+ sessionMap.get("currentStudy").toString());
+//                    userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(newRole, studyName)));
+//                    return "studyPage";
+//            }
+//        }
+//                    studyTeamController.clearGroups(getUsername(), sessionMap.get("currentStudy").toString());
+//                    sessionMap.remove("currentStudy");
+//                    return null;
+    }
 
     public void addStudyMaster(String study_name) {
 

@@ -9,7 +9,7 @@ package se.kth.bbc.activity;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
+
 
 /**
  *
@@ -43,5 +43,11 @@ public class UserGroupsController {
     }
 
    
-    
+    /**
+     * Deletes only GUEST role of a study from USERS_GROUPS table
+     * @param username 
+     */
+    public void clearGroups(String email){
+        em.createNamedQuery("UsersGroups.deleteGroupsForEmail", UsersGroups.class).setParameter("email", email).executeUpdate();
+    }  
 }

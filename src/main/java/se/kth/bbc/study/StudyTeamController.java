@@ -112,12 +112,23 @@ public class StudyTeamController {
     }
     
     public void updateTeamRole(String name, String email, String teamRole){
+        System.out.println(teamRole + "size --- "+ teamRole.getBytes());
         StudyTeam team = findByPrimaryKey(name, email);
             if(team != null){
                 team.setTeamRole(teamRole);
                 team.setTimestamp(new Date());
                 em.merge(team);
             }
+            
+//            em.createNamedQuery("StudyTeam.updateTeamRole", StudyTeam.class).setParameter("teamRole", teamRole).setParameter("timestamp", new Date())
+//                    .setParameter("name", name).setParameter("teamMember", email).executeUpdate();
+            
+//            Query query = em.createNativeQuery("UPDATE StudyTeam SET team_role= '"+ teamRole +"' , timestamp='"+ new Date() +"' WHERE team_member=? AND name=?",StudyTeam.class)
+//                    .setParameter(1, email).setParameter(2, name);
+//            
+//            em.merge(query);
+//           
+            
     }
     
     
@@ -125,20 +136,17 @@ public class StudyTeamController {
         return em.find(StudyTeam.class, new StudyTeam(new StudyTeamPK(name, email)).getStudyTeamPK());
     }
     
-    /**
-     * Deletes all roles for the user on login, except ADMIN
-     * @param username 
-     */
-    public void clearGroups(String username){
-        em.createNamedQuery("UsersGroups.deleteGroupsForEmail", StudyTeam.class).setParameter("email", username).executeUpdate();
-    }    
+      
         
-    public List<StudyTeam> findUserForActiveStudy(String studyname, String username){
+    public boolean findUserForActiveStudy(String studyname, String username){
         // TODO
 //        Query query = em.createNamedQuery("StudyTeam.findByNameAndTeamMember", StudyTeam.class).setParameter("name", studyname).setParameter("teamMember", username);
         Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_member=?", StudyTeam.class).setParameter(1, studyname).setParameter(2, username);
         //List<StudyTeam> res = query.getResultList();
-        return query.getResultList();
+        if( query.getResultList().size() > 0)
+            return true;
+        
+        return false;
 //        //System.out.println("Returned " + res.size() + " answers!!");
 //        if (res.iterator().hasNext()) {
 //            StudyTeam t = res.iterator().next();

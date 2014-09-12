@@ -6,6 +6,8 @@ package se.kth.bbc.study;
 
 
 
+
+
 /**
  *
  * @author roshan
@@ -13,8 +15,9 @@ package se.kth.bbc.study;
 public enum StudyRoleTypes {
     
   MASTER("Master"),
+  RESEARCH_ADMIN("Research Admin"),
   RESEARCHER("Researcher"),
-  GUEST("Guest");
+  AUDITOR("Auditor");
   
   String role;
    
