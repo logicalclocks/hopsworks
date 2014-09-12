@@ -20,6 +20,8 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
+import javax.faces.event.PhaseEvent;
+import javax.faces.event.PhaseId;
 import javax.servlet.http.HttpServletRequest;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
@@ -152,6 +154,17 @@ public class UserController implements Serializable {
     public void setUsername(String username){
         this.username = username;
     }
+    
+    
+    
+    public void removeSessionAttributeAfterRender(PhaseEvent event) {
+        if (event.getPhaseId() == PhaseId.RENDER_RESPONSE) {
+            //FacesContext.getExternalContext().getSessionMap().get("studyManagedBean");
+            //Object sessionObj = FacesContext.getCurrentInstance().getExternalContext().getSessionMap().
+           
+        }
+    }
+    
     
     
     public String fetchUser(){

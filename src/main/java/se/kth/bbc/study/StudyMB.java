@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -204,7 +205,7 @@ public class StudyMB implements Serializable {
     public void setStudyTeamEntry(StudyTeam studyTeamEntry) {
         this.studyTeamEntry = studyTeamEntry;
     }
-
+    
     public String getStudyTeamRole(String email) {
        this.setTeamRole = studyTeamController.findByPrimaryKey(studyName, email).getTeamRole();
        return setTeamRole;
@@ -486,19 +487,28 @@ public class StudyMB implements Serializable {
         this.studyCreator = params.get("username");
 
         //System.out.println("Studyname: " + this.studyName + " - user: " + getUsername() + " - creator: " + this.studyCreator);
-        List<StudyTeam> stList = studyTeamController.findUserForActiveStudy(studyName, getUsername());
-        if (stList.iterator().hasNext()){
-              StudyTeam t = stList.iterator().next();
-              if(getRequest().getRequestedSessionId() != null && getRequest().isRequestedSessionIdValid()){
-                    userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(t.getStudyTeamPK().getTeamMember(), t.getTeamRole())));
-              } else {
-                    userGroupsController.removeUserGroups(t.getStudyTeamPK().getTeamMember(), t.getTeamRole());
-              }
-        }
+     
+        FacesContext facesContext = FacesContext.getCurrentInstance(); 
+        Map<String,Object> sessionMap = facesContext.getExternalContext().getSessionMap();
         
-            return "studyPage";
-
+        List<StudyTeam> stList = studyTeamController.findUserForActiveStudy(studyName, getUsername());
+        sessionMap.put("currentStudy", studyName);
+        
+        if (stList.iterator().hasNext()){
+            StudyTeam t = stList.iterator().next();
+//            if(getRequest().getRequestedSessionId() != null && getRequest().isRequestedSessionIdValid()){
+                if(sessionMap.get("currentStudy").equals(t.getStudyTeamPK().getName())){
+                    System.out.println("Session set - "+ sessionMap.get("currentStudy").toString());
+                    userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(t.getStudyTeamPK().getTeamMember(), t.getTeamRole())));
+                    return "studyPage";
+            }
+        }
+                    return null;
     }
+        
+            
+
+    
 
     public void addStudyMaster(String study_name) {
 
@@ -512,13 +522,17 @@ public class StudyMB implements Serializable {
         } catch (EJBException ejb) {
             System.out.println("Add study master failed" + ejb.getMessage());
         }
-        System.out.println("Add study master success!");
+            System.out.println("Add study master success!");
     }
 
-    //delete a study
-    public synchronized String deleteStudy() {
+    //delete a study - only owner can perform the deletion
+    public String deleteStudy() {
+       
+        String StudyOwner = studyController.filterByName(studyName);
+        
         try {
-            studyController.removeStudy(study);
+            if(getUsername().equals(StudyOwner))
+                  studyController.removeStudy(study);
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Study wasn't removed.");
             return null;
@@ -527,7 +541,7 @@ public class StudyMB implements Serializable {
             return "Success!";
     }
 
-    //add member to a team - batch persist 
+    //add members to a team - bulk persist 
     public synchronized String addToTeam() {
         try {
             Iterator<Theme> itr = getSelectedUsernames().listIterator();

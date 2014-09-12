@@ -70,14 +70,17 @@ public class StudyController {
     } 
      
      
-//     public List<TrackStudy> filterLatestStudy(){
-//     
-//         Date now = new Date();
-//         Date oneMonth = new Date(now.getTime() - );
-//         Query query = em.createQuery(null);
-//     
-//     }
-//     
+     public String filterByName(String name){
+     
+         Query query = em.createNamedQuery("TrackStudy.findByName", TrackStudy.class).setParameter("name", name);
+         List<TrackStudy> result = query.getResultList();
+          if (result.iterator().hasNext()){
+              TrackStudy t = result.iterator().next();
+              return t.getUsername();
+          }
+              return null;
+     }
+     
     
     public List<TrackStudy> findAllStudies(String user){
     
@@ -105,7 +108,7 @@ public class StudyController {
     }
     
     public void removeStudy(TrackStudy study) {
-       em.remove(study);
+        em.remove(study);
     }
     
 }
