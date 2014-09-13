@@ -93,14 +93,17 @@ public class StudyController {
         return query.getResultList();
     }
     
+    //SELECT name, username FROM study WHERE name IN (SELECT DISTINCT name FROM StudyTeam WHERE name NOT IN (SELECT name FROM study WHERE username=?) "
+    //            + "AND (SELECT COUNT(*) FROM study where username=?) > 0)
+    
     
     public List<TrackStudy> findJoinedStudies(String user){
     
-        //SELECT name, username FROM study WHERE NOT EXISTS (SELECT * FROM StudyTeam WHERE StudyTeam.team_member=? AND study.username=?)
         //select name, username from study where name IN (select distinct name from StudyTeam where name NOT IN (select name from study where username like 'roshan%'))
-        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE name IN (SELECT DISTINCT name FROM StudyTeam WHERE name NOT IN (SELECT name FROM study WHERE username=?) "
-                + "AND (SELECT COUNT(*) FROM study where username=?) > 0)", TrackStudy.class)
-                .setParameter(1, user).setParameter(2, user);
+        //select name, username from study where (name,username) NOT IN (select name, team_member from StudyTeam where team_member='roshan@yahoo.com')
+        
+        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE (name, username) NOT IN (SELECT name, team_member FROM StudyTeam WHERE team_member=?)", TrackStudy.class)
+                .setParameter(1, user);
         return query.getResultList();
     }
     

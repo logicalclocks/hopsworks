@@ -395,15 +395,13 @@ public class StudyMB implements Serializable {
         return null;
     }
 
-    public String renderList(String email) {
-//        if (!getNewTeamRole().equals(studyTeamController.findByPrimaryKey(studyName, email).getTeamRole())) {
-            //String role = studyTeamController.findByPrimaryKey(studyName, email).getTeamRole();
-//        }
-            //return role;
-        //return null;
-        
-        String role = studyTeamController.getStudyTeam(studyName, email).getTeamRole();
-        return role;
+    public String renderComponentList() {
+        List<StudyTeam> st = studyTeamController.findCurrentRole(studyName, getUsername());
+        if(st.iterator().hasNext()){
+            StudyTeam t = st.iterator().next();
+            return t.getTeamRole();
+        }
+            return null;
     }
 
     public List<StudyRoleTypes> getListBasedOnCurrentRole(String email) {

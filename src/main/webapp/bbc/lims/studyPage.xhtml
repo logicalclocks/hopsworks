@@ -68,8 +68,7 @@
                                         Team Members (#{studyManagedBean.countAllMembersPerStudy()})
                                         <span class="right_button">
                                             <h:form id="frmBtn">
-                                                <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" rendered="#{userMB.anyAdminUser}"
-                                                                 action="newTeamMemb"/>
+                                                <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" action="newTeamMemb" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                                             </h:form>
                                         </span>
                                     </h3>
@@ -98,9 +97,10 @@
                                                                 </div>
                                                                 <div class="span5 right">
                                                                     <div class="left">
-                                                                        <h:form id="frmStudyMaster_${mst.count}" class="edit_team_members">
+                                                                        <h:form id="frmStudyMaster_${mst.count}" class="edit_team_members"> 
                                                                             <div style="margin:0;padding:0;display:inline">
-                                                                                <p:selectOneMenu id="Owner" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign" disabled="true" style="width:170px;">
+                                                                                <p:selectOneMenu id="Owner" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign" disabled="true" 
+                                                                                                 style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                     <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
 <!--                                                                                     <f:selectItem itemLabel="Master" itemValue="Master"/>
                                                                                      <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
@@ -131,10 +131,10 @@
                                                                        </div>
                                                                        <div class="span5 right">
                                                                            <div class="left">
-                                                                               <h:form id="frmMaster_${mst.count}" class="edit_team_members">
+                                                                               <h:form id="frmMaster_${mst.count}" class="edit_team_members"> 
                                                                                    <div style="margin:0;padding:0;display:inline">
                                                                                    <p:selectOneMenu id="masterList_${mst.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign"  
-                                                                                                    style="width:170px;">
+                                                                                                    style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                        <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(mlist.email)}"/>
                                                                                        <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
 <!--                                                                                                <f:selectItem itemLabel="Master" itemValue="Master"/>
@@ -146,7 +146,7 @@
                                                                            </div>
                                                                            <div class="right" align="right">
                                                                                         <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                                                        <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}">
+                                                                                        <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"> 
                                                                                              <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert" />
                                                                                         </p:commandButton>
                                                                                         <p:confirmDialog id="currentUser_master_${mst.count}" global="true" severity="alert" showEffect="fade"> 
@@ -176,7 +176,7 @@
                                                                                <h:form id="frmMaster_${mst.count}" class="edit_team_members">
                                                                                    <div style="margin:0;padding:0;display:inline">
                                                                                    <p:selectOneMenu id="masterList_${mst.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign"  style="width:170px;"
-                                                                                                    disabled="true">
+                                                                                                    disabled="true" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                        <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(mlist.email)}"/>
                                                                                        <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
 <!--                                                                                                <f:selectItem itemLabel="Master" itemValue="Master"/>
@@ -212,7 +212,7 @@
                                                                                <h:form id="frmMaster_${mst.count}" class="edit_team_members">
                                                                                    <div style="margin:0;padding:0;display:inline">
                                                                                    <p:selectOneMenu id="masterList_${mst.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign" 
-                                                                                                    style="width:170px;">
+                                                                                                    style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                        <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(mlist.email)}"/>
                                                                                        <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
 <!--                                                                                                <f:selectItem itemLabel="Master" itemValue="Master"/>
@@ -223,7 +223,7 @@
                                                                                </h:form>
                                                                            </div>
                                                                            <div class="right" align="right">
-                                                                                    <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}">
+                                                                                    <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                          <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert" />
                                                                                     </p:commandButton>
                                                                                <p:confirmDialog id="notCurrentUserNOwner_master_${mst.count}" global="true" severity="alert" showEffect="fade"> 
@@ -266,7 +266,7 @@
                                                                         <h:form id="frmRchs_${rchs.count}" class="edit_team_members">
                                                                             <div style="margin:0;padding:0;display:inline">
                                                                                 <p:selectOneMenu id="researcherList_${rchs.count}" value="#{valueChangeMB.newTeamRole}" 
-                                                                                                 styleClass="study_role_assign"  style="width:170px;">
+                                                                                                 styleClass="study_role_assign"  style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                      <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(rlist.email)}"/>
     <!--                                                                            <f:selectItem itemLabel="Researcher"/>-->
                                                                                     <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(rlist.email)}" var="rc" itemLabel="#{rc.team}" itemValue="#{rc}"/>
@@ -279,7 +279,7 @@
                                                                         </h:form>
                                                                     </div>
                                                                     <div class="right" align="right">
-                                                                                <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}">
+                                                                                <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                      <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
                                                                                 </p:commandButton>
                                                                                 <p:confirmDialog id="notCurrentUser_researcher_${rchs.count}"  global="true" severity="alert" showEffect="fade"> 
@@ -309,7 +309,7 @@
                                                                         <h:form id="frmRchs_${rchs.count}" class="edit_team_members">
                                                                             <div style="margin:0;padding:0;display:inline">
                                                                                 <p:selectOneMenu id="researcherList_${rchs.count}" value="#{valueChangeMB.newTeamRole}" 
-                                                                                                 styleClass="study_role_assign"  style="width:170px;">
+                                                                                                 styleClass="study_role_assign"  style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                      <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(rlist.email)}"/>
     <!--                                                                            <f:selectItem itemLabel="Researcher"/>-->
                                                                                 <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(rlist.email)}" var="rc" itemLabel="#{rc.team}" itemValue="#{rc}"/>
@@ -323,7 +323,7 @@
                                                                     </div>
                                                                     <div class="right" align="right">
                                                                             <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                                            <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}">
+                                                                            <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                  <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert" />
                                                                             </p:commandButton>
                                                                             <p:confirmDialog id="currentUser_researcher_${rchs.count}" global="true" severity="alert" showEffect="fade"> 
@@ -369,7 +369,7 @@
                                                                         <h:form id="frmRchsAd_${rDchs.count}" class="edit_team_members">
                                                                             <div style="margin:0;padding:0;display:inline">
                                                                                 <p:selectOneMenu id="researcherList_${rDchs.count}" value="#{valueChangeMB.newTeamRole}" 
-                                                                                                 styleClass="study_role_assign"  style="width:170px;">
+                                                                                                 styleClass="study_role_assign"  style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                      <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(rDlist.email)}"/>
     <!--                                                                            <f:selectItem itemLabel="Researcher"/>-->
                                                                                     <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(rDlist.email)}" var="rca" itemLabel="#{rca.team}" itemValue="#{rca}"/>
@@ -382,7 +382,7 @@
                                                                         </h:form>
                                                                     </div>
                                                                     <div class="right" align="right">
-                                                                                <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rDlist.email)}">
+                                                                                <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rDlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                      <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rDlist.name} [#{rDlist.email}]?" icon="ui-icon-alert"/>
                                                                                 </p:commandButton>
                                                                                 <p:confirmDialog id="notCurrentUser_researchAdmin_${rDchs.count}"  global="true" severity="alert" showEffect="fade"> 
@@ -412,7 +412,7 @@
                                                                         <h:form id="frmRchsA_${rDchs.count}" class="edit_team_members">
                                                                             <div style="margin:0;padding:0;display:inline">
                                                                                 <p:selectOneMenu id="researcherList_${rDchs.count}" value="#{valueChangeMB.newTeamRole}" 
-                                                                                                 styleClass="study_role_assign"  style="width:170px;">
+                                                                                                 styleClass="study_role_assign"  style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                      <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(rDlist.email)}"/>
     <!--                                                                            <f:selectItem itemLabel="Researcher"/>-->
                                                                                 <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(rDlist.email)}" var="rca" itemLabel="#{rca.team}" itemValue="#{rca}"/>
@@ -426,7 +426,7 @@
                                                                     </div>
                                                                     <div class="right" align="right">
                                                                             <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                                            <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rDlist.email)}">
+                                                                            <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rDlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                  <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rDlist.name} [#{rDlist.email}]?" icon="ui-icon-alert" />
                                                                             </p:commandButton>
                                                                             <p:confirmDialog id="currentUser_researchAdmin_${rDchs.count}" global="true" severity="alert" showEffect="fade"> 
@@ -471,7 +471,7 @@
                                                                         <h:form id="frmGuest_${aud.count}" class="edit_team_members">
                                                                             <div style="margin:0;padding:0;display:inline">
                                                                                 <p:selectOneMenu id="guestsList_${aud.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign" 
-                                                                                             style="width:170px;">
+                                                                                             style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                      <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(alist.email)}"/>
                                                                                 <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(alist.email)}" var="ad" itemLabel="#{ad.team}" itemValue="#{ad}"/> 
     <!--                                                                            rendered="#{studyManagedBean.getCurrentRole(glist.email) == 'Guest'}"/>-->
@@ -483,7 +483,7 @@
                                                                         </h:form>
                                                                     </div>
                                                                     <div class="right" align="right">
-                                                                                <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(alist.email)}">
+                                                                                <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(alist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                     <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{alist.name} [#{alist.email}]?" icon="ui-icon-alert"/>
                                                                                 </p:commandButton>
                                                                                 <p:confirmDialog id="notCurrentUser_guest_${aud.count}" global="true" severity="alert" showEffect="fade"> 
@@ -514,7 +514,7 @@
                                                                         <h:form id="frmGuest_${aud.count}" class="edit_team_members">
                                                                             <div style="margin:0;padding:0;display:inline">
                                                                                 <p:selectOneMenu id="guestsList_${aud.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign" 
-                                                                                            style="width:170px;">
+                                                                                            style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                     <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(alist.email)}"/>
                                                                                 <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(alist.email)}" var="ad" itemLabel="#{ad.team}" itemValue="#{ad}"/> 
     <!--                                                                            rendered="#{studyManagedBean.getCurrentRole(glist.email) == 'Guest'}"/>-->
@@ -527,7 +527,7 @@
                                                                     </div>
                                                                     <div class="right" align="right">
                                                                             <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                                            <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(alist.email)}">
+                                                                            <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(alist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                 <p:confirm  header="Removing a team member" message="Are you sure you want to remove the user #{alist.name} [#{alist.email}]?" icon="ui-icon-alert" />
                                                                             </p:commandButton>
                                                                             <p:confirmDialog id="currentUser_guest_${aud.count}" global="true" severity="alert" showEffect="fade"> 
