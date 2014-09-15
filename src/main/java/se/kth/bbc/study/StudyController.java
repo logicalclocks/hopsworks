@@ -107,6 +107,25 @@ public class StudyController {
         return query.getResultList();
     }
     
+    public List<TrackStudy> QueryForNonRegistered(String user){
+        
+        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE name IN (SELECT name FROM StudyTeam WHERE team_member=?)", TrackStudy.class)
+                .setParameter(1, user);
+        return query.getResultList();
+    }
+    
+    public boolean checkForStudyOwnership(String user){
+    
+        //Query query = em.createNativeQuery("SELECT EXISTS(SELECT * from study WHERE username=?) AS T", TrackStudy.class).setParameter(1, user);
+        Query query = em.createNamedQuery("TrackStudy.findAllStudy", TrackStudy.class).setParameter("username", user);
+        long res = (Long) query.getSingleResult();
+        
+        if(res > 0) return true;
+                else return false;
+    }
+    
+    
+    
     public void persistStudy(TrackStudy study) {
         em.persist(study);
     }

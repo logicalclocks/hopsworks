@@ -453,9 +453,14 @@ public class StudyMB implements Serializable {
     }
 
     public List<TrackStudy> getJoinedStudies() {
-        return studyController.findJoinedStudies(getUsername());
+        boolean check = studyController.checkForStudyOwnership(getUsername());
+        
+        if(check)
+            return studyController.findJoinedStudies(getUsername());
+        else
+            return studyController.QueryForNonRegistered(getUsername());
     }
-
+    
     public List<StudyTeam> getTeamList() {
         return studyTeamController.findMembersByStudy(studyName);
     }
@@ -470,7 +475,12 @@ public class StudyMB implements Serializable {
     
     
      public int countJoinedStudy(){
-        return  studyController.findJoinedStudies(getUsername()).size();
+        boolean check = studyController.checkForStudyOwnership(getUsername());
+        
+        if(check)
+            return  studyController.findJoinedStudies(getUsername()).size();
+        else
+             return studyController.QueryForNonRegistered(getUsername()).size();
     }
     
     /**
@@ -513,9 +523,12 @@ public class StudyMB implements Serializable {
 //        sessionMap.put("currentStudy", studyName);
         
         boolean res = studyTeamController.findUserForActiveStudy(studyName, getUsername());
+        boolean rec = userGroupsController.checkForCurrentSession(getUsername());
            if (!res){
+               if(!rec){
                     userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(getUsername(), "GUEST")));
                     return "studyPage";
+               }
            }
         
               return "studyPage";

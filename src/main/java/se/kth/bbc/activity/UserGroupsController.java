@@ -9,6 +9,7 @@ package se.kth.bbc.activity;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 
 /**
@@ -49,5 +50,13 @@ public class UserGroupsController {
      */
     public void clearGroups(String email){
         em.createNamedQuery("UsersGroups.deleteGroupsForEmail", UsersGroups.class).setParameter("email", email).executeUpdate();
-    }  
+    } 
+    
+    public boolean checkForCurrentSession(String email){
+        Query query = em.createNamedQuery("UsersGroups.findARecord", UsersGroups.class).setParameter("email", email);
+        long rec = (Long) query.getSingleResult();
+        if(rec > 0) return true;
+                    else return false;
+    }
+    
 }
