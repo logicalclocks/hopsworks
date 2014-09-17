@@ -29,7 +29,7 @@
                     </p:toolbarGroup>  
 
                     <p:toolbarGroup align="right">  
-                        <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{userMB.adminUser}"/>
+<!--                        <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{userMB.adminUser}"/>-->
                         <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
                         <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
                             <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" /> 

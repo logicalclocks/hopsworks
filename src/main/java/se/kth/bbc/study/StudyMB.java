@@ -413,25 +413,23 @@ public class StudyMB implements Serializable {
 //                for(StudyRoleTypes role: StudyRoleTypes.values()) {
             reOrder.add(StudyRoleTypes.RESEARCHER);
             reOrder.add(StudyRoleTypes.AUDITOR);
-            reOrder.add(StudyRoleTypes.RESEARCH_ADMIN);
             reOrder.add(StudyRoleTypes.MASTER);
            
 //                }
             return reOrder;
 
-        } else if (team.equals("Research Admin")) {
-
-            reOrder.add(StudyRoleTypes.RESEARCH_ADMIN);
-            reOrder.add(StudyRoleTypes.AUDITOR);
-            reOrder.add(StudyRoleTypes.RESEARCHER);
-            reOrder.add(StudyRoleTypes.MASTER);
-
-            return reOrder;
+//        } else if (team.equals("Research Admin")) {
+//
+//            reOrder.add(StudyRoleTypes.RESEARCH_ADMIN);
+//            reOrder.add(StudyRoleTypes.AUDITOR);
+//            reOrder.add(StudyRoleTypes.RESEARCHER);
+//            reOrder.add(StudyRoleTypes.MASTER);
+//
+//            return reOrder;
             
         } else if (team.equals("Auditor")) {
 
             reOrder.add(StudyRoleTypes.AUDITOR);
-            reOrder.add(StudyRoleTypes.RESEARCH_ADMIN);
             reOrder.add(StudyRoleTypes.RESEARCHER);
             reOrder.add(StudyRoleTypes.MASTER);
             
@@ -524,7 +522,8 @@ public class StudyMB implements Serializable {
         
         boolean res = studyTeamController.findUserForActiveStudy(studyName, getUsername());
         boolean rec = userGroupsController.checkForCurrentSession(getUsername());
-           if (!res){
+          
+        if (!res){
                if(!rec){
                     userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(getUsername(), "GUEST")));
                     return "studyPage";

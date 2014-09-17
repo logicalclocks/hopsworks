@@ -53,6 +53,7 @@ public class UserMB {
         return getRequest().isUserInRole("BBC_ADMIN") || getRequest().isUserInRole("BBC_RESEARCHER") || getRequest().isUserInRole("ADMIN");
     }
     
+    
     public String logOut() {
         getRequest().getSession().invalidate();
         return "logout";

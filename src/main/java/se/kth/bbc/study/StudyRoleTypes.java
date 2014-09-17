@@ -15,7 +15,6 @@ package se.kth.bbc.study;
 public enum StudyRoleTypes {
     
   MASTER("Master"),
-  RESEARCH_ADMIN("Research Admin"),
   RESEARCHER("Researcher"),
   AUDITOR("Auditor");
   

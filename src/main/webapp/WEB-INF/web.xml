@@ -37,6 +37,10 @@
             <param-name>javax.faces.PARTIAL_STATE_SAVING</param-name>
             <param-value>true</param-value>
     </context-param>
+    <context-param>
+        <param-name>javax.faces.FACELETS_BUFFER_SIZE</param-name>
+        <param-value>65535</param-value>
+    </context-param>
     <servlet>
         <servlet-name>Faces Servlet</servlet-name>
         <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
@@ -120,14 +124,14 @@
         <servlet-name>FileUploadJSP</servlet-name>
         <url-pattern>/plupupload/</url-pattern>
     </servlet-mapping>-->
-    <!--    <servlet>
-        <servlet-name>FileUploadHandler</servlet-name>
-        <servlet-class>se.kth.bbc.hdfsclient.FileUploadHandler</servlet-class>
+   <servlet>
+        <servlet-name>UploadServlet</servlet-name>
+        <servlet-class>se.kth.bbc.upload.UploadServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>FileUploadHandler</servlet-name>
+        <servlet-name>UploadServlet</servlet-name>
         <url-pattern>/upload</url-pattern>
-    </servlet-mapping>-->
+    </servlet-mapping>
     <!-- declare the roles relevant for our webapp -->
     <security-role>
         <role-name>ADMIN</role-name>

@@ -205,7 +205,7 @@ public class DatasetMB implements Serializable{
     
         try{
              
-            long start = System.currentTimeMillis();
+            //long start = System.currentTimeMillis();
 
             File fileToCreate = new File("/disk/samples"+File.separator+filename);
             OutputStream os = new FileOutputStream(fileToCreate);
@@ -307,9 +307,9 @@ public class DatasetMB implements Serializable{
                       return;
                 }
            
-                   InputStream inStream = fs.open(outputPath, 1048576);    
-                   file = new DefaultStreamedContent(inStream, "VCF/BAM/SAM/ADAM", fileName);
-                   
+                      InputStream inStream = fs.open(outputPath, 1048576);    
+                      file = new DefaultStreamedContent(inStream, "VCF/BAM/SAM/ADAM", fileName);
+
         } finally {
                    //inStream.close();
         }  

@@ -75,9 +75,9 @@
                                                         <h:outputText value="#{user.email}" />
                                                     </p:column>
                                         
-                                                    <p:column id="usernameColumn" headerText="Username" style="width:273px;font-size: 12px;text-align: left;">
+<!--                                                    <p:column id="usernameColumn" headerText="Username" style="width:273px;font-size: 12px;text-align: left;">
                                                         <h:outputText value="#{user.username}" />
-                                                    </p:column>
+                                                    </p:column>-->
                                         
                                                     <p:column id="mobileNumColumn" headerText="Mobile Number" style="width:273px;font-size: 12px;text-align: left;">
                                                         <h:outputText value="#{user.mobileNum}" />
@@ -97,9 +97,9 @@
 
                                                   <h:outputText value="Email:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
                                                   <h:outputText value="#{userController.selectedUser.email}" />
-
+<!--
                                                   <h:outputText value="Username:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
-                                                  <h:outputText value="#{userController.selectedUser.username}" />
+                                                  <h:outputText value="#{userController.selectedUser.username}" />-->
                                                   
                                                   <h:outputText value="Registered On:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
                                                   <h:outputText value="#{userController.selectedUser.registeredOn}" />
@@ -176,11 +176,11 @@
                                         <p:message for="email" />
                                         <h:outputText value=""/>
 
-                                        <h:outputLabel for="uname" value="Username:" style="font-weight:bold"/>					
+<!--                                        <h:outputLabel for="uname" value="Username:" style="font-weight:bold"/>					
                                         <p:inputText id="uname" required="true" label="Username" value="#{userController.user.username}" autocomplete="off" validatorMessage="Username cannot be empty">
                                         </p:inputText>
                                         <p:message for="uname" />
-                                        <h:outputText value=""/>
+                                        <h:outputText value=""/>-->
 
                                         <h:outputLabel for="password" value="Password:" style="font-weight:bold"/>					
                                         <p:password id="password" label="password" required="true" value="#{userController.user.password}" validatorMessage="password is required">

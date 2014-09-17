@@ -15,8 +15,12 @@
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/studyPage.css']}" />
+          
         </h:head>
         <h:body>
+            
+
+            
             <h:form class="stylelayout" id="formToolbar">  
                 <p:toolbar styleClass="MainToolbar">  
                     <p:toolbarGroup align="left">  
@@ -344,7 +348,7 @@
                     <!-- Research Admin block -->
   
   
-                        <c:if id="researchAdminBlock"  test="${studyManagedBean.countResearchAdmins() > 0}">
+<!--                        <c:if id="researchAdminBlock"  test="${studyManagedBean.countResearchAdmins() > 0}">
                                         <h:panelGroup id="divRechAdmin" styleClass="ui_box">
                                             <h5 class="title" align="left">Research Admins
                                                 <small>#{studyManagedBean.countResearchAdmins()}</small></h5>
@@ -371,12 +375,12 @@
                                                                                 <p:selectOneMenu id="researcherList_${rDchs.count}" value="#{valueChangeMB.newTeamRole}" 
                                                                                                  styleClass="study_role_assign"  style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                      <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(rDlist.email)}"/>
-    <!--                                                                            <f:selectItem itemLabel="Researcher"/>-->
+                                                                                <f:selectItem itemLabel="Researcher"/>
                                                                                     <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(rDlist.email)}" var="rca" itemLabel="#{rca.team}" itemValue="#{rca}"/>
-    <!--                                                                                           rendered="#{studyManagedBean.getCurrentRole(rlist.email)== 'Researcher'}"/>-->
-<!--                                                                                  <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
+                                                                                               rendered="#{studyManagedBean.getCurrentRole(rlist.email)== 'Researcher'}"/>
+                                                                                  <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
                                                                                   <f:selectItem itemLabel="Master" itemValue="Master"/>
-                                                                                  <f:selectItem itemLabel="Guest" itemValue="Guest"/>-->
+                                                                                  <f:selectItem itemLabel="Guest" itemValue="Guest"/>
                                                                             </p:selectOneMenu>
                                                                            </div>
                                                                         </h:form>
@@ -414,12 +418,12 @@
                                                                                 <p:selectOneMenu id="researcherList_${rDchs.count}" value="#{valueChangeMB.newTeamRole}" 
                                                                                                  styleClass="study_role_assign"  style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                                                      <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(rDlist.email)}"/>
-    <!--                                                                            <f:selectItem itemLabel="Researcher"/>-->
+                                                                                <f:selectItem itemLabel="Researcher"/>
                                                                                 <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(rDlist.email)}" var="rca" itemLabel="#{rca.team}" itemValue="#{rca}"/>
-    <!--                                                                                           rendered="#{studyManagedBean.getCurrentRole(rlist.email)== 'Researcher'}"/>-->
-<!--                                                                                  <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
+                                                                                               rendered="#{studyManagedBean.getCurrentRole(rlist.email)== 'Researcher'}"/>
+                                                                                  <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
                                                                                   <f:selectItem itemLabel="Master" itemValue="Master"/>
-                                                                                  <f:selectItem itemLabel="Guest" itemValue="Guest"/>-->
+                                                                                  <f:selectItem itemLabel="Guest" itemValue="Guest"/>
                                                                             </p:selectOneMenu>
                                                                            </div>
                                                                         </h:form>
@@ -441,10 +445,10 @@
                                              </c:forEach>
                                             </ul>
                                         </h:panelGroup>
-                                      </c:if>
+                                      </c:if>-->
   
     
-  <!-- End of Researcher Panel Group and starting of Guest Panel Group-->                                    
+  <!-- End of Researcher Panel Group and starting of Auditor Panel Group-->                                    
                                         
                             <c:if id="auditorBlock" test="${studyManagedBean.countAuditors() > 0}">
                                         <h:panelGroup id="divAud" styleClass="ui_box">
@@ -546,8 +550,12 @@
                                       </c:if>
                                     </div>
                                 </p:tab>
-<!--                                <p:tab id="genomes" title="Genomes"></p:tab>
-                                <p:tab id="workflows" title="Workflows"></p:tab>-->
+                                <p:tab id="genomes" title="Genomes" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
+     
+                                
+                                
+                                </p:tab>
+<!--                                <p:tab id="workflows" title="Workflows"></p:tab>-->
                             </p:tabView>
                         </div>
                     </div>

@@ -112,7 +112,7 @@ public class StudyTeamController {
     }
     
     public void updateTeamRole(String name, String email, String teamRole){
-        System.out.println(teamRole + "size --- "+ teamRole.length());
+        //System.out.println(teamRole + "size --- "+ teamRole.length());
         StudyTeam team = findByPrimaryKey(name, email);
             if(team != null){
                 team.setTeamRole(teamRole);

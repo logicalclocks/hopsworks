@@ -157,13 +157,13 @@ public class UserController implements Serializable {
     
     
     
-    public void removeSessionAttributeAfterRender(PhaseEvent event) {
-        if (event.getPhaseId() == PhaseId.RENDER_RESPONSE) {
-            //FacesContext.getExternalContext().getSessionMap().get("studyManagedBean");
-            //Object sessionObj = FacesContext.getCurrentInstance().getExternalContext().getSessionMap().
-           
-        }
-    }
+//    public void removeSessionAttributeAfterRender(PhaseEvent event) {
+//        if (event.getPhaseId() == PhaseId.RENDER_RESPONSE) {
+//            //FacesContext.getExternalContext().getSessionMap().get("studyManagedBean");
+//            //Object sessionObj = FacesContext.getCurrentInstance().getExternalContext().getSessionMap().
+//           
+//        }
+//    }
     
     
     
