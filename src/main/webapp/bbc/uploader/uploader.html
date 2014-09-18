@@ -6,37 +6,43 @@ and open the template in the editor.
 -->
 <html>
   <head>
-    <title>Resumable.js - Multiple simultaneous, stable and resumable uploads via the HTML5 File API</title>
+    <title>File uploader</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" type="text/css" href="resumable.css" />
   </head>
   <body>
-    <div id="frame">
+   <div id="htmlToolBar">
+      <form class="stylelayout" id="formToolbar">
+          <a class="aLink" href="../lims/index.xhtml">BioBankCloud</a>
+      </form>
+   </div>
 
-        
-        
-        
-        
-      <h1>Resumable.js</h1>
-      <p>It's a JavaScript library providing multiple simultaneous, stable and resumable uploads via the HTML5 File API.</p>
-
-      <p>The library is designed to introduce fault-tolerance into the upload of large files through HTTP. This is done by splitting each files into small chunks; whenever the upload of a chunk fails, uploading is retried until the procedure completes. This allows uploads to automatically resume uploading after a network connection is lost either locally or to the server. Additionally, it allows for users to pause and resume uploads without loosing state.</p>
-
-      <p>Resumable.js relies on the HTML5 File API and the ability to chunks files into smaller pieces. Currently, this means that support is limited to Firefox 4+ and Chrome 11+.</p>
-
-      <hr/>
-
-      <h3>Demo</h3>
+       <div class="container">
+                        <ul class="main_menu"></ul>  
+                        <div class="content"> 
+      
+      
+<!--    <div id="frame">-->
+      <h1 class="page_title" align="left">Dataset(s) uploader</h1>
+<!--      <hr/>-->
       <script src="../js/jquery.min.js"></script>
       <script src="resumable.js"></script>
       <script src="resumable-uploader.js"></script>
 
+<!--      <a href="#" id="browseButton">Select files</a>
+       <a href="#" onclick="r.upload(); return(true);">upload</a>-->
+      
+      
       <div class="resumable-error">
         Your browser, unfortunately, is not supported by Resumable.js. The library requires support for <a href="http://www.w3.org/TR/FileAPI/">the HTML5 File API</a> along with <a href="http://www.w3.org/TR/FileAPI/#normalization-of-params">file slicing</a>.
       </div>
 
       <div class="resumable-drop" ondragenter="jQuery(this).addClass('resumable-dragover');" ondragend="jQuery(this).removeClass('resumable-dragover');" ondrop="jQuery(this).removeClass('resumable-dragover');">
-        Drop video files here to upload or <a class="resumable-browse"><u>select from your computer</u></a>
+        Drag &amp; Drop Genomic data here to upload or
+        <a class="resumable-browse">
+            <u>Select from your computer</u>
+        </a>
+     
       </div>
       
       <div class="resumable-progress">
@@ -45,8 +51,8 @@ and open the template in the editor.
             <td width="100%"><div class="progress-container"><div class="progress-bar"></div></div></td>
             <td class="progress-text" nowrap="nowrap"></td>
             <td class="progress-pause" nowrap="nowrap">
-              <a href="#" onclick="r.upload(); return(false);" class="progress-resume-link"></a>
-              <a href="#" onclick="r.pause(); return(false);" class="progress-pause-link"></a>
+              <a href="#" onclick="r.upload(); return(false);" class="progress-resume-link"><img src="resume.png" title="Resume upload" /></a>
+              <a href="#" onclick="r.pause(); return(false);" class="progress-pause-link"><img src="pause.png" title="Pause upload" /></a>
             </td>
           </tr>
         </table>
@@ -57,14 +63,17 @@ and open the template in the editor.
       
       <script>
         var r = new Resumable({
-            target:'/tmp',
+            target:'/hop-dashboard/bbc/uploader',
             chunkSize:1*1024*1024,
             simultaneousUploads:4,
             testChunks: true,
             throttleProgressCallbacks:1,
             method: "octet"
-          });
-        // Resumable.js isn't supported, fall back on a different method
+        });
+  
+//        r.assignBrowse(document.getElementById('browseButton'));
+
+ // Resumable.js isn't supported, fall back on a different method
         if(!r.support) {
           $('.resumable-error').show();
         } else {
@@ -81,7 +90,7 @@ and open the template in the editor.
               $('.resumable-progress .progress-resume-link').hide();
               $('.resumable-progress .progress-pause-link').show();
               // Add the file to the list
-              $('.resumable-list').append('<li class="resumable-file-'+file.uniqueIdentifier+'">Uploading <span class="resumable-file-name"></span> <span class="resumable-file-progress"></span>');
+              $('.resumable-list').append('<li class="resumable-file-'+file.uniqueIdentifier+'">Uploading   <span class="resumable-file-name"></span>....<span class="resumable-file-progress"></span>');
               $('.resumable-file-'+file.uniqueIdentifier+' .resumable-file-name').html(file.fileName);
               // Actually start the upload
               r.upload();
@@ -108,10 +117,54 @@ and open the template in the editor.
               $('.resumable-file-'+file.uniqueIdentifier+' .resumable-file-progress').html(Math.floor(file.progress()*100) + '%');
               $('.progress-bar').css({width:Math.floor(r.progress()*100) + '%'});
             });
-        }
+             r.on('uploadStart', function(){
+            //console.debug();
+             });}
+
+
+
+//r.on('fileSuccess', function(file){
+//    console.debug(file);
+//  });
+//r.on('fileProgress', function(file){
+//    console.debug(file);
+//  });
+//r.on('fileAdded', function(file, event){
+//    r.upload();
+//    //console.debug(file, event);
+//  });
+//r.on('filesAdded', function(array){
+//    //console.debug(array);
+//  });
+//r.on('fileRetry', function(file){
+//    //console.debug(file);
+//  });
+//r.on('fileError', function(file, message){
+//    //console.debug(file, message);
+//  });
+//r.on('uploadStart', function(){
+//    //console.debug();
+//  });
+//r.on('complete', function(){
+//    //console.debug();
+//  });
+//r.on('progress', function(){
+//    //console.debug();
+//  });
+//r.on('error', function(message, file){
+//    //console.debug(message, file);
+//  });
+//r.on('pause', function(){
+//    //console.debug();
+//  });
+//r.on('cancel', function(){
+//    //console.debug();
+//  });
       </script>  
 
+<!--    </div>-->
     </div>
+       </div>
   </body>
 </html>
 

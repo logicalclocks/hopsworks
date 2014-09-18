@@ -23,8 +23,9 @@ import javax.servlet.http.HttpServletResponse;
 public class UploadServlet extends HttpServlet {
 
    
-    public static final String UPLOAD_DIR = "/tmp";
+    public static final String UPLOAD_DIR = "/tmp/upload";
 
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int resumableChunkNumber = getResumableChunkNumber(request);
 
@@ -61,8 +62,9 @@ public class UploadServlet extends HttpServlet {
         }
     }
 
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        int resumableChunkNumber        = getResumableChunkNumber(request);
+        int resumableChunkNumber = getResumableChunkNumber(request);
 
         ResumableInfo info = getResumableInfo(request);
 

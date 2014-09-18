@@ -124,14 +124,15 @@
         <servlet-name>FileUploadJSP</servlet-name>
         <url-pattern>/plupupload/</url-pattern>
     </servlet-mapping>-->
-   <servlet>
+    <servlet>
         <servlet-name>UploadServlet</servlet-name>
         <servlet-class>se.kth.bbc.upload.UploadServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>UploadServlet</servlet-name>
-        <url-pattern>/upload</url-pattern>
+        <url-pattern>/bbc/uploader</url-pattern>
     </servlet-mapping>
+    
     <!-- declare the roles relevant for our webapp -->
     <security-role>
         <role-name>ADMIN</role-name>

@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package se.kth.bbc.activity;
 
 import com.timgroup.jgravatar.Gravatar;
@@ -29,163 +28,153 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 
-
-
 /**
  *
  * @author roshan
  */
-
-@ManagedBean(name="activityBean")
+@ManagedBean(name = "activityBean")
 @NoneScoped
 public class ActivityMB implements Serializable {
-    
-   private static final Logger logger = Logger.getLogger(ActivityMB.class.getName());
-   private static final long serialVersionUID = 1L; 
-    
-   @EJB
-   private ActivityController activityController;
-   
-   private UserActivity activity;
 
-   private String flag;
-   
-   
-   public String getFlag(){
-       return flag;
-   }
-  
-   public void setFlag(String flag){
-       this.flag = flag;
-   }
-   
-   public void fetchFlag() {
+    private static final Logger logger = Logger.getLogger(ActivityMB.class.getName());
+    private static final long serialVersionUID = 1L;
+
+    @EJB
+    private ActivityController activityController;
+
+    private UserActivity activity;
+
+    private String flag;
+
+    public String getFlag() {
+        return flag;
+    }
+
+    public void setFlag(String flag) {
+        this.flag = flag;
+    }
+
+    public void fetchFlag() {
 
         FacesContext fc = FacesContext.getCurrentInstance();
         Map<String, String> params = fc.getExternalContext().getRequestParameterMap();
         this.flag = params.get("teamFlag");
-   }
-   
-   public UserActivity getActivity() {
+    }
+
+    public UserActivity getActivity() {
         if (activity == null) {
             activity = new UserActivity();
         }
         return activity;
     }
-    
+
     public void setActivity(UserActivity activity) {
         this.activity = activity;
-    } 
-   
-    
-    public List<UserActivity> getAcvitiyList(){
-            return activityController.filterActivity();
     }
-    
-    
-    public List<UserActivity> getActivityOnstudy(String activityOn){
+
+    public List<UserActivity> getAcvitiyList() {
+        return activityController.filterActivity();
+    }
+
+    public List<UserActivity> getActivityOnstudy(String activityOn) {
         return activityController.activityOnstudy(activityOn);
     }
-    
-    public String findLastActivity(int id){
-        
+
+    public String findLastActivity(int id) {
+
         Iterator<UserActivity> itr = activityController.activityOnID(id).listIterator();
         long currentTime = new Date().getTime();
-        while(itr.hasNext()){
-              long fetchedTime = itr.next().getTimestamp().getTime();
-              if((currentTime - fetchedTime)/1000 >= 0 && (currentTime - fetchedTime)/1000 <= 118){
-                    return String.format("about %s minute ago.", 1);
-                } else if((currentTime - fetchedTime)/1000 > 118 && (currentTime - fetchedTime)/1000 < 1800){
-                    return String.format("%s minutes ago.", (currentTime - fetchedTime)/60000);
-                } else if((currentTime - fetchedTime)/1000 > 1800 && (currentTime - fetchedTime)/1000 <= 7056){
-                    return String.format("about %s hour ago.", 1);
-                } else if((currentTime - fetchedTime)/1000 > 7056 && (currentTime - fetchedTime)/1000 <= 45400){
-                    return String.format("%s hours ago.", (currentTime - fetchedTime)/3600000); 
-                } else if((currentTime - fetchedTime)/1000 > 45400 && (currentTime - fetchedTime)/1000 <= 170000){    
-                    return String.format("about %s day ago.", 1); 
-                } else if((currentTime - fetchedTime)/1000 > 170000 && (currentTime - fetchedTime)/1000 <= 1300000){
-                    return String.format("%s days ago.", (currentTime - fetchedTime)/86400000); 
-                } else if((currentTime - fetchedTime)/1000 > 1300000 && (currentTime - fetchedTime)/1000 <= 2500000){
-                    return String.format("about %s month ago.", 1); 
-                } else if((currentTime - fetchedTime)/1000 > 2500000 && (currentTime - fetchedTime)/1000 < 25000000){
-                    return String.format("%s months ago.", (currentTime - fetchedTime)/(1000*2600000)); 
-                } else {
-                    return String.format("about %s year ago.", 1); 
-                }
+        while (itr.hasNext()) {
+            long fetchedTime = itr.next().getTimestamp().getTime();
+            if ((currentTime - fetchedTime) / 1000 >= 0 && (currentTime - fetchedTime) / 1000 <= 118) {
+                return String.format("about %s minute ago.", 1);
+            } else if ((currentTime - fetchedTime) / 1000 > 118 && (currentTime - fetchedTime) / 1000 < 1800) {
+                return String.format("%s minutes ago.", (currentTime - fetchedTime) / 60000);
+            } else if ((currentTime - fetchedTime) / 1000 > 1800 && (currentTime - fetchedTime) / 1000 <= 7056) {
+                return String.format("about %s hour ago.", 1);
+            } else if ((currentTime - fetchedTime) / 1000 > 7056 && (currentTime - fetchedTime) / 1000 <= 45400) {
+                return String.format("%s hours ago.", (currentTime - fetchedTime) / 3600000);
+            } else if ((currentTime - fetchedTime) / 1000 > 45400 && (currentTime - fetchedTime) / 1000 <= 170000) {
+                return String.format("about %s day ago.", 1);
+            } else if ((currentTime - fetchedTime) / 1000 > 170000 && (currentTime - fetchedTime) / 1000 <= 1300000) {
+                return String.format("%s days ago.", (currentTime - fetchedTime) / 86400000);
+            } else if ((currentTime - fetchedTime) / 1000 > 1300000 && (currentTime - fetchedTime) / 1000 <= 2500000) {
+                return String.format("about %s month ago.", 1);
+            } else if ((currentTime - fetchedTime) / 1000 > 2500000 && (currentTime - fetchedTime) / 1000 < 25000000) {
+                return String.format("%s months ago.", (currentTime - fetchedTime) / (1000 * 2600000));
+            } else {
+                return String.format("about %s year ago.", 1);
+            }
         }
-                    return "OK";
+        return "more than a year ago"; // dummy
     }
-    
-    
-    public String findLastActivityOnStudy(String name){
-    
+
+    public String findLastActivityOnStudy(String name) {
+
         Iterator<UserActivity> itr = activityController.lastActivityOnStudy(name).listIterator();
         long currentTime = new Date().getTime();
-        while(itr.hasNext()){
+        while (itr.hasNext()) {
             long getLastUpdate = itr.next().getTimestamp().getTime();
-            if((currentTime - getLastUpdate)/1000 >= 0 && (currentTime - getLastUpdate)/1000 <= 118){
-                    return String.format("about %s minute ago.", 1);
-                } else if((currentTime - getLastUpdate)/1000 > 118 && (currentTime - getLastUpdate)/1000 < 1800){
-                    return String.format("%s minutes ago.", (currentTime - getLastUpdate)/60000);
-                } else if((currentTime - getLastUpdate)/1000 > 1800 && (currentTime - getLastUpdate)/1000 <= 7056){
-                    return String.format("about %s hour ago.", 1);
-                } else if((currentTime - getLastUpdate)/1000 > 7056 && (currentTime - getLastUpdate)/1000 <= 45400){
-                    return String.format("%s hours ago.", (currentTime - getLastUpdate)/3600000); 
-                } else if((currentTime - getLastUpdate)/1000 > 45400 && (currentTime - getLastUpdate)/1000 <= 170000){    
-                    return String.format("about %s day ago.", 1); 
-                } else if((currentTime - getLastUpdate)/1000 > 170000 && (currentTime - getLastUpdate)/1000 <= 1300000){
-                    return String.format("%s days ago.", (currentTime - getLastUpdate)/86400000); 
-                } else if((currentTime - getLastUpdate)/1000 > 1300000 && (currentTime - getLastUpdate)/1000 <= 2500000){
-                    return String.format("about %s month ago.", 1); 
-                } else if((currentTime - getLastUpdate)/1000 > 2500000 && (currentTime - getLastUpdate)/1000 < 25000000){
-                    return String.format("%s months ago.", (currentTime - getLastUpdate)/(1000*2600000)); 
-                } else {
-                    return String.format("about %s year ago.", 1); 
-                }
+            if ((currentTime - getLastUpdate) / 1000 >= 0 && (currentTime - getLastUpdate) / 1000 <= 118) {
+                return String.format("about %s minute ago.", 1);
+            } else if ((currentTime - getLastUpdate) / 1000 > 118 && (currentTime - getLastUpdate) / 1000 < 1800) {
+                return String.format("%s minutes ago.", (currentTime - getLastUpdate) / 60000);
+            } else if ((currentTime - getLastUpdate) / 1000 > 1800 && (currentTime - getLastUpdate) / 1000 <= 7056) {
+                return String.format("about %s hour ago.", 1);
+            } else if ((currentTime - getLastUpdate) / 1000 > 7056 && (currentTime - getLastUpdate) / 1000 <= 45400) {
+                return String.format("%s hours ago.", (currentTime - getLastUpdate) / 3600000);
+            } else if ((currentTime - getLastUpdate) / 1000 > 45400 && (currentTime - getLastUpdate) / 1000 <= 170000) {
+                return String.format("about %s day ago.", 1);
+            } else if ((currentTime - getLastUpdate) / 1000 > 170000 && (currentTime - getLastUpdate) / 1000 <= 1300000) {
+                return String.format("%s days ago.", (currentTime - getLastUpdate) / 86400000);
+            } else if ((currentTime - getLastUpdate) / 1000 > 1300000 && (currentTime - getLastUpdate) / 1000 <= 2500000) {
+                return String.format("about %s month ago.", 1);
+            } else if ((currentTime - getLastUpdate) / 1000 > 2500000 && (currentTime - getLastUpdate) / 1000 < 25000000) {
+                return String.format("%s months ago.", (currentTime - getLastUpdate) / (1000 * 2600000));
+            } else {
+                return String.format("about %s year ago.", 1);
+            }
         }
-                    return "OK";
+        return "more than a year ago"; // dummy
     }
-    
-    public void addActivity(String message, String activityAbout, String flag){
-        
+
+    public void addActivity(String message, String activityAbout, String flag) {
+
         activity.setId(Integer.SIZE);
         activity.setActivity(message);
         activity.setPerformedBy(getUsername());
         activity.setTimestamp(new Date());
         activity.setFlag(flag);
         activity.setActivityOn(activityAbout);
-        
-        try{
+
+        try {
             activityController.persistActivity(activity);
-        }catch(EJBException ejb){
+        } catch (EJBException ejb) {
             logger.log(Level.SEVERE, " Add new activity for new study failed!");
             return;
         }
-            logger.log(Level.FINE, " Add new activity for new study successful: {0}", activity.getId());
+        logger.log(Level.FINE, " Add new activity for new study successful: {0}", activity.getId());
     }
-    
-    
-    public List<UserActivity> getAllTeamActivity(){
+
+    public List<UserActivity> getAllTeamActivity() {
         return activityController.findAllTeamActivity(getFlag());
     }
-    
+
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
     }
-    
-    
-    public String getUsername(){
-          return getRequest().getUserPrincipal().getName();
+
+    public String getUsername() {
+        return getRequest().getUserPrincipal().getName();
     }
-     
-    public String getGravatar(String email){
-    
-         Gravatar gravatar = new Gravatar();
-         gravatar.setRating(GravatarRating.GENERAL_AUDIENCES);
-         String url = gravatar.getUrl(email);
-    
-         return url;
+
+    public String getGravatar(String email) {
+
+        Gravatar gravatar = new Gravatar();
+        gravatar.setRating(GravatarRating.GENERAL_AUDIENCES);
+        String url = gravatar.getUrl(email);
+
+        return url;
     }
-   
-    
+
 }
