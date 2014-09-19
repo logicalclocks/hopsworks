@@ -58,7 +58,7 @@ import se.kth.bbc.activity.ActivityMB;
  *
  * @author roshan
  */
-@ManagedBean
+@ManagedBean(name = "datasetMBean", eager = true)
 @RequestScoped
 public class DatasetMB implements Serializable{
     
@@ -117,7 +117,7 @@ public class DatasetMB implements Serializable{
     }
     
     
-    public String createDataset()throws IOException, URISyntaxException{
+    public void createDataset()throws IOException, URISyntaxException{
         
         dataset.setOwner(getUsername());
         dataset.setTimestamp(new Timestamp(new Date().getTime()));
@@ -126,12 +126,12 @@ public class DatasetMB implements Serializable{
             datasetController.persistDataset(dataset);
         }catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Dataset wasn't created. Dataset name might have been duplicated!");
-            return null;
+            return;
         }
         addMessage("Dataset created! ["+ dataset.getName() + "] dataset is owned by " + dataset.getOwner());
         activity.addActivity("New Dataset Created", dataset.getName(), "DATA");
-        mkDIRS(dataset.getOwner(),dataset.getName());
-        return "dataUpload";
+        mkDIRS(dataset.getOwner(), dataset.getName());
+        //return "dataUpload";
     }
     
     public String deleteDataset(){
@@ -190,7 +190,7 @@ public class DatasetMB implements Serializable{
 //                }
             
          } catch(IOException ioe){
-            System.err.println("IOException during operation"+ ioe.toString());
+            System.err.println("IOException during operation"+ ioe.getMessage());
             System.exit(1);
          }finally {
                 fs.close();

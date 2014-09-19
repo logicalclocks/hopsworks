@@ -65,6 +65,10 @@ public class StudyMB implements Serializable {
     
     @EJB
     private UserGroupsController userGroupsController;
+    
+    @EJB
+    private SampleIdController sampleIDController;
+
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
@@ -76,7 +80,10 @@ public class StudyMB implements Serializable {
     private StudyTeam studyTeamEntry;
     private List<Theme> selectedUsernames;
     private List<Theme> themes;
-
+    private List<SampleIds> sampleIds;
+    private String sample_Id;
+    List<SampleIdDisplay> filteredSampleIds;
+    
     private String studyName;
     private String studyCreator;
     private String newTeamRole;
@@ -85,6 +92,7 @@ public class StudyMB implements Serializable {
     private String newRole;
     private String owner;
     private int tabIndex;
+    
 
     //private UIInput newTeamRole;
     
@@ -153,6 +161,15 @@ public class StudyMB implements Serializable {
 
     public void setNewRole(String newRole){
         this.newRole = newRole;
+    }
+    
+    
+    public String getSampleID(){
+        return sample_Id;
+    }
+
+    public void setSampleID(String sample_Id){
+        this.sample_Id = sample_Id;
     }
     
 //    public void teamRoleChanged(ValueChangeEvent e) {
@@ -279,18 +296,18 @@ public class StudyMB implements Serializable {
         return filteredThemes;
     }
 
-//    public void setService(ThemeService service) {
-//        this.service = service;
-//    }
-//    public List<Username> completeUsername(String name) {
-//        usernames = getUsersNameList();
-//        List<Username> suggestions = new ArrayList<>();
-//        for(Username names : usernames) {
-//            if(names.getName().toLowerCase().startsWith(name))
-//                suggestions.add(names);
-//        }
-//            return suggestions;
-//    }
+     public List<SampleIdDisplay> completeSampleIDs(String query) {
+        List<SampleIds> allSampleIds = sampleIDController.getExistingSampleIDs(studyName, getUsername());
+        filteredSampleIds = new ArrayList<>();
+
+        for (SampleIds t : allSampleIds) {
+            if (t.getSampleIdsPK().getId().toLowerCase().contains(query)) {
+                filteredSampleIds.add(new SampleIdDisplay(t.getSampleIdsPK().getId(), studyName));
+            }
+        }
+            return filteredSampleIds;
+    }
+ 
     public List<Theme> getSelectedUsernames() {
         return this.selectedUsernames;
     }
@@ -315,28 +332,9 @@ public class StudyMB implements Serializable {
         return StudyRoleTypes.values();
     }
 
-//    public List<StudyRoleTypes> getTeamForResearcherList() {
-//
-//        List<StudyRoleTypes> reOrder = new ArrayList<>();
-//        //for(StudyRoleTypes role: StudyRoleTypes.values()){
-//        reOrder.add(StudyRoleTypes.RESEARCHER);
-//        reOrder.add(StudyRoleTypes.RESEARCHADMIN);
-//        reOrder.add(StudyRoleTypes.MASTER);
-//        reOrder.add(StudyRoleTypes.AUDITOR);
-//        //}
-//        return reOrder;
-//    }
-//
-//    public  List<StudyRoleTypes> getTeamForResearchAdminList() {
-//
-//        List<StudyRoleTypes> reOrder = new ArrayList<>();
-//        //for(StudyRoleTypes role: StudyRoleTypes.values()){
-//        reOrder.add(StudyRoleTypes.RESEARCHADMIN);
-//        reOrder.add(StudyRoleTypes.MASTER);
-//        reOrder.add(StudyRoleTypes.RESEARCHER);
-//        //}
-//        return reOrder;
-//    }
+    public SampleFileTypes[] getFileType() {
+        return SampleFileTypes.values();
+    }
 
     public long countAllMembersPerStudy() {
         return studyTeamController.countMembersPerStudy(studyName).size();
@@ -601,6 +599,36 @@ public class StudyMB implements Serializable {
             addMessage("New Member Added!");
             return "studyPage";
     }
+    
+    //adding a record to sample id table
+    public String addSample(){
+        
+        boolean rec = sampleIDController.checkForExistingIDs(getSampleID(), studyName);
+       
+        try{
+            if(!rec){
+                
+                    SampleIdsPK idPK = new SampleIdsPK(getSampleID(), studyName);
+                    SampleIds samId = new SampleIds(idPK);
+                    sampleIDController.persistSample(samId);
+                    activity.addActivity("added new sample " + getSampleID() + " ", studyName, "DATA");
+                    
+                    addMessage("New Sample Added: " + getSampleID());
+                    return "/bbc/uploader/uploader.html?faces-redirect=true";
+             } else {
+                    
+                    addErrorMessageToUserAction("Error: Sample ID exists.");
+                    return null;
+                    
+                }
+            
+        }catch(EJBException ejb){
+        
+            addErrorMessageToUserAction("Error: Failed");
+            return null;
+        }
+    }
+    
     
     public void itemSelect(SelectEvent e) {
          if(getSelectedUsernames().isEmpty())

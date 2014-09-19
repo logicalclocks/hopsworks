@@ -65,6 +65,16 @@
             <redirect/>
         </navigation-case>
         <navigation-case>
+            <from-outcome>newSample</from-outcome>
+            <to-view-id>/bbc/lims/addSamples.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>addSampleFiles</from-outcome>
+            <to-view-id>/bbc/uploader/uploader.html</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
             <from-outcome>wfhome</from-outcome>
             <to-view-id>/bbc-views.xhtml</to-view-id>
             <redirect/>

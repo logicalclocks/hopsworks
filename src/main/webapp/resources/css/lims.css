@@ -295,7 +295,16 @@
          background: #00BD36;
     }
 
+    
+.button-add-data {
+         background: #00B233;
+ }
 
+.button-add-data:hover {
+        background: #00BD36;
+    }        
+        
+        
 .StudyBlock {
     font-size: 14px;
     width: 450px;

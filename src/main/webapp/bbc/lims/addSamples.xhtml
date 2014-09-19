@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://java.sun.com/jsp/jstl/core">
+      
+   <f:view contentType="text/html">
+    
+    <h:head>
+        <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}"/>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}"/>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/newTeamMem.css']}"/>
+    </h:head>
+    
+<h:body>
+    <h:form class="stylelayout" id="formToolbar">  
+            <p:toolbar styleClass="MainToolbar">  
+                <p:toolbarGroup align="left">  
+                    <p:commandLink value="BiobankCloud" action="indexPage"/>
+                </p:toolbarGroup> 
+
+                <p:toolbarGroup align="left">              
+                </p:toolbarGroup>  
+
+                <p:toolbarGroup align="right">  
+                    <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
+                    <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
+                        <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" /> 
+                        <p:separator/>
+                        <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
+                    </p:menu>  
+                </p:toolbarGroup>  
+
+            </p:toolbar> 
+        </h:form>
+
+ 
+<p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+<p:layoutUnit position="center">
+          
+          <div class="container">
+          <ul class="main_menu"></ul>
+                <div class="content">
+                             <h3 class="page_title" align="left">
+                                     Add New Sample(s)
+                              </h3>
+                            <hr/>
+                            <h:form class="new_member_content">
+                                <p:messages autoUpdate="true" closable="true"/>
+                                
+                                  <h6 align="left">1. Choose an existing sample ID or enter a new one </h6>
+                                           <div class="clearfix">
+                                               <label for="team_member_user_ids">Sample ID</label>
+                                               <p:autoComplete id="sampleId" dropdown="true" value="#{studyManagedBean.sampleID}" completeMethod="#{studyManagedBean.completeSampleIDs}"/>
+                                                               
+                                           </div>
+                                           
+                                           <div class="actions">
+                                               <h:commandButton class="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addSample}"/>
+                                               <h:commandButton class="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href='studyPage.xhtml'"/>
+                                           </div>
+                         </h:form>     
+                </div>
+            </div> 
+
+</p:layoutUnit>
+</p:layout>
+</h:body>
+   </f:view>
+</html>
+

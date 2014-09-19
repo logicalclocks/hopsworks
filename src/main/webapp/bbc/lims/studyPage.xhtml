@@ -49,6 +49,17 @@
                         <div class="content"> 
                             <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs">
                                 <p:tab id="showTab" title="Show">
+                                    <h5 class="page_title" align="left">
+                                        Add Sample
+                                        <span class="right_button">
+                                            <h:form id="frmBtnData">
+                                                <h:commandButton id="addData" class="button-add button-add-data" value="New Sample" type="submit" action="newSample" 
+                                                                 rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+                                            </h:form>
+                                        </span>
+                                    </h5>
+                                    <hr/>
+                                    <div class="clear_fixing"></div>
                                     <div class="study_content_list">
                                         <c:forEach var="lstActivity" items="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}" varStatus="showAll">
                                             <div class="event-item" align="left">
@@ -552,6 +563,7 @@
                                     </div>
                                 </p:tab>
 <!--                                <p:tab id="genomes" title="Genomes" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
+
                                 </p:tab>-->
 <!--                                <p:tab id="workflows" title="Workflows"></p:tab>-->
                             </p:tabView>

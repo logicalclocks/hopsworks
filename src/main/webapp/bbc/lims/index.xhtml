@@ -70,7 +70,7 @@
                                         </div>-->
                                     </div>
                                     <h:panelGroup id="contentList" styleClass="content_list">
-                                        <c:if test="${activityBean.flag ne 'TEAM'}">
+<!--                                        <c:if test="${activityBean.flag ne 'TEAM'}">-->
                                             <c:forEach var="act" items="#{activityBean.acvitiyList}">
                                                 <div class="event-item" align="left">
                                                     <span class="cgray right">#{activityBean.findLastActivity(act.id)}</span>
@@ -86,7 +86,7 @@
                                                     </div>
                                                 </div>
                                             </c:forEach>
-                                        </c:if>
+<!--                                        </c:if>-->
                                         <c:if test="${activityBean.flag eq 'TEAM'}">
                                             <c:forEach var="team" items="#{activityBean.allTeamActivity}">
                                                 <div class="event-item" align="left">

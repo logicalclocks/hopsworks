@@ -11,24 +11,47 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.net.URISyntaxException;
+import javax.faces.bean.ManagedProperty;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import se.kth.bbc.study.DatasetMB;
 
 /**
- *
- * @author roshan
+ * by fanxu
  */
 public class UploadServlet extends HttpServlet {
 
    
     public static final String UPLOAD_DIR = "/tmp/upload";
 
+    @ManagedProperty(value="#{datasetMBean}")
+    private DatasetMB dataMB;
+    
+    public void setDatasetMB(DatasetMB dataMB){
+        this.dataMB = dataMB;
+    }
+    
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int resumableChunkNumber = getResumableChunkNumber(request);
 
+        
+        String sampleId = request.getParameter("sampleId");
+        String projectName = request.getParameter("projectName");
+        String fileName = request.getParameter("fileName");
+        int extPos = fileName.lastIndexOf(".");
+        if (extPos == -1) {
+            // return error to client.
+        }
+        String fileType = fileName.substring(extPos);
+        
+       // 1. Add projectName,sampleId to SampleIds EntityBean. Already exists => no error.
+       // 2. create the directory in HDFS: /projects/projectName/sampleId  Already exists => no error.
+       // 3. Add projectName,sampleId, fileType, fileName to SampleFiles EntityBean. Already exists => no error.
+        
         ResumableInfo info = getResumableInfo(request);
 
         RandomAccessFile raf = new RandomAccessFile(info.resumableFilePath, "rw");
@@ -60,6 +83,18 @@ public class UploadServlet extends HttpServlet {
         } else {
             response.getWriter().print("Upload");
         }
+        
+        //Invoke DatasetMB in order to copy data to HDFS
+        //DatasetMB dataMB = (DatasetMB) request.getSession().getAttribute("datasetMBean"); 
+        
+        try{
+            dataMB.createDataset();
+        } catch(URISyntaxException uri){
+            System.out.println("uri error "+ uri.getMessage());
+        }
+        
+        
+        
     }
 
     @Override
