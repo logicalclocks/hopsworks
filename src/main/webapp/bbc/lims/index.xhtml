@@ -61,7 +61,7 @@
                                                     <div class="event-title">
                                                         <span class="author_name"><p:commandLink> #{act.performedBy}</p:commandLink></span>
                                                         <span class="event_label merged">#{act.activity}</span>
-                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}" disabled="#{studyManagedBean.isRemoved(act.activityOn)}">
                                                             <strong>at #{act.performedBy} / #{act.activityOn}</strong>
                                                             <f:param name="studyname" value="#{act.activityOn}"/>
                                                             <f:param name="username" value="#{act.performedBy}"/>
@@ -78,7 +78,7 @@
                                                     <div class="event-title">
                                                         <span class="author_name"><p:commandLink> #{team.performedBy}</p:commandLink></span>
                                                         <span class="event_label merged">#{team.activity}</span>
-                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}" disabled="#{studyManagedBean.isRemoved(act.activityOn)}">
                                                             <strong>at #{team.performedBy} / #{team.activityOn}</strong>
                                                             <f:param name="studyname" value="#{team.activityOn}"/>
                                                             <f:param name="username" value="#{team.performedBy}"/>
@@ -141,7 +141,7 @@
                                                 </c:if>
                                                 <c:forEach var="pList" items="${studyManagedBean.personalStudy}" varStatus="personalStatus">
                                                     <li class="ui-tabs-panel">
-                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}" >
                                                             <span class="tiny">#{pList.username}</span> / <strong>#{pList.name}</strong>
                                                             <f:param name="studyname" value="#{pList.name}"/>
                                                             <f:param name="username" value="#{pList.username}"/>
