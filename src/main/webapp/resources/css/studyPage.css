@@ -42,7 +42,6 @@ and open the template in the editor.
 }
 
 .ui-tabs .ui-tabs-panel .ui-widget-content li{
-     width: 1170px !important;
      line-height: 20px;
      float: left;
      display: block;
@@ -121,10 +120,6 @@ and open the template in the editor.
 }
 
 .ui-tabs .ui-widget-content{
-    
-     display: block;
-     width: 1170px;
-     min-height: 1000px;
      height: auto  !important; 
      margin: 0 0 0 0;
      padding: 0 0 0 0;
@@ -224,4 +219,21 @@ and open the template in the editor.
 h1 {
     font-size: 30px;
     float: left;
+}
+
+.ui-treetable table {
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.uploading {
+    background-color: #F5A9A9;
+}
+
+.available {
+    background-color: #00BD36;
+}
+
+.copying_to_hdfs {
+    background-color: #e6db74;
 }

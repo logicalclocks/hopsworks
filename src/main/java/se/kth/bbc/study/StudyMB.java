@@ -9,24 +9,18 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
-import javax.faces.component.UIInput;
-import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.event.ValueChangeEvent;
@@ -38,6 +32,8 @@ import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
+import org.primefaces.model.DefaultTreeNode;
+import org.primefaces.model.TreeNode;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityMB;
 import se.kth.bbc.activity.UserGroupsController;
@@ -74,6 +70,9 @@ public class StudyMB implements Serializable {
 
     @EJB
     private SampleIdController sampleIDController;
+    
+    @EJB
+    private SampleFilesController sampleFilesController;
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
@@ -100,16 +99,19 @@ public class StudyMB implements Serializable {
 
     //private UIInput newTeamRole;
     private int manTabIndex = SHOW_TAB;
+    
+     private TreeNode root;
 
     @PostConstruct
     public void init() {
+        initTreeTable();
         activity.getActivity();
     }
 
     public void setActivity(ActivityMB activity) {
         this.activity = activity;
     }
-
+    
     public List<Username> getUsersNameList() {
         return userFacade.findAllUsers();
     }
@@ -118,6 +120,14 @@ public class StudyMB implements Serializable {
         return usernames;
     }
 
+     public TreeNode getRoot() {
+        return root;
+    }
+
+    public void setRoot(TreeNode t) {
+        this.root = t;
+    }
+    
     public String getStudyName() {
         return studyName;
     }
@@ -557,6 +567,8 @@ public class StudyMB implements Serializable {
                 return "studyPage";
             }
         }
+        //initialize the file browser
+        initTreeTable();       
 
         return "studyPage";
 //        if (stList.iterator().hasNext()){
@@ -631,6 +643,7 @@ public class StudyMB implements Serializable {
         }
 
         addMessage("New Member Added!");
+        manTabIndex = TEAM_TAB;
         return "studyPage";
     }
 
@@ -780,6 +793,19 @@ public class StudyMB implements Serializable {
     public boolean isRemoved(String studyName) {
         TrackStudy item = studyController.findByName(studyName);
         return item == null;
+    }
+    
+    private void initTreeTable(){
+        List<SampleIds> samples = sampleIDController.findAllByStudy(studyName);
+        root = new DefaultTreeNode(new FileSummary("root","",false), null);
+        TreeNode studyRoot = new DefaultTreeNode(new FileSummary(studyName,"",false),root);
+        for(SampleIds sam: samples){
+            TreeNode node = new DefaultTreeNode(new FileSummary(sam.getSampleIdsPK().getId(),"",false),studyRoot);
+            List<SampleFiles> files = sampleFilesController.findAllById(sam.getSampleIdsPK().getId());
+            for(SampleFiles file: files){
+                TreeNode leaf = new DefaultTreeNode(new FileSummary(file.getSampleFilesPK().getFilename(),file.getStatus(),true),node);
+            }
+        }
     }
 
 }
