@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -64,6 +65,9 @@ public class StudyMB implements Serializable {
 
     @EJB
     private SampleIdController sampleIDController;
+    
+    @EJB
+    private SampleFilesController sampleFilesController;
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
@@ -95,15 +99,8 @@ public class StudyMB implements Serializable {
 
     @PostConstruct
     public void init() {
+        initTreeTable();
         activity.getActivity();
-        // Temporary code for the TreeTable construction -- for sake of working sync
-        root = new DefaultTreeNode(new FileSummary("root"), null);
-        for (int i = 0; i < 5; i++) {
-            TreeNode node = new DefaultTreeNode(new FileSummary("" + i), root);
-            for (int j = 0; j < 3; j++) {
-                TreeNode subnode = new DefaultTreeNode(new FileSummary("" + i + "," + j), node);
-            }
-        }
     }
 
     public void setActivity(ActivityMB activity) {
@@ -561,6 +558,8 @@ public class StudyMB implements Serializable {
                 return "studyPage";
             }
         }
+        //initialize the file browser
+        initTreeTable();       
 
         return "studyPage";
 //        if (stList.iterator().hasNext()){
@@ -635,6 +634,7 @@ public class StudyMB implements Serializable {
         }
 
         addMessage("New Member Added!");
+        manTabIndex = TEAM_TAB;
         return "studyPage";
     }
 
@@ -782,6 +782,19 @@ public class StudyMB implements Serializable {
     public boolean isRemoved(String studyName) {
         TrackStudy item = studyController.findByName(studyName);
         return item == null;
+    }
+    
+    private void initTreeTable(){
+        List<SampleIds> samples = sampleIDController.findAllByStudy(studyName);
+        root = new DefaultTreeNode(new FileSummary("root","",false), null);
+        TreeNode studyRoot = new DefaultTreeNode(new FileSummary(studyName,"",false),root);
+        for(SampleIds sam: samples){
+            TreeNode node = new DefaultTreeNode(new FileSummary(sam.getSampleIdsPK().getId(),"",false),studyRoot);
+            List<SampleFiles> files = sampleFilesController.findAllById(sam.getSampleIdsPK().getId());
+            for(SampleFiles file: files){
+                TreeNode leaf = new DefaultTreeNode(new FileSummary(file.getSampleFilesPK().getFilename(),file.getStatus(),true),node);
+            }
+        }
     }
 
 }

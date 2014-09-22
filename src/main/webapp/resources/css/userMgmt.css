@@ -44,7 +44,7 @@ and open the template in the editor.
 }
 
 .ui-tabs .ui-tabs-panel .ui-widget-content{
-     width: 1170px !important;
+     width: 1167px !important;
      line-height: 20px;
      float: left;
      display: block;
@@ -101,7 +101,7 @@ and open the template in the editor.
 
 .ui-datatable table {
     border-collapse: collapse;
-    width: 1170px;
+    width: 1169px;
     table-layout: fixed;
 }
 

@@ -1,6 +1,7 @@
 package se.kth.bbc.study;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Container for data to be displayed in the file browser.
@@ -10,9 +11,13 @@ import java.io.Serializable;
 public class FileSummary implements Serializable, Comparable<FileSummary> {
 
     private String name;
+    private String status; //TODO: make into enum field (same as DB)
+    private boolean file;
 
-    public FileSummary(String name) {
+    public FileSummary(String name, String status, boolean isFile) {
         this.name = name;
+        this.status = status;
+        this.file = isFile;
     }
 
     public String getName() {
@@ -22,33 +27,44 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
     public void setName(String name) {
         this.name = name;
     }
+    
+    public String getStatus() {
+        return status;
+    }
 
-    //Eclipse Generated hashCode and equals
+    public void setStatus(String status) {
+        this.status = status;
+    } 
+    
+    public boolean isFile(){
+        return file;
+    }
+    
+    public void setFile(boolean file){
+        this.file = file;
+    }
+
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        return result;
+        int hash = 7;
+        hash = 61 * hash + Objects.hashCode(this.name);
+        hash = 61 * hash + Objects.hashCode(this.status);
+        return hash;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
         if (obj == null) {
             return false;
         }
         if (getClass() != obj.getClass()) {
             return false;
         }
-        FileSummary other = (FileSummary) obj;
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
+        final FileSummary other = (FileSummary) obj;
+        if (!Objects.equals(this.name, other.name)) {
+            return false;
+        }
+        if (!Objects.equals(this.status, other.status)) {
             return false;
         }
         return true;

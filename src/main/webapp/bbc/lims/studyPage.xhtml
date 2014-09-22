@@ -36,7 +36,7 @@
                         <p:growl autoUpdate="true" showDetail="false"/>
                         <div class="content"> 
                             <p:messages autoUpdate="true" closable="true"/>
-                            <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs">
+                            <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="studyTabs">
                                 <p:tab id="showTab" title="Show">
                                     <c:if test="${studyManagedBean.renderComponentList() eq 'Master'}">
                                         <h5 class="page_title" align="left">
@@ -552,14 +552,17 @@
                                         </c:if>
                                     </div>
                                 </p:tab>
-                                <p:tab id="genomes" title="Genomes">
+                                <p:tab id="samples" title="Samples">
 
-                                    <p:treeTable value="#{studyManagedBean.root}" var="document">
-                                        <f:facet name="header">
-                                            Document Viewer
-                                        </f:facet>
-                                        <p:column>
+                                    <p:treeTable value="#{studyManagedBean.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}">
+                                        <p:column headerText="Name">
                                             <h:outputText value="#{document.name}" />
+                                        </p:column>
+                                        <p:column headerText="Status">
+                                            <h:outputText value="#{document.status}" />
+                                        </p:column>
+                                        <p:column style="width:15px" rendered="#{userMB.anyAdminUser}">
+                                            <p:commandLink title="Download" styleClass="ui-icon ui-icon-arrowthick-1-s" disabled="#{!document.file}"/>
                                         </p:column>
                                     </p:treeTable>
 
@@ -568,6 +571,9 @@
 
                                 <!--                                <p:tab id="workflows" title="Workflows"></p:tab>-->
                             </p:tabView>
+                            <script>
+                                studyTabs.select(#{studyManagedBean.manTabIndex});
+                            </script>
                         </div>
                     </div>
 
