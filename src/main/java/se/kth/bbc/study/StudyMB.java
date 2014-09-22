@@ -62,13 +62,12 @@ public class StudyMB implements Serializable {
 
     @EJB
     private UserFacade userFacade;
-    
+
     @EJB
     private UserGroupsController userGroupsController;
-    
+
     @EJB
     private SampleIdController sampleIDController;
-
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
@@ -83,7 +82,7 @@ public class StudyMB implements Serializable {
     private List<SampleIds> sampleIds;
     private String sample_Id;
     List<SampleIdDisplay> filteredSampleIds;
-    
+
     private String studyName;
     private String studyCreator;
     private String newTeamRole;
@@ -92,11 +91,8 @@ public class StudyMB implements Serializable {
     private String newRole;
     private String owner;
     private int tabIndex;
-    
 
     //private UIInput newTeamRole;
-    
-    
     @PostConstruct
     public void init() {
         activity.getActivity();
@@ -130,15 +126,14 @@ public class StudyMB implements Serializable {
         this.studyCreator = studyCreator;
     }
 
-    
-    public String getOwnerRole(){
+    public String getOwnerRole() {
         return owner;
     }
-    
-    public void setOwnerRole(String owner){
+
+    public void setOwnerRole(String owner) {
         this.owner = owner;
     }
-    
+
     public String getNewTeamRole() {
         return newTeamRole;
     }
@@ -154,31 +149,29 @@ public class StudyMB implements Serializable {
     public void setChangedRole(String newChangedRole) {
         this.newChangedRole = newChangedRole;
     }
-    
-    public String getNewRole(){
+
+    public String getNewRole() {
         return newRole;
     }
 
-    public void setNewRole(String newRole){
+    public void setNewRole(String newRole) {
         this.newRole = newRole;
     }
-    
-    
-    public String getSampleID(){
+
+    public String getSampleID() {
         return sample_Id;
     }
 
-    public void setSampleID(String sample_Id){
+    public void setSampleID(String sample_Id) {
         this.sample_Id = sample_Id;
     }
-    
+
 //    public void teamRoleChanged(ValueChangeEvent e) {
 //        setChangedRole(e.getNewValue().toString());
 //        System.out.println(" New role selected : " + getChangedRole());
 //
 ////     if(getChangedRole().equals(e.getOldValue().toString()))
 //    }
-
     public TrackStudy getStudy() {
         if (study == null) {
             study = new TrackStudy();
@@ -222,10 +215,10 @@ public class StudyMB implements Serializable {
     public void setStudyTeamEntry(StudyTeam studyTeamEntry) {
         this.studyTeamEntry = studyTeamEntry;
     }
-    
+
     public String getStudyTeamRole(String email) {
-       this.setTeamRole = studyTeamController.findByPrimaryKey(studyName, email).getTeamRole();
-       return setTeamRole;
+        this.setTeamRole = studyTeamController.findByPrimaryKey(studyName, email).getTeamRole();
+        return setTeamRole;
 //        if (team != null) {
 //            setTeamRole = team.getTeamRole();
 //            return setTeamRole;
@@ -237,11 +230,12 @@ public class StudyMB implements Serializable {
     public void setStudyTeamRole(String email, String role) {
 //        studyTeamEntry = studyTeamController.findByPrimaryKey(studyName, email);
 //        this.setTeamRole = studyTeamEntry.getTeamRole();
-          this.setTeamRole = role;
+        this.setTeamRole = role;
     }
 //    public void setStudyTeam(StudyTeam studyTeam) {
 ////        this.studyTeam = studyTeam;
 //    }
+
     public List<TrackStudy> getStudyList() {
         return studyController.findAll();
     }
@@ -296,7 +290,7 @@ public class StudyMB implements Serializable {
         return filteredThemes;
     }
 
-     public List<SampleIdDisplay> completeSampleIDs(String query) {
+    public List<SampleIdDisplay> completeSampleIDs(String query) {
         List<SampleIds> allSampleIds = sampleIDController.getExistingSampleIDs(studyName, getUsername());
         filteredSampleIds = new ArrayList<>();
 
@@ -305,9 +299,9 @@ public class StudyMB implements Serializable {
                 filteredSampleIds.add(new SampleIdDisplay(t.getSampleIdsPK().getId(), studyName));
             }
         }
-            return filteredSampleIds;
+        return filteredSampleIds;
     }
- 
+
     public List<Theme> getSelectedUsernames() {
         return this.selectedUsernames;
     }
@@ -327,7 +321,7 @@ public class StudyMB implements Serializable {
     public void gravatarAccess() {
         activity.getGravatar(studyCreator);
     }
-    
+
     public StudyRoleTypes[] getTeam() {
         return StudyRoleTypes.values();
     }
@@ -355,8 +349,7 @@ public class StudyMB implements Serializable {
     public long countAuditors() {
         return studyTeamController.countStudyTeam(studyName, "Auditor");
     }
-    
-    
+
     public List<Username> getMastersList() {
         return studyTeamController.findTeamMembersByName(studyName, "Master");
     }
@@ -368,38 +361,38 @@ public class StudyMB implements Serializable {
     public List<Username> getResearchAdminList() {
         return studyTeamController.findTeamMembersByName(studyName, "Research Admin");
     }
-    
+
     public List<Username> getAuditorsList() {
         return studyTeamController.findTeamMembersByName(studyName, "Auditor");
     }
-    
 
     public String checkStudyOwner(String email) {
-       
+
         List<TrackStudy> lst = studyTeamController.findStudyMaster(studyName);
         for (TrackStudy tr : lst) {
             if (tr.getUsername().equals(email)) {
-                    return email;
+                return email;
             }
         }
         return null;
     }
-    
+
     public String checkCurrentUser(String email) {
-       
-        if(email.equals(getUsername()))
-                return email;
-        
+
+        if (email.equals(getUsername())) {
+            return email;
+        }
+
         return null;
     }
 
     public String renderComponentList() {
         List<StudyTeam> st = studyTeamController.findCurrentRole(studyName, getUsername());
-        if(st.iterator().hasNext()){
+        if (st.iterator().hasNext()) {
             StudyTeam t = st.iterator().next();
             return t.getTeamRole();
         }
-            return null;
+        return null;
     }
 
     public List<StudyRoleTypes> getListBasedOnCurrentRole(String email) {
@@ -412,7 +405,7 @@ public class StudyMB implements Serializable {
             reOrder.add(StudyRoleTypes.RESEARCHER);
             reOrder.add(StudyRoleTypes.AUDITOR);
             reOrder.add(StudyRoleTypes.MASTER);
-           
+
 //                }
             return reOrder;
 
@@ -424,16 +417,16 @@ public class StudyMB implements Serializable {
 //            reOrder.add(StudyRoleTypes.MASTER);
 //
 //            return reOrder;
-            
         } else if (team.equals("Auditor")) {
 
             reOrder.add(StudyRoleTypes.AUDITOR);
             reOrder.add(StudyRoleTypes.RESEARCHER);
             reOrder.add(StudyRoleTypes.MASTER);
-            
+
             return reOrder;
-        } else 
+        } else {
             return null;
+        }
     }
 
     public int getAllStudyUserTypesListSize() {
@@ -450,42 +443,43 @@ public class StudyMB implements Serializable {
 
     public List<TrackStudy> getJoinedStudies() {
         boolean check = studyController.checkForStudyOwnership(getUsername());
-        
-        if(check)
+
+        if (check) {
             return studyController.findJoinedStudies(getUsername());
-        else
+        } else {
             return studyController.QueryForNonRegistered(getUsername());
+        }
     }
-    
+
     public List<StudyTeam> getTeamList() {
         return studyTeamController.findMembersByStudy(studyName);
     }
 
-    public int countAllStudiesPerUser(){
+    public int countAllStudiesPerUser() {
         return studyController.findAllStudies(getUsername()).size();
     }
-    
-    public int countPersonalStudy(){
-        return  studyController.findByUser(getUsername()).size();
+
+    public int countPersonalStudy() {
+        return studyController.findByUser(getUsername()).size();
     }
-    
-    
-     public int countJoinedStudy(){
+
+    public int countJoinedStudy() {
         boolean check = studyController.checkForStudyOwnership(getUsername());
-        
-        if(check)
-            return  studyController.findJoinedStudies(getUsername()).size();
-        else
-             return studyController.QueryForNonRegistered(getUsername()).size();
+
+        if (check) {
+            return studyController.findJoinedStudies(getUsername()).size();
+        } else {
+            return studyController.QueryForNonRegistered(getUsername()).size();
+        }
     }
-    
+
     /**
-     * Get the current username from session and
-     * sets it as the creator of the study,
-     * and also adding a record to the StudyTeam table for setting role as master for the study.
-     * @return 
+     * Get the current username from session and sets it as the creator of the
+     * study, and also adding a record to the StudyTeam table for setting role
+     * as master for the study.
+     *
+     * @return
      */
-    
     public String createStudy() {
 
         study.setUsername(getUsername());
@@ -498,37 +492,35 @@ public class StudyMB implements Serializable {
             addErrorMessageToUserAction("Failed: Study already exists!");
             return null;
         }
-            addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
-            return "Success!";
+        addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
+        return "Success!";
     }
 
     /**
-     *  @return  
+     * @return
      */
     public String fetchStudy() {
-        
+
         FacesContext fc = FacesContext.getCurrentInstance();
         Map<String, String> params = fc.getExternalContext().getRequestParameterMap();
         this.studyName = params.get("studyname");
         this.studyCreator = params.get("username");
 
         //System.out.println("Studyname: " + this.studyName + " - user: " + getUsername() + " - creator: " + this.studyCreator);
-        
 //        FacesContext facesContext = FacesContext.getCurrentInstance(); 
 //        Map<String,Object> sessionMap = facesContext.getExternalContext().getSessionMap();
 //        sessionMap.put("currentStudy", studyName);
-        
         boolean res = studyTeamController.findUserForActiveStudy(studyName, getUsername());
         boolean rec = userGroupsController.checkForCurrentSession(getUsername());
-          
-        if (!res){
-               if(!rec){
-                    userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(getUsername(), "GUEST")));
-                    return "studyPage";
-               }
-           }
-        
-              return "studyPage";
+
+        if (!res) {
+            if (!rec) {
+                userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(getUsername(), "GUEST")));
+                return "studyPage";
+            }
+        }
+
+        return "studyPage";
 //        if (stList.iterator().hasNext()){
 //            StudyTeam t = stList.iterator().next();
 ////            if(getRequest().getRequestedSessionId() != null && getRequest().isRequestedSessionIdValid()){
@@ -555,23 +547,24 @@ public class StudyMB implements Serializable {
         } catch (EJBException ejb) {
             System.out.println("Add study master failed" + ejb.getMessage());
         }
-            System.out.println("Add study master success!");
+        System.out.println("Add study master success!");
     }
 
     //delete a study - only owner can perform the deletion
     public String deleteStudy() {
-       
+
         String StudyOwner = studyController.filterByName(studyName);
-        
+
         try {
-            if(getUsername().equals(StudyOwner))
-                  studyController.removeStudy(study);
+            if (getUsername().equals(StudyOwner)) {
+                studyController.removeStudy(study);
+            }
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Study wasn't removed.");
             return null;
         }
-            addMessage("Study removed.");
-            return "Success!";
+        addMessage("Study removed.");
+        return "Success!";
     }
 
     //add members to a team - bulk persist 
@@ -587,52 +580,53 @@ public class StudyMB implements Serializable {
                 studyTeamController.persistStudyTeam(st);
                 activity.addActivity("added new member " + t.getName() + " ", studyName, "STUDY");
             }
-                
-                 if(!getSelectedUsernames().isEmpty())
-                       getSelectedUsernames().clear();
-            
+
+            if (!getSelectedUsernames().isEmpty()) {
+                getSelectedUsernames().clear();
+            }
+
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Adding team member failed.");
             return null;
         }
-            
-            addMessage("New Member Added!");
-            return "studyPage";
+
+        addMessage("New Member Added!");
+        return "studyPage";
     }
-    
+
     //adding a record to sample id table
-    public String addSample(){
-        
+    public String addSample() {
+
         boolean rec = sampleIDController.checkForExistingIDs(getSampleID(), studyName);
-       
-        try{
-            if(!rec){
-                
-                    SampleIdsPK idPK = new SampleIdsPK(getSampleID(), studyName);
-                    SampleIds samId = new SampleIds(idPK);
-                    sampleIDController.persistSample(samId);
-                    activity.addActivity("added new sample " + getSampleID() + " ", studyName, "DATA");
-                    
-                    addMessage("New Sample Added: " + getSampleID());
-                    return "/bbc/uploader/uploader.html?faces-redirect=true";
-             } else {
-                    
-                    addErrorMessageToUserAction("Error: Sample ID exists.");
-                    return null;
-                    
-                }
-            
-        }catch(EJBException ejb){
-        
+
+        try {
+            if (!rec) {
+
+                SampleIdsPK idPK = new SampleIdsPK(getSampleID(), studyName);
+                SampleIds samId = new SampleIds(idPK);
+                sampleIDController.persistSample(samId);
+                activity.addActivity("added new sample " + getSampleID() + " ", studyName, "DATA");
+
+                addMessage("New Sample Added: " + getSampleID());
+                return "/bbc/uploader/uploader.html?faces-redirect=true";
+            } else {
+
+                addErrorMessageToUserAction("Error: Sample ID exists.");
+                return null;
+
+            }
+
+        } catch (EJBException ejb) {
+
             addErrorMessageToUserAction("Error: Failed");
             return null;
         }
     }
-    
-    
+
     public void itemSelect(SelectEvent e) {
-         if(getSelectedUsernames().isEmpty())
-             addErrorMessageToUserAction("Error: People field cannot be empty.");
+        if (getSelectedUsernames().isEmpty()) {
+            addErrorMessageToUserAction("Error: People field cannot be empty.");
+        }
     }
 
     public void addMessage(String summary) {
@@ -644,7 +638,7 @@ public class StudyMB implements Serializable {
         FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, message, message);
         FacesContext.getCurrentInstance().addMessage(null, errorMessage);
     }
-    
+
     public int getTabIndex() {
         return tabIndex;
     }
@@ -653,27 +647,26 @@ public class StudyMB implements Serializable {
         this.tabIndex = tabIndex;
     }
 
-    
     public void onTabChange(TabChangeEvent event) {
-        if(event.getTab().getTitle().equals("All")){
+        if (event.getTab().getTitle().equals("All")) {
             setTabIndex(0);
             //System.out.println("All - " + getTabIndex());
-        } else if(event.getTab().getTitle().equals("Personal")){
+        } else if (event.getTab().getTitle().equals("Personal")) {
             setTabIndex(1);
             //System.out.println("Personal - " + getTabIndex());
-        } else if(event.getTab().getTitle().equals("Joined")){
+        } else if (event.getTab().getTitle().equals("Joined")) {
             setTabIndex(2);
-             //System.out.println("Joined - " + getTabIndex());
+            //System.out.println("Joined - " + getTabIndex());
         } else {
             //do nothing at the moment
         }
 
     }
-    
-    public String onComplete(){
+
+    public String onComplete() {
         return "indexPage";
     }
-    
+
     public void save(ActionEvent actionEvent) {
         createStudy();
     }
