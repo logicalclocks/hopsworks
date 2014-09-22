@@ -8,33 +8,26 @@ package se.kth.bbc.study;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
-import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
-import javax.faces.component.UIInput;
-import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import javax.faces.event.ValueChangeEvent;
 import javax.servlet.http.HttpServletRequest;
-import org.primefaces.component.tabview.TabView;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
+import org.primefaces.model.DefaultTreeNode;
+import org.primefaces.model.TreeNode;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityMB;
 import se.kth.bbc.activity.UserGroupsController;
@@ -97,16 +90,26 @@ public class StudyMB implements Serializable {
 
     //private UIInput newTeamRole;
     private int manTabIndex = SHOW_TAB;
+    
+     private TreeNode root;
 
     @PostConstruct
     public void init() {
         activity.getActivity();
+        // Temporary code for the TreeTable construction -- for sake of working sync
+        root = new DefaultTreeNode(new FileSummary("root"), null);
+        for (int i = 0; i < 5; i++) {
+            TreeNode node = new DefaultTreeNode(new FileSummary("" + i), root);
+            for (int j = 0; j < 3; j++) {
+                TreeNode subnode = new DefaultTreeNode(new FileSummary("" + i + "," + j), node);
+            }
+        }
     }
 
     public void setActivity(ActivityMB activity) {
         this.activity = activity;
     }
-
+    
     public List<Username> getUsersNameList() {
         return userFacade.findAllUsers();
     }
@@ -115,6 +118,14 @@ public class StudyMB implements Serializable {
         return usernames;
     }
 
+     public TreeNode getRoot() {
+        return root;
+    }
+
+    public void setRoot(TreeNode t) {
+        this.root = t;
+    }
+    
     public String getStudyName() {
         return studyName;
     }
