@@ -62,5 +62,9 @@ public class UserMB {
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
     }
+    
+    public boolean isLoggedIn(){
+        return getRequest().getRemoteUser() != null;
+    }
       
 }

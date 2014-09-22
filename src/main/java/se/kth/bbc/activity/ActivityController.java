@@ -19,6 +19,11 @@ import javax.persistence.Query;
  */
 @Stateless
 public class ActivityController {
+    
+    // String constants
+    public static final String REMOVED_STUDY = " removed study ";
+    // Flag constants
+    public static final String CTE_FLAG_STUDY = "STUDY";
 
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;

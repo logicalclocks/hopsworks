@@ -1,0 +1,65 @@
+/* 
+    Created on : 12-sep-2014, 10:24:52
+    Author     : Stig
+*/
+
+.ui-widget, .ui-widget .ui-widget .ui-widget-content {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 12px;  
+}
+
+.BbcMainLayoutProfile {
+    min-height: 900px;
+    height: auto !important;
+}
+
+.BbcMainLayoutProfile .ui-widget-content {
+    border-width: 0px;  
+    overflow-y: hidden;
+    overflow-x: hidden;
+    //overflow-y: auto;
+    //////////////////////
+}
+
+.BbcMainLayoutProfile::-webkit-scrollbar {
+ display: none;
+}
+
+.profile_avatar_holder {
+    width: 60px;
+    height: 60px;
+    margin-right: 20px;
+    float: left;
+}
+
+.profile_avatar_holder img {
+    border: 1px solid #DDD;
+}
+
+h3.page_title, .save-project-loader h3 {
+    color: #456;
+    font-size: 20px;
+    font-weight: normal;
+    line-height: 28px;
+    float: none;
+}
+
+.right{
+    float: right !important;
+}
+
+h3 small, .link_logout {
+    font-size: 13px !important;
+    color: #999 !important;
+}
+
+.property_editor {
+    margin-left: 18px;
+}
+
+.command_link {
+    margin-left: 10px;
+    color:#1385e5 !important;
+    text-decoration: underline;
+}
+

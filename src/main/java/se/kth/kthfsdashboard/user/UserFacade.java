@@ -95,5 +95,21 @@ public class UserFacade extends AbstractFacade<Username> {
     public void detach(Username user) {
         em.detach(user);
     }
+    
+    
+    /*
+    
+    STIG
+    
+    */
+    
+    /*
+    Gets all users with STATUS = status
+    */
+    public List<Username> findAllByStatus(int status) {
+        TypedQuery<Username> query = em.createNamedQuery("Username.findAllByStatus", Username.class);
+        query.setParameter("status", status);
+        return query.getResultList();
+    }
 
 }

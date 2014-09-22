@@ -148,3 +148,13 @@ and open the template in the editor.
     
         background: #ddd;
 }
+
+.requestPopup {
+    height: 100px !important;
+    width: 200px !important;
+}
+
+.requestPopup .viewReqButton {
+    margin-top: 10px;
+    background-color: lightblue;
+}

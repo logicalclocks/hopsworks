@@ -35,6 +35,7 @@ import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
+import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityMB;
 import se.kth.bbc.activity.UserGroupsController;
 import se.kth.bbc.activity.UsersGroups;
@@ -53,6 +54,8 @@ public class StudyMB implements Serializable {
 
     private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
     private static final long serialVersionUID = 1L;
+    public static final int TEAM_TAB = 1;
+    public static final int SHOW_TAB = 0;
 
     @EJB
     private StudyController studyController;
@@ -93,6 +96,8 @@ public class StudyMB implements Serializable {
     private int tabIndex;
 
     //private UIInput newTeamRole;
+    private int manTabIndex = SHOW_TAB;
+
     @PostConstruct
     public void init() {
         activity.getActivity();
@@ -326,6 +331,28 @@ public class StudyMB implements Serializable {
         return StudyRoleTypes.values();
     }
 
+    public List<StudyRoleTypes> getTeamForResearchList() {
+
+        List<StudyRoleTypes> reOrder = new ArrayList<>();
+        //for(StudyRoleTypes role: StudyRoleTypes.values()){
+        reOrder.add(StudyRoleTypes.RESEARCHER);
+        reOrder.add(StudyRoleTypes.MASTER);
+        reOrder.add(StudyRoleTypes.AUDITOR);
+        //}
+        return reOrder;
+    }
+
+    public List<StudyRoleTypes> getTeamForGuestList() {
+
+        List<StudyRoleTypes> reOrder = new ArrayList<>();
+        //for(StudyRoleTypes role: StudyRoleTypes.values()){
+        reOrder.add(StudyRoleTypes.AUDITOR);
+        reOrder.add(StudyRoleTypes.MASTER);
+        reOrder.add(StudyRoleTypes.RESEARCHER);
+        //}
+        return reOrder;
+    }
+    
     public SampleFileTypes[] getFileType() {
         return SampleFileTypes.values();
     }
@@ -493,7 +520,11 @@ public class StudyMB implements Serializable {
             return null;
         }
         addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
-        return "Success!";
+        this.studyName = study.getName();
+        this.studyCreator = study.getUsername();
+        FacesContext context = FacesContext.getCurrentInstance();
+        context.getExternalContext().getFlash().setKeepMessages(true);
+        return "studyPage";
     }
 
     /**
@@ -564,7 +595,9 @@ public class StudyMB implements Serializable {
             return null;
         }
         addMessage("Study removed.");
-        return "Success!";
+        FacesContext context = FacesContext.getCurrentInstance();
+        context.getExternalContext().getFlash().setKeepMessages(true);
+        return "indexPage";
     }
 
     //add members to a team - bulk persist 
@@ -634,6 +667,11 @@ public class StudyMB implements Serializable {
         FacesContext.getCurrentInstance().addMessage(null, message);
     }
 
+    public void addMessage(String summary, String mess, String anchor) {
+        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, mess);
+        FacesContext.getCurrentInstance().addMessage(anchor, message);
+    }
+
     public void addErrorMessageToUserAction(String message) {
         FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, message, message);
         FacesContext.getCurrentInstance().addMessage(null, errorMessage);
@@ -690,6 +728,49 @@ public class StudyMB implements Serializable {
         RequestContext.getCurrentInstance().update("formNewStudyMember");
         RequestContext.getCurrentInstance().reset("formNewStudyMember");
         RequestContext.getCurrentInstance().execute("dlgNewStudyMember.show()");
+    }
+
+    /*
+     Used for navigating to the second tab immediately.
+     */
+    public int getManTabIndex() {
+        int val = manTabIndex;
+        manTabIndex = SHOW_TAB;
+        return val;
+    }
+
+    public void setManTabIndex(int mti) {
+        manTabIndex = mti;
+    }
+
+    public boolean isCurrentOwner() {
+        String email = getUsername();
+        List<TrackStudy> lst = studyTeamController.findStudyMaster(studyName);
+        for (TrackStudy tr : lst) {
+            if (tr.getUsername().equals(email)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String removeByName() {
+        try {
+            studyController.removeByName(studyName);
+            activity.addActivity(ActivityController.REMOVED_STUDY, studyName, ActivityController.CTE_FLAG_STUDY);
+        } catch (EJBException ejb) {
+            addErrorMessageToUserAction("Error: Study wasn't removed.");
+            return null;
+        }
+        addMessage("Success", "Study " + studyName + " was successfully removed.", "studyRemoved");
+        FacesContext context = FacesContext.getCurrentInstance();
+        context.getExternalContext().getFlash().setKeepMessages(true);
+        return "indexPage";
+    }
+
+    public boolean isRemoved(String studyName) {
+        TrackStudy item = studyController.findByName(studyName);
+        return item == null;
     }
 
 }

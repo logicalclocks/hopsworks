@@ -220,3 +220,8 @@ and open the template in the editor.
     position: relative;
     border: 0px;
 }
+
+h1 {
+    font-size: 30px;
+    float: left;
+}

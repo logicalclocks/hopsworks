@@ -5,7 +5,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:f="http://java.sun.com/jsf/core">
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
 
     <h:head>
         <title>BiobankCloud - Sign in</title>
@@ -15,29 +16,30 @@
 
     <h:body >
 
-        <h:form class="stylelayout" id="formToolbar">  
-            <p:toolbar styleClass="MainToolbar" >  
-                <p:toolbarGroup align="left">  
-                    <p:commandLink value="BiobankCloud"/>
-                </p:toolbarGroup>            
-            </p:toolbar> 
-        </h:form>
+        <ui:insert name="titleBar" >
+            <ui:include src="/bbc/lims/titleBar.xhtml" />       
+        </ui:insert>
+
+        <p:growl for="userRegistered" life="20000" showDetail="true"/>
+        <p:growl for="loginFail" life="20000" showDetail="true"/>
 
         <h:form id="hoplogin">                  
             <div class="Signin">            
                 <h:panelGrid columns="1" >  
                     <h1>Sign in</h1>     
-                    <p:outputLabel for="username" value="Username" />
-                    <p:inputText id="username" value="#{authBackingBean.username}"/>
+                    <p:outputLabel for="username" value="E-mail" />
+                    <p:inputText id="username" value="#{authBackingBean.username}" required="true"/>
                     <p:outputLabel for="password" value="Password" />
-                    <p:password id="password" value="#{authBackingBean.password}"/>
-                    <p:messages showDetail="true" autoUpdate="true" showSummary="false"/>
-                    <p:commandButton id="loginButton" value="Sign in" action="#{authBackingBean.login()}" styleClass="MainButton">
-<!--                        <f:param name="password" value="#{authBackingBean.password}"/>-->
-                    </p:commandButton>
+                    <p:password id="password" value="#{authBackingBean.password}" required="true"/>
+                    <p:messages showDetail="true" autoUpdate="true" showSummary="false" for="username password"/>
+                    <p:commandButton id="loginButton" value="Sign in" action="#{authBackingBean.login()}" validateClient="true" styleClass="MainButton"/>
                 </h:panelGrid>
             </div>
         </h:form> 
+
+        <div align="center">
+            <p:commandButton id="signupButton" value="Sign up" action="register" styleClass="signupButton MainButton"/>
+        </div>
 
         <br />
     </h:body>

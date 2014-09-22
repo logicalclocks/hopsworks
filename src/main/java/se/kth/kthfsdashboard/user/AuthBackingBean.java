@@ -33,24 +33,25 @@ import se.kth.bbc.activity.UserGroupsController;
 @ManagedBean
 @RequestScoped
 public class AuthBackingBean {
-
+    
     private static Logger log = Logger.getLogger(AuthBackingBean.class.getName());
     private String username;
     private String password;
-    @ManagedProperty(value="#{bbcViewController}")
+    @ManagedProperty(value = "#{bbcViewController}")
     private BbcViewController views;
-
     
     @EJB
     private UserGroupsController userGroupsController;
 
+    ///TODO: probs remove
+    @EJB
+    private UserFacade userFacade;
     
     public AuthBackingBean() {
     }
-
-
+    
     public String login() {
-
+        
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
         
@@ -59,13 +60,25 @@ public class AuthBackingBean {
             context.addMessage(null, msg);
             return null;
         }
-
+        
         if (password.isEmpty()) {
             FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, null, "Enter your password.");
             context.addMessage(null, msg);
             return null;
         }
 
+        /////////////////////////
+        // TODO: probably remove from here
+        Username user = userFacade.findByEmail(username);
+        if (user.getStatus() == Username.STATUS_REQUEST) {
+            FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fail", "Your request has not yet been acknowlegded.");
+            context.addMessage("loginFail", msg);
+            context.getExternalContext().getFlash().setKeepMessages(true);
+            return "welcome";
+        }
+
+        // TODO: probably remove up till here
+        /////////////////////////////
         try {
             if (request.getRemoteUser() != null) {
                 request.logout();
@@ -87,13 +100,13 @@ public class AuthBackingBean {
                 
         
         if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER") || request.isUserInRole("ADMIN")) {
-            return "/bbc/lims/index.xml?faces-redirect=true";            
+            return "/bbc/lims/index.xml?faces-redirect=true";
 //        } else if (request.isUserInRole("ADMIN")) {
 //            return "/sauron/clusters.xml?faces-redirect=true";
         }
-            return "/view.xml";
+        return "/view.xml";
     }
-
+    
     public String logout() {
 //      TODO does not work correctly
         String result = "logout";
@@ -120,27 +133,27 @@ public class AuthBackingBean {
         }
         return result;
     }
-
+    
     public String getUsername() {
         return username;
     }
-
+    
     public void setUsername(String username) {
         this.username = username;
     }
-
+    
     public String getPassword() {
         return password;
     }
-
+    
     public void setPassword(String password) {
         this.password = password;
     }
-
+    
     public BbcViewController getViews() {
         return views;
     }
-
+    
     public void setViews(BbcViewController views) {
         this.views = views;
     }

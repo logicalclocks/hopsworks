@@ -7,207 +7,144 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       >
-<f:view contentType="text/html">
-    
-    <h:head>
-        <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-         <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
-<!--        <style type="text/css">
-        .ui-layout, .ui-layout-doc, .ui-layout-unit, .ui-layout-wrap, .ui-layout-bd, .ui-layout-hd{
-             border: none;
-        }
-    </style>-->
-    </h:head>
+    <f:view contentType="text/html">
 
-<h:body>
-     <h:form class="stylelayout" id="formToolbar">  
-            <p:toolbar styleClass="MainToolbar">  
-                <p:toolbarGroup align="left">  
-                    <p:commandLink value="BiobankCloud" action="indexPage"/>
-                </p:toolbarGroup> 
+        <h:head>
+            <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+        </h:head>
 
-                <p:toolbarGroup align="left">              
-                </p:toolbarGroup>  
+        <h:body>
+            <ui:insert name="titleBar" >
+                <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
+            </ui:insert>
 
-                <p:toolbarGroup align="right">  
-                    <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
-                    <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
-                        <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" /> 
-                        <p:separator/>
-                        <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
-                    </p:menu>  
-                </p:toolbarGroup>  
+            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser">  
 
-            </p:toolbar> 
- </h:form>
+                <p:layoutUnit position="center">
+                    <div class="container">
+                        <h1>User management</h1>
+                        <div class="content">
+                            <p:tabView id="tabViewNew" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="userMgmtTabview">
+                                <p:tab title="Registered Users" id="Registered">
+                                    <h:form id="userdataForm">
+                                        <p:contextMenu for="userdataTable">
+                                            <p:menuitem value="View" update="userDetail" icon="ui-icon-search" oncomplete="PF('userDialog').show()"/>
+                                            <p:menuitem value="Delete" update="userdataTable" icon="ui-icon-close" actionListener="#{userController.deleteUser()}"/>
+                                        </p:contextMenu>
+                                        <p:growl id="growl" life="2000"/>
+                                        <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
+                                                     selectionMode="single" rowKey="#{user.email}" selection="#{userController.selectedUser}" style="table-layout: fixed">
 
-    <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser">  
+                                            <p:column id="nameColumn" filterBy="name" headerText="Name" style="width:32%; font-size: 12px; text-align: left;">
+                                                <h:outputText value="#{user.name}" />
+                                            </p:column>
 
-    <p:layoutUnit position="center">
-    <div class="container">
-          <ul class="main_menu"></ul>
-                <div class="content">
-                    <p:tabView id="tabViewNew" dynamic="true" cache="false" styleClass="ui-tabs">
-        <p:tab title="Registered Users" id="Registered">
-            <h:form id="userdataForm">
-                <p:contextMenu for="userdataTable">
-                    <p:menuitem value="View" update="userDetail" icon="ui-icon-search" oncomplete="PF('userDialog').show()"/>
-                    <p:menuitem value="Delete" update="userdataTable" icon="ui-icon-close" actionListener="#{userController.deleteUser()}"/>
-                </p:contextMenu>
-                <p:growl id="growl" life="2000"/>
-                        <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
-                                     selectionMode="single" rowKey="#{user.email}" selection="#{userController.selectedUser}">
-                                        
-                                                   <f:facet name="header">
-                                                       <p:outputPanel>
-                                                       <h:outputText value="Search users: " />
-                                                       <p:inputText id="globalFilter" onkeyup="usersTable.filter()" style="width:150px" />
-                                                       </p:outputPanel>
-                                                   </f:facet>
-                                        
-                                                   <p:column id="nameColumn" filterBy="name" headerText="Name" style="width:273px; font-size: 12px; text-align: left;">
-                                                        <h:outputText value="#{user.name}" />
-                                                    </p:column>
-                                        
-                                                    <p:column id="emailColumn" filterBy="email" headerText="Email" style="width:273px;font-size: 12px;text-align: left;">
-                                                        <h:outputText value="#{user.email}" />
-                                                    </p:column>
-                                        
-<!--                                                    <p:column id="usernameColumn" headerText="Username" style="width:273px;font-size: 12px;text-align: left;">
-                                                        <h:outputText value="#{user.username}" />
-                                                    </p:column>-->
-                                        
-                                                    <p:column id="mobileNumColumn" headerText="Mobile Number" style="width:273px;font-size: 12px;text-align: left;">
-                                                        <h:outputText value="#{user.mobileNum}" />
-                                                    </p:column>
-                                                                                         
-                                         </p:dataTable>
-<!--                                             <f:facet name="footer">
-                                                        <p:commandButton value="Delete" update="userdata" icon="ui-icon-search" style="margin-right:10px" oncomplete="PF('userDialog').show()"/>
-                                             </f:facet>-->
-                                                                                   
-                                      <p:dialog id="dialog" header="Selected User" widgetVar="userDialog" draggable="true" resizable="false" width="350" showEffect="clip" hideEffect="fold">
+                                            <p:column id="emailColumn" filterBy="email" headerText="Email" style="width:32%;font-size: 12px;text-align: left;">
+                                                <h:outputText value="#{user.email}" />
+                                            </p:column>
+
+                                            <p:column id="mobileNumColumn" headerText="Mobile Number" style="width:32%;font-size: 12px;text-align: left;">
+                                                <h:outputText value="#{user.mobileNum}" />
+                                            </p:column>
+
+
+                                            <p:column id="removeColumn" style="width:4%;">
+                                                <p:commandButton icon="ui-icon-closethick" action="#{userController.deleteUser(user)}" style="width:25px;" iconPos="center" update="@form">
+                                                    <p:confirm header="Remove user" message="Are you sure you want to remove this user?" icon="ui-icon-alert"/>
+                                                </p:commandButton>
+                                            </p:column>
+                                        </p:dataTable>
+
+                                        <p:dialog id="dialog" header="Selected User" widgetVar="userDialog" draggable="true" resizable="false" width="350" showEffect="clip" hideEffect="fold">
                                             <p:outputPanel id="userDetail" style="text-align:center;">
-                                              <h:panelGrid id="display" columns="2" cellpadding="4">
+                                                <h:panelGrid id="display" columns="2" cellpadding="4">
 
-                                                  <h:outputText value="Name:" style="font-size: 12px;font-weight: bold;text-align: left;" />
-                                                  <h:outputText value="#{userController.selectedUser.name}" />
+                                                    <h:outputText value="Name:" style="font-size: 12px;font-weight: bold;text-align: left;" />
+                                                    <h:outputText value="#{userController.selectedUser.name}" />
 
-                                                  <h:outputText value="Email:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
-                                                  <h:outputText value="#{userController.selectedUser.email}" />
-<!--
-                                                  <h:outputText value="Username:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
-                                                  <h:outputText value="#{userController.selectedUser.username}" />-->
-                                                  
-                                                  <h:outputText value="Registered On:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
-                                                  <h:outputText value="#{userController.selectedUser.registeredOn}" />
+                                                    <h:outputText value="Email:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
+                                                    <h:outputText value="#{userController.selectedUser.email}" />
 
-                                             </h:panelGrid>
-                                            </p:outputPanel>
-<!--                                          <f:facet name="footer">
-                                                      <h:outputText id="deletemsg" value="Are you sure you want to remove this user?" />
-                                                      <p:commandButton value="Confirm" update="growl" icon="ui-icon-close" style="margin-right:10px" action="#{userController.deleteUser()}"
-                                                                       actionListener="#{userController.confirmMessage}" oncomplete="PF('userDialog').hide()"/>
-                                          </f:facet>-->
-                                    </p:dialog>
-                                   </h:form>   
-                              </p:tab>                 
-                        
-            <p:tab title="Add New Users" id="New">
-                 <h3 class="page_title" align="left">
-                                     Add New User
-                              </h3>
-                            <hr/>
-<!--                            <div class="span9">-->
-<!--                            <h:form id="frmUserData" class="new_user_content">-->
-<!--                                           <div class="clear_fix">
-                                               <label for="team_member_user_ids">Name</label>
-                                                <div class="input">
-                                                    <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}" autocomplete="off" validatorMessage="Name cannot be empty" style="font-size: 12px;"/>
-                                                 </div>
-                                                </div>
-                                           <div class="clear_fix">
-                                               <label for="team_member_user_ids">Email</label>
-                                               <div class="input">
-                                                <p:inputText id="email"  required="true" label="Email" value="#{userController.user.email}" autocomplete="off" validatorMessage="Not a valid email" style="font-size: 12px;">
-                                                        <f:validateRegex pattern="([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)" />
-                                                </p:inputText>
-                                                 </div>   
-                                           </div>
-                                
-                                           <div class="clear_fix">
-                                                <label for="team_member_user_ids">Username</label>
-                                                <div class="input">
-                                                <p:inputText id="uname" required="true" label="Username" value="#{userController.user.username}" autocomplete="off" validatorMessage="Username cannot be empty" style="font-size: 12px;">
-                                                 </p:inputText>
-                                                </div>    
-                                           </div>
-                                
-                                           <div class="clear_fix">
-                                                <label for="team_member_user_ids">Password</label>
-                                                <div class="input">
-                                                <p:password id="password" label="password" required="true" value="#{userController.user.password}" validatorMessage="password is required">
-                                                </p:password>
-                                                </div>    
-                                           </div>
-                                
-                                             <div class="clear_fix">
-                                                <label for="team_member_user_ids">Mobile Number</label>
-                                                <div class="input">
-                                                <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" autocomplete="off" validatorMessage="Only Numbers (10 digits)" style="font-size: 12px;">
-                                                    <f:validateRegex pattern="[0-9]{1,10}"/>                                
-                                                </p:inputText>
-                                                </div>    
-                                           </div>
-                                -->
-                                <h:form id="frmUserData" class="new_user_content">
-                                    <h:panelGrid id="grid" columns="2" style="font-size: 12px;">    
-                                        <h:outputLabel for="name" value="Name:" style="font-weight:bold"/>					
-                                        <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}" autocomplete="off" validatorMessage="Name cannot be empty"/>
-                                        <p:message for="name" />
-                                        <h:outputText value=""/>
+                                                    <h:outputText value="Registered On:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
+                                                    <h:outputText value="#{userController.selectedUser.registeredOn}" />
 
-                                        <h:outputLabel for="email" value="Email:" style="font-weight:bold"/>					
-                                        <p:inputText id="email"  required="true" label="Email" value="#{userController.user.email}" autocomplete="off" validatorMessage="Not a valid email">
-                                            <f:validateRegex pattern="([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)" />
-                                        </p:inputText>
-                                        <p:message for="email" />
-                                        <h:outputText value=""/>
+                                                </h:panelGrid>
+                                            </p:outputPanel>                   
+                                        </p:dialog>
+                                        <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                                            <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                                            <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+                                        </p:confirmDialog>
 
-<!--                                        <h:outputLabel for="uname" value="Username:" style="font-weight:bold"/>					
-                                        <p:inputText id="uname" required="true" label="Username" value="#{userController.user.username}" autocomplete="off" validatorMessage="Username cannot be empty">
-                                        </p:inputText>
-                                        <p:message for="uname" />
-                                        <h:outputText value=""/>-->
 
-                                        <h:outputLabel for="password" value="Password:" style="font-weight:bold"/>					
-                                        <p:password id="password" label="password" required="true" value="#{userController.user.password}" validatorMessage="password is required">
-                                        </p:password>
-                                        <p:message for="password" />
-                                        <h:outputText value=""/>
+                                    </h:form>   
+                                </p:tab>                 
 
-                                        <h:outputLabel for="mobile" value="Mobile Number:" style="font-weight:bold"/>					
-                                        <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" autocomplete="off" validatorMessage="Only Numbers (10 digits)">
-                                            <f:validateRegex pattern="[0-9]{1,10}"/>                                
-                                        </p:inputText>
-                                        <p:message for="mobile"/>
-                                        <h:outputText value=""/> 
-                                </h:panelGrid>
-                                
-                                
-                                           <div class="actions">
-                                               <h:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{userController.addUser()}"/>
-                                           </div>
-                             </h:form>     
-<!--                            </div>-->
-          </p:tab>
-                 </p:tabView>
-  </div>
-            </div> 
-       </p:layoutUnit>
-</p:layout>
-</h:body>
-</f:view>
+                                <p:tab title="User requests" id="requests">
+                                    <h:form id="reqdataForm">
+                                        <p:dataTable id="userReqTable" var="req" value="#{userController.allRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
+                                                     rowKey="#{req.email}" selection="#{userController.selectedUsers}" style="table-layout: fixed">
+
+
+                                            <f:facet name="header" class="header-button-group">
+                                                <p:commandButton value="Allow selection" actionListener="#{userController.allowSelectedUsers}" update="@form"/>
+                                                <p:commandButton value="Deny selection" actionListener="#{userController.denySelectedUsers}" update="@form"/>
+                                            </f:facet>
+
+                                            <p:column selectionMode="multiple" style="width:1%" disabledSelection="false"/>
+
+                                            <p:column id="nameColumn" headerText="Name" style="width:30%; font-size: 12px; text-align: left;">
+                                                <h:outputText value="#{req.name}" />
+                                            </p:column>
+
+                                            <p:column id="emailColumn" headerText="Email" style="width:30%;font-size: 12px;text-align: left;">
+                                                <h:outputText value="#{req.email}" />
+                                            </p:column>
+
+                                            <p:column id="mobileNumColumn" headerText="Mobile Number" style="width:30%;font-size: 12px;text-align: left;">
+                                                <h:outputText value="#{req.mobileNum}" />
+                                            </p:column>
+
+                                            <!--                                            <p:column id="roleColumn" headerText="Role" style="width: 39%">
+                                                                                        <p:selectOneMenu id="role" value="req.groups[0]">
+                                                                                            <f:selectItems value="#{userController.roles}" var="rol" itemLabel="#{rol.group}" itemValue="#{rol.group}"/>
+                                                                                        </p:selectOneMenu>
+                                                                                        </p:column>-->
+
+                                            <p:column id="qctionColumn" headerText="Action" style="width:9%;">
+                                                <h:panelGrid columns="2" style="width: auto">                                                    
+                                                    <p:commandButton icon="ui-icon-closethick" action="#{userController.deleteUser(req)}" style="width:25px;" iconPos="center" update="@form">
+                                                        <p:confirm header="Deny user" message="Are you sure you want to deny this user?" icon="ui-icon-alert"/>
+                                                    </p:commandButton>
+                                                    <p:commandButton icon="ui-icon-check" action="#{userController.allowUser(req)}" style="width:25px;" iconPos="center" update="@form">
+                                                        <p:confirm header="Allow user" message="Allow selected user?" icon="ui-icon-help"/>
+                                                    </p:commandButton>
+                                                </h:panelGrid>
+                                            </p:column>
+                                        </p:dataTable>
+
+                                        <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                                            <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                                            <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+                                        </p:confirmDialog>
+
+
+                                    </h:form>
+
+
+                                </p:tab>
+                            </p:tabView>
+                            
+                            <script>
+                                userMgmtTabview.select(#{userController.tabIndex});
+                            </script>
+                        </div>
+                    </div> 
+                </p:layoutUnit>
+            </p:layout>
+        </h:body>
+    </f:view>
 </html>

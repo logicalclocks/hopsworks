@@ -24,7 +24,7 @@
             <to-view-id>/bbc/lims/newStudy.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
-         <navigation-case>
+        <navigation-case>
             <from-outcome>dataMgmt</from-outcome>
             <to-view-id>/bbc/lims/create-Datasets.xhtml</to-view-id>
             <redirect/>
@@ -44,7 +44,7 @@
             <to-view-id>/bbc/lims/studyMember.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
-         <navigation-case>
+        <navigation-case>
             <from-outcome>studyPage</from-outcome>
             <to-view-id>/bbc/lims/studyPage.xhtml</to-view-id>
             <redirect/>
@@ -220,12 +220,20 @@
             <to-view-id>/wf/index.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+        <navigation-case>
+            <from-outcome>register</from-outcome>
+            <to-view-id>register.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
     </navigation-rule>
     <application>
         <resource-bundle>
             <base-name>/Bundle</base-name>
             <var>bundle</var>
         </resource-bundle>
+        <action-listener>org.primefaces.application.DialogActionListener</action-listener>
+        <navigation-handler>org.primefaces.application.DialogNavigationHandler</navigation-handler>
+        <view-handler>org.primefaces.application.DialogViewHandler</view-handler>       
     </application>
     <converter>
         <converter-for-class>java.lang.Enum</converter-for-class>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+    <f:view contentType="text/html">
+
+        <h:head>
+            <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/profile.css']}" />            
+        </h:head>
+
+        <h:body>
+            <ui:insert name="titleBar" >
+                <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
+            </ui:insert>
+
+            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutProfile">  
+                <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
+                <p:layoutUnit position="center">
+                    <div class="container">
+                        <ul class="main_menu"></ul>
+                        <div class="content">
+                            <!-- Avatar and name, email -->
+                            <div class="profile_avatar_holder">
+                                <img src="#{profileController.gravatar}" />
+                            </div>
+                            <h3 class="page_title">
+                                #{profileController.user.name}
+                                <br></br>
+                                <small>
+                                    #{profileController.loginName}
+                                </small>
+                                <div class="right">
+                                    <p:commandLink value="Logout" action="#{authBackingBean.logout}" styleClass="link_logout"/>
+                                </div>
+                            </h3>
+                            <hr></hr>
+
+                            <!-- edit content-->
+                            <h:form id="editUserData">
+                                <h:panelGrid id="infoGrid" columns="3" style="font-size: 12px;">    
+                                    <h:outputLabel for="name" value="Name" styleClass="changeLabel"/>					
+                                    <p:inputText id="name" label="Name" value="#{profileController.user.name}" autocomplete="off" validatorMessage="Name cannot be empty" styleClass="property_editor">
+                                        <f:validateRequired/> <!-- For some reason, the 'required'-attribute did not show the specified validation message...-->
+                                    </p:inputText>
+                                    <p:message for="name"/>
+
+                                    <h:outputLabel for="mobile" value="Mobile" styleClass="changeLabel"/>					
+                                    <p:inputText id="mobile" label="Mobile Number" value="#{profileController.user.mobileNum}" autocomplete="off" validatorMessage="Only Numbers (10 digits)" styleClass="property_editor">
+                                        <f:validateRegex pattern="[0-9]{10,10}"/>                                
+                                    </p:inputText>
+                                    <p:message for="mobile"/>
+
+                                    <h:outputLabel for="password" value="Password" styleClass="changeLabel"/>					
+                                    <p:inputText id="password" label="Password" value="********" styleClass="property_editor" disabled="true"/>
+                                    <p:commandLink id="changePwdLink" value="Change" styleClass="command_link" actionListener="#{profileController.changePasswordForm}" update=":growl">
+                                        <p:ajax event="dialogReturn" listener="#{profileController.onPwdChanged}"/>
+                                    </p:commandLink>
+
+                                </h:panelGrid>
+
+                                <div class="actions">
+                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{profileController.updateUser()}" validateClient="true" update=":bbcMainLayout"/>
+                                </div>
+
+                            </h:form>                            
+                        </div>
+                    </div>                    
+                </p:layoutUnit>
+            </p:layout>
+        </h:body>
+    </f:view>
+</html>
