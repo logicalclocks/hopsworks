@@ -5,6 +5,7 @@
  */
 package se.kth.bbc.study;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,7 +30,9 @@ import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.event.ValueChangeEvent;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.primefaces.component.tabview.TabView;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
@@ -319,6 +322,10 @@ public class StudyMB implements Serializable {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
     }
 
+    private HttpServletResponse getResponse() {
+        return (HttpServletResponse) FacesContext.getCurrentInstance().getExternalContext().getResponse();
+    }
+    
     public String getUsername() {
         return getRequest().getUserPrincipal().getName();
     }
@@ -628,10 +635,10 @@ public class StudyMB implements Serializable {
     }
 
     //adding a record to sample id table
-    public String addSample() {
+    public String addSample() throws IOException{
 
         boolean rec = sampleIDController.checkForExistingIDs(getSampleID(), studyName);
-
+     
         try {
             if (!rec) {
 
@@ -641,7 +648,9 @@ public class StudyMB implements Serializable {
                 activity.addActivity("added new sample " + getSampleID() + " ", studyName, "DATA");
 
                 addMessage("New Sample Added: " + getSampleID());
-                return "/bbc/uploader/uploader.html?faces-redirect=true";
+                getResponse().sendRedirect(getRequest().getContextPath()+"/bbc/uploader/sampleUploader.jsp");
+                FacesContext.getCurrentInstance().responseComplete();
+                return "Success!";
             } else {
 
                 addErrorMessageToUserAction("Error: Sample ID exists.");

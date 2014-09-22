@@ -105,7 +105,7 @@
     <!--    <servlet>
             <servlet-name>FileUploadServlet</servlet-name>
             <servlet-class>se.kth.bbc.upload.FileUploadServlet</servlet-class>
-    </servlet>
+    </servlet> 
     
     <servlet-mapping>
         <servlet-name>FileUploadServlet</servlet-name>
@@ -124,6 +124,17 @@
         <servlet-name>FileUploadJSP</servlet-name>
         <url-pattern>/plupupload/</url-pattern>
     </servlet-mapping>-->
+    
+<!--    <servlet>
+        <servlet-name>sampleUploader</servlet-name>
+        <jsp-file>sampleUploader.jsp</jsp-file>
+    </servlet>
+    <servlet-mapping>
+         <servlet-name>sampleUploader</servlet-name>
+         <url-pattern>/bbc/uploader/sampleUploader.jsp</url-pattern>
+    </servlet-mapping>-->
+    
+    
     <servlet>
         <servlet-name>UploadServlet</servlet-name>
         <servlet-class>se.kth.bbc.upload.UploadServlet</servlet-class>

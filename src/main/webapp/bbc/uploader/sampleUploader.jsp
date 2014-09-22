@@ -4,12 +4,16 @@
     Author     : roshan
 --%>
 
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page pageEncoding="UTF-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!DOCTYPE html>
+
 <html>
     <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta charset="utf-8" />
         <title>JSP Page</title>
+        <link rel="stylesheet" type="text/css" href="resumable.css" />
     </head>
     <body>
       <div id="htmlToolBar">
@@ -24,9 +28,9 @@
                             <!--    <div id="frame">-->
       <h1 class="page_title" align="left">Dataset(s) uploader</h1>
 <!--      <hr/>-->
-      <script src="../js/jquery.min.js"></script>
-      <script src="resumable.js"></script>
-      <script src="resumable-uploader.js"></script>
+                <script src="../js/jquery.min.js"></script>
+                <script src="resumable.js"></script>
+                <script src="resumable-uploader.js"></script>
 
 <!--      <a href="#" id="browseButton">Select files</a>
        <a href="#" onclick="r.upload(); return(true);">upload</a>-->
@@ -166,3 +170,4 @@
        </div>
     </body>
 </html>
+

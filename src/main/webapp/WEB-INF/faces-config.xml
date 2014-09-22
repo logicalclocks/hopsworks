@@ -69,11 +69,7 @@
             <to-view-id>/bbc/lims/addSamples.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
-        <navigation-case>
-            <from-outcome>addSampleFiles</from-outcome>
-            <to-view-id>/bbc/uploader/uploader.html</to-view-id>
-            <redirect/>
-        </navigation-case>
+       
         <navigation-case>
             <from-outcome>wfhome</from-outcome>
             <to-view-id>/bbc-views.xhtml</to-view-id>
@@ -225,7 +221,32 @@
             <to-view-id>register.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+<!--        <navigation-case>
+            <from-outcome>addSampleFiles</from-outcome>
+            <to-view-id>/bbc/uploader/resumableUpload.xhtml</to-view-id>
+            <redirect />
+        </navigation-case>-->
     </navigation-rule>
+
+<!--    <navigation-rule>
+        <from-view-id>/bbc/lims/addSamples.xhtml</from-view-id>
+        <navigation-case>
+            <from-outcome>addSampleFiles</from-outcome>
+            <to-view-id>/bbc/uploader/sampleUploader.jsp</to-view-id>
+            <redirect/>
+        </navigation-case>
+    </navigation-rule>-->
+
+
+<!--    <navigation-rule>
+        <from-view-id>/bbc/lims/addSamples.xhtml</from-view-id>
+        <navigation-case>
+            <from-outcome>addSampleFiles</from-outcome>
+            <to-view-id>/bbc/uploader/sampleUploader.jsp</to-view-id>
+            <redirect />
+        </navigation-case>
+    </navigation-rule>-->
+    
     <application>
         <resource-bundle>
             <base-name>/Bundle</base-name>
