@@ -215,13 +215,13 @@ h1 {
 }
 
 .uploading {
-    background-color: #F5A9A9;
-}
-
-.available {
-    background-color: #00BD36;
+    background-color: #FF9999;
 }
 
 .copying_to_hdfs {
-    background-color: #e6db74;
+    background-color: #FFCC66;
+}
+
+.available {
+    background-color: #66FF99;
 }

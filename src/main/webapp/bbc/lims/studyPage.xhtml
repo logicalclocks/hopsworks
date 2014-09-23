@@ -38,18 +38,6 @@
                             <p:messages autoUpdate="true" closable="true"/>
                             <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="studyTabs">
                                 <p:tab id="showTab" title="Show">
-                                    <c:if test="${studyManagedBean.renderComponentList() eq 'Master'}">
-                                        <h5 class="page_title" align="left">
-                                            Add Sample
-                                            <span class="right_button">
-                                                <h:form id="frmBtnData">
-                                                    <h:commandButton id="addData" class="button-add button-add-data" value="New Sample" 
-                                                                     type="submit" action="newSample"/>
-                                                </h:form>
-                                            </span>
-                                        </h5>
-                                        <hr/>
-                                    </c:if>
                                     <div class="study_content_list">
                                         <c:forEach var="lstActivity" items="#{activityBean.getActivityOnstudy(studyManagedBean.studyName)}" varStatus="showAll">
                                             <div class="event-item" align="left">
@@ -152,8 +140,8 @@
                                                                         </div>
                                                                         <div class="right" align="right">
                                                                             <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
-                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
+                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert"/>
                                                                             </p:commandLink>
                                                                             <p:confirmDialog id="currentUser_master_${mst.count}" global="true" severity="alert" showEffect="fade"> 
                                                                                 <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
@@ -229,8 +217,8 @@
                                                                             </h:form>
                                                                         </div>
                                                                         <div class="right" align="right">
-                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
-                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
+                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert"/>
                                                                             </p:commandLink>
                                                                             <p:confirmDialog id="notCurrentUserNOwner_master_${mst.count}" global="true" severity="alert" showEffect="fade"> 
                                                                                 <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" />   
@@ -286,7 +274,7 @@
                                                                         </div>
                                                                         <div class="right" align="right">
                                                                             <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
-                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
+                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
                                                                             </p:commandLink>
                                                                             <p:confirmDialog id="notCurrentUser_researcher_${rchs.count}"  global="true" severity="alert" showEffect="fade"> 
                                                                                 <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" />   
@@ -330,7 +318,7 @@
                                                                         <div class="right" align="right">
                                                                             <h:commandButton class="btn" value="This is you!" disabled="true"/>
                                                                             <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
-                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
+                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
                                                                             </p:commandLink>
                                                                             <p:confirmDialog id="currentUser_researcher_${rchs.count}" global="true" severity="alert" showEffect="fade"> 
                                                                                 <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
@@ -489,8 +477,8 @@
                                                                             </h:form>
                                                                         </div>
                                                                         <div class="right" align="right">
-                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
-                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
+                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(alist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove #{alist.name} [#{alist.email}]?" icon="ui-icon-alert"/>
                                                                             </p:commandLink>
                                                                             <p:confirmDialog id="notCurrentUser_guest_${aud.count}" global="true" severity="alert" showEffect="fade"> 
                                                                                 <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
@@ -533,8 +521,8 @@
                                                                         </div>
                                                                         <div class="right" align="right">
                                                                             <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
-                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
+                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(alist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove #{alist.name} [#{alist.email}]?" icon="ui-icon-alert"/>
                                                                             </p:commandLink>
                                                                             <p:confirmDialog id="currentUser_guest_${aud.count}" global="true" severity="alert" showEffect="fade"> 
                                                                                 <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
@@ -553,18 +541,34 @@
                                     </div>
                                 </p:tab>
                                 <p:tab id="samples" title="Samples">
-
-                                    <p:treeTable value="#{studyManagedBean.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}">
-                                        <p:column headerText="Name">
-                                            <h:outputText value="#{document.name}" />
-                                        </p:column>
-                                        <p:column headerText="Status">
-                                            <h:outputText value="#{document.status}" />
-                                        </p:column>
-                                        <p:column style="width:15px" rendered="#{userMB.anyAdminUser}">
-                                            <p:commandLink title="Download" styleClass="ui-icon ui-icon-arrowthick-1-s" disabled="#{!document.file}"/>
-                                        </p:column>
-                                    </p:treeTable>
+                                    <h3 class="page_title" align="left">
+                                        Study samples
+                                        <span class="right_button">
+                                            <h:form id="frmBtnData" style="margin-bottom: 0px;">
+                                                <h:commandButton id="addData" class="button-add button-add-data" value="New Sample" 
+                                                                 type="submit" action="newSample" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" />
+                                            </h:form>
+                                        </span>
+                                    </h3>
+                                    <div class="clear_fixing"></div>
+                                    <div class="container">
+                                        <h:form id="filesForm">                                            
+                                            <p:contextMenu for="filesTable" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
+                                                <p:menuitem value="Download"  icon="ui-icon-arrowthick-1-s" update="@form" actionListener="#{studyManagedBean.download()}"/>
+                                            </p:contextMenu>
+                                            <p:treeTable id="filesTable" value="#{studyManagedBean.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single">
+                                                <p:column headerText="Name">
+                                                    <h:outputText value="#{document.name}" />
+                                                </p:column>
+                                                <p:column headerText="Status">
+                                                    <h:outputText value="#{document.status}" />
+                                                </p:column>
+                                                <p:column style="width:15px" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
+                                                    <p:commandLink title="Download" styleClass="ui-icon ui-icon-arrowthick-1-s" disabled="#{!document.file}" actionListener="#{studyManagedBean.download()}"/>
+                                                </p:column>
+                                            </p:treeTable>
+                                        </h:form>
+                                    </div>
 
                                 </p:tab>
 

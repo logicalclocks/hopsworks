@@ -34,41 +34,41 @@
                             <div class="study">
                                 <div class="span8">
                                     <div class="event_filter">
-<!--                                        <div class="filter_icon">
-                                            <p:commandLink id="usrLink" styleClass="link_a" process="@all">
-                                                    <p:ajax event="click" update=":#{p:component('contentList')}"/>
-                                                    <p:graphicImage value="#{resource['/images/icons/user.png']}"/>
-                                                    <f:param name="teamFlag" value="TEAM"/>
-                                            </p:commandLink>
-                                            <p:tooltip id="userRelated" for="usrLink" value="Team activity filtering" 
-                                                       showEffect="slide"
-                                                       hideEffect="slide"/>
-                                        </div>
-                                        <div class="filter_icon">
-                                            <p:commandLink styleClass="link_a"/>
-                                        </div>
-                                        <div class="filter_icon">
-                                            <p:commandLink styleClass="link_a"/>
-                                        </div>-->
+                                        <!--                                        <div class="filter_icon">
+                                                                                    <p:commandLink id="usrLink" styleClass="link_a" process="@all">
+                                                                                            <p:ajax event="click" update=":#{p:component('contentList')}"/>
+                                                                                            <p:graphicImage value="#{resource['/images/icons/user.png']}"/>
+                                                                                            <f:param name="teamFlag" value="TEAM"/>
+                                                                                    </p:commandLink>
+                                                                                    <p:tooltip id="userRelated" for="usrLink" value="Team activity filtering" 
+                                                                                               showEffect="slide"
+                                                                                               hideEffect="slide"/>
+                                                                                </div>
+                                                                                <div class="filter_icon">
+                                                                                    <p:commandLink styleClass="link_a"/>
+                                                                                </div>
+                                                                                <div class="filter_icon">
+                                                                                    <p:commandLink styleClass="link_a"/>
+                                                                                </div>-->
                                     </div>
                                     <h:panelGroup id="contentList" styleClass="content_list">
 <!--                                        <c:if test="${activityBean.flag ne 'TEAM'}">-->
-                                            <c:forEach var="act" items="#{activityBean.acvitiyList}">
-                                                <div class="event-item" align="left">
-                                                    <span class="cgray right">#{activityBean.findLastActivity(act.id)}</span>
-                                                    <img class="avatar s24" src="#{activityBean.getGravatar(act.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
-                                                    <div class="event-title">
-                                                        <span class="author_name"><p:commandLink> #{act.performedBy}</p:commandLink></span>
-                                                        <span class="event_label merged">#{act.activity}</span>
-                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}" disabled="#{studyManagedBean.isRemoved(act.activityOn)}">
-                                                            <strong>at #{act.performedBy} / #{act.activityOn}</strong>
-                                                            <f:param name="studyname" value="#{act.activityOn}"/>
-                                                            <f:param name="username" value="#{act.performedBy}"/>
-                                                        </p:commandLink>
-                                                    </div>
+                                        <c:forEach var="act" items="#{activityBean.activityDetailList}">
+                                            <div class="event-item" align="left">
+                                                <span class="cgray right">#{activityBean.findLastActivity(act.id)}</span>
+                                                <img class="avatar s24" src="#{activityBean.getGravatar(act.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                <div class="event-title">
+                                                    <span class="author_name"><p:commandLink> #{act.author}</p:commandLink></span>
+                                                    <span class="event_label merged">#{act.activity}</span>
+                                                    <p:commandLink action="#{studyManagedBean.fetchStudy()}" disabled="#{studyManagedBean.isRemoved(act.studyName)}">
+                                                        <strong>at #{act.author} / #{act.studyName}</strong>
+                                                        <f:param name="studyname" value="#{act.studyName}"/>
+                                                        <f:param name="username" value="#{act.email}"/>
+                                                    </p:commandLink>
                                                 </div>
-                                            </c:forEach>
-<!--                                        </c:if>-->
+                                            </div>
+                                        </c:forEach>
+                                        <!--                                        </c:if>-->
                                         <c:if test="${activityBean.flag eq 'TEAM'}">
                                             <c:forEach var="team" items="#{activityBean.allTeamActivity}">
                                                 <div class="event-item" align="left">
@@ -113,41 +113,41 @@
                                         <p:tabView id="tabViewSummary" styleClass="ui-tabs" dynamic="true" cache="false" activeIndex="#{studyManagedBean.tabIndex}">
                                             <p:ajax event="tabChange" listener="#{studyManagedBean.onTabChange}" update=":#{p:component('studyBoxHeader')}"/>
                                             <p:tab id="allTab" title="All">
-                                                        <c:if test="${studyManagedBean.countAllStudiesPerUser() eq 0}">
-                                                                <li class="nothing_here_message">
-                                                                    There are no studies here.
-                                                                </li>
-                                                        </c:if>
-                                                    <c:forEach var="aList" items="${studyManagedBean.allStudiesPerUser}" varStatus="allStatus">
-                                                        <li class="ui-tabs-panel">
-                                                            <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                                                                <span class="tiny">#{aList.username}</span> / <strong>#{aList.name}</strong>
-                                                                <f:param name="studyname" value="#{aList.name}"/>
-                                                                <f:param name="username" value="#{aList.username}"/>
-                                                            </p:commandLink>
-                                                            <span class="last_activity">
-                                                                <strong style="font-size: 12px;color: #666;">Last activity:</strong>
-                                                                <span>#{activityBean.findLastActivityOnStudy(aList.name)}</span>
-                                                            </span>
-                                                        </li> 
-                                                    </c:forEach>
+                                                <c:if test="${studyManagedBean.countAllStudiesPerUser() eq 0}">
+                                                    <li class="nothing_here_message">
+                                                        There are no studies here.
+                                                    </li>
+                                                </c:if>
+                                                <c:forEach var="aList" items="${studyManagedBean.allStudiesPerUser}" varStatus="allStatus">
+                                                    <li class="ui-tabs-panel">
+                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                                                            <span class="tiny">#{aList.creator}</span> / <strong>#{aList.studyName}</strong>
+                                                            <f:param name="studyname" value="#{aList.studyName}"/>
+                                                            <f:param name="username" value="#{aList.email}"/>
+                                                        </p:commandLink>
+                                                        <span class="last_activity">
+                                                            <strong style="font-size: 12px;color: #666;">Last activity:</strong>
+                                                            <span>#{activityBean.findLastActivityOnStudy(aList.studyName)}</span>
+                                                        </span>
+                                                    </li> 
+                                                </c:forEach>
                                             </p:tab>
                                             <p:tab id="personalTab" title="Personal">
                                                 <c:if test="${studyManagedBean.countPersonalStudy() eq 0}">
-                                                                <li class="nothing_here_message">
-                                                                    There are no studies here.
-                                                                </li>
+                                                    <li class="nothing_here_message">
+                                                        There are no studies here.
+                                                    </li>
                                                 </c:if>
                                                 <c:forEach var="pList" items="${studyManagedBean.personalStudy}" varStatus="personalStatus">
                                                     <li class="ui-tabs-panel">
                                                         <p:commandLink action="#{studyManagedBean.fetchStudy()}" >
-                                                            <span class="tiny">#{pList.username}</span> / <strong>#{pList.name}</strong>
-                                                            <f:param name="studyname" value="#{pList.name}"/>
-                                                            <f:param name="username" value="#{pList.username}"/>
+                                                            <span class="tiny">#{pList.creator}</span> / <strong>#{pList.studyName}</strong>
+                                                            <f:param name="studyname" value="#{pList.studyName}"/>
+                                                            <f:param name="username" value="#{pList.email}"/>
                                                         </p:commandLink>
                                                         <span class="last_activity">
                                                             <strong style="font-size: 12px;color: #666;">Last activity:</strong>
-                                                            <span>#{activityBean.findLastActivityOnStudy(pList.name)}</span>
+                                                            <span>#{activityBean.findLastActivityOnStudy(pList.studyName)}</span>
                                                         </span>
                                                     </li> 
                                                 </c:forEach>
@@ -155,20 +155,20 @@
                                             </p:tab>
                                             <p:tab id="joinedTab" title="Joined">
                                                 <c:if test="${studyManagedBean.countJoinedStudy() eq 0}">
-                                                                <li class="nothing_here_message">
-                                                                    There are no studies here.
-                                                                </li>
+                                                    <li class="nothing_here_message">
+                                                        There are no studies here.
+                                                    </li>
                                                 </c:if>
                                                 <c:forEach var="jList" items="${studyManagedBean.joinedStudies}" varStatus="joinStatus">
                                                     <li class="ui-tabs-panel">
                                                         <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                                                            <span class="tiny">#{jList.username}</span> / <strong>#{jList.name}</strong>
-                                                            <f:param name="studyname" value="#{jList.name}"/>
-                                                            <f:param name="username" value="#{jList.username}"/>
+                                                            <span class="tiny">#{jList.creator}</span> / <strong>#{jList.studyName}</strong>
+                                                            <f:param name="studyname" value="#{jList.studyName}"/>
+                                                            <f:param name="username" value="#{jList.email}"/>
                                                         </p:commandLink>
                                                         <span class="last_activity">
                                                             <strong style="font-size: 12px;color: #666;">Last activity:</strong>
-                                                            <span>#{activityBean.findLastActivityOnStudy(jList.name)}</span>
+                                                            <span>#{activityBean.findLastActivityOnStudy(jList.studyName)}</span>
                                                         </span>
                                                     </li> 
                                                 </c:forEach>
@@ -187,8 +187,8 @@
             <p:dialog draggable="false" resizable="false" styleClass="requestPopup" position="right bottom" header="Open user requests" visible="#{indexController.checkForRequests()}">
                 <div align="center">
                     There are open user requests!<br/>
-                <p:commandButton action="#{userController.openRequests}" value="View requests" styleClass="viewReqButton">
-                </p:commandButton>
+                    <p:commandButton action="#{userController.openRequests}" value="View requests" styleClass="viewReqButton">
+                    </p:commandButton>
                 </div>
             </p:dialog>
         </h:body>

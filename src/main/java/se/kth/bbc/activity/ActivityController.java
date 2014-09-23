@@ -22,6 +22,12 @@ public class ActivityController {
     
     // String constants
     public static final String REMOVED_STUDY = " removed study ";
+    public static final String CREATED_STUDY = " created new study ";
+    public static final String NEW_DATA = " added a new dataset ";
+    public static final String NEW_MEMBER = " added new member ";
+    public static final String NEW_SAMPLE = " added a new sample ";
+    public static final String CHANGE_ROLE = " changed role of ";
+    public static final String REMOVED_MEMBER = " removed team member ";
     // Flag constants
     public static final String CTE_FLAG_STUDY = "STUDY";
 
@@ -43,9 +49,13 @@ public class ActivityController {
         em.remove(activity);
     }
 
-    public List<UserActivity> filterActivity(){
-    
+    public List<UserActivity> filterActivity(){    
         Query query = em.createNamedQuery("UserActivity.findAll", UserActivity.class);
+        return query.getResultList();
+    }
+    
+    public List<ActivityDetail> filterActivityDetail(){
+        Query query = em.createNativeQuery("SELECT id, performed_By AS email, USERS.name AS author, activity, activity_on AS studyName, timestamp AS myTimestamp FROM activity JOIN USERS ON activity.performed_By=USERS.email ORDER BY myTimestamp DESC", ActivityDetail.class);
         return query.getResultList();
     }
     

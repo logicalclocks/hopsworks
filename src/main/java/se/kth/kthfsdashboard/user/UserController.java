@@ -48,7 +48,6 @@ public class UserController implements Serializable {
 
     List<Group> g = new ArrayList<>();
     private List<Username> filteredUsers;
-
     private List<Username> selectedUsers;
 
     private String email;
@@ -155,6 +154,15 @@ public class UserController implements Serializable {
             addErrorMessageToUserAction("Error", "Delete operation failed");
         }
         addMessage(user.getName() + " successfully removed.");
+    }
+    
+    public void deleteUser(){
+        try{
+            userFacade.removeByEmail(user.getEmail());
+        } catch(EJBException ejb){
+            addErrorMessageToUserAction("Error", "Delete operation failed.");
+        }
+        addMessage(user.getName() + "successfully removed.");
     }
 
     public void updateUser() {

@@ -9,6 +9,7 @@ package se.kth.bbc.study;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -102,22 +103,38 @@ public class StudyController {
         //select name, username from study where username='roshan@yahoo.com' UNION ALL select name, username from study where name IN (select name from StudyTeam where team_member='roshan@yahoo.com');
 
         Query query = em.createNativeQuery("SELECT name, username FROM study WHERE username=? UNION SELECT name, username FROM study WHERE name IN (SELECT name FROM StudyTeam WHERE team_member=?)",TrackStudy.class)
-                .setParameter(1, user).setParameter(2, user);
+                .setParameter(1, user).setParameter(2, user);   
         
         return query.getResultList();
     }
     
-    //SELECT name, username FROM study WHERE name IN (SELECT DISTINCT name FROM StudyTeam WHERE name NOT IN (SELECT name FROM study WHERE username=?) "
-    //            + "AND (SELECT COUNT(*) FROM study where username=?) > 0)
+    //Finds the details about all studies a user has joined
+    public List<StudyDetail> findAllStudyDetails(String useremail){
+        Query query = em.createNativeQuery("SELECT study.name as studyName, study.username as email, USERS.name as creator FROM study join USERS on study.username=USERS.email WHERE study.name IN (SELECT name FROM StudyTeam WHERE team_member=?)",StudyDetail.class)
+                .setParameter(1, useremail); 
+        return query.getResultList();
+    }
     
+    public List<StudyDetail> findAllPersonalStudyDetails(String useremail){
+        Query query = em.createNativeQuery("SELECT study.name as studyName, study.username as email, USERS.name as creator FROM study join USERS on study.username=USERS.email WHERE study.username=?",StudyDetail.class)
+                .setParameter(1, useremail); 
+        return query.getResultList();
+    }    
     
     public List<TrackStudy> findJoinedStudies(String user){
     
         //select name, username from study where name IN (select distinct name from StudyTeam where name NOT IN (select name from study where username like 'roshan%'))
         //select name, username from study where (name,username) NOT IN (select name, team_member from StudyTeam where team_member='roshan@yahoo.com')
         
-        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE (name, username) NOT IN (SELECT name, team_member FROM StudyTeam WHERE team_member=?)", TrackStudy.class)
-                .setParameter(1, user);
+        Query query = em.createNativeQuery("select study.name, study.username from (StudyTeam join study on StudyTeam.name=study.name) join USERS on study.username=USERS.email where study.username not like ? and StudyTeam.team_member like ?", TrackStudy.class)
+                .setParameter(1, user).setParameter(2, user);
+        return query.getResultList();
+    }
+    
+    public List<StudyDetail> findJoinedStudyDetails(String useremail){
+        Query query = em.createNativeQuery("SELECT study.name AS studyName, study.username AS email, USERS.name AS creator FROM (StudyTeam JOIN study ON StudyTeam.name=study.name) JOIN USERS ON study.username=USERS.email WHERE study.username NOT LIKE ? AND StudyTeam.team_member LIKE ?", StudyDetail.class)
+                .setParameter(1, useremail).setParameter(2,useremail);
+       
         return query.getResultList();
     }
     
@@ -134,8 +151,7 @@ public class StudyController {
         Query query = em.createNamedQuery("TrackStudy.findAllStudy", TrackStudy.class).setParameter("username", user);
         long res = (Long) query.getSingleResult();
         
-        if(res > 0) return true;
-                else return false;
+        return res>0;
     }
     
     

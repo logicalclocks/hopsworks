@@ -52,6 +52,7 @@ import org.apache.hadoop.io.IOUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
+import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityMB;
 
 /**
@@ -129,7 +130,7 @@ public class DatasetMB implements Serializable{
             return;
         }
         addMessage("Dataset created! ["+ dataset.getName() + "] dataset is owned by " + dataset.getOwner());
-        activity.addActivity("New Dataset Created", dataset.getName(), "DATA");
+        activity.addActivity(ActivityController.NEW_DATA, dataset.getName(), "DATA");
         mkDIRS(dataset.getOwner(), dataset.getName());
         //return "dataUpload";
     }

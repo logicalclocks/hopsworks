@@ -92,7 +92,7 @@
 
                                             <f:facet name="header" class="header-button-group">
                                                 <p:commandButton value="Allow selection" actionListener="#{userController.allowSelectedUsers}" update="@form"/>
-                                                <p:commandButton value="Deny selection" actionListener="#{userController.denySelectedUsers}" update="@form"/>
+                                                <p:commandButton value="Reject selection" actionListener="#{userController.denySelectedUsers}" update="@form"/>
                                             </f:facet>
 
                                             <p:column selectionMode="multiple" style="width:1%" disabledSelection="false"/>
@@ -117,12 +117,12 @@
 
                                             <p:column id="qctionColumn" headerText="Action" style="width:9%;">
                                                 <h:panelGrid columns="2" style="width: auto">                                                    
-                                                    <p:commandButton icon="ui-icon-closethick" action="#{userController.deleteUser(req)}" style="width:25px;" iconPos="center" update="@form">
-                                                        <p:confirm header="Deny user" message="Are you sure you want to deny this user?" icon="ui-icon-alert"/>
-                                                    </p:commandButton>
-                                                    <p:commandButton icon="ui-icon-check" action="#{userController.allowUser(req)}" style="width:25px;" iconPos="center" update="@form">
-                                                        <p:confirm header="Allow user" message="Allow selected user?" icon="ui-icon-help"/>
-                                                    </p:commandButton>
+                                                    <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{userController.deleteUser(req)}" update="@form">
+                                                        <p:confirm header="Reject user" message="Are you sure you want to reject this user?" icon="ui-icon-alert"/>
+                                                    </p:commandLink>
+                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" action="#{userController.allowUser(req)}" update="@form">
+                                                        <p:confirm header="Allow user" message="Allow selected user?" icon="ui-icon-alert"/>
+                                                    </p:commandLink>
                                                 </h:panelGrid>
                                             </p:column>
                                         </p:dataTable>
