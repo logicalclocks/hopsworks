@@ -6,7 +6,6 @@
 
 package se.kth.bbc.activity;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -62,6 +61,12 @@ public class ActivityController {
     public List<UserActivity> activityOnstudy(String activityOn){
     
         Query query = em.createNamedQuery("UserActivity.findByActivityOn", UserActivity.class).setParameter("activityOn", activityOn);
+        return query.getResultList();
+    }
+    
+    public List<ActivityDetail> activityDetailOnStudy(String studyName){
+        Query query = em.createNativeQuery("SELECT id, performed_By AS email, USERS.name AS author, activity, activity_on AS studyName, timestamp AS myTimestamp FROM activity JOIN USERS ON activity.performed_By=USERS.email WHERE activity.activity_on = ? ORDER BY myTimestamp DESC", ActivityDetail.class);
+        query.setParameter(1, studyName);
         return query.getResultList();
     }
     
