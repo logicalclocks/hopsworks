@@ -72,8 +72,12 @@ public class ActivityMB implements Serializable {
         this.activity = activity;
     }
 
-    public List<UserActivity> getAcvitiyList() {
+    public List<UserActivity> getActivityList() {
         return activityController.filterActivity();
+    }
+    
+    public List<ActivityDetail> getActivityDetailList() {
+        return activityController.filterActivityDetail();
     }
 
     public List<UserActivity> getActivityOnstudy(String activityOn) {

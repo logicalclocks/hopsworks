@@ -70,7 +70,7 @@ public class StudyMB implements Serializable {
 
     @EJB
     private SampleIdController sampleIDController;
-    
+
     @EJB
     private SampleFilesController sampleFilesController;
 
@@ -99,8 +99,8 @@ public class StudyMB implements Serializable {
 
     //private UIInput newTeamRole;
     private int manTabIndex = SHOW_TAB;
-    
-     private TreeNode root;
+
+    private TreeNode root;
 
     @PostConstruct
     public void init() {
@@ -111,7 +111,7 @@ public class StudyMB implements Serializable {
     public void setActivity(ActivityMB activity) {
         this.activity = activity;
     }
-    
+
     public List<Username> getUsersNameList() {
         return userFacade.findAllUsers();
     }
@@ -120,14 +120,14 @@ public class StudyMB implements Serializable {
         return usernames;
     }
 
-     public TreeNode getRoot() {
+    public TreeNode getRoot() {
         return root;
     }
 
     public void setRoot(TreeNode t) {
         this.root = t;
     }
-    
+
     public String getStudyName() {
         return studyName;
     }
@@ -258,8 +258,8 @@ public class StudyMB implements Serializable {
         return studyController.findAll();
     }
 
-    public List<TrackStudy> getPersonalStudy() {
-        return studyController.findByUser(getUsername());
+    public List<StudyDetail> getPersonalStudy() {
+        return studyController.findAllPersonalStudyDetails(getUsername());
     }
 
     public long getAllStudy() {
@@ -335,7 +335,7 @@ public class StudyMB implements Serializable {
     private HttpServletResponse getResponse() {
         return (HttpServletResponse) FacesContext.getCurrentInstance().getExternalContext().getResponse();
     }
-    
+
     public String getUsername() {
         return getRequest().getUserPrincipal().getName();
     }
@@ -369,7 +369,7 @@ public class StudyMB implements Serializable {
         //}
         return reOrder;
     }
-    
+
     public SampleFileTypes[] getFileType() {
         return SampleFileTypes.values();
     }
@@ -481,18 +481,12 @@ public class StudyMB implements Serializable {
         return studyTeamController.findMembersByStudy(studyName);
     }
 
-    public List<TrackStudy> getAllStudiesPerUser() {
-        return studyController.findAllStudies(getUsername());
+    public List<StudyDetail> getAllStudiesPerUser() {
+        return studyController.findAllStudyDetails(getUsername());
     }
 
-    public List<TrackStudy> getJoinedStudies() {
-        boolean check = studyController.checkForStudyOwnership(getUsername());
-
-        if (check) {
-            return studyController.findJoinedStudies(getUsername());
-        } else {
-            return studyController.QueryForNonRegistered(getUsername());
-        }
+    public List<StudyDetail> getJoinedStudies() {
+        return studyController.findJoinedStudyDetails(getUsername());
     }
 
     public List<StudyTeam> getTeamList() {
@@ -530,7 +524,7 @@ public class StudyMB implements Serializable {
         study.setTimestamp(new Date());
         try {
             studyController.persistStudy(study);
-            activity.addActivity("new study created", study.getName(), "STUDY");
+            activity.addActivity(ActivityController.CREATED_STUDY, study.getName(), "STUDY");
             addStudyMaster(study.getName());
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Failed: Study already exists!");
@@ -568,7 +562,7 @@ public class StudyMB implements Serializable {
             }
         }
         //initialize the file browser
-        initTreeTable();       
+        initTreeTable();
 
         return "studyPage";
 //        if (stList.iterator().hasNext()){
@@ -630,7 +624,7 @@ public class StudyMB implements Serializable {
                 st.setTimestamp(new Date());
                 st.setTeamRole(studyTeamEntry.getTeamRole());
                 studyTeamController.persistStudyTeam(st);
-                activity.addActivity("added new member " + t.getName() + " ", studyName, "STUDY");
+                activity.addActivity(ActivityController.NEW_MEMBER + t.getName() + " ", studyName, "STUDY");
             }
 
             if (!getSelectedUsernames().isEmpty()) {
@@ -651,17 +645,17 @@ public class StudyMB implements Serializable {
     public void addSample() throws IOException {
 
         boolean rec = sampleIDController.checkForExistingIDs(getSampleID(), studyName);
-     
+
         try {
             if (!rec) {
 
                 SampleIdsPK idPK = new SampleIdsPK(getSampleID(), studyName);
                 SampleIds samId = new SampleIds(idPK);
                 sampleIDController.persistSample(samId);
-                activity.addActivity("added new sample " + getSampleID() + " ", studyName, "DATA");
+                activity.addActivity(ActivityController.NEW_SAMPLE + getSampleID() + " ", studyName, "DATA");
 
                 addMessage("New Sample Added: " + getSampleID());
-                getResponse().sendRedirect(getRequest().getContextPath()+"/bbc/uploader/sampleUploader.jsp");
+                getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
                 FacesContext.getCurrentInstance().responseComplete();
                 
             } else {
@@ -792,18 +786,21 @@ public class StudyMB implements Serializable {
         TrackStudy item = studyController.findByName(studyName);
         return item == null;
     }
-    
-    private void initTreeTable(){
+
+    private void initTreeTable() {
         List<SampleIds> samples = sampleIDController.findAllByStudy(studyName);
-        root = new DefaultTreeNode(new FileSummary("root","",false), null);
-        TreeNode studyRoot = new DefaultTreeNode(new FileSummary(studyName,"",false),root);
-        for(SampleIds sam: samples){
-            TreeNode node = new DefaultTreeNode(new FileSummary(sam.getSampleIdsPK().getId(),"",false),studyRoot);
+        root = new DefaultTreeNode(new FileSummary("root", "", false), null);
+        TreeNode studyRoot = new DefaultTreeNode(new FileSummary(studyName, "", false), root);
+        for (SampleIds sam : samples) {
+            TreeNode node = new DefaultTreeNode(new FileSummary(sam.getSampleIdsPK().getId(), "", false), studyRoot);
             List<SampleFiles> files = sampleFilesController.findAllById(sam.getSampleIdsPK().getId());
-            for(SampleFiles file: files){
-                TreeNode leaf = new DefaultTreeNode(new FileSummary(file.getSampleFilesPK().getFilename(),file.getStatus(),true),node);
+            for (SampleFiles file : files) {
+                TreeNode leaf = new DefaultTreeNode(new FileSummary(file.getSampleFilesPK().getFilename(), file.getStatus(), true), node);
             }
         }
+    }
+
+    public void download() {
     }
 
 }

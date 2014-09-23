@@ -21,6 +21,7 @@ import javax.faces.component.UIOutput;
 import javax.faces.context.FacesContext;
 import javax.faces.event.AjaxBehaviorEvent;
 import javax.faces.event.ValueChangeEvent;
+import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityMB;
 
 
@@ -71,7 +72,7 @@ public class ValueChangeMB implements Serializable {
 
         try {
             studyTeamController.updateTeamRole(studyMB.getStudyName(), email, getNewTeamRole());
-            activity.addActivity("changed team role of " + email + " to " + getNewTeamRole(), studyMB.getStudyName(), "TEAM");
+            activity.addActivity(ActivityController.CHANGE_ROLE + email + " to " + getNewTeamRole(), studyMB.getStudyName(), "TEAM");
         } catch (Exception ejb) {
             //addErrorMessageToUserAction("Error: Update failed.");
             return "Failed";
@@ -87,13 +88,14 @@ public class ValueChangeMB implements Serializable {
         try {
 
             studyTeamController.removeStudyTeam(studyMB.getStudyName(), email);
-            activity.addActivity("team member " + email + " deleted ", studyMB.getStudyName(), "TEAM");
+            activity.addActivity(ActivityController.REMOVED_MEMBER + email, studyMB.getStudyName(), "TEAM");
 
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Deleting team member failed.");
             return null;
         }
-            addMessage("Team member " + email + " deleted from study " + studyMB.getStudyName());
+            addMessage("Team member " + email + " deleted from study " + studyMB.getStudyName());            
+            studyMB.setManTabIndex(StudyMB.TEAM_TAB);
             return "studyPage";
 
     }
