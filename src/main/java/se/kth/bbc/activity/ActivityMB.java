@@ -83,6 +83,10 @@ public class ActivityMB implements Serializable {
     public List<UserActivity> getActivityOnstudy(String activityOn) {
         return activityController.activityOnstudy(activityOn);
     }
+    
+    public List<ActivityDetail> getActivityDetailOnStudy(String studyName){
+        return activityController.activityDetailOnStudy(studyName);
+    }
 
     public String findLastActivity(int id) {
 

@@ -16,8 +16,8 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
 
     public FileSummary(String name, String status, boolean isFile) {
         this.name = name;
-        this.status = status;
         this.file = isFile;
+        this.status = status;
     }
 
     public String getName() {
@@ -27,20 +27,33 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
     public void setName(String name) {
         this.name = name;
     }
-    
+
+    public String getDisplayStatus() {
+        switch (status) {
+            case "available":
+                return "Available";
+            case "copying_to_hdfs":
+                return "Copying to HDFS";
+            case "uploading":
+                return "Uploading";
+            default:
+                return "Unknown";
+        }
+    }
+
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
-    } 
-    
-    public boolean isFile(){
+    }
+
+    public boolean isFile() {
         return file;
     }
-    
-    public void setFile(boolean file){
+
+    public void setFile(boolean file) {
         this.file = file;
     }
 
