@@ -561,7 +561,7 @@
                                                     <h:outputText value="#{document.name}" />
                                                 </p:column>
                                                 <p:column headerText="Status">
-                                                    <h:outputText value="#{document.status}" />
+                                                    <h:outputText value="#{document.displayStatus}" />
                                                 </p:column>
                                                 <p:column style="width:15px" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                     <p:commandLink title="Download" styleClass="ui-icon ui-icon-arrowthick-1-s" disabled="#{!document.file}" actionListener="#{studyManagedBean.download()}"/>
