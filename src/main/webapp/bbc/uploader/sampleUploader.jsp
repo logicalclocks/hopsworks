@@ -63,6 +63,9 @@
       
       <ul class="resumable-list"></ul>
 
+      <a href="../lims/studyPage.xhtml">
+            <input type="button" value="Check Uploaded Samples"/>
+     </a>
       
       <script>
         var r = new Resumable({
@@ -93,7 +96,7 @@
               $('.resumable-progress .progress-resume-link').hide();
               $('.resumable-progress .progress-pause-link').show();
               // Add the file to the list
-              $('.resumable-list').append('<li class="resumable-file-'+file.uniqueIdentifier+'">Uploading   <span class="resumable-file-name"></span>....<span class="resumable-file-progress"></span>');
+              $('.resumable-list').append('<li class="resumable-file-'+file.uniqueIdentifier+'">Uploading <span class="resumable-file-name"></span>....<span class="resumable-file-progress"></span>');
               $('.resumable-file-'+file.uniqueIdentifier+' .resumable-file-name').html(file.fileName);
               // Actually start the upload
               r.upload();

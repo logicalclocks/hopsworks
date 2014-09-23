@@ -31,6 +31,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
@@ -58,8 +59,8 @@ import se.kth.bbc.activity.ActivityMB;
  *
  * @author roshan
  */
-@ManagedBean(name = "datasetMBean", eager = true)
-@RequestScoped
+@ManagedBean(name = "datasetMBean")
+@SessionScoped
 public class DatasetMB implements Serializable{
     
     @EJB
@@ -117,7 +118,7 @@ public class DatasetMB implements Serializable{
     }
     
     
-    public void createDataset()throws IOException, URISyntaxException{
+    public void createDataset() throws IOException, URISyntaxException{
         
         dataset.setOwner(getUsername());
         dataset.setTimestamp(new Timestamp(new Date().getTime()));
@@ -130,7 +131,7 @@ public class DatasetMB implements Serializable{
         }
         addMessage("Dataset created! ["+ dataset.getName() + "] dataset is owned by " + dataset.getOwner());
         activity.addActivity("New Dataset Created", dataset.getName(), "DATA");
-        mkDIRS(dataset.getOwner(), dataset.getName());
+        mkDIRS(dataset.getOwner(), "fuck");
         //return "dataUpload";
     }
     
@@ -191,7 +192,7 @@ public class DatasetMB implements Serializable{
             
          } catch(IOException ioe){
             System.err.println("IOException during operation"+ ioe.getMessage());
-            System.exit(1);
+            return;
          }finally {
                 fs.close();
         }
