@@ -44,7 +44,7 @@ public class ResumableInfo {
     }
 
     //Chunks uploaded
-    public HashSet<ResumableChunkNumber> uploadedChunks = new HashSet<ResumableChunkNumber>();
+    public HashSet<ResumableChunkNumber> uploadedChunks = new HashSet<>();
 
     public String resumableFilePath;
 

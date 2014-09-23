@@ -55,6 +55,7 @@ public class StudyMB implements Serializable {
     private static final long serialVersionUID = 1L;
     public static final int TEAM_TAB = 1;
     public static final int SHOW_TAB = 0;
+    public static final String PROP_DATASETMB = "datasetMB";
 
     @EJB
     private StudyController studyController;
@@ -76,6 +77,9 @@ public class StudyMB implements Serializable {
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
+    
+    @ManagedProperty(value = "#{datasetMBean}")
+    private DatasetMB datasetMB;
 
     private TrackStudy study;
     private DatasetStudy dsStudy;
@@ -655,6 +659,7 @@ public class StudyMB implements Serializable {
                 activity.addActivity(ActivityController.NEW_SAMPLE + getSampleID() + " ", studyName, "DATA");
 
                 addMessage("New Sample Added: " + getSampleID());
+                getRequest().getSession().setAttribute(PROP_DATASETMB, datasetMB);
                 getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
                 FacesContext.getCurrentInstance().responseComplete();
                 return "Success!";
@@ -670,6 +675,10 @@ public class StudyMB implements Serializable {
             addErrorMessageToUserAction("Error: Failed");
             return null;
         }
+    }
+    
+    public void setDatasetMB(DatasetMB dmb){
+        this.datasetMB = dmb;
     }
 
     public void itemSelect(SelectEvent e) {

@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import se.kth.bbc.study.DatasetMB;
+import se.kth.bbc.study.StudyMB;
 
 /**
  * by fanxu
@@ -85,13 +86,14 @@ public class UploadServlet extends HttpServlet {
         }
         
         //Invoke DatasetMB in order to copy data to HDFS
-        //DatasetMB dataMB = (DatasetMB) request.getSession().getAttribute("datasetMBean"); 
+        //DatasetMB dataMB = (DatasetMB) request.getSession().getAttribute("datasetMBean");
+        DatasetMB dataMB = (DatasetMB) request.getAttribute(StudyMB.PROP_DATASETMB);
         
-//        try{
-//            dataMB.createDataset();
-//        } catch(URISyntaxException uri){
-//            System.out.println("uri error "+ uri.getMessage());
-//        }
+       try{
+            dataMB.createDataset();
+        } catch(URISyntaxException uri){
+            System.out.println("uri error "+ uri.getMessage());
+       }
         
         
         

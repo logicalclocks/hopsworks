@@ -60,7 +60,7 @@ import se.kth.bbc.activity.ActivityMB;
  * @author roshan
  */
 @ManagedBean(name = "datasetMBean", eager = true)
-@RequestScoped
+@SessionScoped
 public class DatasetMB implements Serializable{
     
     @EJB
