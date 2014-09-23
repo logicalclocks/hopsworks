@@ -5,8 +5,13 @@
  */
 package se.kth.bbc.study;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
+import java.net.URISyntaxException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -27,6 +32,11 @@ import javax.faces.event.ValueChangeEvent;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
 import org.primefaces.component.tabview.TabView;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
@@ -55,7 +65,8 @@ public class StudyMB implements Serializable {
     private static final long serialVersionUID = 1L;
     public static final int TEAM_TAB = 1;
     public static final int SHOW_TAB = 0;
-    public static final String PROP_DATASETMB = "datasetMB";
+
+    public final String nameNodeURI = "hdfs://localhost:9999";
 
     @EJB
     private StudyController studyController;
@@ -77,9 +88,6 @@ public class StudyMB implements Serializable {
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
-    
-    @ManagedProperty(value = "#{datasetMBean}")
-    private DatasetMB datasetMB;
 
     private TrackStudy study;
     private DatasetStudy dsStudy;
@@ -100,12 +108,15 @@ public class StudyMB implements Serializable {
     private String newRole;
     private String owner;
     private int tabIndex;
+    private String loginName;
 
     //private UIInput newTeamRole;
     private int manTabIndex = SHOW_TAB;
 
     private TreeNode root;
 
+    public StudyMB(){}
+    
     @PostConstruct
     public void init() {
         initTreeTable();
@@ -124,6 +135,14 @@ public class StudyMB implements Serializable {
         return usernames;
     }
 
+    public String getLoginName(){
+        return loginName;
+    }
+    
+    public void setLoginName(String loginName){
+        this.loginName = loginName;
+    }
+    
     public TreeNode getRoot() {
         return root;
     }
@@ -376,6 +395,10 @@ public class StudyMB implements Serializable {
 
     public SampleFileTypes[] getFileType() {
         return SampleFileTypes.values();
+    }
+
+    public SampleFileStatus[] getFileStatus() {
+        return SampleFileStatus.values();
     }
 
     public long countAllMembersPerStudy() {
@@ -657,15 +680,15 @@ public class StudyMB implements Serializable {
                 SampleIds samId = new SampleIds(idPK);
                 sampleIDController.persistSample(samId);
                 activity.addActivity(ActivityController.NEW_SAMPLE + getSampleID() + " ", studyName, "DATA");
-
-                addMessage("New Sample Added: " + getSampleID());
-                getRequest().getSession().setAttribute(PROP_DATASETMB, datasetMB);
+                //System.out.println("Session id from bean "+getRequest().getSession().getId());
                 getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
                 FacesContext.getCurrentInstance().responseComplete();
-                
-            } else {
 
-                getResponse().sendRedirect(getRequest().getContextPath()+"/bbc/uploader/sampleUploader.jsp");
+            } else {
+                
+               
+                //System.out.println("Session id from bean "+getRequest().getSession().getId());
+                getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
                 FacesContext.getCurrentInstance().responseComplete();
             }
 
@@ -674,10 +697,88 @@ public class StudyMB implements Serializable {
             addErrorMessageToUserAction("Error: Transaction failed");
         }
     }
-    
-    public void setDatasetMB(DatasetMB dmb){
-        this.datasetMB = dmb;
+
+    public void createSampleFiles(String fileName, String fileType) throws IOException, URISyntaxException {
+
+        boolean rec = sampleFilesController.checkForExistingSampleFiles(getSampleID(), fileName);
+        
+        try {
+            if(!rec) {
+                    SampleFilesPK smPK = new SampleFilesPK(getSampleID(), fileName);
+                    SampleFiles sf = new SampleFiles(smPK);
+                    sf.setFileType(fileType);
+                    sf.setStatus(SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
+                    sampleFilesController.persistSampleFiles(sf);
+                    activity.addSampleActivity(ActivityController.NEW_SAMPLE +"[" + fileName +"]" + " file ", studyName, "DATA", getCreator());
+            }
+                    
+        } catch (EJBException ejb) {
+            addErrorMessageToUserAction("Error: Sample file wasn't created.");
+            return;
+        }
+            mkDIRS(fileType,fileName);
     }
+
+    //Creating directory structure in HDFS
+    public void mkDIRS(String fileType, String fileName) throws IOException, URISyntaxException {
+
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", this.nameNodeURI);
+        String rootDir = getCreator().split("@")[0].trim();
+
+        String buildPath = File.separator + rootDir + File.separator + studyName;
+        FileSystem fs = FileSystem.get(conf);
+        Path path = new Path(buildPath);
+
+        try {
+            if (fs.exists(path)) {
+                Path.mergePaths(path, new Path(File.separator+getSampleID()+File.separator+fileType.toUpperCase().trim()));
+                //addMessage("Dataset directory created!" + "/" + getSampleID());
+                //Path fullPath = new Path(path, new Path(File.separator+getSampleID()+File.separator+fileType.toUpperCase().trim()));
+                copyFromLocal(fileType, fileName);
+            }
+                fs.mkdirs(path.suffix(File.separator+getSampleID()+File.separator+fileType.toUpperCase().trim()), null);
+                copyFromLocal(fileType, fileName);
+                
+               
+                //copyFromLocal()
+                //addMessage("Sample file directory created!" + buildPath);
+//                FileStatus[] files = fs.listStatus(path);
+//                    for(FileStatus file: files){
+//                        System.out.println(file.getPath().getName());
+//                }
+
+        } catch (IOException ioe) {
+            System.err.println("IOException during operation" + ioe.getMessage());
+        } finally {
+            fs.close();
+        }
+
+    }
+    
+     //Copy file to HDFS 
+    public void copyFromLocal(String fileType, String filename) throws IOException, URISyntaxException {
+        
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", this.nameNodeURI);
+        FileSystem fs = FileSystem.get(conf);
+        
+        String rootDir = getCreator().split("@")[0].trim();
+        String buildPath = File.separator + rootDir + File.separator + studyName;
+        
+        File fileToRead = new File("/home/glassfish/data"+File.separator+filename);
+        System.out.println("Path to read "+fileToRead.toString());
+        Path build = new Path(buildPath+File.separator+getSampleID()+File.separator+fileType.toUpperCase().trim()+File.separator+filename);
+        
+        
+        InputStream is = new FileInputStream(fileToRead);
+        FSDataOutputStream os = fs.create(build, false);
+        IOUtils.copyBytes(is, os, 131072, true);
+        System.out.println("Copied to hdfs "+ build.toString());
+        
+       
+    }
+    
 
     public void itemSelect(SelectEvent e) {
         if (getSelectedUsernames().isEmpty()) {

@@ -157,8 +157,27 @@ public class ActivityMB implements Serializable {
             logger.log(Level.SEVERE, " Add new activity for new study failed!");
             return;
         }
-        logger.log(Level.FINE, " Add new activity for new study successful: {0}", activity.getId());
+            logger.log(Level.FINE, " Add new activity for new study successful: {0}", activity.getId());
     }
+    
+    public void addSampleActivity(String message, String activityAbout, String flag, String username) {
+
+        activity.setId(Integer.SIZE);
+        activity.setActivity(message);
+        activity.setPerformedBy(username);
+        activity.setTimestamp(new Date());
+        activity.setFlag(flag);
+        activity.setActivityOn(activityAbout);
+
+        try {
+            activityController.persistActivity(activity);
+        } catch (EJBException ejb) {
+            logger.log(Level.SEVERE, " Add new activity for new study failed!");
+            return;
+        }
+            logger.log(Level.FINE, " Add new activity for new study successful: {0}", activity.getId());
+    }
+    
 
     public List<UserActivity> getAllTeamActivity() {
         return activityController.findAllTeamActivity(getFlag());

@@ -28,7 +28,7 @@ import se.kth.bbc.study.StudyMB;
  */
 public class UploadServlet extends HttpServlet {
 
-    public static final String UPLOAD_DIR = "/tmp/upload";
+    public static final String UPLOAD_DIR = "/home/glassfish/data";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -79,12 +79,20 @@ public class UploadServlet extends HttpServlet {
             response.getWriter().print("Upload");
         }
         
-        //Invoke DatasetMB in order to copy data to HDFS
-        //DatasetMB dataMB = (DatasetMB) request.getSession().getAttribute("datasetMBean");
-        DatasetMB dataMB = (DatasetMB) request.getAttribute(StudyMB.PROP_DATASETMB);
+        int extPos = info.resumableFilename.lastIndexOf(".");
+        if (extPos == -1) { return;}
+        String fileType = info.resumableFilename.substring(extPos+1);
+        
+        StudyMB studyMB = (StudyMB) request.getSession().getAttribute("studyManagedBean");
+        
+        if(studyMB == null){
+            studyMB = new StudyMB();
+            request.setAttribute("studyMB", studyMB);
+        }
+        //System.out.println("Session id "+request.getSession().getId());
         
        try{
-            dataMB.createDataset();
+            studyMB.createSampleFiles(info.resumableFilename, fileType);
         } catch(URISyntaxException uri){
             System.out.println("uri error "+ uri.getMessage());
        }

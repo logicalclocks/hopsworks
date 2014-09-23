@@ -33,4 +33,24 @@ public class SampleFilesController {
         TypedQuery<SampleFiles> query = em.createNamedQuery("SampleFiles.findById", SampleFiles.class).setParameter("id", id);
         return query.getResultList();
     }
+    
+    
+    public void persistSampleFiles(SampleFiles sampleFiles){
+        em.persist(sampleFiles);
+    }
+
+    public SampleFiles findByPrimaryKey(String id, String filename) {
+        return em.find(SampleFiles.class, new SampleFiles(new SampleFilesPK(id, filename)).getSampleFilesPK());
+    }
+
+    public boolean checkForExistingSampleFiles(String id, String filename) {
+        SampleFiles checkedFile = findByPrimaryKey(id, filename);
+        if (checkedFile != null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    
 }

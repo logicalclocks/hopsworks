@@ -77,6 +77,16 @@ public class DatasetMB implements Serializable{
     @ManagedProperty(value="#{activityBean}")
     private ActivityMB activity;
     
+    private String username;
+    
+    public void setUsername(String username){
+        this.username = username;
+    }
+    
+    public String getUsername2(){
+        return username;
+    }
+    
     @PostConstruct
     public void init(){
        activity.getActivity();
@@ -121,7 +131,7 @@ public class DatasetMB implements Serializable{
     
     public void createDataset() throws IOException, URISyntaxException{
         
-        dataset.setOwner(getUsername());
+        dataset.setOwner(username);
         dataset.setTimestamp(new Timestamp(new Date().getTime()));
       
         try{
