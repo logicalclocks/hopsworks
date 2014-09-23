@@ -739,14 +739,6 @@ public class StudyMB implements Serializable {
             }
                 fs.mkdirs(path.suffix(File.separator+getSampleID()+File.separator+fileType.toUpperCase().trim()), null);
                 copyFromLocal(fileType, fileName);
-                
-               
-                //copyFromLocal()
-                //addMessage("Sample file directory created!" + buildPath);
-//                FileStatus[] files = fs.listStatus(path);
-//                    for(FileStatus file: files){
-//                        System.out.println(file.getPath().getName());
-//                }
 
         } catch (IOException ioe) {
             System.err.println("IOException during operation" + ioe.getMessage());
