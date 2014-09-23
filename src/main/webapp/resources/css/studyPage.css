@@ -12,17 +12,17 @@ and open the template in the editor.
     //font-size: 70% !important;
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-size: 12px;
-    
-    
+
+
 }
 
 
 .ui-tabs{
-    
-     width: 1170px !important;
-     display: block;
-     height: auto;
-     padding: 0em !important;
+
+    width: 1170px !important;
+    display: block;
+    height: auto;
+    padding: 0em !important;
 }
 
 .ui-tabs .ui-tabs-nav{
@@ -42,14 +42,14 @@ and open the template in the editor.
 }
 
 .ui-tabs .ui-tabs-panel .ui-widget-content li{
-     line-height: 20px;
-     float: left;
-     display: block;
-     height: auto;
-     margin-bottom: -1px;
-     
- }
- 
+    line-height: 20px;
+    float: left;
+    display: block;
+    height: auto;
+    margin-bottom: -1px;
+
+}
+
 .ui-tabs .ui-tabs-nav li.ui-tabs-selected { 
     padding-bottom: 0; 
     border-right-width: 1px; 
@@ -57,73 +57,73 @@ and open the template in the editor.
 }
 
 .ui-tabs .ui-tabs-panels{
-     display: block;
-     width: 1170px !important;
-     min-height: 100%;
-     height: auto !important; 
-     margin: 0 0 0 0 !important;
-     padding-bottom: 0px !important;
-     padding-left: 0px !important;
-     padding-right: 0px !important;
-     padding-top: 0px !important;
-
-/*    display: inline-block;
+    display: block;
     width: 1170px !important;
     min-height: 100%;
-    height: auto;
-    margin: 0 0 0 0;
-    padding: 0 0 0 0;
-    float: left;*/
+    height: auto !important; 
+    margin: 0 0 0 0 !important;
+    padding-bottom: 0px !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+    padding-top: 0px !important;
+
+    /*    display: inline-block;
+        width: 1170px !important;
+        min-height: 100%;
+        height: auto;
+        margin: 0 0 0 0;
+        padding: 0 0 0 0;
+        float: left;*/
 
 
 }
 
 .ui-tabs .ui-tabs-panel{
-     position: relative; 
-     display: block;
-     width: 1170px !important;
-     min-height: 100%;
-     height: auto; 
-     margin: 0 !important;
-     padding: 0 !important;
-     zoom:1;
+    position: relative; 
+    display: block;
+    width: 1170px !important;
+    min-height: 100%;
+    height: auto; 
+    margin: 0 !important;
+    padding: 0 !important;
+    zoom:1;
 
-/*    float: left;
-    display: list-item;
-    text-align: left;
-    background-color: #FFF;
-    padding: 10px 10px 10px 10px;
-    min-height: 18px;
-    width: 1148px;
-    height: 42px;
-    list-style: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.0470588);
-    text-align: -webkit-match-parent;*/
+    /*    float: left;
+        display: list-item;
+        text-align: left;
+        background-color: #FFF;
+        padding: 10px 10px 10px 10px;
+        min-height: 18px;
+        width: 1148px;
+        height: 42px;
+        list-style: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.0470588);
+        text-align: -webkit-match-parent;*/
 
 
 
-/*     width: 1148px;
-    height: 46px;
-    background-color: #FFF;
-    padding: 10px 10px 10px 10px;
-    min-height: 20px;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    border-bottom-width: 1px;
-    border-bottom-style: solid;
-    border-bottom-color: rgba(0, 0, 0, 0.0470588);
-    list-style: none;
-    display: list-item;
-    text-align: -webkit-match-parent;
-    float: left;
+    /*     width: 1148px;
+        height: 46px;
+        background-color: #FFF;
+        padding: 10px 10px 10px 10px;
+        min-height: 20px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        border-bottom-width: 1px;
+        border-bottom-style: solid;
+        border-bottom-color: rgba(0, 0, 0, 0.0470588);
+        list-style: none;
+        display: list-item;
+        text-align: -webkit-match-parent;
+        float: left;
     */
-    
+
 }
 
 .ui-tabs .ui-widget-content{
-     height: auto  !important; 
-     margin: 0 0 0 0;
-     padding: 0 0 0 0;
-    
+    height: auto  !important; 
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+
 }
 
 .ui-tabs-panel.disabled{color:#888;}
@@ -145,46 +145,34 @@ and open the template in the editor.
 .BbcMainLayoutStudy .ui-layout-unit-content{
     min-height: 1500px;
     height: auto !important;
-    
+
 }
 /*.BbcMainLayoutStudy::-webkit-scrollbar {
      display: none;
 }*/
 
 .span5 .ui-button{
-    background: linear-gradient(rgb(252, 141, 131) 5%, rgb(228, 104, 93) 100%) rgb(252, 141, 131);
+    font-size: 11px;
+    padding: 2px 6px;
+    line-height: 16px;
+    margin: 2px;
+    border-color: #BD362F;
+    color: #FFF;
+    text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+    background-color: #DB4F4A;
+    background-image: linear-gradient(to bottom, #EE5F5B, #BD362F);
+    background-repeat: repeat-x;
     display: inline-block;
     text-align: center;
     vertical-align: middle;
     cursor: pointer;
-    border: 1px solid rgb(216, 53, 38);
-    background-image: initial;
-    background-position-x: initial;
-    background-position-y: initial;
-    background-size: initial;
-    background-repeat-x: initial;
-    background-repeat-y: initial;
-    background-attachment: initial;
-    background-origin: initial;
-    background-clip: initial;
-    background: #da4f49;
-    text-decoration: none;
-    text-shadow: rgb(178, 62, 53) 0px 1px 0px;
-    line-height: 14px;
-    margin: 2px;
-    -webkit-box-shadow: none;
-    -moz-box-shadow: none;
-    box-shadow: none;
-    -webkit-transition-property: background;
-    -moz-transition-property: background;
-    -o-transition-property: background;
-    transition-property: background;
-    -webkit-transition-duration: 0.3s;
-    -moz-transition-duration: 0.3s;
-    -o-transition-duration: 0.3s;
-    transition-duration: 0.3s;
-    
-
+    border-width: 1px;
+    border-style: solid;
+    border-image: none;
+    border-radius: 4px;
+    box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px 1px 2px rgba(0, 0, 0, 0.05);
+    font-family: 'FontAwesome';
+    font-style: normal;   
 }
 
 .span5 .ui-button .ui-widget-content{
@@ -192,8 +180,8 @@ and open the template in the editor.
 }
 
 .span5 .ui-button:hover {
-       //color:#333;
-        background: #FF530D;
+    //color:#333;
+    background: #FF530D;
 }
 
 .ui-dialog .ui-widget-content {
@@ -207,7 +195,7 @@ and open the template in the editor.
     background-image: none;
     margin: .5em 0 0 0;
     padding: .3em 1em .5em .4em;
-    
+
 }
 
 .ui-dialog .ui-dialog-titlebar {

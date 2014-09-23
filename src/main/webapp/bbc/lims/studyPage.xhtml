@@ -16,7 +16,7 @@
             <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/studyPage.css']}" />
             <link rel="stylesheet" type="text/css" href="resumable.css" />
-
+            <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
         </h:head>
         <h:body>
             <ui:insert name="titleBar" >
@@ -152,9 +152,9 @@
                                                                         </div>
                                                                         <div class="right" align="right">
                                                                             <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                                            <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"> 
-                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert" />
-                                                                            </p:commandButton>
+                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
+                                                                            </p:commandLink>
                                                                             <p:confirmDialog id="currentUser_master_${mst.count}" global="true" severity="alert" showEffect="fade"> 
                                                                                 <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
                                                                                 <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/> 
@@ -229,9 +229,9 @@
                                                                             </h:form>
                                                                         </div>
                                                                         <div class="right" align="right">
-                                                                            <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert" />
-                                                                            </p:commandButton>
+                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
+                                                                            </p:commandLink>
                                                                             <p:confirmDialog id="notCurrentUserNOwner_master_${mst.count}" global="true" severity="alert" showEffect="fade"> 
                                                                                 <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" />   
                                                                                 <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
@@ -285,9 +285,9 @@
                                                                             </h:form>
                                                                         </div>
                                                                         <div class="right" align="right">
-                                                                            <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
+                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
                                                                                 <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
-                                                                            </p:commandButton>
+                                                                            </p:commandLink>
                                                                             <p:confirmDialog id="notCurrentUser_researcher_${rchs.count}"  global="true" severity="alert" showEffect="fade"> 
                                                                                 <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" />   
                                                                                 <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
@@ -329,9 +329,9 @@
                                                                         </div>
                                                                         <div class="right" align="right">
                                                                             <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                                            <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert" />
-                                                                            </p:commandButton>
+                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
+                                                                            </p:commandLink>
                                                                             <p:confirmDialog id="currentUser_researcher_${rchs.count}" global="true" severity="alert" showEffect="fade"> 
                                                                                 <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
                                                                                 <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
@@ -489,9 +489,9 @@
                                                                             </h:form>
                                                                         </div>
                                                                         <div class="right" align="right">
-                                                                            <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(alist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{alist.name} [#{alist.email}]?" icon="ui-icon-alert"/>
-                                                                            </p:commandButton>
+                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
+                                                                            </p:commandLink>
                                                                             <p:confirmDialog id="notCurrentUser_guest_${aud.count}" global="true" severity="alert" showEffect="fade"> 
                                                                                 <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
                                                                                 <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
@@ -533,9 +533,9 @@
                                                                         </div>
                                                                         <div class="right" align="right">
                                                                             <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                                            <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(alist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                                                <p:confirm  header="Removing a team member" message="Are you sure you want to remove the user #{alist.name} [#{alist.email}]?" icon="ui-icon-alert" />
-                                                                            </p:commandButton>
+                                                                            <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                                                <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
+                                                                            </p:commandLink>
                                                                             <p:confirmDialog id="currentUser_guest_${aud.count}" global="true" severity="alert" showEffect="fade"> 
                                                                                 <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
                                                                                 <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   

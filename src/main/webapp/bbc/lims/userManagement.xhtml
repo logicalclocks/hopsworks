@@ -14,6 +14,7 @@
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+            <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
         </h:head>
 
         <h:body>
@@ -52,9 +53,9 @@
 
 
                                             <p:column id="removeColumn" style="width:4%;">
-                                                <p:commandButton icon="ui-icon-closethick" action="#{userController.deleteUser(user)}" style="width:25px;" iconPos="center" update="@form">
+                                                <p:commandLink styleClass="ui-button-remove fa fa-minus"  value="" action="#{userController.deleteUser(user)}" update="@form">
                                                     <p:confirm header="Remove user" message="Are you sure you want to remove this user?" icon="ui-icon-alert"/>
-                                                </p:commandButton>
+                                                </p:commandLink>
                                             </p:column>
                                         </p:dataTable>
 
@@ -137,7 +138,7 @@
 
                                 </p:tab>
                             </p:tabView>
-                            
+
                             <script>
                                 userMgmtTabview.select(#{userController.tabIndex});
                             </script>
