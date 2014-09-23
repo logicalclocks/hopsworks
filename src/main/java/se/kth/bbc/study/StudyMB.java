@@ -646,7 +646,7 @@ public class StudyMB implements Serializable {
     }
 
     //adding a record to sample id table
-    public String addSample() throws IOException {
+    public void addSample() throws IOException {
 
         boolean rec = sampleIDController.checkForExistingIDs(getSampleID(), studyName);
 
@@ -662,18 +662,16 @@ public class StudyMB implements Serializable {
                 getRequest().getSession().setAttribute(PROP_DATASETMB, datasetMB);
                 getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
                 FacesContext.getCurrentInstance().responseComplete();
-                return "Success!";
+                
             } else {
 
-                addErrorMessageToUserAction("Error: Sample ID exists.");
-                return null;
-
+                getResponse().sendRedirect(getRequest().getContextPath()+"/bbc/uploader/sampleUploader.jsp");
+                FacesContext.getCurrentInstance().responseComplete();
             }
 
         } catch (EJBException ejb) {
 
-            addErrorMessageToUserAction("Error: Failed");
-            return null;
+            addErrorMessageToUserAction("Error: Transaction failed");
         }
     }
     
