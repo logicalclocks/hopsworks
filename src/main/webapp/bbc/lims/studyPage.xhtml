@@ -546,7 +546,7 @@
                                         <span class="right_button">
                                             <h:form id="frmBtnData" style="margin-bottom: 0px;">
                                                 <h:commandButton id="addData" class="button-add button-add-data" value="New Sample" 
-                                                                 type="submit" action="newSample" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" />
+                                                                 type="submit" action="newSample" rendered="#{studyManagedBean.checkOwnerForSamples()}" />
                                             </h:form>
                                         </span>
                                     </h3>

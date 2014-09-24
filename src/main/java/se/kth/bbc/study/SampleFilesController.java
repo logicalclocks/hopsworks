@@ -52,5 +52,12 @@ public class SampleFilesController {
         }
     }
     
+    public void update(String id, String filename){
+        SampleFiles sf = findByPrimaryKey(id, filename);
+        if(sf != null) {
+            sf.setStatus(SampleFileStatus.AVAILABLE.getFileStatus());
+            em.merge(sf);
+        }
+    }
     
 }
