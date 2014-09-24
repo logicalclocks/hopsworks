@@ -26,6 +26,8 @@ public class ActivityController {
     public static final String NEW_SAMPLE = " added a new sample ";
     public static final String CHANGE_ROLE = " changed role of ";
     public static final String REMOVED_MEMBER = " removed team member ";
+    public static final String REMOVED_SAMPLE = " removed a sample ";
+    public static final String REMOVED_FILE = " removed a file ";
     public static final String REMOVED_STUDY = " removed study ";
     // Flag constants
     public static final String CTE_FLAG_STUDY = "STUDY";
