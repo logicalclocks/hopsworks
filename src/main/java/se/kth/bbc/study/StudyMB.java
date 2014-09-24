@@ -1053,19 +1053,30 @@ public class StudyMB implements Serializable {
             String sampleId = ((FileSummary) sampleFolder.getData()).getName();
             String type = selected.getExtension();
             String filename = selected.getName();
-            deleteFileFromHdfs(filename, type, sampleId);
+            try {
+                deleteFileFromHDFS(sampleId, filename, type);
+            } catch (IOException | URISyntaxException ex) {
+                addErrorMessageToUserAction("Error", "Failed to remove file.", "remove");
+                return;
+            }
             message = "Successfully removed file " + filename + ".";
         } else if (selected.isTypeFolder()) {
             TreeNode sampleFolder = selectedFile.getParent();
             String sampleId = ((FileSummary) sampleFolder.getData()).getName();
             String foldername = selected.getName();
-            deleteFolderFromHdfs(sampleId, foldername);
+            try {
+                deleteFileTypeFromHDFS(sampleId, foldername);
+            } catch (IOException | URISyntaxException ex) {
+                addErrorMessageToUserAction("Error", "Failed to remove folder.", "remove");
+                return;
+            }
             message = "Successfully removed folder " + foldername + ".";
         } else if (selected.isSample()) {
             try {
-                deleteFromHDFS(selected.getName());
+                deleteSampleFromHDFS(selected.getName());
             } catch (IOException | URISyntaxException ex) {
                 addErrorMessageToUserAction("Error", "Failed to remove sample.", "remove");
+                return;
             }
             message = "Successfully removed sample " + selected.getName() + ".";
         } else {
@@ -1074,13 +1085,4 @@ public class StudyMB implements Serializable {
         }
         addMessage("Success", message, "remove");
     }
-
-    private void deleteFolderFromHdfs(String a, String b) {
-        //dummy
-    }
-
-    private void deleteFileFromHdfs(String a, String b, String c) {
-        //dummy
-    }
-
 }
