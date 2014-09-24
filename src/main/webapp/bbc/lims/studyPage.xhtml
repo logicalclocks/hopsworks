@@ -553,11 +553,18 @@
                                             <p:growl for="remove" autoUpdate="true" showDetail="true"/>
                                             <p:contextMenu for="filesTable" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                 <p:menuitem update="@form">
-                                                    <h:commandLink title="Download" style="text-decoration: none;text-align: center;"  value="Download" actionListener="#{studyManagedBean.fileDownloadEvent}">
+                                                    <h:commandLink title="Download" style="text-decoration: none;text-align: center;"  
+                                                                   value="Download" actionListener="#{studyManagedBean.fileDownloadEvent}">
                                                         <p:fileDownload value="#{studyManagedBean.file}"/>
                                                     </h:commandLink>
                                                 </p:menuitem>
-                                                <p:menuitem value="Remove" icon="ui-icon-closethick" update="@form" oncomplete="#{treeTableView.reInit()}" actionListener="#{studyManagedBean.removeFile()}"/>                                                
+                                                <!--<p:menuitem>
+                                                    <h:commandLink title="Delete" style="text-decoration: none;text-align: center;" 
+                                                                   value="Delete" action="#{studyManagedBean.removeFile}">
+                                                    </h:commandLink>
+                                                </p:menuitem>-->
+                                                <p:menuitem value="Delete" update="@form" oncomplete="#{treeTableView.reInit()}" actionListener="#{studyManagedBean.removeFile()}"
+                                                            style="padding: 0em;background: inherit !important;box-shadow: inherit !important;color: inherit !important;"/>                                            
                                             </p:contextMenu>
                                             <p:treeTable id="filesTable" value="#{treeTableView.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedNode}">
                                                 <p:column headerText="Name">
@@ -567,10 +574,12 @@
                                                     <h:outputText value="#{document.displayStatus}" />
                                                 </p:column>
                                                 <p:column style="width:15px" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                    <h:commandLink title="Download" class="ui-icon ui-icon-arrowthick-1-s" actionListener="#{studyManagedBean.fileDownloadEvent}">
+                                                    <h:commandLink title="Download" class="ui-icon ui-icon-arrowthick-1-s" actionListener="#{studyManagedBean.fileDownloadEvent}" rendered="#{document.file}">
                                                         <p:fileDownload value="#{studyManagedBean.file}"/>
                                                         <f:setPropertyActionListener value="#{document}" target="#{studyManagedBean.selectedFile}" />
                                                     </h:commandLink>
+                                                    <p:commandLink title="Download" styleClass="ui-icon ui-icon-arrowthick-1-s" disabled="true" rendered="#{!document.file}">
+                                                    </p:commandLink>
                                                 </p:column>
                                             </p:treeTable>
                                         </h:form>

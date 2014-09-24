@@ -91,7 +91,7 @@ public class StudyMB implements Serializable {
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
-
+    
     private TrackStudy study;
     private DatasetStudy dsStudy;
     private Dataset dataset;
