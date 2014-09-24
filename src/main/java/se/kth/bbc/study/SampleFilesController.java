@@ -60,4 +60,21 @@ public class SampleFilesController {
         }
     }
     
+    public void deleteFile(String id, String filename){
+        SampleFiles fetchedFile = findByPrimaryKey(id, filename);
+        if(fetchedFile != null)
+            em.remove(fetchedFile);
+    }
+    
+    public void deleteFileTypeRecords(String sampleId, String study_name, String file_type){
+        
+        Query query = em.createNativeQuery("SELECT * FROM SampleFiles WHERE id IN (SELECT id FROM SampleIds WHERE id=? AND study_name=?) AND file_type=?",SampleFiles.class).setParameter(1, sampleId)
+                .setParameter(2, study_name).setParameter(3, file_type);
+        List<SampleFiles> res = query.getResultList();
+        if(res.iterator().hasNext()){
+            SampleFiles sf = res.iterator().next();
+            if(sf != null) em.remove(sf);
+        }
+    }
+    
 }
