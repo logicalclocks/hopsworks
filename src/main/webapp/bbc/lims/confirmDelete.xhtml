@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+    <h:head>
+        <title>Delete?</title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/profile.css']}" />    
+    </h:head>
+    <body style="overflow: hidden !important;">
+        <h:form id="cnfrmDelDlg" style="overflow: hidden !important;">
+            <h:panelGrid columns="1" style="overflow: hidden !important;">
+            <h:outputLabel value="Are you sure you want to delete this file?" rendered="#{studyManagedBean.selectedFile.file}" style="width: auto;"/>
+            <h:outputLabel value="Are you sure you want to delete this folder?" rendered="#{!studyManagedBean.selectedFile.file}" style="width:auto;"/>
+
+            <h:panelGrid columns="2" style="overflow: hidden !important;">
+                <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" actionListener="#{studyManagedBean.removeFile()}"/>   
+                <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" actionListener="#{studyManagedBean.closeConfirmDelete()}"/> 
+            </h:panelGrid>
+            </h:panelGrid>
+        </h:form>   
+    </body>
+</html>

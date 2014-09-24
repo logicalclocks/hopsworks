@@ -14,6 +14,7 @@ import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -1076,8 +1077,8 @@ public class StudyMB implements Serializable {
         try {
             fileDownloadEvent(selectedFile.getSampleID(), selectedFile.getType(), selectedFile.getFilename());
         } catch (IOException | URISyntaxException ex) {
-            logger.log(Level.SEVERE,"FAILED DOWNLOAD");
-            addErrorMessageToUserAction("Error", "Failed to download "+selectedFile.getFilename(), "remove");
+            logger.log(Level.SEVERE, "FAILED DOWNLOAD");
+            addErrorMessageToUserAction("Error", "Failed to download " + selectedFile.getFilename(), "remove");
         }
     }
 
@@ -1101,8 +1102,8 @@ public class StudyMB implements Serializable {
     }
 
     public void removeFile() {
-        //check if sample or file
-        String message;
+        //check if sample or file        
+        FacesMessage message;
         if (selectedFile.isFile()) {
             String sampleId = selectedFile.getSampleID();
             String type = selectedFile.getType();
@@ -1110,32 +1111,56 @@ public class StudyMB implements Serializable {
             try {
                 deleteFileFromHDFS(sampleId, filename, type);
             } catch (IOException | URISyntaxException ex) {
-                addErrorMessageToUserAction("Error", "Failed to remove file.", "remove");
+                message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Failed to remove file " + filename + ".");
+                RequestContext.getCurrentInstance().closeDialog(message);
                 return;
             }
-            message = "Successfully removed file " + filename + ".";
+            message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", "Successfully removed file " + filename + ".");
         } else if (selectedFile.isTypeFolder()) {
             String sampleId = selectedFile.getSampleID();
             String foldername = selectedFile.getType();
             try {
                 deleteFileTypeFromHDFS(sampleId, foldername);
             } catch (IOException | URISyntaxException ex) {
-                addErrorMessageToUserAction("Error", "Failed to remove folder.", "remove");
+                message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Failed to remove folder " + foldername + ".");
+                RequestContext.getCurrentInstance().closeDialog(message);
                 return;
             }
-            message = "Successfully removed folder " + foldername + ".";
+            message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", "Successfully removed folder " + foldername + ".");
         } else if (selectedFile.isSample()) {
             try {
                 deleteSampleFromHDFS(selectedFile.getSampleID());
             } catch (IOException | URISyntaxException ex) {
-                addErrorMessageToUserAction("Error", "Failed to remove sample.", "remove");
+                message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Failed to remove folder " + selectedFile.getSampleID() + ".");
+                RequestContext.getCurrentInstance().closeDialog(message);
                 return;
             }
-            message = "Successfully removed sample " + selectedFile.getSampleID() + ".";
+            message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", "Successfully removed sample " + selectedFile.getSampleID() + ".");
         } else {
             logger.log(Level.SEVERE, "Trying to remove a file that is not according to the hierarchy.");
             return;
         }
-        addMessage("Success", message, "remove");
+
+        RequestContext.getCurrentInstance().closeDialog(message);
+    }
+
+    public void deleteDataDlg() {
+        Map<String, Object> options = new HashMap<>();
+        options.put("modal", true);
+        options.put("draggable", false);
+        options.put("resizable", false);
+        options.put("width", 320);
+        options.put("contentWidth", 300);
+        options.put("height", 100);
+        RequestContext.getCurrentInstance().openDialog("confirmDelete", options, null);
+    }
+
+    public void closeConfirmDelete() {
+        RequestContext.getCurrentInstance().closeDialog(null);
+    }
+
+    public void onDeleteDlgDone(SelectEvent event) {
+        FacesMessage mess = (FacesMessage) (event.getObject());
+        FacesContext.getCurrentInstance().addMessage("remove", mess);
     }
 }

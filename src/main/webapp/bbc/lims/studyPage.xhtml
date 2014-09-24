@@ -554,7 +554,9 @@
                                             <p:growl for="remove" autoUpdate="true" showDetail="true"/>
                                             <p:contextMenu for="filesTable" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                 <p:menuitem value="Download"  icon="ui-icon-arrowthick-1-s" update="@form" actionListener="#{studyManagedBean.download()}"/>
-                                                <p:menuitem value="Remove" icon="ui-icon-closethick" update="@form" oncomplete="PF('removeDataDlg').show()"/>
+                                                <p:menuitem value="Delete" icon="ui-icon-closethick" update="@form" actionListener="#{studyManagedBean.deleteDataDlg()}">
+                                                    
+                                                </p:menuitem>
                                             </p:contextMenu>
                                             <p:treeTable id="filesTable" value="#{studyManagedBean.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedNode}">
                                                 <p:column headerText="Name">
@@ -585,10 +587,10 @@
 
                 </p:layoutUnit>
             </p:layout>
-            <p:dialog id="rmdlg" widgetVar="removeDataDlg" header="Remove data" modal="true" resizable="false" draggable="false"> 
+            <p:dialog id="rmdlg" widgetVar="removeDataDlg" header="Delete data" modal="true" resizable="false" draggable="false"> 
                 <h:panelGrid>
                     <div align="left">
-                    <h:outputLabel value="Are you sure you want to remove this file?" />
+                        <h:outputLabel value="Are you sure you want to delete this ?"/>
                     </div>
                 </h:panelGrid>
                 <div align="right">

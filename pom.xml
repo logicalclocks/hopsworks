@@ -5,11 +5,11 @@
 
 
     <groupId>se.kth.hop</groupId>
-    <artifactId>hop-dashboard</artifactId>
+    <artifactId>hop-dashboard-stig</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
-    <name>Hop Dashboard</name>
+    <name>Hop Dashboard Stig</name>
 
     <properties>
         <java.version>1.7</java.version>
@@ -279,7 +279,7 @@
     </dependencies>
 
     <build>
-        <finalName>hop-dashboard</finalName>
+        <finalName>hop-dashboard-stig</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
