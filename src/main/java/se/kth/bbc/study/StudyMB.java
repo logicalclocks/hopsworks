@@ -111,7 +111,7 @@ public class StudyMB implements Serializable {
     private String owner;
     private int tabIndex;
     private String loginName;
-    
+
     private StreamedContent file;
 
     //private UIInput newTeamRole;
@@ -369,7 +369,7 @@ public class StudyMB implements Serializable {
     public String getUsername() {
         return getRequest().getUserPrincipal().getName();
     }
-    
+
     public void gravatarAccess() {
         activity.getGravatar(studyCreator);
     }
@@ -724,10 +724,10 @@ public class StudyMB implements Serializable {
                 sf.setFileType(fileType);
                 sf.setStatus(SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
                 sampleFilesController.persistSampleFiles(sf);
-                System.out.println("loging name after set " +getLoginName());
+                System.out.println("loging name after set " + getLoginName());
                 activity.addSampleActivity(ActivityController.NEW_SAMPLE + "[" + fileName + "]" + " file ", studyName, "DATA", getLoginName());
             }
-
+            
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Sample file wasn't created.");
             return;
@@ -824,7 +824,7 @@ public class StudyMB implements Serializable {
         try {
             sampleIDController.removeSample(id, studyName);
             activity.addSampleActivity(ActivityController.REMOVED_SAMPLE + "[" + id + "]" + " ", studyName, "DATA", getUsername());
-            System.out.println("loging name after set from delete " +getLoginName());
+            System.out.println("loging name after set from delete " + getLoginName());
         } catch (EJBException ejb) {
             System.out.println("Sample deletion failed");
         }
@@ -849,12 +849,12 @@ public class StudyMB implements Serializable {
         //remove file type records
         deleteFileTypes(sampleId, fileType);
     }
-    
-    public void deleteFileTypes(String sampleId, String fileType){
-    
-         try {
-             sampleFilesController.deleteFileTypeRecords(sampleId, studyName, fileType);
-             activity.addSampleActivity(" removed " + "[" + fileType + "]" + " files "+ " ", studyName, "DATA", getUsername());
+
+    public void deleteFileTypes(String sampleId, String fileType) {
+
+        try {
+            sampleFilesController.deleteFileTypeRecords(sampleId, studyName, fileType);
+            activity.addSampleActivity(" removed " + "[" + fileType + "]" + " files " + " ", studyName, "DATA", getUsername());
         } catch (EJBException ejb) {
             System.out.println("Sample file type deletion failed");
         }
@@ -897,8 +897,7 @@ public class StudyMB implements Serializable {
         String sampleId = selectedFile.getSampleID();
         String fileType = selectedFile.getType();
         String fileName = selectedFile.getFilename();
-                
-                
+
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
@@ -918,11 +917,11 @@ public class StudyMB implements Serializable {
             file = new DefaultStreamedContent(inStream, "fastq/fasta/bam/sam/vcf", fileName);
 
         } finally {
-                   //inStream.close();
-        }  
-           
+            //inStream.close();
+        }
+
     }
-    
+
     public StreamedContent getFile() {
         return file;
     }
@@ -930,7 +929,7 @@ public class StudyMB implements Serializable {
     public void setFile(StreamedContent file) {
         this.file = file;
     }
-    
+
     public void itemSelect(SelectEvent e) {
         if (getSelectedUsernames().isEmpty()) {
             addErrorMessageToUserAction("Error: People field cannot be empty.");
@@ -1083,7 +1082,6 @@ public class StudyMB implements Serializable {
 //            //addErrorMessageToUserAction("Error", "Failed to download "+selectedFile.getFilename(), "remove");
 //        }
 //    }
-
     public FileSummary getSelectedFile() {
         return selectedFile;
     }

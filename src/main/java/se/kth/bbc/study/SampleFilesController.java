@@ -96,4 +96,11 @@ public class SampleFilesController {
         }
     }
     
+    public long checkFileCount(String id, String study_name){
+        
+        Query query = em.createNativeQuery("SELECT COUNT(*) FROM SampleFiles WHERE id IN (SELECT id FROM SampleIds WHERE id=? AND study_name=?)",SampleFiles.class).setParameter(1, id)
+                .setParameter(2, study_name);
+        return (Long)query.getSingleResult();
+    }
+    
 }
