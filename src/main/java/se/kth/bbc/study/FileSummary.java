@@ -13,13 +13,19 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
     private String name;
     private String status; //TODO: make into enum field (same as DB)
     private boolean file;
-    private String type;
+    private String extension;
+    private NODETYPE nodeType;
+    
+    public static enum NODETYPE{
+        FILE, DIR_TYPE, DIR_SAMPLE, DIR_STUDY;
+    }
 
-    public FileSummary(String name, String status, boolean isFile, String type) {
+    public FileSummary(String name, String status, boolean isFile, String extension, NODETYPE nodetype) {
         this.name = name;
         this.file = isFile;
         this.status = status;
-        this.type = type;
+        this.extension = extension;
+        this.nodeType = nodetype;
     }
 
     public String getName() {
@@ -59,16 +65,30 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
         this.file = file;
     }
 
-    public String getType() {
-        return type;
+    public String getExtension() {
+        return extension;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setExtension(String extension) {
+        this.extension = extension;
+    }
+
+    public NODETYPE getNodeType() {
+        return nodeType;
+    }
+
+    public void setNodeType(NODETYPE nodeType) {
+        this.nodeType = nodeType;
     }
     
+    public boolean isSample(){
+        return this.nodeType == NODETYPE.DIR_SAMPLE;
+    }
     
-
+    public boolean isTypeFolder(){
+        return this.nodeType == NODETYPE.DIR_TYPE;
+    }
+    
     @Override
     public int hashCode() {
         int hash = 7;
@@ -103,9 +123,5 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
     @Override
     public int compareTo(FileSummary document) {
         return this.getName().compareTo(document.getName());
-    }
-    
-    public String getFullFilename(){
-        return name + "." + type;
     }
 }
