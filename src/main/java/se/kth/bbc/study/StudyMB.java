@@ -114,6 +114,7 @@ public class StudyMB implements Serializable {
     private int manTabIndex = SHOW_TAB;
 
     private TreeNode root;
+    private TreeNode selectedFile;
 
     public StudyMB(){}
     
@@ -891,13 +892,13 @@ public class StudyMB implements Serializable {
 
     private void initTreeTable() {
         List<SampleIds> samples = sampleIDController.findAllByStudy(studyName);
-        root = new DefaultTreeNode(new FileSummary("root", "", false), null);
-        TreeNode studyRoot = new DefaultTreeNode(new FileSummary(studyName, "", false), root);
+        root = new DefaultTreeNode(new FileSummary("root", "", false,""), null);
+        TreeNode studyRoot = new DefaultTreeNode(new FileSummary(studyName, "", false,""), root);
         for (SampleIds sam : samples) {
-            TreeNode node = new DefaultTreeNode(new FileSummary(sam.getSampleIdsPK().getId(), "", false), studyRoot);
+            TreeNode node = new DefaultTreeNode(new FileSummary(sam.getSampleIdsPK().getId(), "", false,""), studyRoot);
             List<SampleFiles> files = sampleFilesController.findAllById(sam.getSampleIdsPK().getId());
             for (SampleFiles file : files) {
-                TreeNode leaf = new DefaultTreeNode(new FileSummary(file.getSampleFilesPK().getFilename(), file.getStatus(), true), node);
+                TreeNode leaf = new DefaultTreeNode(new FileSummary(file.getSampleFilesPK().getFilename(), file.getStatus(), true, file.getFileType()), node);
             }
         }
     }
@@ -905,4 +906,11 @@ public class StudyMB implements Serializable {
     public void download() {
     }
 
+    public TreeNode getSelectedFile() {
+        return selectedFile;
+    }
+
+    public void setSelectedFile(TreeNode selectedFile) {
+        this.selectedFile = selectedFile;
+    }    
 }

@@ -13,11 +13,13 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
     private String name;
     private String status; //TODO: make into enum field (same as DB)
     private boolean file;
+    private String type;
 
-    public FileSummary(String name, String status, boolean isFile) {
+    public FileSummary(String name, String status, boolean isFile, String type) {
         this.name = name;
         this.file = isFile;
         this.status = status;
+        this.type = type;
     }
 
     public String getName() {
@@ -37,7 +39,7 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
             case "uploading":
                 return "Uploading";
             default:
-                return "Unknown";
+                return "";
         }
     }
 
@@ -56,6 +58,16 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
     public void setFile(boolean file) {
         this.file = file;
     }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+    
+    
 
     @Override
     public int hashCode() {
@@ -91,5 +103,9 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
     @Override
     public int compareTo(FileSummary document) {
         return this.getName().compareTo(document.getName());
+    }
+    
+    public String getFullFilename(){
+        return name + "." + type;
     }
 }

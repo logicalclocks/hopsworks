@@ -555,8 +555,9 @@
                                         <h:form id="filesForm">                                            
                                             <p:contextMenu for="filesTable" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                 <p:menuitem value="Download"  icon="ui-icon-arrowthick-1-s" update="@form" actionListener="#{studyManagedBean.download()}"/>
+                                                <p:menuitem value="Remove" icon="ui-icon-closethick" update="@form" actionListener="#{studyManagedBean.removeFile()}"/>
                                             </p:contextMenu>
-                                            <p:treeTable id="filesTable" value="#{studyManagedBean.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single">
+                                            <p:treeTable id="filesTable" value="#{studyManagedBean.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedFile}">
                                                 <p:column headerText="Name">
                                                     <h:outputText value="#{document.name}" />
                                                 </p:column>
