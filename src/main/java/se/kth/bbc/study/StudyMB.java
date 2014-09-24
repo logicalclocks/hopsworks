@@ -891,27 +891,21 @@ public class StudyMB implements Serializable {
         }
     }
 
-    public StreamedContent getFile() {
-        return file;
-    }
-
-    public void setFile(StreamedContent file) {
-        this.file = file;
-    }
-
-    public String getContentType() {
-        return file.getContentType();
-    }
-
     //Download a file from HDFS
-    public void fileDownloadEvent(String sampleId, String fileType, String fileName) throws IOException, URISyntaxException {
+    public void fileDownloadEvent() throws IOException, URISyntaxException {
 
+        String sampleId = selectedFile.getSampleID();
+        String fileType = selectedFile.getType();
+        String fileName = selectedFile.getFilename();
+                
+                
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
         String rootDir = "Projects";
         String buildPath = File.separator + rootDir + File.separator + studyName;
-        Path outputPath = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + fileName);
+        Path outputPath = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + fileName.trim());
+        //System.out.println("download path "+outputPath.toString());
 
         try {
 
@@ -921,12 +915,20 @@ public class StudyMB implements Serializable {
             }
 
             InputStream inStream = fs.open(outputPath, 1048576);
-            file = new DefaultStreamedContent(inStream, fileType, fileName);
+            file = new DefaultStreamedContent(inStream, "fastq/fasta/bam/sam/vcf", fileName);
 
         } finally {
                    //inStream.close();
         }  
            
+    }
+    
+    public StreamedContent getFile() {
+        return file;
+    }
+
+    public void setFile(StreamedContent file) {
+        this.file = file;
     }
     
     public void itemSelect(SelectEvent e) {
@@ -1073,14 +1075,14 @@ public class StudyMB implements Serializable {
         }
     }
 
-    public void download() {
-        try {
-            fileDownloadEvent(selectedFile.getSampleID(), selectedFile.getType(), selectedFile.getFilename());
-        } catch (IOException | URISyntaxException ex) {
-            logger.log(Level.SEVERE,"FAILED DOWNLOAD");
-            addErrorMessageToUserAction("Error", "Failed to download "+selectedFile.getFilename(), "remove");
-        }
-    }
+//    public void download() {
+//        try {
+//            fileDownloadEvent(selectedFile.getSampleID(), selectedFile.getType(), selectedFile.getFilename());
+//        } catch (IOException | URISyntaxException ex) {
+//            logger.log(Level.SEVERE,"FAILED DOWNLOAD");
+//            //addErrorMessageToUserAction("Error", "Failed to download "+selectedFile.getFilename(), "remove");
+//        }
+//    }
 
     public FileSummary getSelectedFile() {
         return selectedFile;
