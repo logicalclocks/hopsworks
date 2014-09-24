@@ -15,7 +15,6 @@
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/studyPage.css']}" />
-            <link rel="stylesheet" type="text/css" href="resumable.css" />
             <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
         </h:head>
         <h:body>
@@ -553,10 +552,15 @@
                                         <h:form id="filesForm">       
                                             <p:growl for="remove" autoUpdate="true" showDetail="true"/>
                                             <p:contextMenu for="filesTable" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                <p:menuitem value="Download"  icon="ui-icon-arrowthick-1-s" update="@form" actionListener="#{studyManagedBean.download()}"/>
-                                                <p:menuitem value="Delete" icon="ui-icon-closethick" update="@form" actionListener="#{studyManagedBean.deleteDataDlg()}">
-                                                    
+                                                <p:menuitem update="@form">
+                                                    <h:commandLink title="Download" style="text-decoration: none;text-align: center;"  value="Download" actionListener="#{studyManagedBean.fileDownloadEvent}">
+                                                        <p:fileDownload value="#{studyManagedBean.file}"/>
+                                                    </h:commandLink>
                                                 </p:menuitem>
+                                                <p:menuitem>
+                                                    <h:commandLink value="Remove" style="text-decoration: none;text-align: center;" onclick="PF('removeDataDlg').show()"/>
+                                                </p:menuitem>
+                                                
                                             </p:contextMenu>
                                             <p:treeTable id="filesTable" value="#{studyManagedBean.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedNode}">
                                                 <p:column headerText="Name">
@@ -566,9 +570,13 @@
                                                     <h:outputText value="#{document.displayStatus}" />
                                                 </p:column>
                                                 <p:column style="width:15px" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                    <p:commandLink title="Download" styleClass="ui-icon ui-icon-arrowthick-1-s" disabled="#{!document.file}" action="#{studyManagedBean.download()}" update="@form">
+<!--                                                    <p:commandLink title="Download" styleClass="ui-icon ui-icon-arrowthick-1-s" disabled="#{!document.file}" action="#{studyManagedBean.download}" update="@form">
                                                         <f:setPropertyActionListener value="#{document}" target="#{studyManagedBean.selectedFile}" />
-                                                    </p:commandLink>
+                                                    </p:commandLink>-->
+                                                    <h:commandLink title="Download" class="ui-icon ui-icon-arrowthick-1-s" actionListener="#{studyManagedBean.fileDownloadEvent}">
+                                                        <p:fileDownload value="#{studyManagedBean.file}"/>
+                                                        <f:setPropertyActionListener value="#{document}" target="#{studyManagedBean.selectedFile}" />
+                                                    </h:commandLink>
                                                 </p:column>
                                             </p:treeTable>
                                         </h:form>
@@ -590,7 +598,7 @@
             <p:dialog id="rmdlg" widgetVar="removeDataDlg" header="Delete data" modal="true" resizable="false" draggable="false"> 
                 <h:panelGrid>
                     <div align="left">
-                        <h:outputLabel value="Are you sure you want to delete this ?"/>
+                        <h:outputLabel value="Are you sure you want to remove this file?"/>
                     </div>
                 </h:panelGrid>
                 <div align="right">

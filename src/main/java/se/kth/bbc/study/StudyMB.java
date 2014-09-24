@@ -112,7 +112,7 @@ public class StudyMB implements Serializable {
     private String owner;
     private int tabIndex;
     private String loginName;
-
+    
     private StreamedContent file;
 
     //private UIInput newTeamRole;
@@ -370,7 +370,7 @@ public class StudyMB implements Serializable {
     public String getUsername() {
         return getRequest().getUserPrincipal().getName();
     }
-
+    
     public void gravatarAccess() {
         activity.getGravatar(studyCreator);
     }
@@ -705,7 +705,6 @@ public class StudyMB implements Serializable {
             } else {
 
                 setLoginName(getUsername());
-                //System.out.println("Session id from bean "+getRequest().getSession().getId());
                 getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
                 FacesContext.getCurrentInstance().responseComplete();
             }
@@ -726,6 +725,7 @@ public class StudyMB implements Serializable {
                 sf.setFileType(fileType);
                 sf.setStatus(SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
                 sampleFilesController.persistSampleFiles(sf);
+                System.out.println("loging name after set " +getLoginName());
                 activity.addSampleActivity(ActivityController.NEW_SAMPLE + "[" + fileName + "]" + " file ", studyName, "DATA", getLoginName());
             }
 
@@ -825,6 +825,7 @@ public class StudyMB implements Serializable {
         try {
             sampleIDController.removeSample(id, studyName);
             activity.addSampleActivity(ActivityController.REMOVED_SAMPLE + "[" + id + "]" + " ", studyName, "DATA", getLoginName());
+            System.out.println("loging name after set from delete " +getLoginName());
         } catch (EJBException ejb) {
             System.out.println("Sample deletion failed");
         }
@@ -849,12 +850,12 @@ public class StudyMB implements Serializable {
         //remove file type records
         deleteFileTypes(sampleId, fileType);
     }
-
-    public void deleteFileTypes(String sampleId, String fileType) {
-
-        try {
-            sampleFilesController.deleteFileTypeRecords(sampleId, studyName, fileType);
-            activity.addSampleActivity("removed " + "[" + fileType + "]" + " files " + " ", studyName, "DATA", getLoginName());
+    
+    public void deleteFileTypes(String sampleId, String fileType){
+    
+         try {
+             sampleFilesController.deleteFileTypeRecords(sampleId, studyName, fileType);
+             activity.addSampleActivity(" removed " + "[" + fileType + "]" + " files "+ " ", studyName, "DATA", getLoginName());
         } catch (EJBException ejb) {
             System.out.println("Sample file type deletion failed");
         }
@@ -891,27 +892,21 @@ public class StudyMB implements Serializable {
         }
     }
 
-    public StreamedContent getFile() {
-        return file;
-    }
-
-    public void setFile(StreamedContent file) {
-        this.file = file;
-    }
-
-    public String getContentType() {
-        return file.getContentType();
-    }
-
     //Download a file from HDFS
-    public void fileDownloadEvent(String sampleId, String fileType, String fileName) throws IOException, URISyntaxException {
+    public void fileDownloadEvent() throws IOException, URISyntaxException {
 
+        String sampleId = selectedFile.getSampleID();
+        String fileType = selectedFile.getType();
+        String fileName = selectedFile.getFilename();
+                
+                
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
         String rootDir = "Projects";
         String buildPath = File.separator + rootDir + File.separator + studyName;
-        Path outputPath = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + fileName);
+        Path outputPath = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + fileName.trim());
+        //System.out.println("download path "+outputPath.toString());
 
         try {
 
@@ -921,14 +916,22 @@ public class StudyMB implements Serializable {
             }
 
             InputStream inStream = fs.open(outputPath, 1048576);
-            file = new DefaultStreamedContent(inStream, fileType, fileName);
+            file = new DefaultStreamedContent(inStream, "fastq/fasta/bam/sam/vcf", fileName);
 
         } finally {
-            //inStream.close();
-        }
-
+                   //inStream.close();
+        }  
+           
+    }
+    
+    public StreamedContent getFile() {
+        return file;
     }
 
+    public void setFile(StreamedContent file) {
+        this.file = file;
+    }
+    
     public void itemSelect(SelectEvent e) {
         if (getSelectedUsernames().isEmpty()) {
             addErrorMessageToUserAction("Error: People field cannot be empty.");
@@ -1073,14 +1076,14 @@ public class StudyMB implements Serializable {
         }
     }
 
-    public void download() {
-        try {
-            fileDownloadEvent(selectedFile.getSampleID(), selectedFile.getType(), selectedFile.getFilename());
-        } catch (IOException | URISyntaxException ex) {
-            logger.log(Level.SEVERE, "FAILED DOWNLOAD");
-            addErrorMessageToUserAction("Error", "Failed to download " + selectedFile.getFilename(), "remove");
-        }
-    }
+//    public void download() {
+//        try {
+//            fileDownloadEvent(selectedFile.getSampleID(), selectedFile.getType(), selectedFile.getFilename());
+//        } catch (IOException | URISyntaxException ex) {
+//            logger.log(Level.SEVERE,"FAILED DOWNLOAD");
+//            //addErrorMessageToUserAction("Error", "Failed to download "+selectedFile.getFilename(), "remove");
+//        }
+//    }
 
     public FileSummary getSelectedFile() {
         return selectedFile;

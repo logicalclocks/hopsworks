@@ -21,12 +21,14 @@ import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.NoneScoped;
 import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+import se.kth.bbc.study.StudyMB;
 
 /**
  *
@@ -43,9 +45,9 @@ public class ActivityMB implements Serializable {
     private ActivityController activityController;
 
     private UserActivity activity;
-
+        
     private String flag;
-
+    
     public String getFlag() {
         return flag;
     }
