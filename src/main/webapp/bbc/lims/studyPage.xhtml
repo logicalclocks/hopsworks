@@ -552,10 +552,15 @@
                                         <h:form id="filesForm">       
                                             <p:growl for="remove" autoUpdate="true" showDetail="true"/>
                                             <p:contextMenu for="filesTable" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                <p:menuitem value="Download"  icon="ui-icon-arrowthick-1-s" update="@form" actionListener="#{studyManagedBean.fileDownloadEvent}">
-                                                    <p:fileDownload value="#{studyManagedBean.file}"/>
+                                                <p:menuitem update="@form">
+                                                    <h:commandLink title="Download" style="text-decoration: none;text-align: center;"  value="Download" actionListener="#{studyManagedBean.fileDownloadEvent}">
+                                                        <p:fileDownload value="#{studyManagedBean.file}"/>
+                                                    </h:commandLink>
                                                 </p:menuitem>
-                                                <p:menuitem value="Remove" icon="ui-icon-closethick" update="@form" oncomplete="PF('removeDataDlg').show()"/>
+                                                <p:menuitem>
+                                                    <h:commandLink value="Remove" style="text-decoration: none;text-align: center;" onclick="PF('removeDataDlg').show()"/>
+                                                </p:menuitem>
+                                                
                                             </p:contextMenu>
                                             <p:treeTable id="filesTable" value="#{studyManagedBean.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedNode}">
                                                 <p:column headerText="Name">
