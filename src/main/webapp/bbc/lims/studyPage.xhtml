@@ -557,12 +557,9 @@
                                                         <p:fileDownload value="#{studyManagedBean.file}"/>
                                                     </h:commandLink>
                                                 </p:menuitem>
-                                                <p:menuitem>
-                                                    <h:commandLink value="Remove" style="text-decoration: none;text-align: center;" onclick="PF('removeDataDlg').show()"/>
-                                                </p:menuitem>
-                                                
+                                                <p:menuitem value="Remove" icon="ui-icon-closethick" update="@form" oncomplete="#{treeTableView.reInit()}" actionListener="#{studyManagedBean.removeFile()}"/>                                                
                                             </p:contextMenu>
-                                            <p:treeTable id="filesTable" value="#{studyManagedBean.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedNode}">
+                                            <p:treeTable id="filesTable" value="#{treeTableView.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedNode}">
                                                 <p:column headerText="Name">
                                                     <h:outputText value="#{document.displayName}" />
                                                 </p:column>
@@ -570,9 +567,6 @@
                                                     <h:outputText value="#{document.displayStatus}" />
                                                 </p:column>
                                                 <p:column style="width:15px" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-<!--                                                    <p:commandLink title="Download" styleClass="ui-icon ui-icon-arrowthick-1-s" disabled="#{!document.file}" action="#{studyManagedBean.download}" update="@form">
-                                                        <f:setPropertyActionListener value="#{document}" target="#{studyManagedBean.selectedFile}" />
-                                                    </p:commandLink>-->
                                                     <h:commandLink title="Download" class="ui-icon ui-icon-arrowthick-1-s" actionListener="#{studyManagedBean.fileDownloadEvent}">
                                                         <p:fileDownload value="#{studyManagedBean.file}"/>
                                                         <f:setPropertyActionListener value="#{document}" target="#{studyManagedBean.selectedFile}" />
@@ -595,19 +589,6 @@
 
                 </p:layoutUnit>
             </p:layout>
-            <p:dialog id="rmdlg" widgetVar="removeDataDlg" header="Delete data" modal="true" resizable="false" draggable="false"> 
-                <h:panelGrid>
-                    <div align="left">
-                        <h:outputLabel value="Are you sure you want to remove this file?"/>
-                    </div>
-                </h:panelGrid>
-                <div align="right">
-                <h:panelGrid columns="2">
-                    <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" actionListener="#{studyManagedBean.removeFile()}" oncomplete="PF('removeDataDlg').hide()"/>   
-                    <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" oncomplete="PF('removeDataDlg').hide()"/> 
-                </h:panelGrid>
-                </div>
-            </p:dialog>
         </h:body>
     </f:view>
 </html>

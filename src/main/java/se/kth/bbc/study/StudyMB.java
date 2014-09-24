@@ -112,13 +112,12 @@ public class StudyMB implements Serializable {
     private String owner;
     private int tabIndex;
     private String loginName;
-    
+
     private StreamedContent file;
 
     //private UIInput newTeamRole;
     private int manTabIndex = SHOW_TAB;
 
-    private TreeNode root;
     private FileSummary selectedFile;
     private TreeNode selectedNode;
 
@@ -127,7 +126,6 @@ public class StudyMB implements Serializable {
 
     @PostConstruct
     public void init() {
-        initTreeTable();
         activity.getActivity();
     }
 
@@ -149,14 +147,6 @@ public class StudyMB implements Serializable {
 
     public void setLoginName(String loginName) {
         this.loginName = loginName;
-    }
-
-    public TreeNode getRoot() {
-        return root;
-    }
-
-    public void setRoot(TreeNode t) {
-        this.root = t;
     }
 
     public String getStudyName() {
@@ -370,7 +360,7 @@ public class StudyMB implements Serializable {
     public String getUsername() {
         return getRequest().getUserPrincipal().getName();
     }
-    
+
     public void gravatarAccess() {
         activity.getGravatar(studyCreator);
     }
@@ -605,8 +595,6 @@ public class StudyMB implements Serializable {
                 return "studyPage";
             }
         }
-        //initialize the file browser
-        initTreeTable();
 
         return "studyPage";
 //        if (stList.iterator().hasNext()){
@@ -725,7 +713,6 @@ public class StudyMB implements Serializable {
                 sf.setFileType(fileType);
                 sf.setStatus(SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
                 sampleFilesController.persistSampleFiles(sf);
-                System.out.println("loging name after set " +getLoginName());
                 activity.addSampleActivity(ActivityController.NEW_SAMPLE + "[" + fileName + "]" + " file ", studyName, "DATA", getLoginName());
             }
 
@@ -825,7 +812,6 @@ public class StudyMB implements Serializable {
         try {
             sampleIDController.removeSample(id, studyName);
             activity.addSampleActivity(ActivityController.REMOVED_SAMPLE + "[" + id + "]" + " ", studyName, "DATA", getLoginName());
-            System.out.println("loging name after set from delete " +getLoginName());
         } catch (EJBException ejb) {
             System.out.println("Sample deletion failed");
         }
@@ -850,12 +836,12 @@ public class StudyMB implements Serializable {
         //remove file type records
         deleteFileTypes(sampleId, fileType);
     }
-    
-    public void deleteFileTypes(String sampleId, String fileType){
-    
-         try {
-             sampleFilesController.deleteFileTypeRecords(sampleId, studyName, fileType);
-             activity.addSampleActivity(" removed " + "[" + fileType + "]" + " files "+ " ", studyName, "DATA", getLoginName());
+
+    public void deleteFileTypes(String sampleId, String fileType) {
+
+        try {
+            sampleFilesController.deleteFileTypeRecords(sampleId, studyName, fileType);
+            activity.addSampleActivity("removed " + "[" + fileType + "]" + " files " + " ", studyName, "DATA", getLoginName());
         } catch (EJBException ejb) {
             System.out.println("Sample file type deletion failed");
         }
@@ -898,8 +884,7 @@ public class StudyMB implements Serializable {
         String sampleId = selectedFile.getSampleID();
         String fileType = selectedFile.getType();
         String fileName = selectedFile.getFilename();
-                
-                
+
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
@@ -919,11 +904,11 @@ public class StudyMB implements Serializable {
             file = new DefaultStreamedContent(inStream, "fastq/fasta/bam/sam/vcf", fileName);
 
         } finally {
-                   //inStream.close();
-        }  
-           
+            //inStream.close();
+        }
+
     }
-    
+
     public StreamedContent getFile() {
         return file;
     }
@@ -931,7 +916,7 @@ public class StudyMB implements Serializable {
     public void setFile(StreamedContent file) {
         this.file = file;
     }
-    
+
     public void itemSelect(SelectEvent e) {
         if (getSelectedUsernames().isEmpty()) {
             addErrorMessageToUserAction("Error: People field cannot be empty.");
@@ -1054,28 +1039,6 @@ public class StudyMB implements Serializable {
         return item == null;
     }
 
-    private void initTreeTable() {
-        //root node
-        root = new DefaultTreeNode(new FileSummary("", "", "", "", ""), null);
-        //level 1: study
-        TreeNode studyRoot = new DefaultTreeNode(new FileSummary(studyName, "", "", "", ""), root);
-        //level 2: all samples
-        List<SampleIds> samples = sampleIDController.findAllByStudy(studyName);
-        for (SampleIds sam : samples) {
-            TreeNode node = new DefaultTreeNode(new FileSummary(studyName, sam.getSampleIdsPK().getId(), "", "", ""), studyRoot);
-            //level 3: all extensions
-            List<String> extensions = sampleFilesController.findAllExtensionsForSample(sam.getSampleIdsPK().getId());
-            for (String s : extensions) {
-                TreeNode typeFolder = new DefaultTreeNode(new FileSummary(studyName, sam.getSampleIdsPK().getId(), s, "", ""), node);
-                //level 4: all files
-                List<SampleFiles> files = sampleFilesController.findAllByIdType(sam.getSampleIdsPK().getId(), s);
-                for (SampleFiles file : files) {
-                    TreeNode leaf = new DefaultTreeNode(new FileSummary(studyName, sam.getSampleIdsPK().getId(), s, file.getSampleFilesPK().getFilename(), file.getStatus()), typeFolder);
-                }
-            }
-        }
-    }
-
 //    public void download() {
 //        try {
 //            fileDownloadEvent(selectedFile.getSampleID(), selectedFile.getType(), selectedFile.getFilename());
@@ -1084,7 +1047,6 @@ public class StudyMB implements Serializable {
 //            //addErrorMessageToUserAction("Error", "Failed to download "+selectedFile.getFilename(), "remove");
 //        }
 //    }
-
     public FileSummary getSelectedFile() {
         return selectedFile;
     }
@@ -1105,8 +1067,9 @@ public class StudyMB implements Serializable {
     }
 
     public void removeFile() {
-        //check if sample or file        
-        FacesMessage message;
+        System.out.println("CALLED REMOVE");
+        //check if sample or file
+        String message;
         if (selectedFile.isFile()) {
             String sampleId = selectedFile.getSampleID();
             String type = selectedFile.getType();
@@ -1114,40 +1077,36 @@ public class StudyMB implements Serializable {
             try {
                 deleteFileFromHDFS(sampleId, filename, type);
             } catch (IOException | URISyntaxException ex) {
-                message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Failed to remove file " + filename + ".");
-                RequestContext.getCurrentInstance().closeDialog(message);
+                addErrorMessageToUserAction("Error", "Failed to remove file.", "remove");
                 return;
             }
-            message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", "Successfully removed file " + filename + ".");
+            message = "Successfully removed file " + filename + ".";
         } else if (selectedFile.isTypeFolder()) {
             String sampleId = selectedFile.getSampleID();
             String foldername = selectedFile.getType();
             try {
                 deleteFileTypeFromHDFS(sampleId, foldername);
             } catch (IOException | URISyntaxException ex) {
-                message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Failed to remove folder " + foldername + ".");
-                RequestContext.getCurrentInstance().closeDialog(message);
+                addErrorMessageToUserAction("Error", "Failed to remove folder.", "remove");
                 return;
             }
-            message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", "Successfully removed folder " + foldername + ".");
+            message = "Successfully removed folder " + foldername + ".";
         } else if (selectedFile.isSample()) {
             try {
                 deleteSampleFromHDFS(selectedFile.getSampleID());
             } catch (IOException | URISyntaxException ex) {
-                message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Failed to remove folder " + selectedFile.getSampleID() + ".");
-                RequestContext.getCurrentInstance().closeDialog(message);
+                addErrorMessageToUserAction("Error", "Failed to remove sample.", "remove");
                 return;
             }
-            message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", "Successfully removed sample " + selectedFile.getSampleID() + ".");
+            message = "Successfully removed sample " + selectedFile.getSampleID() + ".";
         } else {
             logger.log(Level.SEVERE, "Trying to remove a file that is not according to the hierarchy.");
             return;
         }
-
-        RequestContext.getCurrentInstance().closeDialog(message);
+        addMessage("Success", message, "remove");
     }
 
-    public void deleteDataDlg() {
+    /*public void deleteDataDlg() {
         Map<String, Object> options = new HashMap<>();
         options.put("modal", true);
         options.put("draggable", false);
@@ -1165,5 +1124,5 @@ public class StudyMB implements Serializable {
     public void onDeleteDlgDone(SelectEvent event) {
         FacesMessage mess = (FacesMessage) (event.getObject());
         FacesContext.getCurrentInstance().addMessage("remove", mess);
-    }
+    }*/
 }
