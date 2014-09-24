@@ -823,7 +823,7 @@ public class StudyMB implements Serializable {
     public void deleteSamples(String id) {
         try {
             sampleIDController.removeSample(id, studyName);
-            activity.addSampleActivity(ActivityController.REMOVED_SAMPLE + "[" + id + "]" + " ", studyName, "DATA", getLoginName());
+            activity.addSampleActivity(ActivityController.REMOVED_SAMPLE + "[" + id + "]" + " ", studyName, "DATA", getUsername());
             System.out.println("loging name after set from delete " +getLoginName());
         } catch (EJBException ejb) {
             System.out.println("Sample deletion failed");
@@ -854,7 +854,7 @@ public class StudyMB implements Serializable {
     
          try {
              sampleFilesController.deleteFileTypeRecords(sampleId, studyName, fileType);
-             activity.addSampleActivity(" removed " + "[" + fileType + "]" + " files "+ " ", studyName, "DATA", getLoginName());
+             activity.addSampleActivity(" removed " + "[" + fileType + "]" + " files "+ " ", studyName, "DATA", getUsername());
         } catch (EJBException ejb) {
             System.out.println("Sample file type deletion failed");
         }
@@ -885,7 +885,7 @@ public class StudyMB implements Serializable {
     public void deleteFileFromSampleFiles(String id, String filename) {
         try {
             sampleFilesController.deleteFile(id, filename);
-            activity.addSampleActivity(ActivityController.REMOVED_FILE + "[" + filename + "]" + " in " + "[" + id + "]" + " ", studyName, "DATA", getLoginName());
+            activity.addSampleActivity(ActivityController.REMOVED_FILE + "[" + filename + "]" + " from sample " + "[" + id + "]" + " ", studyName, "DATA", getUsername());
         } catch (EJBException ejb) {
             System.out.println("Sample file deletion failed");
         }
