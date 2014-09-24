@@ -10,30 +10,58 @@ import java.util.Objects;
  */
 public class FileSummary implements Serializable, Comparable<FileSummary> {
 
-    private String name;
-    private String status; //TODO: make into enum field (same as DB)
-    private boolean file;
-    private String extension;
-    private NODETYPE nodeType;
-    
-    public static enum NODETYPE{
-        FILE, DIR_TYPE, DIR_SAMPLE, DIR_STUDY;
-    }
+    private String sampleID;
+    private String type;
+    private String filename;
+    private String status;
+    private String studyName;
 
-    public FileSummary(String name, String status, boolean isFile, String extension, NODETYPE nodetype) {
-        this.name = name;
-        this.file = isFile;
+    public FileSummary(String studyName, String sampleID, String type, String filename, String status) {
+        this.sampleID = sampleID;
+        this.type = type;
+        this.filename = filename;
         this.status = status;
-        this.extension = extension;
-        this.nodeType = nodetype;
+        this.studyName = studyName;
     }
 
-    public String getName() {
-        return name;
+    public String getSampleID() {
+        return sampleID;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setSampleID(String sampleID) {
+        this.sampleID = sampleID;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getStudyName() {
+        return studyName;
+    }
+
+    public void setStudyName(String studyName) {
+        this.studyName = studyName;
     }
 
     public String getDisplayStatus() {
@@ -49,51 +77,37 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
         }
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public boolean isFile() {
-        return file;
+        return filename != null && !filename.equals("");
     }
 
-    public void setFile(boolean file) {
-        this.file = file;
+    public boolean isTypeFolder() {
+        return !isFile() && type != null && !type.equals("");
     }
 
-    public String getExtension() {
-        return extension;
-    }
-
-    public void setExtension(String extension) {
-        this.extension = extension;
-    }
-
-    public NODETYPE getNodeType() {
-        return nodeType;
-    }
-
-    public void setNodeType(NODETYPE nodeType) {
-        this.nodeType = nodeType;
+    public boolean isSample() {
+        return !isTypeFolder();
     }
     
-    public boolean isSample(){
-        return this.nodeType == NODETYPE.DIR_SAMPLE;
+    public String getDisplayName(){
+        if(filename!=null && !filename.equals("")){
+            return filename;
+        }else if(type != null && !type.equals("")){
+            return type;
+        }else if(sampleID != null && !sampleID.equals("")){
+            return sampleID;
+        }else{
+            return studyName;
+        }
     }
-    
-    public boolean isTypeFolder(){
-        return this.nodeType == NODETYPE.DIR_TYPE;
-    }
-    
+
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 61 * hash + Objects.hashCode(this.name);
-        hash = 61 * hash + Objects.hashCode(this.status);
+        hash = 29 * hash + Objects.hashCode(this.sampleID);
+        hash = 29 * hash + Objects.hashCode(this.type);
+        hash = 29 * hash + Objects.hashCode(this.filename);
+        hash = 29 * hash + Objects.hashCode(this.status);
         return hash;
     }
 
@@ -106,7 +120,13 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
             return false;
         }
         final FileSummary other = (FileSummary) obj;
-        if (!Objects.equals(this.name, other.name)) {
+        if (!Objects.equals(this.sampleID, other.sampleID)) {
+            return false;
+        }
+        if (!Objects.equals(this.type, other.type)) {
+            return false;
+        }
+        if (!Objects.equals(this.filename, other.filename)) {
             return false;
         }
         if (!Objects.equals(this.status, other.status)) {
@@ -117,11 +137,13 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
 
     @Override
     public String toString() {
-        return name;
+        return "FileSummary{" + "sampleID=" + sampleID + ", type=" + type + ", filename=" + filename + ", status=" + status + '}';
     }
 
     @Override
-    public int compareTo(FileSummary document) {
-        return this.getName().compareTo(document.getName());
+    public int compareTo(FileSummary o) {
+        return o.filename.compareTo(filename);
     }
+    
+    
 }

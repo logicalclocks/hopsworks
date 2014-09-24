@@ -113,12 +113,13 @@ public class StudyMB implements Serializable {
     private String loginName;
     
     private StreamedContent file;
-    
+
     //private UIInput newTeamRole;
     private int manTabIndex = SHOW_TAB;
 
     private TreeNode root;
-    private TreeNode selectedFile;
+    private FileSummary selectedFile;
+    private TreeNode selectedNode;
 
     public StudyMB() {
     }
@@ -714,7 +715,6 @@ public class StudyMB implements Serializable {
     }
 
     public void createSampleFiles(String fileName, String fileType) throws IOException, URISyntaxException {
-
         boolean rec = sampleFilesController.checkForExistingSampleFiles(getSampleID(), fileName);
 
         try {
@@ -753,8 +753,8 @@ public class StudyMB implements Serializable {
                 //Path fullPath = new Path(path, new Path(File.separator+getSampleID()+File.separator+fileType.toUpperCase().trim()));
                 copyFromLocal(fileType, fileName, sampleID);
             }
-                fs.mkdirs(path.suffix(File.separator + sampleID + File.separator + fileType.toUpperCase().trim()), null);
-                copyFromLocal(fileType, fileName, sampleID);
+            fs.mkdirs(path.suffix(File.separator + sampleID + File.separator + fileType.toUpperCase().trim()), null);
+            copyFromLocal(fileType, fileName, sampleID);
 
         } catch (IOException ioe) {
             System.err.println("IOException during operation" + ioe.getMessage());
@@ -832,7 +832,7 @@ public class StudyMB implements Serializable {
 
     //Delete a file type folder
     public void deleteFileTypeFromHDFS(String sampleId, String fileType) throws IOException, URISyntaxException {
-    
+
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
@@ -845,7 +845,7 @@ public class StudyMB implements Serializable {
         } else {
             System.out.println("File Type folder does not exist");
         }
-    
+
         //remove file type records
         deleteFileTypes(sampleId, fileType);
     }
@@ -856,74 +856,72 @@ public class StudyMB implements Serializable {
              sampleFilesController.deleteFileTypeRecords(sampleId, studyName, fileType);
              activity.addSampleActivity(" removed " + "[" + fileType + "]" + " files "+ " ", studyName, "DATA", getLoginName());
         } catch (EJBException ejb) {
-             System.out.println("Sample file type deletion failed");
+            System.out.println("Sample file type deletion failed");
         }
-    
+
     }
-    
+
     //Delete a file from a sample study
-    public void deleteFileFromHDFS(String sampleId, String filename, String fileType) throws IOException, URISyntaxException{
-    
+    public void deleteFileFromHDFS(String sampleId, String filename, String fileType) throws IOException, URISyntaxException {
+
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
 
         String rootDir = "Projects";
         String buildPath = File.separator + rootDir + File.separator + studyName;
-        
+
         Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + filename);
-        if(fs.exists(build)){
+        if (fs.exists(build)) {
             fs.delete(build, false);
         } else {
             System.out.println("File does not exist");
         }
-        
+
         //remove file record from SampleFiles
         deleteFileFromSampleFiles(sampleId, filename);
     }
-    
+
     public void deleteFileFromSampleFiles(String id, String filename) {
         try {
             sampleFilesController.deleteFile(id, filename);
-            activity.addSampleActivity(ActivityController.REMOVED_FILE + "[" + filename + "]" + " in " + "["+ id + "]" +" ", studyName, "DATA", getLoginName());
+            activity.addSampleActivity(ActivityController.REMOVED_FILE + "[" + filename + "]" + " in " + "[" + id + "]" + " ", studyName, "DATA", getLoginName());
         } catch (EJBException ejb) {
             System.out.println("Sample file deletion failed");
         }
     }
-    
+
     public StreamedContent getFile() {
         return file;
     }
-            
-    public void setFile(StreamedContent file){
+
+    public void setFile(StreamedContent file) {
         this.file = file;
     }
-    
+
     public String getContentType() {
         return file.getContentType();
     }
-    
-    
+
     //Download a file from HDFS
-    public void fileDownloadEvent(String sampleId, String fileType, String fileName) throws IOException, URISyntaxException{
-        
+    public void fileDownloadEvent(String sampleId, String fileType, String fileName) throws IOException, URISyntaxException {
+
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
         String rootDir = "Projects";
         String buildPath = File.separator + rootDir + File.separator + studyName;
         Path outputPath = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + fileName);
-      
-        
+
         try {
-        
-                if(!fs.exists(outputPath)){
-                      System.out.println("Error: File does not exist for downloading" + fileName);
-                      return;
-                }
-           
-                      InputStream inStream = fs.open(outputPath, 1048576);    
-                      file = new DefaultStreamedContent(inStream, fileType, fileName);
+
+            if (!fs.exists(outputPath)) {
+                System.out.println("Error: File does not exist for downloading" + fileName);
+                return;
+            }
+
+            InputStream inStream = fs.open(outputPath, 1048576);
+            file = new DefaultStreamedContent(inStream, fileType, fileName);
 
         } finally {
                    //inStream.close();
@@ -1055,47 +1053,61 @@ public class StudyMB implements Serializable {
 
     private void initTreeTable() {
         //root node
-        root = new DefaultTreeNode(new FileSummary("root", "", false, "", null), null);
+        root = new DefaultTreeNode(new FileSummary("", "", "", "", ""), null);
         //level 1: study
-        TreeNode studyRoot = new DefaultTreeNode(new FileSummary(studyName, "", false, "dir", FileSummary.NODETYPE.DIR_STUDY), root);
+        TreeNode studyRoot = new DefaultTreeNode(new FileSummary(studyName, "", "", "", ""), root);
         //level 2: all samples
         List<SampleIds> samples = sampleIDController.findAllByStudy(studyName);
         for (SampleIds sam : samples) {
-            TreeNode node = new DefaultTreeNode(new FileSummary(sam.getSampleIdsPK().getId(), "", false, "sampleDir", FileSummary.NODETYPE.DIR_SAMPLE), studyRoot);
+            TreeNode node = new DefaultTreeNode(new FileSummary(studyName, sam.getSampleIdsPK().getId(), "", "", ""), studyRoot);
             //level 3: all extensions
             List<String> extensions = sampleFilesController.findAllExtensionsForSample(sam.getSampleIdsPK().getId());
             for (String s : extensions) {
-                TreeNode typeFolder = new DefaultTreeNode(new FileSummary(s, "", false, s, FileSummary.NODETYPE.DIR_TYPE), node);
+                TreeNode typeFolder = new DefaultTreeNode(new FileSummary(studyName, sam.getSampleIdsPK().getId(), s, "", ""), node);
                 //level 4: all files
-                List<SampleFiles> files = sampleFilesController.findAllByIdType(sam.getSampleIdsPK().getId(),s);
+                List<SampleFiles> files = sampleFilesController.findAllByIdType(sam.getSampleIdsPK().getId(), s);
                 for (SampleFiles file : files) {
-                    TreeNode leaf = new DefaultTreeNode(new FileSummary(file.getSampleFilesPK().getFilename(), file.getStatus(), true, file.getFileType(), FileSummary.NODETYPE.FILE), typeFolder);
+                    TreeNode leaf = new DefaultTreeNode(new FileSummary(studyName, sam.getSampleIdsPK().getId(), s, file.getSampleFilesPK().getFilename(), file.getStatus()), typeFolder);
                 }
             }
         }
     }
 
     public void download() {
+        try {
+            fileDownloadEvent(selectedFile.getSampleID(), selectedFile.getType(), selectedFile.getFilename());
+        } catch (IOException | URISyntaxException ex) {
+            logger.log(Level.SEVERE,"FAILED DOWNLOAD");
+            addErrorMessageToUserAction("Error", "Failed to download "+selectedFile.getFilename(), "remove");
+        }
     }
 
-    public TreeNode getSelectedFile() {
+    public FileSummary getSelectedFile() {
         return selectedFile;
     }
 
-    public void setSelectedFile(TreeNode selectedFile) {
-        this.selectedFile = selectedFile;
+    public void setSelectedNode(TreeNode selectedNode) {
+        if (selectedNode != null) {
+            this.selectedFile = (FileSummary) selectedNode.getData();
+        }
+        this.selectedNode = selectedNode;
+    }
+
+    public TreeNode getSelectedNode() {
+        return selectedNode;
+    }
+
+    public void setSelectedFile(FileSummary file) {
+        this.selectedFile = file;
     }
 
     public void removeFile() {
         //check if sample or file
-        FileSummary selected = (FileSummary) selectedFile.getData();
         String message;
-        if (selected.isFile()) {
-            TreeNode typeFolder = selectedFile.getParent();
-            TreeNode sampleFolder = typeFolder.getParent();
-            String sampleId = ((FileSummary) sampleFolder.getData()).getName();
-            String type = selected.getExtension();
-            String filename = selected.getName();
+        if (selectedFile.isFile()) {
+            String sampleId = selectedFile.getSampleID();
+            String type = selectedFile.getType();
+            String filename = selectedFile.getFilename();
             try {
                 deleteFileFromHDFS(sampleId, filename, type);
             } catch (IOException | URISyntaxException ex) {
@@ -1103,10 +1115,9 @@ public class StudyMB implements Serializable {
                 return;
             }
             message = "Successfully removed file " + filename + ".";
-        } else if (selected.isTypeFolder()) {
-            TreeNode sampleFolder = selectedFile.getParent();
-            String sampleId = ((FileSummary) sampleFolder.getData()).getName();
-            String foldername = selected.getName();
+        } else if (selectedFile.isTypeFolder()) {
+            String sampleId = selectedFile.getSampleID();
+            String foldername = selectedFile.getType();
             try {
                 deleteFileTypeFromHDFS(sampleId, foldername);
             } catch (IOException | URISyntaxException ex) {
@@ -1114,14 +1125,14 @@ public class StudyMB implements Serializable {
                 return;
             }
             message = "Successfully removed folder " + foldername + ".";
-        } else if (selected.isSample()) {
+        } else if (selectedFile.isSample()) {
             try {
-                deleteSampleFromHDFS(selected.getName());
+                deleteSampleFromHDFS(selectedFile.getSampleID());
             } catch (IOException | URISyntaxException ex) {
                 addErrorMessageToUserAction("Error", "Failed to remove sample.", "remove");
                 return;
             }
-            message = "Successfully removed sample " + selected.getName() + ".";
+            message = "Successfully removed sample " + selectedFile.getSampleID() + ".";
         } else {
             logger.log(Level.SEVERE, "Trying to remove a file that is not according to the hierarchy.");
             return;

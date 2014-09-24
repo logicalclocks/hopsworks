@@ -556,15 +556,17 @@
                                                 <p:menuitem value="Download"  icon="ui-icon-arrowthick-1-s" update="@form" actionListener="#{studyManagedBean.download()}"/>
                                                 <p:menuitem value="Remove" icon="ui-icon-closethick" update="@form" oncomplete="PF('removeDataDlg').show()"/>
                                             </p:contextMenu>
-                                            <p:treeTable id="filesTable" value="#{studyManagedBean.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedFile}">
+                                            <p:treeTable id="filesTable" value="#{studyManagedBean.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedNode}">
                                                 <p:column headerText="Name">
-                                                    <h:outputText value="#{document.name}" />
+                                                    <h:outputText value="#{document.displayName}" />
                                                 </p:column>
                                                 <p:column headerText="Status">
                                                     <h:outputText value="#{document.displayStatus}" />
                                                 </p:column>
                                                 <p:column style="width:15px" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                    <p:commandLink title="Download" styleClass="ui-icon ui-icon-arrowthick-1-s" disabled="#{!document.file}" actionListener="#{studyManagedBean.download()}"/>
+                                                    <p:commandLink title="Download" styleClass="ui-icon ui-icon-arrowthick-1-s" disabled="#{!document.file}" action="#{studyManagedBean.download()}" update="@form">
+                                                        <f:setPropertyActionListener value="#{document}" target="#{studyManagedBean.selectedFile}" />
+                                                    </p:commandLink>
                                                 </p:column>
                                             </p:treeTable>
                                         </h:form>
