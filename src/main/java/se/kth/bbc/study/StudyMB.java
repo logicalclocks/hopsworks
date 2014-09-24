@@ -42,7 +42,9 @@ import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
+import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.DefaultTreeNode;
+import org.primefaces.model.StreamedContent;
 import org.primefaces.model.TreeNode;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityMB;
@@ -110,6 +112,8 @@ public class StudyMB implements Serializable {
     private int tabIndex;
     private String loginName;
 
+    private StreamedContent file;
+    
     //private UIInput newTeamRole;
     private int manTabIndex = SHOW_TAB;
 
@@ -862,7 +866,7 @@ public class StudyMB implements Serializable {
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
 
-        String rootDir = getLoginName().split("@")[0].trim();
+        String rootDir = "Projects";
         String buildPath = File.separator + rootDir + File.separator + studyName;
         
         Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + filename);
@@ -884,6 +888,48 @@ public class StudyMB implements Serializable {
             System.out.println("Sample file deletion failed");
         }
     }
+    
+    public StreamedContent getFile() {
+        return file;
+    }
+            
+    public void setFile(StreamedContent file){
+        this.file = file;
+    }
+    
+    public String getContentType() {
+        return file.getContentType();
+    }
+    
+    
+    //Download a file from HDFS
+    public void fileDownloadEvent(String sampleId, String fileType, String fileName) throws IOException, URISyntaxException{
+        
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", this.nameNodeURI);
+        FileSystem fs = FileSystem.get(conf);
+        String rootDir = "Projects";
+        String buildPath = File.separator + rootDir + File.separator + studyName;
+        Path outputPath = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + fileName);
+      
+        
+        try {
+        
+                if(!fs.exists(outputPath)){
+                      System.out.println("Error: File does not exist for downloading" + fileName);
+                      return;
+                }
+           
+                      InputStream inStream = fs.open(outputPath, 1048576);    
+                      file = new DefaultStreamedContent(inStream, fileType, fileName);
+
+        } finally {
+                   //inStream.close();
+        }  
+           
+    }
+    
+    
     
     
     
