@@ -118,6 +118,7 @@ public class StudyMB implements Serializable {
     private int manTabIndex = SHOW_TAB;
 
     private TreeNode root;
+    private TreeNode selectedFile;
 
     public StudyMB() {
     }
@@ -565,7 +566,7 @@ public class StudyMB implements Serializable {
         study.setTimestamp(new Date());
         try {
             studyController.persistStudy(study);
-            activity.addActivity(ActivityController.CREATED_STUDY, study.getName(), "STUDY");
+            activity.addActivity(ActivityController.NEW_STUDY, study.getName(), "STUDY");
             addStudyMaster(study.getName());
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Failed: Study already exists!");
@@ -955,6 +956,11 @@ public class StudyMB implements Serializable {
         FacesContext.getCurrentInstance().addMessage(null, errorMessage);
     }
 
+    public void addErrorMessageToUserAction(String summary, String message, String anchor) {
+        FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, summary, message);
+        FacesContext.getCurrentInstance().addMessage(anchor, errorMessage);
+    }
+
     public int getTabIndex() {
         return tabIndex;
     }
@@ -1052,14 +1058,23 @@ public class StudyMB implements Serializable {
     }
 
     private void initTreeTable() {
+        //root node
+        root = new DefaultTreeNode(new FileSummary("root", "", false, "", null), null);
+        //level 1: study
+        TreeNode studyRoot = new DefaultTreeNode(new FileSummary(studyName, "", false, "dir", FileSummary.NODETYPE.DIR_STUDY), root);
+        //level 2: all samples
         List<SampleIds> samples = sampleIDController.findAllByStudy(studyName);
-        root = new DefaultTreeNode(new FileSummary("root", "", false), null);
-        TreeNode studyRoot = new DefaultTreeNode(new FileSummary(studyName, "", false), root);
         for (SampleIds sam : samples) {
-            TreeNode node = new DefaultTreeNode(new FileSummary(sam.getSampleIdsPK().getId(), "", false), studyRoot);
-            List<SampleFiles> files = sampleFilesController.findAllById(sam.getSampleIdsPK().getId());
-            for (SampleFiles file : files) {
-                TreeNode leaf = new DefaultTreeNode(new FileSummary(file.getSampleFilesPK().getFilename(), file.getStatus(), true), node);
+            TreeNode node = new DefaultTreeNode(new FileSummary(sam.getSampleIdsPK().getId(), "", false, "sampleDir", FileSummary.NODETYPE.DIR_SAMPLE), studyRoot);
+            //level 3: all extensions
+            List<String> extensions = sampleFilesController.findAllExtensionsForSample(sam.getSampleIdsPK().getId());
+            for (String s : extensions) {
+                TreeNode typeFolder = new DefaultTreeNode(new FileSummary(s, "", false, s, FileSummary.NODETYPE.DIR_TYPE), node);
+                //level 4: all files
+                List<SampleFiles> files = sampleFilesController.findAllByIdType(sam.getSampleIdsPK().getId(),s);
+                for (SampleFiles file : files) {
+                    TreeNode leaf = new DefaultTreeNode(new FileSummary(file.getSampleFilesPK().getFilename(), file.getStatus(), true, file.getFileType(), FileSummary.NODETYPE.FILE), typeFolder);
+                }
             }
         }
     }
@@ -1067,4 +1082,54 @@ public class StudyMB implements Serializable {
     public void download() {
     }
 
+    public TreeNode getSelectedFile() {
+        return selectedFile;
+    }
+
+    public void setSelectedFile(TreeNode selectedFile) {
+        this.selectedFile = selectedFile;
+    }
+
+    public void removeFile() {
+        //check if sample or file
+        FileSummary selected = (FileSummary) selectedFile.getData();
+        String message;
+        if (selected.isFile()) {
+            TreeNode typeFolder = selectedFile.getParent();
+            TreeNode sampleFolder = typeFolder.getParent();
+            String sampleId = ((FileSummary) sampleFolder.getData()).getName();
+            String type = selected.getExtension();
+            String filename = selected.getName();
+            try {
+                deleteFileFromHDFS(sampleId, filename, type);
+            } catch (IOException | URISyntaxException ex) {
+                addErrorMessageToUserAction("Error", "Failed to remove file.", "remove");
+                return;
+            }
+            message = "Successfully removed file " + filename + ".";
+        } else if (selected.isTypeFolder()) {
+            TreeNode sampleFolder = selectedFile.getParent();
+            String sampleId = ((FileSummary) sampleFolder.getData()).getName();
+            String foldername = selected.getName();
+            try {
+                deleteFileTypeFromHDFS(sampleId, foldername);
+            } catch (IOException | URISyntaxException ex) {
+                addErrorMessageToUserAction("Error", "Failed to remove folder.", "remove");
+                return;
+            }
+            message = "Successfully removed folder " + foldername + ".";
+        } else if (selected.isSample()) {
+            try {
+                deleteSampleFromHDFS(selected.getName());
+            } catch (IOException | URISyntaxException ex) {
+                addErrorMessageToUserAction("Error", "Failed to remove sample.", "remove");
+                return;
+            }
+            message = "Successfully removed sample " + selected.getName() + ".";
+        } else {
+            logger.log(Level.SEVERE, "Trying to remove a file that is not according to the hierarchy.");
+            return;
+        }
+        addMessage("Success", message, "remove");
+    }
 }

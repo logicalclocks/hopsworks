@@ -33,9 +33,7 @@
                             <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
                             <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/> 
                         </p:confirmDialog>
-                        <p:growl autoUpdate="true" showDetail="false"/>
                         <div class="content"> 
-                            <p:messages autoUpdate="true" closable="true"/>
                             <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="studyTabs">
                                 <p:tab id="showTab" title="Show">
                                     <div class="study_content_list">
@@ -552,11 +550,13 @@
                                     </h3>
                                     <div class="clear_fixing"></div>
                                     <div class="container">
-                                        <h:form id="filesForm">                                            
+                                        <h:form id="filesForm">       
+                                            <p:growl for="remove" autoUpdate="true" showDetail="true"/>
                                             <p:contextMenu for="filesTable" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
                                                 <p:menuitem value="Download"  icon="ui-icon-arrowthick-1-s" update="@form" actionListener="#{studyManagedBean.download()}"/>
+                                                <p:menuitem value="Remove" icon="ui-icon-closethick" update="@form" oncomplete="PF('removeDataDlg').show()"/>
                                             </p:contextMenu>
-                                            <p:treeTable id="filesTable" value="#{studyManagedBean.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single">
+                                            <p:treeTable id="filesTable" value="#{studyManagedBean.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedFile}">
                                                 <p:column headerText="Name">
                                                     <h:outputText value="#{document.name}" />
                                                 </p:column>
@@ -583,6 +583,19 @@
 
                 </p:layoutUnit>
             </p:layout>
+            <p:dialog id="rmdlg" widgetVar="removeDataDlg" header="Remove data" modal="true" resizable="false" draggable="false"> 
+                <h:panelGrid>
+                    <div align="left">
+                    <h:outputLabel value="Are you sure you want to remove this file?" />
+                    </div>
+                </h:panelGrid>
+                <div align="right">
+                <h:panelGrid columns="2">
+                    <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" actionListener="#{studyManagedBean.removeFile()}" oncomplete="PF('removeDataDlg').hide()"/>   
+                    <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" oncomplete="PF('removeDataDlg').hide()"/> 
+                </h:panelGrid>
+                </div>
+            </p:dialog>
         </h:body>
     </f:view>
 </html>

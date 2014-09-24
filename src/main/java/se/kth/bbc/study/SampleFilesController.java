@@ -5,6 +5,7 @@
  */
 package se.kth.bbc.study;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -32,6 +33,24 @@ public class SampleFilesController {
     public List<SampleFiles> findAllById(String id){
         TypedQuery<SampleFiles> query = em.createNamedQuery("SampleFiles.findById", SampleFiles.class).setParameter("id", id);
         return query.getResultList();
+    }
+    
+    public List<SampleFiles> findAllByIdType(String id, String type){
+        Query query = em.createNativeQuery("SELECT * FROM SampleFiles WHERE id LIKE ? AND file_type LIKE ?",SampleFiles.class);
+        query.setParameter(1, id);
+        query.setParameter(2, type);
+        return query.getResultList();
+    }
+    
+    public List<String> findAllExtensionsForSample(String sampleId){
+        Query query = em.createNativeQuery("SELECT DISTINCT file_type FROM SampleFiles WHERE id LIKE ?");
+        query.setParameter(1, sampleId);
+        List<Object> res = query.getResultList();
+        List<String> stringRes = new ArrayList<>(res.size());
+        for(Object o: res){
+            stringRes.add((String)o);
+        }
+        return stringRes;
     }
     
     

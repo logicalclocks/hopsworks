@@ -13,11 +13,19 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
     private String name;
     private String status; //TODO: make into enum field (same as DB)
     private boolean file;
+    private String extension;
+    private NODETYPE nodeType;
+    
+    public static enum NODETYPE{
+        FILE, DIR_TYPE, DIR_SAMPLE, DIR_STUDY;
+    }
 
-    public FileSummary(String name, String status, boolean isFile) {
+    public FileSummary(String name, String status, boolean isFile, String extension, NODETYPE nodetype) {
         this.name = name;
         this.file = isFile;
         this.status = status;
+        this.extension = extension;
+        this.nodeType = nodetype;
     }
 
     public String getName() {
@@ -37,7 +45,7 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
             case "uploading":
                 return "Uploading";
             default:
-                return "Unknown";
+                return "";
         }
     }
 
@@ -57,6 +65,30 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
         this.file = file;
     }
 
+    public String getExtension() {
+        return extension;
+    }
+
+    public void setExtension(String extension) {
+        this.extension = extension;
+    }
+
+    public NODETYPE getNodeType() {
+        return nodeType;
+    }
+
+    public void setNodeType(NODETYPE nodeType) {
+        this.nodeType = nodeType;
+    }
+    
+    public boolean isSample(){
+        return this.nodeType == NODETYPE.DIR_SAMPLE;
+    }
+    
+    public boolean isTypeFolder(){
+        return this.nodeType == NODETYPE.DIR_TYPE;
+    }
+    
     @Override
     public int hashCode() {
         int hash = 7;

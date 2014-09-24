@@ -20,8 +20,7 @@ import javax.persistence.Query;
 public class ActivityController {
     
     // String constants
-    public static final String REMOVED_STUDY = " removed study ";
-    public static final String CREATED_STUDY = " created new study ";
+    public static final String NEW_STUDY = " created new study ";
     public static final String NEW_DATA = " added a new dataset ";
     public static final String NEW_MEMBER = " added new member ";
     public static final String NEW_SAMPLE = " added a new sample ";
@@ -29,6 +28,7 @@ public class ActivityController {
     public static final String REMOVED_MEMBER = " removed team member ";
     public static final String REMOVED_SAMPLE = " removed a sample ";
     public static final String REMOVED_FILE = " removed a file ";
+    public static final String REMOVED_STUDY = " removed study ";
     // Flag constants
     public static final String CTE_FLAG_STUDY = "STUDY";
 
