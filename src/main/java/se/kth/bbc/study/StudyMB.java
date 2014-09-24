@@ -111,7 +111,7 @@ public class StudyMB implements Serializable {
     private String owner;
     private int tabIndex;
     private String loginName;
-
+    
     private StreamedContent file;
     
     //private UIInput newTeamRole;
@@ -368,7 +368,7 @@ public class StudyMB implements Serializable {
     public String getUsername() {
         return getRequest().getUserPrincipal().getName();
     }
-
+    
     public void gravatarAccess() {
         activity.getGravatar(studyCreator);
     }
@@ -702,8 +702,7 @@ public class StudyMB implements Serializable {
 
             } else {
 
-                 setLoginName(getUsername());
-                //System.out.println("Session id from bean "+getRequest().getSession().getId());
+                setLoginName(getUsername());
                 getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
                 FacesContext.getCurrentInstance().responseComplete();
             }
@@ -825,6 +824,7 @@ public class StudyMB implements Serializable {
         try {
             sampleIDController.removeSample(id, studyName);
             activity.addSampleActivity(ActivityController.REMOVED_SAMPLE + "[" + id + "]" + " ", studyName, "DATA", getLoginName());
+            System.out.println("loging name after set from delete " +getLoginName());
         } catch (EJBException ejb) {
             System.out.println("Sample deletion failed");
         }
@@ -930,10 +930,6 @@ public class StudyMB implements Serializable {
         }  
            
     }
-    
-    
-    
-    
     
     public void itemSelect(SelectEvent e) {
         if (getSelectedUsernames().isEmpty()) {
