@@ -34,18 +34,6 @@ public class UploadServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int resumableChunkNumber = getResumableChunkNumber(request);
 
-//        String sampleId = request.getParameter("sampleId");
-//        String projectName = request.getParameter("projectName");
-        //String fileNameBR = request.getParameter("resumableBrowse");
-        //System.out.println("Browse "+fileNameBR);
-//        int extPos = fileName.lastIndexOf(".");
-//        if (extPos == -1) {
-//            // return error to client.
-//        }
-//        String fileType = fileName.substring(extPos);
-        // 1. Add projectName,sampleId to SampleIds EntityBean. Already exists => no error.
-        // 2. create the directory in HDFS: /projects/projectName/sampleId  Already exists => no error.
-        // 3. Add projectName,sampleId, fileType, fileName to SampleFiles EntityBean. Already exists => no error.
         ResumableInfo info = getResumableInfo(request);
 
         RandomAccessFile raf = new RandomAccessFile(info.resumableFilePath, "rw");
@@ -72,9 +60,6 @@ public class UploadServlet extends HttpServlet {
         if (info.checkIfUploadFinished()) { //Check if all chunks uploaded, and change filename
             ResumableInfoStorage.getInstance().remove(info);
             response.getWriter().print("All finished.");
-//            String studyPage = request.getContextPath() + "/bbc/lims/studyPage.xhtml";
-//            System.out.println("from servlet " + studyPage);
-//            response.sendRedirect(studyPage);
         } else {
             response.getWriter().print("Upload");
         }
@@ -89,7 +74,6 @@ public class UploadServlet extends HttpServlet {
             studyMB = new StudyMB();
             request.setAttribute("studyMB", studyMB);
         }
-        //System.out.println("Session id "+request.getSession().getId());
         
        try{
             studyMB.createSampleFiles(info.resumableFilename, fileType);

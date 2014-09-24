@@ -99,6 +99,52 @@ form{
 }
 
 
+.button-add {
+        -webkit-box-shadow: none;
+        -moz-box-shadow: none;
+        box-shadow: none;
+        -webkit-transition-property: background;
+        -moz-transition-property: background;
+        -o-transition-property: background;
+        transition-property: background;
+        -webkit-transition-duration: 0.3s;
+        -moz-transition-duration: 0.3s;
+        -o-transition-duration: 0.3s;
+        transition-duration: 0.3s;
+        background-color: #5bb75b; 
+        font-weight: normal;
+        font-size: 16px;
+        font-family: "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+        margin-right: 7px;
+        text-decoration: none;
+        text-align: center;
+        display: inline-block;   
+        vertical-align: middle;
+        border-color: rgba(0,0,0,0.1) rgba(0,0,0,0.1) rgba(0,0,0,0.25);
+        background-image: linear-gradient(to bottom, #62c462, #51a351);
+        color: #fff;
+        text-shadow: 0 -1px 0 rgba(0,0,0,0.25);
+        padding:6px 10px;
+	border-radius:5px;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	border:1px solid #459A00;
+        margin-left: 10px;
+        margin-bottom: 8px;
+        margin-right: 0px;
+        margin-top: 0px;
+        width: auto;
+        line-height: 20px;
+    }
+
+.button-add-data {
+         background: #00B233;
+ }
+
+.button-add-data:hover {
+        background: #00BD36;
+    }  
+
 /* Baseline */
 body, p, h1, h2, h3, h4, h5, h6 {font:normal 12px/1.3em Helvetica, Arial, sans-serif; color:#333; }
 h1 {font-size:22px; font-weight:bold;}

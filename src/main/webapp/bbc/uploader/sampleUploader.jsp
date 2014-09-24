@@ -13,7 +13,7 @@
     <head>
         <meta charset="utf-8" />
         <title>BioBankCloud LIMS</title>
-        <link rel="stylesheet" type="text/css" href="resumable.css" />
+        <link rel="stylesheet" type="text/css" href="resumable.css"/>
     </head>
     <body>
       <div id="htmlToolBar">
@@ -63,10 +63,11 @@
       
       <ul class="resumable-list"></ul>
 
-      <a href="../lims/studyPage.xhtml">
-            <input type="button" value="Check Uploaded Samples"/>
-     </a>
       
+          <div style="width: 1170px;height: 25px;"></div>  
+          <a href="../lims/studyPage.xhtml" >
+                  <input type="button" class="button-add button-add-data" value="Check Uploaded Samples"/>
+            </a>
       <script>
         var r = new Resumable({
             target:'/hop-dashboard/bbc/uploader',
