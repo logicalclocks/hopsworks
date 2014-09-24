@@ -3,7 +3,7 @@
 <glassfish-web-app error-url="">
   <property name="allowLinking" value="true"/>
   <parameter-encoding default-charset="UTF-8"/>
-  <context-root>/hop-dashboard-stig</context-root>
+  <context-root>/hop-dashboard</context-root>
   <security-role-mapping>
     <role-name>USER</role-name>
     <group-name>USER</group-name>
