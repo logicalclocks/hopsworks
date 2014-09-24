@@ -6,7 +6,6 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.bean.ViewScoped;
 import org.primefaces.model.DefaultTreeNode;
@@ -64,6 +63,7 @@ public class TreeTableView implements Serializable {
     }
     
     public void reInit(){
+        root = null;
         root = new DefaultTreeNode(new FileSummary("", "", "", "", ""), null);
         //level 1: study
         TreeNode studyRoot = new DefaultTreeNode(new FileSummary(studymb.getStudyName(), "", "", "", ""), root);

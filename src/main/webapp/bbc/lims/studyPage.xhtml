@@ -563,7 +563,7 @@
                                                                    value="Delete" action="#{studyManagedBean.removeFile}">
                                                     </h:commandLink>
                                                 </p:menuitem>-->
-                                                <p:menuitem value="Delete" update="@form" oncomplete="#{treeTableView.reInit()}" actionListener="#{studyManagedBean.removeFile()}"
+                                                <p:menuitem value="Delete" update="@form" oncomplete="PF('removeDataDlg').show()"
                                                             style="padding: 0em;background: inherit !important;box-shadow: inherit !important;color: inherit !important;"/>                                            
                                             </p:contextMenu>
                                             <p:treeTable id="filesTable" value="#{treeTableView.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedNode}">
@@ -583,9 +583,10 @@
                                                 </p:column>
                                             </p:treeTable>
                                         </h:form>
-                                    </div>
+             
+                                    </div> 
 
-                                </p:tab>
+                                </p:tab> 
 
 
                                 <!--                                <p:tab id="workflows" title="Workflows"></p:tab>-->
@@ -598,6 +599,20 @@
 
                 </p:layoutUnit>
             </p:layout>
+                                                     
+            <p:dialog id="rmdlg" widgetVar="removeDataDlg" header="Remove data" modal="true" resizable="false" draggable="false"> 
+                <h:panelGrid>
+                    <div align="left">
+                    <h:outputLabel value="Are you sure you want to remove this data?" />
+                    </div>
+                </h:panelGrid>
+                <div align="right">
+                <h:panelGrid columns="2">
+                    <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" actionListener="#{studyManagedBean.removeFile()}"  onsuccess="PF('removeDataDlg').hide()" oncomplete="#{treeTableView.reInit()}" update="@all"/>   
+                    <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" oncomplete="PF('removeDataDlg').hide()"/> 
+                </h:panelGrid>
+                </div>
+            </p:dialog>
         </h:body>
     </f:view>
 </html>
