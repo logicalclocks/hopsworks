@@ -116,8 +116,9 @@ public class StudyMB implements Serializable {
     private TreeNode root;
     private TreeNode selectedFile;
 
-    public StudyMB(){}
-    
+    public StudyMB() {
+    }
+
     @PostConstruct
     public void init() {
         initTreeTable();
@@ -136,14 +137,14 @@ public class StudyMB implements Serializable {
         return usernames;
     }
 
-    public String getLoginName(){
+    public String getLoginName() {
         return loginName;
     }
-    
-    public void setLoginName(String loginName){
+
+    public void setLoginName(String loginName) {
         this.loginName = loginName;
     }
-    
+
     public TreeNode getRoot() {
         return root;
     }
@@ -448,6 +449,14 @@ public class StudyMB implements Serializable {
         }
         return null;
     }
+    
+    public boolean checkOwnerForSamples(){
+    
+        if(getUsername().equals(getCreator()))
+            return true;
+        else
+            return false;
+    }
 
     public String checkCurrentUser(String email) {
 
@@ -686,8 +695,7 @@ public class StudyMB implements Serializable {
                 FacesContext.getCurrentInstance().responseComplete();
 
             } else {
-                
-               
+
                 //System.out.println("Session id from bean "+getRequest().getSession().getId());
                 getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
                 FacesContext.getCurrentInstance().responseComplete();
@@ -702,22 +710,22 @@ public class StudyMB implements Serializable {
     public void createSampleFiles(String fileName, String fileType) throws IOException, URISyntaxException {
 
         boolean rec = sampleFilesController.checkForExistingSampleFiles(getSampleID(), fileName);
-        
+
         try {
-            if(!rec) {
-                    SampleFilesPK smPK = new SampleFilesPK(getSampleID(), fileName);
-                    SampleFiles sf = new SampleFiles(smPK);
-                    sf.setFileType(fileType);
-                    sf.setStatus(SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
-                    sampleFilesController.persistSampleFiles(sf);
-                    activity.addSampleActivity(ActivityController.NEW_SAMPLE +"[" + fileName +"]" + " file ", studyName, "DATA", getCreator());
+            if (!rec) {
+                SampleFilesPK smPK = new SampleFilesPK(getSampleID(), fileName);
+                SampleFiles sf = new SampleFiles(smPK);
+                sf.setFileType(fileType);
+                sf.setStatus(SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
+                sampleFilesController.persistSampleFiles(sf);
+                activity.addSampleActivity(ActivityController.NEW_SAMPLE + "[" + fileName + "]" + " file ", studyName, "DATA", getCreator());
             }
-                    
+
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Sample file wasn't created.");
             return;
         }
-            mkDIRS(fileType,fileName);
+        mkDIRS(fileType, fileName);
     }
 
     //Creating directory structure in HDFS
@@ -733,13 +741,13 @@ public class StudyMB implements Serializable {
 
         try {
             if (fs.exists(path)) {
-                Path.mergePaths(path, new Path(File.separator+getSampleID()+File.separator+fileType.toUpperCase().trim()));
+                Path.mergePaths(path, new Path(File.separator + getSampleID() + File.separator + fileType.toUpperCase().trim()));
                 //addMessage("Dataset directory created!" + "/" + getSampleID());
                 //Path fullPath = new Path(path, new Path(File.separator+getSampleID()+File.separator+fileType.toUpperCase().trim()));
                 copyFromLocal(fileType, fileName);
             }
-                fs.mkdirs(path.suffix(File.separator+getSampleID()+File.separator+fileType.toUpperCase().trim()), null);
-                copyFromLocal(fileType, fileName);
+            fs.mkdirs(path.suffix(File.separator + getSampleID() + File.separator + fileType.toUpperCase().trim()), null);
+            copyFromLocal(fileType, fileName);
 
         } catch (IOException ioe) {
             System.err.println("IOException during operation" + ioe.getMessage());
@@ -748,31 +756,70 @@ public class StudyMB implements Serializable {
         }
 
     }
-    
-     //Copy file to HDFS 
+
+    //Copy file to HDFS 
     public void copyFromLocal(String fileType, String filename) throws IOException, URISyntaxException {
+
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", this.nameNodeURI);
+        FileSystem fs = FileSystem.get(conf);
+
+        String rootDir = getCreator().split("@")[0].trim();
+        String buildPath = File.separator + rootDir + File.separator + studyName;
+
+        File fileToRead = new File("/home/glassfish/data" + File.separator + filename);
+        System.out.println("Path to read " + fileToRead.toString());
+        Path build = new Path(buildPath + File.separator + getSampleID() + File.separator + fileType.toUpperCase().trim() + File.separator + filename);
+
+        InputStream is = new FileInputStream(fileToRead);
+        if (!fs.exists(build)) {
+            FSDataOutputStream os = fs.create(build, false);
+            IOUtils.copyBytes(is, os, 131072, true);
+        } else {
+            System.out.println("Error: File exist.");
+        }
+            System.out.println("Copied to hdfs " + build.toString());
+
+            //Status update in SampleFiles
+            updateFileStatus(getSampleID(), filename);
+    }
+
+    public void updateFileStatus(String id, String filename) {
+        try {
+            sampleFilesController.update(id, filename);
+        } catch (EJBException ejb) {
+            System.out.println("Status update failed");
+        }
+    }
+
+    //Delete a file from HDFS
+    public void deleteFromHDFS(String sampleId) throws IOException, URISyntaxException {
         
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
-        
+
         String rootDir = getCreator().split("@")[0].trim();
         String buildPath = File.separator + rootDir + File.separator + studyName;
+    
+        Path build = new Path(buildPath + File.separator + sampleId);
+        if(fs.exists(build)) fs.delete(build, true);
+        else System.out.println("File does not exist");
         
-        File fileToRead = new File("/home/glassfish/data"+File.separator+filename);
-        System.out.println("Path to read "+fileToRead.toString());
-        Path build = new Path(buildPath+File.separator+getSampleID()+File.separator+fileType.toUpperCase().trim()+File.separator+filename);
-        
-        
-        InputStream is = new FileInputStream(fileToRead);
-        FSDataOutputStream os = fs.create(build, false);
-        IOUtils.copyBytes(is, os, 131072, true);
-        System.out.println("Copied to hdfs "+ build.toString());
-        
-       
+        //remove the sample from SampleIds
+        deleteSamples(sampleId);
     }
     
-
+    public void deleteSamples(String id){
+        try {
+           sampleIDController.removeSample(id, studyName);
+        } catch (EJBException ejb) {
+            System.out.println("Sample deletion failed");
+        }
+    }
+    
+    
+    
     public void itemSelect(SelectEvent e) {
         if (getSelectedUsernames().isEmpty()) {
             addErrorMessageToUserAction("Error: People field cannot be empty.");
