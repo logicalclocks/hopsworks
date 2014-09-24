@@ -12,7 +12,7 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <title>JSP Page</title>
+        <title>BioBankCloud LIMS</title>
         <link rel="stylesheet" type="text/css" href="resumable.css" />
     </head>
     <body>

@@ -724,6 +724,7 @@ public class StudyMB implements Serializable {
                 sf.setFileType(fileType);
                 sf.setStatus(SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
                 sampleFilesController.persistSampleFiles(sf);
+                System.out.println("loging name after set " +getLoginName());
                 activity.addSampleActivity(ActivityController.NEW_SAMPLE + "[" + fileName + "]" + " file ", studyName, "DATA", getLoginName());
             }
 
@@ -852,7 +853,7 @@ public class StudyMB implements Serializable {
     
          try {
              sampleFilesController.deleteFileTypeRecords(sampleId, studyName, fileType);
-             activity.addSampleActivity("removed " + "[" + fileType + "]" + " files "+ " ", studyName, "DATA", getLoginName());
+             activity.addSampleActivity(" removed " + "[" + fileType + "]" + " files "+ " ", studyName, "DATA", getLoginName());
         } catch (EJBException ejb) {
              System.out.println("Sample file type deletion failed");
         }

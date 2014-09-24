@@ -33,7 +33,7 @@ import javax.servlet.http.HttpServletRequest;
  * @author roshan
  */
 @ManagedBean(name = "activityBean")
-@NoneScoped
+@SessionScoped
 public class ActivityMB implements Serializable {
 
     private static final Logger logger = Logger.getLogger(ActivityMB.class.getName());
