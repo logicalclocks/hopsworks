@@ -11,10 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URISyntaxException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +27,6 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import javax.faces.event.ValueChangeEvent;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.hadoop.conf.Configuration;
@@ -38,13 +34,11 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
-import org.primefaces.component.tabview.TabView;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.FlowEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.DefaultStreamedContent;
-import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.TreeNode;
 import se.kth.bbc.activity.ActivityController;
@@ -91,31 +85,22 @@ public class StudyMB implements Serializable {
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
-    
+
     private TrackStudy study;
-    private DatasetStudy dsStudy;
-    private Dataset dataset;
     private List<Username> usernames;
     private StudyTeam studyTeamEntry;
     private List<Theme> selectedUsernames;
     private List<Theme> themes;
-    private List<SampleIds> sampleIds;
     private String sample_Id;
     List<SampleIdDisplay> filteredSampleIds;
 
     private String studyName;
     private String studyCreator;
-    private String newTeamRole;
-    private String newChangedRole;
-    private String setTeamRole;
-    private String newRole;
-    private String owner;
     private int tabIndex;
     private String loginName;
 
     private StreamedContent file;
 
-    //private UIInput newTeamRole;
     private int manTabIndex = SHOW_TAB;
 
     private FileSummary selectedFile;
@@ -165,38 +150,6 @@ public class StudyMB implements Serializable {
         this.studyCreator = studyCreator;
     }
 
-    public String getOwnerRole() {
-        return owner;
-    }
-
-    public void setOwnerRole(String owner) {
-        this.owner = owner;
-    }
-
-    public String getNewTeamRole() {
-        return newTeamRole;
-    }
-
-    public void setNewTeamRole(String newTeamRole) {
-        this.newTeamRole = newTeamRole;
-    }
-
-    public String getChangedRole() {
-        return newChangedRole;
-    }
-
-    public void setChangedRole(String newChangedRole) {
-        this.newChangedRole = newChangedRole;
-    }
-
-    public String getNewRole() {
-        return newRole;
-    }
-
-    public void setNewRole(String newRole) {
-        this.newRole = newRole;
-    }
-
     public String getSampleID() {
         return sample_Id;
     }
@@ -205,12 +158,6 @@ public class StudyMB implements Serializable {
         this.sample_Id = sample_Id;
     }
 
-//    public void teamRoleChanged(ValueChangeEvent e) {
-//        setChangedRole(e.getNewValue().toString());
-//        System.out.println(" New role selected : " + getChangedRole());
-//
-////     if(getChangedRole().equals(e.getOldValue().toString()))
-//    }
     public TrackStudy getStudy() {
         if (study == null) {
             study = new TrackStudy();
@@ -220,28 +167,6 @@ public class StudyMB implements Serializable {
 
     public void setStudy(TrackStudy study) {
         this.study = study;
-    }
-
-    public DatasetStudy getDatasetStudy() {
-        if (dsStudy == null) {
-            dsStudy = new DatasetStudy();
-        }
-        return dsStudy;
-    }
-
-    public void setDatasetStudy(DatasetStudy dsStudy) {
-        this.dsStudy = dsStudy;
-    }
-
-    public Dataset getDataset() {
-        if (dataset == null) {
-            dataset = new Dataset();
-        }
-        return dataset;
-    }
-
-    public void setDataset(Dataset dataset) {
-        this.dataset = dataset;
     }
 
     public StudyTeam getStudyTeamEntry() {
@@ -254,26 +179,6 @@ public class StudyMB implements Serializable {
     public void setStudyTeamEntry(StudyTeam studyTeamEntry) {
         this.studyTeamEntry = studyTeamEntry;
     }
-
-    public String getStudyTeamRole(String email) {
-        this.setTeamRole = studyTeamController.findByPrimaryKey(studyName, email).getTeamRole();
-        return setTeamRole;
-//        if (team != null) {
-//            setTeamRole = team.getTeamRole();
-//            return setTeamRole;
-//        }
-//        return null;
-
-    }
-
-    public void setStudyTeamRole(String email, String role) {
-//        studyTeamEntry = studyTeamController.findByPrimaryKey(studyName, email);
-//        this.setTeamRole = studyTeamEntry.getTeamRole();
-        this.setTeamRole = role;
-    }
-//    public void setStudyTeam(StudyTeam studyTeam) {
-////        this.studyTeam = studyTeam;
-//    }
 
     public List<TrackStudy> getStudyList() {
         return studyController.findAll();
@@ -306,7 +211,6 @@ public class StudyMB implements Serializable {
         for (Username user : list) {
             themes.add(new Theme(i, user.getName(), user.getEmail()));
             i++;
-            //System.out.println("themes - " + user.getName() + " - "+user.getEmail());
         }
 
         return themes;
@@ -317,7 +221,6 @@ public class StudyMB implements Serializable {
     }
 
     public List<Theme> completeUsername(String query) {
-        //List<Theme> allThemes = userFacade.filterUsersBasedOnStudy(studyName);
         List<Theme> allThemes = addThemes();
         List<Theme> filteredThemes = new ArrayList<>();
 
@@ -367,28 +270,6 @@ public class StudyMB implements Serializable {
 
     public StudyRoleTypes[] getTeam() {
         return StudyRoleTypes.values();
-    }
-
-    public List<StudyRoleTypes> getTeamForResearchList() {
-
-        List<StudyRoleTypes> reOrder = new ArrayList<>();
-        //for(StudyRoleTypes role: StudyRoleTypes.values()){
-        reOrder.add(StudyRoleTypes.RESEARCHER);
-        reOrder.add(StudyRoleTypes.MASTER);
-        reOrder.add(StudyRoleTypes.AUDITOR);
-        //}
-        return reOrder;
-    }
-
-    public List<StudyRoleTypes> getTeamForGuestList() {
-
-        List<StudyRoleTypes> reOrder = new ArrayList<>();
-        //for(StudyRoleTypes role: StudyRoleTypes.values()){
-        reOrder.add(StudyRoleTypes.AUDITOR);
-        reOrder.add(StudyRoleTypes.MASTER);
-        reOrder.add(StudyRoleTypes.RESEARCHER);
-        //}
-        return reOrder;
     }
 
     public SampleFileTypes[] getFileType() {
@@ -479,22 +360,12 @@ public class StudyMB implements Serializable {
         List<StudyRoleTypes> reOrder = new ArrayList<>();
 
         if (team.equals("Researcher")) {
-//                for(StudyRoleTypes role: StudyRoleTypes.values()) {
             reOrder.add(StudyRoleTypes.RESEARCHER);
             reOrder.add(StudyRoleTypes.AUDITOR);
             reOrder.add(StudyRoleTypes.MASTER);
 
-//                }
             return reOrder;
 
-//        } else if (team.equals("Research Admin")) {
-//
-//            reOrder.add(StudyRoleTypes.RESEARCH_ADMIN);
-//            reOrder.add(StudyRoleTypes.AUDITOR);
-//            reOrder.add(StudyRoleTypes.RESEARCHER);
-//            reOrder.add(StudyRoleTypes.MASTER);
-//
-//            return reOrder;
         } else if (team.equals("Auditor")) {
 
             reOrder.add(StudyRoleTypes.AUDITOR);
@@ -560,8 +431,11 @@ public class StudyMB implements Serializable {
             studyController.persistStudy(study);
             activity.addActivity(ActivityController.NEW_STUDY, study.getName(), "STUDY");
             addStudyMaster(study.getName());
-        } catch (EJBException ejb) {
+            mkStudyDIR(study.getName());
+            logger.log(Level.INFO, "{0} - study is created successfully.", study.getName());
+        } catch (IOException | EJBException | URISyntaxException exp) {
             addErrorMessageToUserAction("Failed: Study already exists!");
+            logger.log(Level.SEVERE, "Study does not create - {0}", exp.getMessage());
             return null;
         }
         addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
@@ -570,6 +444,25 @@ public class StudyMB implements Serializable {
         FacesContext context = FacesContext.getCurrentInstance();
         context.getExternalContext().getFlash().setKeepMessages(true);
         return "studyPage";
+    }
+
+    //create study on HDFS
+    public void mkStudyDIR(String study_name) throws IOException, URISyntaxException {
+
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", this.nameNodeURI);
+        String rootDir = "Projects";
+
+        String buildPath = File.separator + rootDir + File.separator + study_name;
+        FileSystem fs = FileSystem.get(conf);
+        Path path = new Path(buildPath);
+
+        if (fs.exists(path)) {
+            logger.log(Level.SEVERE, "Study directory exists : {0}", study_name);
+            return;
+        }
+        fs.mkdirs(path, null);
+        logger.log(Level.INFO, "Directory was created on HDFS: {0}.", path.toString());
     }
 
     /**
@@ -582,35 +475,21 @@ public class StudyMB implements Serializable {
         this.studyName = params.get("studyname");
         this.studyCreator = params.get("username");
 
-        //System.out.println("Studyname: " + this.studyName + " - user: " + getUsername() + " - creator: " + this.studyCreator);
-//        FacesContext facesContext = FacesContext.getCurrentInstance(); 
-//        Map<String,Object> sessionMap = facesContext.getExternalContext().getSessionMap();
-//        sessionMap.put("currentStudy", studyName);
         boolean res = studyTeamController.findUserForActiveStudy(studyName, getUsername());
         boolean rec = userGroupsController.checkForCurrentSession(getUsername());
 
         if (!res) {
             if (!rec) {
                 userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(getUsername(), "GUEST")));
+                logger.log(Level.INFO, "Guest role added for: {0}.", getUsername());
                 return "studyPage";
             }
         }
 
         return "studyPage";
-//        if (stList.iterator().hasNext()){
-//            StudyTeam t = stList.iterator().next();
-////            if(getRequest().getRequestedSessionId() != null && getRequest().isRequestedSessionIdValid()){
-//                if(sessionMap.get("currentStudy").equals(t.getStudyTeamPK().getName())){
-//                    System.out.println("Session set - "+ sessionMap.get("currentStudy").toString());
-//                    userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(newRole, studyName)));
-//                    return "studyPage";
-//            }
-//        }
-//                    studyTeamController.clearGroups(getUsername(), sessionMap.get("currentStudy").toString());
-//                    sessionMap.remove("currentStudy");
-//                    return null;
     }
 
+    //Set the study owner as study master in StudyTeam table
     public void addStudyMaster(String study_name) {
 
         StudyTeamPK stp = new StudyTeamPK(study_name, getUsername());
@@ -620,10 +499,12 @@ public class StudyMB implements Serializable {
 
         try {
             studyTeamController.persistStudyTeam(st);
+            logger.log(Level.INFO, "{0} - added the study owner as a master.", study.getName());
         } catch (EJBException ejb) {
             System.out.println("Add study master failed" + ejb.getMessage());
+            logger.log(Level.SEVERE, "{0} - adding the study owner as a master failed.", ejb.getMessage());
         }
-        System.out.println("Add study master success!");
+
     }
 
     //delete a study - only owner can perform the deletion
@@ -633,16 +514,38 @@ public class StudyMB implements Serializable {
 
         try {
             if (getUsername().equals(StudyOwner)) {
-                studyController.removeStudy(study);
+                studyController.removeStudy(studyName);
             }
-        } catch (EJBException ejb) {
+            delStudyDIR(studyName);
+            logger.log(Level.INFO, "{0} - study removed.", studyName);
+        } catch (IOException | URISyntaxException | EJBException exp) {
             addErrorMessageToUserAction("Error: Study wasn't removed.");
+            logger.log(Level.SEVERE, "{0} - study was not removed.", exp.getMessage());
             return null;
         }
         addMessage("Study removed.");
         FacesContext context = FacesContext.getCurrentInstance();
         context.getExternalContext().getFlash().setKeepMessages(true);
         return "indexPage";
+    }
+
+    //delete study dir from HDFS
+    public void delStudyDIR(String study_name) throws IOException, URISyntaxException {
+
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", this.nameNodeURI);
+        String rootDir = "Projects";
+
+        String buildPath = File.separator + rootDir + File.separator + study_name;
+        FileSystem fs = FileSystem.get(conf);
+        Path path = new Path(buildPath);
+
+        if (!fs.exists(path)) {
+            logger.log(Level.SEVERE, "Study directory does not exist : {0}", study_name);
+            return;
+        }
+        fs.delete(path, true);
+        logger.log(Level.INFO, "Directory was deleted on HDFS: {0}.", path.toString());
     }
 
     //add members to a team - bulk persist 
@@ -656,6 +559,7 @@ public class StudyMB implements Serializable {
                 st.setTimestamp(new Date());
                 st.setTeamRole(studyTeamEntry.getTeamRole());
                 studyTeamController.persistStudyTeam(st);
+                logger.log(Level.INFO, "{0} - member added to study : {1}.", new Object[]{t.getName(), studyName});
                 activity.addActivity(ActivityController.NEW_MEMBER + t.getName() + " ", studyName, "STUDY");
             }
 
@@ -665,6 +569,7 @@ public class StudyMB implements Serializable {
 
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Adding team member failed.");
+            logger.log(Level.SEVERE, "Adding members to study failed...{0}", ejb.getMessage());
             return null;
         }
 
@@ -684,8 +589,8 @@ public class StudyMB implements Serializable {
                 SampleIdsPK idPK = new SampleIdsPK(getSampleID(), studyName);
                 SampleIds samId = new SampleIds(idPK);
                 sampleIDController.persistSample(samId);
+                logger.log(Level.INFO, "{0} - sample ID was created for : {1}.", new Object[]{getSampleID(), studyName});
                 activity.addActivity(ActivityController.NEW_SAMPLE + getSampleID() + " ", studyName, "DATA");
-                //System.out.println("Session id from bean "+getRequest().getSession().getId());
                 setLoginName(getUsername());
                 getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
                 FacesContext.getCurrentInstance().responseComplete();
@@ -700,12 +605,13 @@ public class StudyMB implements Serializable {
         } catch (EJBException ejb) {
 
             addErrorMessageToUserAction("Error: Transaction failed");
+            logger.log(Level.SEVERE, "Error: Transaction failed....{0}", ejb.getMessage());
         }
     }
 
     public void createSampleFiles(String fileName, String fileType) throws IOException, URISyntaxException {
-        boolean rec = sampleFilesController.checkForExistingSampleFiles(getSampleID(), fileName);
 
+        boolean rec = sampleFilesController.checkForExistingSampleFiles(getSampleID(), fileName);
         try {
             if (!rec) {
                 SampleFilesPK smPK = new SampleFilesPK(getSampleID(), fileName);
@@ -713,19 +619,20 @@ public class StudyMB implements Serializable {
                 sf.setFileType(fileType);
                 sf.setStatus(SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
                 sampleFilesController.persistSampleFiles(sf);
-                System.out.println("loging name after set " + getLoginName());
+                logger.log(Level.INFO, "{0} - sample file was created for : {1}.", new Object[]{getSampleID(), fileName});
                 activity.addSampleActivity(ActivityController.NEW_SAMPLE + "[" + fileName + "]" + " file ", studyName, "DATA", getLoginName());
             }
-            
+
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Sample file wasn't created.");
+            logger.log(Level.SEVERE, "Sample files were not created...{0}", ejb.getMessage());
             return;
         }
-        mkDIRS(fileType, fileName, getSampleID());
+        mkDIRS(getSampleID(), fileType, fileName);
     }
 
     //Creating directory structure in HDFS
-    public void mkDIRS(String fileType, String fileName, String sampleID) throws IOException, URISyntaxException {
+    public void mkDIRS(String sampleID, String fileType, String fileName) throws IOException {
 
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
@@ -736,19 +643,18 @@ public class StudyMB implements Serializable {
         Path path = new Path(buildPath);
 
         try {
+
             if (fs.exists(path)) {
                 Path.mergePaths(path, new Path(File.separator + sampleID + File.separator + fileType.toUpperCase().trim()));
-                //addMessage("Dataset directory created!" + "/" + getSampleID());
-                //Path fullPath = new Path(path, new Path(File.separator+getSampleID()+File.separator+fileType.toUpperCase().trim()));
                 copyFromLocal(fileType, fileName, sampleID);
             }
-            fs.mkdirs(path.suffix(File.separator + sampleID + File.separator + fileType.toUpperCase().trim()), null);
-            copyFromLocal(fileType, fileName, sampleID);
+                fs.mkdirs(path.suffix(File.separator + sampleID + File.separator + fileType.toUpperCase().trim()), null);
+                copyFromLocal(fileType, fileName, sampleID);
 
-        } catch (IOException ioe) {
-            System.err.println("IOException during operation" + ioe.getMessage());
+        } catch (URISyntaxException uri) {
+                logger.log(Level.SEVERE, "Directories were not created in HDFS...{0}", uri.getMessage());
         } finally {
-            fs.close();
+                fs.close();
         }
 
     }
@@ -764,7 +670,6 @@ public class StudyMB implements Serializable {
         String buildPath = File.separator + rootDir + File.separator + studyName;
 
         File fileFromLocal = new File("/home/glassfish/data" + File.separator + filename);
-        System.out.println("Path to read " + fileFromLocal.toString());
         Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + filename);
 
         InputStream is = new FileInputStream(fileFromLocal);
@@ -772,19 +677,21 @@ public class StudyMB implements Serializable {
             FSDataOutputStream os = fs.create(build, false);
             IOUtils.copyBytes(is, os, 131072, true);
         } else {
-            System.out.println("Error: File exist.");
+            logger.log(Level.SEVERE, "File exists in HDFS: {0}", filename);
         }
-        System.out.println("Copied to hdfs " + build.toString());
+            logger.log(Level.INFO, "File, {0}, copied to HDFS: {1}", new Object[]{filename, build.toString()});
+            logger.log(Level.INFO, "File size: {0} bytes", fs.getFileStatus(build).getLen());
 
         //Status update in SampleFiles
-        updateFileStatus(sampleId, filename);
+            updateFileStatus(sampleId, filename);
     }
 
     public void updateFileStatus(String id, String filename) {
         try {
             sampleFilesController.update(id, filename);
+            logger.log(Level.INFO, "Sample file status updated in TreeTable, ID: {0}, Name: {1}", new Object[]{id,filename});
         } catch (EJBException ejb) {
-            System.out.println("Status update failed");
+            logger.log(Level.SEVERE, "Sample file status updated failed: {0}", ejb.getMessage());
         }
     }
 
@@ -801,21 +708,22 @@ public class StudyMB implements Serializable {
         Path build = new Path(buildPath + File.separator + sampleId);
         if (fs.exists(build)) {
             fs.delete(build, true);
+            logger.log(Level.INFO, "{0} - Sample was deleted from {1} in HDFS", new Object[]{sampleId, studyName});
         } else {
-            System.out.println("Sample ID does not exist");
+            logger.log(Level.SEVERE, "Sample id {0} does not exist", sampleId);
         }
 
-        //remove the sample from SampleIds
-        deleteSamples(sampleId);
+            //remove the sample from SampleIds
+            deleteSamples(sampleId);
     }
 
     public void deleteSamples(String id) {
         try {
             sampleIDController.removeSample(id, studyName);
             activity.addSampleActivity(ActivityController.REMOVED_SAMPLE + "[" + id + "]" + " ", studyName, "DATA", getUsername());
-            System.out.println("loging name after set from delete " + getLoginName());
+            logger.log(Level.INFO, "{0} - Sample was deleted from {1} in SampleFiles table", new Object[]{id, studyName});
         } catch (EJBException ejb) {
-            System.out.println("Sample deletion failed");
+            logger.log(Level.SEVERE, "Sample deletion failed: {0}", ejb.getMessage());
         }
     }
 
@@ -831,12 +739,13 @@ public class StudyMB implements Serializable {
         Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim());
         if (fs.exists(build)) {
             fs.delete(build, true);
+            logger.log(Level.INFO, "{0} - File type folder was deleted from {1} in HDFS", new Object[]{fileType.toUpperCase(), studyName});
         } else {
-            System.out.println("File Type folder does not exist");
+            logger.log(Level.SEVERE, "{0} - File type folder does not exist", fileType.toUpperCase());
         }
 
-        //remove file type records
-        deleteFileTypes(sampleId, fileType);
+            //remove file type records
+            deleteFileTypes(sampleId, fileType);
     }
 
     public void deleteFileTypes(String sampleId, String fileType) {
@@ -844,8 +753,9 @@ public class StudyMB implements Serializable {
         try {
             sampleFilesController.deleteFileTypeRecords(sampleId, studyName, fileType);
             activity.addSampleActivity(" removed " + "[" + fileType + "]" + " files " + " ", studyName, "DATA", getUsername());
+            logger.log(Level.INFO, "{0} - File type folder was deleted from {1}/{2} in SampleFiles table", new Object[]{fileType, sampleId, studyName});
         } catch (EJBException ejb) {
-            System.out.println("Sample file type deletion failed");
+             logger.log(Level.SEVERE, "File type folder deletion failed: {0}", ejb.getMessage());
         }
 
     }
@@ -861,7 +771,9 @@ public class StudyMB implements Serializable {
         String buildPath = File.separator + rootDir + File.separator + studyName;
 
         Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + filename);
+        //check the file count inside a directory, if it is only one then recursive delete
         if (fs.exists(build)) {
+            //if(fs.getFileStatus(build))
             fs.delete(build, false);
         } else {
             System.out.println("File does not exist");
@@ -893,7 +805,6 @@ public class StudyMB implements Serializable {
         String rootDir = "Projects";
         String buildPath = File.separator + rootDir + File.separator + studyName;
         Path outputPath = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + fileName.trim());
-        //System.out.println("download path "+outputPath.toString());
 
         try {
 
@@ -969,35 +880,6 @@ public class StudyMB implements Serializable {
 
     }
 
-    public String onComplete() {
-        return "indexPage";
-    }
-
-    public void save(ActionEvent actionEvent) {
-        createStudy();
-    }
-
-    public String onFlowProcess(FlowEvent event) {
-        logger.info(event.getOldStep());
-        logger.info(event.getNewStep());
-
-        return event.getNewStep();
-    }
-
-    public void showNewStudyDialog() {
-
-        RequestContext.getCurrentInstance().update("formNewStudy");
-        RequestContext.getCurrentInstance().reset("formNewStudy");
-        RequestContext.getCurrentInstance().execute("dlgNewStudy.show()");
-    }
-
-    public void showNewStudyMemberDialog() {
-
-        RequestContext.getCurrentInstance().update("formNewStudyMember");
-        RequestContext.getCurrentInstance().reset("formNewStudyMember");
-        RequestContext.getCurrentInstance().execute("dlgNewStudyMember.show()");
-    }
-
     /*
      Used for navigating to the second tab immediately.
      */
@@ -1026,7 +908,9 @@ public class StudyMB implements Serializable {
         try {
             studyController.removeByName(studyName);
             activity.addActivity(ActivityController.REMOVED_STUDY, studyName, ActivityController.CTE_FLAG_STUDY);
-        } catch (EJBException ejb) {
+            delStudyDIR(studyName);
+            logger.log(Level.INFO, "{0} - study removed.", studyName);
+        } catch (IOException | URISyntaxException | EJBException exp) {
             addErrorMessageToUserAction("Error: Study wasn't removed.");
             return null;
         }
@@ -1109,22 +993,22 @@ public class StudyMB implements Serializable {
     }
 
     /*public void deleteDataDlg() {
-        Map<String, Object> options = new HashMap<>();
-        options.put("modal", true);
-        options.put("draggable", false);
-        options.put("resizable", false);
-        options.put("width", 320);
-        options.put("contentWidth", 300);
-        options.put("height", 100);
-        RequestContext.getCurrentInstance().openDialog("confirmDelete", options, null);
-    }
+     Map<String, Object> options = new HashMap<>();
+     options.put("modal", true);
+     options.put("draggable", false);
+     options.put("resizable", false);
+     options.put("width", 320);
+     options.put("contentWidth", 300);
+     options.put("height", 100);
+     RequestContext.getCurrentInstance().openDialog("confirmDelete", options, null);
+     }
 
-    public void closeConfirmDelete() {
-        RequestContext.getCurrentInstance().closeDialog(null);
-    }
+     public void closeConfirmDelete() {
+     RequestContext.getCurrentInstance().closeDialog(null);
+     }
 
-    public void onDeleteDlgDone(SelectEvent event) {
-        FacesMessage mess = (FacesMessage) (event.getObject());
-        FacesContext.getCurrentInstance().addMessage("remove", mess);
-    }*/
+     public void onDeleteDlgDone(SelectEvent event) {
+     FacesMessage mess = (FacesMessage) (event.getObject());
+     FacesContext.getCurrentInstance().addMessage("remove", mess);
+     }*/
 }

@@ -69,15 +69,6 @@ public class StudyController {
     }
     
     public List<TrackStudy> filterPersonalStudy(String username){
-    
-//        Calendar cal = Calendar.getInstance();
-//        cal.setTime(new Date());
-//        cal.add(Calendar.DATE, -2);
-//        
-//        Query query = 
-//                em.createQuery("SELECT t FROM TrackStudy t WHERE t.timestamp BETWEEN ? AND ?",TrackStudy.class).setParameter(1, new Date(), TemporalType.DATE)
-//                        .setParameter(2, cal, TemporalType.DATE);
-        
         
         Query query = em.createNamedQuery("TrackStudy.findByUsername", TrackStudy.class).setParameter("username", username);
         return query.getResultList();
@@ -99,9 +90,6 @@ public class StudyController {
     
     public List<TrackStudy> findAllStudies(String user){
     
-        //Query query = em.createNativeQuery("SELECT name, username FROM study WHERE username=? UNION SELECT name, team_member FROM StudyTeam WHERE team_member=?",TrackStudy.class).setParameter(1, user).setParameter(2, user);
-        //select name, username from study where username='roshan@yahoo.com' UNION ALL select name, username from study where name IN (select name from StudyTeam where team_member='roshan@yahoo.com');
-
         Query query = em.createNativeQuery("SELECT name, username FROM study WHERE username=? UNION SELECT name, username FROM study WHERE name IN (SELECT name FROM StudyTeam WHERE team_member=?)",TrackStudy.class)
                 .setParameter(1, user).setParameter(2, user);   
         
@@ -122,9 +110,6 @@ public class StudyController {
     }    
     
     public List<TrackStudy> findJoinedStudies(String user){
-    
-        //select name, username from study where name IN (select distinct name from StudyTeam where name NOT IN (select name from study where username like 'roshan%'))
-        //select name, username from study where (name,username) NOT IN (select name, team_member from StudyTeam where team_member='roshan@yahoo.com')
         
         Query query = em.createNativeQuery("select study.name, study.username from (StudyTeam join study on StudyTeam.name=study.name) join USERS on study.username=USERS.email where study.username not like ? and StudyTeam.team_member like ?", TrackStudy.class)
                 .setParameter(1, user).setParameter(2, user);
@@ -146,8 +131,7 @@ public class StudyController {
     }
     
     public boolean checkForStudyOwnership(String user){
-    
-        //Query query = em.createNativeQuery("SELECT EXISTS(SELECT * from study WHERE username=?) AS T", TrackStudy.class).setParameter(1, user);
+
         Query query = em.createNamedQuery("TrackStudy.findAllStudy", TrackStudy.class).setParameter("username", user);
         long res = (Long) query.getSingleResult();
         
@@ -160,8 +144,11 @@ public class StudyController {
         em.persist(study);
     }
     
-    public void removeStudy(TrackStudy study) {
-        em.remove(study);
+    public void removeStudy(String name) {
+       TrackStudy study = em.find(TrackStudy.class, name);
+        if(study != null){
+            em.remove(study);
+        }
     }
     
     public synchronized void removeByName(String studyname){

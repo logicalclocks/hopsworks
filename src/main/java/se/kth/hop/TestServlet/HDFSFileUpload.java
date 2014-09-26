@@ -25,7 +25,7 @@ import org.apache.hadoop.hdfs.DFSClient;
 
 public class HDFSFileUpload {
     
-    private String hdfsUrl = "hdfs://localhost:9000";
+    private final String hdfsUrl = "hdfs://localhost:9000";
  
     private String sourceFilename;
     private String destinationFilename;
