@@ -8,7 +8,9 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 /**
- *
+ * Utility class for loading Activity data into webpage. 
+ * It reflects the main information needed to show in the 'show' tabs, created with results from database queries. 
+ * As such it contains but getters and setters.
  * @author stig
  */
 @Entity

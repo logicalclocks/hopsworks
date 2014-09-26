@@ -4,6 +4,9 @@ import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 
 /**
+ * Custom implementation of the TreeNode interface. It enforces the use of
+ * FileSummary as data type. Only overrides the equals method to allow efficient
+ * use of the class in Lists. (Use of FileSummary could be removed.)
  *
  * @author stig
  */
@@ -20,12 +23,12 @@ public class SampleTreeNode extends DefaultTreeNode {
         }
         if (getClass() != o.getClass()) {
             return false;
-        }        
+        }
         final SampleTreeNode other = (SampleTreeNode) o;
-        if(super.getData() == null){
-            return other.getData()==null;
-        }else{
-            return ((FileSummary)super.getData()).equals(other.getData());
+        if (super.getData() == null) {
+            return other.getData() == null;
+        } else {
+            return ((FileSummary) super.getData()).equals(other.getData());
         }
     }
 }

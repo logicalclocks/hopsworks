@@ -237,10 +237,8 @@ public class UserController implements Serializable {
         }
     }
 
-    /*
-    
-     STIG
-    
+    /**
+     * Get all open user requests.
      */
     public List<Username> getAllRequests() {
         return userFacade.findAllByStatus(Username.STATUS_REQUEST);
@@ -254,6 +252,9 @@ public class UserController implements Serializable {
         this.selectedUsers = users;
     }
 
+    /**
+     * Accept the requests of the selected users.
+     */
     public void allowSelectedUsers() {
         int num = selectedUsers.size();
         ArrayList<String> failedNames = new ArrayList<>();
@@ -276,6 +277,9 @@ public class UserController implements Serializable {
         }
     }
 
+    /**
+     * Deny requests for the selected users.
+     */
     public void denySelectedUsers() {
         int num = selectedUsers.size();
         ArrayList<String> failedNames = new ArrayList<>();

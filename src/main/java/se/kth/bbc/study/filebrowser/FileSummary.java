@@ -4,8 +4,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * Container for data to be displayed in the file browser.
- *
+ * Container for data to be displayed in the frontend file browser. *
  * @author Stig
  */
 public class FileSummary implements Serializable, Comparable<FileSummary> {

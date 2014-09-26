@@ -15,6 +15,8 @@ import se.kth.bbc.study.SampleIds;
 import se.kth.bbc.study.StudyMB;
 
 /**
+ * Represents the file structure in the backend for display in the webpage. The
+ * root node is the study, under that the samples, types and files respectively.
  *
  * @author stig
  */
@@ -36,8 +38,14 @@ public class SampleTreeModel implements Serializable, FileStructureListener {
     //The root of the study folder
     private SampleTreeNode studyRoot;
 
+    /**
+     * Initializes the file structure tree. Fetches from database: all samples
+     * for the current study, all extensions and all filenames for these
+     * samples.
+     */
     @PostConstruct
     public void init() {
+        //TODO: consider not calling findAllExtensions, but aggregating that query into the file search.
         //root node
         root = new SampleTreeNode(new FileSummary("", "", "", "", ""), null);
         //level 1: study
@@ -156,7 +164,7 @@ public class SampleTreeModel implements Serializable, FileStructureListener {
 
     @Override
     public void updateStatus(String sampleId, String type, String filename, String newStatus) {
-                // get the sample node
+        // get the sample node
         List<TreeNode> samples = studyRoot.getChildren();
         SampleTreeNode sampleTemplate = new SampleTreeNode(new FileSummary(studymb.getStudyName(), sampleId, "", "", ""), null);
         TreeNode sampleReal = samples.get(samples.indexOf(sampleTemplate));
@@ -170,7 +178,7 @@ public class SampleTreeModel implements Serializable, FileStructureListener {
         List<TreeNode> files = typeReal.getChildren();
         SampleTreeNode toChange = new SampleTreeNode(new FileSummary(studymb.getStudyName(), sampleId, type, filename, ""), null);
         files.remove(toChange);
-        toChange = new SampleTreeNode(new FileSummary(studymb.getStudyName(),sampleId,type,filename,newStatus),typeReal);
+        toChange = new SampleTreeNode(new FileSummary(studymb.getStudyName(), sampleId, type, filename, newStatus), typeReal);
     }
 
     /*

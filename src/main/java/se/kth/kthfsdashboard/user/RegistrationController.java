@@ -19,7 +19,7 @@ import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
 
 /**
- *
+ * Controller for the registration view.
  * @author stig
  */
 @ManagedBean
@@ -47,8 +47,8 @@ public class RegistrationController implements Serializable {
         this.user = user;
     }
 
-    /*
-     Called upon completing the "Register user" form. Registers a user as having requested access. 
+    /**
+     * Called upon completing the "Register user" form. Registers a user as having requested access. 
      */
     public String registerUser() {
         user.encodePassword();

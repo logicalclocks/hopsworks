@@ -8,6 +8,8 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 
 /**
+ * Controller class for monitoring user requests and warning administrator of
+ * new requests.
  *
  * @author stig
  */

@@ -28,7 +28,7 @@ import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
 
 /**
- *
+ * Provides the controller for the Profile page view; interface to the model.
  * @author Stig
  */
 @ManagedBean
