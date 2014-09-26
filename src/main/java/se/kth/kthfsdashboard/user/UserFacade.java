@@ -4,14 +4,12 @@
  */
 package se.kth.kthfsdashboard.user;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.study.Theme;
 
 /**
  *
@@ -96,15 +94,8 @@ public class UserFacade extends AbstractFacade<Username> {
         em.detach(user);
     }
     
-    
-    /*
-    
-    STIG
-    
-    */
-    
-    /*
-    Gets all users with STATUS = status
+    /**
+    * Get all users with STATUS = status.
     */
     public List<Username> findAllByStatus(int status) {
         TypedQuery<Username> query = em.createNamedQuery("Username.findAllByStatus", Username.class);

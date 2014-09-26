@@ -1,11 +1,10 @@
-package se.kth.bbc.study;
+package se.kth.bbc.study.filebrowser;
 
 import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * Container for data to be displayed in the file browser.
- *
+ * Container for data to be displayed in the frontend file browser. *
  * @author Stig
  */
 public class FileSummary implements Serializable, Comparable<FileSummary> {
@@ -129,9 +128,6 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
         if (!Objects.equals(this.filename, other.filename)) {
             return false;
         }
-        if (!Objects.equals(this.status, other.status)) {
-            return false;
-        }
         return true;
     }
 
@@ -142,7 +138,15 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
 
     @Override
     public int compareTo(FileSummary o) {
-        return o.filename.compareTo(filename);
+        if(filename!= null){
+            return filename.compareTo(o.filename);
+        }else if(type != null){
+            return type.compareTo(o.type);
+        }else if(sampleID!= null){
+            return sampleID.compareTo(o.sampleID);
+        }else{
+            return studyName.compareTo(o.studyName);
+        }
     }
     
     

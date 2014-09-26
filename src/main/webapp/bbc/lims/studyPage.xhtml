@@ -6,8 +6,7 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:c="http://java.sun.com/jsp/jstl/core"
-      xmlns:fn="http://java.sun.com/jsp/jstl/functions">
+      xmlns:c="http://java.sun.com/jsp/jstl/core">
 
     <f:view contentType="text/html">
         <h:head>
@@ -330,113 +329,6 @@
                                                 </ul>
                                             </h:panelGroup>
                                         </c:if>
-
-
-                                        <!-- Research Admin block -->
-
-
-<!--                        <c:if id="researchAdminBlock"  test="${studyManagedBean.countResearchAdmins() > 0}">
-                                      <h:panelGroup id="divRechAdmin" styleClass="ui_box">
-                                          <h5 class="title" align="left">Research Admins
-                                              <small>#{studyManagedBean.countResearchAdmins()}</small></h5>
-
-                                          <ul class="well-list">
-                                              <c:forEach var="rDlist" items="${studyManagedBean.researchAdminList}" varStatus="rDchs">
-                                                  <c:if id="notCurrentUser_researchAdmin" test="${studyManagedBean.checkCurrentUser(rDlist.email) ne rDlist.email}">
-                                                      <li id="researchAdmin_${rDchs.count}" class="team_member_row">
-                                                          <div id="divRow" class="row">
-                                                              <div class="span6">
-                                                                  <img class="avatar s32" src="#{activityBean.getGravatar(rDlist.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
-                                                                  <p:commandLink styleClass="dark">
-                                                                      <strong>#{rDlist.name}</strong>
-                                                                      <br/>
-                                                                      <small class="cgray">
-                                        #{rDlist.email}
-                                    </small>
-                                </p:commandLink>
-                            </div>
-                            <div id="userBlock" class="span5 right">
-                                <div class="left">
-                                    <h:form id="frmRchsAd_${rDchs.count}" class="edit_team_members">
-                                        <div style="margin:0;padding:0;display:inline">
-                                            <p:selectOneMenu id="researcherList_${rDchs.count}" value="#{valueChangeMB.newTeamRole}" 
-                                                             styleClass="study_role_assign"  style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                 <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(rDlist.email)}"/>
-                                            <f:selectItem itemLabel="Researcher"/>
-                                                <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(rDlist.email)}" var="rca" itemLabel="#{rca.team}" itemValue="#{rca}"/>
-                                                           rendered="#{studyManagedBean.getCurrentRole(rlist.email)== 'Researcher'}"/>
-                                              <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
-                                              <f:selectItem itemLabel="Master" itemValue="Master"/>
-                                              <f:selectItem itemLabel="Guest" itemValue="Guest"/>
-                                        </p:selectOneMenu>
-                                       </div>
-                                    </h:form>
-                                </div>
-                                <div class="right" align="right">
-                                            <p:commandButton icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rDlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                 <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rDlist.name} [#{rDlist.email}]?" icon="ui-icon-alert"/>
-                                            </p:commandButton>
-                                            <p:confirmDialog id="notCurrentUser_researchAdmin_${rDchs.count}"  global="true" severity="alert" showEffect="fade"> 
-                                                  <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" />   
-                                                  <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
-                                             </p:confirmDialog>
-                                </div>
-                            </div>
-                        </div> 
-                    </li>
-            </c:if> 
-            <c:if id="currentUser_researchAdmin" test="${studyManagedBean.checkCurrentUser(rDlist.email) eq rDlist.email}">
-                    <li id="researchAdmin_${rDchs.count}" class="team_member_row">
-                        <div id="divRow" class="row">
-                            <div class="span6">
-                                <img class="avatar s32" src="#{activityBean.getGravatar(rDlist.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
-                                <p:commandLink styleClass="dark">
-                                    <strong>#{rDlist.name}</strong>
-                                    <br/>
-                                    <small class="cgray">
-                                        #{rDlist.email}
-                                    </small>
-                                </p:commandLink>
-                            </div>
-                            <div id="userBlock" class="span5 right">
-                                <div class="left">
-                                    <h:form id="frmRchsA_${rDchs.count}" class="edit_team_members">
-                                        <div style="margin:0;padding:0;display:inline">
-                                            <p:selectOneMenu id="researcherList_${rDchs.count}" value="#{valueChangeMB.newTeamRole}" 
-                                                             styleClass="study_role_assign"  style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                 <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(rDlist.email)}"/>
-                                            <f:selectItem itemLabel="Researcher"/>
-                                            <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(rDlist.email)}" var="rca" itemLabel="#{rca.team}" itemValue="#{rca}"/>
-                                                           rendered="#{studyManagedBean.getCurrentRole(rlist.email)== 'Researcher'}"/>
-                                              <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
-                                              <f:selectItem itemLabel="Master" itemValue="Master"/>
-                                              <f:selectItem itemLabel="Guest" itemValue="Guest"/>
-                                        </p:selectOneMenu>
-                                       </div>
-                                    </h:form>
-                                </div>
-                                <div class="right" align="right">
-                                        <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                        <p:commandButton styleClass="ui-button" icon="ui-icon-minus" action="#{valueChangeMB.deleteMemberFromTeam(rDlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                             <p:confirm header="Removing a team member" message="Are you sure you want to remove the user #{rDlist.name} [#{rDlist.email}]?" icon="ui-icon-alert" />
-                                        </p:commandButton>
-                                        <p:confirmDialog id="currentUser_researchAdmin_${rDchs.count}" global="true" severity="alert" showEffect="fade"> 
-                                              <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
-                                              <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
-                                         </p:confirmDialog> 
-                                </div>
-                            </div>
-                        </div> 
-                    </li>
-            </c:if> 
-         </c:forEach>
-        </ul>
-    </h:panelGroup>
-  </c:if>-->
-
-
-                                        <!-- End of Researcher Panel Group and starting of Auditor Panel Group-->                                    
-
                                         <c:if id="auditorBlock" test="${studyManagedBean.countAuditors() > 0}">
                                             <h:panelGroup id="divAud" styleClass="ui_box">
                                                 <h5 class="title" align="left">Auditors
@@ -552,21 +444,12 @@
                                         <h:form id="filesForm">       
                                             <p:growl for="remove" autoUpdate="true" showDetail="true"/>
                                             <p:contextMenu for="filesTable" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                <p:menuitem update="@form">
-                                                    <h:commandLink title="Download" style="text-decoration: none;text-align: center;"  
-                                                                   value="Download" actionListener="#{studyManagedBean.fileDownloadEvent}">
-                                                        <p:fileDownload value="#{studyManagedBean.file}"/>
-                                                    </h:commandLink>
+                                                <p:menuitem update="@form" value="Download" actionListener="#{studyManagedBean.fileDownloadEvent}" icon="ui-icon-arrowthick-1-s" ajax="false">
+                                                    <p:fileDownload value="#{studyManagedBean.file}"/>
                                                 </p:menuitem>
-                                                <!--<p:menuitem>
-                                                    <h:commandLink title="Delete" style="text-decoration: none;text-align: center;" 
-                                                                   value="Delete" action="#{studyManagedBean.removeFile}">
-                                                    </h:commandLink>
-                                                </p:menuitem>-->
-                                                <p:menuitem value="Delete" update="@form" oncomplete="#{treeTableView.reInit()}" actionListener="#{studyManagedBean.removeFile()}"
-                                                            style="padding: 0em;background: inherit !important;box-shadow: inherit !important;color: inherit !important;"/>                                            
+                                                <p:menuitem value="Delete" update="@form" oncomplete="PF('removeDataDlg').show()"/>                                            
                                             </p:contextMenu>
-                                            <p:treeTable id="filesTable" value="#{treeTableView.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedNode}">
+                                            <p:treeTable id="filesTable" value="#{sampleModel.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedNode}">
                                                 <p:column headerText="Name">
                                                     <h:outputText value="#{document.displayName}" />
                                                 </p:column>
@@ -583,9 +466,10 @@
                                                 </p:column>
                                             </p:treeTable>
                                         </h:form>
-                                    </div>
 
-                                </p:tab>
+                                    </div> 
+
+                                </p:tab> 
 
 
                                 <!--                                <p:tab id="workflows" title="Workflows"></p:tab>-->
@@ -598,6 +482,20 @@
 
                 </p:layoutUnit>
             </p:layout>
+
+            <p:dialog id="rmdlg" widgetVar="removeDataDlg" header="Remove data" modal="true" resizable="false" draggable="false"> 
+                <h:panelGrid>
+                    <div align="left">
+                        <h:outputLabel value="Are you sure you want to remove this data?" />
+                    </div>
+                </h:panelGrid>
+                <div align="right">
+                    <h:panelGrid columns="2">
+                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" actionListener="#{studyManagedBean.removeFile()}"  oncomplete="PF('removeDataDlg').hide()" update="tabStudyPage:filesForm"/>   
+                        <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" oncomplete="PF('removeDataDlg').hide()"/> 
+                    </h:panelGrid>
+                </div>
+            </p:dialog>
         </h:body>
     </f:view>
 </html>

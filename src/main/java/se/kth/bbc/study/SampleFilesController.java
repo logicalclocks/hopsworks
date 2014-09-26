@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.study;
 
 import java.util.ArrayList;
@@ -14,7 +9,7 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 /**
- *
+ * Controls access to datatable SampleFiles.
  * @author stig
  */
 @Stateless
@@ -26,15 +21,19 @@ public class SampleFilesController {
         return em;
     }
 
-    public SampleFilesController() {
+    public SampleFilesController() {}
 
-    }
-
+    /**
+     * Find all SampleFiles having id <i>id</i>.
+     */
     public List<SampleFiles> findAllById(String id){
         TypedQuery<SampleFiles> query = em.createNamedQuery("SampleFiles.findById", SampleFiles.class).setParameter("id", id);
         return query.getResultList();
     }
     
+    /**
+     * Find all SampleFiles in database having id <i>id</i> and type <i>type</i>.
+     */
     public List<SampleFiles> findAllByIdType(String id, String type){
         Query query = em.createNativeQuery("SELECT * FROM SampleFiles WHERE id LIKE ? AND file_type LIKE ?",SampleFiles.class);
         query.setParameter(1, id);
@@ -42,6 +41,9 @@ public class SampleFilesController {
         return query.getResultList();
     }
     
+    /**
+     * Find all file types featuring in SampleFiles for the sample <i>sampleId</i>.
+     */
     public List<String> findAllExtensionsForSample(String sampleId){
         Query query = em.createNativeQuery("SELECT DISTINCT file_type FROM SampleFiles WHERE id LIKE ?");
         query.setParameter(1, sampleId);
@@ -62,13 +64,12 @@ public class SampleFilesController {
         return em.find(SampleFiles.class, new SampleFiles(new SampleFilesPK(id, filename)).getSampleFilesPK());
     }
 
+    /**
+     * Check if the SampleFile with id <i>id</i> and filename <i>filename</i> exists.
+     */
     public boolean checkForExistingSampleFiles(String id, String filename) {
         SampleFiles checkedFile = findByPrimaryKey(id, filename);
-        if (checkedFile != null) {
-            return true;
-        } else {
-            return false;
-        }
+        return checkedFile != null;
     }
     
     public void update(String id, String filename){
@@ -85,8 +86,11 @@ public class SampleFilesController {
             em.remove(fetchedFile);
     }
     
-    public void deleteFileTypeRecords(String sampleId, String study_name, String file_type){
-        
+    /**
+     * Remove all SampleFiles in sample <i>sampleId</i> in study <i>study_name</i> with type <i>file_type</i>.
+     */
+    public void deleteFileTypeRecords(String sampleId, String study_name, String file_type){     
+        //TODO: improve: one remove query, not one search and then remove every single item.
         Query query = em.createNativeQuery("SELECT * FROM SampleFiles WHERE id IN (SELECT id FROM SampleIds WHERE id=? AND study_name=?) AND file_type=?",SampleFiles.class).setParameter(1, sampleId)
                 .setParameter(2, study_name).setParameter(3, file_type);
         List<SampleFiles> res = query.getResultList();
@@ -96,8 +100,10 @@ public class SampleFilesController {
         }
     }
     
-    public long checkFileCount(String id, String study_name){
-        
+    /**
+     * Get the number of files in study <i>study_name</i> in sample <i>id</i>.
+     */
+    public long checkFileCount(String id, String study_name){        
         Query query = em.createNativeQuery("SELECT COUNT(*) FROM SampleFiles WHERE id IN (SELECT id FROM SampleIds WHERE id=? AND study_name=?)",SampleFiles.class).setParameter(1, id)
                 .setParameter(2, study_name);
         return (Long)query.getSingleResult();

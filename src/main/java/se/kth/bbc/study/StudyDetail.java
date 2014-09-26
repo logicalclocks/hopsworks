@@ -10,7 +10,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 /**
- *
+ * Utility class for loading Study data into webpage. 
+ * It reflects the main information needed to show in the index page, created with results from database queries. 
+ * As such it contains but getters and setters.
  * @author stig
  */
 @Entity

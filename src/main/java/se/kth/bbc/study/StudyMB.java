@@ -5,6 +5,7 @@
  */
 package se.kth.bbc.study;
 
+import se.kth.bbc.study.filebrowser.FileSummary;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -26,7 +27,6 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
-import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.hadoop.conf.Configuration;
@@ -34,8 +34,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
-import org.primefaces.context.RequestContext;
-import org.primefaces.event.FlowEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.DefaultStreamedContent;
@@ -46,6 +44,7 @@ import se.kth.bbc.activity.ActivityMB;
 import se.kth.bbc.activity.UserGroupsController;
 import se.kth.bbc.activity.UsersGroups;
 import se.kth.bbc.activity.UsersGroupsPK;
+import se.kth.bbc.study.filebrowser.FileStructureListener;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
 
@@ -57,32 +56,32 @@ import se.kth.kthfsdashboard.user.Username;
 @ManagedBean(name = "studyManagedBean", eager = true)
 @SessionScoped
 public class StudyMB implements Serializable {
-
+    
     private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
     private static final long serialVersionUID = 1L;
     public static final int TEAM_TAB = 1;
     public static final int SHOW_TAB = 0;
-
+    
     public final String nameNodeURI = "hdfs://localhost:9999";
-
+    
     @EJB
     private StudyController studyController;
-
+    
     @EJB
     private StudyTeamController studyTeamController;
-
+    
     @EJB
     private UserFacade userFacade;
-
+    
     @EJB
     private UserGroupsController userGroupsController;
-
+    
     @EJB
     private SampleIdController sampleIDController;
-
+    
     @EJB
     private SampleFilesController sampleFilesController;
-
+    
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
 
@@ -93,59 +92,64 @@ public class StudyMB implements Serializable {
     private List<Theme> themes;
     private String sample_Id;
     List<SampleIdDisplay> filteredSampleIds;
-
+    
     private String studyName;
     private String studyCreator;
     private int tabIndex;
     private String loginName;
-
+    
     private StreamedContent file;
 
     private int manTabIndex = SHOW_TAB;
-
+    
     private FileSummary selectedFile;
     private TreeNode selectedNode;
-
+    
+    private final List<FileStructureListener> fileListeners = new ArrayList<>();
+    
     public StudyMB() {
     }
-
+    
     @PostConstruct
     public void init() {
         activity.getActivity();
     }
-
+    
     public void setActivity(ActivityMB activity) {
         this.activity = activity;
     }
-
+    
     public List<Username> getUsersNameList() {
         return userFacade.findAllUsers();
     }
-
+    
     public List<Username> getUsersname() {
         return usernames;
     }
-
+    
     public String getLoginName() {
         return loginName;
     }
-
+    
     public void setLoginName(String loginName) {
         this.loginName = loginName;
     }
-
+    
     public String getStudyName() {
         return studyName;
     }
-
+    
     public void setStudyName(String studyName) {
-        this.studyName = studyName;
+        this.studyName = studyName;        
+        for (FileStructureListener l : fileListeners) {
+            l.changeStudy(studyName);
+        }
     }
-
+    
     public String getCreator() {
         return studyCreator;
     }
-
+    
     public void setCreator(String studyCreator) {
         this.studyCreator = studyCreator;
     }
@@ -153,7 +157,7 @@ public class StudyMB implements Serializable {
     public String getSampleID() {
         return sample_Id;
     }
-
+    
     public void setSampleID(String sample_Id) {
         this.sample_Id = sample_Id;
     }
@@ -164,7 +168,7 @@ public class StudyMB implements Serializable {
         }
         return study;
     }
-
+    
     public void setStudy(TrackStudy study) {
         this.study = study;
     }
@@ -175,7 +179,7 @@ public class StudyMB implements Serializable {
         }
         return studyTeamEntry;
     }
-
+    
     public void setStudyTeamEntry(StudyTeam studyTeamEntry) {
         this.studyTeamEntry = studyTeamEntry;
     }
@@ -183,27 +187,27 @@ public class StudyMB implements Serializable {
     public List<TrackStudy> getStudyList() {
         return studyController.findAll();
     }
-
+    
     public List<StudyDetail> getPersonalStudy() {
         return studyController.findAllPersonalStudyDetails(getUsername());
     }
-
+    
     public long getAllStudy() {
         return studyController.getAllStudy(getUsername());
     }
-
+    
     public long getNOfMembers() {
         return studyController.getMembers(getStudyName());
     }
-
+    
     public List<TrackStudy> getPersonalStudyList() {
         return studyController.filterPersonalStudy(getUsername());
     }
-
+    
     public int getLatestStudyListSize() {
         return studyController.filterPersonalStudy(getUsername()).size();
     }
-
+    
     public List<Theme> addThemes() {
         List<Username> list = userFacade.filterUsersBasedOnStudy(getStudyName());
         themes = new ArrayList<>();
@@ -212,18 +216,18 @@ public class StudyMB implements Serializable {
             themes.add(new Theme(i, user.getName(), user.getEmail()));
             i++;
         }
-
+        
         return themes;
     }
-
+    
     public List<Theme> getThemes() {
         return themes;
     }
-
+    
     public List<Theme> completeUsername(String query) {
         List<Theme> allThemes = addThemes();
         List<Theme> filteredThemes = new ArrayList<>();
-
+        
         for (Theme t : allThemes) {
             if (t.getName().toLowerCase().contains(query)) {
                 filteredThemes.add(t);
@@ -231,11 +235,11 @@ public class StudyMB implements Serializable {
         }
         return filteredThemes;
     }
-
+    
     public List<SampleIdDisplay> completeSampleIDs(String query) {
         List<SampleIds> allSampleIds = sampleIDController.getExistingSampleIDs(studyName, getUsername());
         filteredSampleIds = new ArrayList<>();
-
+        
         for (SampleIds t : allSampleIds) {
             if (t.getSampleIdsPK().getId().toLowerCase().contains(query)) {
                 filteredSampleIds.add(new SampleIdDisplay(t.getSampleIdsPK().getId(), studyName));
@@ -243,31 +247,31 @@ public class StudyMB implements Serializable {
         }
         return filteredSampleIds;
     }
-
+    
     public List<Theme> getSelectedUsernames() {
         return this.selectedUsernames;
     }
-
+    
     public void setSelectedUsernames(List<Theme> selectedUsernames) {
         this.selectedUsernames = selectedUsernames;
     }
-
+    
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
     }
-
+    
     private HttpServletResponse getResponse() {
         return (HttpServletResponse) FacesContext.getCurrentInstance().getExternalContext().getResponse();
     }
-
+    
     public String getUsername() {
         return getRequest().getUserPrincipal().getName();
     }
-
+    
     public void gravatarAccess() {
         activity.getGravatar(studyCreator);
     }
-
+    
     public StudyRoleTypes[] getTeam() {
         return StudyRoleTypes.values();
     }
@@ -275,49 +279,49 @@ public class StudyMB implements Serializable {
     public SampleFileTypes[] getFileType() {
         return SampleFileTypes.values();
     }
-
+    
     public SampleFileStatus[] getFileStatus() {
         return SampleFileStatus.values();
     }
-
+    
     public long countAllMembersPerStudy() {
         return studyTeamController.countMembersPerStudy(studyName).size();
     }
-
+    
     public long countMasters() {
         return studyTeamController.countStudyTeam(studyName, "Master");
     }
-
+    
     public long countResearchers() {
         return studyTeamController.countStudyTeam(studyName, "Researcher");
     }
-
+    
     public long countResearchAdmins() {
         return studyTeamController.countStudyTeam(studyName, "Research Admin");
     }
-
+    
     public long countAuditors() {
         return studyTeamController.countStudyTeam(studyName, "Auditor");
     }
-
+    
     public List<Username> getMastersList() {
         return studyTeamController.findTeamMembersByName(studyName, "Master");
     }
-
+    
     public List<Username> getResearchersList() {
         return studyTeamController.findTeamMembersByName(studyName, "Researcher");
     }
-
+    
     public List<Username> getResearchAdminList() {
         return studyTeamController.findTeamMembersByName(studyName, "Research Admin");
     }
-
+    
     public List<Username> getAuditorsList() {
         return studyTeamController.findTeamMembersByName(studyName, "Auditor");
     }
-
+    
     public String checkStudyOwner(String email) {
-
+        
         List<TrackStudy> lst = studyTeamController.findStudyMaster(studyName);
         for (TrackStudy tr : lst) {
             if (tr.getUsername().equals(email)) {
@@ -326,25 +330,25 @@ public class StudyMB implements Serializable {
         }
         return null;
     }
-
+    
     public boolean checkOwnerForSamples() {
-
+        
         if (getUsername().equals(getCreator())) {
             return true;
         } else {
             return false;
         }
     }
-
+    
     public String checkCurrentUser(String email) {
-
+        
         if (email.equals(getUsername())) {
             return email;
         }
-
+        
         return null;
     }
-
+    
     public String renderComponentList() {
         List<StudyTeam> st = studyTeamController.findCurrentRole(studyName, getUsername());
         if (st.iterator().hasNext()) {
@@ -353,12 +357,12 @@ public class StudyMB implements Serializable {
         }
         return null;
     }
-
+    
     public List<StudyRoleTypes> getListBasedOnCurrentRole(String email) {
-
+        
         String team = studyTeamController.findByPrimaryKey(studyName, email).getTeamRole();
         List<StudyRoleTypes> reOrder = new ArrayList<>();
-
+        
         if (team.equals("Researcher")) {
             reOrder.add(StudyRoleTypes.RESEARCHER);
             reOrder.add(StudyRoleTypes.AUDITOR);
@@ -367,48 +371,46 @@ public class StudyMB implements Serializable {
             return reOrder;
 
         } else if (team.equals("Auditor")) {
-
             reOrder.add(StudyRoleTypes.AUDITOR);
             reOrder.add(StudyRoleTypes.RESEARCHER);
             reOrder.add(StudyRoleTypes.MASTER);
-
             return reOrder;
         } else {
             return null;
         }
     }
-
+    
     public int getAllStudyUserTypesListSize() {
         return studyTeamController.findMembersByStudy(studyName).size();
     }
-
+    
     public List<StudyTeam> getAllStudyUserTypesList() {
         return studyTeamController.findMembersByStudy(studyName);
     }
-
+    
     public List<StudyDetail> getAllStudiesPerUser() {
         return studyController.findAllStudyDetails(getUsername());
     }
-
+    
     public List<StudyDetail> getJoinedStudies() {
         return studyController.findJoinedStudyDetails(getUsername());
     }
-
+    
     public List<StudyTeam> getTeamList() {
         return studyTeamController.findMembersByStudy(studyName);
     }
-
+    
     public int countAllStudiesPerUser() {
         return studyController.findAllStudies(getUsername()).size();
     }
-
+    
     public int countPersonalStudy() {
         return studyController.findByUser(getUsername()).size();
     }
-
+    
     public int countJoinedStudy() {
         boolean check = studyController.checkForStudyOwnership(getUsername());
-
+        
         if (check) {
             return studyController.findJoinedStudies(getUsername()).size();
         } else {
@@ -424,7 +426,7 @@ public class StudyMB implements Serializable {
      * @return
      */
     public String createStudy() {
-
+        
         study.setUsername(getUsername());
         study.setTimestamp(new Date());
         try {
@@ -439,7 +441,7 @@ public class StudyMB implements Serializable {
             return null;
         }
         addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
-        this.studyName = study.getName();
+        setStudyName(study.getName());
         this.studyCreator = study.getUsername();
         FacesContext context = FacesContext.getCurrentInstance();
         context.getExternalContext().getFlash().setKeepMessages(true);
@@ -469,15 +471,15 @@ public class StudyMB implements Serializable {
      * @return
      */
     public String fetchStudy() {
-
+        
         FacesContext fc = FacesContext.getCurrentInstance();
         Map<String, String> params = fc.getExternalContext().getRequestParameterMap();
-        this.studyName = params.get("studyname");
+        setStudyName(params.get("studyname"));
         this.studyCreator = params.get("username");
 
         boolean res = studyTeamController.findUserForActiveStudy(studyName, getUsername());
         boolean rec = userGroupsController.checkForCurrentSession(getUsername());
-
+        
         if (!res) {
             if (!rec) {
                 userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(getUsername(), "GUEST")));
@@ -485,18 +487,18 @@ public class StudyMB implements Serializable {
                 return "studyPage";
             }
         }
-
+        
         return "studyPage";
     }
 
     //Set the study owner as study master in StudyTeam table
     public void addStudyMaster(String study_name) {
-
+        
         StudyTeamPK stp = new StudyTeamPK(study_name, getUsername());
         StudyTeam st = new StudyTeam(stp);
         st.setTeamRole("Master");
         st.setTimestamp(new Date());
-
+        
         try {
             studyTeamController.persistStudyTeam(st);
             logger.log(Level.INFO, "{0} - added the study owner as a master.", study.getName());
@@ -509,9 +511,9 @@ public class StudyMB implements Serializable {
 
     //delete a study - only owner can perform the deletion
     public String deleteStudy() {
-
+        
         String StudyOwner = studyController.filterByName(studyName);
-
+        
         try {
             if (getUsername().equals(StudyOwner)) {
                 studyController.removeStudy(studyName);
@@ -562,17 +564,17 @@ public class StudyMB implements Serializable {
                 logger.log(Level.INFO, "{0} - member added to study : {1}.", new Object[]{t.getName(), studyName});
                 activity.addActivity(ActivityController.NEW_MEMBER + t.getName() + " ", studyName, "STUDY");
             }
-
+            
             if (!getSelectedUsernames().isEmpty()) {
                 getSelectedUsernames().clear();
             }
-
+            
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Adding team member failed.");
             logger.log(Level.SEVERE, "Adding members to study failed...{0}", ejb.getMessage());
             return null;
         }
-
+        
         addMessage("New Member Added!");
         manTabIndex = TEAM_TAB;
         return "studyPage";
@@ -580,12 +582,12 @@ public class StudyMB implements Serializable {
 
     //adding a record to sample id table
     public void addSample() throws IOException {
-
+        
         boolean rec = sampleIDController.checkForExistingIDs(getSampleID(), studyName);
-
+        
         try {
             if (!rec) {
-
+                
                 SampleIdsPK idPK = new SampleIdsPK(getSampleID(), studyName);
                 SampleIds samId = new SampleIds(idPK);
                 sampleIDController.persistSample(samId);
@@ -593,22 +595,24 @@ public class StudyMB implements Serializable {
                 activity.addActivity(ActivityController.NEW_SAMPLE + getSampleID() + " ", studyName, "DATA");
                 setLoginName(getUsername());
                 getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
-                FacesContext.getCurrentInstance().responseComplete();
-
+                FacesContext.getCurrentInstance().responseComplete();                
+                for (FileStructureListener l : fileListeners) {
+                    l.newSample(idPK.getId());
+                }
             } else {
-
+                
                 setLoginName(getUsername());
                 getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
                 FacesContext.getCurrentInstance().responseComplete();
             }
-
+            
         } catch (EJBException ejb) {
-
+            
             addErrorMessageToUserAction("Error: Transaction failed");
             logger.log(Level.SEVERE, "Error: Transaction failed....{0}", ejb.getMessage());
         }
     }
-
+    
     public void createSampleFiles(String fileName, String fileType) throws IOException, URISyntaxException {
 
         boolean rec = sampleFilesController.checkForExistingSampleFiles(getSampleID(), fileName);
@@ -621,6 +625,9 @@ public class StudyMB implements Serializable {
                 sampleFilesController.persistSampleFiles(sf);
                 logger.log(Level.INFO, "{0} - sample file was created for : {1}.", new Object[]{getSampleID(), fileName});
                 activity.addSampleActivity(ActivityController.NEW_SAMPLE + "[" + fileName + "]" + " file ", studyName, "DATA", getLoginName());
+                for (FileStructureListener l : fileListeners) {
+                    l.newFile(getSampleID(), fileType, fileName, SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
+                }
             }
 
         } catch (EJBException ejb) {
@@ -637,11 +644,11 @@ public class StudyMB implements Serializable {
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         String rootDir = "Projects";
-
+        
         String buildPath = File.separator + rootDir + File.separator + studyName;
         FileSystem fs = FileSystem.get(conf);
         Path path = new Path(buildPath);
-
+        
         try {
 
             if (fs.exists(path)) {
@@ -656,22 +663,22 @@ public class StudyMB implements Serializable {
         } finally {
                 fs.close();
         }
-
+        
     }
 
     //Copy file to HDFS 
     public void copyFromLocal(String fileType, String filename, String sampleId) throws IOException, URISyntaxException {
-
+        
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
-
+        
         String rootDir = "Projects";
         String buildPath = File.separator + rootDir + File.separator + studyName;
-
+        
         File fileFromLocal = new File("/home/glassfish/data" + File.separator + filename);
         Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + filename);
-
+        
         InputStream is = new FileInputStream(fileFromLocal);
         if (!fs.exists(build)) {
             FSDataOutputStream os = fs.create(build, false);
@@ -685,11 +692,14 @@ public class StudyMB implements Serializable {
         //Status update in SampleFiles
             updateFileStatus(sampleId, filename);
     }
-
+    
     public void updateFileStatus(String id, String filename) {
+        //TODO: update when finished uploading, when copying to hdfs
         try {
             sampleFilesController.update(id, filename);
-            logger.log(Level.INFO, "Sample file status updated in TreeTable, ID: {0}, Name: {1}", new Object[]{id,filename});
+            for (FileStructureListener l : fileListeners) {
+                l.updateStatus(id, filename.substring(filename.lastIndexOf('.') + 1), filename, "available");
+            }
         } catch (EJBException ejb) {
             logger.log(Level.SEVERE, "Sample file status updated failed: {0}", ejb.getMessage());
         }
@@ -716,7 +726,7 @@ public class StudyMB implements Serializable {
             //remove the sample from SampleIds
             deleteSamples(sampleId);
     }
-
+    
     public void deleteSamples(String id) {
         try {
             sampleIDController.removeSample(id, studyName);
@@ -747,9 +757,9 @@ public class StudyMB implements Serializable {
             //remove file type records
             deleteFileTypes(sampleId, fileType);
     }
-
+    
     public void deleteFileTypes(String sampleId, String fileType) {
-
+        
         try {
             sampleFilesController.deleteFileTypeRecords(sampleId, studyName, fileType);
             activity.addSampleActivity(" removed " + "[" + fileType + "]" + " files " + " ", studyName, "DATA", getUsername());
@@ -757,7 +767,7 @@ public class StudyMB implements Serializable {
         } catch (EJBException ejb) {
              logger.log(Level.SEVERE, "File type folder deletion failed: {0}", ejb.getMessage());
         }
-
+        
     }
 
     //Delete a file from a sample study
@@ -782,7 +792,7 @@ public class StudyMB implements Serializable {
         //remove file record from SampleFiles
         deleteFileFromSampleFiles(sampleId, filename);
     }
-
+    
     public void deleteFileFromSampleFiles(String id, String filename) {
         try {
             sampleFilesController.deleteFile(id, filename);
@@ -794,7 +804,7 @@ public class StudyMB implements Serializable {
 
     //Download a file from HDFS
     public void fileDownloadEvent() throws IOException, URISyntaxException {
-
+        
         String sampleId = selectedFile.getSampleID();
         String fileType = selectedFile.getType();
         String fileName = selectedFile.getFilename();
@@ -821,49 +831,49 @@ public class StudyMB implements Serializable {
         }
 
     }
-
+    
     public StreamedContent getFile() {
         return file;
     }
-
+    
     public void setFile(StreamedContent file) {
         this.file = file;
     }
-
+    
     public void itemSelect(SelectEvent e) {
         if (getSelectedUsernames().isEmpty()) {
             addErrorMessageToUserAction("Error: People field cannot be empty.");
         }
     }
-
+    
     public void addMessage(String summary) {
         FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, summary);
         FacesContext.getCurrentInstance().addMessage(null, message);
     }
-
+    
     public void addMessage(String summary, String mess, String anchor) {
         FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, mess);
         FacesContext.getCurrentInstance().addMessage(anchor, message);
     }
-
+    
     public void addErrorMessageToUserAction(String message) {
         FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, message, message);
         FacesContext.getCurrentInstance().addMessage(null, errorMessage);
     }
-
+    
     public void addErrorMessageToUserAction(String summary, String message, String anchor) {
         FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, summary, message);
         FacesContext.getCurrentInstance().addMessage(anchor, errorMessage);
     }
-
+    
     public int getTabIndex() {
         return tabIndex;
     }
-
+    
     public void setTabIndex(int tabIndex) {
         this.tabIndex = tabIndex;
     }
-
+    
     public void onTabChange(TabChangeEvent event) {
         if (event.getTab().getTitle().equals("All")) {
             setTabIndex(0);
@@ -877,7 +887,7 @@ public class StudyMB implements Serializable {
         } else {
             //do nothing at the moment
         }
-
+        
     }
 
     /*
@@ -888,11 +898,11 @@ public class StudyMB implements Serializable {
         manTabIndex = SHOW_TAB;
         return val;
     }
-
+    
     public void setManTabIndex(int mti) {
         manTabIndex = mti;
     }
-
+    
     public boolean isCurrentOwner() {
         String email = getUsername();
         List<TrackStudy> lst = studyTeamController.findStudyMaster(studyName);
@@ -903,7 +913,7 @@ public class StudyMB implements Serializable {
         }
         return false;
     }
-
+    
     public String removeByName() {
         try {
             studyController.removeByName(studyName);
@@ -919,39 +929,31 @@ public class StudyMB implements Serializable {
         context.getExternalContext().getFlash().setKeepMessages(true);
         return "indexPage";
     }
-
+    
     public boolean isRemoved(String studyName) {
         TrackStudy item = studyController.findByName(studyName);
         return item == null;
     }
-
-//    public void download() {
-//        try {
-//            fileDownloadEvent(selectedFile.getSampleID(), selectedFile.getType(), selectedFile.getFilename());
-//        } catch (IOException | URISyntaxException ex) {
-//            logger.log(Level.SEVERE,"FAILED DOWNLOAD");
-//            //addErrorMessageToUserAction("Error", "Failed to download "+selectedFile.getFilename(), "remove");
-//        }
-//    }
+    
     public FileSummary getSelectedFile() {
         return selectedFile;
     }
-
+    
     public void setSelectedNode(TreeNode selectedNode) {
         if (selectedNode != null) {
             this.selectedFile = (FileSummary) selectedNode.getData();
         }
         this.selectedNode = selectedNode;
     }
-
+    
     public TreeNode getSelectedNode() {
         return selectedNode;
     }
-
+    
     public void setSelectedFile(FileSummary file) {
         this.selectedFile = file;
     }
-
+    
     public void removeFile() {
         System.out.println("CALLED REMOVE");
         //check if sample or file
@@ -966,6 +968,9 @@ public class StudyMB implements Serializable {
                 addErrorMessageToUserAction("Error", "Failed to remove file.", "remove");
                 return;
             }
+            for (FileStructureListener l : fileListeners) {
+                l.removeFile(sampleId, type, filename);
+            }
             message = "Successfully removed file " + filename + ".";
         } else if (selectedFile.isTypeFolder()) {
             String sampleId = selectedFile.getSampleID();
@@ -976,6 +981,9 @@ public class StudyMB implements Serializable {
                 addErrorMessageToUserAction("Error", "Failed to remove folder.", "remove");
                 return;
             }
+            for (FileStructureListener l : fileListeners) {
+                l.removeType(sampleId, foldername);
+            }
             message = "Successfully removed folder " + foldername + ".";
         } else if (selectedFile.isSample()) {
             try {
@@ -984,6 +992,9 @@ public class StudyMB implements Serializable {
                 addErrorMessageToUserAction("Error", "Failed to remove sample.", "remove");
                 return;
             }
+            for (FileStructureListener l : fileListeners) {
+                l.removeSample(selectedFile.getSampleID());
+            }
             message = "Successfully removed sample " + selectedFile.getSampleID() + ".";
         } else {
             logger.log(Level.SEVERE, "Trying to remove a file that is not according to the hierarchy.");
@@ -991,24 +1002,10 @@ public class StudyMB implements Serializable {
         }
         addMessage("Success", message, "remove");
     }
-
-    /*public void deleteDataDlg() {
-     Map<String, Object> options = new HashMap<>();
-     options.put("modal", true);
-     options.put("draggable", false);
-     options.put("resizable", false);
-     options.put("width", 320);
-     options.put("contentWidth", 300);
-     options.put("height", 100);
-     RequestContext.getCurrentInstance().openDialog("confirmDelete", options, null);
-     }
-
-     public void closeConfirmDelete() {
-     RequestContext.getCurrentInstance().closeDialog(null);
-     }
-
-     public void onDeleteDlgDone(SelectEvent event) {
-     FacesMessage mess = (FacesMessage) (event.getObject());
-     FacesContext.getCurrentInstance().addMessage("remove", mess);
-     }*/
+    
+    public void registerFileListener(FileStructureListener listener) {
+        if (!fileListeners.contains(listener)) {
+            fileListeners.add(listener);
+        }
+    }
 }
