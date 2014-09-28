@@ -157,4 +157,11 @@ public class StudyController {
             em.remove(study);
         }
     }    
+
+    public boolean findStudy(String name){
+        TrackStudy study = em.find(TrackStudy.class, name);
+        if(study != null) return true;
+        else return false;
+    }
+
 }

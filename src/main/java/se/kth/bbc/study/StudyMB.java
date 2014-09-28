@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -426,26 +427,32 @@ public class StudyMB implements Serializable {
      * @return
      */
     public String createStudy() {
-        
-        study.setUsername(getUsername());
-        study.setTimestamp(new Date());
         try {
-            studyController.persistStudy(study);
-            activity.addActivity(ActivityController.NEW_STUDY, study.getName(), "STUDY");
-            addStudyMaster(study.getName());
-            mkStudyDIR(study.getName());
-            logger.log(Level.INFO, "{0} - study is created successfully.", study.getName());
+            if(!studyController.findStudy(study.getName())){
+                study.setUsername(getUsername());
+                study.setTimestamp(new Date());
+                studyController.persistStudy(study);
+                activity.addActivity(ActivityController.NEW_STUDY, study.getName(), "STUDY");
+                addStudyMaster(study.getName());
+                mkStudyDIR(study.getName());
+                logger.log(Level.INFO, "{0} - study was created successfully.", study.getName());
+                
+                //addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
+                setStudyName(study.getName());
+                this.studyCreator = study.getUsername();
+//                FacesContext context = FacesContext.getCurrentInstance();
+//                context.getExternalContext().getFlash().setKeepMessages(true);
+                return "studyPage";
+            }
+            
         } catch (IOException | EJBException | URISyntaxException exp) {
             addErrorMessageToUserAction("Failed: Study already exists!");
-            logger.log(Level.SEVERE, "Study does not create - {0}", exp.getMessage());
+            logger.log(Level.SEVERE, "Study was not created!");
             return null;
         }
-        addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
-        setStudyName(study.getName());
-        this.studyCreator = study.getUsername();
-        FacesContext context = FacesContext.getCurrentInstance();
-        context.getExternalContext().getFlash().setKeepMessages(true);
-        return "studyPage";
+            addErrorMessageToUserAction("Failed: Study already exists!");
+            logger.log(Level.SEVERE, "Study exists!");
+            return null;
     }
 
     //create study on HDFS
@@ -464,7 +471,7 @@ public class StudyMB implements Serializable {
             return;
         }
         fs.mkdirs(path, null);
-        logger.log(Level.INFO, "Directory was created on HDFS: {0}.", path.toString());
+        logger.log(Level.INFO, "Study directory was created on HDFS: {0}.", path.toString());
     }
 
     /**
@@ -608,8 +615,8 @@ public class StudyMB implements Serializable {
             
         } catch (EJBException ejb) {
             
-            addErrorMessageToUserAction("Error: Transaction failed");
-            logger.log(Level.SEVERE, "Error: Transaction failed....{0}", ejb.getMessage());
+            addErrorMessageToUserAction("Error: Add sample transaction failed");
+            logger.log(Level.SEVERE, "Error: Add sample transaction failed.");
         }
     }
     
@@ -632,7 +639,7 @@ public class StudyMB implements Serializable {
 
         } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error: Sample file wasn't created.");
-            logger.log(Level.SEVERE, "Sample files were not created...{0}", ejb.getMessage());
+            logger.log(Level.SEVERE, "Sample files were not created.");
             return;
         }
         mkDIRS(getSampleID(), fileType, fileName);
@@ -683,8 +690,6 @@ public class StudyMB implements Serializable {
         if (!fs.exists(build)) {
             FSDataOutputStream os = fs.create(build, false);
             IOUtils.copyBytes(is, os, 131072, true);
-        } else {
-            logger.log(Level.SEVERE, "File exists in HDFS: {0}", filename);
         }
             logger.log(Level.INFO, "File, {0}, copied to HDFS: {1}", new Object[]{filename, build.toString()});
             logger.log(Level.INFO, "File size: {0} bytes", fs.getFileStatus(build).getLen());
@@ -697,11 +702,12 @@ public class StudyMB implements Serializable {
         //TODO: update when finished uploading, when copying to hdfs
         try {
             sampleFilesController.update(id, filename);
+            logger.log(Level.INFO, "{0} - sample file status was updated to: {1}", new Object[]{filename, "available"});
             for (FileStructureListener l : fileListeners) {
                 l.updateStatus(id, filename.substring(filename.lastIndexOf('.') + 1), filename, "available");
             }
         } catch (EJBException ejb) {
-            logger.log(Level.SEVERE, "Sample file status updated failed: {0}", ejb.getMessage());
+            logger.log(Level.SEVERE, "Sample file status update failed.");
         }
     }
 
@@ -733,7 +739,7 @@ public class StudyMB implements Serializable {
             activity.addSampleActivity(ActivityController.REMOVED_SAMPLE + "[" + id + "]" + " ", studyName, "DATA", getUsername());
             logger.log(Level.INFO, "{0} - Sample was deleted from {1} in SampleFiles table", new Object[]{id, studyName});
         } catch (EJBException ejb) {
-            logger.log(Level.SEVERE, "Sample deletion failed: {0}", ejb.getMessage());
+            logger.log(Level.SEVERE, "Sample deletion was failed.");
         }
     }
 
@@ -749,7 +755,7 @@ public class StudyMB implements Serializable {
         Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim());
         if (fs.exists(build)) {
             fs.delete(build, true);
-            logger.log(Level.INFO, "{0} - File type folder was deleted from {1} in HDFS", new Object[]{fileType.toUpperCase(), studyName});
+            logger.log(Level.INFO, "{0} - File type folder was deleted from {1} study in HDFS", new Object[]{fileType.toUpperCase(), studyName});
         } else {
             logger.log(Level.SEVERE, "{0} - File type folder does not exist", fileType.toUpperCase());
         }
@@ -763,9 +769,8 @@ public class StudyMB implements Serializable {
         try {
             sampleFilesController.deleteFileTypeRecords(sampleId, studyName, fileType);
             activity.addSampleActivity(" removed " + "[" + fileType + "]" + " files " + " ", studyName, "DATA", getUsername());
-            logger.log(Level.INFO, "{0} - File type folder was deleted from {1}/{2} in SampleFiles table", new Object[]{fileType, sampleId, studyName});
         } catch (EJBException ejb) {
-             logger.log(Level.SEVERE, "File type folder deletion failed: {0}", ejb.getMessage());
+             logger.log(Level.SEVERE, "File type folder deletion was failed.");
         }
         
     }
@@ -780,17 +785,34 @@ public class StudyMB implements Serializable {
         String rootDir = "Projects";
         String buildPath = File.separator + rootDir + File.separator + studyName;
 
-        Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + filename);
+        Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim());
         //check the file count inside a directory, if it is only one then recursive delete
         if (fs.exists(build)) {
-            //if(fs.getFileStatus(build))
-            fs.delete(build, false);
+            if(fileCount(fs, build) == 1) {
+                fs.delete(build, true);
+            } else{
+                fs.delete(build.suffix(File.separator+filename), false);
+            }
         } else {
-            System.out.println("File does not exist");
+            logger.log(Level.SEVERE, "File does not exist on path: {0}", build.toString());
         }
 
+        logger.log(Level.INFO,"{0} - file was deleted from path: {1}", new Object[]{filename, build.toString()});
         //remove file record from SampleFiles
         deleteFileFromSampleFiles(sampleId, filename);
+    }
+    
+    //count the number of files in a directory for a given path on HDFS
+    public int fileCount(FileSystem fs, Path path) throws IOException, URISyntaxException{
+    
+            int count = 0;
+            FileStatus[] files = fs.listStatus(path);
+            for(FileStatus f: files){
+                if(!f.getPath().getName().isEmpty())
+                    count++;
+            }
+            //logger.log(Level.INFO, "file count: {0}", count);
+        return count;
     }
     
     public void deleteFileFromSampleFiles(String id, String filename) {
@@ -820,11 +842,13 @@ public class StudyMB implements Serializable {
 
             if (!fs.exists(outputPath)) {
                 System.out.println("Error: File does not exist for downloading" + fileName);
+                logger.log(Level.SEVERE, "File does not exist on this [{0}] path of HDFS", outputPath.toString());
                 return;
             }
 
             InputStream inStream = fs.open(outputPath, 1048576);
             file = new DefaultStreamedContent(inStream, "fastq/fasta/bam/sam/vcf", fileName);
+            logger.log(Level.INFO, "{0} - file was downloaded from HDFS path: {1}", new Object[]{fileName, outputPath.toString()});
 
         } finally {
             //inStream.close();
