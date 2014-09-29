@@ -6,20 +6,13 @@
 
 package se.kth.bbc.study;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.logging.Logger;
-import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
-import org.apache.commons.lang3.time.DateUtils;
-import se.kth.kthfsdashboard.user.Username;
 
 /**
  *

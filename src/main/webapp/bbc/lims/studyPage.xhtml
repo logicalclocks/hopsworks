@@ -17,20 +17,16 @@
             <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
         </h:head>
         <h:body>
-            <ui:insert name="titleBar" >
-                <ui:include src="/bbc/lims/titleBar.xhtml" />
-            </ui:insert>
+            <h:form>
+                <ui:insert name="titleBar" >
+                    <ui:include src="/bbc/lims/titleBar.xhtml" />
+                </ui:insert>
+            </h:form>
             <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutStudy">  
                 <p:layoutUnit position="center">
                     <div class="container">
                         <h1>#{studyManagedBean.studyName} </h1>
-                        <p:commandButton value="Remove" rendered="#{studyManagedBean.currentOwner}" style="float:right;margin-top: 26px;" action="#{studyManagedBean.removeByName()}">
-                            <p:confirm header="Remove study" message="Are you sure you want to remove this study?" icon="ui-icon-alert" />
-                        </p:commandButton>
-                        <p:confirmDialog id="removeStudyConfirm" global="true" severity="alert" showEffect="fade"> 
-                            <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
-                            <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/> 
-                        </p:confirmDialog>
+                        <p:commandButton value="Remove" rendered="#{studyManagedBean.currentOwner}" type="button" style="float:right;margin-top: 26px;" onclick="PF('removeStudyDlg').show();"/>
                         <div class="content"> 
                             <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="studyTabs">
                                 <p:tab id="showTab" title="Show">
@@ -482,7 +478,19 @@
 
                 </p:layoutUnit>
             </p:layout>
-
+            <h:form>
+                <p:dialog widgetVar="removeStudyDlg"  closable="true" draggable="false" resizable="false" header="Remove study?" modal="true" style="width: auto;">
+                    <p:outputLabel value="Do you want to remove this study and its data?" style="width: auto;"/>
+                    <p:selectOneRadio id="console" value="#{studyManagedBean.deleteFilesOnRemove}"  layout="grid" columns="1" style="width: auto;" >
+                        <f:selectItem itemLabel="Remove study and its data." itemValue="true"/>
+                        <f:selectItem itemLabel="Remove study, but keep data." itemValue="false" />
+                    </p:selectOneRadio>
+                    <f:facet name="footer">
+                        <p:commandButton value="Remove" action="#{studyManagedBean.removeByName()}" onstart="PF('removeStudyDlg').hide()" type="submit"/>
+                        <p:commandButton value="Cancel" oncomplete="PF('removeStudyDlg').hide()"/>
+                    </f:facet>     
+                </p:dialog>
+            </h:form>
             <p:dialog id="rmdlg" widgetVar="removeDataDlg" header="Remove data" modal="true" resizable="false" draggable="false"> 
                 <h:panelGrid>
                     <div align="left">

@@ -104,7 +104,11 @@ public class SampleTreeModel implements Serializable, FileStructureListener {
         //remove the file
         List<TreeNode> files = typeReal.getChildren();
         SampleTreeNode toRemove = new SampleTreeNode(new FileSummary(studymb.getStudyName(), sampleId, type, file, ""), null);
-        files.remove(toRemove);
+        if (typeReal.getChildCount() == 1) {
+            types.remove(typeReal);
+        } else {
+            files.remove(toRemove);
+        }
     }
 
     @Override
