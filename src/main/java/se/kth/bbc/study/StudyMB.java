@@ -285,23 +285,23 @@ public class StudyMB implements Serializable {
         return SampleFileStatus.values();
     }
     
-    public long countAllMembersPerStudy() {
+    public int countAllMembersPerStudy() {
         return studyTeamController.countMembersPerStudy(studyName).size();
     }
     
-    public long countMasters() {
-        return studyTeamController.countStudyTeam(studyName, "Master");
+    public int countMasters() {
+        return (studyTeamController.countStudyTeam(studyName, "Master"));
     }
     
-    public long countResearchers() {
+    public int countResearchers() {
         return studyTeamController.countStudyTeam(studyName, "Researcher");
     }
     
-    public long countResearchAdmins() {
+    public int countResearchAdmins() {
         return studyTeamController.countStudyTeam(studyName, "Research Admin");
     }
     
-    public long countAuditors() {
+    public int countAuditors() {
         return studyTeamController.countStudyTeam(studyName, "Auditor");
     }
     
@@ -437,12 +437,15 @@ public class StudyMB implements Serializable {
                 mkStudyDIR(study.getName());
                 logger.log(Level.INFO, "{0} - study was created successfully.", study.getName());
                 
-                //addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
                 setStudyName(study.getName());
                 this.studyCreator = study.getUsername();
-//                FacesContext context = FacesContext.getCurrentInstance();
-//                context.getExternalContext().getFlash().setKeepMessages(true);
                 return "studyPage";
+                
+            } else {
+                
+                addErrorMessageToUserAction("Failed: Study already exists!");
+                logger.log(Level.SEVERE, "Study exists!");
+                return null;
             }
             
         } catch (IOException | EJBException | URISyntaxException exp) {
@@ -450,9 +453,7 @@ public class StudyMB implements Serializable {
             logger.log(Level.SEVERE, "Study was not created!");
             return null;
         }
-            addErrorMessageToUserAction("Failed: Study already exists!");
-            logger.log(Level.SEVERE, "Study exists!");
-            return null;
+            
     }
 
     //create study on HDFS

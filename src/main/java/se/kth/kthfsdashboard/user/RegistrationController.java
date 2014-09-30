@@ -54,9 +54,9 @@ public class RegistrationController implements Serializable {
         user.encodePassword();
         user.setRegisteredOn(new Date());
         //TODO: check!
-        List<Group> groups = new ArrayList<>();
-        groups.add(Group.USER);
-        user.setGroups(groups);
+        //List<Group> groups = new ArrayList<>();
+        //groups.add(Group.USER);
+        //user.setGroups(groups);
         user.setStatus(Username.STATUS_REQUEST);
         FacesMessage message;
 

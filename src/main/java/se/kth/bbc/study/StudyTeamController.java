@@ -32,8 +32,9 @@ public class StudyTeamController {
     public StudyTeamController(){}
     
     
-    public long countStudyTeam(String name, String teamRole){
-        return (Long)em.createNamedQuery("StudyTeam.countMastersByStudy").setParameter("name", name).setParameter("teamRole", teamRole).getSingleResult();
+    public int countStudyTeam(String name, String teamRole){
+        return ((Long)em.createNamedQuery("StudyTeam.countMastersByStudy").setParameter("name", name)
+                .setParameter("teamRole", teamRole).getSingleResult()).intValue();
     }
     
     public List<StudyTeam> countMembersPerStudy(String name){
