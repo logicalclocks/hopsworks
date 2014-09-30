@@ -43,9 +43,6 @@ public class StudyTeamController {
     }
     
     public List<Username> findMasterMembersByName(String name, String role){
-        //Query query = em.createNamedQuery("StudyTeam.findMembersByRole", StudyTeam.class).setParameter("name", name).setParameter("teamRole", role);
-        // select NAME, EMAIL from USERS where EMAIL in (select team_member from StudyTeam where name='BBC' and team_role='Guests')
-        //SELECT * FROM StudyTeam WHERE name =? AND team_role=?
         Query query = em.createNativeQuery("SELECT NAME, EMAIL FROM USERS WHERE EMAIL IN (SELECT team_member FROM StudyTeam WHERE name=? AND team_role=?)" , Username.class).setParameter(1, name).setParameter(2, role);
         return query.getResultList();
     
@@ -61,14 +58,12 @@ public class StudyTeamController {
     
     
     public List<StudyTeam> findResearchMembersByName(String name){
-        //Query query = em.createNamedQuery("StudyTeam.findMembersByRole", StudyTeam.class).setParameter("name", name).setParameter("teamRole", role);
         Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_role=?" , StudyTeam.class).setParameter(1, name).setParameter(2, "Researcher");
         return query.getResultList();
     
     }
     
     public List<StudyTeam> findGuestMembersByName(String name){
-        //Query query = em.createNamedQuery("StudyTeam.findMembersByRole", StudyTeam.class).setParameter("name", name).setParameter("teamRole", role);
         Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_role=?" , StudyTeam.class).setParameter(1, name).setParameter(2, "Guest");
         return query.getResultList();
     
@@ -112,23 +107,12 @@ public class StudyTeamController {
     }
     
     public void updateTeamRole(String name, String email, String teamRole){
-        //System.out.println(teamRole + "size --- "+ teamRole.length());
         StudyTeam team = findByPrimaryKey(name, email);
             if(team != null){
                 team.setTeamRole(teamRole);
                 team.setTimestamp(new Date());
                 em.merge(team);
             }
-            
-//            em.createNamedQuery("StudyTeam.updateTeamRole", StudyTeam.class).setParameter("teamRole", teamRole).setParameter("timestamp", new Date())
-//                    .setParameter("name", name).setParameter("teamMember", email).executeUpdate();
-            
-//            Query query = em.createNativeQuery("UPDATE StudyTeam SET team_role= '"+ teamRole +"' , timestamp='"+ new Date() +"' WHERE team_member=? AND name=?",StudyTeam.class)
-//                    .setParameter(1, email).setParameter(2, name);
-//            
-//            em.merge(query);
-//           
-            
     }
     
     
