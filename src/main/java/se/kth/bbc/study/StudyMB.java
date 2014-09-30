@@ -197,7 +197,7 @@ public class StudyMB implements Serializable {
         return studyController.getAllStudy(getUsername());
     }
     
-    public long getNOfMembers() {
+    public int getNOfMembers() {
         return studyController.getMembers(getStudyName());
     }
     
@@ -275,14 +275,6 @@ public class StudyMB implements Serializable {
     
     public StudyRoleTypes[] getTeam() {
         return StudyRoleTypes.values();
-    }
-
-    public SampleFileTypes[] getFileType() {
-        return SampleFileTypes.values();
-    }
-    
-    public SampleFileStatus[] getFileStatus() {
-        return SampleFileStatus.values();
     }
     
     public int countAllMembersPerStudy() {
@@ -421,8 +413,8 @@ public class StudyMB implements Serializable {
 
     /**
      * Get the current username from session and sets it as the creator of the
-     * study, and also adding a record to the StudyTeam table for setting role
-     * as master for the study.
+     * study, and also adding a record to the StudyTeam table for setting the role
+     * as master for within study.
      *
      * @return
      */
@@ -902,15 +894,12 @@ public class StudyMB implements Serializable {
     public void onTabChange(TabChangeEvent event) {
         if (event.getTab().getTitle().equals("All")) {
             setTabIndex(0);
-            //System.out.println("All - " + getTabIndex());
         } else if (event.getTab().getTitle().equals("Personal")) {
             setTabIndex(1);
-            //System.out.println("Personal - " + getTabIndex());
         } else if (event.getTab().getTitle().equals("Joined")) {
             setTabIndex(2);
-            //System.out.println("Joined - " + getTabIndex());
         } else {
-            //do nothing at the moment
+            //
         }
         
     }

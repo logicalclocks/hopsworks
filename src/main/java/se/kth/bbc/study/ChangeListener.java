@@ -6,7 +6,6 @@
 
 package se.kth.bbc.study;
 
-import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.AbortProcessingException;
 import javax.faces.event.ValueChangeEvent;
