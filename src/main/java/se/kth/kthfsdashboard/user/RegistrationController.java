@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.kthfsdashboard.user;
 
 import java.io.Serializable;
@@ -23,7 +18,7 @@ import javax.faces.context.FacesContext;
  * @author stig
  */
 @ManagedBean
-@RequestScoped //TODO: check!
+@RequestScoped
 public class RegistrationController implements Serializable {
 
     private static final Logger logger = Logger.getLogger(UserController.class.getName());
@@ -53,9 +48,8 @@ public class RegistrationController implements Serializable {
     public String registerUser() {
         user.encodePassword();
         user.setRegisteredOn(new Date());
-        //TODO: check!
         List<Group> groups = new ArrayList<>();
-        groups.add(Group.USER);
+        groups.add(Group.GUEST);
         user.setGroups(groups);
         user.setStatus(Username.STATUS_REQUEST);
         FacesMessage message;

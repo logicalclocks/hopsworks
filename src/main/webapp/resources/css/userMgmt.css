@@ -244,3 +244,7 @@ h1 {
     font-family: 'FontAwesome' !important;
     font-style: normal !important;   
 }
+
+.ui-selectonemenu label {
+    text-align: left;
+}

@@ -1,35 +1,25 @@
 package se.kth.kthfsdashboard.user;
 
-import com.timgroup.jgravatar.Gravatar;
-import com.timgroup.jgravatar.GravatarRating;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.logging.Logger;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.RequestScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import javax.faces.event.PhaseEvent;
-import javax.faces.event.PhaseId;
+import javax.faces.model.ListDataModel;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
-import org.primefaces.event.SelectEvent;
-import org.primefaces.event.TabChangeEvent;
-import se.kth.bbc.study.StudyMB;
 
 /**
  *
@@ -46,13 +36,14 @@ public class UserController implements Serializable {
     private UserFacade userFacade;
     private Username user;
 
-    List<Group> g = new ArrayList<>();
+    List<Group> groups;
     private List<Username> filteredUsers;
     private List<Username> selectedUsers;
 
     private String email;
     private String name;
     private String username;
+    private Group role;
     
     private int tabIndex;
 
@@ -60,13 +51,13 @@ public class UserController implements Serializable {
 
     }
 
-//    @ManagedProperty(value="#{autoComplete}")
-//    private AutocompleteMB autoComplete;
-//    
-//    @PostConstruct
-//    protected void init(){
-//        usernames = getUsersNameList();
-//    }
+    
+    @PostConstruct
+    public void initGroups(){
+        groups = new ArrayList<>(Arrays.asList(Group.values())); // to support the remove operation
+        groups.remove(Group.GUEST);
+    }
+    
     public Username getUser() {
         if (user == null) {
             user = new Username();
@@ -98,8 +89,8 @@ public class UserController implements Serializable {
         return userFacade.findAllByName();
     }
 
-    public Group[] getGroups() {
-        return Group.values();
+    public List<Group> getGroups() {
+        return groups;
     }
 
     public Username getSelectedUser() {
@@ -132,6 +123,14 @@ public class UserController implements Serializable {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public Group getRole() {
+        return role;
+    }
+
+    public void setRole(Group role) {
+        this.role = role;
     }
 
     public String fetchUser() {
@@ -186,16 +185,6 @@ public class UserController implements Serializable {
         FacesContext.getCurrentInstance().addMessage(null, errorMessage);
     }
 
-    public void changePassword() {
-        //TODO
-        addMessage("Change Password not implemented!");
-    }
-
-    public void logout() {
-        //TODO
-        addMessage("Logout not implemented!");
-    }
-
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
     }
@@ -240,8 +229,8 @@ public class UserController implements Serializable {
     /**
      * Get all open user requests.
      */
-    public List<Username> getAllRequests() {
-        return userFacade.findAllByStatus(Username.STATUS_REQUEST);
+    public ListDataModel<Username> getAllRequests() {
+        return new ListDataModel(userFacade.findAllByStatus(Username.STATUS_REQUEST));
     }
 
     public List<Username> getSelectedUsers() {
@@ -301,16 +290,13 @@ public class UserController implements Serializable {
         }
     }
 
-    public List<Group> getRoles() {
-        return Arrays.asList(Group.values());
-    }
-
     public String getGroup(Username user) {
         return user.getGroups().get(0).getGroup();
     }
 
     public void allowUser(Username user) {
         user.setStatus(Username.STATUS_ALLOW);
+        System.out.println("User group:" + user.getExtraGroup());
         userFacade.update(user);
     }
     

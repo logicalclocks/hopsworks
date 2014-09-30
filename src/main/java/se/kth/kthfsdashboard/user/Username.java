@@ -75,6 +75,9 @@ public class Username implements Serializable {
     @NotNull
     @Column(name = "STATUS")
     private int status;
+    
+    @Transient
+    private Group extraGroup;
 
     private static final long serialVersionUID = 1L;
     // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
@@ -248,5 +251,18 @@ public class Username implements Serializable {
         if (!groups.contains(g)) {
             groups.add(g);
         }
+    }
+    
+    /*
+     Fake property to allow adding groups with dropdown list in frontend.
+    */
+    public void setExtraGroup(Group g){
+        addGroup(g);
+        this.extraGroup = g;
+        System.out.println("Set called."+g);
+    }
+    
+    public Group getExtraGroup(){
+        return extraGroup;
     }
 }

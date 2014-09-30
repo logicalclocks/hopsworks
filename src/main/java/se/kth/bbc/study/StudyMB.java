@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.study;
 
 import se.kth.bbc.study.filebrowser.FileSummary;
@@ -63,7 +58,7 @@ public class StudyMB implements Serializable {
     public static final int TEAM_TAB = 1;
     public static final int SHOW_TAB = 0;
 
-    public final String nameNodeURI = "hdfs://localhost:9999";
+    public final String nameNodeURI = "hdfs://snurran.sics.se:9999";
 
     @EJB
     private StudyController studyController;
@@ -466,7 +461,7 @@ public class StudyMB implements Serializable {
 
     //create study on HDFS
     public void mkStudyDIR(String study_name) throws IOException, URISyntaxException {
-/*
+
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         String rootDir = "Projects";
@@ -480,7 +475,7 @@ public class StudyMB implements Serializable {
             return;
         }
         fs.mkdirs(path, null);
-        logger.log(Level.INFO, "Study directory was created on HDFS: {0}.", path.toString());*/
+        logger.log(Level.INFO, "Study directory was created on HDFS: {0}.", path.toString());
     }
 
     /**
@@ -549,7 +544,7 @@ public class StudyMB implements Serializable {
 
     //delete study dir from HDFS
     public void delStudyDIR(String study_name) throws IOException, URISyntaxException {
-/*
+
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         String rootDir = "Projects";
@@ -563,7 +558,7 @@ public class StudyMB implements Serializable {
             return;
         }
         fs.delete(path, true);
-        logger.log(Level.INFO, "Directory was deleted on HDFS: {0}.", path.toString());*/
+        logger.log(Level.INFO, "Directory was deleted on HDFS: {0}.", path.toString());
     }
 
     //add members to a team - bulk persist 
@@ -722,7 +717,7 @@ public class StudyMB implements Serializable {
 
     //Delete a sample from HDFS
     public void deleteSampleFromHDFS(String sampleId) throws IOException, URISyntaxException {
-/*
+
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
@@ -737,7 +732,7 @@ public class StudyMB implements Serializable {
         } else {
             logger.log(Level.SEVERE, "Sample id {0} does not exist", sampleId);
         }
-*/
+
         //remove the sample from SampleIds
         deleteSamples(sampleId);
     }
@@ -754,7 +749,7 @@ public class StudyMB implements Serializable {
 
     //Delete a file type folder
     public void deleteFileTypeFromHDFS(String sampleId, String fileType) throws IOException, URISyntaxException {
-/*
+
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
@@ -767,7 +762,7 @@ public class StudyMB implements Serializable {
             logger.log(Level.INFO, "{0} - File type folder was deleted from {1} study in HDFS", new Object[]{fileType.toUpperCase(), studyName});
         } else {
             logger.log(Level.SEVERE, "{0} - File type folder does not exist", fileType.toUpperCase());
-        }*/
+        }
 
         //remove file type records
         deleteFileTypes(sampleId, fileType);
@@ -786,7 +781,7 @@ public class StudyMB implements Serializable {
 
     //Delete a file from a sample study
     public void deleteFileFromHDFS(String sampleId, String filename, String fileType) throws IOException, URISyntaxException {
-/*
+
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
@@ -807,7 +802,7 @@ public class StudyMB implements Serializable {
         }
 
         logger.log(Level.INFO, "{0} - file was deleted from path: {1}", new Object[]{filename, build.toString()});
-        //remove file record from SampleFiles*/
+        //remove file record from SampleFiles
         deleteFileFromSampleFiles(sampleId, filename);
     }
 
