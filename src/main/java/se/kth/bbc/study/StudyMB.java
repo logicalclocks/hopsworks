@@ -192,8 +192,8 @@ public class StudyMB implements Serializable {
     public long getAllStudy() {
         return studyController.getAllStudy(getUsername());
     }
-
-    public long getNOfMembers() {
+    
+    public int getNOfMembers() {
         return studyController.getMembers(getStudyName());
     }
 
@@ -280,32 +280,24 @@ public class StudyMB implements Serializable {
     public StudyRoleTypes[] getTeam() {
         return StudyRoleTypes.values();
     }
-
-    public SampleFileTypes[] getFileType() {
-        return SampleFileTypes.values();
-    }
-
-    public SampleFileStatus[] getFileStatus() {
-        return SampleFileStatus.values();
-    }
-
-    public long countAllMembersPerStudy() {
+    
+    public int countAllMembersPerStudy() {
         return studyTeamController.countMembersPerStudy(studyName).size();
     }
-
-    public long countMasters() {
-        return studyTeamController.countStudyTeam(studyName, "Master");
+    
+    public int countMasters() {
+        return (studyTeamController.countStudyTeam(studyName, "Master"));
     }
-
-    public long countResearchers() {
+    
+    public int countResearchers() {
         return studyTeamController.countStudyTeam(studyName, "Researcher");
     }
-
-    public long countResearchAdmins() {
+    
+    public int countResearchAdmins() {
         return studyTeamController.countStudyTeam(studyName, "Research Admin");
     }
-
-    public long countAuditors() {
+    
+    public int countAuditors() {
         return studyTeamController.countStudyTeam(studyName, "Auditor");
     }
 
@@ -425,8 +417,8 @@ public class StudyMB implements Serializable {
 
     /**
      * Get the current username from session and sets it as the creator of the
-     * study, and also adding a record to the StudyTeam table for setting role
-     * as master for the study.
+     * study, and also adding a record to the StudyTeam table for setting the role
+     * as master for within study.
      *
      * @return
      */
@@ -440,13 +432,16 @@ public class StudyMB implements Serializable {
                 addStudyMaster(study.getName());
                 mkStudyDIR(study.getName());
                 logger.log(Level.INFO, "{0} - study was created successfully.", study.getName());
-
-                //addMessage("Study created! [" + study.getName() + "] study is owned by " + study.getUsername());
+                
                 setStudyName(study.getName());
                 this.studyCreator = study.getUsername();
-//                FacesContext context = FacesContext.getCurrentInstance();
-//                context.getExternalContext().getFlash().setKeepMessages(true);
                 return "studyPage";
+                
+            } else {
+                
+                addErrorMessageToUserAction("Failed: Study already exists!");
+                logger.log(Level.SEVERE, "Study exists!");
+                return null;
             }
 
         } catch (IOException | EJBException | URISyntaxException exp) {
@@ -454,9 +449,7 @@ public class StudyMB implements Serializable {
             logger.log(Level.SEVERE, "Study was not created!");
             return null;
         }
-        addErrorMessageToUserAction("Failed: Study already exists!");
-        logger.log(Level.SEVERE, "Study exists!");
-        return null;
+            
     }
 
     //create study on HDFS
@@ -906,15 +899,12 @@ public class StudyMB implements Serializable {
     public void onTabChange(TabChangeEvent event) {
         if (event.getTab().getTitle().equals("All")) {
             setTabIndex(0);
-            //System.out.println("All - " + getTabIndex());
         } else if (event.getTab().getTitle().equals("Personal")) {
             setTabIndex(1);
-            //System.out.println("Personal - " + getTabIndex());
         } else if (event.getTab().getTitle().equals("Joined")) {
             setTabIndex(2);
-            //System.out.println("Joined - " + getTabIndex());
         } else {
-            //do nothing at the moment
+            //
         }
 
     }

@@ -6,11 +6,8 @@
 package se.kth.bbc.activity;
 
 import com.timgroup.jgravatar.Gravatar;
-import com.timgroup.jgravatar.GravatarDefaultImage;
 import com.timgroup.jgravatar.GravatarRating;
 import java.io.Serializable;
-import java.sql.Time;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -19,16 +16,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
-import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.NoneScoped;
-import javax.faces.bean.RequestScoped;
-import javax.faces.bean.SessionScoped;
-import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
-import se.kth.bbc.study.StudyMB;
 
 /**
  *
@@ -96,7 +87,9 @@ public class ActivityMB implements Serializable {
         long currentTime = new Date().getTime();
         while (itr.hasNext()) {
             long fetchedTime = itr.next().getTimestamp().getTime();
-            if ((currentTime - fetchedTime) / 1000 >= 0 && (currentTime - fetchedTime) / 1000 <= 118) {
+            if ((currentTime - fetchedTime) / 1000 >= 0 && (currentTime - fetchedTime) / 1000 <= 20) {
+                return String.format("less than a minute ago.");
+            } else if((currentTime - fetchedTime) / 1000 > 20 && (currentTime - fetchedTime) / 1000 <= 118){
                 return String.format("about %s minute ago.", 1);
             } else if ((currentTime - fetchedTime) / 1000 > 118 && (currentTime - fetchedTime) / 1000 < 1800) {
                 return String.format("%s minutes ago.", (currentTime - fetchedTime) / 60000);
@@ -125,7 +118,9 @@ public class ActivityMB implements Serializable {
         long currentTime = new Date().getTime();
         while (itr.hasNext()) {
             long getLastUpdate = itr.next().getTimestamp().getTime();
-            if ((currentTime - getLastUpdate) / 1000 >= 0 && (currentTime - getLastUpdate) / 1000 <= 118) {
+            if ((currentTime - getLastUpdate) / 1000 >= 0 && (currentTime - getLastUpdate) / 1000 <= 20) {
+                return String.format("less than a minute ago.");
+            } else if((currentTime - getLastUpdate) / 1000 > 20 && (currentTime - getLastUpdate) / 1000 <= 118){
                 return String.format("about %s minute ago.", 1);
             } else if ((currentTime - getLastUpdate) / 1000 > 118 && (currentTime - getLastUpdate) / 1000 < 1800) {
                 return String.format("%s minutes ago.", (currentTime - getLastUpdate) / 60000);

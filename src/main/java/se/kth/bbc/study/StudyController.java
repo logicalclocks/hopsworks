@@ -53,12 +53,12 @@ public class StudyController {
     }
     
     
-    public long getAllStudy(String username){
-        return (Long)em.createNamedQuery("TrackStudy.findAllStudy").setParameter("username", username).getSingleResult();
+    public int getAllStudy(String username){
+        return ((Long)em.createNamedQuery("TrackStudy.findAllStudy").setParameter("username", username).getSingleResult()).intValue();
     }
     
-    public long getMembers(String name){
-        return (Long)em.createNamedQuery("TrackStudy.findMembers").setParameter("name", name).getSingleResult();
+    public int getMembers(String name){
+        return ((Long)em.createNamedQuery("TrackStudy.findMembers").setParameter("name", name).getSingleResult()).intValue();
     }
     
     public List<TrackStudy> filterPersonalStudy(String username){
