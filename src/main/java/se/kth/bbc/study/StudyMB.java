@@ -41,6 +41,7 @@ import se.kth.bbc.activity.UserGroupsController;
 import se.kth.bbc.activity.UsersGroups;
 import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.bbc.study.filebrowser.FileStructureListener;
+import se.kth.bbc.upload.UploadServlet;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
 
@@ -680,7 +681,7 @@ public class StudyMB implements Serializable {
         String rootDir = "Projects";
         String buildPath = File.separator + rootDir + File.separator + studyName;
 
-        File fileFromLocal = new File("/home/glassfish/data" + File.separator + filename);
+        File fileFromLocal = new File(UploadServlet.UPLOAD_DIR + File.separator + filename);
         Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + filename);
 
         InputStream is = new FileInputStream(fileFromLocal);
@@ -974,6 +975,7 @@ public class StudyMB implements Serializable {
 
     public void setSelectedFile(FileSummary file) {
         this.selectedFile = file;
+        System.out.println("Setter called."+file.getDisplayName());
     }
 
     public void removeFile() {
@@ -1030,4 +1032,36 @@ public class StudyMB implements Serializable {
             fileListeners.add(listener);
         }
     }
+    
+    public StreamedContent getFile(String sampleId, String type, String filename) throws IOException{
+
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", this.nameNodeURI);
+        FileSystem fs = FileSystem.get(conf);
+        String rootDir = "Projects";
+        String buildPath = File.separator + rootDir + File.separator + studyName;
+        Path outputPath = new Path(buildPath + File.separator + sampleId + File.separator + type.toUpperCase().trim() + File.separator + filename.trim());
+
+        try {
+
+            if (!fs.exists(outputPath)) {
+                System.out.println("Error: File "+ filename+" does not exist for downloading.");
+                logger.log(Level.SEVERE, "File does not exist on this path [{0}] of HDFS", outputPath.toString());
+                return null;
+            }
+
+            InputStream inStream = fs.open(outputPath, 1048576);
+            file = new DefaultStreamedContent(inStream, "fastq/fasta/bam/sam/vcf", filename);
+            logger.log(Level.INFO, "{0} - file was downloaded from HDFS path: {1}", new Object[]{filename, outputPath.toString()});
+
+        } catch (IOException ex) {
+            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+            addErrorMessageToUserAction("File not found.");
+        } finally {
+            //inStream.close();
+        }
+        return file;
+    }
+    
+    
 }

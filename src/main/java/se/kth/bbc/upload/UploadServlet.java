@@ -28,7 +28,7 @@ import se.kth.bbc.study.StudyMB;
  */
 public class UploadServlet extends HttpServlet {
 
-    public static final String UPLOAD_DIR = "/home/glassfish/data";
+    public static final String UPLOAD_DIR = "/home/stig/tst";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

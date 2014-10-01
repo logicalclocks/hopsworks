@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.logging.Logger;
 import java.util.List;
 import java.util.Map;
@@ -44,20 +45,19 @@ public class UserController implements Serializable {
     private String name;
     private String username;
     private Group role;
-    
+
     private int tabIndex;
 
-    public UserController() {
 
+    public UserController() {
     }
 
-    
     @PostConstruct
-    public void initGroups(){
+    public void initGroups() {
         groups = new ArrayList<>(Arrays.asList(Group.values())); // to support the remove operation
         groups.remove(Group.GUEST);
     }
-    
+
     public Username getUser() {
         if (user == null) {
             user = new Username();
@@ -154,11 +154,11 @@ public class UserController implements Serializable {
         }
         addMessage(user.getName() + " successfully removed.");
     }
-    
-    public void deleteUser(){
-        try{
+
+    public void deleteUser() {
+        try {
             userFacade.removeByEmail(user.getEmail());
-        } catch(EJBException ejb){
+        } catch (EJBException ejb) {
             addErrorMessageToUserAction("Error", "Delete operation failed.");
         }
         addMessage(user.getName() + "successfully removed.");
@@ -168,7 +168,7 @@ public class UserController implements Serializable {
         try {
             userFacade.update(user);
         } catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error","Update action failed.");
+            addErrorMessageToUserAction("Error", "Update action failed.");
             return;
         }
         addMessage("Update Completed.");
@@ -229,8 +229,8 @@ public class UserController implements Serializable {
     /**
      * Get all open user requests.
      */
-    public ListDataModel<Username> getAllRequests() {
-        return new ListDataModel(userFacade.findAllByStatus(Username.STATUS_REQUEST));
+    public List<Username> getAllRequests() {        
+        return userFacade.findAllByStatus(Username.STATUS_REQUEST);
     }
 
     public List<Username> getSelectedUsers() {
@@ -255,13 +255,13 @@ public class UserController implements Serializable {
                 failedNames.add(s.getEmail());
             }
         }
-        if(!failedNames.isEmpty()){
-            if(failedNames.size()==num){
-                addErrorMessageToUserAction("Operation failed.","Requests were not processed.");
-            }else{
-                addErrorMessageToUserAction("Operation partially failed.","Requests for "+ StringUtils.join(failedNames.iterator(), ", ")+" were not processed.");
+        if (!failedNames.isEmpty()) {
+            if (failedNames.size() == num) {
+                addErrorMessageToUserAction("Operation failed.", "Requests were not processed.");
+            } else {
+                addErrorMessageToUserAction("Operation partially failed.", "Requests for " + StringUtils.join(failedNames.iterator(), ", ") + " were not processed.");
             }
-        }else{
+        } else {
             addMessage("Operation successful");
         }
     }
@@ -279,13 +279,13 @@ public class UserController implements Serializable {
                 failedNames.add(s.getEmail());
             }
         }
-        if(!failedNames.isEmpty()){
-            if(failedNames.size()==num){
-                addErrorMessageToUserAction("Operation failed.","Requests were not processed.");
-            }else{
-                addErrorMessageToUserAction("Operation partially failed.","Requests for "+ StringUtils.join(failedNames.iterator(), ", ")+" were not processed.");
+        if (!failedNames.isEmpty()) {
+            if (failedNames.size() == num) {
+                addErrorMessageToUserAction("Operation failed.", "Requests were not processed.");
+            } else {
+                addErrorMessageToUserAction("Operation partially failed.", "Requests for " + StringUtils.join(failedNames.iterator(), ", ") + " were not processed.");
             }
-        }else{
+        } else {
             addMessage("Operation successful");
         }
     }
@@ -299,19 +299,19 @@ public class UserController implements Serializable {
         System.out.println("User group:" + user.getExtraGroup());
         userFacade.update(user);
     }
-    
-    public void setTabIndex(int index){
+
+    public void setTabIndex(int index) {
         this.tabIndex = index;
     }
-    
-    public int getTabIndex(){
+
+    public int getTabIndex() {
         int oldindex = tabIndex;
         tabIndex = 0;
         return oldindex;
     }
-    
-    public String openRequests(){
-        this.tabIndex=1;
+
+    public String openRequests() {
+        this.tabIndex = 1;
         return "userMgmt";
     }
 

@@ -17,9 +17,9 @@
             <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
         </h:head>
         <h:body>
-                <ui:insert name="titleBar" >
-                    <ui:include src="/bbc/lims/titleBar.xhtml" />
-                </ui:insert>
+            <ui:insert name="titleBar" >
+                <ui:include src="/bbc/lims/titleBar.xhtml" />
+            </ui:insert>
 
             <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutStudy">  
                 <p:layoutUnit position="center">
@@ -452,10 +452,9 @@
                                                     <h:outputText value="#{document.displayStatus}" />
                                                 </p:column>
                                                 <p:column style="width:15px" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                    <h:commandLink title="Download" class="ui-icon ui-icon-arrowthick-1-s" actionListener="#{studyManagedBean.fileDownloadEvent}" rendered="#{document.file}">
-                                                        <p:fileDownload value="#{studyManagedBean.file}"/>
-                                                        <f:setPropertyActionListener value="#{document}" target="#{studyManagedBean.selectedFile}" />
-                                                    </h:commandLink>
+                                                    <p:commandLink title="Download" ajax="false" styleClass="ui-icon ui-icon-arrowthick-1-s"  rendered="#{document.file}">
+                                                        <p:fileDownload value="#{studyManagedBean.getFile(document.sampleID, document.type, document.filename)}" />
+                                                    </p:commandLink>
                                                     <p:commandLink title="Download" styleClass="ui-icon ui-icon-arrowthick-1-s" disabled="true" rendered="#{!document.file}">
                                                     </p:commandLink>
                                                 </p:column>
