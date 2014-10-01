@@ -117,7 +117,7 @@
 
                                             <p:column id="actionColumn" headerText="Action" style="width:9%;">
                                                 <h:panelGrid columns="2" style="width: auto">                                                    
-                                                    <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{userController.deleteUser(req)}" update="@form">
+                                                    <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{userController.rejectUser(req)}" update="@form">
                                                         <p:confirm header="Reject user" message="Are you sure you want to reject this user?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:commandLink styleClass="ui-button-allow fa fa-check" actionListener="#{userController.allowUser(req)}" update="@form">

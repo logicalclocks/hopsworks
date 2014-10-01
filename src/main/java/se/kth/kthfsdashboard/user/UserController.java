@@ -5,7 +5,6 @@ import java.io.Serializable;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.logging.Logger;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +17,6 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
-import javax.faces.model.ListDataModel;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
 
@@ -48,6 +46,7 @@ public class UserController implements Serializable {
 
     private int tabIndex;
 
+    private List<Username> requests;
 
     public UserController() {
     }
@@ -154,6 +153,16 @@ public class UserController implements Serializable {
         }
         addMessage(user.getName() + " successfully removed.");
     }
+    
+    public void rejectUser(Username user) {
+        try {
+            userFacade.removeByEmail(user.getEmail()); //userFacade.remove(user) doesn't seem to work
+        } catch (EJBException ejb) {
+            addErrorMessageToUserAction("Error", "Rejection failed");
+        }
+        addMessage(user.getName() + " was rejected.");
+        requests.remove(user);
+    }
 
     public void deleteUser() {
         try {
@@ -229,8 +238,11 @@ public class UserController implements Serializable {
     /**
      * Get all open user requests.
      */
-    public List<Username> getAllRequests() {        
-        return userFacade.findAllByStatus(Username.STATUS_REQUEST);
+    public List<Username> getAllRequests() {
+        if (requests == null) {
+            requests = userFacade.findAllByStatus(Username.STATUS_REQUEST);
+        }
+        return requests;
     }
 
     public List<Username> getSelectedUsers() {
@@ -251,6 +263,7 @@ public class UserController implements Serializable {
             try {
                 s.setStatus(Username.STATUS_ALLOW);
                 userFacade.update(s);
+                requests.remove(s);
             } catch (EJBException ejb) {
                 failedNames.add(s.getEmail());
             }
@@ -275,6 +288,7 @@ public class UserController implements Serializable {
         for (Username s : selectedUsers) {
             try {
                 userFacade.removeByEmail(s.getEmail());
+                requests.remove(s);
             } catch (EJBException ejb) {
                 failedNames.add(s.getEmail());
             }
@@ -298,6 +312,7 @@ public class UserController implements Serializable {
         user.setStatus(Username.STATUS_ALLOW);
         System.out.println("User group:" + user.getExtraGroup());
         userFacade.update(user);
+        requests.remove(user);
     }
 
     public void setTabIndex(int index) {
