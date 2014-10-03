@@ -207,6 +207,10 @@ h1 {
     float: left;
 }
 
+.Oops {
+    float: none;
+}
+
 .ui-treetable table {
     border-collapse: collapse;
     table-layout: fixed;

@@ -31,7 +31,6 @@ public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements 
 
     @Override
     public List<ActivityDetail> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> filters) {
-        System.out.println("Load called: "+first+", "+pageSize);
         List<ActivityDetail> data;
         if (filterStudy == null) {
             data = activityController.getPaginatedActivityDetail(first, pageSize);

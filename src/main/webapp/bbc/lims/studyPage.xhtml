@@ -20,8 +20,7 @@
             <ui:insert name="titleBar" >
                 <ui:include src="/bbc/lims/titleBar.xhtml" />
             </ui:insert>
-
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutStudy">  
+            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutStudy" rendered="#{studyManagedBean.studyName != null}">  
                 <p:layoutUnit position="center">
                     <div class="container">
                         <h1>#{studyManagedBean.studyName} </h1>
@@ -47,7 +46,7 @@
                                     </div>
                                 </p:tab>
 
-                                <p:tab id="teamTab" title="Team">
+                                <p:tab id="teamTab" title="Team" rendered="#{studyManagedBean.renderComponentList() != null}">
 
                                     <h3 class="page_title" align="left">
                                         Team Members (#{studyManagedBean.countAllMembersPerStudy()})
@@ -424,7 +423,7 @@
                                         </c:if>
                                     </div>
                                 </p:tab>
-                                <p:tab id="samples" title="Samples">
+                                <p:tab id="samples" title="Samples" rendered="#{studyManagedBean.renderComponentList() != null}">
                                     <h3 class="page_title" align="left">
                                         Study samples
                                         <span class="right_button">
@@ -476,6 +475,20 @@
 
                 </p:layoutUnit>
             </p:layout>
+            
+            
+            <!-- In case Study has not been set: user navigated to the page manually. -->
+            <p:layout id="bbcMainLayoutAlt" styleClass="BbcMainLayoutStudy" rendered="#{studyManagedBean.studyName == null}">  
+                <p:layoutUnit position="center">
+                    <div class="container">
+                        <h1 class="Oops">Oops!</h1>
+                        <br></br>
+                        <strong> Something went wrong. </strong>
+                    </div>
+                </p:layoutUnit>
+            </p:layout>
+            
+            
             <h:form>
                 <p:dialog widgetVar="removeStudyDlg"  closable="true" draggable="false" resizable="false" header="Remove study?" modal="true" style="width: auto;">
                     <p:outputLabel value="Do you want to remove this study and its data?" style="width: auto;"/>

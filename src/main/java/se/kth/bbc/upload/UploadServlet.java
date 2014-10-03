@@ -8,19 +8,13 @@ package se.kth.bbc.upload;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.net.URISyntaxException;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.context.FacesContext;
-import javax.faces.event.ActionEvent;
-import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import se.kth.bbc.study.DatasetMB;
 import se.kth.bbc.study.StudyMB;
 
 /**
@@ -30,8 +24,18 @@ public class UploadServlet extends HttpServlet {
 
     public static final String UPLOAD_DIR = "/home/stig/tst";
 
+    @ManagedProperty(value = "#{studyManagedBean}")
+    private StudyMB study;
+    
+    public void setStudy(StudyMB study){
+        this.study = study;
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        if (!"Master".equals(study.renderComponentList())) {
+            return;
+        }
         int resumableChunkNumber = getResumableChunkNumber(request);
 
         ResumableInfo info = getResumableInfo(request);
@@ -63,26 +67,26 @@ public class UploadServlet extends HttpServlet {
         } else {
             response.getWriter().print("Upload");
         }
-        
+
         int extPos = info.resumableFilename.lastIndexOf(".");
-        if (extPos == -1) { return;}
-        String fileType = info.resumableFilename.substring(extPos+1);
-        
+        if (extPos == -1) {
+            return;
+        }
+        String fileType = info.resumableFilename.substring(extPos + 1);
+
         StudyMB studyMB = (StudyMB) request.getSession().getAttribute("studyManagedBean");
-        
-        if(studyMB == null){
+
+        if (studyMB == null) {
             studyMB = new StudyMB();
             request.setAttribute("studyMB", studyMB);
         }
-        
-       try{
+
+        try {
             studyMB.createSampleFiles(info.resumableFilename, fileType);
-        } catch(URISyntaxException uri){
-            System.out.println("uri error "+ uri.getMessage());
-       }
-        
-        
-        
+        } catch (URISyntaxException uri) {
+            System.out.println("uri error " + uri.getMessage());
+        }
+
     }
 
     @Override

@@ -24,7 +24,7 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
 
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+            <p:layout id="bbcMainLayout" styleClass="BbcMainLayout" rendered="#{studyManagedBean.renderComponentList() != null}">  
                 <p:layoutUnit position="center">
 
                     <div class="container">

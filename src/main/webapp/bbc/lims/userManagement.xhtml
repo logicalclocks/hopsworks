@@ -22,7 +22,7 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
 
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser">  
+            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser" rendered="#{userMB.adminUser}">  
 
                 <p:layoutUnit position="center">
                     <div class="container">
