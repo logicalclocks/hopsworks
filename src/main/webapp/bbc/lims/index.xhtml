@@ -41,7 +41,7 @@
                                             <p:dataScroller value="#{activityBean.allLazyModel}" var="act" chunkSize="25" lazy="true" buffer="50">
                                                 <div class="event-item" align="left">
                                                     <span class="cgray right">#{activityBean.findLastActivity(act.id)}</span>
-                                                    <img class="avatar s24" src="#{activityBean.getGravatar(act.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                    <img class="avatar s24" src="#{activityBean.getGravatar(act.email)}?d=mm"/>
                                                     <div class="event-title">
                                                         <span class="author_name"><p:commandLink> #{act.author}</p:commandLink></span>
                                                         <span class="event_label merged">#{act.activity}</span>

@@ -5,10 +5,7 @@
  */
 package se.kth.bbc.activity;
 
-import com.timgroup.jgravatar.Gravatar;
-import com.timgroup.jgravatar.GravatarRating;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -19,11 +16,11 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.NoneScoped;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import org.primefaces.model.LazyDataModel;
+import se.kth.kthfsdashboard.user.Gravatar;
 
 /**
  *
@@ -203,12 +200,7 @@ public class ActivityMB implements Serializable {
     }
 
     public String getGravatar(String email) {
-
-        Gravatar gravatar = new Gravatar();
-        gravatar.setRating(GravatarRating.GENERAL_AUDIENCES);
-        String url = gravatar.getUrl(email);
-
-        return url;
+        return Gravatar.getUrl(email,20);
     }
 
 }

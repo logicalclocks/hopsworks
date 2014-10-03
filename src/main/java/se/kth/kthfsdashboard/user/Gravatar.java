@@ -12,6 +12,7 @@ import java.security.*;
 public class Gravatar {
 
     private static final String BASIC_URL = "http://www.gravatar.com/avatar/";
+    private static final String DEFAULT = "?d=mm";
 
     public static String hex(byte[] array) {
         StringBuilder sb = new StringBuilder();
@@ -34,12 +35,12 @@ public class Gravatar {
 
     public static String getUrl(String email) {
         String hash = md5Hex(email);
-        return BASIC_URL + hash;
+        return BASIC_URL + hash + DEFAULT;
     }
 
     public static String getUrl(String email, int size) {
         String url = getUrl(email);
-        return url + "?s=" + size;
+        return url + "&s=" + size;
     }
 
 }
