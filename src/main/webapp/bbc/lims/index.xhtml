@@ -16,7 +16,7 @@
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
-            
+
         </h:head>
 
         <h:body>
@@ -27,7 +27,7 @@
             <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
                 <p:growl for="studyRemoved" autoUpdate="true" showDetail="true"/>
 
-                <p:layoutUnit position="center">
+                <p:layoutUnit position="center" style="height: auto;">
 
                     <div class="container"> 
                         <ul class="main_menu"></ul>
@@ -35,58 +35,25 @@
                             <div class="study">
                                 <div class="span8">
                                     <div class="event_filter">
-                                        <!--                                        <div class="filter_icon">
-                                                                                    <p:commandLink id="usrLink" styleClass="link_a" process="@all">
-                                                                                            <p:ajax event="click" update=":#{p:component('contentList')}"/>
-                                                                                            <p:graphicImage value="#{resource['/images/icons/user.png']}"/>
-                                                                                            <f:param name="teamFlag" value="TEAM"/>
-                                                                                    </p:commandLink>
-                                                                                    <p:tooltip id="userRelated" for="usrLink" value="Team activity filtering" 
-                                                                                               showEffect="slide"
-                                                                                               hideEffect="slide"/>
-                                                                                </div>
-                                                                                <div class="filter_icon">
-                                                                                    <p:commandLink styleClass="link_a"/>
-                                                                                </div>
-                                                                                <div class="filter_icon">
-                                                                                    <p:commandLink styleClass="link_a"/>
-                                                                                </div>-->
                                     </div>
-                                    <h:panelGroup id="contentList" styleClass="content_list">
-<!--                                        <c:if test="${activityBean.flag ne 'TEAM'}">-->
-                                        <c:forEach var="act" items="#{activityBean.activityDetailList}">
-                                            <div class="event-item" align="left">
-                                                <span class="cgray right">#{activityBean.findLastActivity(act.id)}</span>
-                                                <img class="avatar s24" src="#{activityBean.getGravatar(act.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
-                                                <div class="event-title">
-                                                    <span class="author_name"><p:commandLink> #{act.author}</p:commandLink></span>
-                                                    <span class="event_label merged">#{act.activity}</span>
-                                                    <p:commandLink action="#{studyManagedBean.fetchStudy()}" disabled="#{studyManagedBean.isRemoved(act.studyName)}">
-                                                        <strong>at #{act.author} / #{act.studyName}</strong>
-                                                        <f:param name="studyname" value="#{act.studyName}"/>
-                                                        <f:param name="username" value="#{act.email}"/>
-                                                    </p:commandLink>
-                                                </div>
-                                            </div>
-                                        </c:forEach>
-                                        <!--                                        </c:if>-->
-                                        <c:if test="${activityBean.flag eq 'TEAM'}">
-                                            <c:forEach var="team" items="#{activityBean.allTeamActivity}">
+                                    <h:panelGroup id="contentList">
+                                        <h:form>
+                                            <p:dataScroller value="#{activityBean.allLazyModel}" var="act" chunkSize="25" lazy="true" buffer="50">
                                                 <div class="event-item" align="left">
-                                                    <span class="cgray right">#{activityBean.findLastActivity(team.id)}</span>
-                                                    <img class="avatar s24" src="#{activityBean.getGravatar(team.performedBy)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                    <span class="cgray right">#{activityBean.findLastActivity(act.id)}</span>
+                                                    <img class="avatar s24" src="#{activityBean.getGravatar(act.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
                                                     <div class="event-title">
-                                                        <span class="author_name"><p:commandLink> #{team.performedBy}</p:commandLink></span>
-                                                        <span class="event_label merged">#{team.activity}</span>
+                                                        <span class="author_name"><p:commandLink> #{act.author}</p:commandLink></span>
+                                                        <span class="event_label merged">#{act.activity}</span>
                                                         <p:commandLink action="#{studyManagedBean.fetchStudy()}" disabled="#{studyManagedBean.isRemoved(act.studyName)}">
-                                                            <strong>at #{team.performedBy} / #{team.activityOn}</strong>
-                                                            <f:param name="studyname" value="#{team.activityOn}"/>
-                                                            <f:param name="username" value="#{team.performedBy}"/>
+                                                            <strong>at #{act.author} / #{act.studyName}</strong>
+                                                            <f:param name="studyname" value="#{act.studyName}"/>
+                                                            <f:param name="username" value="#{act.email}"/>
                                                         </p:commandLink>
                                                     </div>
                                                 </div>
-                                            </c:forEach>
-                                        </c:if>
+                                            </p:dataScroller>
+                                        </h:form>
                                     </h:panelGroup>
                                 </div>  
                                 <div id="divSpan4" class="span4">
@@ -94,22 +61,16 @@
                                         <h:panelGroup id="studyBoxHeader" styleClass="title">
                                             <c:if id="allTabChange" test="${studyManagedBean.tabIndex == 0}">
                                                 Studies<small>(#{studyManagedBean.countAllStudiesPerUser()})</small>
-                                                <span class="right">
-                                                    <p:commandButton value="New Study" type="button" rendered="#{userMB.anyAdminUser}" icon="ui-icon-plus" onclick="window.location.href = 'newStudy.xhtml'"/>
-                                                </span>
                                             </c:if>
                                             <c:if id="personalTabChange" test="${studyManagedBean.tabIndex == 1}">
                                                 Studies<small>(#{studyManagedBean.countPersonalStudy()})</small>
-                                                <span class="right">
-                                                    <p:commandButton value="New Study" type="button" rendered="#{userMB.anyAdminUser}" icon="ui-icon-plus" onclick="window.location.href = 'newStudy.xhtml'"/>
-                                                </span>
                                             </c:if>
                                             <c:if id="joinedTabChange" test="${studyManagedBean.tabIndex == 2}">
                                                 Studies<small>(#{studyManagedBean.countJoinedStudy()})</small>
-                                                <span class="right">
-                                                    <p:commandButton value="New Study" type="button" rendered="#{userMB.anyAdminUser}" icon="ui-icon-plus" onclick="window.location.href = 'newStudy.xhtml'"/>
-                                                </span>
                                             </c:if>
+                                            <span class="right">
+                                                <p:commandButton value="New Study" type="button" rendered="#{userMB.anyAdminUser}" icon="ui-icon-plus" onclick="window.location.href = 'newStudy.xhtml'"/>
+                                            </span>
                                         </h:panelGroup>
                                         <p:tabView id="tabViewSummary" styleClass="ui-tabs" dynamic="true" cache="false" activeIndex="#{studyManagedBean.tabIndex}">
                                             <p:ajax event="tabChange" listener="#{studyManagedBean.onTabChange}" update=":#{p:component('studyBoxHeader')}"/>

@@ -1530,7 +1530,6 @@ img .avatar .s32 {
 .study {
     margin-left: -30px;
     width:1200px;
-    height: 2802px;
 }
 .study:before, .row:after, .study:after {
     display: table;
@@ -2302,4 +2301,9 @@ ui-wizard {
     margin:0 3px 0 0;
     padding:0.4em;
     float:left;
+}
+
+ .ui-layout-pane-center {
+    bottom: auto !important;
+    height: auto !important;
 }

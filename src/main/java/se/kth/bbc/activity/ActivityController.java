@@ -11,6 +11,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 
 /**
  *
@@ -49,20 +50,9 @@ public class ActivityController {
     public void removetActivity(UserActivity activity) {
         em.remove(activity);
     }
-
-    public List<UserActivity> filterActivity(){    
-        Query query = em.createNamedQuery("UserActivity.findAll", UserActivity.class);
-        return query.getResultList();
-    }
     
     public List<ActivityDetail> filterActivityDetail(){
         Query query = em.createNativeQuery("SELECT id, performed_By AS email, USERS.name AS author, activity, activity_on AS studyName, timestamp AS myTimestamp FROM activity JOIN USERS ON activity.performed_By=USERS.email ORDER BY myTimestamp DESC", ActivityDetail.class);
-        return query.getResultList();
-    }
-    
-    public List<UserActivity> activityOnstudy(String activityOn){
-    
-        Query query = em.createNamedQuery("UserActivity.findByActivityOn", UserActivity.class).setParameter("activityOn", activityOn);
         return query.getResultList();
     }
     
@@ -70,6 +60,37 @@ public class ActivityController {
         Query query = em.createNativeQuery("SELECT id, performed_By AS email, USERS.name AS author, activity, activity_on AS studyName, timestamp AS myTimestamp FROM activity JOIN USERS ON activity.performed_By=USERS.email WHERE activity.activity_on = ? ORDER BY myTimestamp DESC", ActivityDetail.class);
         query.setParameter(1, studyName);
         return query.getResultList();
+    }
+    
+    public List<ActivityDetail> getPaginatedActivityDetail(int first, int pageSize){
+        Query query = em.createNativeQuery("SELECT id, performed_By AS email, USERS.name AS author, activity, activity_on AS studyName, timestamp AS myTimestamp FROM activity JOIN USERS ON activity.performed_By=USERS.email ORDER BY myTimestamp DESC LIMIT ?,?", ActivityDetail.class);
+        query.setParameter(1, first);
+        query.setParameter(2, pageSize);
+        return query.getResultList();
+    }
+    
+    public List<ActivityDetail> getPaginatedActivityDetailForStudy(int first,int pageSize, String filterStudy){
+        Query query = em.createNativeQuery("SELECT id, performed_By AS email, USERS.name AS author, activity, "
+                + "activity_on AS studyName, timestamp AS myTimestamp "
+                + "FROM activity JOIN USERS ON activity.performed_By=USERS.email "
+                + "WHERE activity_on LIKE ? "
+                + "ORDER BY myTimestamp DESC "
+                + "LIMIT ?,?", ActivityDetail.class);
+        query.setParameter(1, filterStudy);
+        query.setParameter(2, first);
+        query.setParameter(3, pageSize);
+        return query.getResultList();
+    }
+    
+    public long getTotalCount(){
+        TypedQuery<Long> q = em.createNamedQuery("UserActivity.countAll",Long.class);
+        return q.getSingleResult();
+    }
+    
+    public long getStudyCount(String studyName){
+        TypedQuery<Long> q = em.createNamedQuery("UserActivity.countStudy",Long.class);
+        q.setParameter("studyName", studyName);
+        return q.getSingleResult();
     }
     
     public List<UserActivity> activityOnID(int id){

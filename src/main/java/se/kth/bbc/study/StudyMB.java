@@ -33,10 +33,13 @@ import org.apache.hadoop.io.IOUtils;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.TreeNode;
 import se.kth.bbc.activity.ActivityController;
+import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.activity.ActivityMB;
+import se.kth.bbc.activity.LazyActivityModel;
 import se.kth.bbc.activity.UserGroupsController;
 import se.kth.bbc.activity.UsersGroups;
 import se.kth.bbc.activity.UsersGroupsPK;
@@ -78,6 +81,9 @@ public class StudyMB implements Serializable {
 
     @EJB
     private SampleFilesController sampleFilesController;
+    
+    @EJB
+    private ActivityController activityController;
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
@@ -104,6 +110,8 @@ public class StudyMB implements Serializable {
     private boolean deleteFilesOnRemove = true;
 
     private final List<FileStructureListener> fileListeners = new ArrayList<>();
+    
+    private LazyActivityModel lazyModel = null;
 
     public StudyMB() {
     }
@@ -142,6 +150,7 @@ public class StudyMB implements Serializable {
         for (FileStructureListener l : fileListeners) {
             l.changeStudy(studyName);
         }
+        this.lazyModel = null;
     }
 
     public String getCreator() {
@@ -1061,6 +1070,14 @@ public class StudyMB implements Serializable {
             //inStream.close();
         }
         return file;
+    }
+    
+    public LazyDataModel<ActivityDetail> getSpecificLazyModel(){
+        if(lazyModel == null){
+            lazyModel = new LazyActivityModel(activityController,studyName);
+            lazyModel.setRowCount((int)activityController.getStudyCount(studyName));
+        }
+        return lazyModel;
     }
     
     

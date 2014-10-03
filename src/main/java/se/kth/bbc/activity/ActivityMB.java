@@ -8,25 +8,29 @@ package se.kth.bbc.activity;
 import com.timgroup.jgravatar.Gravatar;
 import com.timgroup.jgravatar.GravatarRating;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.NoneScoped;
+import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+import org.primefaces.model.LazyDataModel;
 
 /**
  *
  * @author roshan
  */
 @ManagedBean(name = "activityBean")
-@NoneScoped
+@SessionScoped
 public class ActivityMB implements Serializable {
 
     private static final Logger logger = Logger.getLogger(ActivityMB.class.getName());
@@ -38,6 +42,20 @@ public class ActivityMB implements Serializable {
     private UserActivity activity;
         
     private String flag;
+    
+    private LazyDataModel<ActivityDetail> allLazyModel;
+    
+    @PostConstruct
+    public void init(){
+        this.allLazyModel = new LazyActivityModel(activityController);
+        int cnt = (int)activityController.getTotalCount();
+        System.out.println(cnt);
+        allLazyModel.setRowCount(cnt);
+    }
+    
+    public LazyDataModel<ActivityDetail> getAllLazyModel(){
+        return allLazyModel;
+    }
     
     public String getFlag() {
         return flag;
@@ -64,17 +82,9 @@ public class ActivityMB implements Serializable {
     public void setActivity(UserActivity activity) {
         this.activity = activity;
     }
-
-    public List<UserActivity> getActivityList() {
-        return activityController.filterActivity();
-    }
     
     public List<ActivityDetail> getActivityDetailList() {
         return activityController.filterActivityDetail();
-    }
-
-    public List<UserActivity> getActivityOnstudy(String activityOn) {
-        return activityController.activityOnstudy(activityOn);
     }
     
     public List<ActivityDetail> getActivityDetailOnStudy(String studyName){
