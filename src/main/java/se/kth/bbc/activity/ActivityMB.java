@@ -46,7 +46,6 @@ public class ActivityMB implements Serializable {
     public void init(){
         this.allLazyModel = new LazyActivityModel(activityController);
         int cnt = (int)activityController.getTotalCount();
-        System.out.println(cnt);
         allLazyModel.setRowCount(cnt);
     }
     
