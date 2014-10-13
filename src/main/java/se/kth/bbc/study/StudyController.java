@@ -80,6 +80,14 @@ public class StudyController {
               return null;
      }
      
+     /**
+        Get the owner of the given study. 
+     */
+     public String findOwner(String studyName){
+         Query q = em.createNamedQuery("TrackStudy.findOwner", String.class).setParameter("name", studyName);
+         return (String)q.getSingleResult();
+     }
+     
     
     public List<TrackStudy> findAllStudies(String user){
     

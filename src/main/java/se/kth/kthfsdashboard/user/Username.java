@@ -250,7 +250,7 @@ public class Username implements Serializable {
     }
     
     /*
-     Fake property to allow adding groups with dropdown list in frontend.
+     Derived property to allow adding groups with dropdown list in frontend.
     */
     public void setExtraGroup(Group g){
         addGroup(g);

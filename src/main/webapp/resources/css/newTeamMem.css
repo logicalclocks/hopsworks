@@ -19,14 +19,14 @@ and open the template in the editor.
 
 .ui-tabs{
     
-     width: 1170px !important;
+     width: 90% !important;
      display: block;
      height: auto;
      padding: 0em !important;
 }
 
 .ui-tabs .ui-tabs-nav{
-    width: 1162px !important;
+    width: 90% !important;
     height: auto;
     display: block;
     border-bottom: 1px solid #ddd;
@@ -42,7 +42,7 @@ and open the template in the editor.
 }
 
 .ui-tabs .ui-tabs-panel .ui-widget-content{
-     width: 1170px !important;
+     width: 90% !important;
      line-height: 20px;
      float: left;
      display: block;
@@ -59,7 +59,7 @@ and open the template in the editor.
 
 .ui-tabs .ui-tabs-panels{
      display: block;
-     width: 1170px !important;
+     width: 90% !important;
      min-height: 100%;
      height: auto; 
      margin: 0 0 0 0 !important;
@@ -72,7 +72,7 @@ and open the template in the editor.
 .ui-tabs .ui-tabs-panel{
      position: relative; 
      display: block;
-     width: 1170px !important;
+     width: 90% !important;
      min-height: 100%;
      height: auto; 
      margin: 0 !important;
@@ -84,7 +84,7 @@ and open the template in the editor.
 .ui-tabs .ui-widget-content{
     
      display: block;
-     width: 1170px !important;
+     width: 90% !important;
      min-height: 100%;
      height: auto; 
      margin: 0 0 0 0 !important;

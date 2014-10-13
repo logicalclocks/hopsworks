@@ -283,10 +283,6 @@ public class StudyMB implements Serializable {
         return getRequest().getUserPrincipal().getName();
     }
 
-    public void gravatarAccess() {
-        activity.getGravatar(studyCreator);
-    }
-
     public StudyRoleTypes[] getTeam() {
         return StudyRoleTypes.values();
     }
@@ -407,8 +403,8 @@ public class StudyMB implements Serializable {
         return studyTeamController.findMembersByStudy(studyName);
     }
 
-    public int countAllStudiesPerUser() {
-        return studyController.findAllStudies(getUsername()).size();
+    public long countAllStudiesPerUser() {
+        return studyTeamController.countByMember(getUsername());
     }
 
     public int countPersonalStudy() {
@@ -934,13 +930,7 @@ public class StudyMB implements Serializable {
 
     public boolean isCurrentOwner() {
         String email = getUsername();
-        List<TrackStudy> lst = studyTeamController.findStudyMaster(studyName);
-        for (TrackStudy tr : lst) {
-            if (tr.getUsername().equals(email)) {
-                return true;
-            }
-        }
-        return false;
+        return email.equals(studyController.findOwner(studyName));
     }
 
     public String removeByName() {

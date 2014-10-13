@@ -12,6 +12,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.user.Username;
 
 /**
@@ -40,15 +41,14 @@ public class StudyTeamController {
     
         Query query = em.createNamedQuery("StudyTeam.countAllMembers").setParameter("name", name);
         return query.getResultList();
-    }
+    }    
     
-    public List<Username> findMasterMembersByName(String name, String role){
-        Query query = em.createNativeQuery("SELECT NAME, EMAIL FROM USERS WHERE EMAIL IN (SELECT team_member FROM StudyTeam WHERE name=? AND team_role=?)" , Username.class).setParameter(1, name).setParameter(2, role);
-        return query.getResultList();
-    
-    }
-    
-    
+    /**
+     * Find all team members in study 'name' with role 'role'.
+     * @param name
+     * @param role
+     * @return 
+     */
     public List<Username> findTeamMembersByName(String name, String role){
         Query query = em.createNativeQuery("SELECT NAME, EMAIL FROM USERS WHERE EMAIL IN (SELECT team_member FROM StudyTeam WHERE name=? AND team_role=?)" , Username.class)
                     .setParameter(1, name).setParameter(2, role);
@@ -59,14 +59,12 @@ public class StudyTeamController {
     
     public List<StudyTeam> findResearchMembersByName(String name){
         Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_role=?" , StudyTeam.class).setParameter(1, name).setParameter(2, "Researcher");
-        return query.getResultList();
-    
+        return query.getResultList();    
     }
     
     public List<StudyTeam> findGuestMembersByName(String name){
         Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_role=?" , StudyTeam.class).setParameter(1, name).setParameter(2, "Guest");
-        return query.getResultList();
-    
+        return query.getResultList();    
     }
     
     //filter all members based on study name
@@ -82,10 +80,17 @@ public class StudyTeamController {
         return query.getResultList();
     }
     
-    public List<StudyTeam> findByMember(String teamMember){
-    
-        Query query = em.createNamedQuery("StudyTeam.findByTeamMember", StudyTeam.class).setParameter("teamMember", teamMember).setParameter("teamRole", "Master");
+    /*
+     Finds all studies in which the user teamMember is a participant (no matter which role).
+    */
+    public List<StudyTeam> findByMember(String teamMember){    
+        Query query = em.createNamedQuery("StudyTeam.findByTeamMember", StudyTeam.class).setParameter("teamMember", teamMember);
         return query.getResultList();
+    }
+    
+    public long countByMember(String teamMember){
+        Query query = em.createNamedQuery("StudyTeam.countStudiesByMember",Long.class).setParameter("teamMember", teamMember);
+        return (Long)query.getSingleResult();
     }
     
     
@@ -140,14 +145,16 @@ public class StudyTeamController {
 //        }
     }    
     
-    public StudyTeam getStudyTeam(String studyname, String username){
-        Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_member=?", StudyTeam.class).setParameter(1, studyname).setParameter(2, username);
-        List<StudyTeam> res = query.getResultList();
-        if (res.iterator().hasNext()) {
-            StudyTeam t = res.iterator().next();
-            return t;
-        }
-            return null;
-    }  
+    /**
+     * Find the StudyTeam entry with studyName and username as primary key.
+     * @param studyName
+     * @param username
+     * @return 
+     */
+    public StudyTeam findStudyTeam(String studyName, String username){
+        TypedQuery<StudyTeam> q = em.createNamedQuery("StudyTeam.find", StudyTeam.class);
+        q.setParameter("studyName", studyName).setParameter("username", username);
+        return q.getSingleResult();
+    } 
       
 }

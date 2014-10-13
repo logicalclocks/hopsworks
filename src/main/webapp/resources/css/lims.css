@@ -22,7 +22,7 @@
  display: none;
 }
 .BbcMainLayout .BbcPanel {
-    width: 700px; 
+    width: 54%; 
     margin: 0 auto;
 }
 
@@ -100,26 +100,26 @@
     background-repeat:no-repeat;    
 }
 .sideMenuItem.Home {
-    background-image: url("#{resource['images/bbc/home-dark.png']}");
+    background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/home-dark.png.xhtml");
 }
 .sideMenuItem.Home:hover {
-    background-image: url("#{resource['images/bbc/home-light.png']}");
+    background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/home-light.png.xhtml");
 }
 .sideMenuItem.New {
-    background-image: url("#{resource['images/bbc/new-sc-dark.png']}");
+    background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/new-sc-dark.png.xhtml");
 }
 .sideMenuItem.New:hover {
-    background-image: url("#{resource['images/bbc/new-sc-light.png']}");
+    background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/new-sc-light.png.xhtml");
 }
 .sideMenuItem.Find {
-    background-image: url("#{resource['images/bbc/find-sc-dark.png']}");
+    background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/find-sc-dark.png.xhtml");
 }
 .sideMenuItem.Find:hover {
-    background-image: url("#{resource['images/bbc/find-sc-light.png']}");
+    background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/find-sc-light.png.xhtml");
 }
 
 .sideMenuItem.User {
-    background-image: url("#{resource['images/bbc/new-sc-dark.png']}");
+    background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/new-sc-dark.png.xhtml");
 }
 
 
@@ -281,7 +281,6 @@
 	-webkit-border-radius:5px;
 	border:1px solid #459A00;
         margin-left: 10px;
-        margin-bottom: 8px;
         margin-right: 0px;
         margin-top: 0px;
         width: auto;
@@ -386,7 +385,7 @@
 .content .nav{
     
     display: block;
-    width: 1170px;
+    width: 90%;
     height: 37px;
     margin-left: 0;
     margin-bottom: 18px;
@@ -423,7 +422,7 @@
     margin-bottom: 30px;
     margin-top: 10px;
     border-bottom: 1px solid #ddd;
-    width: 1170px;
+    width: 100%;
     height: 37px;
     position: relative;
     overflow: hidden;
@@ -432,12 +431,11 @@
 .study_new_holder{
     
     display: inline-block;
-    width: 1170px;
+    width: 90%;
     height: 207px;
 }
 
 .page_title {
-    width: 1166px;
     float: left;
     color: #456;
     font-size: 20px;
@@ -447,10 +445,10 @@
     margin-left: 0;
     margin-top: 0;
     margin-right: 0;
+    width: 100%;
  }
  
 hr {
-    width: 1170px;
     line-height: 0px;
     margin-top: 18px;
     margin-right: 0px;
@@ -479,7 +477,7 @@ hr {
 
 
 .clear_fix{
-    width: 1170px;
+    width: 90%;
     height: 45px;
     margin-bottom: 18px;
 }
@@ -491,7 +489,6 @@ hr {
 
 
 .clear_fixing{
-    width: 1170px;
      height: auto !important;
     
 }
@@ -523,14 +520,13 @@ h6{
 .actions{
     
     padding-top: 17px;
-    padding-right: 20px;
+    padding-right: 0px;
     padding-bottom: 18px;
-    padding-left: 180px;
+    padding-left: 6%;
     margin-top: 18px;
     margin-bottom: 18px;
     background-color: #f5f5f5;
     border-top: 1px solid #e5e5e5;
-    width: 970px;
     height: 28px;
 }
 
@@ -578,7 +574,6 @@ h6{
  }
 
 .button-cancel {
-        float: right;
         background: #da4f49;
 }
 .button-cancel:hover {
@@ -586,7 +581,7 @@ h6{
 }
 
 .new_member_content .clear_fixing{
-    width: 1170px;
+    width: 90%;
     height: 34px;
     margin-bottom: 18px;
     
@@ -678,7 +673,7 @@ h6{
 
 .content > .team_table{
     display: block;
-    width: 1170px !important;
+    width: 90% !important;
     min-height: 1170px;
     height: auto !important;
 }
@@ -766,12 +761,11 @@ h6{
     border-left-color: rgb(204, 204, 204);
     border-left-style: solid;
     border-left-width: 1px;
-    box-shadow: 0 0 0 3px #f1f1f1;
+    box-shadow: 0 0 0 1px #f1f1f1;
     background: #F9F9F9;
     margin-bottom: 25px;
 /*    min-height: 440px;*/
     height: auto !important;
-    width: 1168px !important;
 }
 
 
@@ -779,23 +773,23 @@ h6{
 
 
 .ui_box > .title {
-     width: 1148px;
+    width: 99%;
      height: 36px;
-     padding: 0 10px 0 10px;
+     padding: 0 0 0 1%;
      border-bottom: 1px solid #ccc;
      margin: 0 0 0 0;
 }
 .study_name_holder{
     
     display: block;
-    width: 1170px;
+    width: 90%;
     height: 45px;
 }
 
 .ui_box .well-list {
     
     display: inline-block;
-    width: 1168px !important;
+    width: 100%;
 /*    min-height: 401px;*/
     height: auto;
     padding: 0 0 0 0;
@@ -805,10 +799,10 @@ h6{
 
 .team_member_row{
     
-    width: 1148px;
+    width: 99%;
     height: 46px;
     background-color: #FFF;
-    padding: 10px 10px 10px 10px;
+    padding: 0.5% 0.5% 0.5% 0.5%;
     min-height: 20px;
     border-bottom: 1px solid rgba(0,0,0,0.05);
     border-bottom-width: 1px;
@@ -817,9 +811,7 @@ h6{
     list-style: none;
     display: list-item;
     text-align: -webkit-match-parent;
-    float: left;
-    
-    
+    float: left;    
 }
 
 
@@ -844,7 +836,7 @@ label{
 
 
 .new_study {
-    width: 1170px;
+    width: 90%;
     height: 141px;
     margin-top: 0px;
     margin-right: 0px;
@@ -859,7 +851,7 @@ label{
    
    display: block;
    margin-left: 180px;
-   width: 990px;
+   width: 75%;
    height: auto !important;
    
 }
@@ -868,7 +860,7 @@ label{
    
    display: block;
    margin-left: 180px;
-   width: 990px;
+   width: 75%;
    height: 45px;
    
 }
@@ -972,10 +964,10 @@ label{
     border-bottom-style: solid;
     border-bottom-color: rgb(238, 238, 238);
     padding-top: 16px;
-    padding-right: 5px;
+    padding-right: 1%;
     padding-bottom: 16px;
-    padding-left: 5px;
-    width: 1160px;
+    padding-left: 1%;
+    width: 98%;
     height: 18px;
     
 }
@@ -983,7 +975,7 @@ label{
     color: #333;
     font-weight: bold;
     display: block;
-    width: 760px;
+    width: 75%px;
     height: 18px;
     
 }
@@ -1065,7 +1057,7 @@ img .avatar .s24 {
     float: left;
 }
 
-img .avatar .s32 {
+img .avatar .s36 {
     width: 36px;
     height: 36px;
     margin-right: 10px;
@@ -1276,7 +1268,7 @@ img .avatar .s32 {
 
 .container{
     display: block;
-    width:1170px;
+    width:64%;
     //min-height: 2880px;
     //min-height: 100%;
     height: auto !important;
@@ -1299,7 +1291,7 @@ img .avatar .s32 {
 
 .content{
     display: inline-block;
-    width:1170px;
+    width:100%;
     //min-height: 2802px;
     //min-height: 100%;
     height: auto !important;
@@ -1315,7 +1307,7 @@ img .avatar .s32 {
 .content_project{
     
     display: block;
-    width:1170px;
+    width:90%;
     height: 207px;
     margin-top: 0px;
     margin-right: 0px;
@@ -1337,7 +1329,7 @@ img .avatar .s32 {
 
 .content_list{
     display: block;
-    width:770px;
+    width:75%;
     height: 2802px;
     margin-top: 0px;
     margin-right: 0px;
@@ -1347,7 +1339,6 @@ img .avatar .s32 {
 
 .study_content_list{
     display: block;
-    width:1170px;
     //height: 2802px;
     min-height: 100%;
     height: auto;
@@ -1369,7 +1360,7 @@ img .avatar .s32 {
 .event-item .right {
     
     float: right !important;
-    width: 120px;
+    width: auto;
     height: 36px;
 }
 
@@ -1397,8 +1388,6 @@ img .avatar .s32 {
 
 
 .new_member_content{
-    
-    width: 1170px;
     height: auto !important;
     margin-bottom: 18px;
     
@@ -1406,7 +1395,7 @@ img .avatar .s32 {
 
 .new_user_content{
     
-    width: 1170px;
+    width: 90%;
     min-height: 800px;
     height: auto !important;
     margin-bottom: 18px;
@@ -1415,7 +1404,7 @@ img .avatar .s32 {
 
 .new_user_content .clear_fixing{
     
-    width: 1170px;
+    width: 90%;
     height: auto !important;
     margin-bottom: 18px;
     
@@ -1498,18 +1487,18 @@ img .avatar .s32 {
 
 .span8{
     display: block;
-    width: 770px;
+    width: 66%;
     //min-height: 2802px;
     min-height: 100%;
     height: auto;
     float: left;
     min-height: 1px;
-    margin-left: 30px;
+    margin-left: 0px;
 }
 
 .span9{
     display: block;
-    width: 1140px;
+    width: 90%;
     //min-height: 2802px;
     min-height: 600px;
     height: auto !important;
@@ -1528,8 +1517,8 @@ img .avatar .s32 {
 }
 
 .study {
-    margin-left: -30px;
-    width:1200px;
+    margin-left: 0px;
+    width:100%;
 }
 .study:before, .row:after, .study:after {
     display: table;
@@ -1671,6 +1660,10 @@ form {
     margin-right: 0px;
     margin-bottom: 18px;
     margin-left: 0px;
+}
+
+.right_button form {
+    margin-bottom: 0px;
 }
 
 /*h3 {
@@ -1937,7 +1930,7 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
     min-height: 100%;
     height: auto !important;
     float: right !important;
-    margin-left: 30px;
+    margin-left: 0px;
     display: inline-block;
     //clear: both;
 }
@@ -1993,7 +1986,7 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
     height: 13px;
     display: inline;
     text-align: center;
-    background-image: url("#{resource['images/icons/icon_home.png']}");
+    background-image: url("/hop-dashboard/javax.faces.resource/images/icons/icon_home.png.xhtml");
   
 }
 
@@ -2008,7 +2001,7 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
 
 
 .study_operation_panel{
-    width: 1154px;
+    width: 90%;
     height: 26px;
     display: block;
     padding: 4px 7px 4px 7px;
@@ -2022,9 +2015,9 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
 
 .team_member_row > .row {
     display: block;
-    margin-left: -30px;
+    margin-left: 0px;
     height: 46px;
-    width: 1178px;
+    width: 100%;
 }
 
 .team_member_row > .row:before, .row:after{
@@ -2040,7 +2033,19 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
     float: left;
     width: 570px;
     height: 46px;
-    margin-left: 30px;
+}
+
+.team_member_row .span6  img, .team_member_row a{
+    
+    position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.team_member_row .span5 form, .team_member_row .span5 a, .team_member_row .span5 .btn , .team_member_row .span5 .button-success{    
+    position: relative;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .span5{
@@ -2057,7 +2062,7 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
     
     float: right;
     width: 170px;
-    height: 36px;
+    height: 46px;
 }
 
 /* .span5 .right_with{
@@ -2088,7 +2093,7 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
     
     width: 170px;
     height: 28px;
-    margin-bottom: 18px;
+    margin-bottom: 0px;
 }
 
 .span6 .dark{

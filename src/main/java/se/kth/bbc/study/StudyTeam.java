@@ -29,11 +29,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "StudyTeam")
 @XmlRootElement
 @NamedQueries({
+    @NamedQuery(name = "StudyTeam.find", query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :studyName AND s.studyTeamPK.teamMember = :username"),
     @NamedQuery(name = "StudyTeam.findAll", query = "SELECT s FROM StudyTeam s"),
     @NamedQuery(name = "StudyTeam.findByName", query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name"),
-    @NamedQuery(name = "StudyTeam.findByTeamMember", query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.teamMember = :teamMember AND s.teamRole <> :teamRole"),
+    @NamedQuery(name = "StudyTeam.findByTeamMember", query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.teamMember = :teamMember"),
     @NamedQuery(name = "StudyTeam.findByTeamRole", query = "SELECT s FROM StudyTeam s WHERE s.teamRole = :teamRole"),
     @NamedQuery(name = "StudyTeam.findByTimestamp", query = "SELECT s FROM StudyTeam s WHERE s.timestamp = :timestamp"),
+    @NamedQuery(name = "StudyTeam.countStudiesByMember", query = "SELECT COUNT(s) FROM StudyTeam s WHERE s.studyTeamPK.teamMember = :teamMember"),
     @NamedQuery(name = "StudyTeam.countMastersByStudy", query = "SELECT COUNT(DISTINCT s.studyTeamPK.teamMember) FROM StudyTeam s WHERE s.studyTeamPK.name=:name AND s.teamRole = :teamRole"),
     @NamedQuery(name = "StudyTeam.countAllMembers", query = "SELECT s.studyTeamPK.teamMember FROM StudyTeam s WHERE s.studyTeamPK.name = :name"),
     @NamedQuery(name = "StudyTeam.findMembersByRole", query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name AND s.teamRole = :teamRole"),

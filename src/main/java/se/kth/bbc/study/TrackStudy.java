@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package se.kth.bbc.study;
 
 import java.io.Serializable;
@@ -38,6 +32,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "TrackStudy.findByName", query = "SELECT t FROM TrackStudy t WHERE t.name = :name"),
     @NamedQuery(name = "TrackStudy.findByUsername", query = "SELECT t FROM TrackStudy t WHERE t.username = :username"),
     @NamedQuery(name = "TrackStudy.findByTimestamp", query = "SELECT t FROM TrackStudy t WHERE t.timestamp = :timestamp"),
+    @NamedQuery(name = "TrackStudy.findOwner", query = "SELECT t.username FROM TrackStudy t WHERE t.name = :name"),
     @NamedQuery(name = "TrackStudy.findAllStudy", query = "SELECT count(t.name) FROM TrackStudy t WHERE t.username = :username")})
 public class TrackStudy implements Serializable {
     private static final long serialVersionUID = 1L;

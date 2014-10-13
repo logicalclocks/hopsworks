@@ -34,7 +34,7 @@
                                                 <span class="cgray right">
                                                     #{activityBean.findLastActivity(act.id)}
                                                 </span>
-                                                <img class="avatar s24" src="#{activityBean.getGravatar(act.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                <img class="avatar s24" src="#{activityBean.getGravatar(act.email,24)}"/>
                                                 <div class="event-title">
                                                     <span class="author_name"><h:link>#{act.author}</h:link></span>
                                                     <span class="event_label opened">#{act.activity}</span>
@@ -61,6 +61,7 @@
 
                                     <div id="divTeam" class="team_table"> 
                                         <c:if id="masterBlock" test="${studyManagedBean.countMasters() > 0}">
+                                            <!-- There are Masters registered for this study: display them -->
                                             <h:panelGroup id="divMaster" styleClass="ui_box">
                                                 <h5 class="title" align="left">Masters
                                                     <small>#{studyManagedBean.countMasters()}</small></h5>
@@ -70,7 +71,7 @@
                                                             <li id="team_member_row_${mst.count}" class="team_member_row">
                                                                 <div class="row">
                                                                     <div class="span6">
-                                                                        <img class="avatar s32" src="#{activityBean.getGravatar(mlist.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                                        <img class="avatar s36" src="#{activityBean.getGravatar(mlist.email,36)}"/>
                                                                         <p:commandLink styleClass="dark">
                                                                             <strong>#{mlist.name}</strong>
                                                                             <br/>
@@ -104,7 +105,7 @@
                                                             <li id="team_member_row_${mst.count}" class="team_member_row">
                                                                 <div class="row">
                                                                     <div class="span6">
-                                                                        <img class="avatar s32" src="#{activityBean.getGravatar(mlist.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                                        <img class="avatar s36" src="#{activityBean.getGravatar(mlist.email,36)}"/>
                                                                         <p:commandLink styleClass="dark">
                                                                             <strong>#{mlist.name}</strong>
                                                                             <br/>
@@ -146,7 +147,7 @@
                                                             <li id="team_member_row_${mst.count}" class="team_member_row">
                                                                 <div class="row">
                                                                     <div class="span6">
-                                                                        <img class="avatar s32" src="#{activityBean.getGravatar(mlist.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                                        <img class="avatar s36" src="#{activityBean.getGravatar(mlist.email,36)}"/>
                                                                         <p:commandLink styleClass="dark">
                                                                             <strong>#{mlist.name}</strong>
                                                                             <br/>
@@ -182,7 +183,7 @@
                                                             <li id="team_member_row_${mst.count}" class="team_member_row">
                                                                 <div class="row">
                                                                     <div class="span6">
-                                                                        <img class="avatar s32" src="#{activityBean.getGravatar(mlist.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                                        <img class="avatar s36" src="#{activityBean.getGravatar(mlist.email,36)}"/>
                                                                         <p:commandLink styleClass="dark">
                                                                             <strong>#{mlist.name}</strong>
                                                                             <br/>
@@ -236,7 +237,7 @@
                                                             <li id="researchers_${rchs.count}" class="team_member_row">
                                                                 <div id="divRow" class="row">
                                                                     <div class="span6">
-                                                                        <img class="avatar s32" src="#{activityBean.getGravatar(rlist.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                                        <img class="avatar s36" src="#{activityBean.getGravatar(rlist.email,36)}"/>
                                                                         <p:commandLink styleClass="dark">
                                                                             <strong>#{rlist.name}</strong>
                                                                             <br/>
@@ -279,7 +280,7 @@
                                                             <li id="researchers_${rchs.count}" class="team_member_row">
                                                                 <div id="divRow" class="row">
                                                                     <div class="span6">
-                                                                        <img class="avatar s32" src="#{activityBean.getGravatar(rlist.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                                        <img class="avatar s36" src="#{activityBean.getGravatar(rlist.email,36)}"/>
                                                                         <p:commandLink styleClass="dark">
                                                                             <strong>#{rlist.name}</strong>
                                                                             <br/>
@@ -333,7 +334,7 @@
                                                             <li id="guests_${aud.count}" class="team_member_row">
                                                                 <div class="row">
                                                                     <div class="span6">
-                                                                        <img class="avatar s32" src="#{activityBean.getGravatar(alist.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                                        <img class="avatar s36" src="#{activityBean.getGravatar(alist.email,36)}"/>
                                                                         <p:commandLink styleClass="dark">
                                                                             <strong>#{alist.name}</strong>
                                                                             <br/>
@@ -376,7 +377,7 @@
                                                             <li id="guests_${aud.count}" class="team_member_row">
                                                                 <div class="row">
                                                                     <div class="span6">
-                                                                        <img class="avatar s32" src="#{activityBean.getGravatar(alist.email)}?d=http://gravatar.com/avatar/1a5660f09aa811358625c85efc99750c?s=40&amp;d=mm"/>
+                                                                        <img class="avatar s36" src="#{activityBean.getGravatar(alist.email,36)}"/>
                                                                         <p:commandLink styleClass="dark">
                                                                             <strong>#{alist.name}</strong>
                                                                             <br/>
@@ -441,7 +442,7 @@
                                                 <p:menuitem update="@form" value="Download" actionListener="#{studyManagedBean.fileDownloadEvent}" icon="ui-icon-arrowthick-1-s" ajax="false">
                                                     <p:fileDownload value="#{studyManagedBean.file}"/>
                                                 </p:menuitem>
-                                                <p:menuitem value="Delete" update="@form" oncomplete="PF('removeDataDlg').show()"/>                                            
+                                                <p:menuitem value="Delete" update="@form" oncomplete="PF('removeDataDlg').show()" icon="ui-icon-closethick"/>                                            
                                             </p:contextMenu>
                                             <p:treeTable id="filesTable" value="#{sampleModel.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedNode}">
                                                 <p:column headerText="Name">

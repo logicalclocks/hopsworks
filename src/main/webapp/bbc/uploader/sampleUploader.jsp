@@ -64,7 +64,7 @@
       <ul class="resumable-list"></ul>
 
       
-          <div style="width: 1170px;height: 25px;"></div>  
+          <div style="width: 90%;height: 25px;"></div>  
           <a href="../lims/studyPage.xhtml" >
                   <input type="button" class="button-add button-add-data" value="Check Uploaded Samples"/>
             </a>
