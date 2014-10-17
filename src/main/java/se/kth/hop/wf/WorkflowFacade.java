@@ -16,13 +16,13 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
  *
  * @author Alberto Lorente Leal <albll@kth.se>
  */
-@Stateless
-public class WorkflowFacade extends AbstractFacade<Workflow> {
+@Stateless (name = "oldFacade")
+public class WorkflowFacade extends AbstractFacade<WorkflowOld> {
     @PersistenceContext(unitName="kthfsPU")
     private EntityManager em;
     
     public WorkflowFacade(){
-        super(Workflow.class);
+        super(WorkflowOld.class);
         
     }
      
@@ -32,24 +32,24 @@ public class WorkflowFacade extends AbstractFacade<Workflow> {
     }
     
      @Override
-     public List<Workflow> findAll() {
+     public List<WorkflowOld> findAll() {
 
-        TypedQuery<Workflow> query = em.createNamedQuery("Workflow.findAll", Workflow.class);
+        TypedQuery<WorkflowOld> query = em.createNamedQuery("WorkflowOld.findAll", WorkflowOld.class);
         return query.getResultList();
     }
 
     @Override
-    public void create(Workflow entity) {
+    public void create(WorkflowOld entity) {
         super.create(entity);
     }
 
     @Override
-    public void edit(Workflow entity) {
+    public void edit(WorkflowOld entity) {
         super.edit(entity);
     }
 
     @Override
-    public void remove(Workflow entity) {
+    public void remove(WorkflowOld entity) {
         super.remove(entity);
     }
 }

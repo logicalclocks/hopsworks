@@ -127,12 +127,14 @@ label {
 .BbcMainLayoutStudy {
     //text-align: center;
     min-height: 1500px;
+    width: 100%;
 }
 
 .BbcMainLayoutStudy .ui-widget-content {
     border-width: 0px;  
     overflow-y: hidden;
     overflow-x: hidden;
+    width: 100% !important;
 }
 
 .BbcMainLayoutStudy .ui-layout-unit-content{
@@ -230,4 +232,8 @@ h1 {
 
 .ui-tabs-panel .container {
 	width: 100%;
+}
+
+.workflow-panel-content {
+    margin-left: 0.6em;
 }

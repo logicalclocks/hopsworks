@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  
+      xmlns:f="http://java.sun.com/jsf/core" 
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+
+      xmlns:c="http://java.sun.com/jsp/jstl/core">
+    <body>
+        <ui:composition>
+
+            <label for="experiment_name" style="float: left; font-size: 16px;">Experiment name</label>
+            <div class="input">
+                <h:inputText  styleClass="xlarge" id="expName" required="true"/>
+            </div>
+            <p:panel id="workflow" header="Workflow" toggleable="true" closable="false" toggleSpeed="500" widgetVar="workflowPanel">
+                <div class="workflow-panel-content">
+                    <h:form>
+                        <h:outputLabel>
+                            Choose a workflow file
+                        </h:outputLabel>  
+                        <br/><br/>
+                        <p:selectOneMenu  id="workflowChooser" value="#{experimentController.selectedWorkflow}" style="width:150px">
+                            <p:ajax update="descField" />
+                            <f:selectItem itemLabel="Select..." itemValue="" noSelectionOption="true" />
+                            <f:selectItems value="#{experimentController.workflowNames}"/>
+                        </p:selectOneMenu>
+                        <p:commandButton id="uploadWorkflow" value="Upload file" action="#{experimentController.doSomething}"/>
+                        <h3> Description </h3>
+                        <p:inputTextarea id="descField" widgetVar="desc" readonly="true" value="#{empty experimentController.flowfile?'Select workflow':experimentController.flowfile.description}" />
+                    </h:form>
+                </div>
+            </p:panel>
+            <!--      <p:panel id="params" header="Parameters" toggleable="true" closable="false" toggleSpeed="500" widgetVar="paramPanel">
+  
+                      <div class="workflow-panel-content">
+                          <c:if test="true">
+                              - in case no workflow is chosen yet -
+                              Choose a workflow file. 
+                              <br/><br/>
+                          </c:if>
+                          <c:if test="true">
+                              <h:outputLabel>
+                                  Parameter a:
+                              </h:outputLabel> 
+                              <br/><br/>
+                              <p:commandButton value="Choose file..."/>
+                          </c:if>
+                      </div>
+                  </p:panel>
+                  <p:panel id="targets" header="Targets" toggleable="true" closable="false" toggleSpeed="500" widgetVar="targetPanel">
+                      <div class="workflow-panel-content">
+                          <h:outputLabel>
+                              Select variables to be included in output:
+                          </h:outputLabel> 
+                          <br/><br/>
+                          <p:selectManyCheckbox id="output" layout="grid" columns="1">
+                              <f:selectItem itemLabel="result"/>
+                              <f:selectItem itemLabel="resultb"/>
+                          </p:selectManyCheckbox>
+                      </div>
+                  </p:panel>
+                  <p:commandButton id="executeButton" value="Execute" />
+            -->
+        </ui:composition>
+    </body>
+</html>

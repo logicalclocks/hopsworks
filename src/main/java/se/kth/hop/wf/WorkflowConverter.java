@@ -17,10 +17,10 @@ import org.apache.commons.lang.StringUtils;
  */
 public class WorkflowConverter implements Converter{
     
-    public static Map<String, Workflow> workflows = new HashMap<String, Workflow>();
+    public static Map<String, WorkflowOld> workflows = new HashMap<String, WorkflowOld>();
     
     static {
-        workflows.put("alberto", new Workflow("alberto","workflow1", "20-10-2013","blablabla", 
+        workflows.put("alberto", new WorkflowOld("alberto","workflow1", "20-10-2013","blablabla", 
                 "declare hello-world; deftask spell( ~out : ~<str> ) *{    out=`echo ${str[@]}`; sleep 30 }* x = 'hello' 'world'; out = spell( str : x ); target out;"));
 //        workflows.put("jim", new Workflow("jim","workflow2", "12-9-2013","bowtie test", ""));
 //        workflows.put("jorgen", new Workflow("jorgen"," jorgen","10-8-2013","workflow, simply a test", ""));
@@ -42,7 +42,7 @@ public class WorkflowConverter implements Converter{
         if (value == null || value.equals("")) {
             return "";
         } else {
-            return String.valueOf(((Workflow) value).getWorkflowTags());
+            return String.valueOf(((WorkflowOld) value).getWorkflowTags());
         }
     }
 }

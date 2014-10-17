@@ -8,7 +8,6 @@
     <validation-mode>NONE</validation-mode>
     <properties>
       <property name="eclipselink.target-database" value="MYSQL"/>
-      <property name="eclipselink.ddl-generation" value="create-tables"/>
       <property name="eclipselink.query-results-cache" value="false"/>
       <property name="eclipselink.jpa.uppercase-column-names" value="true"/>
     </properties>

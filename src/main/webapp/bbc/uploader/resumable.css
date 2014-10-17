@@ -54,12 +54,12 @@ form{
 
 .container{
     display: block;
-    width:64%;
     height: auto !important;
     padding-top: 0;
     z-index: 5;
     margin-right: auto;
     margin-left: auto;
+    max-width: 1200px;
  }
 
  

@@ -15,6 +15,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.study.StudyMB;
 
 /**
@@ -22,7 +23,7 @@ import se.kth.bbc.study.StudyMB;
  */
 public class UploadServlet extends HttpServlet {
 
-    public static final String UPLOAD_DIR = "/home/stig/tst";
+    public static final String UPLOAD_DIR = Constants.UPLOAD_DIR;
 
     @ManagedProperty(value = "#{studyManagedBean}")
     private StudyMB study;
@@ -33,9 +34,9 @@ public class UploadServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if (!"Master".equals(study.renderComponentList())) {
-            return;
-        }
+//        if (!"Master".equals(study.renderComponentList())) {
+//            return;
+//        }
         int resumableChunkNumber = getResumableChunkNumber(request);
 
         ResumableInfo info = getResumableInfo(request);

@@ -15,7 +15,7 @@ import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import org.apache.commons.io.FileUtils;
-import se.kth.hop.wf.Workflow;
+import se.kth.hop.wf.WorkflowOld;
 
 /**
  *
@@ -23,10 +23,10 @@ import se.kth.hop.wf.Workflow;
  */
 public class WorkflowJobTask implements Callable<Job> {
 
-    private Workflow selectedWorkflow;
+    private WorkflowOld selectedWorkflow;
     private JobHistoryFacade history;
 
-    public WorkflowJobTask(Workflow selectedWorkflow, JobHistoryFacade history) {
+    public WorkflowJobTask(WorkflowOld selectedWorkflow, JobHistoryFacade history) {
         this.selectedWorkflow = selectedWorkflow;
         this.history = history;
     }

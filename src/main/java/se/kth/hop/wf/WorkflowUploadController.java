@@ -55,7 +55,7 @@ public class WorkflowUploadController implements Serializable{
             System.out.println(file!=null);
             byte[] data = file.getContents();
             String content = new String(data, "UTF-8");
-            Workflow created = new Workflow(owner, file.getFileName(), new Date().toString(), tags, content);
+            WorkflowOld created = new WorkflowOld(owner, file.getFileName(), new Date().toString(), tags, content);
             workflowFacade.create(created);
         } catch (UnsupportedEncodingException e) {
             System.out.println("Unsupported format");

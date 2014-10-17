@@ -30,8 +30,8 @@ public class WorkflowTableController implements Serializable {
     @EJB
     private WorkflowFacade workflowFacade;
     private JobDispatcher dispatcher;
-    private List<Workflow> workflows;
-    private Workflow selectedWorkflow;
+    private List<WorkflowOld> workflows;
+    private WorkflowOld selectedWorkflow;
     private SelectItem[] workflowNamesOptions;
 
     public WorkflowTableController() {
@@ -42,16 +42,16 @@ public class WorkflowTableController implements Serializable {
         //workflows = new ArrayList<Workflow>(WorkflowConverter.workflows.values());
         workflows = workflowFacade.findAll();
         dispatcher = new JobDispatcher(jobHistory);
-        HashSet<Workflow> temp = new HashSet(workflows);
+        HashSet<WorkflowOld> temp = new HashSet(workflows);
         workflowNamesOptions =
-                createFilterOptions(temp.toArray(new Workflow[temp.size()]));
+                createFilterOptions(temp.toArray(new WorkflowOld[temp.size()]));
     }
 
-    public List<Workflow> getWorkflows() {
+    public List<WorkflowOld> getWorkflows() {
         return workflows;
     }
 
-    public void setWorkflows(List<Workflow> workflows) {
+    public void setWorkflows(List<WorkflowOld> workflows) {
         this.workflows = workflows;
     }
 
@@ -60,7 +60,7 @@ public class WorkflowTableController implements Serializable {
         return workflowNamesOptions;
     }
 
-    private SelectItem[] createFilterOptions(Workflow[] data) {
+    private SelectItem[] createFilterOptions(WorkflowOld[] data) {
         SelectItem[] options = new SelectItem[data.length + 1];
 
         options[0] = new SelectItem("", "Select");
@@ -71,11 +71,11 @@ public class WorkflowTableController implements Serializable {
         return options;
     }
 
-    public Workflow getSelectedWorkflow() {
+    public WorkflowOld getSelectedWorkflow() {
         return selectedWorkflow;
     }
 
-    public void setSelectedWorkflow(Workflow selectedWorkflow) {
+    public void setSelectedWorkflow(WorkflowOld selectedWorkflow) {
         this.selectedWorkflow = selectedWorkflow;
     }
 

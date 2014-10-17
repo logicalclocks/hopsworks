@@ -9,7 +9,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Date;
 import java.util.concurrent.Executors;
-import se.kth.hop.wf.Workflow;
+import se.kth.hop.wf.WorkflowOld;
 
 /**
  *
@@ -31,7 +31,7 @@ public class JobDispatcher{
         this.history= jobs;
     }
     
-    public void submitWorkflowTask(Workflow selectedWorkflow){
+    public void submitWorkflowTask(WorkflowOld selectedWorkflow){
         
         //We would create a new entry in the history table with the state of the running job to pending
         Date actual = new Date();

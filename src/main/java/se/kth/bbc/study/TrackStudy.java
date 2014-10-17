@@ -33,7 +33,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "TrackStudy.findByUsername", query = "SELECT t FROM TrackStudy t WHERE t.username = :username"),
     @NamedQuery(name = "TrackStudy.findByTimestamp", query = "SELECT t FROM TrackStudy t WHERE t.timestamp = :timestamp"),
     @NamedQuery(name = "TrackStudy.findOwner", query = "SELECT t.username FROM TrackStudy t WHERE t.name = :name"),
-    @NamedQuery(name = "TrackStudy.findAllStudy", query = "SELECT count(t.name) FROM TrackStudy t WHERE t.username = :username")})
+    @NamedQuery(name = "TrackStudy.countStudyByOwner", query = "SELECT count(t.name) FROM TrackStudy t WHERE t.username = :username")})
 public class TrackStudy implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -116,10 +116,7 @@ public class TrackStudy implements Serializable {
             return false;
         }
         TrackStudy other = (TrackStudy) object;
-        if ((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name))) {
-            return false;
-        }
-        return true;
+        return !((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name)));
     }
 
     @Override

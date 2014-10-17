@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+    <h:head>
+        <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/studyPage.css']}" />
+        <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+    </h:head>
+    <body>
+        <label for="experiment_name" style="float: left; font-size: 16px;">Experiment name</label>
+        <div class="input">
+            <h:inputText  styleClass="xlarge" id="expName" required="true"/>
+        </div>
+        <p:panel id="workflow" header="Workflow" toggleable="true" closable="false" toggleSpeed="500" widgetVar="workflowPanel">
+            <div class="workflow-panel-content">
+                <h:form>
+                    <h:outputLabel>
+                        Choose a workflow file
+                    </h:outputLabel>  
+                    <br/><br/>
+                    <p:selectOneMenu  id="workflowChooser" value="#{experimentController.selectedWorkflow}" style="width:150px">
+                        <p:ajax update="descField" />
+                        <f:selectItem itemLabel="Select..." itemValue="" noSelectionOption="true" />
+                        <f:selectItems value="#{experimentController.workflowNames}"/>
+                    </p:selectOneMenu>
+                    <p:commandButton id="uploadWorkflow" value="Upload file" action="#{experimentController.doSomething}"/>
+                    <h3> Description </h3>
+                    <p:inputTextarea id="descField" widgetVar="desc" readonly="true" value="#{empty experimentController.flowfile?'Select workflow':experimentController.flowfile.description}" />
+                </h:form>
+            </div>
+        </p:panel>
+    </body>
+</html>

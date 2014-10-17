@@ -19,13 +19,13 @@ import javax.persistence.Table;
  * @author Alberto Lorente Leal <albll@kth.se>
  */
 @Entity
-@Table(name="Workflows")
+@Table(name="WorkflowsOld")
 @NamedQueries({
-    @NamedQuery(name = "Workflow.findAll", query = "SELECT c FROM Workflow c")
+    @NamedQuery(name = "WorkflowOld.findAll", query = "SELECT c FROM WorkflowOld c")
 })
 
-public class Workflow implements Serializable{
-    
+public class WorkflowOld implements Serializable{
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -36,10 +36,10 @@ public class Workflow implements Serializable{
     @Column(columnDefinition = "text")
     private String workflowMetadata;
 
-    public Workflow() {
+    public WorkflowOld() {
     }
 
-    public Workflow(String owner, String workflowName, String workflowDate, String workflowTags, String Metadata) {
+    public WorkflowOld(String owner, String workflowName, String workflowDate, String workflowTags, String Metadata) {
         this.owner = owner;
         this.workflowName = workflowName;
         this.workflowDate = workflowDate;
@@ -114,7 +114,7 @@ public class Workflow implements Serializable{
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final Workflow other = (Workflow) obj;
+        final WorkflowOld other = (WorkflowOld) obj;
         if ((this.owner == null) ? (other.owner != null) : !this.owner.equals(other.owner)) {
             return false;
         }

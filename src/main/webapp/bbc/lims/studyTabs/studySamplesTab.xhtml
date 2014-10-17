@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://java.sun.com/jsp/jstl/core"  
+      xmlns:f="http://java.sun.com/jsf/core"
+      >
+    <body>
+        <ui:composition>
+            <h3 class="page_title" align="left">
+                Study samples
+                <span class="right_button">
+                    <h:form id="frmBtnData" style="margin-bottom: 0px;">
+                        <h:commandButton id="addData" class="button-add button-add-data" value="New Sample" 
+                                         type="submit" action="newSample" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" />
+                    </h:form>
+                </span>
+            </h3>
+            <div class="clear_fixing"></div>
+            <div class="container">
+                <h:form id="filesForm">       
+                    <p:growl for="remove" autoUpdate="true" showDetail="true"/>
+                    <p:contextMenu for="filesTable" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
+                        <p:menuitem update="@form" value="Download" actionListener="#{studyManagedBean.fileDownloadEvent}" icon="ui-icon-arrowthick-1-s" ajax="false">
+                            <p:fileDownload value="#{studyManagedBean.file}"/>
+                        </p:menuitem>
+                        <p:menuitem value="Delete" update="@form" oncomplete="PF('removeDataDlg').show()" icon="ui-icon-closethick"/>                                            
+                    </p:contextMenu>
+                    <p:treeTable id="filesTable" value="#{sampleModel.root}" var="document" resizableColumns="false" rowStyleClass="#{document.status}" selectionMode="single" selection="#{studyManagedBean.selectedNode}">
+                        <p:column headerText="Name">
+                            <h:outputText value="#{document.displayName}" />
+                        </p:column>
+                        <p:column headerText="Status">
+                            <h:outputText value="#{document.displayStatus}" />
+                        </p:column>
+                        <p:column style="width:15px" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
+                            <p:commandLink title="Download" ajax="false" styleClass="ui-icon ui-icon-arrowthick-1-s"  rendered="#{document.file}">
+                                <p:fileDownload value="#{studyManagedBean.getFile(document.sampleID, document.type, document.filename)}" />
+                            </p:commandLink>
+                            <p:commandLink title="Download" styleClass="ui-icon ui-icon-arrowthick-1-s" disabled="true" rendered="#{!document.file}">
+                            </p:commandLink>
+                        </p:column>
+                    </p:treeTable>
+                </h:form>
+
+            </div> 
+        </ui:composition>
+    </body>
+</html>

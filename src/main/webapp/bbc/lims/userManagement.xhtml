@@ -87,7 +87,7 @@
                                 <p:tab title="User requests" id="requests">
                                     <h:form id="reqdataForm">
                                         <p:dataTable id="userReqTable" var="req" value="#{userController.allRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
-                                                     rowKey="#{req.email}" selection="#{userController.selectedUsers}" style="table-layout: fixed" editable="true" editMode="cell">
+                                                     rowKey="#{req.email}" selection="#{userController.selectedUsers}" editable="true" editMode="cell">
 
 
                                             <f:facet name="header" class="header-button-group">
@@ -95,27 +95,27 @@
                                                 <p:commandButton value="Reject selection" actionListener="#{userController.denySelectedUsers}" update="@form"/>
                                             </f:facet>
 
-                                            <p:column selectionMode="multiple" style="width:1%" disabledSelection="false"/>
+                                            <p:column selectionMode="multiple" style="width:10px;" disabledSelection="false"/>
 
-                                            <p:column id="nameColumn" headerText="Name" style="width:25%; font-size: 12px; text-align: left;">
+                                            <p:column id="nameColumn" headerText="Name" style="font-size: 12px; text-align: left;">
                                                 <h:outputText value="#{req.name}" />
                                             </p:column>
 
-                                            <p:column id="emailColumn" headerText="Email" style="width:25%;font-size: 12px;text-align: left;">
+                                            <p:column id="emailColumn" headerText="Email" style="font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{req.email}" />
                                             </p:column>
 
-                                            <p:column id="mobileNumColumn" headerText="Mobile Number" style="width:25%;font-size: 12px;text-align: left;">
+                                            <p:column id="mobileNumColumn" headerText="Mobile Number" style="font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{req.mobileNum}" />
                                             </p:column>
 
-                                            <p:column id="roleColumn" headerText="Role" style="width: 15%;">
+                                            <p:column id="roleColumn" headerText="Role">
                                                 <p:selectOneMenu id="roleChoose" value="#{req.extraGroup}" editable="false">
                                                     <f:selectItems value="#{userController.groups}"/>
                                                 </p:selectOneMenu>
                                             </p:column>
 
-                                            <p:column id="actionColumn" headerText="Action" style="width:9%;">
+                                            <p:column id="actionColumn" headerText="Action">
                                                 <h:panelGrid columns="2" style="width: auto">                                                    
                                                     <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{userController.rejectUser(req)}" update="@form">
                                                         <p:confirm header="Reject user" message="Are you sure you want to reject this user?" icon="ui-icon-alert"/>

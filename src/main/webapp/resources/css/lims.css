@@ -590,11 +590,12 @@ h6{
 
 .nothing_here_message {
     text-align: center;
-    padding: 12px;
+    padding: 5%;
     color: #666;
     font-weight: normal;
     font-size: 14px;
     line-height: 28px;
+    width: 90%;
 }
 
 .very_small {
@@ -946,7 +947,7 @@ label{
 
 .event-item {
     //border-bottom: 1px solid #eee;
-    width: 760px;
+    width: 100%;
     height: 18px;
     border-bottom-width: 1px;
     border-bottom-style: solid;
@@ -1268,7 +1269,6 @@ img .avatar .s36 {
 
 .container{
     display: block;
-    width:64%;
     //min-height: 2880px;
     //min-height: 100%;
     height: auto !important;
@@ -1278,6 +1278,7 @@ img .avatar .s36 {
     z-index: 5;
     margin-right: auto;
     margin-left: auto;
+    max-width: 1200px;
  }
 
 .container:before, .container:after {
@@ -1383,7 +1384,7 @@ img .avatar .s36 {
     padding-top: 5px;
     display: block;
     line-height: 18px;
-    width: 338px;
+    width: 100%;
 }
 
 
@@ -1566,7 +1567,7 @@ img .avatar .s36 {
 .study_box {
     display: inline-block;
     background: #F9F9F9;
-    width:368px;
+    width:100%;
 /*    min-height: 368px;*/
     min-height: 100%;
     height: auto !important;
@@ -1648,7 +1649,7 @@ img .avatar .s36 {
 
 .title{
     
-    width: 338px;
+    width: 86%;
     height: 36px;
     float: left;
     
@@ -1679,10 +1680,10 @@ form {
 
 .study_box > .title {
    
-    padding-top: 2px;
-    padding-right: 15px;
-    padding-bottom: 2px;
-    padding-left: 15px;
+    padding-top: 1%;
+    padding-right: 7%;
+    padding-bottom: 1%;
+    padding-left: 7%;
     margin-top: 0px;
     margin-right: 0px;
     margin-bottom: 0px;
@@ -1925,7 +1926,7 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
 
 
 .span4 {
-    width: 370px;
+    width: 33%;
 /*    min-height: 475px;*/
     min-height: 100%;
     height: auto !important;
@@ -2031,7 +2032,6 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
 .span6{
     display: block;
     float: left;
-    width: 570px;
     height: 46px;
 }
 

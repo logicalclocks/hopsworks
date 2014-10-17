@@ -54,7 +54,7 @@ public class StudyController {
     
     
     public int getAllStudy(String username){
-        return ((Long)em.createNamedQuery("TrackStudy.findAllStudy").setParameter("username", username).getSingleResult()).intValue();
+        return ((Long)em.createNamedQuery("TrackStudy.countStudyByOwner").setParameter("username", username).getSingleResult()).intValue();
     }
     
     public int getMembers(String name){
@@ -133,7 +133,7 @@ public class StudyController {
     
     public boolean checkForStudyOwnership(String user){
 
-        Query query = em.createNamedQuery("TrackStudy.findAllStudy", TrackStudy.class).setParameter("username", user);
+        Query query = em.createNamedQuery("TrackStudy.countStudyByOwner", TrackStudy.class).setParameter("username", user);
         long res = (Long) query.getSingleResult();
         
         return res>0;
@@ -161,8 +161,7 @@ public class StudyController {
 
     public boolean findStudy(String name){
         TrackStudy study = em.find(TrackStudy.class, name);
-        if(study != null) return true;
-        else return false;
+        return study != null;
     }
 
 }

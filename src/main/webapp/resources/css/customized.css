@@ -12,7 +12,7 @@ and open the template in the editor.
     //font-size: 70% !important;
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-size: 12px;
-    
+    min-height: 0;
     
 }
 
@@ -49,7 +49,7 @@ and open the template in the editor.
 
 .ui-tabs .ui-tabs-panels{
      display: inline-block;
-     width: 364px;
+     width: 100%;
      min-height: 100%;
      height: auto; 
      margin: 0 0 0 0;
@@ -62,10 +62,10 @@ and open the template in the editor.
     display: list-item;
     text-align: left;
     background-color: #FFF;
-    padding: 15px 15px 15px 15px;
+    padding: 7% 7% 7% 7%;
     line-height: 18px;
-    width: 338px;
-    height: 42px;
+    width: 86%;
+    min-height: 42px;
     list-style: none;
     border-bottom: 1px solid rgba(0, 0, 0, 0.0470588);
     
@@ -74,7 +74,7 @@ and open the template in the editor.
 .ui-tabs .ui-widget-content{
     
      display: block;
-     width: 368px;
+     width: 100%;
      height: auto !important; 
      margin: 0 0 0 0;
      padding: 0 0 0 0;

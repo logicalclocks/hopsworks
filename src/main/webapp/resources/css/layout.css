@@ -93,9 +93,14 @@ body {
 }
 
 .ui-panel .ui-panel-titlebar {
-    padding: 0.6em 0.6em 0.6em;
-    font-size: 14px;
-    margin: -1px;
+    padding: 0.6em 0.6em 0.1em 0em;
+    font-size: 20px;
+    margin: 5px;
+    border-radius: 0px;   
+    border-left: none;
+    border-top: none;
+    border-right: none;
+    background: none;
 }
 
 .ui-panel .ui-panel-title {
@@ -138,7 +143,7 @@ body {
 #logo{
     height: 110px;
     margin-bottom: 8px;
-    background-image: url("#{resource['/logo/HOPS.png']}");
+    background-image: url("/hop-dashboard/javax.faces.resource/logo/HOPS.png.xhtml");
     background-repeat: no-repeat;
 }
 
@@ -562,15 +567,15 @@ body {
 }
 
 .ui-icon-hadoop {
-    background-image: url("#{resource['images/views/hop.png']}") !important;
+    background-image: url("/hop-dashboard/javax.faces.resource/images/views/hop.png.xhtml") !important;
 }
 
 .ui-icon-wf {
-    background-image: url("#{resource['images/views/wf.png']}") !important;
+    background-image: url("/hop-dashboard/javax.faces.resource/images/views/wf.png.xhtml") !important;
 }
 
 .ui-icon-lims {
-    background-image: url("#{resource['images/views/lims.png']}") !important;
+    background-image: url("/hop-dashboard/javax.faces.resource/images/views/lims.png.xhtml") !important;
 }
 
 .BbcSelect {
