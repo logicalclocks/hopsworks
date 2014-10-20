@@ -37,36 +37,36 @@ and open the template in the editor.
                     </h:form>
                 </div>
             </p:panel>
-            <!--      <p:panel id="params" header="Parameters" toggleable="true" closable="false" toggleSpeed="500" widgetVar="paramPanel">
-  
-                      <div class="workflow-panel-content">
-                          <c:if test="true">
-                              - in case no workflow is chosen yet -
-                              Choose a workflow file. 
-                              <br/><br/>
-                          </c:if>
-                          <c:if test="true">
-                              <h:outputLabel>
-                                  Parameter a:
-                              </h:outputLabel> 
-                              <br/><br/>
-                              <p:commandButton value="Choose file..."/>
-                          </c:if>
-                      </div>
-                  </p:panel>
-                  <p:panel id="targets" header="Targets" toggleable="true" closable="false" toggleSpeed="500" widgetVar="targetPanel">
-                      <div class="workflow-panel-content">
-                          <h:outputLabel>
-                              Select variables to be included in output:
-                          </h:outputLabel> 
-                          <br/><br/>
-                          <p:selectManyCheckbox id="output" layout="grid" columns="1">
-                              <f:selectItem itemLabel="result"/>
-                              <f:selectItem itemLabel="resultb"/>
-                          </p:selectManyCheckbox>
-                      </div>
-                  </p:panel>
-                  <p:commandButton id="executeButton" value="Execute" />
+            <p:panel id="params" header="Parameters" toggleable="true" closable="false" toggleSpeed="500" widgetVar="paramPanel">
+
+                <div class="workflow-panel-content">
+                    <c:if test="true">
+                        - in case no workflow is chosen yet -
+                        Choose a workflow file. 
+                        <br/><br/>
+                    </c:if>
+                    <c:if test="true">
+                        <h:outputLabel>
+                            Parameter a:
+                        </h:outputLabel> 
+                        <br/><br/>
+                        <p:commandButton value="Choose file..."/>
+                    </c:if>
+                </div>
+            </p:panel>
+            <!-- <p:panel id="targets" header="Targets" toggleable="true" closable="false" toggleSpeed="500" widgetVar="targetPanel">
+                 <div class="workflow-panel-content">
+                     <h:outputLabel>
+                         Select variables to be included in output:
+                     </h:outputLabel> 
+                     <br/><br/>
+                     <p:selectManyCheckbox id="output" layout="grid" columns="1">
+                         <f:selectItem itemLabel="result"/>
+                         <f:selectItem itemLabel="resultb"/>
+                     </p:selectManyCheckbox>
+                 </div>
+             </p:panel>
+             <p:commandButton id="executeButton" value="Execute" />
             -->
         </ui:composition>
     </body>

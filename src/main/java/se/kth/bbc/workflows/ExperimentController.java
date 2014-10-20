@@ -20,7 +20,7 @@ import se.kth.bbc.study.StudyMB;
  */
 @ManagedBean
 @SessionScoped
-public class ExperimentController implements Serializable{
+public class ExperimentController implements Serializable {
 
     private String expName;
     private Workflow flowfile;
@@ -44,12 +44,10 @@ public class ExperimentController implements Serializable{
     }
 
     public Workflow getFlowfile() {
-        System.out.println("DEBUG: called GGGETflowfile.");
         return flowfile;
     }
 
     public void setFlowfile(Workflow flowfile) {
-        System.out.println("DEBUG: called SSSETflowfile: " + flowfile.getTitle());
         this.flowfile = flowfile;
     }
 
@@ -65,7 +63,11 @@ public class ExperimentController implements Serializable{
         this.workflows = workflows;
     }
 
-    private Map<String,Workflow> getAvailableWorkflows() {
+    public boolean isFlowfileSet() {
+        return this.flowfile != null;
+    }
+
+    private Map<String, Workflow> getAvailableWorkflows() {
         if (availableFlows == null) {
             availableFlows = Maps.uniqueIndex(workflows.findAllForStudy(study.getStudyName()), new Function<Workflow, String>() {
                 @Override
@@ -80,44 +82,17 @@ public class ExperimentController implements Serializable{
     public void doSomething() {
         System.out.println("DEBUG: called nothing");
     }
-    
-    public Collection<String> getWorkflowNames(){
-        Map<String,Workflow> flows = getAvailableWorkflows();
+
+    public Collection<String> getWorkflowNames() {
+        Map<String, Workflow> flows = getAvailableWorkflows();
         return flows.keySet();
     }
-    
-    public void setSelectedWorkflow(String title){
+
+    public void setSelectedWorkflow(String title) {
         setFlowfile(getAvailableWorkflows().get(title));
     }
-    
-    public String getSelectedWorkflow(){
-        return flowfile==null?"":flowfile.getTitle();
-    }
 
-    /**
-     * *****
-     *
-     * DEBUG
-     *
-     */
-    private String testString;
-
-    public String getTestString() {
-        System.out.println("DEBUG: called Get string");
-        return testString;
-    }
-
-    public void setTestString(String testString) {
-        System.out.println("DEBUG: called Set string");
-        this.testString = testString;
-    }
-
-    public List<String> getFlows() {
-        List<String> s = new ArrayList<>();
-        s.add("blej");
-        s.add("kjslk");
-        s.add("sdkf");
-        s.add("shi");
-        return s;
+    public String getSelectedWorkflow() {
+        return flowfile == null ? "" : flowfile.getTitle();
     }
 }
