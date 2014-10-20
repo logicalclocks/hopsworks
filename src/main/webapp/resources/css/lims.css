@@ -2088,6 +2088,14 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
     
 }
 
+.inode_row {
+    display: block;
+    margin-left: -30px;
+    height: 15px;
+    width: auto;
+}
+
+
 
 .edit_team_members{
     

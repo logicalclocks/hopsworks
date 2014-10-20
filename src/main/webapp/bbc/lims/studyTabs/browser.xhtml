@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://java.sun.com/jsp/jstl/core"  
+      xmlns:f="http://java.sun.com/jsf/core"
+      >
+    <body>
+        <ui:composition>
+            <div class="clear_fixing"></div>
+            <div class="container">
+                <h:form id="browserForm">       
+                    <p:growl for="remove" autoUpdate="true" showDetail="true"/>
+
+                    <h:panelGroup id="divBrowser" styleClass="ui_box">
+                        <h5 class="title" align="left">
+                            Name Size
+                        </h5>
+                        <ul class="well-list">
+                        <c:forEach var="inode" items="${FilesMB.getFiles()}" varStatus="mst">
+                                    <li id="inode_row_${mst.count}" class="team_member_row">
+                                        <div class="row">
+                                            <div class="span6">
+                                                <img class="avatar s36" src="resources/images/icons/folder.png"/>
+
+                                                <h:graphicImage class="avatar s36" library="images/icons" name="folder.png" />
+                                                
+                                                <p:commandLink styleClass="dark" ajax="true" action="#{FilesMB.cdDown(inode.name)}">
+                                                    <strong>#{inode.name}</strong>
+                                                </p:commandLink>
+                                            </div>
+                                        </div>
+                                    </li>
+                        </c:forEach>
+                        </ul>
+                    </h:panelGroup>
+
+                </h:form>
+
+            </div> 
+        </ui:composition>
+    </body>
+</html>
