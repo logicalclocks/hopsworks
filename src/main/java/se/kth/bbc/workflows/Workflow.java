@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.workflows;
 
 import java.io.Serializable;
@@ -29,53 +24,57 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "Workflows")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Workflows.findAll", query = "SELECT w FROM Workflow w"),
-    @NamedQuery(name = "Workflows.findByTitle", query = "SELECT w FROM Workflow w WHERE w.workflowsPK.title = :title"),
-    @NamedQuery(name = "Workflows.findByStudy", query = "SELECT w FROM Workflow w WHERE w.workflowsPK.study = :study"),
-    @NamedQuery(name = "Workflows.findByCreationDate", query = "SELECT w FROM Workflow w WHERE w.creationDate = :creationDate")})
+    @NamedQuery(name = "Workflow.findAll", query = "SELECT w FROM Workflow w"),
+    @NamedQuery(name = "Workflow.findByTitle", query = "SELECT w FROM Workflow w WHERE w.workflowPK.title = :title"),
+    @NamedQuery(name = "Workflow.findByStudy", query = "SELECT w FROM Workflow w WHERE w.workflowPK.study = :study"),
+    @NamedQuery(name = "Workflow.findByCreationDate", query = "SELECT w FROM Workflow w WHERE w.creationDate = :creationDate"),
+    @NamedQuery(name = "Workflow.findByPublicFile", query = "SELECT w FROM Workflow w WHERE w.publicFile = :publicFile"),
+    @NamedQuery(name = "Workflow.findByCreator", query = "SELECT w FROM Workflow w WHERE w.creator = :creator"),
+    @NamedQuery(name = "Workflow.findByStudyOrPublic", query = "SELECT w FROM Workflow w WHERE w.workflowPK.study = :study OR w.publicFile=TRUE")})
 public class Workflow implements Serializable {
     private static final long serialVersionUID = 1L;
     @EmbeddedId
-    protected WorkflowsPK workflowsPK;
+    protected WorkflowPK workflowPK;
     @Lob
     @Size(max = 65535)
-    @Column(name = "description")
     private String description;
     @Basic(optional = false)
     @NotNull
-    @Column(name = "creationDate")
     @Temporal(TemporalType.TIMESTAMP)
     private Date creationDate;
     @Basic(optional = false)
     @NotNull
-    @Lob
-    @Size(min = 1, max = 2147483647)
-    @Column(name = "script")
-    private String script;
+    private boolean publicFile;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
+    private String creator;
+
 
     public Workflow() {
     }
 
-    public Workflow(WorkflowsPK workflowsPK) {
-        this.workflowsPK = workflowsPK;
+    public Workflow(WorkflowPK workflowPK) {
+        this.workflowPK = workflowPK;
     }
 
-    public Workflow(WorkflowsPK workflowsPK, Date creationDate, String script) {
-        this.workflowsPK = workflowsPK;
+    public Workflow(WorkflowPK workflowPK, Date creationDate, boolean publicFile, String creator) {
+        this.workflowPK = workflowPK;
         this.creationDate = creationDate;
-        this.script = script;
+        this.publicFile = publicFile;
+        this.creator = creator;
     }
 
     public Workflow(String title, String study) {
-        this.workflowsPK = new WorkflowsPK(title, study);
+        this.workflowPK = new WorkflowPK(title, study);
     }
 
-    public WorkflowsPK getWorkflowsPK() {
-        return workflowsPK;
+    public WorkflowPK getWorkflowPK() {
+        return workflowPK;
     }
 
-    public void setWorkflowsPK(WorkflowsPK workflowsPK) {
-        this.workflowsPK = workflowsPK;
+    public void setWorkflowPK(WorkflowPK workflowPK) {
+        this.workflowPK = workflowPK;
     }
 
     public String getDescription() {
@@ -94,18 +93,26 @@ public class Workflow implements Serializable {
         this.creationDate = creationDate;
     }
 
-    public String getScript() {
-        return script;
+    public boolean getPublicFile() {
+        return publicFile;
     }
 
-    public void setScript(String script) {
-        this.script = script;
+    public void setPublicFile(boolean publicFile) {
+        this.publicFile = publicFile;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public void setCreator(String creator) {
+        this.creator = creator;
     }
 
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (workflowsPK != null ? workflowsPK.hashCode() : 0);
+        hash += (workflowPK != null ? workflowPK.hashCode() : 0);
         return hash;
     }
 
@@ -116,7 +123,7 @@ public class Workflow implements Serializable {
             return false;
         }
         Workflow other = (Workflow) object;
-        if ((this.workflowsPK == null && other.workflowsPK != null) || (this.workflowsPK != null && !this.workflowsPK.equals(other.workflowsPK))) {
+        if ((this.workflowPK == null && other.workflowPK != null) || (this.workflowPK != null && !this.workflowPK.equals(other.workflowPK))) {
             return false;
         }
         return true;
@@ -124,21 +131,7 @@ public class Workflow implements Serializable {
 
     @Override
     public String toString() {
-        return "se.kth.bbc.workflows.Workflows[ workflowsPK=" + workflowsPK + " ]";
-    }
-    
-    /**
-     * Get the title of this record. Avoids going through the workflowsPK. 
-     */
-    public String getTitle(){
-        return workflowsPK.getTitle();
-    }
-    
-     /**
-     * Get the study of this record. Avoids going through the workflowsPK. 
-     */
-    public String getStudy(){
-        return workflowsPK.getStudy();
+        return "se.kth.bbc.workflows.Workflow[ workflowPK=" + workflowPK + " ]";
     }
     
 }

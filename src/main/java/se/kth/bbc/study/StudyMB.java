@@ -62,6 +62,15 @@ public class StudyMB implements Serializable {
     public static final int TEAM_TAB = 1;
     public static final int SHOW_TAB = 0;
 
+    /**************************************
+     * 
+     * TODO!
+     *  TODO: isolate file system operations to FileSystemOperations.java (or anywhere really).
+     * TODO!
+     * 
+     * 
+     */  
+    
     public final String nameNodeURI = "hdfs://snurran.sics.se:9999";
 
     @EJB

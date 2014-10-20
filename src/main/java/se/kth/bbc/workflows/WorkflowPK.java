@@ -7,7 +7,6 @@ package se.kth.bbc.workflows;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
-import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -17,22 +16,20 @@ import javax.validation.constraints.Size;
  * @author stig
  */
 @Embeddable
-public class WorkflowsPK implements Serializable {
+public class WorkflowPK implements Serializable {
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 128)
-    @Column(name = "title")
     private String title;
     @Basic(optional = false)
     @NotNull
     @Size(min = 1, max = 128)
-    @Column(name = "study")
     private String study;
 
-    public WorkflowsPK() {
+    public WorkflowPK() {
     }
 
-    public WorkflowsPK(String title, String study) {
+    public WorkflowPK(String title, String study) {
         this.title = title;
         this.study = study;
     }
@@ -64,10 +61,10 @@ public class WorkflowsPK implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof WorkflowsPK)) {
+        if (!(object instanceof WorkflowPK)) {
             return false;
         }
-        WorkflowsPK other = (WorkflowsPK) object;
+        WorkflowPK other = (WorkflowPK) object;
         if ((this.title == null && other.title != null) || (this.title != null && !this.title.equals(other.title))) {
             return false;
         }
@@ -79,7 +76,7 @@ public class WorkflowsPK implements Serializable {
 
     @Override
     public String toString() {
-        return "se.kth.bbc.workflows.WorkflowsPK[ title=" + title + ", study=" + study + " ]";
+        return "se.kth.bbc.workflows.WorkflowPK[ title=" + title + ", study=" + study + " ]";
     }
     
 }
