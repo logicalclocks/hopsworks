@@ -16,7 +16,7 @@ and open the template in the editor.
         <ui:composition>
             <div class="clear_fixing"></div>
             <div class="container">
-                <h:form id="browserForm">       
+                <h:form id="browserForm" prependId="false">       
                     <p:growl for="remove" autoUpdate="true" showDetail="true"/>
 
                     <h:panelGroup id="divBrowser" styleClass="ui_box">
@@ -28,12 +28,17 @@ and open the template in the editor.
                                     <li id="inode_row_${mst.count}" class="team_member_row">
                                         <div class="row">
                                             <div class="span6">
-                                                <img class="avatar s36" src="resources/images/icons/folder.png"/>
-
+                                        <c:if id="inodeDirIcon" test="${inode.isDir()}">
                                                 <h:graphicImage class="avatar s36" library="images/icons" name="folder.png" />
-                                                
+                                        </c:if>
+                                        <c:if id="inodeFileIcon" test="${inode.isDir() eq false }">
+                                                <h:graphicImage class="avatar s36" library="images/icons" name="file.png" />
+                                        </c:if>                                        
+                                                <!--onclick="javascript:jsf.ajax.request(this, event, {execute:'browserForm', render:'divBrowser'}); return false;"-->
                                                 <p:commandLink styleClass="dark" ajax="true" action="#{FilesMB.cdDown(inode.name)}">
                                                     <strong>#{inode.name}</strong>
+                                                     <f:ajax event="action" render="divBrowser"></f:ajax>
+                                                     <!--execute="browserForm"--> 
                                                 </p:commandLink>
                                             </div>
                                         </div>
