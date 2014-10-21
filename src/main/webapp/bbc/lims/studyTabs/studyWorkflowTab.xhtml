@@ -16,23 +16,27 @@ and open the template in the editor.
         <ui:composition>
             <p:growl for="fileFailure" autoUpdate="true" showDetail="true"/>
             <div class="workflow-head">
-                <h:outputLabel value="App name"/>
-                <p:selectOneMenu  id="workflowChooser" value="#{experimentController.selectedWorkflow}" style="width:150px">
-                    <f:selectItem itemLabel="Select..." itemValue="" noSelectionOption="true" rendered="#{not experimentController.flowfileSet}" />
-                    <f:selectItems value="#{experimentController.workflowNames}"/>
-                </p:selectOneMenu>
+                <div class="left">
+                    <span>
+                        <h:outputLabel value="App name"/>
+                    </span>
+                    <p:selectOneMenu  id="workflowChooser" value="#{experimentController.selectedWorkflow}" style="width:150px">
+                        <f:selectItem itemLabel="Select..." itemValue="" noSelectionOption="true" rendered="#{not experimentController.flowfileSet}" />
+                        <f:selectItems value="#{experimentController.workflowNames}"/>
+                    </p:selectOneMenu>
 
-                <p:commandButton value="Upload" type="button" onclick="PF('uploadDlg').show()"/>
-
-                <p:commandButton value="Execute"/>
-
+                    <p:commandButton value="Upload" type="button" onclick="PF('uploadDlg').show()"/>
+                </div>
+                <div class="right">
+                    <p:commandButton value="Execute"/>
+                </div>
             </div>
 
-            <p:panel closable="false" header="Parameters">
+            <p:panel closable="false" header="Parameters" styleClass="wf-panel">
                 <h:form>
                     <h:panelGrid columns="3">
-                        <p:outputLabel value="Name"/>
-                        <p:outputLabel value="Value"/>
+                        <p:outputLabel value="Name" styleClass="wf-table-header"/>
+                        <p:outputLabel value="Value" styleClass="wf-table-header"/>
                         <h:inputHidden/>
 
                         <c:forEach var="inputParam" items="#{cuneiformParamsMB.input}">

@@ -105,6 +105,7 @@ body {
 
 .ui-panel .ui-panel-title {
     margin: 0.1em 16px 0.1em 0;
+    color: #456;
 }
 
 .ui-panel .ui-panel-content {

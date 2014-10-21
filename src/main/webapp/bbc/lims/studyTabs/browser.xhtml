@@ -24,42 +24,42 @@ and open the template in the editor.
                             Name Size
                         </h5>
                         <ul class="well-list">
-                            <c:forEach var="inode" items="${InodesMB.getChildren()}" varStatus="mst">
-                                <li class="browser_row">
-                                    <div class="row" prependId="false">
-                                        <div class="spanFb" prependId="false">
-                                            <c:if id="inodeDirIcon" test="${inode.isDir()}">
+                            <c:forEach var="inode" items="#{InodesMB.children}" varStatus="mst">
+                                <c:if id="inodeDirIcon" test="${inode.isDir()}">
+                                    <li class="browser_row">
+                                        <div class="row" >
+                                            <div class="spanFb">                                            
                                                 <h:graphicImage class="browser s16" library="images/icons" name="folder.png" />
                                                 <c:choose>
                                                     <c:when id="isParent" test="${inode.isParent()}">
-                                                        <p:commandLink styleClass="dark" ajax="true" action="#{InodesMB.cdUp()}" update="@form">
+                                                        <p:commandLink styleClass="dark" ajax="true" actionListener="#{InodesMB.cdUp()}" update="@form">
                                                             <strong>#{inode.name}</strong>
-                                                            <!--<f:ajax event="click" render="@form"></f:ajax>-->
                                                         </p:commandLink>
                                                     </c:when>                                        
                                                     <c:otherwise>
-                                                        <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}">
+                                                        <p:commandLink styleClass="dark" actionListener="#{InodesMB.cdDown(inode.name)}" ajax="true" update="@form">
                                                             <strong>#{inode.name}</strong>
-                                                            <f:ajax event="click" execute="@form" render="@form"></f:ajax>
                                                         </p:commandLink>
                                                     </c:otherwise>
                                                 </c:choose>
-                                            </c:if>
+                                            </div>
                                         </div>
-                                    </div>
-                                </li>
+                                    </li>                                
+                                </c:if>
                             </c:forEach>
                             <c:forEach var="inode" items="${InodesMB.getChildren()}" varStatus="mst">
-                                <li id="inode_row_${mst.count}" class="browser_row">
-                                    <div class="row">
-                                        <div class="spanFb">
-                                            <c:if id="inodeFileIcon" test="${inode.isDir() eq false }">
+                                <c:if id="inodeFileIcon" test="${not inode.isDir()}">
+                                    <li id="inode_row_${mst.count}" class="browser_row">
+                                        <div class="row">
+                                            <div class="spanFb">
+
                                                 <h:graphicImage class="browser s16" library="images/icons" name="file.png" />
                                                 <strong>#{inode.name}</strong>
-                                            </c:if>   
+
+                                            </div>
                                         </div>
-                                    </div>
-                                </li>
+                                    </li>
+                                </c:if>   
                             </c:forEach>
                         </ul>
                     </h:panelGroup>

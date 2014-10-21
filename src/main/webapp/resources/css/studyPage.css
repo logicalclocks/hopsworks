@@ -237,3 +237,68 @@ h1 {
 .workflow-panel-content {
     margin-left: 0.6em;
 }
+
+.workflow-head{
+    margin-top: 1.5%;
+}
+
+.workflow-head .left{
+    float: left;
+    width: auto;
+}
+
+.workflow-head span, .workflow-head .ui-widget label{
+    /*width: auto !important;*/
+}
+
+.workflow-head .left span label {
+    font-size: 20px;
+    color: #456;
+font-weight: normal;
+line-height: 28px;
+    font-family: "Helvetica Neue","Helvetica","Arial","sans-serif";
+    margin-right: 10px;
+    padding-top: 0;
+}
+
+.workflow-head .ui-selectonemenu {
+    margin-right: 10px;
+    vertical-align: top;
+}
+
+.workflow-head .left .ui-selectonemenu label {
+    font-size: 15px;
+}
+
+.workflow-head .ui-button span {
+    font-size: 13px;
+}
+
+.workflow-head .right {
+    float: right;
+}
+
+.publicCheckbox .ui-chkbox-box {
+    margin-top: 5px;
+    vertical-align: bottom;
+    padding-top: 0;
+}
+
+.publicCheckbox label {
+    margin-top: 2px;
+}
+
+.publicCheckbox .ui-widget {
+    float: left;
+    margin-right: 3px;    
+}
+
+.wf-table-header {
+    min-width: 170px;
+    text-align: left;
+}
+
+.wf-panel .ui-panel-content{
+    margin: 5px;
+}
+

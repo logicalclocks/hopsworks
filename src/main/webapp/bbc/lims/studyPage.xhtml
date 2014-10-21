@@ -102,11 +102,13 @@
             </p:dialog>
             <p:dialog id="uploadDialog" header="Upload file" widgetVar="uploadDlg" draggable="false" resizable="false" modal="true">
                 <h:form id="uploadForm">
-                    <p:fileUpload required="true" multiple="false" label="Select file" mode="advanced" allowTypes="/(\.|\/)(cf)$/" fileUploadListener="#{experimentController.handleFileUpload}" oncomplete="PF('uploadDlg').hide()"/>
-                    <p:selectBooleanCheckbox id="publicCheckbox" value="#{experimentController.publicFile}">
-                        <p:ajax listener="#{experimentController.checkboxChanged}"/>
-                    </p:selectBooleanCheckbox>
-                    <h:outputLabel for="publicCheckbox" value="Make file publicly available"/>
+                    <p:fileUpload required="true" multiple="false" label="Select" mode="advanced" allowTypes="/(\.|\/)(cf)$/" fileUploadListener="#{experimentController.handleFileUpload}" oncomplete="PF('uploadDlg').hide()"/>
+                    <div class="publicCheckbox">
+                        <p:selectBooleanCheckbox id="publicCheckbox" value="#{experimentController.publicFile}">
+                            <p:ajax listener="#{experimentController.checkboxChanged}"/>
+                        </p:selectBooleanCheckbox>
+                        <h:outputLabel value="Make file public"/>
+                    </div>
                 </h:form>
             </p:dialog>
         </h:body>
