@@ -15,7 +15,7 @@ and open the template in the editor.
     <body>
         <ui:composition>
             <div class="clear_fixing"></div>
-            <div class="container">
+            <div class="container" prependId="false">
                 <h:form id="browserForm" prependId="false">       
                     <p:growl for="remove" autoUpdate="true" showDetail="true"/>
 
@@ -24,26 +24,43 @@ and open the template in the editor.
                             Name Size
                         </h5>
                         <ul class="well-list">
-                        <c:forEach var="inode" items="${FilesMB.getFiles()}" varStatus="mst">
-                                    <li id="inode_row_${mst.count}" class="team_member_row">
-                                        <div class="row">
-                                            <div class="span6">
-                                        <c:if id="inodeDirIcon" test="${inode.isDir()}">
-                                                <h:graphicImage class="avatar s36" library="images/icons" name="folder.png" />
-                                        </c:if>
-                                        <c:if id="inodeFileIcon" test="${inode.isDir() eq false }">
-                                                <h:graphicImage class="avatar s36" library="images/icons" name="file.png" />
-                                        </c:if>                                        
-                                                <!--onclick="javascript:jsf.ajax.request(this, event, {execute:'browserForm', render:'divBrowser'}); return false;"-->
-                                                <p:commandLink styleClass="dark" ajax="true" action="#{FilesMB.cdDown(inode.name)}">
-                                                    <strong>#{inode.name}</strong>
-                                                     <f:ajax event="action" render="divBrowser"></f:ajax>
-                                                     <!--execute="browserForm"--> 
-                                                </p:commandLink>
-                                            </div>
+                            <c:forEach var="inode" items="${InodesMB.getChildren()}" varStatus="mst">
+                                <li class="browser_row">
+                                    <div class="row" prependId="false">
+                                        <div class="spanFb" prependId="false">
+                                            <c:if id="inodeDirIcon" test="${inode.isDir()}">
+                                                <h:graphicImage class="browser s16" library="images/icons" name="folder.png" />
+                                                <c:choose>
+                                                    <c:when id="isParent" test="${inode.isParent()}">
+                                                        <p:commandLink styleClass="dark" ajax="true" action="#{InodesMB.cdUp()}" update="@form">
+                                                            <strong>#{inode.name}</strong>
+                                                            <!--<f:ajax event="click" render="@form"></f:ajax>-->
+                                                        </p:commandLink>
+                                                    </c:when>                                        
+                                                    <c:otherwise>
+                                                        <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}">
+                                                            <strong>#{inode.name}</strong>
+                                                            <f:ajax event="click" execute="@form" render="@form"></f:ajax>
+                                                        </p:commandLink>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </c:if>
                                         </div>
-                                    </li>
-                        </c:forEach>
+                                    </div>
+                                </li>
+                            </c:forEach>
+                            <c:forEach var="inode" items="${InodesMB.getChildren()}" varStatus="mst">
+                                <li id="inode_row_${mst.count}" class="browser_row">
+                                    <div class="row">
+                                        <div class="spanFb">
+                                            <c:if id="inodeFileIcon" test="${inode.isDir() eq false }">
+                                                <h:graphicImage class="browser s16" library="images/icons" name="file.png" />
+                                                <strong>#{inode.name}</strong>
+                                            </c:if>   
+                                        </div>
+                                    </div>
+                                </li>
+                            </c:forEach>
                         </ul>
                     </h:panelGroup>
 

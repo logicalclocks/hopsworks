@@ -19,13 +19,12 @@ import javax.faces.bean.SessionScoped;
  *
  * @author jdowling
  */
-@ManagedBean(name = "FilesMB")
+@ManagedBean(name = "InodesMB")
 @SessionScoped
-public class FilesMB implements Serializable {
+public class InodesMB implements Serializable {
 
-    List<FileInfo> files = new ArrayList<>();
-    FileInfo root = new FileInfo("/", "root", FileInfo.Status.READY, 0, true, null);
-    FileInfo cwd;
+    Inode root = new Inode("/", Inode.Status.READY, 0, true, null);
+    Inode cwd;
 
     private class BadPath extends Exception {
 
@@ -34,31 +33,33 @@ public class FilesMB implements Serializable {
         }
     }
 
-    public FilesMB() {
+    public InodesMB() {
         this.cwd = this.root;
-        this.cwd.addChild(new FileInfo("tmp", "jim", FileInfo.Status.READY, 1024, false, this.cwd));
+        Inode tmp = new Inode("tmp", Inode.Status.READY, 1024, true, this.cwd);
+        this.cwd.addChild(tmp);
+        tmp.addChild(new Inode("bbc.txt", Inode.Status.READY, 1024, false, tmp));
     }
 
-    public List<FileInfo> getFiles() {
+    public List<Inode> getChildren() {
+                // TODO - we should get the children from the database
+
         return cwd.getChildren();
-    }
-
-    public void setFiles(List<FileInfo> files) {
-        this.files = files;
     }
 
     public void cdUp() {
         if (!cwd.isRoot()) {
+            Inode parent = cwd.getParent();
             // nullify object reference to prevent mem leak
-            cwd.setParent(null);
+            // TODO: uncomment this line when we get the list of children from the DB.
+//            cwd.setParent(null);
             // set cwd to move up a directory
-            cwd = cwd.getParent();
+            cwd = parent;
         }
     }
 
     public void cdDown(String name) {
 
-        for (FileInfo f : cwd.getChildren()) {
+        for (Inode f : cwd.getChildren()) {
             if (f.getName().compareTo(name) == 0 && f.isDir()) {
                 cwd = f;
             }
@@ -79,7 +80,7 @@ public class FilesMB implements Serializable {
      * @param origCwd cwd when calling this method and still cwd when it returns
      * @return list of path components, starting with root.
      */
-    private List<FileInfo> getPathComponents(List<String> components, List<FileInfo> path, FileInfo origCwd)
+    private List<Inode> getPathComponents(List<String> components, List<Inode> path, Inode origCwd)
             throws BadPath {
         if (components.size() < 1) {
             throw new BadPath("Path was empty");
@@ -97,7 +98,7 @@ public class FilesMB implements Serializable {
         return getPathComponents(components, path, origCwd);
     }
 
-    private int distanceFromRoot(FileInfo f, int d, FileInfo origCwd) {
+    private int distanceFromRoot(Inode f, int d, Inode origCwd) {
         if (isRoot()) { // base case
             this.cwd = origCwd;
             d++;
@@ -116,13 +117,13 @@ public class FilesMB implements Serializable {
         String[] p = name.split("/");
         List<String> pathComponents = Arrays.asList(p);
         try {
-            List<FileInfo> path = getPathComponents(pathComponents, new ArrayList<FileInfo>(), this.cwd);
+            List<Inode> path = getPathComponents(pathComponents, new ArrayList<Inode>(), this.cwd);
             // TODO: Do not allow user to change to arbitrary directory outside the project
             
             // Change cwd to last element in the path
             this.cwd = path.get(path.size()-1);
         } catch (BadPath ex) {
-            Logger.getLogger(FilesMB.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(InodesMB.class.getName()).log(Level.SEVERE, null, ex);
             // TODO: Faces msg to user here.
         }
     }

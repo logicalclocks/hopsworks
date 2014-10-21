@@ -13,39 +13,36 @@ import java.util.List;
  *
  * @author jdowling
  */
-public class FileInfo implements Serializable
-{
+public class Inode implements Serializable {
 
-    public static enum Status { UPLOADING, COPYING_TO_HDFS, READY };
+    public static enum Status {
+
+        UPLOADING, COPYING_TO_HDFS, READY
+    };
     boolean dir;
     String name;
-    String owner;
     Status status;
     int size;
-    List<FileInfo> children = new ArrayList<>();
-    FileInfo parent;
+    List<Inode> children = new ArrayList<>();
+    Inode parent;
 
-    public FileInfo() {
-        this("", "nobody", Status.READY, 0, false, null);
+    public Inode() {
+        this("", Status.READY, 0, false, null);
     }
-    
-    public FileInfo(String name, String owner, Status status, int size, boolean dir, FileInfo parent) {
+
+    public Inode(String name, Status status, int size, boolean dir, Inode parent) {
         this.name = name;
-        this.owner = owner;
         this.status = status;
         this.size = size;
         this.dir = dir;
-        if (dir) {
-            this.children.add(new FileInfo(".", owner, status, size, false, this));
-        }
         this.parent = parent;
     }
 
-    public FileInfo getParent() {
+    public Inode getParent() {
         return parent;
     }
 
-    public void setParent(FileInfo parent) {
+    public void setParent(Inode parent) {
         this.parent = parent;
     }
 
@@ -53,45 +50,51 @@ public class FileInfo implements Serializable
         return name;
     }
 
-    public String getOwner() {
-        return owner;
-    }
-
     public Status getStatus() {
         return status;
+    }
+
+    public int getSize() {
+        return size;
     }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public void setOwner(String owner) {
-        this.owner = owner;
-    }
-
     public void setStatus(Status status) {
         this.status = status;
     }
 
-    public List<FileInfo> getChildren() {
-        return children;
+    public List<Inode> getChildren() {
+        // TODO - we should get the children from the database
+        if (!isDir()) {
+            throw new IllegalStateException("Files do not have children, only directories do");
+        }
+        List<Inode> res = new ArrayList<>();
+        res.addAll(this.children);
+        if (this.name.compareTo("/") != 0) { // root doesn't have a parent to show
+            res.add(new Inode("..", parent.getStatus(),
+                    parent.getSize(), true, parent.getParent()));
+        }
+        return res;
     }
 
-    public void setChildren(List<FileInfo> children) {
+    public void setChildren(List<Inode> children) {
         this.children = children;
     }
 
-    public void addChild(FileInfo child) {
+    public void addChild(Inode child) {
         this.children.add(child);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null || obj instanceof FileInfo == false) {
+        if (obj == null || obj instanceof Inode == false) {
             return false;
         }
-        FileInfo that = (FileInfo) obj;
-        if (this.name.compareTo(that.name)!= 0) {
+        Inode that = (Inode) obj;
+        if (this.name.compareTo(that.name) != 0) {
             return false;
         }
         if (that.parent == null && that.parent == null) {
@@ -103,16 +106,15 @@ public class FileInfo implements Serializable
         if (this.parent.equals(that.parent) != true) {
             return false;
         }
-        
+
         return true;
     }
 
-    
     @Override
     public int hashCode() {
         return parent.hashCode() + this.name.hashCode();
     }
-    
+
     boolean isRoot() {
         return this.name.compareTo("/") == 0 && this.parent == null && this.dir;
     }
@@ -120,5 +122,8 @@ public class FileInfo implements Serializable
     public boolean isDir() {
         return dir;
     }
-    
+
+    public boolean isParent() {
+        return name.compareTo("..") == 0;
+    }
 }

@@ -815,6 +815,23 @@ h6{
     float: left;    
 }
 
+.browser_row{
+    
+    width: 99%;
+    height: 20px;
+    background-color: #FFF;
+    padding: 0.5% 0.5% 0.5% 0.5%;
+    min-height: 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: rgba(0, 0, 0, 0.0470588);
+    list-style: none;
+    display: list-item;
+    text-align: -webkit-match-parent;
+    float: left;    
+    margin-left: 20px;
+}
 
 label{
     
@@ -1066,6 +1083,33 @@ img .avatar .s36 {
     border: 1px solid #ddd;
     float: left;
     vertical-align: middle;
+}
+
+img .browser .s16 {
+    width: 16px ;
+    height: 16px;
+    margin-right: 25px;
+    margin-left: 25px;    
+    padding: 1px 1px 1px 1px;
+    border: 1px solid #ddd;
+    float: left;
+    vertical-align: middle;
+}
+
+.spanFb img {
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    margin-left: 10px;
+    float: left;
+    padding: 1px 1px 1px 1px;
+    border: 1px solid #ddd;
+    float: left;
+    vertical-align: middle;
+    
 }
 
 .span6 img {
