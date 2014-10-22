@@ -12,4 +12,8 @@
       <property name="eclipselink.jpa.uppercase-column-names" value="true"/>
     </properties>
   </persistence-unit>
+  <persistence-unit name="ndb" transaction-type="JTA">
+    <jta-data-source>jndi/hop</jta-data-source>
+    <properties/>
+  </persistence-unit>
 </persistence>

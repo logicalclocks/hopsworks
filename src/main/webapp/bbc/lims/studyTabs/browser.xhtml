@@ -16,51 +16,38 @@ and open the template in the editor.
         <ui:composition>
             <div class="clear_fixing"></div>
             <div class="container" prependId="false">
-                <h:form id="browserForm" prependId="false">       
+
+                <h:form id="browserForm">   
+                    <ui:repeat var="node" value="#{InodesMB.currentPath}">
+                        <p:commandLink action="#{InodesMB.cdBrowse(node.path)}" update="@form">
+                            <strong>#{node.top}</strong>
+                        </p:commandLink>/
+                    </ui:repeat>
                     <p:growl for="remove" autoUpdate="true" showDetail="true"/>
 
                     <h:panelGroup id="divBrowser" styleClass="ui_box">
                         <h5 class="title" align="left">
-                            Name Size
+                            Name 
                         </h5>
                         <ul class="well-list">
-                            <c:forEach var="inode" items="#{InodesMB.children}" varStatus="mst">
-                                <c:if id="inodeDirIcon" test="${inode.isDir()}">
-                                    <li class="browser_row">
-                                        <div class="row" >
-                                            <div class="spanFb">                                            
-                                                <h:graphicImage class="browser s16" library="images/icons" name="folder.png" />
-                                                <c:choose>
-                                                    <c:when id="isParent" test="${inode.isParent()}">
-                                                        <p:commandLink styleClass="dark" ajax="true" actionListener="#{InodesMB.cdUp()}" update="@form">
-                                                            <strong>#{inode.name}</strong>
-                                                        </p:commandLink>
-                                                    </c:when>                                        
-                                                    <c:otherwise>
-                                                        <p:commandLink styleClass="dark" actionListener="#{InodesMB.cdDown(inode.name)}" ajax="true" update="@form">
-                                                            <strong>#{inode.name}</strong>
-                                                        </p:commandLink>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </div>
-                                        </div>
-                                    </li>                                
-                                </c:if>
-                            </c:forEach>
-                            <c:forEach var="inode" items="${InodesMB.getChildren()}" varStatus="mst">
-                                <c:if id="inodeFileIcon" test="${not inode.isDir()}">
-                                    <li id="inode_row_${mst.count}" class="browser_row">
-                                        <div class="row">
-                                            <div class="spanFb">
+                            <ui:repeat var="inode" value="#{InodesMB.getChildren()}" varStatus="mst">
+                                <li class="browser_row">
+                                    <div class="row">
+                                        <div class="spanFb">                                            
+                                            <h:graphicImage class="browser s16" library="images/icons" name="#{inode.isDir()?'folder.png':'file.png'}" />
 
-                                                <h:graphicImage class="browser s16" library="images/icons" name="file.png" />
+                                            <p:commandLink styleClass="dark" action="#{InodesMB.cdUp()}" update="@form" rendered="#{inode.isParent()}">
                                                 <strong>#{inode.name}</strong>
+                                            </p:commandLink>
 
-                                            </div>
+                                            <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}" update="@form" rendered="#{not inode.isParent()}">
+                                                <strong>#{inode.name}</strong>
+                                            </p:commandLink>
+
                                         </div>
-                                    </li>
-                                </c:if>   
-                            </c:forEach>
+                                    </div>
+                                </li>          
+                            </ui:repeat>
                         </ul>
                     </h:panelGroup>
 

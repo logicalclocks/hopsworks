@@ -1,41 +1,152 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.study.fb;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  *
- * @author jdowling
+ * @author stig
  */
+@Entity
+@Table(name = "Inodes")
+@XmlRootElement
+@NamedQueries({
+    @NamedQuery(name = "Inode.findAll", query = "SELECT i FROM Inode i"),
+    @NamedQuery(name = "Inode.findById", query = "SELECT i FROM Inode i WHERE i.id = :id"),
+    @NamedQuery(name = "Inode.findByParent", query = "SELECT i FROM Inode i WHERE i.parent = :parent ORDER BY i.dir DESC, i.name ASC"),
+    @NamedQuery(name = "Inode.findDirByParent", query = "SELECT i FROM Inode i WHERE i.parent = :parent AND i.dir = TRUE ORDER BY i.name ASC"),
+    @NamedQuery(name = "Inode.findByName", query = "SELECT i FROM Inode i WHERE i.name = :name")})
 public class Inode implements Serializable {
 
-    public static enum Status {
+    private static final long serialVersionUID = 1L;
 
-        UPLOADING, COPYING_TO_HDFS, READY
-    };
-    boolean dir;
-    String name;
-    Status status;
-    int size;
-    List<Inode> children = new ArrayList<>();
-    Inode parent;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Basic(optional = false)
+    @Column(name = "id")
+    private Integer id;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 128)
+    @Column(name = "name")
+    private String name;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "modified")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date modified;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "isDir")
+    private boolean dir;
+    @Column(name = "size")
+    private Integer size;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "status")
+    private String status;
+    @OneToMany(mappedBy = "parent")
+    private List<Inode> children;
+    @JoinColumn(name = "pid", referencedColumnName = "id")
+    @ManyToOne
+    private Inode parent;
 
     public Inode() {
-        this("", Status.READY, 0, false, null);
     }
 
-    public Inode(String name, Status status, int size, boolean dir, Inode parent) {
+    public Inode(Integer id) {
+        this.id = id;
+    }
+
+    public Inode(Integer id, String name, Date modified, boolean isDir, String status) {
+        this.id = id;
         this.name = name;
+        this.modified = modified;
+        this.dir = isDir;
         this.status = status;
-        this.size = size;
+    }
+
+    public Inode(String name, Date modified, boolean dir, String status) {
+        this(0, name, modified, dir, status);
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Date getModified() {
+        return modified;
+    }
+
+    public void setModified(Date modified) {
+        this.modified = modified;
+    }
+
+    public boolean isDir() {
+        return dir;
+    }
+
+    public void setDir(boolean dir) {
         this.dir = dir;
-        this.parent = parent;
+    }
+
+    public Integer getSize() {
+        return size;
+    }
+
+    public void setSize(Integer size) {
+        this.size = size;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public List<Inode> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<Inode> children) {
+        this.children = children;
     }
 
     public Inode getParent() {
@@ -46,84 +157,61 @@ public class Inode implements Serializable {
         this.parent = parent;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public int getSize() {
-        return size;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public List<Inode> getChildren() {
-        // TODO - we should get the children from the database
-        if (!isDir()) {
-            throw new IllegalStateException("Files do not have children, only directories do");
-        }
-        List<Inode> res = new ArrayList<>();
-        res.addAll(this.children);
-        if (this.name.compareTo("/") != 0) { // root doesn't have a parent to show
-            res.add(new Inode("..", parent.getStatus(),
-                    parent.getSize(), true, parent.getParent()));
-        }
-        return res;
-    }
-
-    public void setChildren(List<Inode> children) {
-        this.children = children;
-    }
-
-    public void addChild(Inode child) {
-        this.children.add(child);
+    @Override
+    public int hashCode() {
+        int hash = 0;
+        hash += (id != null ? id.hashCode() : 0);
+        return hash;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null || obj instanceof Inode == false) {
+    public boolean equals(Object object) {
+        // TODO: Warning - this method won't work in the case the id fields are not set
+        if (!(object instanceof Inode)) {
             return false;
         }
-        Inode that = (Inode) obj;
-        if (this.name.compareTo(that.name) != 0) {
+        Inode other = (Inode) object;
+        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
-        if (that.parent == null && that.parent == null) {
-            return true; // root inode
-        }
-        if (this.parent == null || that.parent == null) {
-            return false; // something went wrong here
-        }
-        if (this.parent.equals(that.parent) != true) {
-            return false;
-        }
-
         return true;
     }
 
     @Override
-    public int hashCode() {
-        return parent.hashCode() + this.name.hashCode();
+    public String toString() {
+        return "se.kth.bbc.study.fb.Inode[ id=" + id + " ]";
     }
 
     boolean isRoot() {
-        return this.name.compareTo("/") == 0 && this.parent == null && this.dir;
-    }
-
-    public boolean isDir() {
-        return dir;
+        //Cannot check on name because sometimes a folder with name ".." is root.
+        return parent == null;
     }
 
     public boolean isParent() {
         return name.compareTo("..") == 0;
     }
+
+    public List<NavigationPath> getPath() {
+        if (isRoot()) {
+            List<NavigationPath> p = new ArrayList<>();
+            //TODO: change "study" to real study name
+            p.add(new NavigationPath(name, name+"/"));
+            return p;
+        } else {
+            List<NavigationPath> p = parent.getPath();
+            NavigationPath a = new NavigationPath(name, p.get(p.size() - 1).getPath() + name + "/");
+            p.add(a);
+            return p;
+        }
+    }
+
+    public Inode getChild(String name) {
+        for (Inode i : children) {
+            if (i.name.equals(name)) {
+                return i;
+            }
+        }
+        return null;
+    }
+
 }

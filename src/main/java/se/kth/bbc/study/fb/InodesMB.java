@@ -1,19 +1,19 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.study.fb;
 
 import com.google.common.collect.Lists;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
+import se.kth.bbc.study.StudyMB;
 
 /**
  *
@@ -23,8 +23,18 @@ import javax.faces.bean.SessionScoped;
 @SessionScoped
 public class InodesMB implements Serializable {
 
-    Inode root = new Inode("/", Inode.Status.READY, 0, true, null);
+    Inode root /*= new Inode("/", Inode.Status.READY, 0, true, null)*/;
     Inode cwd;
+    
+    @ManagedProperty(value="#{studyManagedBean}")
+    private StudyMB study;
+    
+    @EJB
+    private InodeFacade inodes;
+    
+    public void setStudy(StudyMB study){
+        this.study=study;
+    }
 
     private class BadPath extends Exception {
 
@@ -32,18 +42,22 @@ public class InodesMB implements Serializable {
             super(msg);
         }
     }
-
-    public InodesMB() {
-        this.cwd = this.root;
-        Inode tmp = new Inode("tmp", Inode.Status.READY, 1024, true, this.cwd);
-        this.cwd.addChild(tmp);
-        tmp.addChild(new Inode("bbc.txt", Inode.Status.READY, 1024, false, tmp));
+    
+    @PostConstruct
+    public void init(){
+                //TODO: implement a better way to find inodes that represent root folders
+        root = inodes.findByName(study.getStudyName());
+        cwd = root;
     }
 
     public List<Inode> getChildren() {
-                // TODO - we should get the children from the database
-
-        return cwd.getChildren();
+        // TODO - we should get the children from the database
+        List<Inode> res = new ArrayList<>();
+        res.addAll(inodes.findByParent(cwd));
+        if (!cwd.isRoot()) { // root doesn't have a parent to show
+            res.add(0,new Inode(0,"..", new Date(),true,cwd.getParent().getStatus()));
+        }
+        return res;
     }
 
     public void cdUp() {
@@ -75,12 +89,13 @@ public class InodesMB implements Serializable {
 
     /**
      *
-     * @param components string for path to parse
+     * @param components string for path to parse. Has to be a List supporting
+     * remove, so ArrayList here.
      * @param path empty to begin with
      * @param origCwd cwd when calling this method and still cwd when it returns
      * @return list of path components, starting with root.
      */
-    private List<Inode> getPathComponents(List<String> components, List<Inode> path, Inode origCwd)
+    private List<Inode> getPathComponents(ArrayList<String> components, List<Inode> path, Inode origCwd)
             throws BadPath {
         if (components.size() < 1) {
             throw new BadPath("Path was empty");
@@ -94,6 +109,7 @@ public class InodesMB implements Serializable {
             this.cwd = this.root;
         }
         path.add(this.cwd);
+        cdUp();
         components.remove(0);
         return getPathComponents(components, path, origCwd);
     }
@@ -110,22 +126,38 @@ public class InodesMB implements Serializable {
     }
 
     /**
-     * 
+     *
      * @param name valid path
      */
     public void cd(String name) {
+        System.out.println("DEBUG: path:" + name);
         String[] p = name.split("/");
-        List<String> pathComponents = Arrays.asList(p);
+        ArrayList<String> pathComponents = new ArrayList<>(Arrays.asList(p));
         try {
             List<Inode> path = getPathComponents(pathComponents, new ArrayList<Inode>(), this.cwd);
             // TODO: Do not allow user to change to arbitrary directory outside the project
-            
+
             // Change cwd to last element in the path
-            this.cwd = path.get(path.size()-1);
+            this.cwd = path.get(path.size() - 1);
         } catch (BadPath ex) {
             Logger.getLogger(InodesMB.class.getName()).log(Level.SEVERE, null, ex);
             // TODO: Faces msg to user here.
         }
+    }
+
+    public List<NavigationPath> getCurrentPath() {
+        return cwd.getPath();
+    }
+
+    public void cdBrowse(String name) {
+        String[] p = name.split("/");
+        Inode curr = root;
+        for (int i=1;i<p.length;i++) {
+            String s = p[i];
+            Inode next = curr.getChild(s);
+            curr = next;
+        }
+        cwd = curr;
     }
 
 }
