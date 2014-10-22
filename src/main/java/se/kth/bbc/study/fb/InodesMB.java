@@ -23,7 +23,7 @@ import se.kth.bbc.study.StudyMB;
 @SessionScoped
 public class InodesMB implements Serializable {
 
-    Inode root /*= new Inode("/", Inode.Status.READY, 0, true, null)*/;
+    Inode root;
     Inode cwd;
     
     @ManagedProperty(value="#{studyManagedBean}")

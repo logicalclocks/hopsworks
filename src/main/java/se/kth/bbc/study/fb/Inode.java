@@ -88,7 +88,19 @@ public class Inode implements Serializable {
     }
 
     public Inode(String name, Date modified, boolean dir, String status) {
-        this(0, name, modified, dir, status);
+        this.name = name;
+        this.modified = modified;
+        this.dir = dir;
+        this.status = status;
+    }
+    
+    public Inode(String name, Inode parent, boolean dir, int size, String status){
+        this.name = name;
+        this.parent = parent;
+        this.dir = dir;
+        this.size = size;
+        this.status = status;
+        this.modified = new Date();
     }
 
     public Integer getId() {
@@ -147,6 +159,10 @@ public class Inode implements Serializable {
 
     public void setChildren(List<Inode> children) {
         this.children = children;
+    }
+    
+    public void addChild(Inode i){
+        this.children.add(i);
     }
 
     public Inode getParent() {

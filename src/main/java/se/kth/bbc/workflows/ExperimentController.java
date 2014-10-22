@@ -21,6 +21,8 @@ import org.primefaces.component.selectbooleancheckbox.SelectBooleanCheckbox;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
 import se.kth.bbc.study.StudyMB;
+import se.kth.bbc.study.fb.Inode;
+import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.upload.FileSystemOperations;
 
 /**
@@ -42,6 +44,9 @@ public class ExperimentController implements Serializable {
 
     @ManagedProperty(value = "#{studyManagedBean}")
     private StudyMB study;
+    
+    @EJB
+    private InodeFacade inodes;
 
     @EJB
     private FileSystemOperations fileSystem;
@@ -126,10 +131,11 @@ public class ExperimentController implements Serializable {
     public void handleFileUpload(FileUploadEvent event) {
         //TODO: check if file not already in DB and FS
         newFile = event.getFile();
+        
+        String rootDir = "Projects";
 
         //TODO: make more elegant (i.e. don't hard code...)
-        String rootDir = "Workflows";
-        String basePath = File.separator + rootDir + File.separator + study.getStudyName();
+        String basePath = File.separator + rootDir + File.separator + study.getStudyName() + File.separator + "Cuneiform";
         Path destination = new Path(basePath + File.separator + newFile.getFileName());
 
         try {
@@ -142,6 +148,9 @@ public class ExperimentController implements Serializable {
             wf.setPublicFile(publicFile);
             wf.setCreator(study.getUsername());
             workflows.create(wf);
+            
+            Inode inode = inodes.createInode(newFile.getFileName(), false, (int)newFile.getSize(), "available", destination.toString());
+            inodes.persist(inode);
 
             //Set current flowfile + notify
             this.flowfile = wf;
