@@ -1,7 +1,10 @@
 package se.kth.bbc.study.fb;
 
 import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
+import org.apache.hadoop.fs.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -13,7 +16,10 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
+import org.apache.hadoop.conf.Configuration;
+import org.primefaces.model.StreamedContent;
 import se.kth.bbc.study.StudyMB;
+import se.kth.bbc.upload.FileSystemOperations;
 
 /**
  *
@@ -25,15 +31,18 @@ public class InodesMB implements Serializable {
 
     Inode root;
     Inode cwd;
-    
-    @ManagedProperty(value="#{studyManagedBean}")
+
+    @ManagedProperty(value = "#{studyManagedBean}")
     private StudyMB study;
-    
+
     @EJB
     private InodeFacade inodes;
     
-    public void setStudy(StudyMB study){
-        this.study=study;
+    @EJB
+    private FileSystemOperations fsOps;
+
+    public void setStudy(StudyMB study) {
+        this.study = study;
     }
 
     private class BadPath extends Exception {
@@ -42,26 +51,25 @@ public class InodesMB implements Serializable {
             super(msg);
         }
     }
-    
+
     @PostConstruct
-    public void init(){
-                //TODO: implement a better way to find inodes that represent root folders
+    public void init() {
+        //TODO: implement a better way to find inodes that represent root folders
         root = inodes.findByName(study.getStudyName());
         cwd = root;
     }
 
     public List<Inode> getChildren() {
-        // TODO - we should get the children from the database
         List<Inode> res = new ArrayList<>();
         res.addAll(inodes.findByParent(cwd));
-        if (!cwd.isRoot()) { // root doesn't have a parent to show
-            res.add(0,new Inode(0,"..", new Date(),true,cwd.getParent().getStatus()));
+        if (!cwd.isStudyRoot()) { // root doesn't have a parent to show
+            res.add(0, new Inode(0, "..", new Date(), true, cwd.getParent().getStatus()));
         }
         return res;
     }
 
     public void cdUp() {
-        if (!cwd.isRoot()) {
+        if (!cwd.isStudyRoot()) {
             Inode parent = cwd.getParent();
             // nullify object reference to prevent mem leak
             // TODO: uncomment this line when we get the list of children from the DB.
@@ -80,11 +88,8 @@ public class InodesMB implements Serializable {
         }
     }
 
-    private boolean isRoot() {
-        if (cwd.equals(root)) {
-            return true;
-        }
-        return false;
+    private boolean isStudyRoot() {
+        return cwd.equals(root);
     }
 
     /**
@@ -115,7 +120,7 @@ public class InodesMB implements Serializable {
     }
 
     private int distanceFromRoot(Inode f, int d, Inode origCwd) {
-        if (isRoot()) { // base case
+        if (isStudyRoot()) { // base case
             this.cwd = origCwd;
             d++;
             return d;
@@ -146,18 +151,29 @@ public class InodesMB implements Serializable {
     }
 
     public List<NavigationPath> getCurrentPath() {
-        return cwd.getPath();
+        return cwd.getConstituentsPath();
     }
 
     public void cdBrowse(String name) {
         String[] p = name.split("/");
         Inode curr = root;
-        for (int i=1;i<p.length;i++) {
+        for (int i = 1; i < p.length; i++) {
             String s = p[i];
             Inode next = curr.getChild(s);
             curr = next;
         }
         cwd = curr;
+    }
+
+    public StreamedContent downloadFile(Inode inode) {
+
+        Path location = new Path(File.separator + FileSystemOperations.DIR_ROOT + File.separator + inode.getStudyPath());
+
+        StreamedContent sc = fsOps.downloadFile(location);
+        if(sc==null){
+            //TODO: add error message.
+        }
+        return sc;
     }
 
 }

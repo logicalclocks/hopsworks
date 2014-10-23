@@ -25,11 +25,9 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.DefaultStreamedContent;
@@ -43,7 +41,9 @@ import se.kth.bbc.activity.LazyActivityModel;
 import se.kth.bbc.activity.UserGroupsController;
 import se.kth.bbc.activity.UsersGroups;
 import se.kth.bbc.activity.UsersGroupsPK;
+import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.study.filebrowser.FileStructureListener;
+import se.kth.bbc.upload.FileSystemOperations;
 import se.kth.bbc.upload.UploadServlet;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
@@ -62,15 +62,14 @@ public class StudyMB implements Serializable {
     public static final int TEAM_TAB = 1;
     public static final int SHOW_TAB = 0;
 
-    /**************************************
-     * 
-     * TODO!
-     *  TODO: isolate file system operations to FileSystemOperations.java (or anywhere really).
-     * TODO!
-     * 
-     * 
-     */  
-    
+    /**
+     * ************************************
+     *
+     * TODO! TODO: isolate file system operations to FileSystemOperations.java
+     * (or anywhere really). TODO!
+     *
+     *
+     */
     public final String nameNodeURI = "hdfs://snurran.sics.se:9999";
 
     @EJB
@@ -90,9 +89,15 @@ public class StudyMB implements Serializable {
 
     @EJB
     private SampleFilesController sampleFilesController;
-    
+
     @EJB
     private ActivityController activityController;
+
+    @EJB
+    private FileSystemOperations fileOps;
+
+    @EJB
+    private InodeFacade inodes;
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
@@ -119,7 +124,7 @@ public class StudyMB implements Serializable {
     private boolean deleteFilesOnRemove = true;
 
     private final List<FileStructureListener> fileListeners = new ArrayList<>();
-    
+
     private LazyActivityModel lazyModel = null;
 
     public StudyMB() {
@@ -211,7 +216,7 @@ public class StudyMB implements Serializable {
     public long getAllStudy() {
         return studyController.getAllStudy(getUsername());
     }
-    
+
     public int getNOfMembers() {
         return studyController.getMembers(getStudyName());
     }
@@ -295,23 +300,23 @@ public class StudyMB implements Serializable {
     public StudyRoleTypes[] getTeam() {
         return StudyRoleTypes.values();
     }
-    
+
     public int countAllMembersPerStudy() {
         return studyTeamController.countMembersPerStudy(studyName).size();
     }
-    
+
     public int countMasters() {
         return (studyTeamController.countStudyTeam(studyName, "Master"));
     }
-    
+
     public int countResearchers() {
         return studyTeamController.countStudyTeam(studyName, "Researcher");
     }
-    
+
     public int countResearchAdmins() {
         return studyTeamController.countStudyTeam(studyName, "Research Admin");
     }
-    
+
     public int countAuditors() {
         return studyTeamController.countStudyTeam(studyName, "Auditor");
     }
@@ -432,8 +437,8 @@ public class StudyMB implements Serializable {
 
     /**
      * Get the current username from session and sets it as the creator of the
-     * study, and also adding a record to the StudyTeam table for setting the role
-     * as master for within study.
+     * study, and also adding a record to the StudyTeam table for setting the
+     * role as master for within study.
      *
      * @return
      */
@@ -447,13 +452,13 @@ public class StudyMB implements Serializable {
                 addStudyMaster(study.getName());
                 mkStudyDIR(study.getName());
                 logger.log(Level.INFO, "{0} - study was created successfully.", study.getName());
-                
+
                 setStudyName(study.getName());
                 this.studyCreator = study.getUsername();
                 return "studyPage";
-                
+
             } else {
-                
+
                 addErrorMessageToUserAction("Failed: Study already exists!");
                 logger.log(Level.SEVERE, "Study exists!");
                 return null;
@@ -464,26 +469,27 @@ public class StudyMB implements Serializable {
             logger.log(Level.SEVERE, "Study was not created!");
             return null;
         }
-            
+
     }
 
     //create study on HDFS
-    public void mkStudyDIR(String study_name) throws IOException, URISyntaxException {
+    public void mkStudyDIR(String studyName) throws IOException, URISyntaxException {
 
-        Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", this.nameNodeURI);
-        String rootDir = "Projects";
+        String rootDir = FileSystemOperations.DIR_ROOT;
+        String buildPath = File.separator + rootDir + File.separator + studyName;
+        Path studyPath = new Path(buildPath);
+        Path resultsPath = new Path(buildPath + File.separator + FileSystemOperations.DIR_RESULTS);
+        Path cuneiformPath = new Path(buildPath + File.separator + FileSystemOperations.DIR_CUNEIFORM);
+        Path samplesPath = new Path(buildPath + File.separator + FileSystemOperations.DIR_SAMPLES);
 
-        String buildPath = File.separator + rootDir + File.separator + study_name;
-        FileSystem fs = FileSystem.get(conf);
-        Path path = new Path(buildPath);
-
-        if (fs.exists(path)) {
-            logger.log(Level.SEVERE, "Study directory exists : {0}", study_name);
-            return;
-        }
-        fs.mkdirs(path, null);
-        logger.log(Level.INFO, "Study directory was created on HDFS: {0}.", path.toString());
+        fileOps.mkdir(studyPath);
+        inodes.createAndPersistDir(studyPath.toString(), InodeFacade.AVAILABLE);
+        fileOps.mkdir(resultsPath);
+        inodes.createAndPersistDir(resultsPath.toString(), InodeFacade.AVAILABLE);
+        fileOps.mkdir(cuneiformPath);
+        inodes.createAndPersistDir(cuneiformPath.toString(), InodeFacade.AVAILABLE);
+        fileOps.mkdir(samplesPath);
+        inodes.createAndPersistDir(samplesPath.toString(), InodeFacade.AVAILABLE);
     }
 
     /**
@@ -555,7 +561,7 @@ public class StudyMB implements Serializable {
 
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
-        String rootDir = "Projects";
+        String rootDir = FileSystemOperations.DIR_ROOT;
 
         String buildPath = File.separator + rootDir + File.separator + study_name;
         FileSystem fs = FileSystem.get(conf);
@@ -599,13 +605,20 @@ public class StudyMB implements Serializable {
         return "studyPage";
     }
 
-    //adding a record to sample id table
+    //adding a record to sample id table + create a sample folder
     public void addSample() throws IOException {
 
         boolean rec = sampleIDController.checkForExistingIDs(getSampleID(), studyName);
 
         try {
             if (!rec) {
+                //Create dir in HDFS
+                Path p = new Path(File.separator + FileSystemOperations.DIR_ROOT + File.separator + studyName + File.separator + FileSystemOperations.DIR_SAMPLES + File.separator + getSampleID());
+                fileOps.mkdir(p);
+                //Create Inode
+                inodes.createAndPersistInode(p.toString(), true, 0, InodeFacade.AVAILABLE);
+                //Create subfolders
+                createFileTypeFolders(p);
 
                 SampleIdsPK idPK = new SampleIdsPK(getSampleID(), studyName);
                 SampleIds samId = new SampleIds(idPK);
@@ -630,6 +643,33 @@ public class StudyMB implements Serializable {
             addErrorMessageToUserAction("Error: Add sample transaction failed");
             logger.log(Level.SEVERE, "Error: Add sample transaction failed.");
         }
+    }
+
+    /**
+     * Create the filetype subfolders in the given location.
+     *
+     * @param location The location under which to create the subfolders.
+     * Generally the location of a sample folder.
+     */
+    public void createFileTypeFolders(Path location) throws IOException {
+        //create paths
+        Path bam = new Path(location.toString() + File.separator + FileSystemOperations.DIR_BAM);
+        Path sam = new Path(location.toString() + File.separator + FileSystemOperations.DIR_SAM);
+        Path fasta = new Path(location.toString() + File.separator + FileSystemOperations.DIR_FASTA);
+        Path fastq = new Path(location.toString() + File.separator + FileSystemOperations.DIR_FASTQ);
+        Path vcf = new Path(location.toString() + File.separator + FileSystemOperations.DIR_VCF);
+
+        //create folders and inodes entries
+        fileOps.mkdir(bam);
+        inodes.createAndPersistDir(bam.toString(), InodeFacade.AVAILABLE);
+        fileOps.mkdir(sam);
+        inodes.createAndPersistDir(sam.toString(), InodeFacade.AVAILABLE);
+        fileOps.mkdir(fasta);
+        inodes.createAndPersistDir(fasta.toString(), InodeFacade.AVAILABLE);
+        fileOps.mkdir(fastq);
+        inodes.createAndPersistDir(fastq.toString(), InodeFacade.AVAILABLE);
+        fileOps.mkdir(vcf);
+        inodes.createAndPersistDir(vcf.toString(), InodeFacade.AVAILABLE);
     }
 
     public void createSampleFiles(String fileName, String fileType) throws IOException, URISyntaxException {
@@ -662,7 +702,7 @@ public class StudyMB implements Serializable {
 
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
-        String rootDir = "Projects";
+        String rootDir = FileSystemOperations.DIR_ROOT;
 
         String buildPath = File.separator + rootDir + File.separator + studyName;
         FileSystem fs = FileSystem.get(conf);
@@ -673,9 +713,10 @@ public class StudyMB implements Serializable {
             if (fs.exists(path)) {
                 Path.mergePaths(path, new Path(File.separator + sampleID + File.separator + fileType.toUpperCase().trim()));
                 copyFromLocal(fileType, fileName, sampleID);
+            } else {
+                fs.mkdirs(path.suffix(File.separator + sampleID + File.separator + fileType.toUpperCase().trim()), null);
+                copyFromLocal(fileType, fileName, sampleID);
             }
-            fs.mkdirs(path.suffix(File.separator + sampleID + File.separator + fileType.toUpperCase().trim()), null);
-            copyFromLocal(fileType, fileName, sampleID);
 
         } catch (URISyntaxException uri) {
             logger.log(Level.SEVERE, "Directories were not created in HDFS...{0}", uri.getMessage());
@@ -688,23 +729,22 @@ public class StudyMB implements Serializable {
     //Copy file to HDFS 
     public void copyFromLocal(String fileType, String filename, String sampleId) throws IOException, URISyntaxException {
 
-        Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", this.nameNodeURI);
-        FileSystem fs = FileSystem.get(conf);
-
-        String rootDir = "Projects";
-        String buildPath = File.separator + rootDir + File.separator + studyName;
+        String destination = File.separator + FileSystemOperations.DIR_ROOT
+                + File.separator + studyName + File.separator
+                + FileSystemOperations.DIR_SAMPLES + File.separator + sampleId
+                + File.separator + fileType.toLowerCase().trim() + File.separator + filename;
 
         File fileFromLocal = new File(UploadServlet.UPLOAD_DIR + File.separator + filename);
-        Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + filename);
-
+        Path build = new Path(destination);
         InputStream is = new FileInputStream(fileFromLocal);
-        if (!fs.exists(build)) {
-            FSDataOutputStream os = fs.create(build, false);
-            IOUtils.copyBytes(is, os, 131072, true);
-        }
+        fileOps.copyToHDFS(build, is);
+
+        //create Inode in DB
+        //TODO: create this earlier and update according to progress
+        inodes.createAndPersistFile(destination, (int) fileFromLocal.length(), InodeFacade.AVAILABLE);
+
         logger.log(Level.INFO, "File, {0}, copied to HDFS: {1}", new Object[]{filename, build.toString()});
-        logger.log(Level.INFO, "File size: {0} bytes", fs.getFileStatus(build).getLen());
+        logger.log(Level.INFO, "File size: {0} bytes", fileFromLocal.length());
 
         //Status update in SampleFiles
         updateFileStatus(sampleId, filename);
@@ -716,7 +756,7 @@ public class StudyMB implements Serializable {
             sampleFilesController.update(id, filename);
             logger.log(Level.INFO, "{0} - sample file status was updated to: {1}", new Object[]{filename, "available"});
             for (FileStructureListener l : fileListeners) {
-                l.updateStatus(id, filename.substring(filename.lastIndexOf('.') + 1), filename, "available");
+                l.updateStatus(id, filename.substring(filename.lastIndexOf('.') + 1), filename, InodeFacade.AVAILABLE);
             }
         } catch (EJBException ejb) {
             logger.log(Level.SEVERE, "Sample file status update failed.");
@@ -730,7 +770,7 @@ public class StudyMB implements Serializable {
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
 
-        String rootDir = "Projects";
+        String rootDir = FileSystemOperations.DIR_ROOT;
         String buildPath = File.separator + rootDir + File.separator + studyName;
 
         Path build = new Path(buildPath + File.separator + sampleId);
@@ -762,7 +802,7 @@ public class StudyMB implements Serializable {
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
 
-        String rootDir = "Projects";
+        String rootDir = FileSystemOperations.DIR_ROOT;
         String buildPath = File.separator + rootDir + File.separator + studyName;
         Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim());
         if (fs.exists(build)) {
@@ -794,7 +834,7 @@ public class StudyMB implements Serializable {
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
 
-        String rootDir = "Projects";
+        String rootDir = FileSystemOperations.DIR_ROOT;
         String buildPath = File.separator + rootDir + File.separator + studyName;
 
         Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim());
@@ -847,7 +887,7 @@ public class StudyMB implements Serializable {
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
-        String rootDir = "Projects";
+        String rootDir = FileSystemOperations.DIR_ROOT;
         String buildPath = File.separator + rootDir + File.separator + studyName;
         Path outputPath = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + fileName.trim());
 
@@ -983,7 +1023,7 @@ public class StudyMB implements Serializable {
 
     public void setSelectedFile(FileSummary file) {
         this.selectedFile = file;
-        System.out.println("Setter called."+file.getDisplayName());
+        System.out.println("Setter called." + file.getDisplayName());
     }
 
     public void removeFile() {
@@ -1040,20 +1080,20 @@ public class StudyMB implements Serializable {
             fileListeners.add(listener);
         }
     }
-    
-    public StreamedContent getFile(String sampleId, String type, String filename) throws IOException{
+
+    public StreamedContent getFile(String sampleId, String type, String filename) throws IOException {
 
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", this.nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
-        String rootDir = "Projects";
+        String rootDir = FileSystemOperations.DIR_ROOT;
         String buildPath = File.separator + rootDir + File.separator + studyName;
         Path outputPath = new Path(buildPath + File.separator + sampleId + File.separator + type.toUpperCase().trim() + File.separator + filename.trim());
 
         try {
 
             if (!fs.exists(outputPath)) {
-                System.out.println("Error: File "+ filename+" does not exist for downloading.");
+                System.out.println("Error: File " + filename + " does not exist for downloading.");
                 logger.log(Level.SEVERE, "File does not exist on this path [{0}] of HDFS", outputPath.toString());
                 return null;
             }
@@ -1070,14 +1110,13 @@ public class StudyMB implements Serializable {
         }
         return file;
     }
-    
-    public LazyDataModel<ActivityDetail> getSpecificLazyModel(){
-        if(lazyModel == null){
-            lazyModel = new LazyActivityModel(activityController,studyName);
-            lazyModel.setRowCount((int)activityController.getStudyCount(studyName));
+
+    public LazyDataModel<ActivityDetail> getSpecificLazyModel() {
+        if (lazyModel == null) {
+            lazyModel = new LazyActivityModel(activityController, studyName);
+            lazyModel.setRowCount((int) activityController.getStudyCount(studyName));
         }
         return lazyModel;
     }
-    
-    
+
 }

@@ -93,8 +93,8 @@ public class Inode implements Serializable {
         this.dir = dir;
         this.status = status;
     }
-    
-    public Inode(String name, Inode parent, boolean dir, int size, String status){
+
+    public Inode(String name, Inode parent, boolean dir, int size, String status) {
         this.name = name;
         this.parent = parent;
         this.dir = dir;
@@ -160,8 +160,8 @@ public class Inode implements Serializable {
     public void setChildren(List<Inode> children) {
         this.children = children;
     }
-    
-    public void addChild(Inode i){
+
+    public void addChild(Inode i) {
         this.children.add(i);
     }
 
@@ -198,26 +198,64 @@ public class Inode implements Serializable {
         return "se.kth.bbc.study.fb.Inode[ id=" + id + " ]";
     }
 
-    boolean isRoot() {
-        //Cannot check on name because sometimes a folder with name ".." is root.
+    public boolean isRoot() {
         return parent == null;
+    }
+    
+    /**
+     * Determines whether the Inode is the root of this study subtree. 
+     * It is so if its parent is the "ultimate root". This method should always 
+     * be used to check for root-being in non-filesystem operation contexts to 
+     * guarantee safety.
+     * @return True if the Inode is the root of its study subtree.
+     */
+    public boolean isStudyRoot(){
+        if(parent != null){
+            return parent.parent == null;
+        }
+        else return false;
     }
 
     public boolean isParent() {
         return name.compareTo("..") == 0;
     }
 
-    public List<NavigationPath> getPath() {
-        if (isRoot()) {
+    public List<NavigationPath> getConstituentsPath() {
+        if (isStudyRoot()) {
             List<NavigationPath> p = new ArrayList<>();
             //TODO: change "study" to real study name
-            p.add(new NavigationPath(name, name+"/"));
+            p.add(new NavigationPath(name, name + "/"));
             return p;
         } else {
-            List<NavigationPath> p = parent.getPath();
-            NavigationPath a = new NavigationPath(name, p.get(p.size() - 1).getPath() + name + "/");
+            List<NavigationPath> p = parent.getConstituentsPath();
+            NavigationPath a;
+            if (dir) {
+                a = new NavigationPath(name, p.get(p.size() - 1).getPath() + name + "/");
+            } else {
+                a = new NavigationPath(name, p.get(p.size() - 1).getPath() + name);
+            }
             p.add(a);
             return p;
+        }
+    }
+    
+    public String getStudyPath(){
+        if(isStudyRoot()){
+            return name + "/";
+        }else if(dir){
+            return parent.getStudyPath() + name + "/";
+        }else{
+            return parent.getStudyPath() + name;
+        }
+    }
+    
+    public String getPath(){
+        if(isRoot()){
+            return name + "/";
+        }else if(dir){
+            return parent.getPath() + name + "/";
+        }else{
+            return parent.getPath() + name;
         }
     }
 

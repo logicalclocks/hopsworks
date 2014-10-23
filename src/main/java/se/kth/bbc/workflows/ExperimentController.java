@@ -131,11 +131,9 @@ public class ExperimentController implements Serializable {
     public void handleFileUpload(FileUploadEvent event) {
         //TODO: check if file not already in DB and FS
         newFile = event.getFile();
-        
-        String rootDir = "Projects";
 
         //TODO: make more elegant (i.e. don't hard code...)
-        String basePath = File.separator + rootDir + File.separator + study.getStudyName() + File.separator + "Cuneiform";
+        String basePath = File.separator + FileSystemOperations.DIR_ROOT + File.separator + study.getStudyName() + File.separator + FileSystemOperations.DIR_CUNEIFORM;
         Path destination = new Path(basePath + File.separator + newFile.getFileName());
 
         try {
@@ -149,8 +147,7 @@ public class ExperimentController implements Serializable {
             wf.setCreator(study.getUsername());
             workflows.create(wf);
             
-            Inode inode = inodes.createInode(newFile.getFileName(), false, (int)newFile.getSize(), "available", destination.toString());
-            inodes.persist(inode);
+            Inode inode = inodes.createAndPersistFile(destination.toString(), (int)newFile.getSize(), InodeFacade.AVAILABLE);
 
             //Set current flowfile + notify
             this.flowfile = wf;

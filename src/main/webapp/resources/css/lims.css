@@ -830,7 +830,15 @@ h6{
     display: list-item;
     text-align: -webkit-match-parent;
     float: left;    
-    margin-left: 20px;
+    margin-left: 0;
+}
+
+.browser_row .row {
+    margin-left: 0;
+}
+
+.browser_row:hover{
+    background:#d9edf7;border-bottom:1px solid #adf;
 }
 
 label{

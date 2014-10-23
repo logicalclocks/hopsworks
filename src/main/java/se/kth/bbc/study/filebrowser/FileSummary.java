@@ -2,6 +2,7 @@ package se.kth.bbc.study.filebrowser;
 
 import java.io.Serializable;
 import java.util.Objects;
+import se.kth.bbc.study.fb.InodeFacade;
 
 /**
  * Container for data to be displayed in the frontend file browser. *
@@ -65,7 +66,7 @@ public class FileSummary implements Serializable, Comparable<FileSummary> {
 
     public String getDisplayStatus() {
         switch (status) {
-            case "available":
+            case InodeFacade.AVAILABLE:
                 return "Available";
             case "copying_to_hdfs":
                 return "Copying to HDFS";

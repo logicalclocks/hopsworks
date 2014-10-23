@@ -23,6 +23,12 @@ and open the template in the editor.
                             <strong>#{node.top}</strong>
                         </p:commandLink>/
                     </ui:repeat>
+
+                    <span class="right_button">
+                        <h:commandButton id="addData" class="button-add-data" value="Add sample" 
+                                         type="submit" action="newSample" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" />
+                    </span>
+
                     <p:growl for="remove" autoUpdate="true" showDetail="true"/>
 
                     <h:panelGroup id="divBrowser" styleClass="ui_box">
@@ -40,8 +46,13 @@ and open the template in the editor.
                                                 <strong>#{inode.name}</strong>
                                             </p:commandLink>
 
-                                            <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}" update="@form" rendered="#{not inode.isParent()}">
+                                            <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}" update="@form" rendered="#{not inode.isParent() and inode.dir}">
                                                 <strong>#{inode.name}</strong>
+                                            </p:commandLink>
+
+                                            <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false">
+                                                <strong>#{inode.name}</strong>
+                                                <p:fileDownload value="#{InodesMB.downloadFile(inode)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                                             </p:commandLink>
 
                                         </div>
