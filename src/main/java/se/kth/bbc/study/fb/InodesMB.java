@@ -59,6 +59,11 @@ public class InodesMB implements Serializable {
     }
 
     public List<Inode> getChildren() {
+        //Because InodesMB is session scoped, need to check for change of study!!!!
+        //TODO: implement this more gracefully.
+        if(!cwd.getStudyRoot().equals(study.getStudyName())){
+            init();
+        }
         List<Inode> res = new ArrayList<>();
         res.addAll(inodes.findByParent(cwd));
         if (!cwd.isStudyRoot()) { // root doesn't have a parent to show
@@ -150,6 +155,11 @@ public class InodesMB implements Serializable {
     }
 
     public List<NavigationPath> getCurrentPath() {
+        //Because InodesMB is session scoped, need to check for change of study!!!!
+        //TODO: implement this more gracefully.
+        if(!cwd.getStudyRoot().equals(study.getStudyName())){
+            init();
+        }
         return cwd.getConstituentsPath();
     }
 
@@ -200,17 +210,17 @@ public class InodesMB implements Serializable {
             return String.format("about %s year ago.", 1);
         }
     }
-    
-    public void deleteFile(Inode i){
-        try{
+
+    public void deleteFile(Inode i) {
+        try {
             Path toRm = new Path(i.getPath());
             boolean success = fsOps.rm(toRm);
-            if(!success){
+            if (!success) {
                 //TODO: add error message
-            }else{
+            } else {
                 inodes.remove(i);
             }
-        }catch(IOException e){
+        } catch (IOException e) {
             //TODO: add error message.
         }
     }

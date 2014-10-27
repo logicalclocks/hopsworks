@@ -250,6 +250,14 @@ public class Inode implements Serializable {
         }
     }
     
+    public String getStudyRoot(){
+        if(isStudyRoot()){
+            return name;
+        }else{
+            return parent.getStudyRoot();
+        }
+    }
+    
     public String getPath(){
         if(isRoot()){
             return "/" + name + "/";

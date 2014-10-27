@@ -25,8 +25,8 @@ and open the template in the editor.
                     </ui:repeat>
 
                     <span class="right_button">
-                        <h:commandButton id="addData" class="button-add-data" value="Add sample" 
-                                         type="submit" action="newSample" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" />
+                        <p:commandButton id="addData" styleClass="button-add-data" value="Add sample" 
+                                         type="submit" action="#{studyManagedBean.openAddSampleDialog()}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" update="@this"/>
                     </span>
 
                     <p:growl for="remove" autoUpdate="true" showDetail="true"/>
@@ -70,6 +70,10 @@ and open the template in the editor.
                                 <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
                             </p:confirmDialog>
                         </h:column>
+                        <f:facet name="footer">
+                            <p:commandButton value="Upload file" action="#{studyManagedBean.redirectToUploader()}"/>
+                            <p:commandButton value="Create folder"/>
+                        </f:facet>
                     </h:dataTable>
 
                 </h:form>

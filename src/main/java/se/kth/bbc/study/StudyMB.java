@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.DefaultStreamedContent;
@@ -558,14 +560,14 @@ public class StudyMB implements Serializable {
 
     //delete study dir from HDFS
     public void delStudyDIR(String studyName) throws IOException, URISyntaxException {
-        
+
         String path = File.separator + FileSystemOperations.DIR_ROOT + File.separator + studyName;
         Path location = new Path(path);
 
         boolean success = fileOps.rmRecursive(location);
-        if(success){
+        if (success) {
             inodes.removeRecursivePath(location.toString());
-        }else{
+        } else {
             //TODO: add error message
         }
     }
@@ -620,18 +622,11 @@ public class StudyMB implements Serializable {
                 sampleIDController.persistSample(samId);
                 logger.log(Level.INFO, "{0} - sample ID was created for : {1}.", new Object[]{getSampleID(), studyName});
                 activity.addActivity(ActivityController.NEW_SAMPLE + getSampleID() + " ", studyName, "DATA");
-                setLoginName(getUsername());
-                getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
-                FacesContext.getCurrentInstance().responseComplete();
                 for (FileStructureListener l : fileListeners) {
                     l.newSample(idPK.getId());
                 }
-            } else {
-
-                setLoginName(getUsername());
-                getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
-                FacesContext.getCurrentInstance().responseComplete();
             }
+            closeAddSampleDialog();
 
         } catch (EJBException ejb) {
 
@@ -1112,6 +1107,28 @@ public class StudyMB implements Serializable {
             lazyModel.setRowCount((int) activityController.getStudyCount(studyName));
         }
         return lazyModel;
+    }
+
+    public void openAddSampleDialog() {
+        Map<String, Object> options = new HashMap<>();
+        options.put("modal", true);
+        options.put("draggable", false);
+        options.put("resizable", false);
+        RequestContext.getCurrentInstance().openDialog("newSampleDialog", options, null);
+    }
+
+    public void closeAddSampleDialog() {
+        RequestContext.getCurrentInstance().closeDialog(null);
+    }
+
+    public void redirectToUploader() {
+        try {
+            getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
+            FacesContext.getCurrentInstance().responseComplete();
+        } catch (IOException ex) {
+            //TODO: make redirect better...
+            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
 }
