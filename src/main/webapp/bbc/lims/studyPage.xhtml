@@ -37,11 +37,6 @@
                                         <ui:include src="/bbc/lims/studyTabs/studyTeamTab.xhtml"/>
                                     </ui:insert>                                    
                                 </p:tab>
-                                <p:tab id="samples" title="Samples" rendered="#{studyManagedBean.renderComponentList() != null}">
-                                    <ui:insert name="samplesTab">
-                                        <ui:include src="/bbc/lims/studyTabs/studySamplesTab.xhtml"/>
-                                    </ui:insert>
-                                </p:tab> 
                                 <p:tab id="workflows" title="Experiments">
                                     <ui:insert name="workflowsTab">
                                         <ui:include src="/bbc/lims/studyTabs/studyWorkflowTab.xhtml"/>
@@ -87,7 +82,8 @@
                     </f:facet>     
                 </p:dialog>
             </h:form>
-            <p:dialog id="rmdlg" widgetVar="removeDataDlg" header="Remove data" modal="true" resizable="false" draggable="false"> 
+            <!-- TODO: implement data removal -->
+<!--            <p:dialog id="rmdlg" widgetVar="removeDataDlg" header="Remove data" modal="true" resizable="false" draggable="false"> 
                 <h:panelGrid>
                     <div align="left">
                         <h:outputLabel value="Are you sure you want to remove this data?" />
@@ -99,7 +95,7 @@
                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" oncomplete="PF('removeDataDlg').hide()"/> 
                     </h:panelGrid>
                 </div>
-            </p:dialog>
+            </p:dialog>-->
             <p:dialog id="uploadDialog" header="Upload file" widgetVar="uploadDlg" draggable="false" resizable="false" modal="true">
                 <h:form id="uploadForm">
                     <p:fileUpload required="true" multiple="false" label="Select" mode="advanced" allowTypes="/(\.|\/)(cf)$/" fileUploadListener="#{experimentController.handleFileUpload}" oncomplete="PF('uploadDlg').hide()"/>

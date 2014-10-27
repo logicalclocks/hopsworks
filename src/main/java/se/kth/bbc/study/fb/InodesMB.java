@@ -37,7 +37,7 @@ public class InodesMB implements Serializable {
 
     @EJB
     private InodeFacade inodes;
-    
+
     @EJB
     private FileSystemOperations fsOps;
 
@@ -170,10 +170,36 @@ public class InodesMB implements Serializable {
         Path location = new Path(File.separator + FileSystemOperations.DIR_ROOT + File.separator + inode.getStudyPath());
 
         StreamedContent sc = fsOps.downloadFile(location);
-        if(sc==null){
+        if (sc == null) {
             //TODO: add error message.
         }
         return sc;
+    }
+
+    public static String approximateTime(Date event) {
+        long currentTime = new Date().getTime();
+        long fetchedTime = event.getTime();
+        if ((currentTime - fetchedTime) / 1000 >= 0 && (currentTime - fetchedTime) / 1000 <= 20) {
+            return String.format("less than a minute ago.");
+        } else if ((currentTime - fetchedTime) / 1000 > 20 && (currentTime - fetchedTime) / 1000 <= 118) {
+            return String.format("about %s minute ago.", 1);
+        } else if ((currentTime - fetchedTime) / 1000 > 118 && (currentTime - fetchedTime) / 1000 < 1800) {
+            return String.format("%s minutes ago.", (currentTime - fetchedTime) / 60000);
+        } else if ((currentTime - fetchedTime) / 1000 > 1800 && (currentTime - fetchedTime) / 1000 <= 7056) {
+            return String.format("about %s hour ago.", 1);
+        } else if ((currentTime - fetchedTime) / 1000 > 7056 && (currentTime - fetchedTime) / 1000 <= 45400) {
+            return String.format("%s hours ago.", (currentTime - fetchedTime) / 3600000);
+        } else if ((currentTime - fetchedTime) / 1000 > 45400 && (currentTime - fetchedTime) / 1000 <= 170000) {
+            return String.format("about %s day ago.", 1);
+        } else if ((currentTime - fetchedTime) / 1000 > 170000 && (currentTime - fetchedTime) / 1000 <= 1300000) {
+            return String.format("%s days ago.", (currentTime - fetchedTime) / 86400000);
+        } else if ((currentTime - fetchedTime) / 1000 > 1300000 && (currentTime - fetchedTime) / 1000 <= 2500000) {
+            return String.format("about %s month ago.", 1);
+        } else if ((currentTime - fetchedTime) / 1000 > 2500000 && (currentTime - fetchedTime) / 1000 < 25000000) {
+            return String.format("%s months ago.", (currentTime - fetchedTime) / (1000 * 2600000));
+        } else {
+            return String.format("about %s year ago.", 1);
+        }
     }
 
 }

@@ -31,36 +31,34 @@ and open the template in the editor.
 
                     <p:growl for="remove" autoUpdate="true" showDetail="true"/>
 
-                    <h:panelGroup id="divBrowser" styleClass="ui_box">
-                        <h5 class="title" align="left">
-                            Name 
-                        </h5>
-                        <ul class="well-list">
-                            <ui:repeat var="inode" value="#{InodesMB.getChildren()}" varStatus="mst">
-                                <li class="browser_row">
-                                    <div class="row">
-                                        <div class="spanFb">                                            
-                                            <h:graphicImage class="browser s16" library="images/icons" name="#{inode.isDir()?'folder.png':'file.png'}" />
 
-                                            <p:commandLink styleClass="dark" action="#{InodesMB.cdUp()}" update="@form" rendered="#{inode.isParent()}">
-                                                <strong>#{inode.name}</strong>
-                                            </p:commandLink>
+                    <h:dataTable value="#{InodesMB.children}" var="inode"
+                                 styleClass="ui_box browser_table"
+                                 headerClass="browser_header">
 
-                                            <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}" update="@form" rendered="#{not inode.isParent() and inode.dir}">
-                                                <strong>#{inode.name}</strong>
-                                            </p:commandLink>
+                        <p:column width="50%">
+                            <f:facet name="header">Name</f:facet>
+                            <h:graphicImage class="browser s16" library="images/icons" name="#{inode.isDir()?'folder.png':'file.png'}" />
 
-                                            <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false">
-                                                <strong>#{inode.name}</strong>
-                                                <p:fileDownload value="#{InodesMB.downloadFile(inode)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-                                            </p:commandLink>
+                            <p:commandLink styleClass="dark" action="#{InodesMB.cdUp()}" update="@form" rendered="#{inode.isParent()}">
+                                <strong>#{inode.name}</strong>
+                            </p:commandLink>
 
-                                        </div>
-                                    </div>
-                                </li>          
-                            </ui:repeat>
-                        </ul>
-                    </h:panelGroup>
+                            <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}" update="@form" rendered="#{not inode.isParent() and inode.dir}">
+                                <strong>#{inode.name}</strong>
+                            </p:commandLink>
+
+                            <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false">
+                                <strong>#{inode.name}</strong>
+                                <p:fileDownload value="#{InodesMB.downloadFile(inode)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+                            </p:commandLink>
+                        </p:column>
+
+                        <p:column width="50%">
+                            <f:facet name="header">Last modified</f:facet>
+                            #{inode.isParent()?"":InodesMB.approximateTime(inode.modified)}
+                        </p:column>
+                    </h:dataTable>
 
                 </h:form>
 

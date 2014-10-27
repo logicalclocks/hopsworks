@@ -24,7 +24,7 @@ and open the template in the editor.
             </h3>
             <hr/>
             <div class="clear_fixing"></div>
-
+            <h:form id="teamForm">
             <div id="divTeam" class="team_table"> 
                 <c:if id="masterBlock" test="${studyManagedBean.countMasters() > 0}">
                     <!-- There are Masters registered for this study: display them -->
@@ -48,7 +48,7 @@ and open the template in the editor.
                                             </div>
                                             <div class="span5 right">
                                                 <div class="left">
-                                                    <h:form id="frmStudyMaster_${mst.count}" class="edit_team_members"> 
+                                                    <div id="frmStudyMaster_${mst.count}" class="edit_team_members"> 
                                                         <div style="margin:0;padding:0;display:inline">
                                                             <p:selectOneMenu id="Owner" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign" disabled="true" 
                                                                              style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
@@ -58,7 +58,7 @@ and open the template in the editor.
                                                                                                                                                      <f:selectItem itemLabel="Guest" itemValue="Guest"/>-->
                                                             </p:selectOneMenu>
                                                         </div>
-                                                    </h:form>
+                                                    </div>
                                                 </div>
                                                 <div class="right" align="right">
                                                     <h:commandButton class="button-success" value="Owner" disabled="true"/>
@@ -82,26 +82,26 @@ and open the template in the editor.
                                             </div>
                                             <div class="span5 right">
                                                 <div class="left">
-                                                    <h:form id="frmMaster_${mst.count}" class="edit_team_members"> 
+                                                    <div id="frmMaster_${mst.count}" class="edit_team_members"> 
                                                         <div style="margin:0;padding:0;display:inline">
                                                             <p:selectOneMenu id="masterList_${mst.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign"  
                                                                              style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                                <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(mlist.email)}"/>
+                                                                <p:ajax update="@form" listener="#{valueChangeMB.updateStudyTeamRole(mlist.email)}"/>
                                                                 <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
                                                                 <!--                                                                                                <f:selectItem itemLabel="Master" itemValue="Master"/>
                                                                                                                                                                 <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
                                                                                                                                                                 <f:selectItem itemLabel="Guest" itemValue="Guest"/>-->
                                                             </p:selectOneMenu>
                                                         </div>
-                                                    </h:form>
+                                                    </div>
                                                 </div>
                                                 <div class="right" align="right">
                                                     <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" update="@form">
                                                         <p:confirm header="Removing a team member" message="Are you sure you want to remove #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:confirmDialog id="currentUser_master_${mst.count}" global="true" severity="alert" showEffect="fade"> 
-                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
+                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm"/>   
                                                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/> 
                                                     </p:confirmDialog> 
                                                 </div>
@@ -124,18 +124,18 @@ and open the template in the editor.
                                             </div>
                                             <div class="span5 right">
                                                 <div class="left">
-                                                    <h:form id="frmMaster_${mst.count}" class="edit_team_members">
+                                                    <div id="frmMaster_${mst.count}" class="edit_team_members">
                                                         <div style="margin:0;padding:0;display:inline">
                                                             <p:selectOneMenu id="masterList_${mst.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign"  style="width:170px;"
                                                                              disabled="true" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                                <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(mlist.email)}"/>
+                                                                <p:ajax update="@form" listener="#{valueChangeMB.updateStudyTeamRole(mlist.email)}"/>
                                                                 <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
                                                                 <!--                                                                                                <f:selectItem itemLabel="Master" itemValue="Master"/>
                                                                                                                                                                 <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
                                                                                                                                                                 <f:selectItem itemLabel="Guest" itemValue="Guest"/>-->
                                                             </p:selectOneMenu>
                                                         </div>
-                                                    </h:form>
+                                                    </div>
                                                 </div>
                                                 <div class="right" align="right">
                                                     <h:commandButton class="btn" value="This is you!" disabled="true"/>
@@ -160,25 +160,25 @@ and open the template in the editor.
                                             </div>
                                             <div class="span5 right">
                                                 <div class="left">
-                                                    <h:form id="frmMaster_${mst.count}" class="edit_team_members">
+                                                    <div id="frmMaster_${mst.count}" class="edit_team_members">
                                                         <div style="margin:0;padding:0;display:inline">
                                                             <p:selectOneMenu id="masterList_${mst.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign" 
                                                                              style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                                <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(mlist.email)}"/>
+                                                                <p:ajax update="@form" listener="#{valueChangeMB.updateStudyTeamRole(mlist.email)}"/>
                                                                 <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
                                                                 <!--                                                                                                <f:selectItem itemLabel="Master" itemValue="Master"/>
                                                                                                                                                                 <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>
                                                                                                                                                                 <f:selectItem itemLabel="Guest" itemValue="Guest"/>-->
                                                             </p:selectOneMenu>
                                                         </div>
-                                                    </h:form>
+                                                    </div>
                                                 </div>
                                                 <div class="right" align="right">
-                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" update="@form">
                                                         <p:confirm header="Removing a team member" message="Are you sure you want to remove #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:confirmDialog id="notCurrentUserNOwner_master_${mst.count}" global="true" severity="alert" showEffect="fade"> 
-                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" />   
+                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm"/>   
                                                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
                                                     </p:confirmDialog> 
                                                 </div>
@@ -214,11 +214,11 @@ and open the template in the editor.
                                             </div>
                                             <div id="userBlock" class="span5 right">
                                                 <div class="left">
-                                                    <h:form id="frmRchs_${rchs.count}" class="edit_team_members">
+                                                    <div id="frmRchs_${rchs.count}" class="edit_team_members">
                                                         <div style="margin:0;padding:0;display:inline">
                                                             <p:selectOneMenu id="researcherList_${rchs.count}" value="#{valueChangeMB.newTeamRole}" 
                                                                              styleClass="study_role_assign"  style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                                <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(rlist.email)}"/>
+                                                                <p:ajax update="@form" listener="#{valueChangeMB.updateStudyTeamRole(rlist.email)}"/>
                                                                 <!--                                                                            <f:selectItem itemLabel="Researcher"/>-->
                                                                 <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(rlist.email)}" var="rc" itemLabel="#{rc.team}" itemValue="#{rc}"/>
 <!--                                                                                           rendered="#{studyManagedBean.getCurrentRole(rlist.email)== 'Researcher'}"/>-->
@@ -227,14 +227,14 @@ and open the template in the editor.
                                                                                                                                                   <f:selectItem itemLabel="Guest" itemValue="Guest"/>-->
                                                             </p:selectOneMenu>
                                                         </div>
-                                                    </h:form>
+                                                    </div>
                                                 </div>
                                                 <div class="right" align="right">
-                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" update="@form">
                                                         <p:confirm header="Removing a team member" message="Are you sure you want to remove #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:confirmDialog id="notCurrentUser_researcher_${rchs.count}"  global="true" severity="alert" showEffect="fade"> 
-                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" />   
+                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm"/>   
                                                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
                                                     </p:confirmDialog>
                                                 </div>
@@ -257,11 +257,11 @@ and open the template in the editor.
                                             </div>
                                             <div id="userBlock" class="span5 right">
                                                 <div class="left">
-                                                    <h:form id="frmRchs_${rchs.count}" class="edit_team_members">
+                                                    <div id="frmRchs_${rchs.count}" class="edit_team_members">
                                                         <div style="margin:0;padding:0;display:inline">
                                                             <p:selectOneMenu id="researcherList_${rchs.count}" value="#{valueChangeMB.newTeamRole}" 
                                                                              styleClass="study_role_assign"  style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                                <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(rlist.email)}"/>
+                                                                <p:ajax update="@form" listener="#{valueChangeMB.updateStudyTeamRole(rlist.email)}"/>
                                                                 <!--                                                                            <f:selectItem itemLabel="Researcher"/>-->
                                                                 <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(rlist.email)}" var="rc" itemLabel="#{rc.team}" itemValue="#{rc}"/>
 <!--                                                                                           rendered="#{studyManagedBean.getCurrentRole(rlist.email)== 'Researcher'}"/>-->
@@ -270,15 +270,15 @@ and open the template in the editor.
                                                                                                                                                   <f:selectItem itemLabel="Guest" itemValue="Guest"/>-->
                                                             </p:selectOneMenu>
                                                         </div>
-                                                    </h:form>
+                                                    </div>
                                                 </div>
                                                 <div class="right" align="right">
                                                     <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(rlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" update="@form">
                                                         <p:confirm header="Removing a team member" message="Are you sure you want to remove #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:confirmDialog id="currentUser_researcher_${rchs.count}" global="true" severity="alert" showEffect="fade"> 
-                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
+                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm"/>   
                                                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
                                                     </p:confirmDialog> 
                                                 </div>
@@ -312,11 +312,11 @@ and open the template in the editor.
                                             <div class="span5 right"> 
 
                                                 <div class="left">
-                                                    <h:form id="frmGuest_${aud.count}" class="edit_team_members">
+                                                    <div id="frmGuest_${aud.count}" class="edit_team_members">
                                                         <div style="margin:0;padding:0;display:inline">
                                                             <p:selectOneMenu id="guestsList_${aud.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign" 
                                                                              style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                                <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(alist.email)}"/>
+                                                                <p:ajax update="@form" listener="#{valueChangeMB.updateStudyTeamRole(alist.email)}"/>
                                                                 <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(alist.email)}" var="ad" itemLabel="#{ad.team}" itemValue="#{ad}"/> 
 <!--                                                                            rendered="#{studyManagedBean.getCurrentRole(glist.email) == 'Guest'}"/>-->
                                                                 <!--                                                                                  <f:selectItem itemLabel="Guest" itemValue="Guest"/>
@@ -324,14 +324,14 @@ and open the template in the editor.
                                                                                                                                                   <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>-->
                                                             </p:selectOneMenu>
                                                         </div>
-                                                    </h:form>
+                                                    </div>
                                                 </div>
                                                 <div class="right" align="right">
-                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(alist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(alist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" update="@form">
                                                         <p:confirm header="Removing a team member" message="Are you sure you want to remove #{alist.name} [#{alist.email}]?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:confirmDialog id="notCurrentUser_guest_${aud.count}" global="true" severity="alert" showEffect="fade"> 
-                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
+                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm"/>   
                                                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
                                                     </p:confirmDialog>  
                                                 </div>
@@ -355,11 +355,11 @@ and open the template in the editor.
                                             <div class="span5 right"> 
 
                                                 <div class="left">
-                                                    <h:form id="frmGuest_${aud.count}" class="edit_team_members">
+                                                    <div id="frmGuest_${aud.count}" class="edit_team_members">
                                                         <div style="margin:0;padding:0;display:inline">
                                                             <p:selectOneMenu id="guestsList_${aud.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign" 
                                                                              style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                                <p:ajax update="@all" listener="#{valueChangeMB.updateStudyTeamRole(alist.email)}"/>
+                                                                <p:ajax update="@form" listener="#{valueChangeMB.updateStudyTeamRole(alist.email)}"/>
                                                                 <f:selectItems value="#{studyManagedBean.getListBasedOnCurrentRole(alist.email)}" var="ad" itemLabel="#{ad.team}" itemValue="#{ad}"/> 
 <!--                                                                            rendered="#{studyManagedBean.getCurrentRole(glist.email) == 'Guest'}"/>-->
                                                                 <!--                                                                                  <f:selectItem itemLabel="Guest" itemValue="Guest"/>
@@ -367,15 +367,15 @@ and open the template in the editor.
                                                                                                                                                   <f:selectItem itemLabel="Researcher" itemValue="Researcher"/>-->
                                                             </p:selectOneMenu>
                                                         </div>
-                                                    </h:form>
+                                                    </div>
                                                 </div>
                                                 <div class="right" align="right">
                                                     <h:commandButton class="btn" value="This is you!" disabled="true"/>
-                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(alist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" >
+                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(alist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" update="@form">
                                                         <p:confirm header="Removing a team member" message="Are you sure you want to remove #{alist.name} [#{alist.email}]?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:confirmDialog id="currentUser_guest_${aud.count}" global="true" severity="alert" showEffect="fade"> 
-                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
+                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm"/>   
                                                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
                                                     </p:confirmDialog>  
                                                 </div>
@@ -389,6 +389,7 @@ and open the template in the editor.
 
                 </c:if>
             </div>
+            </h:form>
         </ui:composition>
     </body>
 </html>
