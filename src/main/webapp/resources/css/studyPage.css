@@ -231,7 +231,7 @@ h1 {
 }
 
 .ui-tabs-panel .container {
-	width: 100%;
+    width: 100%;
 }
 
 .workflow-panel-content {
@@ -254,8 +254,8 @@ h1 {
 .workflow-head .left span label {
     font-size: 20px;
     color: #456;
-font-weight: normal;
-line-height: 28px;
+    font-weight: normal;
+    line-height: 28px;
     font-family: "Helvetica Neue","Helvetica","Arial","sans-serif";
     margin-right: 10px;
     padding-top: 0;
@@ -341,3 +341,35 @@ line-height: 28px;
     border-top: 1px solid #DDD;
 }
 
+.remove_data_button {
+    font-size: 11px;
+    padding: 2px 6px;
+    line-height: 16px !important;
+    margin: 2px;
+    border-color: #BD362F;
+    color: #FFF !important;
+    text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+    background-color: #DB4F4A;
+    background-image: linear-gradient(to bottom, #EE5F5B, #BD362F);
+    background-repeat: repeat-x;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    border-width: 1px;
+    border-style: solid;
+    border-image: none;
+    border-radius: 4px;
+    box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px 1px 2px rgba(0, 0, 0, 0.05);
+    font-family: "FontAwesome";
+    font-style: normal;
+}
+
+.remove_data_button:hover {
+    background: #FF530D;
+}
+
+.action_column {
+    width: 2%;
+    min-width: 10px;
+}

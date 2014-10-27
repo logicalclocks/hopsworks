@@ -36,7 +36,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "Inode.findById", query = "SELECT i FROM Inode i WHERE i.id = :id"),
     @NamedQuery(name = "Inode.findByParent", query = "SELECT i FROM Inode i WHERE i.parent = :parent ORDER BY i.dir DESC, i.name ASC"),
     @NamedQuery(name = "Inode.findDirByParent", query = "SELECT i FROM Inode i WHERE i.parent = :parent AND i.dir = TRUE ORDER BY i.name ASC"),
-    @NamedQuery(name = "Inode.findByName", query = "SELECT i FROM Inode i WHERE i.name = :name")})
+    @NamedQuery(name = "Inode.findByName", query = "SELECT i FROM Inode i WHERE i.name = :name"),
+    @NamedQuery(name = "Inode.findRootByName", query = "SELECT i FROM Inode i WHERE i.parent IS NULL AND i.name = :name")})
 public class Inode implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -251,7 +252,7 @@ public class Inode implements Serializable {
     
     public String getPath(){
         if(isRoot()){
-            return name + "/";
+            return "/" + name + "/";
         }else if(dir){
             return parent.getPath() + name + "/";
         }else{

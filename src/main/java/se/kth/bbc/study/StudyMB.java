@@ -557,22 +557,17 @@ public class StudyMB implements Serializable {
     }
 
     //delete study dir from HDFS
-    public void delStudyDIR(String study_name) throws IOException, URISyntaxException {
+    public void delStudyDIR(String studyName) throws IOException, URISyntaxException {
+        
+        String path = File.separator + FileSystemOperations.DIR_ROOT + File.separator + studyName;
+        Path location = new Path(path);
 
-        Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", this.nameNodeURI);
-        String rootDir = FileSystemOperations.DIR_ROOT;
-
-        String buildPath = File.separator + rootDir + File.separator + study_name;
-        FileSystem fs = FileSystem.get(conf);
-        Path path = new Path(buildPath);
-
-        if (!fs.exists(path)) {
-            logger.log(Level.SEVERE, "Study directory does not exist : {0}", study_name);
-            return;
+        boolean success = fileOps.rmRecursive(location);
+        if(success){
+            inodes.removeRecursivePath(location.toString());
+        }else{
+            //TODO: add error message
         }
-        fs.delete(path, true);
-        logger.log(Level.INFO, "Directory was deleted on HDFS: {0}.", path.toString());
     }
 
     //add members to a team - bulk persist 

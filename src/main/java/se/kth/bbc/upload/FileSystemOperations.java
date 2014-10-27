@@ -1,5 +1,6 @@
 package se.kth.bbc.upload;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -75,7 +76,7 @@ public class FileSystemOperations {
             String filename = location.getName();
             InputStream inStream = fs.open(location, 1048576);
             file = new DefaultStreamedContent(inStream, extension, filename);
-            logger.log(Level.INFO, "File was downloaded from HDFS path: {1}", new Object[]{location.toString(), location.toString()});
+            logger.log(Level.INFO, "File was downloaded from HDFS path: {0}", location.toString());
 
         } catch (IOException ex) {
             Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
@@ -111,6 +112,35 @@ public class FileSystemOperations {
             return "";
         else return filename.substring(filename.lastIndexOf('.')+1);
         
+    }
+    
+    /**
+     * Delete the file at given path.
+     * @param location: Path to file to be removed
+     * @throws IOException 
+     */
+    public boolean rm(Path location) throws IOException {
+        return rm(location, false);
+    }
+    
+    public boolean rmRecursive(Path location) throws IOException {
+        return rm(location, true);
+    }
+    
+    private boolean rm(Path location, boolean recursive) throws IOException{
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", nameNodeURI);
+        FileSystem fs = FileSystem.get(conf);
+        boolean retVal = false;
+
+        if (fs.exists(location)) {
+            retVal = fs.delete(location,recursive);
+        } else {
+            logger.log(Level.SEVERE, "File does not exist on path: {0}", location.toString());
+        }
+
+        logger.log(Level.INFO, "File {0} was deleted",location);
+        return retVal;
     }
     
 

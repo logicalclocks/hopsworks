@@ -34,9 +34,9 @@ and open the template in the editor.
 
                     <h:dataTable value="#{InodesMB.children}" var="inode"
                                  styleClass="ui_box browser_table"
-                                 headerClass="browser_header" rowClasses="browser_row">
+                                 headerClass="browser_header" rowClasses="browser_row" columnClasses=",,action_column">
 
-                        <p:column width="50%">
+                        <h:column>
                             <f:facet name="header">Name</f:facet>
                             <h:graphicImage class="browser s16" library="images/icons" name="#{inode.isDir()?'folder.png':'file.png'}" />
 
@@ -52,12 +52,24 @@ and open the template in the editor.
                                 <strong>#{inode.name}</strong>
                                 <p:fileDownload value="#{InodesMB.downloadFile(inode)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                             </p:commandLink>
-                        </p:column>
+                        </h:column>
 
-                        <p:column width="50%">
+                        <h:column >
                             <f:facet name="header">Last modified</f:facet>
-                            #{inode.isParent()?"":InodesMB.approximateTime(inode.modified)}
-                        </p:column>
+                                #{inode.isParent()?"":InodesMB.approximateTime(inode.modified)}
+                        </h:column>
+
+                        <h:column>
+                            <p:commandLink styleClass="ui-button fa fa-minus remove_data_button"  
+                                           value="" rendered="#{studyManagedBean.renderComponentList() == 'Master' and not inode.dir}" 
+                                           update="@form" action="#{InodesMB.deleteFile(inode)}">
+                                <p:confirm header="Remove data" message="Are you sure you want to remove this file?" icon="ui-icon-alert"/>
+                            </p:commandLink>
+                            <p:confirmDialog global="true" severity="alert" showEffect="fade"> 
+                                <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
+                                <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
+                            </p:confirmDialog>
+                        </h:column>
                     </h:dataTable>
 
                 </h:form>

@@ -85,4 +85,52 @@ public class InodeFacade extends AbstractFacade<Inode> {
         em.persist(i);
     }
 
+    /**
+     * Remove the inode on path <i>location</i> from the DB.
+     * @param location The location of the file or folder to remove recursively.
+     * @return True if the operation succeeded, false if it failed. A return value of false should be treated with caution as this may result in inconsistencies between the file system and its representation in the DB.
+     */
+    public boolean removeRecursivePath(String location) {
+        Inode toRem = getInode(location);
+        if(toRem == null){
+            return false;
+        }
+        em.remove(toRem);
+        return true;
+    }
+
+    private Inode getInode(String path) {
+        // Get the path components
+        String[] p;
+        if (path.charAt(0) == '/') {
+            p = path.substring(1).split("/");
+        } else {
+            p = path.split("/");
+        }
+
+        if (p.length < 1) {
+            return null;
+        }
+
+        //Get the right root node
+        Inode curr = getRootNode(p[0]);
+        //Move down the path
+        for (int i = 1; i < p.length; i++) {
+            Inode next = curr.getChild(p[i]);
+            if (next == null) {
+                return null;
+            } else {
+                curr = next;
+            }
+        }
+        return curr;
+    }
+
+    private Inode getRootNode(String name) {
+        TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName", Inode.class);
+        query.setParameter("name", name);
+        return query.getSingleResult(); //Sure to give a single result because both all children of same parent "null" so name is unique
+        //TODO: enforce uniqueness of folder and file name under same parent in Inodes table!
+    }
+
 }

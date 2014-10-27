@@ -16,7 +16,6 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
-import org.apache.hadoop.conf.Configuration;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.upload.FileSystemOperations;
@@ -199,6 +198,20 @@ public class InodesMB implements Serializable {
             return String.format("%s months ago.", (currentTime - fetchedTime) / (1000 * 2600000));
         } else {
             return String.format("about %s year ago.", 1);
+        }
+    }
+    
+    public void deleteFile(Inode i){
+        try{
+            Path toRm = new Path(i.getPath());
+            boolean success = fsOps.rm(toRm);
+            if(!success){
+                //TODO: add error message
+            }else{
+                inodes.remove(i);
+            }
+        }catch(IOException e){
+            //TODO: add error message.
         }
     }
 
