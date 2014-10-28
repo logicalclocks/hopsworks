@@ -2,9 +2,7 @@ package se.kth.bbc.study.fb;
 
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
-import org.apache.hadoop.fs.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -16,7 +14,6 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
-import org.primefaces.model.StreamedContent;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.fileoperations.FileSystemOperations;
 
@@ -201,20 +198,6 @@ public class InodesMB implements Serializable {
             return String.format("%s months ago.", (currentTime - fetchedTime) / (1000 * 2600000));
         } else {
             return String.format("about %s year ago.", 1);
-        }
-    }
-
-    public void deleteFile(Inode i) {
-        try {
-            Path toRm = new Path(i.getPath());
-            boolean success = fsOps.rm(toRm);
-            if (!success) {
-                //TODO: add error message
-            } else {
-                inodes.remove(i);
-            }
-        } catch (IOException e) {
-            //TODO: add error message.
         }
     }
 

@@ -17,10 +17,10 @@
             <h:panelGrid columns="2">
               <p:outputLabel for="sampleName" value="Sample ID"/>
                 <!--  TODO: add check on existing samples -->
-                <p:inputText id="sampleName" required="true" value="#{studyManagedBean.sampleID}"/>
+                <p:inputText id="sampleName" required="true" value="#{fileOperationsMB.newFolderName}"/>
             </h:panelGrid>
             <div>
-                <p:commandButton type="submit" value="Create" action="#{studyManagedBean.addSample}"/>
+                <p:commandButton type="submit" value="Create" action="#{fileOperationsMB.createSampleDir()}"/>
                 <p:commandButton type="submit" value="Cancel" process="@this" action="#{studyManagedBean.closeAddSampleDialog()}"/>
             </div>
         </h:form>

@@ -62,7 +62,7 @@ and open the template in the editor.
                         <h:column>
                             <p:commandLink styleClass="ui-button fa fa-minus remove_data_button"  
                                            value="" rendered="#{studyManagedBean.renderComponentList() == 'Master' and not inode.dir}" 
-                                           update="@form" action="#{InodesMB.deleteFile(inode)}">
+                                           update="@form" action="#{fileOperationsMB.deleteFile(inode)}">
                                 <p:confirm header="Remove data" message="Are you sure you want to remove this file?" icon="ui-icon-alert"/>
                             </p:commandLink>
                             <p:confirmDialog global="true" severity="alert" showEffect="fade"> 
@@ -71,8 +71,8 @@ and open the template in the editor.
                             </p:confirmDialog>
                         </h:column>
                         <f:facet name="footer">
-                            <p:commandButton value="Upload file" action="#{studyManagedBean.redirectToUploader()}" ajax="false"/>
-                            <p:commandButton value="Create folder" type="button" onclick="PF('createFolderDlg').show()"/>
+                            <p:commandButton value="Upload file" action="#{studyManagedBean.redirectToUploader()}" ajax="false" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+                            <p:commandButton value="Create folder" type="button" onclick="PF('createFolderDlg').show()" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                         </f:facet>
                     </h:dataTable>
 

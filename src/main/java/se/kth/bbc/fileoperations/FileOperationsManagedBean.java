@@ -7,10 +7,15 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
+import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
+import org.apache.hadoop.fs.Path;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
+import se.kth.bbc.activity.ActivityController;
+import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.study.fb.Inode;
 
 /**
@@ -28,7 +33,10 @@ public class FileOperationsManagedBean implements Serializable {
     @EJB
     private FileOperations fileOps;
 
-    private String newFolderName;    
+    @ManagedProperty(value = "#{studyManagedBean}")
+    private StudyMB study;
+
+    private String newFolderName;
     private static final Logger logger = Logger.getLogger(FileOperationsManagedBean.class.getName());
 
     /**
@@ -53,7 +61,7 @@ public class FileOperationsManagedBean implements Serializable {
         }
         return sc;
     }
-    
+
     /**
      * Create a new folder with the name newFolderName (class property) at the
      * specified path. The path must NOT contain the new folder name. Set this
@@ -71,9 +79,9 @@ public class FileOperationsManagedBean implements Serializable {
         }
         try {
             boolean success = fileOps.mkDir(location);
-            if(success){
+            if (success) {
                 newFolderName = null;
-            }else{
+            } else {
                 //TODO: add error message.
             }
         } catch (IOException ex) {
@@ -100,6 +108,62 @@ public class FileOperationsManagedBean implements Serializable {
             return "";
         } else {
             return filename.substring(filename.lastIndexOf('.') + 1);
+        }
+    }
+
+    /**
+     * Create a sample folder for the current study. Creates a sample folder and
+     * subfolders for various common file types. Folder name should be set through
+     * the <i>newFolderName</i> property.
+     *
+     */
+    public void createSampleDir() {
+        //Construct path
+        String path = File.separator + FileSystemOperations.DIR_ROOT
+                + File.separator + study.getStudyName()
+                + File.separator + FileSystemOperations.DIR_SAMPLES
+                + File.separator + newFolderName;
+
+        //create dirs in fs
+        boolean success;
+        try {
+            //TODO: make validator for existing sample ids
+            //add all (sub)directories
+            String[] folders = {path,
+                path + File.separator + FileSystemOperations.DIR_BAM,
+                path + File.separator + FileSystemOperations.DIR_FASTQ,
+                path + File.separator + FileSystemOperations.DIR_VCF};
+
+            for (String s : folders) {
+                success = fileOps.mkDir(s);
+                if (!success) {
+                    //TODO: add error message
+                    return;
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
+            //TODO: add error message
+        }
+
+        study.closeAddSampleDialog();
+        newFolderName = null;
+    }
+
+    public void setStudy(StudyMB study) {
+        this.study = study;
+    }
+    
+    public StudyMB getStudy(){
+        return study;
+    }
+
+    public void deleteFile(Inode i) {
+        try {
+            fileOps.rm(i);
+        } catch (IOException ex) {
+            Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
+            //TODO: add error message
         }
     }
 }

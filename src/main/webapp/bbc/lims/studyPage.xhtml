@@ -79,20 +79,6 @@
                     </f:facet>     
                 </p:dialog>
             </h:form>
-            <!-- TODO: implement data removal -->
-            <!--            <p:dialog id="rmdlg" widgetVar="removeDataDlg" header="Remove data" modal="true" resizable="false" draggable="false"> 
-                            <h:panelGrid>
-                                <div align="left">
-                                    <h:outputLabel value="Are you sure you want to remove this data?" />
-                                </div>
-                            </h:panelGrid>
-                            <div align="right">
-                                <h:panelGrid columns="2">
-                                    <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" actionListener="#{studyManagedBean.removeFile()}"  oncomplete="PF('removeDataDlg').hide()" update="tabStudyPage:filesForm"/>   
-                                    <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" oncomplete="PF('removeDataDlg').hide()"/> 
-                                </h:panelGrid>
-                            </div>
-                        </p:dialog>-->
             <p:dialog id="uploadDialog" header="Upload file" widgetVar="uploadDlg" draggable="false" resizable="false" modal="true">
                 <h:form id="uploadForm">
                     <p:fileUpload required="true" multiple="false" label="Select" mode="advanced" allowTypes="/(\.|\/)(cf)$/" fileUploadListener="#{experimentController.handleFileUpload}" oncomplete="PF('uploadDlg').hide()"/>

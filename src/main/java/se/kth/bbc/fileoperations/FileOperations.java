@@ -95,5 +95,46 @@ public class FileOperations {
     private static File getLocalFile(String localFilename) {
         return new File(UploadServlet.UPLOAD_DIR + File.separator + localFilename);
     }
+    
+     /**
+     * Delete the file at given path.
+     *
+     * @param location: Path to file to be removed
+     * @throws IOException
+     */
+    public boolean rm(Inode i) throws IOException {
+        Path location = new Path(i.getPath());
+        boolean success = fsOps.rm(location, false);
+        if(success){
+           inodes.remove(i);
+        }
+        return success;
+    }
+
+    /**
+     * Delete the file or folder at the given path recursively: if a folder, all
+     * its children will be deleted.
+     *
+     * @param location
+     * @return True if successful, false otherwise.
+     * @throws IOException
+     */
+    public boolean rmRecursive(Inode i) throws IOException {
+        Path location = new Path(i.getPath());
+        boolean success = fsOps.rm(location, true);
+        if(success){
+            inodes.remove(i);
+        }
+        return success;
+    }
+    
+    public boolean rmRecursive(String path) throws IOException{
+        Path location = new Path(path);
+        boolean success = fsOps.rm(location, true);
+        if(success){
+            inodes.removeRecursivePath(path);
+        }
+        return success;
+    }
 
 }

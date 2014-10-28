@@ -1,10 +1,7 @@
 package se.kth.bbc.study;
 
-import se.kth.bbc.study.filebrowser.FileSummary;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -25,17 +22,10 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
-import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.LazyDataModel;
-import org.primefaces.model.StreamedContent;
-import org.primefaces.model.TreeNode;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.activity.ActivityMB;
@@ -43,12 +33,9 @@ import se.kth.bbc.activity.LazyActivityModel;
 import se.kth.bbc.activity.UserGroupsController;
 import se.kth.bbc.activity.UsersGroups;
 import se.kth.bbc.activity.UsersGroupsPK;
+import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.study.fb.InodeFacade;
-import se.kth.bbc.study.fb.Inode;
-import se.kth.bbc.study.fb.InodesMB;
-import se.kth.bbc.study.filebrowser.FileStructureListener;
 import se.kth.bbc.fileoperations.FileSystemOperations;
-import se.kth.bbc.upload.UploadServlet;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
 
@@ -69,8 +56,11 @@ public class StudyMB implements Serializable {
     /**
      * ************************************
      *
-     * TODO: isolate file system operations to FileSystemOperations.java (or
-     * anywhere really).
+     * TODO: isolate file system operations to FileOperations.java (or
+     * anywhere really). Remains: invert operation of FileOperationsManagedBean and
+     * StudyMB: StudyMB has reference to FileOPMB and calls methods on it with 
+     * studyname as a parameter, or studyname is passed as parameter through the view.
+     * Then move all file operations away (create studyDir e.g.).
      *
      *
      */
@@ -89,19 +79,13 @@ public class StudyMB implements Serializable {
     private UserGroupsController userGroupsController;
 
     @EJB
-    private SampleIdController sampleIDController;
-
-    @EJB
-    private SampleFilesController sampleFilesController;
-
-    @EJB
     private ActivityController activityController;
 
     @EJB
-    private FileSystemOperations fileOps;
+    private InodeFacade inodes;
 
     @EJB
-    private InodeFacade inodes;
+    private FileOperations fileOps;
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
@@ -112,22 +96,15 @@ public class StudyMB implements Serializable {
     private List<Theme> selectedUsernames;
     private List<Theme> themes;
     private String sample_Id;
-    List<SampleIdDisplay> filteredSampleIds;
 
     private String studyName;
     private String studyCreator;
     private int tabIndex;
     private String loginName;
 
-    private StreamedContent file;
-
     private int manTabIndex = SHOW_TAB;
 
-    private FileSummary selectedFile;
-    private TreeNode selectedNode;
     private boolean deleteFilesOnRemove = true;
-
-    private final List<FileStructureListener> fileListeners = new ArrayList<>();
 
     private LazyActivityModel lazyModel = null;
 
@@ -165,9 +142,6 @@ public class StudyMB implements Serializable {
 
     public void setStudyName(String studyName) {
         this.studyName = studyName;
-        for (FileStructureListener l : fileListeners) {
-            l.changeStudy(studyName);
-        }
         this.lazyModel = null;
     }
 
@@ -267,18 +241,6 @@ public class StudyMB implements Serializable {
             }
         }
         return filteredThemes;
-    }
-
-    public List<SampleIdDisplay> completeSampleIDs(String query) {
-        List<SampleIds> allSampleIds = sampleIDController.getExistingSampleIDs(studyName, getUsername());
-        filteredSampleIds = new ArrayList<>();
-
-        for (SampleIds t : allSampleIds) {
-            if (t.getSampleIdsPK().getId().toLowerCase().contains(query)) {
-                filteredSampleIds.add(new SampleIdDisplay(t.getSampleIdsPK().getId(), studyName));
-            }
-        }
-        return filteredSampleIds;
     }
 
     public List<Theme> getSelectedUsernames() {
@@ -480,20 +442,15 @@ public class StudyMB implements Serializable {
     public void mkStudyDIR(String studyName) throws IOException, URISyntaxException {
 
         String rootDir = FileSystemOperations.DIR_ROOT;
-        String buildPath = File.separator + rootDir + File.separator + studyName;
-        Path studyPath = new Path(buildPath);
-        Path resultsPath = new Path(buildPath + File.separator + FileSystemOperations.DIR_RESULTS);
-        Path cuneiformPath = new Path(buildPath + File.separator + FileSystemOperations.DIR_CUNEIFORM);
-        Path samplesPath = new Path(buildPath + File.separator + FileSystemOperations.DIR_SAMPLES);
-
-        fileOps.mkdir(studyPath);
-        inodes.createAndPersistDir(studyPath.toString(), Inode.AVAILABLE);
-        fileOps.mkdir(resultsPath);
-        inodes.createAndPersistDir(resultsPath.toString(), Inode.AVAILABLE);
-        fileOps.mkdir(cuneiformPath);
-        inodes.createAndPersistDir(cuneiformPath.toString(), Inode.AVAILABLE);
-        fileOps.mkdir(samplesPath);
-        inodes.createAndPersistDir(samplesPath.toString(), Inode.AVAILABLE);
+        String studyPath = File.separator + rootDir + File.separator + studyName;
+        String resultsPath = studyPath + File.separator + FileSystemOperations.DIR_RESULTS;
+        String cuneiformPath = studyPath + File.separator + FileSystemOperations.DIR_CUNEIFORM;
+        String samplesPath = studyPath + File.separator + FileSystemOperations.DIR_SAMPLES;
+        
+        fileOps.mkDir(studyPath);
+        fileOps.mkDir(resultsPath);
+        fileOps.mkDir(cuneiformPath);
+        fileOps.mkDir(samplesPath);
     }
 
     /**
@@ -538,42 +495,6 @@ public class StudyMB implements Serializable {
 
     }
 
-    //delete a study - only owner can perform the deletion
-    public String deleteStudy() {
-
-        String StudyOwner = studyController.filterByName(studyName);
-
-        try {
-            if (getUsername().equals(StudyOwner)) {
-                studyController.removeStudy(studyName);
-            }
-            delStudyDIR(studyName);
-            logger.log(Level.INFO, "{0} - study removed.", studyName);
-        } catch (IOException | URISyntaxException | EJBException exp) {
-            addErrorMessageToUserAction("Error: Study wasn't removed.");
-            logger.log(Level.SEVERE, "{0} - study was not removed.", exp.getMessage());
-            return null;
-        }
-        addMessage("Study removed.");
-        FacesContext context = FacesContext.getCurrentInstance();
-        context.getExternalContext().getFlash().setKeepMessages(true);
-        return "indexPage";
-    }
-
-    //delete study dir from HDFS
-    public void delStudyDIR(String studyName) throws IOException, URISyntaxException {
-
-        String path = File.separator + FileSystemOperations.DIR_ROOT + File.separator + studyName;
-        Path location = new Path(path);
-
-        boolean success = fileOps.rmRecursive(location);
-        if (success) {
-            inodes.removeRecursivePath(location.toString());
-        } else {
-            //TODO: add error message
-        }
-    }
-
     //add members to a team - bulk persist 
     public synchronized String addToTeam() {
         try {
@@ -602,290 +523,6 @@ public class StudyMB implements Serializable {
         addMessage("New Member Added!");
         manTabIndex = TEAM_TAB;
         return "studyPage";
-    }
-
-    //adding a record to sample id table + create a sample folder
-    public void addSample() throws IOException {
-
-        boolean rec = sampleIDController.checkForExistingIDs(getSampleID(), studyName);
-
-        try {
-            if (!rec) {
-                //Create dir in HDFS
-                Path p = new Path(File.separator + FileSystemOperations.DIR_ROOT + File.separator + studyName + File.separator + FileSystemOperations.DIR_SAMPLES + File.separator + getSampleID());
-                fileOps.mkdir(p);
-                //Create Inode
-                inodes.createAndPersistInode(p.toString(), true, 0, Inode.AVAILABLE);
-                //Create subfolders
-                createFileTypeFolders(p);
-
-                SampleIdsPK idPK = new SampleIdsPK(getSampleID(), studyName);
-                SampleIds samId = new SampleIds(idPK);
-                sampleIDController.persistSample(samId);
-                logger.log(Level.INFO, "{0} - sample ID was created for : {1}.", new Object[]{getSampleID(), studyName});
-                activity.addActivity(ActivityController.NEW_SAMPLE + getSampleID() + " ", studyName, "DATA");
-                for (FileStructureListener l : fileListeners) {
-                    l.newSample(idPK.getId());
-                }
-            }
-            closeAddSampleDialog();
-
-        } catch (EJBException ejb) {
-
-            addErrorMessageToUserAction("Error: Add sample transaction failed");
-            logger.log(Level.SEVERE, "Error: Add sample transaction failed.");
-        }
-    }
-
-    /**
-     * Create the filetype subfolders in the given location.
-     *
-     * @param location The location under which to create the subfolders.
-     * Generally the location of a sample folder.
-     */
-    public void createFileTypeFolders(Path location) throws IOException {
-        //create paths
-        Path bam = new Path(location.toString() + File.separator + FileSystemOperations.DIR_BAM);
-        Path sam = new Path(location.toString() + File.separator + FileSystemOperations.DIR_SAM);
-        Path fasta = new Path(location.toString() + File.separator + FileSystemOperations.DIR_FASTA);
-        Path fastq = new Path(location.toString() + File.separator + FileSystemOperations.DIR_FASTQ);
-        Path vcf = new Path(location.toString() + File.separator + FileSystemOperations.DIR_VCF);
-
-        //create folders and inodes entries
-        fileOps.mkdir(bam);
-        inodes.createAndPersistDir(bam.toString(), Inode.AVAILABLE);
-        fileOps.mkdir(sam);
-        inodes.createAndPersistDir(sam.toString(), Inode.AVAILABLE);
-        fileOps.mkdir(fasta);
-        inodes.createAndPersistDir(fasta.toString(), Inode.AVAILABLE);
-        fileOps.mkdir(fastq);
-        inodes.createAndPersistDir(fastq.toString(), Inode.AVAILABLE);
-        fileOps.mkdir(vcf);
-        inodes.createAndPersistDir(vcf.toString(), Inode.AVAILABLE);
-    }
-
-    public void createSampleFiles(String filename, String filetype, String path) throws IOException, URISyntaxException {
-
-        String sampleId = InodesMB.getSampleId(path);
-        if (sampleId == null) {
-            //TODO: add error message
-            return;
-        }
-
-        boolean rec = sampleFilesController.checkForExistingSampleFiles(sampleId, filename);
-        try {
-            if (!rec) {
-                SampleFilesPK smPK = new SampleFilesPK(sampleId, filename);
-                SampleFiles sf = new SampleFiles(smPK);
-                sf.setFileType(filetype);
-                sf.setStatus(SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
-                sampleFilesController.persistSampleFiles(sf);
-                logger.log(Level.INFO, "{0} - sample file was created for : {1}.", new Object[]{sampleId, filename});
-                activity.addSampleActivity(ActivityController.NEW_SAMPLE + "[" + filename + "]" + " file ", studyName, "DATA", getLoginName());
-                for (FileStructureListener l : fileListeners) {
-                    l.newFile(sampleId, filetype, filename, SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
-                }
-            }
-
-        } catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error: Sample file wasn't created.");
-            logger.log(Level.SEVERE, "Sample files were not created.");
-            return;
-        }
-        copyFromLocal(filetype, filename, sampleId, path);
-    }
-
-    //Copy file to HDFS 
-    public void copyFromLocal(String fileType, String filename, String sampleId, String path) throws IOException, URISyntaxException {
-
-        String destination;
-        if (path.endsWith(File.separator)) {
-            destination = path + filename;
-        } else {
-            destination = path + File.separator + filename;
-        }
-
-        File fileFromLocal = new File(UploadServlet.UPLOAD_DIR + File.separator + filename);
-        Path build = new Path(destination);
-        InputStream is = new FileInputStream(fileFromLocal);
-        fileOps.copyToHDFS(build, is);
-
-        //create Inode in DB
-        //TODO: create this earlier and update according to progress
-        inodes.createAndPersistFile(destination, (int) fileFromLocal.length(), Inode.AVAILABLE);
-
-        logger.log(Level.INFO, "File, {0}, copied to HDFS: {1}", new Object[]{filename, build.toString()});
-        logger.log(Level.INFO, "File size: {0} bytes", fileFromLocal.length());
-
-        //Status update in SampleFiles
-        updateFileStatus(sampleId, filename);
-    }
-
-    public void updateFileStatus(String id, String filename) {
-        //TODO: update when finished uploading, when copying to hdfs
-        try {
-            sampleFilesController.update(id, filename);
-            logger.log(Level.INFO, "{0} - sample file status was updated to: {1}", new Object[]{filename, "available"});
-            for (FileStructureListener l : fileListeners) {
-                l.updateStatus(id, filename.substring(filename.lastIndexOf('.') + 1), filename, Inode.AVAILABLE);
-            }
-        } catch (EJBException ejb) {
-            logger.log(Level.SEVERE, "Sample file status update failed.");
-        }
-    }
-
-    //Delete a sample from HDFS
-    public void deleteSampleFromHDFS(String sampleId) throws IOException, URISyntaxException {
-
-        Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", this.nameNodeURI);
-        FileSystem fs = FileSystem.get(conf);
-
-        String rootDir = FileSystemOperations.DIR_ROOT;
-        String buildPath = File.separator + rootDir + File.separator + studyName;
-
-        Path build = new Path(buildPath + File.separator + sampleId);
-        if (fs.exists(build)) {
-            fs.delete(build, true);
-            logger.log(Level.INFO, "{0} - Sample was deleted from {1} in HDFS", new Object[]{sampleId, studyName});
-        } else {
-            logger.log(Level.SEVERE, "Sample id {0} does not exist", sampleId);
-        }
-
-        //remove the sample from SampleIds
-        deleteSamples(sampleId);
-    }
-
-    public void deleteSamples(String id) {
-        try {
-            sampleIDController.removeSample(id, studyName);
-            activity.addSampleActivity(ActivityController.REMOVED_SAMPLE + "[" + id + "]" + " ", studyName, "DATA", getUsername());
-            logger.log(Level.INFO, "{0} - Sample was deleted from {1} in SampleFiles table", new Object[]{id, studyName});
-        } catch (EJBException ejb) {
-            logger.log(Level.SEVERE, "Sample deletion was failed.");
-        }
-    }
-
-    //Delete a file type folder
-    public void deleteFileTypeFromHDFS(String sampleId, String fileType) throws IOException, URISyntaxException {
-
-        Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", this.nameNodeURI);
-        FileSystem fs = FileSystem.get(conf);
-
-        String rootDir = FileSystemOperations.DIR_ROOT;
-        String buildPath = File.separator + rootDir + File.separator + studyName;
-        Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim());
-        if (fs.exists(build)) {
-            fs.delete(build, true);
-            logger.log(Level.INFO, "{0} - File type folder was deleted from {1} study in HDFS", new Object[]{fileType.toUpperCase(), studyName});
-        } else {
-            logger.log(Level.SEVERE, "{0} - File type folder does not exist", fileType.toUpperCase());
-        }
-
-        //remove file type records
-        deleteFileTypes(sampleId, fileType);
-    }
-
-    public void deleteFileTypes(String sampleId, String fileType) {
-
-        try {
-            sampleFilesController.deleteFileTypeRecords(sampleId, studyName, fileType);
-            activity.addSampleActivity(" removed " + "[" + fileType + "]" + " files " + " ", studyName, "DATA", getUsername());
-        } catch (EJBException ejb) {
-            logger.log(Level.SEVERE, "File type folder deletion was failed.");
-        }
-
-    }
-
-    //Delete a file from a sample study
-    public void deleteFileFromHDFS(String sampleId, String filename, String fileType) throws IOException, URISyntaxException {
-
-        Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", this.nameNodeURI);
-        FileSystem fs = FileSystem.get(conf);
-
-        String rootDir = FileSystemOperations.DIR_ROOT;
-        String buildPath = File.separator + rootDir + File.separator + studyName;
-
-        Path build = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim());
-        //check the file count inside a directory, if it is only one then recursive delete
-        if (fs.exists(build)) {
-            if (fileCount(fs, build) == 1) {
-                fs.delete(build, true);
-            } else {
-                fs.delete(build.suffix(File.separator + filename), false);
-            }
-        } else {
-            logger.log(Level.SEVERE, "File does not exist on path: {0}", build.toString());
-        }
-
-        logger.log(Level.INFO, "{0} - file was deleted from path: {1}", new Object[]{filename, build.toString()});
-        //remove file record from SampleFiles
-        deleteFileFromSampleFiles(sampleId, filename);
-    }
-
-    //count the number of files in a directory for a given path on HDFS
-    public int fileCount(FileSystem fs, Path path) throws IOException, URISyntaxException {
-
-        int count = 0;
-        FileStatus[] files = fs.listStatus(path);
-        for (FileStatus f : files) {
-            if (!f.getPath().getName().isEmpty()) {
-                count++;
-            }
-        }
-        //logger.log(Level.INFO, "file count: {0}", count);
-        return count;
-    }
-
-    public void deleteFileFromSampleFiles(String id, String filename) {
-        try {
-            sampleFilesController.deleteFile(id, filename);
-            activity.addSampleActivity(ActivityController.REMOVED_FILE + "[" + filename + "]" + " from sample " + "[" + id + "]" + " ", studyName, "DATA", getUsername());
-        } catch (EJBException ejb) {
-            System.out.println("Sample file deletion failed");
-        }
-    }
-
-    //Download a file from HDFS
-    public void fileDownloadEvent() throws IOException, URISyntaxException {
-
-        String sampleId = selectedFile.getSampleID();
-        String fileType = selectedFile.getType();
-        String fileName = selectedFile.getFilename();
-
-        Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", this.nameNodeURI);
-        FileSystem fs = FileSystem.get(conf);
-        String rootDir = FileSystemOperations.DIR_ROOT;
-        String buildPath = File.separator + rootDir + File.separator + studyName;
-        Path outputPath = new Path(buildPath + File.separator + sampleId + File.separator + fileType.toUpperCase().trim() + File.separator + fileName.trim());
-
-        try {
-
-            if (!fs.exists(outputPath)) {
-                System.out.println("Error: File does not exist for downloading" + fileName);
-                logger.log(Level.SEVERE, "File does not exist on this [{0}] path of HDFS", outputPath.toString());
-                return;
-            }
-
-            InputStream inStream = fs.open(outputPath, 1048576);
-            file = new DefaultStreamedContent(inStream, "fastq/fasta/bam/sam/vcf", fileName);
-            logger.log(Level.INFO, "{0} - file was downloaded from HDFS path: {1}", new Object[]{fileName, outputPath.toString()});
-
-        } finally {
-            //inStream.close();
-        }
-
-    }
-
-    public StreamedContent getFile() {
-        return file;
-    }
-
-    public void setFile(StreamedContent file) {
-        this.file = file;
     }
 
     public void itemSelect(SelectEvent e) {
@@ -954,132 +591,34 @@ public class StudyMB implements Serializable {
     }
 
     public String removeByName() {
+        boolean success = false;
         try {
             studyController.removeByName(studyName);
             activity.addActivity(ActivityController.REMOVED_STUDY, studyName, ActivityController.CTE_FLAG_STUDY);
             if (deleteFilesOnRemove) {
-                delStudyDIR(studyName);
+                String path = File.separator + FileSystemOperations.DIR_ROOT + File.separator + studyName;
+                success = fileOps.rmRecursive(path);
+                if (!success) {
+                    //TODO: add error message.
+                }
             }
             logger.log(Level.INFO, "{0} - study removed.", studyName);
-        } catch (IOException | URISyntaxException | EJBException exp) {
+        } catch (IOException e) {
             addErrorMessageToUserAction("Error: Study wasn't removed.");
             return null;
         }
-        addMessage("Success", "Study " + studyName + " was successfully removed.", "studyRemoved");
-        FacesContext context = FacesContext.getCurrentInstance();
-        context.getExternalContext().getFlash().setKeepMessages(true);
-        deleteFilesOnRemove = true;
+        if (success) {
+            addMessage("Success", "Study " + studyName + " was successfully removed.", "studyRemoved");
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.getExternalContext().getFlash().setKeepMessages(true);
+            deleteFilesOnRemove = true;
+        }
         return "indexPage";
     }
 
     public boolean isRemoved(String studyName) {
         TrackStudy item = studyController.findByName(studyName);
         return item == null;
-    }
-
-    public FileSummary getSelectedFile() {
-        return selectedFile;
-    }
-
-    public void setSelectedNode(TreeNode selectedNode) {
-        if (selectedNode != null) {
-            this.selectedFile = (FileSummary) selectedNode.getData();
-        }
-        this.selectedNode = selectedNode;
-    }
-
-    public TreeNode getSelectedNode() {
-        return selectedNode;
-    }
-
-    public void setSelectedFile(FileSummary file) {
-        this.selectedFile = file;
-        System.out.println("Setter called." + file.getDisplayName());
-    }
-
-    public void removeFile() {
-        System.out.println("CALLED REMOVE");
-        //check if sample or file
-        String message;
-        if (selectedFile.isFile()) {
-            String sampleId = selectedFile.getSampleID();
-            String type = selectedFile.getType();
-            String filename = selectedFile.getFilename();
-            try {
-                deleteFileFromHDFS(sampleId, filename, type);
-            } catch (IOException | URISyntaxException ex) {
-                addErrorMessageToUserAction("Error", "Failed to remove file.", "remove");
-                return;
-            }
-            for (FileStructureListener l : fileListeners) {
-                l.removeFile(sampleId, type, filename);
-            }
-            message = "Successfully removed file " + filename + ".";
-        } else if (selectedFile.isTypeFolder()) {
-            String sampleId = selectedFile.getSampleID();
-            String foldername = selectedFile.getType();
-            try {
-                deleteFileTypeFromHDFS(sampleId, foldername);
-            } catch (IOException | URISyntaxException ex) {
-                addErrorMessageToUserAction("Error", "Failed to remove folder.", "remove");
-                return;
-            }
-            for (FileStructureListener l : fileListeners) {
-                l.removeType(sampleId, foldername);
-            }
-            message = "Successfully removed folder " + foldername + ".";
-        } else if (selectedFile.isSample()) {
-            try {
-                deleteSampleFromHDFS(selectedFile.getSampleID());
-            } catch (IOException | URISyntaxException ex) {
-                addErrorMessageToUserAction("Error", "Failed to remove sample.", "remove");
-                return;
-            }
-            for (FileStructureListener l : fileListeners) {
-                l.removeSample(selectedFile.getSampleID());
-            }
-            message = "Successfully removed sample " + selectedFile.getSampleID() + ".";
-        } else {
-            logger.log(Level.SEVERE, "Trying to remove a file that is not according to the hierarchy.");
-            return;
-        }
-        addMessage("Success", message, "remove");
-    }
-
-    public void registerFileListener(FileStructureListener listener) {
-        if (!fileListeners.contains(listener)) {
-            fileListeners.add(listener);
-        }
-    }
-
-    public StreamedContent getFile(String sampleId, String type, String filename) throws IOException {
-
-        Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", this.nameNodeURI);
-        FileSystem fs = FileSystem.get(conf);
-        String rootDir = FileSystemOperations.DIR_ROOT;
-        String buildPath = File.separator + rootDir + File.separator + studyName;
-        Path outputPath = new Path(buildPath + File.separator + sampleId + File.separator + type.toUpperCase().trim() + File.separator + filename.trim());
-
-        try {
-
-            if (!fs.exists(outputPath)) {
-                System.out.println("Error: File " + filename + " does not exist for downloading.");
-                logger.log(Level.SEVERE, "File does not exist on this path [{0}] of HDFS", outputPath.toString());
-                return null;
-            }
-
-            InputStream inStream = fs.open(outputPath, 1048576);
-            file = new DefaultStreamedContent(inStream, "fastq/fasta/bam/sam/vcf", filename);
-            logger.log(Level.INFO, "{0} - file was downloaded from HDFS path: {1}", new Object[]{filename, outputPath.toString()});
-
-        } catch (IOException ex) {
-            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
-            addErrorMessageToUserAction("File not found.");
-        } finally {
-            //inStream.close();
-        }
-        return file;
     }
 
     public LazyDataModel<ActivityDetail> getSpecificLazyModel() {

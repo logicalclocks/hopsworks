@@ -83,40 +83,19 @@ public class FileSystemOperations {
     }
 
     /**
-     * Delete the file at given path.
+     * Delete a file or directory form the file system.
      *
-     * @param location: Path to file to be removed
+     * @param location The location of file or directory to be removed.
+     * @param recursive If true, a directory will be removed with all its
+     * children.
+     * @return True if the operation is successful.
      * @throws IOException
      */
-    public boolean rm(Path location) throws IOException {
-        return rm(location, false);
-    }
-
-    /**
-     * Delete the file or folder at the given path recursively: if a folder, all
-     * its children will be deleted.
-     *
-     * @param location
-     * @return True if successful, false otherwise.
-     * @throws IOException
-     */
-    public boolean rmRecursive(Path location) throws IOException {
-        return rm(location, true);
-    }
-
-    private boolean rm(Path location, boolean recursive) throws IOException {
+    public boolean rm(Path location, boolean recursive) throws IOException {
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
-        boolean retVal = false;
-
-        if (fs.exists(location)) {
-            retVal = fs.delete(location, recursive);
-        } else {
-            logger.log(Level.SEVERE, "File does not exist on path: {0}", location.toString());
-        }
-
-        logger.log(Level.INFO, "File {0} was deleted", location);
+        boolean retVal = fs.delete(location, recursive);
         return retVal;
     }
 
