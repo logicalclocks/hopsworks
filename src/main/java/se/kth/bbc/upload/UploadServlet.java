@@ -1,22 +1,17 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.upload;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.net.URISyntaxException;
-import javax.faces.bean.ManagedProperty;
+import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.Constants;
-import se.kth.bbc.study.StudyMB;
+import se.kth.bbc.study.fb.InodesMB;
 
 /**
  * by fanxu
@@ -24,19 +19,16 @@ import se.kth.bbc.study.StudyMB;
 public class UploadServlet extends HttpServlet {
 
     public static final String UPLOAD_DIR = Constants.UPLOAD_DIR;
-
-    @ManagedProperty(value = "#{studyManagedBean}")
-    private StudyMB study;
     
-    public void setStudy(StudyMB study){
-        this.study = study;
-    }
+    @EJB
+    private FileOperations fileOps;
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-//        if (!"Master".equals(study.renderComponentList())) {
-//            return;
-//        }
+        InodesMB inodes = (InodesMB) request.getSession().getAttribute("InodesMB");
+        //Here because current path may change while uploading
+        String uploadPath = inodes.getCwdPath();        
+        
         int resumableChunkNumber = getResumableChunkNumber(request);
 
         ResumableInfo info = getResumableInfo(request);
@@ -75,19 +67,8 @@ public class UploadServlet extends HttpServlet {
         }
         String fileType = info.resumableFilename.substring(extPos + 1);
 
-        StudyMB studyMB = (StudyMB) request.getSession().getAttribute("studyManagedBean");
-
-        if (studyMB == null) {
-            studyMB = new StudyMB();
-            request.setAttribute("studyMB", studyMB);
-        }
-
-        try {
-            studyMB.createSampleFiles(info.resumableFilename, fileType);
-        } catch (URISyntaxException uri) {
-            System.out.println("uri error " + uri.getMessage());
-        }
-
+        fileOps.copyToHDFS(info.resumableFilename, uploadPath+info.resumableFilename, null);
+        //TODO: create an Inode upon upload start
     }
 
     @Override
@@ -117,6 +98,7 @@ public class UploadServlet extends HttpServlet {
         String resumableRelativePath = request.getParameter("resumableRelativePath");
         //Here we add a ".temp" to every upload file to indicate NON-FINISHED
         String resumableFilePath = new File(base_dir, resumableFilename).getAbsolutePath() + ".temp";
+        //TODO: the current way of uploading will not scale: if two persons happen to upload a file with the same name, trouble is waiting to happen
 
         ResumableInfoStorage storage = ResumableInfoStorage.getInstance();
 

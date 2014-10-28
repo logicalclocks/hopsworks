@@ -44,8 +44,10 @@ import se.kth.bbc.activity.UserGroupsController;
 import se.kth.bbc.activity.UsersGroups;
 import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.bbc.study.fb.InodeFacade;
+import se.kth.bbc.study.fb.Inode;
+import se.kth.bbc.study.fb.InodesMB;
 import se.kth.bbc.study.filebrowser.FileStructureListener;
-import se.kth.bbc.upload.FileSystemOperations;
+import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.upload.UploadServlet;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
@@ -67,8 +69,8 @@ public class StudyMB implements Serializable {
     /**
      * ************************************
      *
-     * TODO! TODO: isolate file system operations to FileSystemOperations.java
-     * (or anywhere really). TODO!
+     * TODO: isolate file system operations to FileSystemOperations.java (or
+     * anywhere really).
      *
      *
      */
@@ -485,13 +487,13 @@ public class StudyMB implements Serializable {
         Path samplesPath = new Path(buildPath + File.separator + FileSystemOperations.DIR_SAMPLES);
 
         fileOps.mkdir(studyPath);
-        inodes.createAndPersistDir(studyPath.toString(), InodeFacade.AVAILABLE);
+        inodes.createAndPersistDir(studyPath.toString(), Inode.AVAILABLE);
         fileOps.mkdir(resultsPath);
-        inodes.createAndPersistDir(resultsPath.toString(), InodeFacade.AVAILABLE);
+        inodes.createAndPersistDir(resultsPath.toString(), Inode.AVAILABLE);
         fileOps.mkdir(cuneiformPath);
-        inodes.createAndPersistDir(cuneiformPath.toString(), InodeFacade.AVAILABLE);
+        inodes.createAndPersistDir(cuneiformPath.toString(), Inode.AVAILABLE);
         fileOps.mkdir(samplesPath);
-        inodes.createAndPersistDir(samplesPath.toString(), InodeFacade.AVAILABLE);
+        inodes.createAndPersistDir(samplesPath.toString(), Inode.AVAILABLE);
     }
 
     /**
@@ -613,7 +615,7 @@ public class StudyMB implements Serializable {
                 Path p = new Path(File.separator + FileSystemOperations.DIR_ROOT + File.separator + studyName + File.separator + FileSystemOperations.DIR_SAMPLES + File.separator + getSampleID());
                 fileOps.mkdir(p);
                 //Create Inode
-                inodes.createAndPersistInode(p.toString(), true, 0, InodeFacade.AVAILABLE);
+                inodes.createAndPersistInode(p.toString(), true, 0, Inode.AVAILABLE);
                 //Create subfolders
                 createFileTypeFolders(p);
 
@@ -651,31 +653,37 @@ public class StudyMB implements Serializable {
 
         //create folders and inodes entries
         fileOps.mkdir(bam);
-        inodes.createAndPersistDir(bam.toString(), InodeFacade.AVAILABLE);
+        inodes.createAndPersistDir(bam.toString(), Inode.AVAILABLE);
         fileOps.mkdir(sam);
-        inodes.createAndPersistDir(sam.toString(), InodeFacade.AVAILABLE);
+        inodes.createAndPersistDir(sam.toString(), Inode.AVAILABLE);
         fileOps.mkdir(fasta);
-        inodes.createAndPersistDir(fasta.toString(), InodeFacade.AVAILABLE);
+        inodes.createAndPersistDir(fasta.toString(), Inode.AVAILABLE);
         fileOps.mkdir(fastq);
-        inodes.createAndPersistDir(fastq.toString(), InodeFacade.AVAILABLE);
+        inodes.createAndPersistDir(fastq.toString(), Inode.AVAILABLE);
         fileOps.mkdir(vcf);
-        inodes.createAndPersistDir(vcf.toString(), InodeFacade.AVAILABLE);
+        inodes.createAndPersistDir(vcf.toString(), Inode.AVAILABLE);
     }
 
-    public void createSampleFiles(String fileName, String fileType) throws IOException, URISyntaxException {
+    public void createSampleFiles(String filename, String filetype, String path) throws IOException, URISyntaxException {
 
-        boolean rec = sampleFilesController.checkForExistingSampleFiles(getSampleID(), fileName);
+        String sampleId = InodesMB.getSampleId(path);
+        if (sampleId == null) {
+            //TODO: add error message
+            return;
+        }
+
+        boolean rec = sampleFilesController.checkForExistingSampleFiles(sampleId, filename);
         try {
             if (!rec) {
-                SampleFilesPK smPK = new SampleFilesPK(getSampleID(), fileName);
+                SampleFilesPK smPK = new SampleFilesPK(sampleId, filename);
                 SampleFiles sf = new SampleFiles(smPK);
-                sf.setFileType(fileType);
+                sf.setFileType(filetype);
                 sf.setStatus(SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
                 sampleFilesController.persistSampleFiles(sf);
-                logger.log(Level.INFO, "{0} - sample file was created for : {1}.", new Object[]{getSampleID(), fileName});
-                activity.addSampleActivity(ActivityController.NEW_SAMPLE + "[" + fileName + "]" + " file ", studyName, "DATA", getLoginName());
+                logger.log(Level.INFO, "{0} - sample file was created for : {1}.", new Object[]{sampleId, filename});
+                activity.addSampleActivity(ActivityController.NEW_SAMPLE + "[" + filename + "]" + " file ", studyName, "DATA", getLoginName());
                 for (FileStructureListener l : fileListeners) {
-                    l.newFile(getSampleID(), fileType, fileName, SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
+                    l.newFile(sampleId, filetype, filename, SampleFileStatus.COPYING_TO_HDFS.getFileStatus());
                 }
             }
 
@@ -684,45 +692,18 @@ public class StudyMB implements Serializable {
             logger.log(Level.SEVERE, "Sample files were not created.");
             return;
         }
-        mkDIRS(getSampleID(), fileType, fileName);
-    }
-
-    //Creating directory structure in HDFS
-    public void mkDIRS(String sampleID, String fileType, String fileName) throws IOException {
-
-        Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", this.nameNodeURI);
-        String rootDir = FileSystemOperations.DIR_ROOT;
-
-        String buildPath = File.separator + rootDir + File.separator + studyName;
-        FileSystem fs = FileSystem.get(conf);
-        Path path = new Path(buildPath);
-
-        try {
-
-            if (fs.exists(path)) {
-                Path.mergePaths(path, new Path(File.separator + sampleID + File.separator + fileType.toUpperCase().trim()));
-                copyFromLocal(fileType, fileName, sampleID);
-            } else {
-                fs.mkdirs(path.suffix(File.separator + sampleID + File.separator + fileType.toUpperCase().trim()), null);
-                copyFromLocal(fileType, fileName, sampleID);
-            }
-
-        } catch (URISyntaxException uri) {
-            logger.log(Level.SEVERE, "Directories were not created in HDFS...{0}", uri.getMessage());
-        } finally {
-            fs.close();
-        }
-
+        copyFromLocal(filetype, filename, sampleId, path);
     }
 
     //Copy file to HDFS 
-    public void copyFromLocal(String fileType, String filename, String sampleId) throws IOException, URISyntaxException {
+    public void copyFromLocal(String fileType, String filename, String sampleId, String path) throws IOException, URISyntaxException {
 
-        String destination = File.separator + FileSystemOperations.DIR_ROOT
-                + File.separator + studyName + File.separator
-                + FileSystemOperations.DIR_SAMPLES + File.separator + sampleId
-                + File.separator + fileType.toLowerCase().trim() + File.separator + filename;
+        String destination;
+        if (path.endsWith(File.separator)) {
+            destination = path + filename;
+        } else {
+            destination = path + File.separator + filename;
+        }
 
         File fileFromLocal = new File(UploadServlet.UPLOAD_DIR + File.separator + filename);
         Path build = new Path(destination);
@@ -731,7 +712,7 @@ public class StudyMB implements Serializable {
 
         //create Inode in DB
         //TODO: create this earlier and update according to progress
-        inodes.createAndPersistFile(destination, (int) fileFromLocal.length(), InodeFacade.AVAILABLE);
+        inodes.createAndPersistFile(destination, (int) fileFromLocal.length(), Inode.AVAILABLE);
 
         logger.log(Level.INFO, "File, {0}, copied to HDFS: {1}", new Object[]{filename, build.toString()});
         logger.log(Level.INFO, "File size: {0} bytes", fileFromLocal.length());
@@ -746,7 +727,7 @@ public class StudyMB implements Serializable {
             sampleFilesController.update(id, filename);
             logger.log(Level.INFO, "{0} - sample file status was updated to: {1}", new Object[]{filename, "available"});
             for (FileStructureListener l : fileListeners) {
-                l.updateStatus(id, filename.substring(filename.lastIndexOf('.') + 1), filename, InodeFacade.AVAILABLE);
+                l.updateStatus(id, filename.substring(filename.lastIndexOf('.') + 1), filename, Inode.AVAILABLE);
             }
         } catch (EJBException ejb) {
             logger.log(Level.SEVERE, "Sample file status update failed.");
@@ -1122,7 +1103,9 @@ public class StudyMB implements Serializable {
     }
 
     public void redirectToUploader() {
+        System.out.println("DEBUG: REDIRECTION CALLED");
         try {
+            setLoginName(getUsername());
             getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
             FacesContext.getCurrentInstance().responseComplete();
         } catch (IOException ex) {

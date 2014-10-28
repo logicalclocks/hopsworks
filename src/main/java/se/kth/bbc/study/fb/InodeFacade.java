@@ -5,7 +5,6 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.upload.FileSystemOperations;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -14,10 +13,6 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
  */
 @Stateless
 public class InodeFacade extends AbstractFacade<Inode> {
-
-    public static final String AVAILABLE = "available";
-    public static final String UPLOADING = "uploading";
-    public static final String COPYING = "copying_to_hdfs";
 
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
@@ -50,8 +45,9 @@ public class InodeFacade extends AbstractFacade<Inode> {
      * @param size
      * @param status
      */
-    public Inode createAndPersistInode(String path, boolean dir, int size, String status) {
+    public Inode createAndPersistInode(String path, boolean dir, long size, String status) {
         //TODO: update size and modified date of parent
+        //TODO: make all occurences of 'size' in application longs.
         while (path.startsWith("/")) {
             path = path.substring(1);
         }
@@ -64,7 +60,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
             curr = next;
         }
         Inode parent = curr;
-        Inode z = new Inode(p[p.length - 1], parent, dir, size, status);
+        Inode z = new Inode(p[p.length - 1], parent, dir, (int)size, status);
         parent.addChild(z);
 
         persist(parent);
@@ -77,12 +73,16 @@ public class InodeFacade extends AbstractFacade<Inode> {
         return createAndPersistInode(path, true, 0, status);
     }
 
-    public Inode createAndPersistFile(String path, int size, String status) {
+    public Inode createAndPersistFile(String path, long size, String status) {
         return createAndPersistInode(path, false, size, status);
     }
 
     public void persist(Inode i) {
         em.persist(i);
+    }
+    
+    public void update(Inode i){
+        em.merge(i);
     }
 
     /**

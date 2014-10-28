@@ -18,7 +18,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.study.StudyMB;
-import se.kth.bbc.upload.FileSystemOperations;
+import se.kth.bbc.fileoperations.FileSystemOperations;
 
 /**
  *
@@ -61,7 +61,7 @@ public class InodesMB implements Serializable {
     public List<Inode> getChildren() {
         //Because InodesMB is session scoped, need to check for change of study!!!!
         //TODO: implement this more gracefully.
-        if(!cwd.getStudyRoot().equals(study.getStudyName())){
+        if (!cwd.getStudyRoot().equals(study.getStudyName())) {
             init();
         }
         List<Inode> res = new ArrayList<>();
@@ -157,10 +157,14 @@ public class InodesMB implements Serializable {
     public List<NavigationPath> getCurrentPath() {
         //Because InodesMB is session scoped, need to check for change of study!!!!
         //TODO: implement this more gracefully.
-        if(!cwd.getStudyRoot().equals(study.getStudyName())){
+        if (!cwd.getStudyRoot().equals(study.getStudyName())) {
             init();
         }
         return cwd.getConstituentsPath();
+    }
+
+    public String getCwdPath() {
+        return cwd.getPath();
     }
 
     public void cdBrowse(String name) {
@@ -172,17 +176,6 @@ public class InodesMB implements Serializable {
             curr = next;
         }
         cwd = curr;
-    }
-
-    public StreamedContent downloadFile(Inode inode) {
-
-        Path location = new Path(File.separator + FileSystemOperations.DIR_ROOT + File.separator + inode.getStudyPath());
-
-        StreamedContent sc = fsOps.downloadFile(location);
-        if (sc == null) {
-            //TODO: add error message.
-        }
-        return sc;
     }
 
     public static String approximateTime(Date event) {
@@ -223,6 +216,20 @@ public class InodesMB implements Serializable {
         } catch (IOException e) {
             //TODO: add error message.
         }
+    }
+
+    public static String getSampleId(String path) {
+        String[] p = path.split(File.separator);
+        for (int i = 0; i < p.length; i++) {
+            if (FileSystemOperations.DIR_SAMPLES.equals(p[i])) {
+                if (i + 1 < p.length) {
+                    return p[i + 1];
+                } else {
+                    return null;
+                }
+            }
+        }
+        return null;
     }
 
 }

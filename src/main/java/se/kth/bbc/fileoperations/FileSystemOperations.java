@@ -1,6 +1,5 @@
-package se.kth.bbc.upload;
+package se.kth.bbc.fileoperations;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -12,12 +11,9 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
-import org.primefaces.model.DefaultStreamedContent;
-import org.primefaces.model.StreamedContent;
-import se.kth.bbc.study.StudyMB;
 
 /**
- * Provides an interface for interaction with HDFS.
+ * Provides an interface for interaction with HDFS. Only interacts with HDFS.
  *
  * @author stig
  */
@@ -36,7 +32,16 @@ public class FileSystemOperations {
     public static final String DIR_FASTA = "fasta";
     public static final String DIR_VCF = "vcf";
 
-    //Copy file to HDFS 
+    /**
+     * Copy a file to HDFS. The file will end up at <i>location</i>. The
+     * InputStream represents the file.
+     *
+     * @param location Location to which the file should be copied. Includes the
+     * filename.
+     * @param is The inputstream representing the file.
+     * @throws IOException
+     * @throws URISyntaxException
+     */
     public void copyToHDFS(Path location, InputStream is) throws IOException, URISyntaxException {
 
         // Get the filesystem
@@ -51,97 +56,68 @@ public class FileSystemOperations {
         }
     }
 
-    //Download file from HDFS
-    public StreamedContent downloadFile(Path location) {
-        //TODO: fix reporting of complete path!
+    /**
+     * Get an input stream for the file at path <i>location</i>.
+     *
+     * @param location The location of the file.
+     * @return An InputStream for the file.
+     */
+    public InputStream getInputStream(Path location) throws IOException {
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", nameNodeURI);
-        FileSystem fs;
-        try {
-            fs = FileSystem.get(conf);
-        } catch (IOException ex) {
-            Logger.getLogger(FileSystemOperations.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
-        StreamedContent file = null;
-
-        try {
-
-            if (!fs.exists(location)) {
-                System.out.println("Error: File " + location + " does not exist.");
-                logger.log(Level.SEVERE, "File does not exist on this path [{0}] of HDFS", location.toString());
-                return null;
-            }
-            String extension = getExtension(location);
-            String filename = location.getName();
-            InputStream inStream = fs.open(location, 1048576);
-            file = new DefaultStreamedContent(inStream, extension, filename);
-            logger.log(Level.INFO, "File was downloaded from HDFS path: {0}", location.toString());
-
-        } catch (IOException ex) {
-            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            //inStream.close();
-        }
-        return file;
+        FileSystem fs = FileSystem.get(conf);
+        return fs.open(location, 1048576); //TODO: undo hard coding of weird constant here...
     }
 
     /**
      * Create a new folder on the given path.
      *
      * @param location The path to the new folder, its name included.
+     * @return True if successful.
      */
-    public void mkdir(Path location) throws IOException {
+    public boolean mkdir(Path location) throws IOException {
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
+        return fs.mkdirs(location, null);
+    }
 
-        if (fs.exists(location)) {
-            logger.log(Level.SEVERE, "Study directory exists : {0}", location);
-            return;
-        }
-        fs.mkdirs(location, null);
-        logger.log(Level.INFO, "Study directory was created on HDFS: {0}.", location);
-    }
-    
-    private static String getExtension(Path file){
-        String filename = file.getName();
-        if(filename.length()==0) // path was a folder TODO: check if this is right!!
-            return null;
-        else if(filename.lastIndexOf('.')<0) //file does not have extension
-            return "";
-        else return filename.substring(filename.lastIndexOf('.')+1);
-        
-    }
-    
     /**
      * Delete the file at given path.
+     *
      * @param location: Path to file to be removed
-     * @throws IOException 
+     * @throws IOException
      */
     public boolean rm(Path location) throws IOException {
         return rm(location, false);
     }
-    
+
+    /**
+     * Delete the file or folder at the given path recursively: if a folder, all
+     * its children will be deleted.
+     *
+     * @param location
+     * @return True if successful, false otherwise.
+     * @throws IOException
+     */
     public boolean rmRecursive(Path location) throws IOException {
         return rm(location, true);
     }
-    
-    private boolean rm(Path location, boolean recursive) throws IOException{
+
+    private boolean rm(Path location, boolean recursive) throws IOException {
         Configuration conf = new Configuration();
         conf.set("fs.defaultFS", nameNodeURI);
         FileSystem fs = FileSystem.get(conf);
         boolean retVal = false;
 
         if (fs.exists(location)) {
-            retVal = fs.delete(location,recursive);
+            retVal = fs.delete(location, recursive);
         } else {
             logger.log(Level.SEVERE, "File does not exist on path: {0}", location.toString());
         }
 
-        logger.log(Level.INFO, "File {0} was deleted",location);
+        logger.log(Level.INFO, "File {0} was deleted", location);
         return retVal;
     }
-    
 
 }

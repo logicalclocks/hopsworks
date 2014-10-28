@@ -41,6 +41,9 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 public class Inode implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    public static final String AVAILABLE = "available";
+    public static final String UPLOADING = "uploading";
+    public static final String COPYING = "copying_to_hdfs";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -202,19 +205,21 @@ public class Inode implements Serializable {
     public boolean isRoot() {
         return parent == null;
     }
-    
+
     /**
-     * Determines whether the Inode is the root of this study subtree. 
-     * It is so if its parent is the "ultimate root". This method should always 
-     * be used to check for root-being in non-filesystem operation contexts to 
-     * guarantee safety.
+     * Determines whether the Inode is the root of this study subtree. It is so
+     * if its parent is the "ultimate root". This method should always be used
+     * to check for root-being in non-filesystem operation contexts to guarantee
+     * safety.
+     *
      * @return True if the Inode is the root of its study subtree.
      */
-    public boolean isStudyRoot(){
-        if(parent != null){
+    public boolean isStudyRoot() {
+        if (parent != null) {
             return parent.parent == null;
+        } else {
+            return false;
         }
-        else return false;
     }
 
     public boolean isParent() {
@@ -239,31 +244,37 @@ public class Inode implements Serializable {
             return p;
         }
     }
-    
-    public String getStudyPath(){
-        if(isStudyRoot()){
+
+    public String getStudyPath() {
+        if (isStudyRoot()) {
             return name + "/";
-        }else if(dir){
+        } else if (dir) {
             return parent.getStudyPath() + name + "/";
-        }else{
+        } else {
             return parent.getStudyPath() + name;
         }
     }
-    
-    public String getStudyRoot(){
-        if(isStudyRoot()){
+
+    public String getStudyRoot() {
+        if (isStudyRoot()) {
             return name;
-        }else{
+        } else {
             return parent.getStudyRoot();
         }
     }
-    
-    public String getPath(){
-        if(isRoot()){
+
+    /**
+     * Get the path to this Inode.
+     *
+     * @return The path to this inode. If the Inode is a folder, the path ends
+     * in a "/".
+     */
+    public String getPath() {
+        if (isRoot()) {
             return "/" + name + "/";
-        }else if(dir){
+        } else if (dir) {
             return parent.getPath() + name + "/";
-        }else{
+        } else {
             return parent.getPath() + name;
         }
     }

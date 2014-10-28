@@ -26,7 +26,7 @@ and open the template in the editor.
 
                     <span class="right_button">
                         <p:commandButton id="addData" styleClass="button-add-data" value="Add sample" 
-                                         type="submit" action="#{studyManagedBean.openAddSampleDialog()}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" update="@this"/>
+                                         type="submit" action="#{studyManagedBean.openAddSampleDialog()}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" update="@form"/>
                     </span>
 
                     <p:growl for="remove" autoUpdate="true" showDetail="true"/>
@@ -50,7 +50,7 @@ and open the template in the editor.
 
                             <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false">
                                 <strong>#{inode.name}</strong>
-                                <p:fileDownload value="#{InodesMB.downloadFile(inode)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+                                <p:fileDownload value="#{fileOperationsMB.downloadFile(inode)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                             </p:commandLink>
                         </h:column>
 
@@ -71,8 +71,8 @@ and open the template in the editor.
                             </p:confirmDialog>
                         </h:column>
                         <f:facet name="footer">
-                            <p:commandButton value="Upload file" action="#{studyManagedBean.redirectToUploader()}"/>
-                            <p:commandButton value="Create folder"/>
+                            <p:commandButton value="Upload file" action="#{studyManagedBean.redirectToUploader()}" ajax="false"/>
+                            <p:commandButton value="Create folder" type="button" onclick="PF('createFolderDlg').show()"/>
                         </f:facet>
                     </h:dataTable>
 

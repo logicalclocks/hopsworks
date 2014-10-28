@@ -23,7 +23,7 @@ import org.primefaces.model.UploadedFile;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.study.fb.Inode;
 import se.kth.bbc.study.fb.InodeFacade;
-import se.kth.bbc.upload.FileSystemOperations;
+import se.kth.bbc.fileoperations.FileSystemOperations;
 
 /**
  * Controller for the Experiments tab in StudyPage.
@@ -147,7 +147,7 @@ public class ExperimentController implements Serializable {
             wf.setCreator(study.getUsername());
             workflows.create(wf);
             
-            Inode inode = inodes.createAndPersistFile(destination.toString(), (int)newFile.getSize(), InodeFacade.AVAILABLE);
+            Inode inode = inodes.createAndPersistFile(destination.toString(), (int)newFile.getSize(), Inode.AVAILABLE);
 
             //Set current flowfile + notify
             this.flowfile = wf;
