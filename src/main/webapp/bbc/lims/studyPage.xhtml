@@ -37,7 +37,7 @@
                                         <ui:include src="/bbc/lims/studyTabs/studyTeamTab.xhtml"/>
                                     </ui:insert>                                    
                                 </p:tab>
-                                <p:tab id="workflows" title="Experiments">
+                                <p:tab id="workflows" title="Experiments" rendered="#{studyManagedBean.renderComponentList() != null}">
                                     <ui:insert name="workflowsTab">
                                         <ui:include src="/bbc/lims/studyTabs/studyWorkflowTab.xhtml"/>
                                     </ui:insert>
@@ -97,6 +97,16 @@
                     <p:inputText id="folderName" value="#{fileOperationsMB.newFolderName}"/>
                     <p:commandButton value="Create" action="#{fileOperationsMB.mkDir(InodesMB.cwdPath)}" oncomplete="PF('createFolderDlg').hide()" update=":#{p:component('browserForm')}"/>
                     <p:commandButton value="Cancel" type="button" onclick="PF('createFolderDlg').hide()"/>
+                </h:form>
+            </p:dialog>
+            <p:dialog id="addSampleDialog" widgetVar="addSampleDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample folder">
+                <h:form>
+                    <p:outputLabel for="sampleName" value="Sample ID"/>
+                    <!--  TODO: add check on existing samples -->
+                    <p:inputText id="sampleName" required="true" value="#{fileOperationsMB.newFolderName}"/>
+
+                    <p:commandButton value="Create" action="#{fileOperationsMB.createSampleDir()}" oncomplete="PF('addSampleDlg').hide()" update=":#{p:component('browserForm')}"/>
+                    <p:commandButton type="button" value="Cancel" onclick="PF('addSampleDlg').hide()"/>
                 </h:form>
             </p:dialog>
         </h:body>

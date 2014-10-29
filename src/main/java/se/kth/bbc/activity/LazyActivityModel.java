@@ -43,6 +43,7 @@ public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements 
 
     @Override
     public List<ActivityDetail> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> filters) {
+        //TODO: if new activities, add them to the front of the array!
         List<ActivityDetail> retData;
         if (first >= data.size()) {
             if (filterStudy == null) {
@@ -56,17 +57,6 @@ public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements 
         } else {
             return data.subList(first, Math.min(first + pageSize, data.size()));
         }
-    }
-
-    @Override
-    public void setWrappedData(Object list) {
-        //Don't do anything because data is set in load.
-        //Because setWrappedData() may be called multiple times
-    }
-
-    @Override
-    public Object getWrappedData() {
-        return data;
     }
 
     @Override

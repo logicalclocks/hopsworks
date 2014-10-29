@@ -26,7 +26,7 @@ and open the template in the editor.
 
                     <span class="right_button">
                         <p:commandButton id="addData" styleClass="button-add-data" value="Add sample" 
-                                         type="submit" action="#{studyManagedBean.openAddSampleDialog()}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" update="@form"/>
+                                         type="button" onclick="PF('addSampleDlg').show()" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                     </span>
 
                     <p:growl for="remove" autoUpdate="true" showDetail="true"/>

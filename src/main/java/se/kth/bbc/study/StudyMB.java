@@ -629,18 +629,6 @@ public class StudyMB implements Serializable {
         return lazyModel;
     }
 
-    public void openAddSampleDialog() {
-        Map<String, Object> options = new HashMap<>();
-        options.put("modal", true);
-        options.put("draggable", false);
-        options.put("resizable", false);
-        RequestContext.getCurrentInstance().openDialog("newSampleDialog", options, null);
-    }
-
-    public void closeAddSampleDialog() {
-        RequestContext.getCurrentInstance().closeDialog(null);
-    }
-
     public void redirectToUploader() {
         try {
             setLoginName(getUsername());

@@ -7,14 +7,11 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
-import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import org.apache.hadoop.fs.Path;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
-import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.study.fb.Inode;
 
@@ -145,8 +142,6 @@ public class FileOperationsManagedBean implements Serializable {
             Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
             //TODO: add error message
         }
-
-        study.closeAddSampleDialog();
         newFolderName = null;
     }
 

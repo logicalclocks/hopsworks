@@ -61,8 +61,10 @@ public class InodesMB implements Serializable {
         if (!cwd.getStudyRoot().equals(study.getStudyName())) {
             init();
         }
+        //get from DB and update Inode
+        cwd.setChildren(inodes.findByParent(cwd));
         List<Inode> res = new ArrayList<>();
-        res.addAll(inodes.findByParent(cwd));
+        res.addAll(cwd.getChildren());
         if (!cwd.isStudyRoot()) { // root doesn't have a parent to show
             res.add(0, new Inode(0, "..", new Date(), true, cwd.getParent().getStatus()));
         }
