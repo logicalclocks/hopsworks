@@ -15,7 +15,7 @@ import javax.persistence.TemporalType;
  */
 @Entity
 public class ActivityDetail implements Serializable{
-    
+
     @Id
     private Integer id;
     private String email;
@@ -75,6 +75,6 @@ public class ActivityDetail implements Serializable{
     public void setMyTimestamp(Date myTimestamp) {
         this.myTimestamp = myTimestamp;
     }
-    
+
     
 }

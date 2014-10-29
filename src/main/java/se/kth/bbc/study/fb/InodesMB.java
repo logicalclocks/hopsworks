@@ -136,7 +136,6 @@ public class InodesMB implements Serializable {
      * @param name valid path
      */
     public void cd(String name) {
-        System.out.println("DEBUG: path:" + name);
         String[] p = name.split("/");
         ArrayList<String> pathComponents = new ArrayList<>(Arrays.asList(p));
         try {

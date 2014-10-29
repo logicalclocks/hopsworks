@@ -452,7 +452,7 @@ public class StudyMB implements Serializable {
         fileOps.mkDir(cuneiformPath);
         fileOps.mkDir(samplesPath);
     }
-
+    
     /**
      * @return
      */
@@ -476,10 +476,10 @@ public class StudyMB implements Serializable {
 
         return "studyPage";
     }
-
+    
     //Set the study owner as study master in StudyTeam table
     public void addStudyMaster(String study_name) {
-
+        
         StudyTeamPK stp = new StudyTeamPK(study_name, getUsername());
         StudyTeam st = new StudyTeam(stp);
         st.setTeamRole("Master");
@@ -642,7 +642,6 @@ public class StudyMB implements Serializable {
     }
 
     public void redirectToUploader() {
-        System.out.println("DEBUG: REDIRECTION CALLED");
         try {
             setLoginName(getUsername());
             getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");

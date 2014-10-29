@@ -95,10 +95,6 @@ public class ExperimentController implements Serializable {
         });
     }
 
-    public void doSomething() {
-        System.out.println("DEBUG: called nothing");
-    }
-
     public Collection<String> getWorkflowNames() {
         Map<String, Workflow> flows = getAvailableWorkflows();
         return flows.keySet();
