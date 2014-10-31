@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +21,7 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.primefaces.context.RequestContext;
+import org.apache.hadoop.fs.Path;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.LazyDataModel;
@@ -36,6 +35,7 @@ import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.fileoperations.FileSystemOperations;
+import se.kth.bbc.yarn.YarnFlinkClient;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
 
@@ -636,6 +636,15 @@ public class StudyMB implements Serializable {
             FacesContext.getCurrentInstance().responseComplete();
         } catch (IOException ex) {
             //TODO: make redirect better...
+            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void test(){
+        YarnFlinkClient c = new YarnFlinkClient();
+        try {
+            c.run("pi 16 100000", 1, new Path("/usr/hadoop/hadoop-2.4.1/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.4.1.jar"));
+        } catch (Exception ex) {
             Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
