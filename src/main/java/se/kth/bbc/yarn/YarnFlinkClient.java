@@ -87,7 +87,7 @@ public class YarnFlinkClient {
         Resource capability = Records.newRecord(Resource.class);
 
         capability.setMemory(
-                256);
+                1200);
         capability.setVirtualCores(
                 1);
 // Finally, set-up ApplicationSubmissionContext for the application
@@ -95,7 +95,7 @@ public class YarnFlinkClient {
                 = app.getApplicationSubmissionContext();
 
         appContext.setApplicationName(
-                "simple-yarn-app"); // application name
+                "flink-jobmanager"); // application name
         appContext.setAMContainerSpec(amContainer);
 
         appContext.setResource(capability);
