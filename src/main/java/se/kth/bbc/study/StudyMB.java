@@ -57,11 +57,11 @@ public class StudyMB implements Serializable {
     /**
      * ************************************
      *
-     * TODO: isolate file system operations to FileOperations.java (or
-     * anywhere really). Remains: invert operation of FileOperationsManagedBean and
-     * StudyMB: StudyMB has reference to FileOPMB and calls methods on it with 
-     * studyname as a parameter, or studyname is passed as parameter through the view.
-     * Then move all file operations away (create studyDir e.g.).
+     * TODO: isolate file system operations to FileOperations.java (or anywhere
+     * really). Remains: invert operation of FileOperationsManagedBean and
+     * StudyMB: StudyMB has reference to FileOPMB and calls methods on it with
+     * studyname as a parameter, or studyname is passed as parameter through the
+     * view. Then move all file operations away (create studyDir e.g.).
      *
      *
      */
@@ -447,13 +447,13 @@ public class StudyMB implements Serializable {
         String resultsPath = studyPath + File.separator + FileSystemOperations.DIR_RESULTS;
         String cuneiformPath = studyPath + File.separator + FileSystemOperations.DIR_CUNEIFORM;
         String samplesPath = studyPath + File.separator + FileSystemOperations.DIR_SAMPLES;
-        
+
         fileOps.mkDir(studyPath);
         fileOps.mkDir(resultsPath);
         fileOps.mkDir(cuneiformPath);
         fileOps.mkDir(samplesPath);
     }
-    
+
     /**
      * @return
      */
@@ -477,10 +477,10 @@ public class StudyMB implements Serializable {
 
         return "studyPage";
     }
-    
+
     //Set the study owner as study master in StudyTeam table
     public void addStudyMaster(String study_name) {
-        
+
         StudyTeamPK stp = new StudyTeamPK(study_name, getUsername());
         StudyTeam st = new StudyTeam(stp);
         st.setTeamRole("Master");
@@ -640,10 +640,10 @@ public class StudyMB implements Serializable {
             Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    public void test(){
+
+    public void test() {
         try {
-            String[] args = {"-w","/home/glassfish/roshan/hiway-0.2.0-SNAPSHOT/wordcount.cf","/home/glassfish/roshan/hiway-0.2.0-SNAPSHOT/wordcount/benzko.txt","/home/glassfish/testRes/out.txt"};
+            String[] args = {"-w", "/home/glassfish/roshan/hiway-0.2.0-SNAPSHOT/wordcount.cf", "/home/glassfish/roshan/hiway-0.2.0-SNAPSHOT/wordcount/benzko.txt", "/home/glassfish/testRes/out.txt"};
             Client c = Client.getInitiatedClient(args);
             c.run();
         } catch (Exception ex) {

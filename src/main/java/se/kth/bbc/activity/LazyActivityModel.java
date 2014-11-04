@@ -26,7 +26,7 @@ import org.primefaces.model.SortOrder;
 public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements Serializable {
 
     private transient final ActivityController activityController;
-    private final List<ActivityDetail> data;
+    private List<ActivityDetail> data;
     private String filterStudy;
     private int rowIndex;
 
@@ -43,19 +43,30 @@ public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements 
 
     @Override
     public List<ActivityDetail> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> filters) {
-        //TODO: if new activities, add them to the front of the array!
-        List<ActivityDetail> retData;
-        if (first >= data.size()) {
+        if (first == 0) {
+            List<ActivityDetail> retData;
             if (filterStudy == null) {
                 retData = activityController.getPaginatedActivityDetail(first, pageSize);
                 //TODO: add support for sorting, filtering
             } else {
                 retData = activityController.getPaginatedActivityDetailForStudy(first, pageSize, filterStudy);
             }
-            data.addAll(retData);
+            data = new ArrayList<>(retData);
             return retData;
         } else {
-            return data.subList(first, Math.min(first + pageSize, data.size()));
+            List<ActivityDetail> retData;
+            if (first >= data.size()) {
+                if (filterStudy == null) {
+                    retData = activityController.getPaginatedActivityDetail(first, pageSize);
+                    //TODO: add support for sorting, filtering
+                } else {
+                    retData = activityController.getPaginatedActivityDetailForStudy(first, pageSize, filterStudy);
+                }
+                data.addAll(retData);
+                return retData;
+            } else {
+                return data.subList(first, Math.min(first + pageSize, data.size()));
+            }
         }
     }
 

@@ -18,6 +18,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DataOutputBuffer;
@@ -33,6 +34,8 @@ import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
 import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.LocalResource;
+import org.apache.hadoop.yarn.api.records.LocalResourceType;
+import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.api.records.NodeReport;
 import org.apache.hadoop.yarn.api.records.NodeState;
 import org.apache.hadoop.yarn.api.records.Priority;
@@ -46,13 +49,15 @@ import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
+import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.Records;
 import static se.kth.bbc.fileoperations.FileSystemOperations.nameNodeURI;
 
 public class Client {
+
     private static final Logger logger = Logger.getLogger(Client.class.getName());
-    
-    public static Client getInitiatedClient(String[] args) throws Exception{
+
+    public static Client getInitiatedClient(String[] args) throws Exception {
         Path confPath = new Path(System.getenv("YARN_CONF_DIR"));
         File confFile = new File(confPath + File.separator + "yarn-site.xml");
         if (!confFile.exists()) {
@@ -64,9 +69,9 @@ public class Client {
         c.addResource(yarnPath);
         Client client = new Client(c);
         boolean ok = client.init(args);
-        if(ok){
+        if (ok) {
             return client;
-        }else{
+        } else {
             return null;
         }
     }
@@ -98,12 +103,12 @@ public class Client {
 
     public Client() throws Exception {
         this(new YarnConfiguration());
-        conf.addResource("core-site.xml");        
+        conf.addResource("core-site.xml");
         conf.set("fs.defaultFS", nameNodeURI);
     }
 
     public Client(Configuration conf) {
-        this.conf = conf;        
+        this.conf = conf;
         this.conf.set("fs.defaultFS", nameNodeURI);
         hiWayConf = new HiWayConfiguration();
         yarnClient = YarnClient.createYarnClient();
@@ -170,7 +175,7 @@ public class Client {
             try {
                 summary = new Data((new File(summaryFile)).getCanonicalPath());
             } catch (IOException e) {
-                logger.log(Level.SEVERE,e.getLocalizedMessage());
+                logger.log(Level.SEVERE, e.getLocalizedMessage());
                 e.printStackTrace();
             }
         }
@@ -179,8 +184,8 @@ public class Client {
         try {
             workflow = new Data((new File(workflowPath)).getCanonicalPath());
         } catch (IOException e) {
-                logger.log(Level.SEVERE,e.getLocalizedMessage());
-                e.printStackTrace();
+            logger.log(Level.SEVERE, e.getLocalizedMessage());
+            e.printStackTrace();
         }
         workflowType = HiWayConfiguration.HIWAY_WORKFLOW_LANGUAGE_OPTS.valueOf(cliParser.getOptionValue("language",
                 HiWayConfiguration.HIWAY_WORKFLOW_LANGUAGE_OPTS.cuneiform.toString()));
@@ -205,7 +210,7 @@ public class Client {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                logger.log(Level.INFO,"Thread sleep in monitoring loop interrupted");
+                logger.log(Level.INFO, "Thread sleep in monitoring loop interrupted");
             }
 
             // Get application report for the appId we are interested in
@@ -303,7 +308,7 @@ public class Client {
         ContainerLaunchContext amContainer = Records.newRecord(ContainerLaunchContext.class);
 
         // set local resources for the application master
-        Map<String, LocalResource> localResources = new HashMap<String, LocalResource>();
+        Map<String, LocalResource> localResources = new HashMap<>();
 
         // Copy the application master jar to the filesystem
         logger.info("Copy App Master jar from local filesystem and add to local environment");
@@ -311,12 +316,26 @@ public class Client {
 
         workflow.stageOut(fs, "");
 
+        /**
+         *
+         * TEST: remaining problem: class not found
+         *
+         */
+        Path origJarPath = new Path("/HiwayFiles/simple-yarn-app-1.1.0.jar");
+        LocalResource appMasterJar = Records.newRecord(LocalResource.class);
+        setupAppMasterJar(origJarPath, appMasterJar);
+        //workflow.addToLocalResourceMap(localResources, fs, "");
+        /**
+         *
+         * TEST
+         *
+         */
         // set local resource info into app master container launch context
         amContainer.setLocalResources(localResources);
 
         /* set the env variables to be setup in the env where the application master will be run */
         logger.info("Set the environment for the application master");
-        Map<String, String> env = new HashMap<String, String>();
+        Map<String, String> env = new HashMap<>();
 
         StringBuilder classPathEnv = new StringBuilder(Environment.CLASSPATH.$()).append(File.pathSeparatorChar).append("./*");
         for (String c : conf.getStrings(YarnConfiguration.YARN_APPLICATION_CLASSPATH, YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH)) {
@@ -334,46 +353,11 @@ public class Client {
 
         amContainer.setEnvironment(env);
 
-        // Set the necessary command to execute the application master
-        Vector<CharSequence> vargs = new Vector<CharSequence>(30);
-
-        // Set java executable command
-        logger.info("Setting up app master command");
-        vargs.add(Environment.JAVA_HOME.$() + "/bin/java");
-        // Set Xmx based on am memory size
-        vargs.add("-Xmx" + amMemory + "m");
-		// Set class name
-
-        switch (workflowType) {
-            case dax:
-                vargs.add(HiWayConfiguration.HIWAY_WORKFLOW_LANGUAGE_DAX_CLASS);
-                break;
-            default:
-                vargs.add(HiWayConfiguration.HIWAY_WORKFLOW_LANGUAGE_CUNEIFORM_CLASS);
-        }
-
-        vargs.add("--workflow " + workflow.getLocalPath());
-        if (summary != null) {
-            vargs.add("--summary " + summary.getLocalPath());
-        }
-        vargs.add("--appid " + appId.toString());
-
-        if (debugFlag) {
-            vargs.add("--debug");
-        }
-
-        vargs.add("1>&1 | tee AppMaster.stdout > " + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/AppMaster.stdout");
-        vargs.add("2>&2 | tee AppMaster.stderr > " + ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/AppMaster.stderr");
-
-        // Get final command
-        StringBuilder command = new StringBuilder();
-        for (CharSequence str : vargs) {
-            command.append(str).append(" ");
-        }
+        String command = "$JAVA_HOME/bin/java com.hortonworks.simpleyarnapp.ApplicationMaster /bin/date 2";
 
         logger.info("Completed setting up app master command " + command.toString());
-        List<String> commands = new ArrayList<String>();
-        commands.add(command.toString());
+        List<String> commands = new ArrayList<>();
+        commands.add(command);
         amContainer.setCommands(commands);
 
         // Set up resource type requirements
@@ -425,6 +409,15 @@ public class Client {
 
         return success;
 
+    }
+
+    private void setupAppMasterJar(Path jarPath, LocalResource appMasterJar) throws IOException {
+        FileStatus jarStat = FileSystem.get(conf).getFileStatus(jarPath);
+        appMasterJar.setResource(ConverterUtils.getYarnUrlFromPath(jarPath));
+        appMasterJar.setSize(jarStat.getLen());
+        appMasterJar.setTimestamp(jarStat.getModificationTime());
+        appMasterJar.setType(LocalResourceType.FILE);
+        appMasterJar.setVisibility(LocalResourceVisibility.PUBLIC);
     }
 
 }
