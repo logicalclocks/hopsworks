@@ -35,6 +35,7 @@ import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.fileoperations.FileSystemOperations;
+import se.kth.bbc.yarn.Client;
 import se.kth.bbc.yarn.YarnFlinkClient;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
@@ -641,11 +642,13 @@ public class StudyMB implements Serializable {
     }
     
     public void test(){
-        YarnFlinkClient c = new YarnFlinkClient();
         try {
-            c.run("pi 16 100000", 1, new Path("/usr/hadoop/hadoop-2.4.1/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.4.1.jar"));
+            String[] args = {"-w","/home/glassfish/roshan/hiway-0.2.0-SNAPSHOT/wordcount.cf","/home/glassfish/roshan/hiway-0.2.0-SNAPSHOT/wordcount/benzko.txt","/home/glassfish/testRes/out.txt"};
+            Client c = Client.getInitiatedClient(args);
+            c.run();
         } catch (Exception ex) {
             Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+            addErrorMessageToUserAction("Failed.");
         }
     }
 

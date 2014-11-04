@@ -46,7 +46,12 @@
                                     <ui:insert name="browserTab">
                                         <ui:include src="/bbc/lims/studyTabs/browser.xhtml"/>
                                     </ui:insert>
-                                </p:tab> 
+                                </p:tab>
+                                <p:tab id="test" title="Test">
+                                    <ui:insert name="test">
+                                        <ui:include src="/bbc/lims/test.xhtml"/>
+                                    </ui:insert>
+                                </p:tab>
                             </p:tabView>
                         </div>
                     </div>

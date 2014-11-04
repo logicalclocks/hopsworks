@@ -18,6 +18,8 @@ and open the template in the editor.
         <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
     </h:head>
     <body>
-        Nothing to see here.
+        <ui:composition>
+            <p:commandButton action="#{studyManagedBean.test()}" value="Test"/>
+        </ui:composition>
     </body>
 </html>
