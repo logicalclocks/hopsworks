@@ -229,7 +229,6 @@ public class Inode implements Serializable {
     public List<NavigationPath> getConstituentsPath() {
         if (isStudyRoot()) {
             List<NavigationPath> p = new ArrayList<>();
-            //TODO: change "study" to real study name
             p.add(new NavigationPath(name, name + "/"));
             return p;
         } else {

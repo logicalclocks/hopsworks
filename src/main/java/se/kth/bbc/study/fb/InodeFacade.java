@@ -132,5 +132,23 @@ public class InodeFacade extends AbstractFacade<Inode> {
         return query.getSingleResult(); //Sure to give a single result because both all children of same parent "null" so name is unique
         //TODO: enforce uniqueness of folder and file name under same parent in Inodes table!
     }
+    
+    /**
+     * Check whether the given path exists.
+     * @param path The path to search for.
+     * @return True if the path exist (i.e. there is an Inode on this path), false otherwise.
+     */
+   public boolean existsPath(String path){
+       return getInode(path)!=null;
+   }
+   
+   /**
+    * Get the Inode at the specified path.
+    * @param path
+    * @return Null if path does not exist.
+    */
+   public Inode getInodeAtPath(String path){
+       return getInode(path);
+   }
 
 }

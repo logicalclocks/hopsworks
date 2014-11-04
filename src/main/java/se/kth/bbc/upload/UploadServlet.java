@@ -67,7 +67,8 @@ public class UploadServlet extends HttpServlet {
         }
         String fileType = info.resumableFilename.substring(extPos + 1);
 
-        fileOps.copyToHDFS(info.resumableFilename, uploadPath+info.resumableFilename, null);
+        //fileOps.copyToHDFS(info.resumableFilename, uploadPath+info.resumableFilename, null);
+        fileOps.uploadFile(info.resumableFilename, uploadPath+info.resumableFilename);
         //TODO: create an Inode upon upload start
     }
 

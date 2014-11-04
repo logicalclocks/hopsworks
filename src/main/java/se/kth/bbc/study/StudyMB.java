@@ -21,7 +21,6 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.hadoop.fs.Path;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.LazyDataModel;
@@ -35,8 +34,8 @@ import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.fileoperations.FileSystemOperations;
+import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.yarn.Client;
-import se.kth.bbc.yarn.YarnFlinkClient;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
 
@@ -600,7 +599,7 @@ public class StudyMB implements Serializable {
                 String path = File.separator + FileSystemOperations.DIR_ROOT + File.separator + studyName;
                 success = fileOps.rmRecursive(path);
                 if (!success) {
-                    //TODO: add error message.
+                    MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to remove study files.");
                 }
             }
             logger.log(Level.INFO, "{0} - study removed.", studyName);

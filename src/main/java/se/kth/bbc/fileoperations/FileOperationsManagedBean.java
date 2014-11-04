@@ -12,6 +12,7 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
+import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.study.fb.Inode;
 
@@ -54,7 +55,7 @@ public class FileOperationsManagedBean implements Serializable {
             logger.log(Level.INFO, "File was downloaded from HDFS path: {0}", inode.getStudyPath());
         } catch (IOException ex) {
             Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
-            //TODO: add error message
+            MessagesController.addErrorMessage(MessagesController.ERROR, "Download failed.");
         }
         return sc;
     }
@@ -79,11 +80,11 @@ public class FileOperationsManagedBean implements Serializable {
             if (success) {
                 newFolderName = null;
             } else {
-                //TODO: add error message.
+                MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to create folder.");
             }
         } catch (IOException ex) {
             Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
-            //TODO: add error message
+            MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to create folder.");
         }
     }
 
@@ -110,8 +111,8 @@ public class FileOperationsManagedBean implements Serializable {
 
     /**
      * Create a sample folder for the current study. Creates a sample folder and
-     * subfolders for various common file types. Folder name should be set through
-     * the <i>newFolderName</i> property.
+     * subfolders for various common file types. Folder name should be set
+     * through the <i>newFolderName</i> property.
      *
      */
     public void createSampleDir() {
@@ -134,13 +135,13 @@ public class FileOperationsManagedBean implements Serializable {
             for (String s : folders) {
                 success = fileOps.mkDir(s);
                 if (!success) {
-                    //TODO: add error message
+                    MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to create folder " + s + ".");
                     return;
                 }
             }
         } catch (IOException ex) {
             Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
-            //TODO: add error message
+            MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to create folders.");
         }
         newFolderName = null;
     }
@@ -148,8 +149,8 @@ public class FileOperationsManagedBean implements Serializable {
     public void setStudy(StudyMB study) {
         this.study = study;
     }
-    
-    public StudyMB getStudy(){
+
+    public StudyMB getStudy() {
         return study;
     }
 
@@ -158,7 +159,7 @@ public class FileOperationsManagedBean implements Serializable {
             fileOps.rm(i);
         } catch (IOException ex) {
             Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
-            //TODO: add error message
+            MessagesController.addErrorMessage(MessagesController.ERROR, "Remove failed.");
         }
     }
 }

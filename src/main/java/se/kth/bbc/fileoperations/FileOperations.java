@@ -5,9 +5,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
+import javax.ejb.Singleton;
 import javax.ejb.Stateless;
 import org.apache.hadoop.fs.Path;
 import se.kth.bbc.study.fb.Inode;
@@ -21,7 +24,7 @@ import se.kth.bbc.upload.UploadServlet;
  *
  * @author stig
  */
-@Stateless
+@Singleton
 public class FileOperations {
 
     @EJB
@@ -68,6 +71,7 @@ public class FileOperations {
         //Update the status of the Inode
         if (inode != null) {
             inode.setStatus(Inode.COPYING);
+            inode.setSize((int)localfile.length());
             inodes.update(inode);
         } else {
             inode = inodes.createAndPersistFile(destination, localfile.length(), Inode.COPYING);
@@ -93,7 +97,11 @@ public class FileOperations {
 
     //TODO: add method for starting an upload of a file, which will create an Inode in status "uploading"
     private static File getLocalFile(String localFilename) {
-        return new File(UploadServlet.UPLOAD_DIR + File.separator + localFilename);
+        return new File(getLocalFilePath(localFilename));
+    }
+    
+    private static String getLocalFilePath(String localFilename){
+        return UploadServlet.UPLOAD_DIR + File.separator + localFilename;
     }
     
      /**
@@ -135,6 +143,28 @@ public class FileOperations {
             inodes.removeRecursivePath(path);
         }
         return success;
+    }
+    
+    /**
+     * Upload a file to HDFS. First, check if an Inode has been created. If not:
+     * create one with status "Uploading". If file is already available locally 
+     * (i.e. has been staged), copy to HDFS. Else, return.
+     * @param localFilename Name of the local file, assumed to be in the tmp directory.
+     * @param destination Destination path in HDFS, includes the filename.
+     */
+    public synchronized void uploadFile(String localFilename, String destination){
+        //Make sure that an entry exists in the DB and get it.
+        Inode upload;
+        if(!inodes.existsPath(destination)){
+            upload = inodes.createAndPersistFile(destination, 0, Inode.UPLOADING);
+        }else{
+            upload = inodes.getInodeAtPath(destination);
+        }
+        
+        //check if uploading is finished: file exists locally
+        if(Files.exists(Paths.get(getLocalFilePath(localFilename))) && upload.getStatus().equals(Inode.UPLOADING)){
+            copyToHDFS(localFilename, destination, upload);
+        }
     }
 
 }
