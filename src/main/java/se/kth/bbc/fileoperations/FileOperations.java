@@ -156,8 +156,12 @@ public class FileOperations {
      * @param destination The path to which the file should be uploaded.
      */
     public void startUpload(String destination) {
-        if (!inodes.existsPath(destination)) {
-            inodes.createAndPersistFile(destination, 0, Inode.UPLOADING);
+        try {
+            if (!inodes.existsPath(destination)) {
+                inodes.createAndPersistFile(destination, 0, Inode.UPLOADING);
+            }
+        } catch (Exception c) {
+
         }
     }
 

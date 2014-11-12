@@ -3,9 +3,7 @@ package se.kth.bbc.study.fb;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceContext;
-import javax.persistence.RollbackException;
 import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
@@ -55,8 +53,8 @@ public class InodeFacade extends AbstractFacade<Inode> {
         Inode z = new Inode(p[p.length - 1], parent, dir, (int)size, status);
         parent.addChild(z);
 
-        persist(parent);
-        persist(z);
+        em.persist(parent);
+        em.persist(z);
 
         return z;
     }
