@@ -5,12 +5,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
-import javax.ejb.Singleton;
 import javax.ejb.Stateless;
 import org.apache.hadoop.fs.Path;
 import se.kth.bbc.study.fb.Inode;
@@ -24,7 +21,7 @@ import se.kth.bbc.upload.UploadServlet;
  *
  * @author stig
  */
-@Singleton
+@Stateless
 public class FileOperations {
 
     @EJB
@@ -71,7 +68,7 @@ public class FileOperations {
         //Update the status of the Inode
         if (inode != null) {
             inode.setStatus(Inode.COPYING);
-            inode.setSize((int)localfile.length());
+            inode.setSize((int) localfile.length());
             inodes.update(inode);
         } else {
             inode = inodes.createAndPersistFile(destination, localfile.length(), Inode.COPYING);
@@ -95,26 +92,42 @@ public class FileOperations {
         }
     }
 
-    //TODO: add method for starting an upload of a file, which will create an Inode in status "uploading"
     private static File getLocalFile(String localFilename) {
         return new File(getLocalFilePath(localFilename));
     }
-    
-    private static String getLocalFilePath(String localFilename){
+
+    private static String getLocalFilePath(String localFilename) {
         return UploadServlet.UPLOAD_DIR + File.separator + localFilename;
     }
-    
-     /**
-     * Delete the file at given path.
+
+    /**
+     * Delete the file represented by Inode i.
      *
-     * @param location: Path to file to be removed
+     * @param i The Inode to be removed.
      * @throws IOException
      */
     public boolean rm(Inode i) throws IOException {
         Path location = new Path(i.getPath());
         boolean success = fsOps.rm(location, false);
-        if(success){
-           inodes.remove(i);
+        if (success) {
+            inodes.remove(i);
+        }
+        return success;
+    }
+
+    /**
+     * Delete the file or folder at the given Inode recursively: if a folder,
+     * all its children will be deleted.
+     *
+     * @param i Inode to be removed recursively.
+     * @return True if successful, false otherwise.
+     * @throws IOException
+     */
+    public boolean rmRecursive(Inode i) throws IOException {
+        Path location = new Path(i.getPath());
+        boolean success = fsOps.rm(location, true);
+        if (success) {
+            inodes.remove(i);
         }
         return success;
     }
@@ -123,48 +136,43 @@ public class FileOperations {
      * Delete the file or folder at the given path recursively: if a folder, all
      * its children will be deleted.
      *
-     * @param location
+     * @param path The path to file or folder to be removed recursively.
      * @return True if successful, false otherwise.
      * @throws IOException
      */
-    public boolean rmRecursive(Inode i) throws IOException {
-        Path location = new Path(i.getPath());
-        boolean success = fsOps.rm(location, true);
-        if(success){
-            inodes.remove(i);
-        }
-        return success;
-    }
-    
-    public boolean rmRecursive(String path) throws IOException{
+    public boolean rmRecursive(String path) throws IOException {
         Path location = new Path(path);
         boolean success = fsOps.rm(location, true);
-        if(success){
+        if (success) {
             inodes.removeRecursivePath(path);
         }
         return success;
     }
-    
+
     /**
-     * Upload a file to HDFS. First, check if an Inode has been created. If not:
-     * create one with status "Uploading". If file is already available locally 
-     * (i.e. has been staged), copy to HDFS. Else, return.
-     * @param localFilename Name of the local file, assumed to be in the tmp directory.
-     * @param destination Destination path in HDFS, includes the filename.
+     * Signify the start of an upload of a file. Check if an Inode has been
+     * created for this file and if not, create one with status "Uploading".
+     *
+     * @param destination The path to which the file should be uploaded.
      */
-    public synchronized void uploadFile(String localFilename, String destination){
-        //Make sure that an entry exists in the DB and get it.
-        Inode upload;
-        if(!inodes.existsPath(destination)){
-            upload = inodes.createAndPersistFile(destination, 0, Inode.UPLOADING);
-        }else{
-            upload = inodes.getInodeAtPath(destination);
+    public void startUpload(String destination) {
+        if (!inodes.existsPath(destination)) {
+            inodes.createAndPersistFile(destination, 0, Inode.UPLOADING);
         }
-        
-        //check if uploading is finished: file exists locally
-        if(Files.exists(Paths.get(getLocalFilePath(localFilename))) && upload.getStatus().equals(Inode.UPLOADING)){
-            copyToHDFS(localFilename, destination, upload);
-        }
+    }
+
+    /**
+     * Copy a file from the local file system to HDFS after its upload. Finds
+     * the corresponding Inode for the file and copies the file, updating the
+     * Inode.
+     *
+     * @param localFilename The local name of the uploaded file.
+     * @param destination The path in HDFS where the file should end up.
+     * Includes the file name.
+     */
+    public void copyAfterUploading(String localFilename, String destination) {
+        Inode node = inodes.getInodeAtPath(destination);
+        copyToHDFS(localFilename, destination, node);
     }
 
 }

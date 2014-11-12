@@ -19,7 +19,7 @@ import se.kth.bbc.study.fb.InodesMB;
 public class UploadServlet extends HttpServlet {
 
     public static final String UPLOAD_DIR = Constants.UPLOAD_DIR;
-    
+
     @EJB
     private FileOperations fileOps;
 
@@ -27,8 +27,8 @@ public class UploadServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         InodesMB inodes = (InodesMB) request.getSession().getAttribute("InodesMB");
         //Here because current path may change while uploading
-        String uploadPath = inodes.getCwdPath();        
-        
+        String uploadPath = inodes.getCwdPath();
+
         int resumableChunkNumber = getResumableChunkNumber(request);
 
         ResumableInfo info = getResumableInfo(request);
@@ -37,6 +37,8 @@ public class UploadServlet extends HttpServlet {
         //Seek to position
         raf.seek((resumableChunkNumber - 1) * (long) info.resumableChunkSize);
 
+        //fileOps.startUpload(uploadPath + info.resumableFilename);
+        
         //Save to file
         InputStream is = request.getInputStream();
         long readed = 0;
@@ -52,24 +54,27 @@ public class UploadServlet extends HttpServlet {
         }
         raf.close();
 
+        boolean finished = false;
+
         //Mark as uploaded.
         info.uploadedChunks.add(new ResumableInfo.ResumableChunkNumber(resumableChunkNumber));
         if (info.checkIfUploadFinished()) { //Check if all chunks uploaded, and change filename
             ResumableInfoStorage.getInstance().remove(info);
             response.getWriter().print("All finished.");
+            finished = true;
         } else {
             response.getWriter().print("Upload");
         }
 
-        int extPos = info.resumableFilename.lastIndexOf(".");
-        if (extPos == -1) {
-            return;
+        if (finished) {
+            int extPos = info.resumableFilename.lastIndexOf(".");
+            if (extPos == -1) {
+                return;
+            }
+            String fileType = info.resumableFilename.substring(extPos + 1);
+            
+            fileOps.copyAfterUploading(info.resumableFilename, uploadPath + info.resumableFilename);
         }
-        String fileType = info.resumableFilename.substring(extPos + 1);
-
-        //fileOps.copyToHDFS(info.resumableFilename, uploadPath+info.resumableFilename, null);
-        fileOps.uploadFile(info.resumableFilename, uploadPath+info.resumableFilename);
-        //TODO: create an Inode upon upload start
     }
 
     @Override

@@ -409,6 +409,7 @@ public class StudyMB implements Serializable {
      * @return
      */
     public String createStudy() {
+        //TODO: fix error messages
         try {
             if (!studyController.findStudy(study.getName())) {
                 study.setUsername(getUsername());

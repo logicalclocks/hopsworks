@@ -1,22 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package se.kth.bbc.upload;
 
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashSet;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.faces.bean.ManagedProperty;
-import se.kth.bbc.activity.ActivityMB;
-import se.kth.bbc.study.DatasetMB;
 
 /**
  * by fanxu

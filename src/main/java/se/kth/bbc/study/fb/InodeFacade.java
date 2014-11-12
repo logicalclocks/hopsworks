@@ -3,7 +3,9 @@ package se.kth.bbc.study.fb;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceContext;
+import javax.persistence.RollbackException;
 import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
@@ -48,18 +50,8 @@ public class InodeFacade extends AbstractFacade<Inode> {
     public Inode createAndPersistInode(String path, boolean dir, long size, String status) {
         //TODO: update size and modified date of parent
         //TODO: make all occurences of 'size' in application longs.
-        while (path.startsWith("/")) {
-            path = path.substring(1);
-        }
+        Inode parent = getParentFromPath(path);
         String[] p = path.split("/");
-        Inode root = findByName(p[0]);
-        Inode curr = root;
-        for (int i = 1; i < p.length - 1; i++) {
-            String s = p[i];
-            Inode next = curr.getChild(s);
-            curr = next;
-        }
-        Inode parent = curr;
         Inode z = new Inode(p[p.length - 1], parent, dir, (int)size, status);
         parent.addChild(z);
 
@@ -149,6 +141,21 @@ public class InodeFacade extends AbstractFacade<Inode> {
     */
    public Inode getInodeAtPath(String path){
        return getInode(path);
+   }
+   
+   private Inode getParentFromPath(String path){
+       while (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        String[] p = path.split("/");
+        Inode root = findByName(p[0]);
+        Inode curr = root;
+        for (int i = 1; i < p.length - 1; i++) {
+            String s = p[i];
+            Inode next = curr.getChild(s);
+            curr = next;
+        }
+        return curr;
    }
 
 }
