@@ -5,7 +5,8 @@ import java.io.File;
 import java.util.HashSet;
 
 /**
- * by fanxu
+ * @author fanxu;
+ * @author Stig
  */
 public class ResumableInfo {
 
@@ -34,8 +35,8 @@ public class ResumableInfo {
         }
     }
 
-    //Chunks uploaded
-    public HashSet<ResumableChunkNumber> uploadedChunks = new HashSet<>();
+    //Chunks uploaded. Private to enable atomically add and check if finished
+    private HashSet<ResumableChunkNumber> uploadedChunks = new HashSet<>();
 
     public String resumableFilePath;
 
@@ -49,9 +50,14 @@ public class ResumableInfo {
             return true;
         }
     }
-    public boolean checkIfUploadFinished() {
+    private boolean checkIfUploadFinished() {
         //check if upload finished
         int count = (int) Math.ceil(((double) resumableTotalSize) / ((double) resumableChunkSize));
+        //If less chunks than necessary have been uploaded, not finished
+        if(uploadedChunks.size() < count){
+            return false;
+        }
+        //In case the right amount has been uploaded: sanity check
         for(int i = 1; i < count; i ++) {
             if (!uploadedChunks.contains(new ResumableChunkNumber(i))) {
                 return false;
@@ -63,6 +69,27 @@ public class ResumableInfo {
         String new_path = file.getAbsolutePath().substring(0, file.getAbsolutePath().length() - ".temp".length());
         file.renameTo(new File(new_path));
         return true;
+    }
+    
+    /**
+     * Add the chunk <i>rcn</i> to the uploaded chunks and check if upload
+     * has finished. Upon upload, change file name. Synchronized method to enable
+     * atomic checking.
+     * @return true if finished.
+     */
+    public synchronized boolean addChuckAndCheckIfFinished(ResumableChunkNumber rcn){
+        uploadedChunks.add(rcn);
+        return checkIfUploadFinished();
+    }
+    
+    
+    /**
+     * Check if the resumable chunk has been uploaded.
+     * @param rcn
+     * @return 
+     */
+    public boolean isUploaded(ResumableChunkNumber rcn){
+        return uploadedChunks.contains(rcn);
     }
     
     

@@ -37,8 +37,11 @@ public class UploadServlet extends HttpServlet {
         //Seek to position
         raf.seek((resumableChunkNumber - 1) * (long) info.resumableChunkSize);
 
-        fileOps.startUpload(uploadPath + info.resumableFilename);
-        
+        //add an entry to the Inodes database: file is uploading.
+        if (resumableChunkNumber == 1) {
+            fileOps.startUpload(uploadPath + info.resumableFilename);
+        }
+
         //Save to file
         InputStream is = request.getInputStream();
         long readed = 0;
@@ -56,9 +59,8 @@ public class UploadServlet extends HttpServlet {
 
         boolean finished = false;
 
-        //Mark as uploaded.
-        info.uploadedChunks.add(new ResumableInfo.ResumableChunkNumber(resumableChunkNumber));
-        if (info.checkIfUploadFinished()) { //Check if all chunks uploaded, and change filename
+        //Mark as uploaded and check if finished
+        if (info.addChuckAndCheckIfFinished(new ResumableInfo.ResumableChunkNumber(resumableChunkNumber))) { //Check if all chunks uploaded, and change filename
             ResumableInfoStorage.getInstance().remove(info);
             response.getWriter().print("All finished.");
             finished = true;
@@ -72,7 +74,7 @@ public class UploadServlet extends HttpServlet {
                 return;
             }
             String fileType = info.resumableFilename.substring(extPos + 1);
-            
+
             fileOps.copyAfterUploading(info.resumableFilename, uploadPath + info.resumableFilename);
         }
     }
@@ -83,7 +85,7 @@ public class UploadServlet extends HttpServlet {
 
         ResumableInfo info = getResumableInfo(request);
 
-        if (info.uploadedChunks.contains(new ResumableInfo.ResumableChunkNumber(resumableChunkNumber))) {
+        if (info.isUploaded(new ResumableInfo.ResumableChunkNumber(resumableChunkNumber))) {
             response.getWriter().print("Uploaded."); //This Chunk has been Uploaded.
         } else {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);

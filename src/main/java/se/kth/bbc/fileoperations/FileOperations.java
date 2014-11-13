@@ -69,7 +69,7 @@ public class FileOperations {
         if (inode != null) {
             inode.setStatus(Inode.COPYING);
             inode.setSize((int) localfile.length());
-            inodes.update(inode);
+            inodes.persist(inode);
         } else {
             inode = inodes.createAndPersistFile(destination, localfile.length(), Inode.COPYING);
         }
@@ -156,12 +156,8 @@ public class FileOperations {
      * @param destination The path to which the file should be uploaded.
      */
     public void startUpload(String destination) {
-        try {
-            if (!inodes.existsPath(destination)) {
-                inodes.createAndPersistFile(destination, 0, Inode.UPLOADING);
-            }
-        } catch (Exception c) {
-
+        if (!inodes.existsPath(destination)) {
+            inodes.createAndPersistFile(destination, 0, Inode.UPLOADING);
         }
     }
 
