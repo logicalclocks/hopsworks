@@ -4,8 +4,8 @@
  */
 package se.kth.hop.wf.job;
 
-import de.huberlin.cuneiform.compiler.local.LocalDispatcher;
-import de.huberlin.logview.table.TableOp;
+//import de.huberlin.cuneiform.compiler.local.LocalDispatcher;
+//import de.huberlin.logview.table.TableOp;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,35 +39,35 @@ public class WorkflowJobTask implements Callable<Job> {
         Job pending = new Job(selectedWorkflow.getOwner(),
                 selectedWorkflow.getWorkflowName(), dateStarted.toString(), 0);
         try {
-            history.create(pending);
-            FileUtils.deleteDirectory(dir);
-            LocalDispatcher ld = new LocalDispatcher(
-                    dir, // the working directory for all the intermediate data
-                    null, // the location of the log-file to be created. By default: (dir)/log_(runid).csv
-                    selectedWorkflow.getWorkflowName());    // the run ID. By default, a random UUID
-
-            ld.addInputString(selectedWorkflow.getWorkflowMetadata());
-            ld.run();
-            Set<String> resStr = ld.getComputationResultSet();
-
-            
-            Date dateFinished = new Date();
-
-//            GraphOp graph = new GraphOp();
-            TableOp table = new TableOp();
-            FileInputStream log = new FileInputStream(ld.getLogFile());
-//            FileOutputStream graphLog = new FileOutputStream(System.getProperty("user.dir") + 
-//                    "/build/"+selectedWorkflow.getWorkflowName()+".dot");
-//            ByteArrayOutputStream graphData = new ByteArrayOutputStream();
-            ByteArrayOutputStream tableData = new ByteArrayOutputStream();
-//            graph.process(log, graphData);
-//            pending.setGraphDot(graphData.toString());
-            
-
-            table.process(log, tableData);
-            pending.setTableJob(tableData.toString());
-            pending.setCompleted(true);
-            pending.setCompletionTime(dateFinished.getTime() - dateStarted.getTime());
+//            history.create(pending);
+//            FileUtils.deleteDirectory(dir);
+//            LocalDispatcher ld = new LocalDispatcher(
+//                    dir, // the working directory for all the intermediate data
+//                    null, // the location of the log-file to be created. By default: (dir)/log_(runid).csv
+//                    selectedWorkflow.getWorkflowName());    // the run ID. By default, a random UUID
+//
+//            ld.addInputString(selectedWorkflow.getWorkflowMetadata());
+//            ld.run();
+//            Set<String> resStr = ld.getComputationResultSet();
+//
+//            
+//            Date dateFinished = new Date();
+//
+////            GraphOp graph = new GraphOp();
+//            TableOp table = new TableOp();
+//            FileInputStream log = new FileInputStream(ld.getLogFile());
+////            FileOutputStream graphLog = new FileOutputStream(System.getProperty("user.dir") + 
+////                    "/build/"+selectedWorkflow.getWorkflowName()+".dot");
+////            ByteArrayOutputStream graphData = new ByteArrayOutputStream();
+//            ByteArrayOutputStream tableData = new ByteArrayOutputStream();
+////            graph.process(log, graphData);
+////            pending.setGraphDot(graphData.toString());
+//            
+//
+//            table.process(log, tableData);
+//            pending.setTableJob(tableData.toString());
+//            pending.setCompleted(true);
+//            pending.setCompletionTime(dateFinished.getTime() - dateStarted.getTime());
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {

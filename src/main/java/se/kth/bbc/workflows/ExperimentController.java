@@ -2,13 +2,22 @@ package se.kth.bbc.workflows;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
+import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
@@ -20,10 +29,12 @@ import org.apache.hadoop.fs.Path;
 import org.primefaces.component.selectbooleancheckbox.SelectBooleanCheckbox;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
+import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.study.fb.Inode;
 import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.fileoperations.FileSystemOperations;
+import se.kth.bbc.lims.MessagesController;
 
 /**
  * Controller for the Experiments tab in StudyPage.
@@ -35,21 +46,16 @@ import se.kth.bbc.fileoperations.FileSystemOperations;
 public class ExperimentController implements Serializable {
 
     private String expName;
-    private Workflow flowfile;
     private boolean publicFile = false;
     private UploadedFile newFile;
 
-    @EJB(beanName = "workflowFacade")
-    private WorkflowFacade workflows;
+    private Inode workflow;
 
     @ManagedProperty(value = "#{studyManagedBean}")
     private StudyMB study;
-    
-    @EJB
-    private InodeFacade inodes;
 
     @EJB
-    private FileSystemOperations fileSystem;
+    private FileOperations fops;
 
     public ExperimentController() {
     }
@@ -62,12 +68,12 @@ public class ExperimentController implements Serializable {
         this.expName = expName;
     }
 
-    public Workflow getFlowfile() {
-        return flowfile;
+    public Inode getWorkflow() {
+        return workflow;
     }
 
-    public void setFlowfile(Workflow flowfile) {
-        this.flowfile = flowfile;
+    public void setWorkflow(Inode flowfile) {
+        this.workflow = flowfile;
     }
 
     public StudyMB getStudy() {
@@ -78,34 +84,36 @@ public class ExperimentController implements Serializable {
         this.study = study;
     }
 
-    public void setWorkflows(WorkflowFacade workflows) {
-        this.workflows = workflows;
+    public boolean isWorkflowSet() {
+        return this.workflow != null;
     }
 
-    public boolean isFlowfileSet() {
-        return this.flowfile != null;
-    }
-
-    private Map<String, Workflow> getAvailableWorkflows() {
-        return Maps.uniqueIndex(workflows.findAllForStudyOrPublic(study.getStudyName()), new Function<Workflow, String>() {
-            @Override
-            public String apply(Workflow from) {
-                return from.getWorkflowPK().getTitle();
-            }
-        });
+    private Map<String, File> getAvailableWorkflows() {
+        /*return Maps.uniqueIndex(workflows.findAllForStudyOrPublic(study.getStudyName()), new Function<Workflow, String>() {
+         @Override
+         public String apply(Workflow from) {
+         return from.getWorkflowPK().getTitle();
+         }
+         });*/
+        return null;
     }
 
     public Collection<String> getWorkflowNames() {
-        Map<String, Workflow> flows = getAvailableWorkflows();
-        return flows.keySet();
+        /*
+         Map<String, Workflow> flows = getAvailableWorkflows();
+         return flows.keySet();*/
+        return null;
     }
 
     public void setSelectedWorkflow(String title) {
-        setFlowfile(getAvailableWorkflows().get(title));
+        /*
+         setFlowfile(getAvailableWorkflows().get(title));*/
+
     }
 
     public String getSelectedWorkflow() {
-        return flowfile == null ? "" : flowfile.getWorkflowPK().getTitle();
+        /*return flowfile == null ? "" : flowfile.getWorkflowPK().getTitle();*/
+        return null;
     }
 
     public void setPublicFile(boolean pubFile) {
@@ -130,39 +138,56 @@ public class ExperimentController implements Serializable {
 
         //TODO: make more elegant (i.e. don't hard code...)
         String basePath = File.separator + FileSystemOperations.DIR_ROOT + File.separator + study.getStudyName() + File.separator + FileSystemOperations.DIR_CUNEIFORM;
-        Path destination = new Path(basePath + File.separator + newFile.getFileName());
+        String destination = basePath + File.separator + newFile.getFileName();
 
         try {
             //Copy to file system
             InputStream is = newFile.getInputstream();
-            fileSystem.copyToHDFS(destination, is);
-
-            //If no problems: write to database
-            Workflow wf = new Workflow(newFile.getFileName(), study.getStudyName());
-            wf.setPublicFile(publicFile);
-            wf.setCreator(study.getUsername());
-            workflows.create(wf);
-            
-            Inode inode = inodes.createAndPersistFile(destination.toString(), (int)newFile.getSize(), Inode.AVAILABLE);
+            fops.writeToHDFS(is, newFile.getSize(), destination);
 
             //Set current flowfile + notify
-            this.flowfile = wf;
-            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Success", "Cuneiform file was successfully uploaded to HDFS.");
-            FacesContext.getCurrentInstance().addMessage("fileFailure", message);
-        } catch (IOException | URISyntaxException ex) {
+            //TODO!!!!! (line below)
+            this.workflow = null;
+            MessagesController.addInfoMessage("Success", "Cuneiform file was successfully uploaded to HDFS.");
+        } catch (IOException e) {
             newFile = null;
-            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Upload to HDFS failed.");
-            FacesContext.getCurrentInstance().addMessage("fileFailure", message);
+            MessagesController.addErrorMessage("fileFailure", "Error", "Upload to HDFS failed.");
         }
     }
-    
-    //Needed because of bug in PF: only calls "process" setters after upload method.
-    public void checkboxChanged(AjaxBehaviorEvent event){
-        publicFile = ((SelectBooleanCheckbox)event.getSource()).isSelected();
+
+    //Needed because PF only calls "process" setters after upload method.
+    public void checkboxChanged(AjaxBehaviorEvent event) {
+        publicFile = ((SelectBooleanCheckbox) event.getSource()).isSelected();
     }
 
+    /**
+     * For the current workflow file, get all the free parameters.
+     *
+     * @return
+     */
+    public List<String> getFreeParameters() {
+        try {
+            //Get the variables
+            String txt = getWorkflowText();
+            TopLevelContext tlc = StaticNodeVisitor.createTlc(txt);
+            return StaticNodeVisitor.getFreeVarNameList(tlc);
+        } catch (HasFailedException | IOException e) {
+            MessagesController.addErrorMessage("Error!","Failed to load the free variables of the given workflow file.");
+        }
+        return null;
+    }
 
-
-
+    //Read the text of the set workflow file
+    private String getWorkflowText() throws IOException {
+        //Read the cf-file
+        StringBuilder workflowBuilder = new StringBuilder();
+        BufferedReader br = new BufferedReader(new InputStreamReader(fops.getInputStream(workflow)));
+        String line = br.readLine();
+        while (line != null) {
+            workflowBuilder.append(line);
+            line = br.readLine();
+        }
+        return workflowBuilder.toString();
+    }
 
 }

@@ -1,7 +1,5 @@
 package se.kth.bbc.yarn;
 
-import de.huberlin.wbi.hiway.app.HiWayConfiguration;
-import de.huberlin.wbi.hiway.common.Data;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -103,10 +101,10 @@ public class Client {
     // command line options
     private Options opts;
     private String sandboxDir;
-    private Data summary;
+    /*private Data summary;
     // the workflow format and its path in the file system
     private Data workflow;
-    private HiWayConfiguration.HIWAY_WORKFLOW_LANGUAGE_OPTS workflowType;
+    private HiWayConfiguration.HIWAY_WORKFLOW_LANGUAGE_OPTS workflowType;*/
     // a handle to the YARN ApplicationsManager (ASM)
     private YarnClient yarnClient;
 
@@ -119,18 +117,18 @@ public class Client {
     public Client(Configuration conf) {
         this.conf = conf;
         this.conf.set("fs.defaultFS", nameNodeURI);
-        hiWayConf = new HiWayConfiguration();
+        /*hiWayConf = new HiWayConfiguration();*/
         yarnClient = YarnClient.createYarnClient();
         yarnClient.init(conf);
         opts = new Options();
         opts.addOption("s", "summary", true, "The name of the json summary file. No file is created if this parameter is not specified.");
         opts.addOption("w", "workflow", true, "The workflow file to be executed by the Application Master");
         String workflowFormats = "";
-        for (HiWayConfiguration.HIWAY_WORKFLOW_LANGUAGE_OPTS language : HiWayConfiguration.HIWAY_WORKFLOW_LANGUAGE_OPTS.values()) {
+        /*for (HiWayConfiguration.HIWAY_WORKFLOW_LANGUAGE_OPTS language : HiWayConfiguration.HIWAY_WORKFLOW_LANGUAGE_OPTS.values()) {
             workflowFormats += ", " + language.toString();
-        }
-        opts.addOption("l", "language", true, "The input file format. Valid arguments: " + workflowFormats.substring(2) + ". Default: "
-                + HiWayConfiguration.HIWAY_WORKFLOW_LANGUAGE_OPTS.cuneiform);
+        }*/
+        /*opts.addOption("l", "language", true, "The input file format. Valid arguments: " + workflowFormats.substring(2) + ". Default: "
+                + HiWayConfiguration.HIWAY_WORKFLOW_LANGUAGE_OPTS.cuneiform);*/
         opts.addOption("debug", false, "Dump out debug information");
         opts.addOption("help", false, "Print usage");
     }
@@ -172,25 +170,25 @@ public class Client {
             debugFlag = true;
         }
 
-        amPriority = hiWayConf.getInt(HiWayConfiguration.HIWAY_AM_PRIORITY, HiWayConfiguration.HIWAY_AM_PRIORITY_DEFAULT);
+        /*amPriority = hiWayConf.getInt(HiWayConfiguration.HIWAY_AM_PRIORITY, HiWayConfiguration.HIWAY_AM_PRIORITY_DEFAULT);
         amQueue = hiWayConf.get(HiWayConfiguration.HIWAY_AM_QUEUE, HiWayConfiguration.HIWAY_AM_QUEUE_DEFAULT);
-        amMemory = hiWayConf.getInt(HiWayConfiguration.HIWAY_AM_MEMORY, HiWayConfiguration.HIWAY_AM_MEMORY_DEFAULT);
+        amMemory = hiWayConf.getInt(HiWayConfiguration.HIWAY_AM_MEMORY, HiWayConfiguration.HIWAY_AM_MEMORY_DEFAULT);*/
         if (amMemory < 0) {
             throw new IllegalArgumentException("Invalid memory specified for application master, exiting." + " Specified memory=" + amMemory);
         }
 
         if (cliParser.hasOption("summary")) {
             String summaryFile = cliParser.getOptionValue("summary");
-            try {
+            /*try {
                 summary = new Data((new File(summaryFile)).getCanonicalPath());
             } catch (IOException e) {
                 logger.log(Level.SEVERE, e.getLocalizedMessage());
                 e.printStackTrace();
-            }
+            }*/
         }
 
         String workflowPath = cliParser.getOptionValue("workflow");
-        try {
+        /*try {
             workflow = new Data((new File(workflowPath)).getCanonicalPath());
         } catch (IOException e) {
             logger.log(Level.SEVERE, e.getLocalizedMessage());
@@ -200,7 +198,7 @@ public class Client {
                 HiWayConfiguration.HIWAY_WORKFLOW_LANGUAGE_OPTS.cuneiform.toString()));
 
         clientTimeout = hiWayConf.getInt(HiWayConfiguration.HIWAY_CLIENT_TIMEOUT, HiWayConfiguration.HIWAY_CLIENT_TIMEOUT_DEFAULT) * 1000;
-
+*/
         return true;
     }
 
@@ -307,11 +305,11 @@ public class Client {
 
         // set the application name
         ApplicationSubmissionContext appContext = app.getApplicationSubmissionContext();
-        appContext.setApplicationType(hiWayConf.get(HiWayConfiguration.HIWAY_AM_APPLICATION_TYPE, HiWayConfiguration.HIWAY_AM_APPLICATION_TYPE_DEFAULT));
+        /*appContext.setApplicationType(hiWayConf.get(HiWayConfiguration.HIWAY_AM_APPLICATION_TYPE, HiWayConfiguration.HIWAY_AM_APPLICATION_TYPE_DEFAULT));
         appContext.setApplicationName("run " + workflow.getName() + " (type: " + workflowType.toString() + ")");
         ApplicationId appId = appContext.getApplicationId();
         sandboxDir = hiWayConf.get(HiWayConfiguration.HIWAY_AM_SANDBOX_DIRECTORY, HiWayConfiguration.HIWAY_AM_SANDBOX_DIRECTORY_DEFAULT);
-        Data.setHdfsDirectoryPrefix(sandboxDir + "/" + appId);
+        Data.setHdfsDirectoryPrefix(sandboxDir + "/" + appId);*/
 
         // Set up the container launch context for the application master
         ContainerLaunchContext amContainer = Records.newRecord(ContainerLaunchContext.class);
@@ -322,8 +320,8 @@ public class Client {
         // Copy the application master jar to the filesystem
         logger.info("Copy App Master jar from local filesystem and add to local environment");
         FileSystem fs = FileSystem.get(conf);
-
-        workflow.stageOut(fs, "");
+/*
+        workflow.stageOut(fs, "");*/
 
         /**
          *
@@ -410,13 +408,13 @@ public class Client {
         yarnClient.submitApplication(appContext);
 
         // Monitor the application
-        boolean success = monitorApplication(appId);
+  /*      boolean success = monitorApplication(appId);
 
         if (summary != null) {
             summary.stageIn(fs, "");
         }
-
-        return success;
+*/
+        return true;
 
     }
 

@@ -15,7 +15,7 @@ import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.upload.UploadServlet;
 
 /**
- * Session bean for file operations. Translates high-level operations in
+ * Session bean for file operations. Translates high-level operations into
  * operations on both the file system (HDFS) and the backing DB model (table
  * Inodes).
  *
@@ -62,6 +62,7 @@ public class FileOperations {
      * If null, a new inode is created for the file.
      */
     public void copyToHDFS(String localFilename, String destination, Inode inode) {
+        //TODO: rethrow caught exceptions so they can be reflected in GUI.
         //Get the local file
         File localfile = getLocalFile(localFilename);
 
@@ -79,6 +80,33 @@ public class FileOperations {
         Path destp = new Path(destination);
         try {
             fsOps.copyToHDFS(destp, new FileInputStream(localfile));
+            success = true;
+        } catch (IOException | URISyntaxException ex) {
+            Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        //Update status
+        //TODO: if fails, shoud local file be removed and Inode as well? Or retry? How to handle this?
+        if (success) {
+            inode.setStatus(Inode.AVAILABLE);
+            inodes.update(inode);
+        }
+    }
+    
+    /**
+     * Write an input stream to a HDFS file. An Inode is also created.
+     * @param is The InputStream to be written.
+     * @param size The length of the file.
+     * @param destination The path on HDFS at which the file should be created. Includes the filename.
+     */
+    public void writeToHDFS(InputStream is, long size, String destination){
+        //TODO: rethrow caught exceptions so they can be reflected in GUI.
+        Inode inode = inodes.createAndPersistFile(destination, size, Inode.COPYING);
+        //Actually copy to HDFS
+        boolean success = false;
+        Path destp = new Path(destination);
+        try {
+            fsOps.copyToHDFS(destp, is);
             success = true;
         } catch (IOException | URISyntaxException ex) {
             Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);

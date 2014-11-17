@@ -643,7 +643,7 @@ public class StudyMB implements Serializable {
 
     public void test() {
         try {
-            String[] args = {"-w", "/home/glassfish/roshan/hiway-0.2.0-SNAPSHOT/wordcount.cf", "/home/glassfish/roshan/hiway-0.2.0-SNAPSHOT/wordcount/benzko.txt", "/home/glassfish/testRes/out.txt"};
+            String[] args = {"-w", "/home/glassfish/roshan/hiway/helloworld.cf"};
             Client c = Client.getInitiatedClient(args);
             c.run();
         } catch (Exception ex) {
