@@ -10,6 +10,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
+import se.kth.bbc.lims.Constants;
 
 /**
  * Provides an interface for interaction with HDFS. Only interacts with HDFS.
@@ -19,7 +20,7 @@ import org.apache.hadoop.io.IOUtils;
 @Stateless
 public class FileSystemOperations {
 
-    public static final String nameNodeURI = "hdfs://snurran.sics.se:9999";
+    private static final String nameNodeURI = Constants.NAMENODE_URI;
     private static final Logger logger = Logger.getLogger(FileSystemOperations.class.getName());
     public static final String DIR_ROOT = "Projects";
     public static final String DIR_SAMPLES = "Samples";

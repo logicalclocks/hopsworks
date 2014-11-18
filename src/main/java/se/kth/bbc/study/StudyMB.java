@@ -64,7 +64,6 @@ public class StudyMB implements Serializable {
      *
      *
      */
-    public final String nameNodeURI = "hdfs://snurran.sics.se:9999";
 
     @EJB
     private StudyController studyController;

@@ -50,7 +50,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.Records;
-import static se.kth.bbc.fileoperations.FileSystemOperations.nameNodeURI;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.EnvironmentVariableFacade;
 
 public class Client {
@@ -111,12 +111,12 @@ public class Client {
     public Client() throws Exception {
         this(new YarnConfiguration());
         conf.addResource("core-site.xml");
-        conf.set("fs.defaultFS", nameNodeURI);
+        conf.set("fs.defaultFS", Constants.NAMENODE_URI);
     }
 
     public Client(Configuration conf) {
         this.conf = conf;
-        this.conf.set("fs.defaultFS", nameNodeURI);
+        this.conf.set("fs.defaultFS", Constants.NAMENODE_URI);
         /*hiWayConf = new HiWayConfiguration();*/
         yarnClient = YarnClient.createYarnClient();
         yarnClient.init(conf);
