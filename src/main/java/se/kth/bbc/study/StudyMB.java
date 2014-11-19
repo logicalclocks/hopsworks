@@ -35,6 +35,7 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.yarn.AppMasterStarter;
 import se.kth.bbc.yarn.Client;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
@@ -641,14 +642,7 @@ public class StudyMB implements Serializable {
     }
 
     public void test() {
-        try {
-            String[] args = {"-w", "/home/glassfish/roshan/hiway/helloworld.cf"};
-            Client c = Client.getInitiatedClient(args);
-            c.run();
-        } catch (Exception ex) {
-            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
-            addErrorMessageToUserAction("Failed.");
-        }
+        AppMasterStarter.start();
     }
 
 }
