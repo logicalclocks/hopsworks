@@ -2,13 +2,13 @@
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee           http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
     <context-param>
         <param-name>javax.faces.PROJECT_STAGE</param-name>
-<!--        <param-value>Development</param-value>-->
+        <!--        <param-value>Development</param-value>-->
         <param-value>Production</param-value>
     </context-param>
     <context-param>
-       <param-name>facelets.SKIP_COMMENTS</param-name>
-       <param-value>true</param-value>
-    </context-param>    
+        <param-name>facelets.SKIP_COMMENTS</param-name>
+        <param-value>true</param-value>
+    </context-param>
     <context-param>
         <param-name>com.sun.faces.verifyObjects</param-name>
         <param-value>false</param-value>
@@ -34,8 +34,8 @@
         <param-value>true</param-value>
     </context-param>
     <context-param>
-            <param-name>javax.faces.PARTIAL_STATE_SAVING</param-name>
-            <param-value>true</param-value>
+        <param-name>javax.faces.PARTIAL_STATE_SAVING</param-name>
+        <param-value>true</param-value>
     </context-param>
     <context-param>
         <param-name>javax.faces.FACELETS_BUFFER_SIZE</param-name>
@@ -83,7 +83,6 @@
         <servlet-name>UploadServlet</servlet-name>
         <url-pattern>/bbc/uploader</url-pattern>
     </servlet-mapping>
-    
     <!-- declare the roles relevant for our webapp -->
     <security-role>
         <role-name>ADMIN</role-name>
@@ -147,7 +146,6 @@
             <role-name>ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
-   
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>BiobankCloud Admin Researcher Private pages</web-resource-name>
@@ -190,7 +188,6 @@
             <role-name>BBC_RESEARCHER</role-name>
         </auth-constraint>
     </security-constraint>
-    
     <login-config>
         <auth-method>BASIC</auth-method>
         <realm-name>DBRealm</realm-name>
@@ -238,5 +235,4 @@
     <!--        <welcome-file-list>
 		<welcome-file>upload.html</welcome-file>
 	</welcome-file-list>-->
-    
 </web-app>

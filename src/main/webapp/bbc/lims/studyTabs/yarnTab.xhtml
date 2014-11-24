@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  
+      xmlns:f="http://java.sun.com/jsf/core" 
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+
+      xmlns:c="http://java.sun.com/jsp/jstl/core">
+    <body>
+        <ui:composition>
+            <h:form>
+                <p:growl autoUpdate="true" showDetail="true"/>
+                <div class="workflow-head">
+                    <div class="left">
+                        <span>
+                            <h:outputLabel value="Application Master jar"/>
+                        </span>
+                        <p:fileUpload required="true" multiple="false" label="Select" mode="advanced" allowTypes="/(\.|\/)(jar)$/" fileUploadListener="#{yarnController.handleFileUpload}" update="@form"/>
+                        <h:outputLabel value="#{yarnController.appName}"/>
+                    </div>
+                    <div class="right">
+                        <p:commandButton value="Execute" action="#{yarnController.runJar()}"/>
+                    </div>
+                    <div>
+                        <h:outputLabel value="arguments:" for="amArgs"/>
+                        <h:inputText value="#{yarnController.args}" id="amArgs"/>
+                        <h:outputLabel value="main class" for="mainClassName"/>
+                        <h:inputText value="#{yarnController.mainClassName}" id="mainClassName"/>
+                    </div>
+                    <div>
+                        Upload files to be included in AM container:
+                        <p:fileUpload multiple="true" label="Browse" mode="advanced" fileUploadListener="#{yarnController.extraFileUploads}"/>
+                    </div>
+                </div>
+                <!--
+                                <p:panel closable="false" header="Parameters" styleClass="wf-panel">
+                                    <h:form>
+                                        <h:panelGrid columns="3">
+                                            <p:outputLabel value="Name" styleClass="wf-table-header"/>
+                                            <p:outputLabel value="Value" styleClass="wf-table-header"/>
+                                            <h:inputHidden/>
+                
+                                            <c:forEach var="inputParam" items="#{cuneiformParamsMB.input}">
+                                                <p:inputText value="#{inputParam.name}"/>
+                                                <p:inputText value="#{inputParam.value}"/>
+                                                <p:commandButton value="Delete" actionListener="#{cuneiformParamsMB.deleteInputParam(inputParam)}" process="@form" update="@form" ajax="true"/>
+                                            </c:forEach>
+                                        </h:panelGrid>
+                                        <p:commandButton value="Add" actionListener="#{cuneiformParamsMB.addNewInputParam()}" update="@form" process="@form"/>
+                                    </h:form>
+                                </p:panel>-->
+
+            </h:form>
+        </ui:composition>
+    </body>
+</html>

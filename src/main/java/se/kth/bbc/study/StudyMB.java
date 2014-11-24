@@ -35,8 +35,6 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.lims.MessagesController;
-import se.kth.bbc.yarn.AppMasterStarter;
-import se.kth.bbc.yarn.Client;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
 
@@ -642,7 +640,7 @@ public class StudyMB implements Serializable {
     }
 
     public void test() {
-        AppMasterStarter.start();
+        
     }
 
 }
