@@ -17,8 +17,8 @@ import javax.faces.validator.ValidatorException;
  *
  * @author Ali Gholmai <gholami@pdc.kth.se>
  */
-@FacesValidator("passwordValidator")
-public class PasswordValidator implements Validator {
+@FacesValidator("otpValidator")
+public class OTPValidator implements Validator {
 
     
     /**
@@ -34,47 +34,35 @@ public class PasswordValidator implements Validator {
 
         String password = value.toString();
 
-        UIInput uiInputConfirmPassword = (UIInput) component.getAttributes()
-                .get("confirmPassword");
-        String confirmPassword = uiInputConfirmPassword.getSubmittedValue()
-                .toString();
 
         // Let required="true" do its job.
-        if (password == null || password.isEmpty() || confirmPassword == null
-                || confirmPassword.isEmpty()) {
+        if (password == null || password.isEmpty()) {
             return;
         }
 
-        if (password.length() < 6) {
-            uiInputConfirmPassword.setValid(false);
+        if (password.length() < 6 || password.length()> 6) {
             throw new ValidatorException(new FacesMessage(
                     "Password must be at least 6 charachters!"));
         }
-
-        if (isAlphaNumeric(password)) {
-            uiInputConfirmPassword.setValid(false);
-            throw new ValidatorException(new FacesMessage(
-                    "Password must be letters, numbers, and non-alphanumeric"));
+     
+        if(!isNumeric(password)){
+           throw new ValidatorException(new FacesMessage(
+                    "Password must be only digits: 123456"));
         }
-
-        if (!password.equals(confirmPassword)) {
-            uiInputConfirmPassword.setValid(false);
-            throw new ValidatorException(new FacesMessage(
-                    "Passwords don't match!"));
-        }
-
     }
         
+    
     /**
-     * To check a string if it contains alphanumeric values: MyPassww232¤!#.
+     * Check if the otp is only numbers.
      * @param s
      * @return 
      */
-    public boolean isAlphaNumeric(String s) {
-        String pattern = "^[a-zA-Z0-9]*$";
+    public boolean isNumeric(String s) {
+        String pattern = "^[0-9]*$";
         if (s.matches(pattern)) {
             return true;
         }
         return false;
     }
+
 }

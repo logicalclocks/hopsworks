@@ -44,8 +44,8 @@
                     <h:outputLabel for="otp" value="PIN:"/> 
                     <h:inputText id="otp" value="#{gauth.otpCode}"
                                  required="true" 
-                                 requiredMessage="Please enter your OTP PIN code">   
-                        <f:validateLength minimum="6" maximum="6"/> 
+                                 requiredMessage="Please enter your OTP PIN code">      
+                    <f:validator validatorId="otpValidator" />
                     </h:inputText>
                     <h:message for="otp" style="color:red" />
                     <h:commandButton value="Login" action="#{gauth.login()}" styleClass="MainButton"/>

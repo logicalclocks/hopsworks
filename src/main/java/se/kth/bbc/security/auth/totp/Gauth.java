@@ -31,7 +31,7 @@ public class Gauth implements Serializable {
 
     private String username;
     private String password;
-    private Integer otpCode;
+    private String otpCode;
     private People user;
     private int userid;
 
@@ -51,11 +51,11 @@ public class Gauth implements Serializable {
         this.password = password;
     }
 
-    public Integer getOtpCode() {
+    public String getOtpCode() {
         return otpCode;
     }
 
-    public void setOtpCode(Integer otpCode) {
+    public void setOtpCode(String otpCode) {
         this.otpCode = otpCode;
     }
 
@@ -118,4 +118,5 @@ public class Gauth implements Serializable {
 
         return ("logout");
     }
+    
 }
