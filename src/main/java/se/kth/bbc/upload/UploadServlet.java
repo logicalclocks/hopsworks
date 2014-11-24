@@ -37,7 +37,7 @@ public class UploadServlet extends HttpServlet {
         //Seek to position
         raf.seek((resumableChunkNumber - 1) * (long) info.resumableChunkSize);
 
-        fileOps.startUpload(uploadPath + info.resumableFilename);
+        //fileOps.startUpload(uploadPath + info.resumableFilename);
         
         //Save to file
         InputStream is = request.getInputStream();

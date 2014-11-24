@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui">
+
+    <h:head>
+        <title>QRCode</title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    </h:head>
+
+    <h:body>
+
+        <h:form class="stylelayout" id="formToolbar">
+            <p:toolbar styleClass="MainToolbar" >
+                <p:toolbarGroup align="left">
+                    <p:commandLink value="BiobankCloud"/>
+                </p:toolbarGroup>
+            </p:toolbar>
+        </h:form>
+        
+        <div class="Signin">
+            Scan the QR code using Google Authenticator of your device:
+            <h:panelGrid columns="3">                           
+                <p:graphicImage value="#{userRegistration.qrCode}" width="300" height="300"/>
+
+            </h:panelGrid>
+            <p:commandLink value="Back to main page" action="welcome"/>
+        </div>
+
+    </h:body>  
+</html>

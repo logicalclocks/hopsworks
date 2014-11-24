@@ -20,4 +20,25 @@
     <role-name>BBC_RESEARCHER</role-name>
     <group-name>BBC_RESEARCHER</group-name>
   </security-role-mapping>
+  
+  <security-role-mapping>
+    <role-name>BBC_GUEST</role-name>
+    <group-name>BBC_GUEST</group-name>
+  </security-role-mapping>
+  
+  <security-role-mapping>
+    <role-name>AUDITOR</role-name>
+    <group-name>AUDITOR</group-name>
+  </security-role-mapping>
+  
+  <security-role-mapping>
+    <role-name>BBC_ADMIN</role-name>
+    <group-name>BBC_ADMIN</group-name>
+  </security-role-mapping>
+  
+  <security-role-mapping>
+    <role-name>ETHICS_BOARD</role-name>
+    <group-name>ETHICS_BOARD</group-name>
+  </security-role-mapping>
+  
 </glassfish-web-app>
