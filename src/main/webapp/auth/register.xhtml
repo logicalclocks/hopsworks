@@ -71,8 +71,8 @@
                                                  required="true"
                                                  requiredMessage="Enter Mobile"
                                                  validatorMessage="Invalid mobile number">
-                                     <f:validateRegex pattern="^([+]?[\d]+)?$" />
-                                   </h:inputText>
+                                         <f:validateLength minimum="6" />
+                                    </h:inputText>
                                     <h:message for="tel"  style="color:red"/>
 
                                     <h:outputLabel for="password0" value="Password: "/>
@@ -81,8 +81,8 @@
                                                    requiredMessage="Select a password">
                                     	<f:validator validatorId="passwordValidator" />
                         		<f:attribute name="confirmPassword" value="#{confirmPassword}" />
+
                                     </h:inputSecret>
-                                    
                                     <h:message for="password0"  style="color:red"/>                
 
                                     

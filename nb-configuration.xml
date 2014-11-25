@@ -13,8 +13,12 @@ You can copy and paste the single properties, into the pom.xml file and the IDE 
 That way multiple projects can share the same settings (useful for formatting rules for example).
 Any value defined here will override the pom.xml file value but is only applicable to the current project.
 -->
+        <netbeans.compile.on.save>all</netbeans.compile.on.save>
         <org-netbeans-modules-projectapi.jsf_2e_language>Facelets</org-netbeans-modules-projectapi.jsf_2e_language>
         <org-netbeans-modules-maven-jaxws.rest_2e_config_2e_type>ide</org-netbeans-modules-maven-jaxws.rest_2e_config_2e_type>
+        <org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_j2eeVersion>1.6-web</org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_j2eeVersion>
+        <org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_deploy_2e_server>gfv3ee6</org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_deploy_2e_server>
+        <netbeans.hint.j2eeVersion>1.7-web</netbeans.hint.j2eeVersion>
         <org-netbeans-modules-css-prep.sass_2e_compiler_2e_options/>
         <org-netbeans-modules-css-prep.less_2e_mappings>/less:/css</org-netbeans-modules-css-prep.less_2e_mappings>
         <org-netbeans-modules-css-prep.less_2e_enabled>false</org-netbeans-modules-css-prep.less_2e_enabled>
@@ -22,6 +26,5 @@ Any value defined here will override the pom.xml file value but is only applicab
         <org-netbeans-modules-css-prep.sass_2e_enabled>false</org-netbeans-modules-css-prep.sass_2e_enabled>
         <org-netbeans-modules-css-prep.less_2e_compiler_2e_options/>
         <org-netbeans-modules-web-clientproject-api.js_2e_libs_2e_folder>plupload/js</org-netbeans-modules-web-clientproject-api.js_2e_libs_2e_folder>
-        <org-netbeans-modules-javascript2-requirejs.enabled>true</org-netbeans-modules-javascript2-requirejs.enabled>
     </properties>
 </project-shared-configuration>

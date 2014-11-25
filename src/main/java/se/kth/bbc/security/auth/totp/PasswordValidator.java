@@ -64,7 +64,7 @@ public class PasswordValidator implements Validator {
         }
 
     }
-        
+
     /**
      * To check a string if it contains alphanumeric values: MyPassww232¤!#.
      * @param s
