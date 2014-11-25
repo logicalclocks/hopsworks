@@ -2,12 +2,12 @@
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee           http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
     <context-param>
         <param-name>javax.faces.PROJECT_STAGE</param-name>
-        <!--        <param-value>Development</param-value>-->
+<!--        <param-value>Development</param-value>-->
         <param-value>Production</param-value>
     </context-param>
     <context-param>
-        <param-name>facelets.SKIP_COMMENTS</param-name>
-        <param-value>true</param-value>
+       <param-name>facelets.SKIP_COMMENTS</param-name>
+       <param-value>true</param-value>
     </context-param>    
     <context-param>
         <param-name>com.sun.faces.verifyObjects</param-name>
@@ -34,8 +34,8 @@
         <param-value>true</param-value>
     </context-param>
     <context-param>
-        <param-name>javax.faces.PARTIAL_STATE_SAVING</param-name>
-        <param-value>true</param-value>
+            <param-name>javax.faces.PARTIAL_STATE_SAVING</param-name>
+            <param-value>true</param-value>
     </context-param>
     <context-param>
         <param-name>javax.faces.FACELETS_BUFFER_SIZE</param-name>
@@ -100,12 +100,6 @@
     <security-role>
         <role-name>BBC_GUEST</role-name>
     </security-role>
-    <security-role>
-        <role-name>AUDITOR</role-name>
-    </security-role>
-    <security-role>
-        <role-name>ETHICS_BOARD</role-name>
-    </security-role>    
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>Secured Content</web-resource-name>
@@ -113,7 +107,6 @@
         </web-resource-collection>
         <auth-constraint>
             <role-name>ADMIN</role-name>
-            <role-name>BBC_GUEST</role-name>
         </auth-constraint>
         <!-- we always want https! -->
         <!--        <user-data-constraint>
@@ -151,7 +144,6 @@
         <auth-constraint>
             <role-name>BBC_ADMIN</role-name>
             <role-name>BBC_RESEARCHER</role-name>
-            <role-name>BBC_GUEST</role-name>
             <role-name>ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
@@ -164,7 +156,6 @@
         <auth-constraint>
             <role-name>BBC_ADMIN</role-name>
             <role-name>ADMIN</role-name>
-            <role-name>BBC_GUEST</role-name>
         </auth-constraint>
     </security-constraint>
     <security-constraint>
@@ -197,18 +188,15 @@
         <auth-constraint>
             <role-name>BBC_ADMIN</role-name>
             <role-name>BBC_RESEARCHER</role-name>
-            <role-name>BBC_GUEST</role-name>
         </auth-constraint>
     </security-constraint>
     
-    
-    
     <login-config>
         <auth-method>BASIC</auth-method>
-        <realm-name>GauthRealm</realm-name>
+        <realm-name>DBRealm</realm-name>
         <form-login-config>
             <form-login-page>/index.xhtml</form-login-page>
-            <form-error-page>/error.xhtml</form-error-page>
+            <form-error-page>/loginError.xhtml</form-error-page>
         </form-login-config>
     </login-config>
     <!--   <error-page>
@@ -250,4 +238,5 @@
     <!--        <welcome-file-list>
 		<welcome-file>upload.html</welcome-file>
 	</welcome-file-list>-->
+    
 </web-app>

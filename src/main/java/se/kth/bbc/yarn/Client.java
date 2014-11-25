@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -52,13 +53,21 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import org.apache.hadoop.yarn.util.Records;
 import static se.kth.bbc.fileoperations.FileSystemOperations.nameNodeURI;
+import se.kth.bbc.lims.EnvironmentVariableFacade;
 
 public class Client {
 
     private static final Logger logger = Logger.getLogger(Client.class.getName());
+    
+    @EJB
+    private static EnvironmentVariableFacade envs;
 
     public static Client getInitiatedClient(String[] args) throws Exception {
-        Path confPath = new Path(System.getenv("YARN_CONF_DIR"));
+        String yarnConfDir = System.getenv("YARN_CONF_DIR");
+        if(yarnConfDir==null){
+            yarnConfDir = envs.getValue("YARN_CONF_DIR");
+        }
+        Path confPath = new Path(yarnConfDir);
         File confFile = new File(confPath + File.separator + "yarn-site.xml");
         if (!confFile.exists()) {
             System.err.println("Unable to locate configuration file in " + confFile);

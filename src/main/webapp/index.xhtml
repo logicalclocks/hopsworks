@@ -1,42 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml"
-xmlns:h="http://java.sun.com/jsf/html"
-xmlns:p="http://primefaces.org/ui"
-xmlns:f="http://java.sun.com/jsf/core">
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets">
 
-<h:head>
-<title>BiobankCloud - Sign in</title>
-<h:outputStylesheet name="css/jsfcrud.css"/>
-<link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-</h:head>
+    <h:head>
+        <title>BiobankCloud - Sign in</title>
+        <h:outputStylesheet name="css/jsfcrud.css"/>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    </h:head>
 
-<h:body >
+    <h:body >
 
-<h:form class="stylelayout" id="formToolbar">
-<p:toolbar styleClass="MainToolbar" >
-<p:toolbarGroup align="left">
-<p:commandLink value="BiobankCloud"/>
-</p:toolbarGroup>
-</p:toolbar>
-</h:form>
+        <ui:insert name="titleBar" >
+            <ui:include src="/bbc/lims/titleBar.xhtml" />       
+        </ui:insert>
 
-<h:form id="hoplogin">
-<div class="Signin">
-<h:panelGrid columns="1" >
-    <h1>Choose Login Mode </h1>
-            <h:commandButton value="Mobile Auth" action="login" />
-            <h:commandButton value="Yubikey Auth" action="yubikeylogin" />
-            <h:commandLink value=" Forgot password" action="passwordreset" />
-              
-</h:panelGrid>
-</div>
-</h:form>
+        <p:growl for="userRegistered" life="20000" showDetail="true"/>
+        <p:growl for="loginFail" life="20000" showDetail="true"/>
 
-<br />
-</h:body>
+        <h:form id="hoplogin">                  
+            <div class="Signin">            
+                <h:panelGrid columns="1" >  
+                    <h1>Sign in</h1>     
+                    <p:outputLabel for="username" value="E-mail" />
+                    <p:inputText id="username" value="#{authBackingBean.username}" required="true"/>
+                    <p:outputLabel for="password" value="Password" />
+                    <p:password id="password" value="#{authBackingBean.password}" required="true"/>
+                    <p:messages showDetail="true" autoUpdate="true" showSummary="false" for="username password"/>
+                    <p:commandButton id="loginButton" value="Sign in" action="#{authBackingBean.login()}" validateClient="true" styleClass="MainButton"/>
+                </h:panelGrid>
+            </div>
+        </h:form> 
+
+        <div align="center">
+            <p:commandLink id="signupLink" value="Don't have an account?" action="register" style="text-align: right"/>
+        </div>
+
+        <br />
+    </h:body>
 
 
 </html>
+
+
