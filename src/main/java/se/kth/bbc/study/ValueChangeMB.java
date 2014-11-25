@@ -15,6 +15,9 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.event.AbortProcessingException;
+import javax.faces.event.ValueChangeEvent;
+import javax.faces.event.ValueChangeListener;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityMB;
 
@@ -26,12 +29,12 @@ import se.kth.bbc.activity.ActivityMB;
 
 @ManagedBean(name="valueChangeMB", eager = true)
 @RequestScoped
-public class ValueChangeMB implements Serializable { 
+public class ValueChangeMB implements Serializable, ValueChangeListener { 
     
     @EJB
     private StudyTeamController studyTeamController;
     
-    private String newTeamRole;
+    private StudyRoleTypes newTeamRole;
     
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
@@ -54,18 +57,19 @@ public class ValueChangeMB implements Serializable {
         this.studyMB = studyMB;
     }
     
-    public String getNewTeamRole() {
+    public StudyRoleTypes getNewTeamRole() {
         return newTeamRole;
     }
 
-    public void setNewTeamRole(String newTeamRole) {
+    public void setNewTeamRole(StudyRoleTypes newTeamRole) {
+        System.out.println("set team role");
         this.newTeamRole = newTeamRole;
     }
     
     public synchronized String updateStudyTeamRole(String email) {
-
+        System.out.println("Called update study team role"+email+newTeamRole.getTeam());
         try {
-            studyTeamController.updateTeamRole(studyMB.getStudyName(), email, getNewTeamRole());
+            studyTeamController.updateTeamRole(studyMB.getStudyName(), email, getNewTeamRole().getTeam());
             activity.addActivity(ActivityController.CHANGE_ROLE + email + " to " + getNewTeamRole(), studyMB.getStudyName(), "TEAM");
         } catch (Exception ejb) {
             //addErrorMessageToUserAction("Error: Update failed.");
@@ -74,6 +78,7 @@ public class ValueChangeMB implements Serializable {
             //addMessage("Team role updated successful "+ email + " at "+ studyMB.getStudyName());
             //return "studyPage?faces-redirect=true";
             studyMB.setManTabIndex(StudyMB.TEAM_TAB);
+            newTeamRole = null;
             return "OK";
     }
     
@@ -104,5 +109,13 @@ public class ValueChangeMB implements Serializable {
         FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, message, message);
         FacesContext.getCurrentInstance().addMessage(null, errorMessage);
     }
+    
+    @Override
+    public void processValueChange(ValueChangeEvent event) throws AbortProcessingException {
+        setNewTeamRole((StudyRoleTypes)event.getNewValue());
+        System.out.println(" new value from Listener ===== "+ event.getNewValue().toString());
+        System.out.println(" new value from Listener ===== "+ event.getOldValue().toString());
+        
+   }
     
 }

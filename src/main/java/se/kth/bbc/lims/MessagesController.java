@@ -28,7 +28,7 @@ public class MessagesController {
     }
 
     public static void addErrorMessage(String message) {
-        addErrorMessage(message, message, null);
+        addErrorMessage("Error", message, null);
     }
     
     public static void addErrorMessage(String summary, String message){

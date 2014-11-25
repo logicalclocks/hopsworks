@@ -63,7 +63,6 @@ public class StudyMB implements Serializable {
      *
      *
      */
-
     @EJB
     private StudyController studyController;
 
@@ -84,6 +83,9 @@ public class StudyMB implements Serializable {
 
     @EJB
     private FileOperations fileOps;
+
+    @EJB
+    private StudyFacade studies;
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
@@ -269,38 +271,6 @@ public class StudyMB implements Serializable {
         return studyTeamController.countMembersPerStudy(studyName).size();
     }
 
-    public int countMasters() {
-        return (studyTeamController.countStudyTeam(studyName, "Master"));
-    }
-
-    public int countResearchers() {
-        return studyTeamController.countStudyTeam(studyName, "Researcher");
-    }
-
-    public int countResearchAdmins() {
-        return studyTeamController.countStudyTeam(studyName, "Research Admin");
-    }
-
-    public int countAuditors() {
-        return studyTeamController.countStudyTeam(studyName, "Auditor");
-    }
-
-    public List<Username> getMastersList() {
-        return studyTeamController.findTeamMembersByName(studyName, "Master");
-    }
-
-    public List<Username> getResearchersList() {
-        return studyTeamController.findTeamMembersByName(studyName, "Researcher");
-    }
-
-    public List<Username> getResearchAdminList() {
-        return studyTeamController.findTeamMembersByName(studyName, "Research Admin");
-    }
-
-    public List<Username> getAuditorsList() {
-        return studyTeamController.findTeamMembersByName(studyName, "Auditor");
-    }
-
     public String checkStudyOwner(String email) {
 
         List<TrackStudy> lst = studyTeamController.findStudyMaster(studyName);
@@ -337,28 +307,6 @@ public class StudyMB implements Serializable {
             return t.getTeamRole();
         }
         return null;
-    }
-
-    public List<StudyRoleTypes> getListBasedOnCurrentRole(String email) {
-
-        String team = studyTeamController.findByPrimaryKey(studyName, email).getTeamRole();
-        List<StudyRoleTypes> reOrder = new ArrayList<>();
-
-        if (team.equals("Researcher")) {
-            reOrder.add(StudyRoleTypes.RESEARCHER);
-            reOrder.add(StudyRoleTypes.AUDITOR);
-            reOrder.add(StudyRoleTypes.MASTER);
-
-            return reOrder;
-
-        } else if (team.equals("Auditor")) {
-            reOrder.add(StudyRoleTypes.AUDITOR);
-            reOrder.add(StudyRoleTypes.RESEARCHER);
-            reOrder.add(StudyRoleTypes.MASTER);
-            return reOrder;
-        } else {
-            return null;
-        }
     }
 
     public int getAllStudyUserTypesListSize() {
@@ -639,8 +587,146 @@ public class StudyMB implements Serializable {
         }
     }
 
-    public void test() {
-        
+    public void test(String s) {
+        System.out.println(s);
+    }
+
+    /**
+     * Return a list of UserGroups, which contain the members of this study per
+     * role type.
+     *
+     * @return
+     */
+    public List<UserGroup> getGroupedMembers() {
+
+        List<UserGroup> groupedUsers = new ArrayList<>();
+        StudyRoleTypes[] roles = StudyRoleTypes.values();
+        for (StudyRoleTypes role : roles) {
+            List<Username> mems = studyTeamController.findTeamMembersByName(studyName, role.getTeam());
+            if (!mems.isEmpty()) {
+                groupedUsers.add(new UserGroup(role, mems));
+            }
+        }
+        return groupedUsers;
+    }
+
+    /**
+     * Count the number of users with the given role in the current study.
+     *
+     * @param role
+     * @return
+     */
+    public int countRoleUsers(String role) {
+        return studyTeamController.countStudyTeam(studyName, role);
+    }
+
+    public class UserGroup {
+
+        private StudyRoleTypes groupname;
+        private List<Username> members;
+
+        public StudyRoleTypes getGroupname() {
+            return groupname;
+        }
+
+        public List<Username> getMembers() {
+            return members;
+        }
+
+        public UserGroup(StudyRoleTypes groupname, List<Username> members) {
+            this.groupname = groupname;
+            this.members = members;
+        }
+
+        public void setGroupname(StudyRoleTypes groupName) {
+            this.groupname = groupName;
+        }
+
+        public void setMembers(List<Username> members) {
+            this.members = members;
+        }
+    }
+
+    /**
+     * Check if the current study is owned by the user with given email.
+     *
+     * @param email
+     * @return true if the study is owned by the user with given email
+     */
+    public boolean studyOwnedBy(String email) {
+        TrackStudy t = studies.getStudyByName(studyName);
+        if (t == null) {
+            return false;
+        } else {
+            return t.getUsername().equalsIgnoreCase(email);
+        }
+    }
+    
+    
+    public List<StudyRoleTypes> getStudyRolesForCurrentRole(StudyRoleTypes role){
+        List<StudyRoleTypes> reordered = new ArrayList<>();
+        reordered.add(role);
+        for(StudyRoleTypes type:StudyRoleTypes.values()){
+            if(type!=role){
+                reordered.add(type);
+            }
+        }
+        return reordered;
+    }
+
+    //TODO: remove following methods!!
+    public int countMasters() {
+        return (studyTeamController.countStudyTeam(studyName, "Master"));
+    }
+
+    public int countResearchers() {
+        return studyTeamController.countStudyTeam(studyName, "Researcher");
+    }
+
+    public int countResearchAdmins() {
+        return studyTeamController.countStudyTeam(studyName, "Research Admin");
+    }
+
+    public int countAuditors() {
+        return studyTeamController.countStudyTeam(studyName, "Auditor");
+    }
+
+    public List<Username> getMastersList() {
+        return studyTeamController.findTeamMembersByName(studyName, "Master");
+    }
+
+    public List<Username> getResearchersList() {
+        return studyTeamController.findTeamMembersByName(studyName, "Researcher");
+    }
+
+    public List<Username> getResearchAdminList() {
+        return studyTeamController.findTeamMembersByName(studyName, "Research Admin");
+    }
+
+    public List<Username> getAuditorsList() {
+        return studyTeamController.findTeamMembersByName(studyName, "Auditor");
+    }
+
+    public List<StudyRoleTypes> getListBasedOnCurrentRole(String email) {
+
+        String team = studyTeamController.findByPrimaryKey(studyName, email).getTeamRole();
+        List<StudyRoleTypes> reOrder = new ArrayList<>();
+
+        if (team.equals("Researcher")) {
+            reOrder.add(StudyRoleTypes.RESEARCHER);
+            reOrder.add(StudyRoleTypes.AUDITOR);
+            reOrder.add(StudyRoleTypes.MASTER);
+
+            return reOrder;
+
+        } else if (team.equals("Auditor")) {
+            reOrder.add(StudyRoleTypes.AUDITOR);
+            reOrder.add(StudyRoleTypes.RESEARCHER);
+            reOrder.add(StudyRoleTypes.MASTER);
+            return reOrder;
+        } else {
+            return null;
+        }
     }
 
 }

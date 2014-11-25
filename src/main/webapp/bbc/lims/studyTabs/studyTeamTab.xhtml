@@ -17,14 +17,14 @@ and open the template in the editor.
             <h3 class="page_title" align="left">
                 Team Members (#{studyManagedBean.countAllMembersPerStudy()})
                 <span class="right_button">
-                    <h:form id="frmBtn">
+                    <h:form id="frmBtn2">
                         <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" action="newTeamMemb" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                     </h:form>
                 </span>
             </h3>
             <hr/>
             <div class="clear_fixing"></div>
-            <h:form id="teamForm">
+            <h:form id="teamForm2">
             <div id="divTeam" class="team_table"> 
                 <c:if id="masterBlock" test="${studyManagedBean.countMasters() > 0}">
                     <!-- There are Masters registered for this study: display them -->
@@ -101,7 +101,7 @@ and open the template in the editor.
                                                         <p:confirm header="Removing a team member" message="Are you sure you want to remove #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:confirmDialog id="currentUser_master_${mst.count}" global="true" severity="alert" showEffect="fade"> 
-                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm"/>   
+                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm2"/>   
                                                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/> 
                                                     </p:confirmDialog> 
                                                 </div>
@@ -178,7 +178,7 @@ and open the template in the editor.
                                                         <p:confirm header="Removing a team member" message="Are you sure you want to remove #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:confirmDialog id="notCurrentUserNOwner_master_${mst.count}" global="true" severity="alert" showEffect="fade"> 
-                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm"/>   
+                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm2"/>   
                                                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
                                                     </p:confirmDialog> 
                                                 </div>
@@ -234,7 +234,7 @@ and open the template in the editor.
                                                         <p:confirm header="Removing a team member" message="Are you sure you want to remove #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:confirmDialog id="notCurrentUser_researcher_${rchs.count}"  global="true" severity="alert" showEffect="fade"> 
-                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm"/>   
+                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm2"/>   
                                                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
                                                     </p:confirmDialog>
                                                 </div>
@@ -278,7 +278,7 @@ and open the template in the editor.
                                                         <p:confirm header="Removing a team member" message="Are you sure you want to remove #{rlist.name} [#{rlist.email}]?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:confirmDialog id="currentUser_researcher_${rchs.count}" global="true" severity="alert" showEffect="fade"> 
-                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm"/>   
+                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm2"/>   
                                                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
                                                     </p:confirmDialog> 
                                                 </div>
@@ -331,7 +331,7 @@ and open the template in the editor.
                                                         <p:confirm header="Removing a team member" message="Are you sure you want to remove #{alist.name} [#{alist.email}]?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:confirmDialog id="notCurrentUser_guest_${aud.count}" global="true" severity="alert" showEffect="fade"> 
-                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm"/>   
+                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm2"/>   
                                                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
                                                     </p:confirmDialog>  
                                                 </div>
@@ -375,7 +375,7 @@ and open the template in the editor.
                                                         <p:confirm header="Removing a team member" message="Are you sure you want to remove #{alist.name} [#{alist.email}]?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:confirmDialog id="currentUser_guest_${aud.count}" global="true" severity="alert" showEffect="fade"> 
-                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm"/>   
+                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm2"/>   
                                                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
                                                     </p:confirmDialog>  
                                                 </div>

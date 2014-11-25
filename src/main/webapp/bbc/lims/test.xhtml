@@ -9,6 +9,7 @@ and open the template in the editor.
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:c="http://java.sun.com/jsp/jstl/core" 
       xmlns:p="http://primefaces.org/ui">
     <h:head>
         <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
@@ -19,7 +20,20 @@ and open the template in the editor.
     </h:head>
     <body>
         <ui:composition>
-            <p:commandButton action="#{studyManagedBean.test()}" value="Test"/>
+            <h:form id="testForm">
+                <ui:repeat value="#{studyManagedBean.groupedMembers}" var="memGroup">
+                    <ui:repeat value="#{memGroup.members}" var="usr">
+                        <p:selectOneMenu 
+                                         value="#{valueChangeMB.newTeamRole}" 
+                                         styleClass="study_role_assign" 
+                                         style="width:170px;" >
+                            <f:ajax render="@form" listener="#{studyManagedBean.test('boo')}" execute="@form"/>
+                            <f:selectItems value="#{studyManagedBean.team}" 
+                                           var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
+                        </p:selectOneMenu>
+                    </ui:repeat>
+                </ui:repeat>
+            </h:form>
         </ui:composition>
     </body>
 </html>

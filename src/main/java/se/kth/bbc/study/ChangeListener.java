@@ -21,7 +21,7 @@ public class ChangeListener implements ValueChangeListener {
     @Override
     public void processValueChange(ValueChangeEvent event) throws AbortProcessingException {
         ValueChangeMB teamRole = (ValueChangeMB) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("valueChangeMB"); 
-        teamRole.setNewTeamRole(event.getNewValue().toString());
+        teamRole.setNewTeamRole((StudyRoleTypes)event.getNewValue());
         System.out.println(" new value from Listener ===== "+ event.getNewValue().toString());
         System.out.println(" new value from Listener ===== "+ event.getOldValue().toString());
         
