@@ -62,22 +62,20 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
     }
 
     public void setNewTeamRole(StudyRoleTypes newTeamRole) {
-        System.out.println("set team role");
         this.newTeamRole = newTeamRole;
     }
     
-    public synchronized String updateStudyTeamRole(String email) {
-        System.out.println("Called update study team role"+email+newTeamRole.getTeam());
+    public synchronized String updateStudyTeamRole(String email, StudyRoleTypes role) {
+        System.out.println("Update "+email+" to "+role);
         try {
-            studyTeamController.updateTeamRole(studyMB.getStudyName(), email, getNewTeamRole().getTeam());
-            activity.addActivity(ActivityController.CHANGE_ROLE + email + " to " + getNewTeamRole(), studyMB.getStudyName(), "TEAM");
+            studyTeamController.updateTeamRole(studyMB.getStudyName(), email, role.getTeam());
+            activity.addActivity(ActivityController.CHANGE_ROLE + email + " to " + role, studyMB.getStudyName(), "TEAM");
         } catch (Exception ejb) {
             //addErrorMessageToUserAction("Error: Update failed.");
             return "Failed";
         }
             //addMessage("Team role updated successful "+ email + " at "+ studyMB.getStudyName());
             //return "studyPage?faces-redirect=true";
-            studyMB.setManTabIndex(StudyMB.TEAM_TAB);
             newTeamRole = null;
             return "OK";
     }
@@ -94,7 +92,6 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
             return null;
         }
             addMessage("Team member " + email + " deleted from study " + studyMB.getStudyName());            
-            studyMB.setManTabIndex(StudyMB.TEAM_TAB);
             return "studyPage";
 
     }

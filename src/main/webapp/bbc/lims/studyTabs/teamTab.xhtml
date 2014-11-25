@@ -26,16 +26,16 @@ and open the template in the editor.
             <h:form id="teamForm">
                 <div id="divTeam" class="team_table"> 
                     <!-- Loop over all member groups -->
-                    <ui:repeat value="#{studyManagedBean.groupedMembers}" var="memGroup">
+                    <ui:repeat value="#{studyManagedBean.groupedMembers}" var="memGroup" varStatus="memGroupStat">
                         <h:panelGroup id="div_#{memGroup.groupname}" styleClass="ui_box">
                             <!-- Display role name and number of members in that group -->
-                            <h5 class="title" align="left">#{memGroup.groupname}
+                            <h5 class="title" align="left">#{memGroup.groupname.team}s
                                 <small>#{studyManagedBean.countRoleUsers(memGroup.groupname)}</small>
                             </h5>
                             <ul class="well-list">
                                 <!-- Loop over all users in this group-->
                                 <ui:repeat value="#{memGroup.members}" var="usr" varStatus="usrStat">
-                                    <li id="team_member_row_#{usrStat.count}" class="team_member_row">
+                                    <li id="team_member_row_${usrStat.index}_${memGroupStat.index}" class="team_member_row">
                                         <div class="row">
                                             <div class="span6">
                                                 <img class="avatar s36" src="#{activityBean.getGravatar(usr.email,36)}"/>
@@ -49,12 +49,16 @@ and open the template in the editor.
                                             </div>
                                             <div class="span5 right">
                                                 <div class="left">
-                                                    <div id="frmStudyMaster_${usrStat.count}" class="edit_team_members"> 
+                                                    <div id="frmStudyMaster_${usrStat.index}_${memGroupStat.index}" class="edit_team_members"> 
                                                         <div style="margin:0;padding:0;display:inline">
-                                                            <p:selectOneMenu id="list_#{memGroup.groupname}_#{usrStat.count}" value="#{valueChangeMB.newTeamRole}" styleClass="study_role_assign" disabled="#{studyManagedBean.studyOwnedBy(usr.email)}" 
-                                                                             style="width:170px;" rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                                <f:ajax execute="@form" render="@form" listener="#{valueChangeMB.updateStudyTeamRole(usr.email)}"/>
-                                                                <f:selectItems value="#{studyManagedBean.getStudyRolesForCurrentRole(memGroup.groupname)}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
+                                                            <p:selectOneMenu value="#{usr.role}" 
+                                                                             styleClass="study_role_assign" 
+                                                                             disabled="#{studyManagedBean.studyOwnedBy(usr.email)}" 
+                                                                             style="width:170px;" 
+                                                                             rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
+                                                                <p:ajax update="@form" process="@all"
+                                                                        listener="#{valueChangeMB.updateStudyTeamRole(usr.email,usr.role)}"/>
+                                                                <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
                                                             </p:selectOneMenu>
                                                         </div>
                                                     </div>
@@ -62,13 +66,13 @@ and open the template in the editor.
                                                 <div class="right" align="right">
                                                     <h:commandButton class="btn" value="This is you!" disabled="true" rendered="#{studyManagedBean.username eq usr.email}"/>
                                                     <h:commandButton class="button-success" value="Owner" disabled="true" rendered="#{studyManagedBean.studyOwnedBy(usr.email)}"/>
-<!--                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(mlist.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}" update="@form">
-                                                        <p:confirm header="Removing a team member" message="Are you sure you want to remove #{mlist.name} [#{mlist.email}]?" icon="ui-icon-alert"/>
+                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" action="#{valueChangeMB.deleteMemberFromTeam(usr.email)}" rendered="#{studyManagedBean.renderComponentList() == 'Master' and not studyManagedBean.studyOwnedBy(usr.email)}" update="@form">
+                                                        <p:confirm header="Removing a team member" message="Are you sure you want to remove #{usr.name} [#{usr.email}]?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
-                                                    <p:confirmDialog id="currentUser_master_${mst.count}" global="true" severity="alert" showEffect="fade"> 
-                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update="teamForm"/>   
+                                                    <p:confirmDialog id="currentUser_master_${memGroupStat.index}_${usrStat.index}" global="true" severity="alert" showEffect="fade"> 
+                                                        <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update=":tabStudyPage:teamForm"/>   
                                                         <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/> 
-                                                    </p:confirmDialog> -->
+                                                    </p:confirmDialog>
                                                 </div>
                                             </div>
                                         </div>

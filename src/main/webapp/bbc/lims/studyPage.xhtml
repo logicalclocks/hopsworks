@@ -37,12 +37,6 @@
                                         <ui:include src="/bbc/lims/studyTabs/teamTab.xhtml"/>
                                     </ui:insert>                                    
                                 </p:tab>
-                                
-                                <p:tab id="oldteamTab" title="oldTeam" rendered="#{studyManagedBean.renderComponentList() != null}">
-                                    <ui:insert name="teamTab">
-                                        <ui:include src="/bbc/lims/studyTabs/studyTeamTab.xhtml"/>
-                                    </ui:insert>                                    
-                                </p:tab>
                                 <p:tab id="browser" title="Browser" rendered="#{studyManagedBean.renderComponentList() != null}">
                                     <ui:insert name="browserTab">
                                         <ui:include src="/bbc/lims/studyTabs/browser.xhtml"/>

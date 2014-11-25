@@ -49,8 +49,6 @@ public class StudyMB implements Serializable {
 
     private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
     private static final long serialVersionUID = 1L;
-    public static final int TEAM_TAB = 1;
-    public static final int SHOW_TAB = 0;
 
     /**
      * ************************************
@@ -101,8 +99,6 @@ public class StudyMB implements Serializable {
     private String studyCreator;
     private int tabIndex;
     private String loginName;
-
-    private int manTabIndex = SHOW_TAB;
 
     private boolean deleteFilesOnRemove = true;
 
@@ -468,7 +464,6 @@ public class StudyMB implements Serializable {
         }
 
         addMessage("New Member Added!");
-        manTabIndex = TEAM_TAB;
         return "studyPage";
     }
 
@@ -517,19 +512,6 @@ public class StudyMB implements Serializable {
             //
         }
 
-    }
-
-    /*
-     Used for navigating to the second tab immediately.
-     */
-    public int getManTabIndex() {
-        int val = manTabIndex;
-        manTabIndex = SHOW_TAB;
-        return val;
-    }
-
-    public void setManTabIndex(int mti) {
-        manTabIndex = mti;
     }
 
     public boolean isCurrentOwner() {
@@ -604,7 +586,11 @@ public class StudyMB implements Serializable {
         for (StudyRoleTypes role : roles) {
             List<Username> mems = studyTeamController.findTeamMembersByName(studyName, role.getTeam());
             if (!mems.isEmpty()) {
-                groupedUsers.add(new UserGroup(role, mems));
+                List<RoledUser> roleMems = new ArrayList<>();
+                for (Username u : mems) {
+                    roleMems.add(new RoledUser(u.getEmail(), u.getName(), role));
+                }
+                groupedUsers.add(new UserGroup(role, roleMems));
             }
         }
         return groupedUsers;
@@ -623,17 +609,17 @@ public class StudyMB implements Serializable {
     public class UserGroup {
 
         private StudyRoleTypes groupname;
-        private List<Username> members;
+        private List<RoledUser> members;
 
         public StudyRoleTypes getGroupname() {
             return groupname;
         }
 
-        public List<Username> getMembers() {
+        public List<RoledUser> getMembers() {
             return members;
         }
 
-        public UserGroup(StudyRoleTypes groupname, List<Username> members) {
+        public UserGroup(StudyRoleTypes groupname, List<RoledUser> members) {
             this.groupname = groupname;
             this.members = members;
         }
@@ -642,8 +628,45 @@ public class StudyMB implements Serializable {
             this.groupname = groupName;
         }
 
-        public void setMembers(List<Username> members) {
+        public void setMembers(List<RoledUser> members) {
             this.members = members;
+        }
+    }
+
+    public class RoledUser {
+
+        private String email;
+        private String name;
+        private StudyRoleTypes role;
+
+        public RoledUser(String email, String name, StudyRoleTypes role) {
+            this.email = email;
+            this.name = name;
+            this.role = role;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public StudyRoleTypes getRole() {
+            return role;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public void setRole(StudyRoleTypes role) {
+            this.role = role;
         }
     }
 
@@ -661,72 +684,4 @@ public class StudyMB implements Serializable {
             return t.getUsername().equalsIgnoreCase(email);
         }
     }
-    
-    
-    public List<StudyRoleTypes> getStudyRolesForCurrentRole(StudyRoleTypes role){
-        List<StudyRoleTypes> reordered = new ArrayList<>();
-        reordered.add(role);
-        for(StudyRoleTypes type:StudyRoleTypes.values()){
-            if(type!=role){
-                reordered.add(type);
-            }
-        }
-        return reordered;
-    }
-
-    //TODO: remove following methods!!
-    public int countMasters() {
-        return (studyTeamController.countStudyTeam(studyName, "Master"));
-    }
-
-    public int countResearchers() {
-        return studyTeamController.countStudyTeam(studyName, "Researcher");
-    }
-
-    public int countResearchAdmins() {
-        return studyTeamController.countStudyTeam(studyName, "Research Admin");
-    }
-
-    public int countAuditors() {
-        return studyTeamController.countStudyTeam(studyName, "Auditor");
-    }
-
-    public List<Username> getMastersList() {
-        return studyTeamController.findTeamMembersByName(studyName, "Master");
-    }
-
-    public List<Username> getResearchersList() {
-        return studyTeamController.findTeamMembersByName(studyName, "Researcher");
-    }
-
-    public List<Username> getResearchAdminList() {
-        return studyTeamController.findTeamMembersByName(studyName, "Research Admin");
-    }
-
-    public List<Username> getAuditorsList() {
-        return studyTeamController.findTeamMembersByName(studyName, "Auditor");
-    }
-
-    public List<StudyRoleTypes> getListBasedOnCurrentRole(String email) {
-
-        String team = studyTeamController.findByPrimaryKey(studyName, email).getTeamRole();
-        List<StudyRoleTypes> reOrder = new ArrayList<>();
-
-        if (team.equals("Researcher")) {
-            reOrder.add(StudyRoleTypes.RESEARCHER);
-            reOrder.add(StudyRoleTypes.AUDITOR);
-            reOrder.add(StudyRoleTypes.MASTER);
-
-            return reOrder;
-
-        } else if (team.equals("Auditor")) {
-            reOrder.add(StudyRoleTypes.AUDITOR);
-            reOrder.add(StudyRoleTypes.RESEARCHER);
-            reOrder.add(StudyRoleTypes.MASTER);
-            return reOrder;
-        } else {
-            return null;
-        }
-    }
-
 }

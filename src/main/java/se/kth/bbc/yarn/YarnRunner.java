@@ -197,6 +197,7 @@ public class YarnRunner {
         }
 
         private EnvironmentVariableFacade lookupEnvironmentVariableFacadeBean() throws NamingException {
+            //TODO: fix this!!!
             Context c = new InitialContext();
             //return (EnvironmentVariableFacade) c.lookup("java:global/se.kth.hop_hop-dashboard_war_1.0-SNAPSHOT/EnvironmentVariableFacade!se.kth.bbc.lims.EnvironmentVariableFacade");
             return null;
