@@ -2,9 +2,9 @@ package se.kth.bbc.workflows;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
-import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
+/*import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
-import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
+import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;*/
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -166,14 +166,14 @@ public class ExperimentController implements Serializable {
      * @return
      */
     public List<String> getFreeParameters() {
-        try {
+        /*try {
             //Get the variables
             String txt = getWorkflowText();
             TopLevelContext tlc = StaticNodeVisitor.createTlc(txt);
             return StaticNodeVisitor.getFreeVarNameList(tlc);
         } catch (HasFailedException | IOException e) {
             MessagesController.addErrorMessage("Error!","Failed to load the free variables of the given workflow file.");
-        }
+        }*/
         return null;
     }
 

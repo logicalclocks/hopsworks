@@ -66,16 +66,6 @@
             <artifactId>jettison</artifactId>
             <version>1.1</version>
         </dependency>
-       <dependency>
-            <groupId>de.huberlin.wbi.cuneiform</groupId>
-            <artifactId>cuneiform-core</artifactId>
-            <version>2.0.0-SNAPSHOT</version>
-        </dependency>
- <!--       <dependency>
-            <groupId>de.huberlin.cuneiform</groupId>
-            <artifactId>logview</artifactId>
-            <version>0.13</version>
-        </dependency>-->
         <dependency>
             <groupId>javax</groupId>
             <artifactId>javaee-web-api</artifactId>
@@ -256,12 +246,6 @@
             <version>1.0</version>
             <scope>compile</scope>
         </dependency>
-        
-<!--        <dependency>
-            <groupId>de.huberlin.wbi.hiway</groupId>
-            <artifactId>hiway-core</artifactId>
-            <version>0.2.0-SNAPSHOT</version>
-        </dependency>-->
         
         <!-- standard.jar --> 
     <dependency>
