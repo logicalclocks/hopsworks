@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.Constants;
+import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.study.fb.InodesMB;
 
 /**
@@ -74,8 +75,11 @@ public class UploadServlet extends HttpServlet {
                 return;
             }
             String fileType = info.resumableFilename.substring(extPos + 1);
-
-            fileOps.copyAfterUploading(info.resumableFilename, uploadPath + info.resumableFilename);
+            try {
+                fileOps.copyAfterUploading(info.resumableFilename, uploadPath + info.resumableFilename);
+            } catch (IOException e) {
+                MessagesController.addErrorMessage("Failed to write to HDFS");
+            }
         }
     }
 

@@ -373,13 +373,13 @@ public class StudyMB implements Serializable {
 
             } else {
 
-                addErrorMessageToUserAction("Failed: Study already exists!");
+                MessagesController.addErrorMessage("Failed: Study already exists!");
                 logger.log(Level.SEVERE, "Study exists!");
                 return null;
             }
 
         } catch (IOException | EJBException | URISyntaxException exp) {
-            addErrorMessageToUserAction("Failed: Study already exists!");
+            MessagesController.addErrorMessage("Failed: Study already exists!");
             logger.log(Level.SEVERE, "Study was not created!");
             return null;
         }
@@ -463,39 +463,19 @@ public class StudyMB implements Serializable {
             }
 
         } catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error: Adding team member failed.");
+            MessagesController.addErrorMessage("Error: Adding team member failed.");
             logger.log(Level.SEVERE, "Adding members to study failed...{0}", ejb.getMessage());
             return null;
         }
 
-        addMessage("New Member Added!");
+        MessagesController.addInfoMessage("New Member Added!");
         return "studyPage";
     }
 
     public void itemSelect(SelectEvent e) {
         if (getSelectedUsernames().isEmpty()) {
-            addErrorMessageToUserAction("Error: People field cannot be empty.");
+            MessagesController.addErrorMessage("Error: People field cannot be empty.");
         }
-    }
-
-    public void addMessage(String summary) {
-        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, summary);
-        FacesContext.getCurrentInstance().addMessage(null, message);
-    }
-
-    public void addMessage(String summary, String mess, String anchor) {
-        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, mess);
-        FacesContext.getCurrentInstance().addMessage(anchor, message);
-    }
-
-    public void addErrorMessageToUserAction(String message) {
-        FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, message, message);
-        FacesContext.getCurrentInstance().addMessage(null, errorMessage);
-    }
-
-    public void addErrorMessageToUserAction(String summary, String message, String anchor) {
-        FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, summary, message);
-        FacesContext.getCurrentInstance().addMessage(anchor, errorMessage);
     }
 
     public int getTabIndex() {
@@ -538,11 +518,11 @@ public class StudyMB implements Serializable {
             }
             logger.log(Level.INFO, "{0} - study removed.", studyName);
         } catch (IOException e) {
-            addErrorMessageToUserAction("Error: Study wasn't removed.");
+            MessagesController.addErrorMessage("Error: Study wasn't removed.");
             return null;
         }
         if (success) {
-            addMessage("Success", "Study " + studyName + " was successfully removed.", "studyRemoved");
+            MessagesController.addInfoMessage("Success", "Study " + studyName + " was successfully removed.", "studyRemoved");
             FacesContext context = FacesContext.getCurrentInstance();
             context.getExternalContext().getFlash().setKeepMessages(true);
             deleteFilesOnRemove = true;

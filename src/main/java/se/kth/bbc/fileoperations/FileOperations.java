@@ -24,6 +24,8 @@ import se.kth.bbc.upload.UploadServlet;
 @Stateless
 public class FileOperations {
 
+    private static final Logger logger = Logger.getLogger(FileOperationsManagedBean.class.getName());
+
     @EJB
     private FileSystemOperations fsOps;
     @EJB
@@ -61,8 +63,7 @@ public class FileOperations {
      * @param inode The Inode representing the file. Its status will be updated.
      * If null, a new inode is created for the file.
      */
-    public void copyToHDFS(String localFilename, String destination, Inode inode) {
-        //TODO: rethrow caught exceptions so they can be reflected in GUI.
+    public void copyToHDFS(String localFilename, String destination, Inode inode) throws IOException {
         //Get the local file
         File localfile = getLocalFile(localFilename);
 
@@ -81,8 +82,9 @@ public class FileOperations {
         try {
             fsOps.copyToHDFS(destp, new FileInputStream(localfile));
             success = true;
-        } catch (IOException | URISyntaxException ex) {
-            Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException|URISyntaxException ex) {
+            logger.log(Level.SEVERE, "Error while copying to HDFS", ex);
+            throw new IOException(ex);
         }
 
         //Update status
@@ -92,15 +94,16 @@ public class FileOperations {
             inodes.update(inode);
         }
     }
-    
+
     /**
      * Write an input stream to a HDFS file. An Inode is also created.
+     *
      * @param is The InputStream to be written.
      * @param size The length of the file.
-     * @param destination The path on HDFS at which the file should be created. Includes the filename.
+     * @param destination The path on HDFS at which the file should be created.
+     * Includes the filename.
      */
-    public void writeToHDFS(InputStream is, long size, String destination){
-        //TODO: rethrow caught exceptions so they can be reflected in GUI.
+    public void writeToHDFS(InputStream is, long size, String destination) throws IOException{
         Inode inode = inodes.createAndPersistFile(destination, size, Inode.COPYING);
         //Actually copy to HDFS
         boolean success = false;
@@ -109,7 +112,8 @@ public class FileOperations {
             fsOps.copyToHDFS(destp, is);
             success = true;
         } catch (IOException | URISyntaxException ex) {
-            Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
+            throw new IOException(ex);
         }
 
         //Update status
@@ -198,7 +202,7 @@ public class FileOperations {
      * @param destination The path in HDFS where the file should end up.
      * Includes the file name.
      */
-    public void copyAfterUploading(String localFilename, String destination) {
+    public void copyAfterUploading(String localFilename, String destination) throws IOException{
         Inode node = inodes.getInodeAtPath(destination);
         copyToHDFS(localFilename, destination, node);
     }

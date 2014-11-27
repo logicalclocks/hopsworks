@@ -79,16 +79,6 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
             //return "studyPage?faces-redirect=true";
             newTeamRole = null;
             return "OK";
-    }    
-    
-    public void addMessage(String summary) {
-        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, summary);
-        FacesContext.getCurrentInstance().addMessage(null, message);
-    }
-
-    public void addErrorMessageToUserAction(String message) {
-        FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, message, message);
-        FacesContext.getCurrentInstance().addMessage(null, errorMessage);
     }
     
     @Override

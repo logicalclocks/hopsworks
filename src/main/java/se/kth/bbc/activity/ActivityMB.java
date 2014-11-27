@@ -80,7 +80,7 @@ public class ActivityMB implements Serializable {
     }
     
     public List<ActivityDetail> getActivityDetailList() {
-        return activityController.filterActivityDetail();
+        return activityController.getAllActivityDetail();
     }
     
     public List<ActivityDetail> getActivityDetailOnStudy(String studyName){

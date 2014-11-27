@@ -74,15 +74,11 @@ public class UsersGroups implements Serializable {
 
     @Override
     public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
         if (!(object instanceof UsersGroups)) {
             return false;
         }
         UsersGroups other = (UsersGroups) object;
-        if ((this.usersGroupsPK == null && other.usersGroupsPK != null) || (this.usersGroupsPK != null && !this.usersGroupsPK.equals(other.usersGroupsPK))) {
-            return false;
-        }
-        return true;
+        return !((this.usersGroupsPK == null && other.usersGroupsPK != null) || (this.usersGroupsPK != null && !this.usersGroupsPK.equals(other.usersGroupsPK)));
     }
 
     @Override

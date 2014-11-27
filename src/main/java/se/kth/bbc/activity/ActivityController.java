@@ -51,12 +51,11 @@ public class ActivityController {
         em.remove(activity);
     }
     
-    //TODO rename method
     /**
      * Gets all activity information.
      * @return 
      */
-    public List<ActivityDetail> filterActivityDetail(){
+    public List<ActivityDetail> getAllActivityDetail(){
         TypedQuery<ActivityDetail> q = em.createNamedQuery("ActivityDetail.findAll", ActivityDetail.class);
         return q.getResultList();
     }

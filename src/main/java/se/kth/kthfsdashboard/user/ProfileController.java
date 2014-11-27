@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.DatatypeConverter;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
+import se.kth.bbc.lims.MessagesController;
 
 /**
  * Provides the controller for the Profile page view; interface to the model.
@@ -143,29 +144,10 @@ public class ProfileController implements Serializable {
         try {
             userFacade.update(user);
         } catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error: Update action failed.");
+            MessagesController.addErrorMessage("Error: Update action failed.");
             return;
         }
-        addMessage("Success", "Profile updated successfully.");
-    }
-
-    public void addMessage(String summary, String elaborate) {
-        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, elaborate);
-        FacesContext.getCurrentInstance().addMessage(null, message);
-    }
-
-    public void addErrorMessageToUserAction(String message) {
-        FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, message, message);
-        FacesContext.getCurrentInstance().addMessage(null, errorMessage);
-    }
-    
-    public void addErrorMessageToUserAction(String key, String summary, String message) {
-        FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, summary, message);
-        FacesContext.getCurrentInstance().addMessage(key, errorMessage);
-    }
-
-    public void addMessage(FacesMessage message) {
-        FacesContext.getCurrentInstance().addMessage(null, message);
+        MessagesController.addInfoMessage("Success", "Profile updated successfully.");
     }
 
     public void changePasswordForm() {
@@ -185,7 +167,7 @@ public class ProfileController implements Serializable {
         
         if(oldPwd.compareTo(currentEncrypted)!= 0){
             //Wrong password            
-            addErrorMessageToUserAction("wrongPassword","Error","Wrong password.");
+            MessagesController.addErrorMessage("wrongPassword","Error","Wrong password.");
             return;
         }
         
@@ -213,7 +195,7 @@ public class ProfileController implements Serializable {
 
     public void onPwdChanged(SelectEvent event) {
         FacesMessage mess = (FacesMessage) (event.getObject());
-        addMessage(mess);
+        MessagesController.addMessage(mess);
     }
 
     public boolean isCorrectPwd(String pwd) {

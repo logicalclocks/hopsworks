@@ -16,6 +16,8 @@ import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.study.fb.Inode;
 
+//TODO: report errors to user!!! seems to be going wrong!
+
 /**
  * Managed bean for accessing operations on the file system. Downloading,
  * uploading, creating files and directories. Methods do not care about the
@@ -98,7 +100,7 @@ public class FileOperationsManagedBean implements Serializable {
 
     private static String getExtension(String path) {
         String filename = path.substring(path.lastIndexOf(File.separator));
-        if (filename.length() == 0) // path was a folder TODO: check if this is right!!
+        if (filename.length() == 0) // path was a folder TODO: check
         {
             return null;
         } else if (filename.lastIndexOf('.') < 0) //file does not have extension

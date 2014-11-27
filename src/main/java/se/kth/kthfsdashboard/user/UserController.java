@@ -19,6 +19,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
+import se.kth.bbc.lims.MessagesController;
 
 /**
  *
@@ -149,18 +150,18 @@ public class UserController implements Serializable {
         try {
             userFacade.removeByEmail(user.getEmail()); //userFacade.remove(user) doesn't seem to work
         } catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error", "Delete operation failed");
+            MessagesController.addErrorMessage("Error", "Delete operation failed");
         }
-        addMessage(user.getName() + " successfully removed.");
+        MessagesController.addInfoMessage(user.getName() + " successfully removed.");
     }
     
     public void rejectUser(Username user) {
         try {
             userFacade.removeByEmail(user.getEmail()); //userFacade.remove(user) doesn't seem to work
         } catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error", "Rejection failed");
+            MessagesController.addErrorMessage("Error", "Rejection failed");
         }
-        addMessage(user.getName() + " was rejected.");
+        MessagesController.addInfoMessage(user.getName() + " was rejected.");
         requests.remove(user);
     }
 
@@ -168,30 +169,20 @@ public class UserController implements Serializable {
         try {
             userFacade.removeByEmail(user.getEmail());
         } catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error", "Delete operation failed.");
+            MessagesController.addErrorMessage("Error", "Delete operation failed.");
         }
-        addMessage(user.getName() + "successfully removed.");
+        MessagesController.addInfoMessage(user.getName() + "successfully removed.");
     }
 
     public void updateUser() {
         try {
             userFacade.update(user);
         } catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error", "Update action failed.");
+            MessagesController.addErrorMessage("Error", "Update action failed.");
             return;
         }
-        addMessage("Update Completed.");
+        MessagesController.addInfoMessage("Update Completed.");
 
-    }
-
-    public void addMessage(String summary) {
-        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, summary);
-        FacesContext.getCurrentInstance().addMessage(null, message);
-    }
-
-    public void addErrorMessageToUserAction(String summary, String message) {
-        FacesMessage errorMessage = new FacesMessage(FacesMessage.SEVERITY_ERROR, summary, message);
-        FacesContext.getCurrentInstance().addMessage(null, errorMessage);
     }
 
     private HttpServletRequest getRequest() {
@@ -204,7 +195,7 @@ public class UserController implements Serializable {
 
     public String userManagement() {
 
-        addMessage("Switched to the LIMS User Management Service!");
+        MessagesController.addInfoMessage("Switched to the LIMS User Management Service!");
         return "userMgmt";
     }
 
@@ -270,12 +261,12 @@ public class UserController implements Serializable {
         }
         if (!failedNames.isEmpty()) {
             if (failedNames.size() == num) {
-                addErrorMessageToUserAction("Operation failed.", "Requests were not processed.");
+                MessagesController.addErrorMessage("Operation failed.", "Requests were not processed.");
             } else {
-                addErrorMessageToUserAction("Operation partially failed.", "Requests for " + StringUtils.join(failedNames.iterator(), ", ") + " were not processed.");
+                MessagesController.addErrorMessage("Operation partially failed.", "Requests for " + StringUtils.join(failedNames.iterator(), ", ") + " were not processed.");
             }
         } else {
-            addMessage("Operation successful");
+            MessagesController.addInfoMessage("Operation successful");
         }
     }
 
@@ -295,12 +286,12 @@ public class UserController implements Serializable {
         }
         if (!failedNames.isEmpty()) {
             if (failedNames.size() == num) {
-                addErrorMessageToUserAction("Operation failed.", "Requests were not processed.");
+                MessagesController.addErrorMessage("Operation failed.", "Requests were not processed.");
             } else {
-                addErrorMessageToUserAction("Operation partially failed.", "Requests for " + StringUtils.join(failedNames.iterator(), ", ") + " were not processed.");
+                MessagesController.addErrorMessage("Operation partially failed.", "Requests for " + StringUtils.join(failedNames.iterator(), ", ") + " were not processed.");
             }
         } else {
-            addMessage("Operation successful");
+            MessagesController.addInfoMessage("Operation successful");
         }
     }
 
