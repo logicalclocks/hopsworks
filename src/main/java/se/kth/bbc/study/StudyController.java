@@ -97,19 +97,29 @@ public class StudyController {
         return query.getResultList();
     }
     
-    //Finds the details about all studies a user has joined
+    /**
+     * Find details about all the studies a user has joined.
+     * @param useremail
+     * @return 
+     */
     public List<StudyDetail> findAllStudyDetails(String useremail){
-        Query query = em.createNativeQuery("SELECT study.name as studyName, study.username as email, USERS.name as creator FROM study join USERS on study.username=USERS.email WHERE study.name IN (SELECT name FROM StudyTeam WHERE team_member=?)",StudyDetail.class)
+        Query query = em.createNativeQuery("SELECT * FROM StudyDetails WHERE studyName IN (SELECT name FROM StudyTeam WHERE team_member=?)",StudyDetail.class)
                 .setParameter(1, useremail); 
         return query.getResultList();
     }
     
+    /**
+     * Find all studies created (and owned) by this user.
+     * @param useremail
+     * @return 
+     */
     public List<StudyDetail> findAllPersonalStudyDetails(String useremail){
-        Query query = em.createNativeQuery("SELECT study.name as studyName, study.username as email, USERS.name as creator FROM study join USERS on study.username=USERS.email WHERE study.username=?",StudyDetail.class)
-                .setParameter(1, useremail); 
-        return query.getResultList();
+        TypedQuery<StudyDetail> q = em.createNamedQuery("StudyDetail.findByEmail", StudyDetail.class);
+        q.setParameter("email", useremail);
+        return q.getResultList();
     }    
     
+    //TODO: remove this method and replace with findJoinedStudyDetails
     public List<TrackStudy> findJoinedStudies(String user){
         
         Query query = em.createNativeQuery("select study.name, study.username from (StudyTeam join study on StudyTeam.name=study.name) join USERS on study.username=USERS.email where study.username not like ? and StudyTeam.team_member like ?", TrackStudy.class)
@@ -117,8 +127,13 @@ public class StudyController {
         return query.getResultList();
     }
     
+    /**
+     * Get all the studies this user has joined, but not created.
+     * @param useremail
+     * @return 
+     */
     public List<StudyDetail> findJoinedStudyDetails(String useremail){
-        Query query = em.createNativeQuery("SELECT study.name AS studyName, study.username AS email, USERS.name AS creator FROM (StudyTeam JOIN study ON StudyTeam.name=study.name) JOIN USERS ON study.username=USERS.email WHERE study.username NOT LIKE ? AND StudyTeam.team_member LIKE ?", StudyDetail.class)
+        Query query = em.createNativeQuery("SELECT * FROM StudyDetails WHERE studyName IN (SELECT name FROM StudyTeam WHERE team_member=?) AND email NOT LIKE ?", StudyDetail.class)
                 .setParameter(1, useremail).setParameter(2,useremail);
        
         return query.getResultList();

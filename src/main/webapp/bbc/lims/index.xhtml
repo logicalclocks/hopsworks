@@ -41,14 +41,14 @@
                                             <p:dataScroller value="#{activityBean.allLazyModel}" var="act" chunkSize="25" lazy="true" buffer="50">
                                                 <div class="event-item" align="left">
                                                     <span class="cgray right">#{activityBean.findLastActivity(act.id)}</span>
-                                                    <img class="avatar s24" src="#{activityBean.getGravatar(act.email,24)}"/>
+                                                    <img class="avatar s24" src="#{activityBean.getGravatar(act.performedByEmail,24)}"/>
                                                     <div class="event-title">
-                                                        <span class="author_name"><p:commandLink> #{act.author}</p:commandLink></span>
-                                                        <span class="event_label merged">#{act.activity}</span>
-                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}" disabled="#{studyManagedBean.isRemoved(act.studyName)}">
-                                                            <strong>at #{act.author} / #{act.studyName}</strong>
-                                                            <f:param name="studyname" value="#{act.studyName}"/>
-                                                            <f:param name="username" value="#{act.email}"/>
+                                                        <span class="author_name"><p:commandLink> #{act.performedByName}</p:commandLink></span>
+                                                        <span class="event_label merged">#{act.description}</span>
+                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}" disabled="#{studyManagedBean.isRemoved(act.studyname)}">
+                                                            <strong>at #{act.performedByName} / #{act.studyname}</strong>
+                                                            <f:param name="studyname" value="#{act.studyname}"/>
+                                                            <f:param name="username" value="#{act.performedByEmail}"/>
                                                         </p:commandLink>
                                                     </div>
                                                 </div>

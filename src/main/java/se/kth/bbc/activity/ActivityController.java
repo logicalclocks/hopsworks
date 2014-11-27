@@ -51,35 +51,55 @@ public class ActivityController {
         em.remove(activity);
     }
     
+    //TODO rename method
+    /**
+     * Gets all activity information.
+     * @return 
+     */
     public List<ActivityDetail> filterActivityDetail(){
-        Query query = em.createNativeQuery("SELECT id, performed_By AS email, USERS.name AS author, activity, activity_on AS studyName, timestamp AS myTimestamp FROM activity JOIN USERS ON activity.performed_By=USERS.email ORDER BY myTimestamp DESC", ActivityDetail.class);
-        return query.getResultList();
+        TypedQuery<ActivityDetail> q = em.createNamedQuery("ActivityDetail.findAll", ActivityDetail.class);
+        return q.getResultList();
     }
     
+    /**
+     * Get all the activities performed on study <i>studyName</i>.
+     * @param studyName
+     * @return 
+     */
     public List<ActivityDetail> activityDetailOnStudy(String studyName){
-        Query query = em.createNativeQuery("SELECT id, performed_By AS email, USERS.name AS author, activity, activity_on AS studyName, timestamp AS myTimestamp FROM activity JOIN USERS ON activity.performed_By=USERS.email WHERE activity.activity_on = ? ORDER BY myTimestamp DESC", ActivityDetail.class);
-        query.setParameter(1, studyName);
-        return query.getResultList();
+        TypedQuery<ActivityDetail> q = em.createNamedQuery("ActivityDetail.findByStudyname", ActivityDetail.class);
+        q.setParameter("studyname", studyName);
+        return q.getResultList();
     }
     
+    /**
+     * Returns all activity, but paginated. Items from <i>first</i> till
+     * <i>first+pageSize</i> are returned.
+     * @param first
+     * @param pageSize
+     * @return 
+     */
     public List<ActivityDetail> getPaginatedActivityDetail(int first, int pageSize){
-        Query query = em.createNativeQuery("SELECT id, performed_By AS email, USERS.name AS author, activity, activity_on AS studyName, timestamp AS myTimestamp FROM activity JOIN USERS ON activity.performed_By=USERS.email ORDER BY myTimestamp DESC LIMIT ?,?", ActivityDetail.class);
-        query.setParameter(1, first);
-        query.setParameter(2, pageSize);
-        return query.getResultList();
+        TypedQuery<ActivityDetail>  q = em.createNamedQuery("ActivityDetail.findAll", ActivityDetail.class);
+        q.setFirstResult(first);
+        q.setMaxResults(pageSize);
+        return q.getResultList();
     }
     
-    public List<ActivityDetail> getPaginatedActivityDetailForStudy(int first,int pageSize, String filterStudy){
-        Query query = em.createNativeQuery("SELECT id, performed_By AS email, USERS.name AS author, activity, "
-                + "activity_on AS studyName, timestamp AS myTimestamp "
-                + "FROM activity JOIN USERS ON activity.performed_By=USERS.email "
-                + "WHERE activity_on LIKE ? "
-                + "ORDER BY myTimestamp DESC "
-                + "LIMIT ?,?", ActivityDetail.class);
-        query.setParameter(1, filterStudy);
-        query.setParameter(2, first);
-        query.setParameter(3, pageSize);
-        return query.getResultList();
+    /**
+     * Returns all activities on study <i>studyName</i>, but paginated. Items from <i>first</i> till
+     * <i>first+pageSize</i> are returned.
+     * @param first
+     * @param pageSize
+     * @param filterStudy
+     * @return 
+     */
+    public List<ActivityDetail> getPaginatedActivityDetailForStudy(int first,int pageSize, String studyName){
+        TypedQuery<ActivityDetail> q = em.createNamedQuery("ActivityDetail.findByStudyname", ActivityDetail.class);
+        q.setParameter("studyname", studyName);
+        q.setFirstResult(first);
+        q.setMaxResults(pageSize);
+        return q.getResultList();
     }
     
     public long getTotalCount(){

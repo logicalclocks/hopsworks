@@ -18,12 +18,12 @@ and open the template in the editor.
                         <span class="cgray right">
                             #{activityBean.findLastActivity(act.id)}
                         </span>
-                        <img class="avatar s24" src="#{activityBean.getGravatar(act.email,24)}"/>
+                        <img class="avatar s24" src="#{activityBean.getGravatar(act.performedByEmail,24)}"/>
                         <div class="event-title">
-                            <span class="author_name"><h:link>#{act.author}</h:link></span>
-                            <span class="event_label opened">#{act.activity}</span>
+                            <span class="author_name"><h:link>#{act.performedByName}</h:link></span>
+                            <span class="event_label opened">#{act.description}</span>
                             at
-                            <h:link><span class="tiny">#{act.author}  /  </span><strong>#{act.studyName}</strong></h:link>
+                            <h:link><span class="tiny">#{act.performedByName}  /  </span><strong>#{act.studyname}</strong></h:link>
                         </div>
                     </div>
                 </p:dataScroller>

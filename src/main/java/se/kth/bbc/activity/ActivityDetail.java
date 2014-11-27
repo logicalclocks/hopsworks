@@ -2,79 +2,113 @@ package se.kth.bbc.activity;
 
 import java.io.Serializable;
 import java.util.Date;
+import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Utility class for loading Activity data into webpage. 
- * It reflects the main information needed to show in the 'show' tabs, created with results from database queries. 
- * As such it contains but getters and setters.
+ * Entity class mapped to the view "activitydetails". Used to present the 
+ * activity in a complete way to the user in the activity log.
  * @author stig
  */
 @Entity
-public class ActivityDetail implements Serializable{
-
+@Table(name = "activitydetails")
+@XmlRootElement
+@NamedQueries({
+    @NamedQuery(name = "ActivityDetail.findAll", query = "SELECT a FROM ActivityDetail a ORDER BY a.timestamp DESC"),
+    @NamedQuery(name = "ActivityDetail.findById", query = "SELECT a FROM ActivityDetail a WHERE a.id = :id"),
+    @NamedQuery(name = "ActivityDetail.findByPerformedByEmail", query = "SELECT a FROM ActivityDetail a WHERE a.performedByEmail = :performedByEmail ORDER BY a.timestamp DESC"),
+    @NamedQuery(name = "ActivityDetail.findByPerformedByName", query = "SELECT a FROM ActivityDetail a WHERE a.performedByName = :performedByName ORDER BY a.timestamp DESC"),
+    @NamedQuery(name = "ActivityDetail.findByDescription", query = "SELECT a FROM ActivityDetail a WHERE a.description = :description ORDER BY a.timestamp DESC"),
+    @NamedQuery(name = "ActivityDetail.findByStudyname", query = "SELECT a FROM ActivityDetail a WHERE a.studyname = :studyname ORDER BY a.timestamp DESC"),
+    @NamedQuery(name = "ActivityDetail.findByTimestamp", query = "SELECT a FROM ActivityDetail a WHERE a.timestamp = :timestamp ORDER BY a.timestamp DESC")})
+public class ActivityDetail implements Serializable {
+    private static final long serialVersionUID = 1L;
     @Id
-    private Integer id;
-    private String email;
-    private String author;
-    private String activity;
-    private String studyName;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "id")
+    private int id;
+    @Size(max = 255)
+    @Column(name = "performed_by_email")
+    private String performedByEmail;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "performed_by_name")
+    private String performedByName;
+    @Size(max = 128)
+    @Column(name = "description")
+    private String description;
+    @Basic(optional = false)
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "studyname")
+    private String studyname;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "timestamp")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date myTimestamp;
+    private Date timestamp;
 
     public ActivityDetail() {
     }
 
-    public Integer getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(int id) {
         this.id = id;
     }
 
-    public String getEmail() {
-        return email;
+    public String getPerformedByEmail() {
+        return performedByEmail;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setPerformedByEmail(String performedByEmail) {
+        this.performedByEmail = performedByEmail;
     }
 
-    public String getAuthor() {
-        return author;
+    public String getPerformedByName() {
+        return performedByName;
     }
 
-    public void setAuthor(String author) {
-        this.author = author;
+    public void setPerformedByName(String performedByName) {
+        this.performedByName = performedByName;
     }
 
-    public String getActivity() {
-        return activity;
+    public String getDescription() {
+        return description;
     }
 
-    public void setActivity(String activity) {
-        this.activity = activity;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public String getStudyName() {
-        return studyName;
+    public String getStudyname() {
+        return studyname;
     }
 
-    public void setStudyName(String studyName) {
-        this.studyName = studyName;
+    public void setStudyname(String studyname) {
+        this.studyname = studyname;
     }
 
-    public Date getMyTimestamp() {
-        return myTimestamp;
+    public Date getTimestamp() {
+        return timestamp;
     }
 
-    public void setMyTimestamp(Date myTimestamp) {
-        this.myTimestamp = myTimestamp;
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
     }
-
     
 }

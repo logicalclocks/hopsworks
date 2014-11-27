@@ -186,6 +186,7 @@ public class StudyMB implements Serializable {
     }
 
     public List<StudyDetail> getPersonalStudy() {
+        List<StudyDetail> tmp = studyController.findAllPersonalStudyDetails(getUsername());
         return studyController.findAllPersonalStudyDetails(getUsername());
     }
 
@@ -316,10 +317,12 @@ public class StudyMB implements Serializable {
     }
 
     public List<StudyDetail> getAllStudiesPerUser() {
+        List<StudyDetail> tmp = studyController.findAllStudyDetails(getUsername());
         return studyController.findAllStudyDetails(getUsername());
     }
 
     public List<StudyDetail> getJoinedStudies() {
+        List<StudyDetail> tmp = studyController.findJoinedStudyDetails(getUsername());
         return studyController.findJoinedStudyDetails(getUsername());
     }
 
