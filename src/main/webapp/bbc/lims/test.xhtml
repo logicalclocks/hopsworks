@@ -23,17 +23,25 @@ and open the template in the editor.
             <h:form id="testForm">
                 <ui:repeat value="#{studyManagedBean.groupedMembers}" var="memGroup">
                     <ui:repeat value="#{memGroup.members}" var="usr">
-                        <p:selectOneMenu 
-                                         value="#{valueChangeMB.newTeamRole}" 
-                                         styleClass="study_role_assign" 
-                                         style="width:170px;" >
-                            <f:ajax render="@form" listener="#{studyManagedBean.test('boo')}" execute="@form"/>
-                            <f:selectItems value="#{studyManagedBean.team}" 
-                                           var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
-                        </p:selectOneMenu>
+                        <!-- encode -->
+                        <p:commandLink styleClass="ui-button fa fa-minus"  value="" rendered="#{studyManagedBean.renderComponentList() == 'Master' and not studyManagedBean.studyOwnedBy(usr.email)}" onclick="PF('removeDlg_${usr.email}').show()">
+                                                        <!--<p:confirm header="Removing a team member" message="Are you sure you want to remove #{usr.name} [#{usr.email}]?" icon="ui-icon-alert"/>-->
+                        </p:commandLink>
+<!--                                                    <p:confirmDialog id="currentUser_master_${memGroupStat.index}_${usrStat.index}" global="true" severity="alert" showEffect="fade"> 
+                            <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" update=":tabStudyPage:teamForm"/>   
+                            <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/> 
+                        </p:confirmDialog>-->
+                        <p:dialog modal="true" draggable="false" resizable="false" widgetVar="removeDlga_${usr.email}" header="Remove user?" appendTo="@(body)" rendered="#{studyManagedBean.renderComponentList() == 'Master' and not studyManagedBean.studyOwnedBy(usr.email)}">
+                            <h:form>
+                                <h:outputText value="Are you sure you want to remove #{usr.name} [#{usr.email}]?"/>
+                                <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit" ajax="true" process="@all" actionListener="#{studyManagedBean.test()}" oncomplete="PF('removeDlg_${usr.email}').hide()"/>
+                                <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button" onclick="PF('removeDlg_${usr.email}').hide()"/>
+                            </h:form>
+                        </p:dialog>
                     </ui:repeat>
                 </ui:repeat>
             </h:form>
+
         </ui:composition>
     </body>
 </html>

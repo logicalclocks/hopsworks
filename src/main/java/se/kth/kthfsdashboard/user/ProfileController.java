@@ -8,10 +8,7 @@ package se.kth.kthfsdashboard.user;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -177,7 +174,7 @@ public class ProfileController implements Serializable {
         options.put("draggable", false);
         options.put("resizable", false);
         options.put("contentHeight", 190);
-        RequestContext.getCurrentInstance().openDialog("changePassword", options, null);
+        RequestContext.getCurrentInstance().openDialog("dialogs/changePassword", options, null);
     }
 
     public void changePassword() {

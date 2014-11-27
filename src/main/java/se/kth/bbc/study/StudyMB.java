@@ -19,8 +19,10 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
+import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.LazyDataModel;
@@ -569,10 +571,6 @@ public class StudyMB implements Serializable {
         }
     }
 
-    public void test(String s) {
-        System.out.println(s);
-    }
-
     /**
      * Return a list of UserGroups, which contain the members of this study per
      * role type.
@@ -683,5 +681,11 @@ public class StudyMB implements Serializable {
         } else {
             return t.getUsername().equalsIgnoreCase(email);
         }
+    }
+    
+    
+    public void test(String s) {
+        System.out.println(s);
+        
     }
 }

@@ -20,6 +20,7 @@ import javax.faces.event.ValueChangeEvent;
 import javax.faces.event.ValueChangeListener;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityMB;
+import se.kth.bbc.study.StudyMB.RoledUser;
 
 
 /**
@@ -78,24 +79,7 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
             //return "studyPage?faces-redirect=true";
             newTeamRole = null;
             return "OK";
-    }
-    
-    public synchronized String deleteMemberFromTeam(String email) {
-
-        try {
-
-            studyTeamController.removeStudyTeam(studyMB.getStudyName(), email);
-            activity.addActivity(ActivityController.REMOVED_MEMBER + email, studyMB.getStudyName(), "TEAM");
-
-        } catch (EJBException ejb) {
-            addErrorMessageToUserAction("Error: Deleting team member failed.");
-            return null;
-        }
-            addMessage("Team member " + email + " deleted from study " + studyMB.getStudyName());            
-            return "studyPage";
-
-    }
-    
+    }    
     
     public void addMessage(String summary) {
         FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, summary, summary);

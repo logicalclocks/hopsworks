@@ -47,8 +47,8 @@
                                         <ui:include src="/bbc/lims/studyTabs/studyWorkflowTab.xhtml"/>
                                     </ui:insert>
                                 </p:tab>-->
-                                
-                               <p:tab id="yarn" title="Yarn">
+
+                                <p:tab id="yarn" title="Yarn">
                                     <ui:insert name="yarn">
                                         <ui:include src="/bbc/lims/studyTabs/yarnTab.xhtml"/>
                                     </ui:insert>
@@ -111,7 +111,7 @@
                     <!--  TODO: add check on existing samples -->
                     <p:inputText id="sampleName" required="true" value="#{fileOperationsMB.newFolderName}"/>
 
-                    <p:commandButton value="Create" action="#{fileOperationsMB.createSampleDir()}" oncomplete="PF('addSampleDlg').hide()" update=":#{p:component('browserForm')}"/>
+                    <p:commandButton value="Create" action="#{fileOperationsMB.createSampleDir()}" oncomplete="PF('addSampleDlg').hide()"/>
                     <p:commandButton type="button" value="Cancel" onclick="PF('addSampleDlg').hide()"/>
                 </h:form>
             </p:dialog>
