@@ -50,6 +50,7 @@ import se.kth.bbc.lims.EnvironmentVariableFacade;
 public class YarnRunner {
 
     private static final Logger logger = Logger.getLogger(YarnRunner.class.getName());
+    private static final String KEY_CLASSPATH = "CLASSPATH";
     //Some hard-coded paths for the AM
     private final static String amJarHdfsPath = "appMaster.jar";
     private ApplicationId appId = null;
@@ -71,6 +72,7 @@ public class YarnRunner {
     private final String amMainClass;
     private final String amArgs;
     private final Map<String, String> amLocalResources;
+    private final Map<String, String> amEnvironment;
 
     //Non-constructor-passed attributes
     private final Configuration conf;
@@ -87,6 +89,7 @@ public class YarnRunner {
         this.conf = builder.conf;
         this.yarnClient = builder.yarnClient;
         this.amLocalResources = builder.amLocalResources;
+        this.amEnvironment = builder.amEnvironment;
     }
 
     public static class Builder {
@@ -111,6 +114,8 @@ public class YarnRunner {
         private String extraArgs;
         //List of paths to resources that should be copied to application master
         private Map<String, String> amLocalResources = null;
+        //Application master environment
+        private Map<String, String> amEnvironment = null;
 
         //Hadoop Configuration
         private Configuration conf;
@@ -174,6 +179,27 @@ public class YarnRunner {
             return this;
         }
 
+        public Builder setAppMasterEnvironment(Map<String, String> env) {
+            this.amEnvironment = env;
+            return this;
+        }
+
+        public Builder addToAppMasterEnvironment(String key, String value) {
+            if (amEnvironment == null) {
+                this.amEnvironment = new HashMap<>();
+            }
+            amEnvironment.put(key, value);
+            return this;
+        }
+
+        public Builder addAllToAppMasterEnvironment(Map<String, String> env) {
+            if (amEnvironment == null) {
+                this.amEnvironment = new HashMap<>();
+            }
+            amEnvironment.putAll(env);
+            return this;
+        }
+
         /**
          * Build the YarnRunner instance.
          *
@@ -189,7 +215,7 @@ public class YarnRunner {
 
             if (appMasterMainClass == null) {
                 appMasterMainClass = getMainClassNameFromJar();
-                if(appMasterMainClass == null){
+                if (appMasterMainClass == null) {
                     throw new IllegalStateException("Could not infer main class name.");
                 }
             }
@@ -338,6 +364,9 @@ public class YarnRunner {
         logger.info("Set the environment for the application master");
         Map<String, String> env = new HashMap<>();
 
+        // Add AM environment vars.
+        env.putAll(amEnvironment);
+        //Set classpath
         setUpClassPath(env);
         List<String> commands = setUpCommands();
 
@@ -424,7 +453,14 @@ public class YarnRunner {
             classPathEnv.append(':');
             classPathEnv.append(System.getProperty("java.class.path"));
         }
-        env.put("CLASSPATH", classPathEnv.toString());
+        //Check whether a classpath variable was already set, and if so: merge them
+        //TODO: clean this up so no doubles are found in the classpath.
+        if (env.containsKey(KEY_CLASSPATH)) {
+            String clpth = env.get(KEY_CLASSPATH) + ":" + classPathEnv.toString();
+            env.put(KEY_CLASSPATH, clpth);
+        } else {
+            env.put(KEY_CLASSPATH, classPathEnv.toString());
+        }
     }
 
     private List<String> setUpCommands() {
