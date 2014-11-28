@@ -21,6 +21,8 @@ import se.kth.bbc.lims.Constants;
 @Stateless
 public class FileSystemOperations {
 
+    //TODO: use fs.copyFromLocalFile
+    
     private static final String nameNodeURI = Constants.NAMENODE_URI;
     private static final Logger logger = Logger.getLogger(FileSystemOperations.class.getName());
     public static final String DIR_ROOT = "Projects";

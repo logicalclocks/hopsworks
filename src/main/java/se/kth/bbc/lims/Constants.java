@@ -15,4 +15,6 @@ public class Constants {
     
     public static final String LOCAL_APPMASTER_DIR = server.equals("LOCAL") ? "/home/stig/tst/appMaster" : "/tmp/appMaster";
     public static final String LOCAL_EXTRA_DIR = server.equals("LOCAL") ? "/home/stig/tst/extraFiles" : "/tmp/extraFiles";
+    
+    public static final String JOB_UPLOAD_DIR = server.equals("LOCAL") ? "/home/stig/tst/jobs" : "/tmp/jobs";
 }

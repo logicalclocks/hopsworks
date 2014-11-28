@@ -41,6 +41,7 @@ import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.EnvironmentVariableFacade;
 
 /**
@@ -51,8 +52,6 @@ public class YarnRunner {
 
     private static final Logger logger = Logger.getLogger(YarnRunner.class.getName());
     private static final String KEY_CLASSPATH = "CLASSPATH";
-    //Some hard-coded paths for the AM
-    private final static String amJarHdfsPath = "appMaster.jar";
     private ApplicationId appId = null;
 
     //Signify whether the application has finished, started.
@@ -64,6 +63,7 @@ public class YarnRunner {
      CONSTRUCTION
     
      */
+    private final String appMasterLocalName;
     private final String appMasterJarPath;
     private final String amQueue;
     private int amMemory;
@@ -71,8 +71,9 @@ public class YarnRunner {
     private final String appName;
     private final String amMainClass;
     private final String amArgs;
-    private final Map<String, String> amLocalResources;
+    private final Map<String, SourceDestinationPair> amLocalResources;
     private final Map<String, String> amEnvironment;
+    private final String localResourcesBasePath;
 
     //Non-constructor-passed attributes
     private final Configuration conf;
@@ -85,11 +86,21 @@ public class YarnRunner {
         this.amVCores = builder.amVCores;
         this.appName = builder.appName;
         this.amMainClass = builder.appMasterMainClass;
-        this.amArgs = builder.extraArgs;
+        this.amArgs = builder.extraArgs == null ? "" : builder.extraArgs;
         this.conf = builder.conf;
         this.yarnClient = builder.yarnClient;
-        this.amLocalResources = builder.amLocalResources;
-        this.amEnvironment = builder.amEnvironment;
+        if (builder.amLocalResources != null) {
+            this.amLocalResources = builder.amLocalResources;
+        } else {
+            this.amLocalResources = new HashMap<>();
+        }
+        if (builder.amEnvironment != null) {
+            this.amEnvironment = builder.amEnvironment;
+        } else {
+            this.amEnvironment = new HashMap<>();
+        }
+        this.localResourcesBasePath = builder.localResourcesBasePath;
+        this.appMasterLocalName = builder.appMasterLocalName;
     }
 
     public static class Builder {
@@ -97,13 +108,16 @@ public class YarnRunner {
         private EnvironmentVariableFacade environmentVariableFacade;
 
         //Required attributes
+        //Path to the application master jar
         private final String appMasterJarPath;
+        //The name of the application master jar in the local resources
+        private final String appMasterLocalName;
 
         //Optional attributes
         // Queue for App master
         private String amQueue = "default"; //TODO: enable changing this, or infer from user data
         // Memory for App master
-        private int amMemory = 10;
+        private int amMemory = 819;
         //Number of cores for appMaster
         private int amVCores = 1;
         // Application name
@@ -113,9 +127,11 @@ public class YarnRunner {
         //Arguments to pass on in invocation of Application master
         private String extraArgs;
         //List of paths to resources that should be copied to application master
-        private Map<String, String> amLocalResources = null;
+        private Map<String, SourceDestinationPair> amLocalResources = null;
         //Application master environment
         private Map<String, String> amEnvironment = null;
+        //Path where the application master expects its local resources to be (added to fs.getHomeDirectory)
+        private String localResourcesBasePath;
 
         //Hadoop Configuration
         private Configuration conf;
@@ -123,8 +139,9 @@ public class YarnRunner {
         private YarnClient yarnClient;
 
         //Constructor
-        public Builder(String appMasterJarPath) {
+        public Builder(String appMasterJarPath, String appMasterLocalName) {
             this.appMasterJarPath = appMasterJarPath;
+            this.appMasterLocalName = appMasterLocalName;
         }
 
         public Builder appMasterArgs(String amArgs) {
@@ -153,34 +170,21 @@ public class YarnRunner {
         }
 
         /**
-         * Map from a local resource name to a path.
+         * Add a local resource that should be added to the AM container. The
+         * name is the name as used in the LocalResources map passed to the
+         * container. The source is the local path to the file, the destination
+         * is the intended location in HDFS relative to
+         * <i>localResourcesBasePath</i>.
          *
-         * @param localResources
+         * @param name
+         * @param path
          * @return
          */
-        public Builder setLocalResources(Map<String, String> localResources) {
-            this.amLocalResources = localResources;
-            return this;
-        }
-
-        public Builder addLocalResourcePath(String name, String path) {
+        public Builder addLocalResource(String name, String source, String destination) {
             if (amLocalResources == null) {
                 amLocalResources = new HashMap<>();
             }
-            amLocalResources.put(name, path);
-            return this;
-        }
-
-        public Builder addAllLocalResourcesPaths(Map<String, String> resources) {
-            if (amLocalResources == null) {
-                amLocalResources = new HashMap<>();
-            }
-            amLocalResources.putAll(resources);
-            return this;
-        }
-
-        public Builder setAppMasterEnvironment(Map<String, String> env) {
-            this.amEnvironment = env;
+            amLocalResources.put(name, new SourceDestinationPair(source, destination));
             return this;
         }
 
@@ -201,13 +205,34 @@ public class YarnRunner {
         }
 
         /**
+         * Set the base path for local resources for the application master.
+         * This is the path where the AM expects its local resources to be. Use
+         * "$APPID" as a replacement for the appId, which will be replaced once
+         * that is available.
+         *
+         * @param basePath
+         * @return
+         */
+        public Builder localResourcesBasePath(String basePath) {
+            while (basePath.endsWith(File.separator)) {
+                basePath = basePath.substring(0, basePath.length() - 1);
+            }
+            this.localResourcesBasePath = basePath;
+            return this;
+        }
+
+        /**
          * Build the YarnRunner instance.
          *
          * @return
          */
         public YarnRunner build() throws IllegalStateException {
             //Set configuration
-            setConfiguration();
+            try {
+                setConfiguration();
+            } catch (IllegalStateException e) {
+                throw new IllegalStateException("Failed to load configuration", e);
+            }
 
             //Set YarnClient
             yarnClient = YarnClient.createYarnClient();
@@ -218,6 +243,9 @@ public class YarnRunner {
                 if (appMasterMainClass == null) {
                     throw new IllegalStateException("Could not infer main class name.");
                 }
+            }
+            if (localResourcesBasePath == null) {
+                localResourcesBasePath = appName + File.separator + "$APPID";
             }
             return new YarnRunner(this);
         }
@@ -260,6 +288,8 @@ public class YarnRunner {
             Path yarnPath = new Path(confFile.getAbsolutePath());
             conf = new Configuration();
             conf.addResource(yarnPath);
+            //TODO: get from configuration
+            conf.set("fs.defaultFS", Constants.NAMENODE_URI);
         }
 
         private String getMainClassNameFromJar() {
@@ -412,26 +442,32 @@ public class YarnRunner {
         // Copy the application master jar to the filesystem
         // Create a local resource to point to the destination jar path
         FileSystem fs = FileSystem.get(conf);
-        addFileToLocalResources(fs, appMasterJarPath, amJarHdfsPath, appId.toString(),
+        addFileToLocalResources(fs, appMasterLocalName, appMasterJarPath, new Path(appMasterJarPath).getName(), appId.toString(),
                 localResources);
 
         for (String key : amLocalResources.keySet()) {
-            addFileToLocalResources(fs, amLocalResources.get(key), key, appId.toString(), localResources);
+            addFileToLocalResources(fs, key, amLocalResources.get(key).source, amLocalResources.get(key).destination, appId.toString(), localResources);
         }
         return localResources;
     }
 
-    private void addFileToLocalResources(FileSystem fs, String fileSrcPath, String fileDstPath, String appId, Map<String, LocalResource> localResources) throws IOException {
-        String suffix = appName + "/" + appId + "/" + fileDstPath;
-        Path dst = new Path(fs.getHomeDirectory(), suffix);
+    private void addFileToLocalResources(FileSystem fs, String name, String fileSrcPath, String fileDstPath, String appId, Map<String, LocalResource> localResources) throws IOException {
+        //basePath never ends in "/"
+        String basePath = localResourcesBasePath.replaceAll("\\$APPID", appId);
+        while (fileDstPath.startsWith(File.separator)) {
+            fileDstPath = fileDstPath.substring(1);
+        }
+        String suffix = fileDstPath;
+        Path dst = new Path(fs.getHomeDirectory(),basePath + File.separator + suffix);
         fs.copyFromLocalFile(new Path(fileSrcPath), dst);
+        logger.info("Copying from: "+fileSrcPath+" to: "+dst);
         FileStatus scFileStatus = fs.getFileStatus(dst);
         LocalResource scRsrc
                 = LocalResource.newInstance(
                         ConverterUtils.getYarnUrlFromURI(dst.toUri()),
                         LocalResourceType.FILE, LocalResourceVisibility.APPLICATION,
                         scFileStatus.getLen(), scFileStatus.getModificationTime());
-        localResources.put(fileDstPath, scRsrc);
+        localResources.put(name, scRsrc);
     }
 
     private void setUpClassPath(Map<String, String> env) {
@@ -470,7 +506,7 @@ public class YarnRunner {
         logger.info("Setting up app master command");
         vargs.add(ApplicationConstants.Environment.JAVA_HOME.$() + "/bin/java");
         // Set Xmx based on am memory size
-        vargs.add("-Xmx" + amMemory + "m");
+        vargs.add("-Xmx" + amMemory + "M");
         // Set class name
         vargs.add(amMainClass);
         // Set params for Application Master
@@ -568,6 +604,34 @@ public class YarnRunner {
             return sb.toString();
         }
         return sb.toString();
+    }
+
+    private static class SourceDestinationPair {
+
+        private String source;
+        private String destination;
+
+        public SourceDestinationPair(String source, String destination) {
+            this.source = source;
+            this.destination = destination;
+        }
+
+        public String getSource() {
+            return source;
+        }
+
+        public void setSource(String source) {
+            this.source = source;
+        }
+
+        public String getDestination() {
+            return destination;
+        }
+
+        public void setDestination(String destination) {
+            this.destination = destination;
+        }
+
     }
 
 }

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  
+      xmlns:f="http://java.sun.com/jsf/core" 
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+
+      xmlns:c="http://java.sun.com/jsp/jstl/core">
+    <body>
+        <ui:composition>
+            <h:form>
+                <p:growl autoUpdate="true" showDetail="true"/>
+                <div class="workflow-head">
+                    <div>
+                        <h:panelGrid columns="1">
+                            <span>
+                                <h:outputLabel value="Flink job jar"/>
+                            </span>
+                            <p:fileUpload required="true" multiple="false" label="Select" mode="advanced" allowTypes="/(\.|\/)(jar)$/" fileUploadListener="#{flinkController.handleJobJarUpload}" update="@form"/>
+                            <h:outputLabel value="#{flinkController.appName}"/>
+                        </h:panelGrid>
+                    </div>
+
+                    <div>
+                        <h:panelGrid columns="2">
+                            <h:outputLabel value="arguments:" for="amArgs"/>
+                            <h:inputText value="#{flinkController.args}" id="amArgs"/>
+                        </h:panelGrid>
+                    </div>
+                    <br/>
+                    <div>
+                        Upload files to be included in AM container:
+                        <h:panelGrid columns="1">
+                            <p:fileUpload multiple="true" label="Browse" mode="advanced" fileUploadListener="#{flinkController.extraFileUploads}"/>
+                        </h:panelGrid>
+                    </div>
+                    <br/>
+                    <div>
+                        <p:commandButton value="Execute" action="#{flinkController.runJar()}"/>
+                    </div>
+                </div>
+            </h:form>
+        </ui:composition>
+    </body>
+</html>

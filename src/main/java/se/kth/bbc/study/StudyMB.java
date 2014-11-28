@@ -14,15 +14,12 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
-import javax.faces.event.ActionEvent;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.LazyDataModel;
@@ -36,6 +33,7 @@ import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.fileoperations.FileSystemOperations;
+import se.kth.bbc.flink.FlinkRunner;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
@@ -667,8 +665,12 @@ public class StudyMB implements Serializable {
     }
     
     
-    public void test(String s) {
-        System.out.println(s);
+    public void test() {
+        try{
+        FlinkRunner.maint();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
         
     }
 }

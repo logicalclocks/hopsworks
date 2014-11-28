@@ -1,22 +1,19 @@
 package se.kth.bbc.yarn;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
 import se.kth.bbc.lims.MessagesController;
-import se.kth.bbc.lims.Constants;
+import se.kth.bbc.study.StudyMB;
 
 /**
  *
@@ -28,103 +25,94 @@ public class YarnController implements Serializable {
 
     private static final Logger logger = Logger.getLogger(YarnController.class.getName());
 
-    //The local path to the application master jar
-    private String appMasterJarPath = null;
-    private UploadedFile appMasterJar;
-    private String appName = null;
-    private String args = null;
-    private final Map<String, String> extraFiles = new HashMap<>();
-    private String mainClassName;
-    
+    private static final String KEY_AM_JARPATH = "appMasterJarPath";
+    private static final String KEY_APP_NAME = "appname";
+    private static final String KEY_ARGS = "args";
+    private static final String KEY_MAIN = "mainClassName";
 
-    public String getAppMasterJarPath() {
-        return appMasterJarPath;
+    private final JobController jc = new JobController();
+
+    @ManagedProperty(value = "#{studyManagedBean}")
+    private transient StudyMB study;
+
+    @PostConstruct
+    public void init() {
+        try {
+            jc.setBasePath(study.getStudyName(), study.getUsername());
+        } catch (IOException c) {
+            logger.log(Level.SEVERE, "Failed to create directory structure.", c);
+            MessagesController.addErrorMessage("Failed to initialize Yarn controller. Running Yarn jobs will not work.");
+        }
     }
 
-    public void setAppMasterJarPath(String path) {
-        appMasterJarPath = path;
+    public String getAppMasterJarPath() {
+        return jc.getFilePath(KEY_AM_JARPATH);
     }
 
     public void setAppName(String name) {
-        this.appName = name;
+        jc.putVariable(KEY_APP_NAME, name);
     }
 
     public String getAppName() {
-        return this.appName;
+        return jc.getVariable(KEY_APP_NAME);
     }
 
     public String getArgs() {
-        return args;
+        return jc.getVariable(KEY_ARGS);
     }
 
     public void setArgs(String args) {
-        this.args = args;
-    }
-    
-    public void setMainClassName(String mainClass){
-        this.mainClassName = mainClass;
-    }
-    
-    public String getMainClassName(){
-        return mainClassName;
+        jc.putVariable(KEY_ARGS, args);
     }
 
-    public void handleFileUpload(FileUploadEvent event) {
-        appMasterJar = event.getFile();
+    public void setMainClassName(String mainClass) {
+        jc.putVariable(KEY_MAIN, mainClass);
+    }
 
-        appMasterJarPath = Constants.LOCAL_APPMASTER_DIR + File.separator + appMasterJar.getFileName();
-        this.appName = appMasterJar.getFileName();
+    public String getMainClassName() {
+        return jc.getVariable(KEY_MAIN);
+    }
+
+    public void handleAMUpload(FileUploadEvent event) {
         try {
-            copyFile(event.getFile().getInputstream(),appMasterJarPath);
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, "Could not upload file.", ex);
-            MessagesController.addErrorMessage("Failed to upload appMaster jar.");
+            jc.handleFileUpload(KEY_AM_JARPATH, event);
+        } catch (IllegalStateException e) {
+            try {
+                jc.setBasePath(study.getStudyName(), study.getUsername());
+                jc.handleFileUpload(KEY_AM_JARPATH, event);
+            } catch (IOException c) {
+                logger.log(Level.SEVERE, "Failed to create directory structure.", c);
+                MessagesController.addErrorMessage("Failed to initialize Yarn controller. Running Yarn jobs will not work.");
+            }
         }
     }
 
     public void extraFileUploads(FileUploadEvent event) {
         //TODO: make a tmp folder per user, per study, per...
         UploadedFile file = event.getFile();
-        String path = Constants.LOCAL_EXTRA_DIR + File.separator + file.getFileName();
+        String key = file.getFileName();
         try {
-            copyFile(event.getFile().getInputstream(),path);
-            extraFiles.put(file.getFileName(), path);
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Could not upload file.", e);
-            MessagesController.addErrorMessage("Failed to upload file " + file.getFileName());
-        }
-    }
-
-    private void copyFile(InputStream in, String path) {
-        try {
-
-            // write the inputStream to a FileOutputStream
-            OutputStream out = new FileOutputStream(new File(path));
-
-            int read = 0;
-            byte[] bytes = new byte[1024];
-
-            while ((read = in.read(bytes)) != -1) {
-                out.write(bytes, 0, read);
+            jc.handleFileUpload(key, event);
+        } catch (IllegalStateException e) {
+            try {
+                jc.setBasePath(study.getStudyName(), study.getUsername());
+                jc.handleFileUpload(key, event);
+            } catch (IOException c) {
+                logger.log(Level.SEVERE, "Failed to create directory structure.", c);
+                MessagesController.addErrorMessage("Failed to initialize Yarn controller. Running Yarn jobs will not work.");
             }
-
-            in.close();
-            out.flush();
-            out.close();
-
-            MessagesController.addInfoMessage("Success.", "Jar successfully uploaded.");
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-            MessagesController.addErrorMessage("Failed to upload jar.");
         }
     }
 
     public void runJar() {
-        YarnRunner.Builder builder = new YarnRunner.Builder(appMasterJarPath);
-        if (!extraFiles.isEmpty()) {
-            builder.addAllLocalResourcesPaths(extraFiles);
+        //TODO: fix this
+        Map<String, String> files = jc.getFiles();
+        String appMasterJar = files.remove(KEY_AM_JARPATH);
+        YarnRunner.Builder builder = new YarnRunner.Builder(appMasterJar,"appMaster.jar");
+        if (!files.isEmpty()) {
+            //builder.addAllLocalResourcesPaths(files);
         }
-        builder.appMasterArgs(args).appMasterMainClass(mainClassName);
+        builder.appMasterArgs(jc.getVariable(KEY_ARGS)).appMasterMainClass(jc.getVariable(KEY_MAIN));
         YarnRunner runner;
         try {
             runner = builder.build();
@@ -136,10 +124,14 @@ public class YarnController implements Serializable {
         try {
             runner.startAppMaster();
         } catch (IOException | YarnException e) {
-            logger.log(Level.SEVERE,"Error while initializing AppMaster.",e);
+            logger.log(Level.SEVERE, "Error while initializing AppMaster.", e);
             MessagesController.addErrorMessage("Failed to initialize AppMaster.");
             return;
         }
+    }
+
+    public void setStudy(StudyMB study) {
+        this.study = study;
     }
 
 }

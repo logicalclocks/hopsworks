@@ -12,25 +12,34 @@
             <h:form>
                 <p:growl autoUpdate="true" showDetail="true"/>
                 <div class="workflow-head">
-                    <div class="left">
-                        <span>
-                            <h:outputLabel value="Application Master jar"/>
-                        </span>
-                        <p:fileUpload required="true" multiple="false" label="Select" mode="advanced" allowTypes="/(\.|\/)(jar)$/" fileUploadListener="#{yarnController.handleFileUpload}" update="@form"/>
-                        <h:outputLabel value="#{yarnController.appName}"/>
-                    </div>
-                    <div class="right">
-                        <p:commandButton value="Execute" action="#{yarnController.runJar()}"/>
-                    </div>
                     <div>
-                        <h:outputLabel value="arguments:" for="amArgs"/>
-                        <h:inputText value="#{yarnController.args}" id="amArgs"/>
-                        <h:outputLabel value="main class" for="mainClassName"/>
-                        <h:inputText value="#{yarnController.mainClassName}" id="mainClassName"/>
+                        <h:panelGrid columns="1">
+                            <span>
+                                <h:outputLabel value="Application Master jar"/>
+                            </span>
+                            <p:fileUpload required="true" multiple="false" label="Select" mode="advanced" allowTypes="/(\.|\/)(jar)$/" fileUploadListener="#{yarnController.handleAMUpload}" update="@form"/>
+                            <h:outputLabel value="#{yarnController.appName}"/>
+                        </h:panelGrid>
                     </div>
+
+                    <div>
+                        <h:panelGrid columns="2">
+                            <h:outputLabel value="arguments" for="amArgs"/>
+                            <h:inputText value="#{yarnController.args}" id="amArgs"/>
+                            <h:outputLabel value="main class" for="mainClassName"/>
+                            <h:inputText value="#{yarnController.mainClassName}" id="mainClassName"/>
+                        </h:panelGrid>
+                    </div>
+                    <br/>
                     <div>
                         Upload files to be included in AM container:
-                        <p:fileUpload multiple="true" label="Browse" mode="advanced" fileUploadListener="#{yarnController.extraFileUploads}"/>
+                        <h:panelGrid columns="1">
+                            <p:fileUpload multiple="true" label="Browse" mode="advanced" fileUploadListener="#{yarnController.extraFileUploads}"/>
+                        </h:panelGrid>
+                    </div>
+                    <br/>
+                    <div>
+                        <p:commandButton value="Execute" action="#{yarnController.runJar()}"/>
                     </div>
                 </div>
                 <!--
