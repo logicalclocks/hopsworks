@@ -2,6 +2,9 @@ package se.kth.bbc.yarn;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,10 +17,14 @@ import java.util.logging.Logger;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import org.apache.flink.configuration.GlobalConfiguration;
+import org.apache.flink.yarn.Client;
+import org.apache.flink.yarn.Utils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -253,8 +260,8 @@ public class YarnRunner {
         private EnvironmentVariableFacade lookupEnvironmentVariableFacadeBean() throws NamingException {
             //TODO: fix this!!!
             Context c = new InitialContext();
-            //return (EnvironmentVariableFacade) c.lookup("java:global/se.kth.hop_hop-dashboard_war_1.0-SNAPSHOT/EnvironmentVariableFacade!se.kth.bbc.lims.EnvironmentVariableFacade");
-            return null;
+            //return (EnvironmentVariableFacade) c.lookup("java:global/Hop_Dashboard/EnvironmentVariableFacade!se.kth.bbc.lims.EnvironmentVariableFacade");
+            throw new NamingException();
         }
 
         private void setConfiguration() throws IllegalStateException {
@@ -283,13 +290,45 @@ public class YarnRunner {
                 logger.log(Level.SEVERE, "Unable to locate configuration file in {0}", confFile);
                 throw new IllegalStateException("No conf file");
             }
+            
+            //TODO make this more robust
+            //Also add the hadoop config!
+            File hadoopConf = new File(confPath + File.separator + "core-site.xml");
+            if(!hadoopConf.exists()){
+                logger.log(Level.INFO,"Unable to load Hadoop configuration.");
+            }
 
             //Set the Configuration object for the returned YarnClient
             Path yarnPath = new Path(confFile.getAbsolutePath());
             conf = new Configuration();
             conf.addResource(yarnPath);
-            //TODO: get from configuration
-            conf.set("fs.defaultFS", Constants.NAMENODE_URI);
+            conf.addResource(new Path(hadoopConf.getAbsolutePath()));
+            
+            addPathToConfig(conf, confFile);
+            addPathToConfig(conf, hadoopConf);
+            setDefaultConfValues(conf);
+        }
+
+        private static void addPathToConfig(Configuration conf, File path) {
+            // chain-in a new classloader
+            URL fileUrl = null;
+            try {
+                fileUrl = path.toURL();
+            } catch (MalformedURLException e) {
+                throw new RuntimeException("Erroneous config file path", e);
+            }
+            URL[] urls = {fileUrl};
+            ClassLoader cl = new URLClassLoader(urls, conf.getClassLoader());
+            conf.setClassLoader(cl);
+        }
+
+        private static void setDefaultConfValues(Configuration conf) {
+            if (conf.get("fs.hdfs.impl", null) == null) {
+                conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
+            }
+            if (conf.get("fs.file.impl", null) == null) {
+                conf.set("fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem");
+            }
         }
 
         private String getMainClassNameFromJar() {
@@ -396,6 +435,32 @@ public class YarnRunner {
 
         // Add AM environment vars.
         env.putAll(amEnvironment);
+        
+
+		
+		
+        
+             
+                env.put(Client.ENV_APP_ID, appId.toString());
+                        FileSystem fs = FileSystem.get(conf);
+                env.put(Client.ENV_CLIENT_HOME_DIR, fs.getHomeDirectory().toString());
+		env.put(Client.ENV_APP_NUMBER, String.valueOf(appId.getId()));
+                //int amport = Utils.offsetPort(6123, appId.getId());
+        //env.put(Client.ENV_AM_PRC_PORT, String.valueOf(10245));
+        env.put(Client.ENV_SLOTS, String.valueOf(-1));
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         //Set classpath
         setUpClassPath(env);
         List<String> commands = setUpCommands();
@@ -442,8 +507,7 @@ public class YarnRunner {
         // Copy the application master jar to the filesystem
         // Create a local resource to point to the destination jar path
         FileSystem fs = FileSystem.get(conf);
-        addFileToLocalResources(fs, appMasterLocalName, appMasterJarPath, new Path(appMasterJarPath).getName(), appId.toString(),
-                localResources);
+        amLocalResources.put(appMasterLocalName, new SourceDestinationPair(appMasterJarPath, new Path(appMasterJarPath).getName()));
 
         for (String key : amLocalResources.keySet()) {
             addFileToLocalResources(fs, key, amLocalResources.get(key).source, amLocalResources.get(key).destination, appId.toString(), localResources);
@@ -458,9 +522,9 @@ public class YarnRunner {
             fileDstPath = fileDstPath.substring(1);
         }
         String suffix = fileDstPath;
-        Path dst = new Path(fs.getHomeDirectory(),basePath + File.separator + suffix);
+        Path dst = new Path(fs.getHomeDirectory(), basePath + File.separator + suffix);
         fs.copyFromLocalFile(new Path(fileSrcPath), dst);
-        logger.info("Copying from: "+fileSrcPath+" to: "+dst);
+        logger.info("Copying from: " + fileSrcPath + " to: " + dst);
         FileStatus scFileStatus = fs.getFileStatus(dst);
         LocalResource scRsrc
                 = LocalResource.newInstance(

@@ -18,21 +18,26 @@
                                 <h:outputLabel value="Flink job jar"/>
                             </span>
                             <p:fileUpload required="true" multiple="false" label="Select" mode="advanced" allowTypes="/(\.|\/)(jar)$/" fileUploadListener="#{flinkController.handleJobJarUpload}" update="@form"/>
-                            <h:outputLabel value="#{flinkController.appName}"/>
+                            <h:outputLabel value="#{flinkController.jobJarName}"/>
                         </h:panelGrid>
                     </div>
 
                     <div>
                         <h:panelGrid columns="2">
-                            <h:outputLabel value="arguments:" for="amArgs"/>
-                            <h:inputText value="#{flinkController.args}" id="amArgs"/>
+                            <h:outputLabel value="Main class name" for="mainclassname"/>
+                            <h:inputText value="#{flinkController.jobJarMain}" id="mainclassname"/>
+                            <h:outputLabel value="Parallellism" for="parale"/>
+                            <h:inputText value="#{flinkController.paral}" id="parale"/>
+                            <h:outputLabel value="Arguments" for="amArgs"/>
+                            <h:inputText value="#{flinkController.jobArgs}" id="amArgs"/>
+                            <span>Use the expressions on the bottom of the page to refer to uploaded files.</span>
                         </h:panelGrid>
                     </div>
                     <br/>
                     <div>
                         Upload files to be included in AM container:
                         <h:panelGrid columns="1">
-                            <p:fileUpload multiple="true" label="Browse" mode="advanced" fileUploadListener="#{flinkController.extraFileUploads}"/>
+                            <p:fileUpload multiple="true" label="Browse" mode="advanced" fileUploadListener="#{flinkController.extraFileUploads}" update="@form" process="@form"/>
                         </h:panelGrid>
                     </div>
                     <br/>
@@ -40,6 +45,11 @@
                         <p:commandButton value="Execute" action="#{flinkController.runJar()}"/>
                     </div>
                 </div>
+                    <ui:repeat value="#{flinkController.uploadedFiles}" var="pair">
+                        <span>\${#{pair.one}} --> </span>
+                        <span>#{pair.two}</span>
+                        <br/>
+                    </ui:repeat>
             </h:form>
         </ui:composition>
     </body>
