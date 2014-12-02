@@ -2,13 +2,14 @@ package se.kth.bbc.yarn;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -16,12 +17,11 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.apache.flink.client.program.ProgramInvocationException;
-import org.apache.flink.configuration.GlobalConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
-import se.kth.bbc.flink.FlinkRunner;
 import se.kth.bbc.flink.FlinkRunnerSimple;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.study.StudyMB;
 
@@ -47,6 +47,8 @@ public class FlinkController implements Serializable {
     private int paral = 1;
     private int port;
     private String host;
+    
+    private static ExecutorService exc = Executors.newCachedThreadPool();
 
     @PostConstruct
     public void init() {
@@ -121,17 +123,26 @@ public class FlinkController implements Serializable {
     }
 
     public void runJar() {
-        getAddressPort("/home/glassfish/stig/flink-0.8-incubating-SNAPSHOT/conf/.yarn-properties");
-        FlinkRunnerSimple.FlinkBuilder b = new FlinkRunnerSimple.FlinkBuilder(new File(jc.getFilePath(KEY_JOB_JAR)), jobjarmain, host, port);
-        b.setParallelism(paral);
-        b.setJobArgs(parseArgs(jobArgs).split(" "));
-        FlinkRunnerSimple p = b.build();
-        try {
-            p.runJob();
-        } catch (IOException | ProgramInvocationException | YarnException ex) {
-            logger.log(Level.SEVERE, null, ex);
-            MessagesController.addErrorMessage("Failed to run job.");
-        }
+
+        Runnable c = new Runnable() {
+
+            @Override
+            public void run() {
+                getAddressPort(Constants.FLINK_CONF_DIR);
+                FlinkRunnerSimple.FlinkBuilder b = new FlinkRunnerSimple.FlinkBuilder(new File(jc.getFilePath(KEY_JOB_JAR)), jobjarmain, host, port);
+                b.setParallelism(paral);
+                b.setJobArgs(parseArgs(jobArgs).split(" "));
+                FlinkRunnerSimple p = b.build();
+                try {
+                    p.runJob();
+                } catch (IOException | ProgramInvocationException | YarnException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                    MessagesController.addErrorMessage("Failed to run job.");
+                }
+            }
+        };
+        exc.execute(c);
+
     }
 
     private String parseArgs(String s) {
@@ -213,12 +224,12 @@ public class FlinkController implements Serializable {
         try (BufferedReader reader = Files.newBufferedReader(f.toPath(), charset)) {
             String line = null;
             while ((line = reader.readLine()) != null) {
-                if(line.contains("jobManager")){
+                if (line.contains("jobManager")) {
                     int index = line.indexOf("=");
-                    String val = line.substring(index+1);
+                    String val = line.substring(index + 1);
                     int sep = line.indexOf("\\:");
-                    host=line.substring(index+1,sep);
-                    port = Integer.valueOf(line.substring(sep+2));
+                    host = line.substring(index + 1, sep);
+                    port = Integer.valueOf(line.substring(sep + 2));
                 }
             }
         } catch (IOException x) {
