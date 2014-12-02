@@ -75,7 +75,7 @@ public class FlinkController implements Serializable {
     }
 
     public void setJobJarMain(String s) {
-        this.jobjarmain = s;
+        this.jobjarmain = s.trim();
     }
 
     public String getJobJarMain() {
@@ -87,7 +87,7 @@ public class FlinkController implements Serializable {
     }
 
     public void setJobArgs(String jobArgs) {
-        this.jobArgs = jobArgs;
+        this.jobArgs = jobArgs.trim();
     }
 
     public void setStudy(StudyMB study) {
@@ -96,7 +96,7 @@ public class FlinkController implements Serializable {
 
     public void setParal(String s) {
         try {
-            paral = Integer.valueOf(s);
+            paral = Integer.valueOf(s.trim());
         } catch (NumberFormatException e) {
             paral = 2;
         }
