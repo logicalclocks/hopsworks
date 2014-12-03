@@ -47,7 +47,7 @@ public class FlinkController implements Serializable {
     private int paral = 1;
     private int port;
     private String host;
-    
+
     private static ExecutorService exc = Executors.newCachedThreadPool();
 
     @PostConstruct
@@ -128,7 +128,12 @@ public class FlinkController implements Serializable {
 
             @Override
             public void run() {
-                getAddressPort(Constants.FLINK_CONF_DIR);
+                try {
+                    getAddressPort(Constants.FLINK_CONF_DIR);
+                } catch (IOException e) {
+                    MessagesController.addErrorMessage("Failed to find Flink JobManager info.");
+                    logger.log(Level.SEVERE,"Could not load configuration from \".yarn-properties\". Are you sure Flink is running on Yarn with configuration directory as "+Constants.FLINK_CONF_DIR+"?");
+                }
                 FlinkRunnerSimple.FlinkBuilder b = new FlinkRunnerSimple.FlinkBuilder(new File(jc.getFilePath(KEY_JOB_JAR)), jobjarmain, host, port);
                 b.setParallelism(paral);
                 b.setJobArgs(parseArgs(jobArgs).split(" "));
@@ -218,7 +223,7 @@ public class FlinkController implements Serializable {
         return pairs;
     }
 
-    private void getAddressPort(String location) {
+    private void getAddressPort(String location) throws IOException {
         File f = new File(location);
         Charset charset = Charset.defaultCharset();
         try (BufferedReader reader = Files.newBufferedReader(f.toPath(), charset)) {
@@ -234,6 +239,10 @@ public class FlinkController implements Serializable {
             }
         } catch (IOException x) {
             System.err.format("IOException: %s%n", x);
+            throw x;
+        }
+        if (host == null || port == 0) {
+            throw new IOException("Failed to read configuration from file.");
         }
     }
 }
