@@ -9,6 +9,75 @@
 
     
     <navigation-rule>      
+        
+                
+        <navigation-case>
+            <from-outcome>welcome</from-outcome>
+            <to-view-id>/index.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        
+        <navigation-case>
+            <from-outcome>user_auth</from-outcome>
+            <to-view-id>/auth/login.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+      
+        <navigation-case>
+            <from-outcome>register_mobile</from-outcome>
+            <to-view-id>/auth/register_mobile.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <navigation-case>
+            <from-outcome>register_yubico</from-outcome>
+            <to-view-id>/auth/register_yubico.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <navigation-case>
+            <from-outcome>yubico</from-outcome>
+            <to-view-id>/auth/yubico.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <navigation-case>
+            <from-outcome>qrcode</from-outcome>
+            <to-view-id>/auth/qrcode.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        
+        
+        <navigation-case>
+            <from-outcome>login</from-outcome>
+            <to-view-id>/auth/login.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <navigation-case>
+            <from-outcome>yubikeylogin</from-outcome>
+            <to-view-id>/auth/yubikeylogin.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <navigation-case>
+            <from-outcome>logout</from-outcome>
+            <to-view-id>/auth/login.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <navigation-case>
+            <from-outcome>login_error</from-outcome>
+            <to-view-id>/auth/loginError.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+  
+      <navigation-case>
+            <from-outcome>reset_password</from-outcome>
+            <to-view-id>/auth/reset_password.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+  
         <navigation-case>
             <from-outcome>userMgmt</from-outcome>
             <to-view-id>/bbc/lims/userManagement.xhtml</to-view-id>
@@ -78,21 +147,6 @@
         <navigation-case>
             <from-outcome>manageJobs</from-outcome>
             <to-view-id>wf/manageJobs.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>bbchome</from-outcome>
-            <to-view-id>/bbc-views.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>logout</from-outcome>
-            <to-view-id>/index.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>login</from-outcome>
-            <to-view-id>/index.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         <navigation-case>

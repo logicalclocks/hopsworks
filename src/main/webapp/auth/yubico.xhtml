@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui">
+    <META HTTP-EQUIV="Pragma" CONTENT="no-cache"/>
+    <META HTTP-EQUIV="Expires" CONTENT="-1"/>
+    <h:head>
+        <title>Yubico</title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    </h:head>
+    <h:body>
+
+        <h:form class="stylelayout" id="formToolbar">
+            <p:toolbar styleClass="MainToolbar" >
+                <p:toolbarGroup align="left">
+                    <p:commandLink value="BiobankCloud"/>
+                </p:toolbarGroup>
+            </p:toolbar>
+        </h:form>
+        
+        <div class="Signin">
+            Yubico account request submitted successfully. You will receive a Yubikey device in 48 hours to your address.
+            <br/>
+            <p:commandLink value="Back to main page" action="welcome"/>
+        </div>
+
+    </h:body>  
+</html>

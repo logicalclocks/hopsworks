@@ -40,7 +40,7 @@
                     <div align="left ">
                         <h:panelGroup >
                             <p:commandButton  value="New User" action="register_mobile" immediate="true" styleClass="MainButton"/>
-                            <p:commandButton id="loginButton" value="Sign in" action="#{gauth.login()}" styleClass="MainButton"/>
+                            <p:commandButton id="loginButton" value="Sign in" action="#{gauth.login()}"  styleClass="MainButton"/>
                         </h:panelGroup>
                     </div>
                  </h:panelGrid>
@@ -48,8 +48,6 @@
         </h:form> 
 
         <div align="center">
-            <p:commandLink id="signupLink" value="Yubikey auth" action="yubikeylogin" style="text-align: right"/>
-             &nbsp;
             <p:commandLink  value="Can't login?"  action="reset_password" style="text-align: right"/>
         </div>
         <br/>

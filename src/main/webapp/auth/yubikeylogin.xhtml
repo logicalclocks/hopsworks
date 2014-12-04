@@ -9,13 +9,14 @@
       xmlns:f="http://java.sun.com/jsf/core">
 
     <h:head>
-        <title>BiobankCloud - Sign in</title>
+        <title>BiobankCloud - Sign in with Yubikey</title>
         <h:outputStylesheet name="css/jsfcrud.css"/>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
     </h:head>
 
     <h:body >
-         <ui:insert name="titleBar" >
+
+        <ui:insert name="titleBar" >
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
 
@@ -25,32 +26,31 @@
         <h:form id="hoplogin">                  
             <div class="Signin">            
                 <h:panelGrid columns="1" >  
-                <h1>Sign in with Mobile</h1>     
-                    <p:outputLabel for="username" value="E-mail"/>
-                    <p:inputText id="username" value="#{gauth.username}" required="true" />
-                      
+                    <h1>Sign in with Yubikey</h1>     
+                    <p:outputLabel for="username" value="E-mail" />
+                    <p:inputText id="username" value="#{yubikeyAuthenticator.username}" required="true"
+                                 >
+                    </p:inputText>
+
                     <p:outputLabel for="password" value="Password" />
-                    <p:password id="password" value="#{gauth.password}" required="true"/>
-                       
+                    <p:password id="password" value="#{yubikeyAuthenticator.password}" required="true"/>
+
                     <p:outputLabel for="otp" value="PIN" />
-                    <p:password id="otp" value="#{gauth.otpCode}" required="true"/>
-                    
-                    <p:messages id="messages" autoUpdate="true"/>
-                 
+                    <p:password id="otp" value="#{yubikeyAuthenticator.otpCode}" required="true"/>
+                    <p:messages id="messages" autoUpdate="true" />
+
                     <div align="left ">
                         <h:panelGroup >
-                            <p:commandButton  value="New User" action="register_mobile" immediate="true" styleClass="MainButton"/>
-                            <p:commandButton id="loginButton" value="Sign in" action="#{gauth.login()}" styleClass="MainButton"/>
+                            <p:commandButton  value="New User" action="register_yubico" immediate="true" styleClass="MainButton"/>
+                            <p:commandButton id="loginButton" value="Sign in" action="#{yubikeyAuthenticator.login()}"  styleClass="MainButton"/>
                         </h:panelGroup>
                     </div>
-                 </h:panelGrid>
+                </h:panelGrid>
             </div>
         </h:form> 
 
         <div align="center">
-            <p:commandLink id="signupLink" value="Yubikey auth" action="yubikeylogin" style="text-align: right"/>
-             &nbsp;
-            <p:commandLink  value="Can't login?"  action="reset_password" style="text-align: right"/>
+            <p:commandLink id="signupLink" value="Can't login?" action="reset_password" style="text-align: right"/>
         </div>
         <br/>
     </h:body>

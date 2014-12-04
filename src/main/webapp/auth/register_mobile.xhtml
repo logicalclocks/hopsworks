@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+    <f:view contentType="text/html">
+
+        <h:head>
+            <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+        </h:head>
+
+
+        <h:body>
+            <ui:insert name="titleBar" >
+                <ui:include src="/bbc/lims/titleBar.xhtml" />       
+            </ui:insert>
+
+            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser">
+
+                <p:layoutUnit position="center">
+                    <div class="container">
+                        <ul class="main_menu"></ul>
+                        <div class="content">
+                            <h3 class="page_title" align="left">
+                                Request Mobile Account
+                            </h3>
+                            <hr/>
+                            <h:form id="registration" class="new_user_content"> 
+                                <h:panelGrid columns="2" style="font-size: 12px;">			
+                                    <h:outputLabel for="fname" value="First name: " style="font-weight:bold"/>
+                                    <h:inputText id="fname" value="#{userRegistration.fname}" size="40"
+                                                 required="true"
+                                                 requiredMessage="Enter Name" />
+
+                                    <h:outputLabel for="lname" value="Last name: " style="font-weight:bold"/>
+                                    <h:inputText id="lname" value="#{userRegistration.lname}" size="40"
+                                                 required="true"
+                                                 requiredMessage="Last Name"/>
+
+                                    <h:outputLabel for="email" value="Email" style="font-weight:bold"/>
+                                    <h:inputText id="email" value="#{userRegistration.mail}" size="40"
+                                                 required="true"
+                                                 requiredMessage="Enter Email">
+                                        <f:validateRegex
+                                            pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+
+                                        <f:validator binding="#{usernameValidator}" />
+                                    </h:inputText>    
+
+
+                                    <h:outputLabel for="tel" value="Mobile: " style="font-weight:bold"/>
+                                    <h:inputText id="tel" value="#{userRegistration.tel}" size="40"
+                                                 required="true"
+                                                 requiredMessage="Enter Mobile"
+                                                 validatorMessage="Invalid mobile number">
+                                        <f:validateRegex pattern="^([+]?[\d]+)?$" />
+                                    </h:inputText>
+
+                                    <h:outputLabel for="sec_question" value="Security Question: " style="font-weight:bold"/>
+                                    <p:selectOneMenu id="console" value="#{userRegistration.security_question}" effect="fold" required="true"
+                                                     requiredMessage="Select Security Question">
+                                        <f:selectItem itemLabel="Select One" itemValue="" />
+                                        <f:selectItems value="#{selectSecurityQuestionMenue.questions}" />
+                                    </p:selectOneMenu>  
+
+                                    <h:outputLabel for="answer" value="Answer:" style="font-weight:bold"/>
+                                    <h:inputText id="answer" value="#{userRegistration.security_answer}" size="40"
+                                                 required="true"
+                                                 requiredMessage="Answer Security Question" />
+
+                                    <h:outputLabel for="password0" value="Password: " style="font-weight:bold"/>
+
+                                    <p:password id="password0" value="#{userRegistration.password}" 
+                                                required="true" size="40"
+                                                requiredMessage="Select a password">
+                                        <f:validator validatorId="passwordValidator" />
+                                        <f:attribute name="confirmPassword" value="#{confirmPassword}" />
+                                    </p:password>
+
+                                    <h:outputLabel for="password" value="Password again:" style="font-weight:bold"/>
+                                    <p:password id="password" value="#{userRegistration.passwordAgain}" size="40"
+                                                requiredMessage="Re-enter a password"
+                                                binding="#{confirmPassword}"
+                                                required="true">
+                                    </p:password>
+
+                                    <p:spacer></p:spacer>
+                                    <p:messages id="messages" autoUpdate="true" />
+                                </h:panelGrid>
+                                <div class="register_actions">
+                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{userRegistration.registerMobileUser()}" />
+                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" style="margin-left: 55px"/>
+                                </div>
+
+                            </h:form>     
+                        </div>
+                    </div> 
+                </p:layoutUnit>
+            </p:layout>
+        </h:body>
+    </f:view>
+</html>
