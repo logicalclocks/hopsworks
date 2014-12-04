@@ -3,6 +3,7 @@ package se.kth.bbc.flink;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 import org.apache.flink.client.program.PackagedProgram;
@@ -11,6 +12,7 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.flink.client.program.Client;
 import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.Configuration;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.log4j.chainsaw.Main;
 
 import se.kth.bbc.yarn.YarnRunner;
@@ -55,7 +57,16 @@ public class FlinkRunner {
 //		public static final String ENV_AM_PRC_PORT = "_AM_PRC_PORT";
 //		public static final String ENV_SLOTS = "_SLOTS";
 //		public static final String ENV_DYNAMIC_PROPERTIES = "_DYNAMIC_PROPERTIES";
-//
+        //todo: make more elegant
+        while (yarnRunner.getApplicationReport().getYarnApplicationState() != YarnApplicationState.RUNNING && yarnRunner.getApplicationReport().getYarnApplicationState() != YarnApplicationState.FAILED) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+
+            }
+            System.out.println("Waiting for running container");
+        }
+
         String amHost = yarnRunner.getApplicationReport().getHost();
         Integer amPort = yarnRunner.getApplicationReport().getRpcPort();
 
@@ -69,14 +80,14 @@ public class FlinkRunner {
         conf.setInteger(ConfigConstants.JOB_MANAGER_IPC_PORT_KEY, amPort);
         Client flinkClient = new Client(conf,
                 pp.getUserCodeClassLoader());
-        flinkClient.run(pp, parallelism, false);
+        flinkClient.run(pp, parallelism, true);
 
         return 0;
     }
 
     public static class FlinkBuilder {
 
-        private Builder yarnBuilder = new YarnRunner.Builder(flinkJarPath,"flink.jar");
+        private Builder yarnBuilder = new YarnRunner.Builder(flinkJarPath, "flink.jar");
 
         private final File jobJarPath;
         private final String jobJarMain;
@@ -136,7 +147,7 @@ public class FlinkRunner {
             //TODO: get from conf
             this.yarnBuilder.addToAppMasterEnvironment(org.apache.flink.yarn.Client.ENV_CLIENT_USERNAME, "stig");
             this.yarnBuilder.appMasterMainClass(appMasterMainClass);
-            this.yarnBuilder.localResourcesBasePath(".flink/$APPID"); 
+            this.yarnBuilder.localResourcesBasePath(".flink/$APPID");
             this.yarnBuilder.addLocalResource("flink-conf.yaml", "/home/stig/projects/flink-yarn-0.7.0-incubating/conf/flink-conf.yaml", "flink-conf.yaml");
             return new FlinkRunner(this);
         }
@@ -144,10 +155,22 @@ public class FlinkRunner {
     }
 
     public static void maint() throws Exception {
-        FlinkBuilder b = new FlinkBuilder(new File("/home/stig/projects/flink-yarn-0.7.0-incubating/examples/flink-java-examples-0.7.0-incubating-WordCount.jar"), "org.apache.flink.examples.java.wordcount.WordCount");
-        b.setJobArgs("file:///home/stig/Downloads/Frodo.vcf","file:///home/stig/tmp/wordoutput");
-        FlinkRunner r = b.build();
-        r.runJob();
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    FlinkBuilder b = new FlinkBuilder(new File("/home/stig/projects/flink-yarn-0.7.0-incubating/examples/flink-java-examples-0.7.0-incubating-WordCount.jar"), "org.apache.flink.examples.java.wordcount.WordCount");
+                    b.setJobArgs("file:///home/stig/Downloads/Frodo.vcf", "file:///home/stig/tmp/wordoutput");
+                    b.setParallelism(1);
+                    FlinkRunner r = b.build();
+                    r.runJob();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
     }
 
 }

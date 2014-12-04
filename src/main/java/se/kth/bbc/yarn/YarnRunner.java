@@ -434,17 +434,16 @@ public class YarnRunner {
         env.putAll(amEnvironment);
         
 
-		//appMasterEnv.put(Client.ENV_AM_PRC_PORT, String.valueOf(amRPCPort));
-		//appMasterEnv.put(Client.ENV_SLOTS, String.valueOf(slots));
         
         
-                env.put(Client.FLINK_JAR_PATH, amLocalResources.get(appMasterLocalName).destination);
+                env.put(Client.FLINK_JAR_PATH,"hdfs://localhost:9000/user/stig/"+localResourcesBasePath.replaceAll("\\$APPID", appId.toString())+"/"+amLocalResources.get(appMasterLocalName).destination);
                 env.put(Client.ENV_APP_ID, appId.toString());
                         FileSystem fs = FileSystem.get(conf);
                 env.put(Client.ENV_CLIENT_HOME_DIR, fs.getHomeDirectory().toString());
 		env.put(Client.ENV_APP_NUMBER, String.valueOf(appId.getId()));
-                env.put(Client.ENV_SLOTS, String.valueOf(-1));
+                env.put(Client.ENV_SLOTS, String.valueOf(1));
                 env.put(Client.ENV_AM_PRC_PORT,String.valueOf(10245));
+                env.put(Client.ENV_CLIENT_SHIP_FILES,"");
         
         
         
@@ -572,6 +571,12 @@ public class YarnRunner {
         vargs.add(amMainClass);
         // Set params for Application Master
         vargs.add(amArgs);
+        
+        vargs.add("1>");
+        vargs.add(ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/jobmanager-stdout.log");
+        vargs.add("2>");
+        vargs.add(ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/jobmanager-stderr.log");
+        
         // Get final commmand
         StringBuilder amcommand = new StringBuilder();
         for (CharSequence str : vargs) {
