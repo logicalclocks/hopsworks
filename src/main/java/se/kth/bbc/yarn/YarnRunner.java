@@ -17,9 +17,7 @@ import java.util.logging.Logger;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import org.apache.flink.configuration.GlobalConfiguration;
 import org.apache.flink.yarn.Client;
-import org.apache.flink.yarn.Utils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -260,8 +258,7 @@ public class YarnRunner {
         private EnvironmentVariableFacade lookupEnvironmentVariableFacadeBean() throws NamingException {
             //TODO: fix this!!!
             Context c = new InitialContext();
-            //return (EnvironmentVariableFacade) c.lookup("java:global/Hop_Dashboard/EnvironmentVariableFacade!se.kth.bbc.lims.EnvironmentVariableFacade");
-            throw new NamingException();
+            return (EnvironmentVariableFacade) c.lookup("java:global/Hop_Dashboard/EnvironmentVariableFacade!se.kth.bbc.lims.EnvironmentVariableFacade");
         }
 
         private void setConfiguration() throws IllegalStateException {
@@ -437,17 +434,17 @@ public class YarnRunner {
         env.putAll(amEnvironment);
         
 
-		
-		
+		//appMasterEnv.put(Client.ENV_AM_PRC_PORT, String.valueOf(amRPCPort));
+		//appMasterEnv.put(Client.ENV_SLOTS, String.valueOf(slots));
         
-             
+        
+                env.put(Client.FLINK_JAR_PATH, amLocalResources.get(appMasterLocalName).destination);
                 env.put(Client.ENV_APP_ID, appId.toString());
                         FileSystem fs = FileSystem.get(conf);
                 env.put(Client.ENV_CLIENT_HOME_DIR, fs.getHomeDirectory().toString());
 		env.put(Client.ENV_APP_NUMBER, String.valueOf(appId.getId()));
-                //int amport = Utils.offsetPort(6123, appId.getId());
-        //env.put(Client.ENV_AM_PRC_PORT, String.valueOf(10245));
-        env.put(Client.ENV_SLOTS, String.valueOf(-1));
+                env.put(Client.ENV_SLOTS, String.valueOf(-1));
+                env.put(Client.ENV_AM_PRC_PORT,String.valueOf(10245));
         
         
         

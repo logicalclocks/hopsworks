@@ -1,13 +1,9 @@
 package se.kth.bbc.flink;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.util.Properties;
 import java.util.logging.Logger;
-import org.apache.flink.client.CliFrontend;
 
 import org.apache.flink.client.program.PackagedProgram;
 import org.apache.flink.client.program.ProgramInvocationException;
@@ -15,10 +11,6 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.flink.client.program.Client;
 import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.yarn.ClientMasterControl;
-import org.apache.flink.yarn.Utils;
-import org.apache.hadoop.yarn.api.records.ApplicationReport;
-import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.log4j.chainsaw.Main;
 
 import se.kth.bbc.yarn.YarnRunner;
@@ -33,7 +25,7 @@ public class FlinkRunner {
     private static final Logger logger = Logger.getLogger(FlinkRunner.class
             .getName());
 
-    private final static String flinkJarPath = "/home/stig/Downloads/flink-0.8-incubating-SNAPSHOT/lib/flink-dist-0.8-incubating-SNAPSHOT-yarn-uberjar.jar";
+    private final static String flinkJarPath = "/home/stig/projects/flink-yarn-0.7.0-incubating/lib/flink-dist-0.7.0-incubating-yarn-uberjar.jar";
     private static final String appMasterMainClass = "org.apache.flink.yarn.appMaster.ApplicationMaster";
     private final YarnRunner yarnRunner;
     private final File jobJarPath;
@@ -54,32 +46,16 @@ public class FlinkRunner {
             ProgramInvocationException {
         yarnRunner.startAppMaster();
 
-        while (yarnRunner.getApplicationReport().getYarnApplicationState() != YarnApplicationState.RUNNING) {
-            try {
-                System.out.println("Waiting for app to run.");
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-
-            }
-        }
-/*
-        ApplicationReport appReport = yarnRunner.getApplicationReport();
-        File yarnPropertiesFile = new File("/home/stig/Downloads/flink-0.8-incubating-SNAPSHOT/conf/" + CliFrontend.YARN_PROPERTIES_FILE);
-        // write jobmanager connect information
-        Properties yarnProps = new Properties();
-        int jmPort = Utils.offsetPort(6123, appReport.getApplicationId().getId());
-        yarnProps.setProperty(CliFrontend.YARN_PROPERTIES_JOBMANAGER_KEY, appReport.getHost() + ":" + 6144);
-        // add dynamic properties
-        OutputStream out = new FileOutputStream(yarnPropertiesFile);
-        yarnProps.store(out, "Generated YARN properties file");
-        out.close();
-        yarnPropertiesFile.setReadable(true, false); // readable for all.
-
-        // connect RPC service
-        ClientMasterControl cmc = new ClientMasterControl(new InetSocketAddress(appReport.getHost(), 10245));
-        cmc.start();
-*/
-
+        // stuff that has not yet been set and might be needed
+//		public final static String ENV_APP_ID = "_APP_ID";
+//		public final static String ENV_APP_NUMBER = "_APP_NUMBER";
+//		public final static String FLINK_JAR_PATH = "_FLINK_JAR_PATH"; // the Flink jar resource location (in HDFS).
+//		public static final String ENV_CLIENT_HOME_DIR = "_CLIENT_HOME_DIR";
+//		public static final String ENV_CLIENT_SHIP_FILES = "_CLIENT_SHIP_FILES";
+//		public static final String ENV_AM_PRC_PORT = "_AM_PRC_PORT";
+//		public static final String ENV_SLOTS = "_SLOTS";
+//		public static final String ENV_DYNAMIC_PROPERTIES = "_DYNAMIC_PROPERTIES";
+//
         String amHost = yarnRunner.getApplicationReport().getHost();
         Integer amPort = yarnRunner.getApplicationReport().getRpcPort();
 
@@ -93,21 +69,21 @@ public class FlinkRunner {
         conf.setInteger(ConfigConstants.JOB_MANAGER_IPC_PORT_KEY, amPort);
         Client flinkClient = new Client(conf,
                 pp.getUserCodeClassLoader());
-        flinkClient.run(pp, parallelism, true);
+        flinkClient.run(pp, parallelism, false);
 
         return 0;
     }
 
     public static class FlinkBuilder {
 
-        private Builder yarnBuilder = new YarnRunner.Builder(flinkJarPath, "flink.jar");
+        private Builder yarnBuilder = new YarnRunner.Builder(flinkJarPath,"flink.jar");
 
         private final File jobJarPath;
         private final String jobJarMain;
 
         private String[] jobArgs = new String[0];
 
-        private int parallelism = 2;
+        private int parallelism = 1;
         private int tmMem = 1024;
         private int tmCor = 1;
 
@@ -160,16 +136,16 @@ public class FlinkRunner {
             //TODO: get from conf
             this.yarnBuilder.addToAppMasterEnvironment(org.apache.flink.yarn.Client.ENV_CLIENT_USERNAME, "stig");
             this.yarnBuilder.appMasterMainClass(appMasterMainClass);
-            this.yarnBuilder.localResourcesBasePath(".flink/$APPID");
-            this.yarnBuilder.addLocalResource("flink-conf.yaml", "/home/stig/Downloads/flink-0.8-incubating-SNAPSHOT/conf/flink-conf.yaml", "flink-conf.yaml");
+            this.yarnBuilder.localResourcesBasePath(".flink/$APPID"); 
+            this.yarnBuilder.addLocalResource("flink-conf.yaml", "/home/stig/projects/flink-yarn-0.7.0-incubating/conf/flink-conf.yaml", "flink-conf.yaml");
             return new FlinkRunner(this);
         }
 
     }
 
     public static void maint() throws Exception {
-        FlinkBuilder b = new FlinkBuilder(new File("/home/glassfish/stig/flink-0.8-incubating-SNAPSHOT/examples/flink-java-examples-0.8-incubating-SNAPSHOT-WordCount.jar"), "org.apache.flink.examples.java.wordcount.WordCount");
-        b.setJobArgs("file:///home/glassfish/stig/helloWorld.cf", "file:///home/glassfish/stig/wordoutput");
+        FlinkBuilder b = new FlinkBuilder(new File("/home/stig/projects/flink-yarn-0.7.0-incubating/examples/flink-java-examples-0.7.0-incubating-WordCount.jar"), "org.apache.flink.examples.java.wordcount.WordCount");
+        b.setJobArgs("file:///home/stig/Downloads/Frodo.vcf","file:///home/stig/tmp/wordoutput");
         FlinkRunner r = b.build();
         r.runJob();
     }

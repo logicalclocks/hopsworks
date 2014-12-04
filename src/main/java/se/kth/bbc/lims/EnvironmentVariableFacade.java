@@ -34,6 +34,7 @@ public class EnvironmentVariableFacade extends AbstractFacade<EnvironmentVariabl
      */
     public String getValue(String name) {
         TypedQuery<EnvironmentVariable> q = em.createNamedQuery("EnvironmentVariable.findByName", EnvironmentVariable.class);
+        q.setParameter("name", name);
         try {
             EnvironmentVariable result = q.getSingleResult();
             return result.getValue();

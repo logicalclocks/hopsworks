@@ -20,6 +20,7 @@ import org.apache.flink.client.program.ProgramInvocationException;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
+import se.kth.bbc.flink.FlinkRunner;
 import se.kth.bbc.flink.FlinkRunnerSimple;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
@@ -123,31 +124,36 @@ public class FlinkController implements Serializable {
     }
 
     public void runJar() {
+        /*
+         Runnable c = new Runnable() {
 
-        Runnable c = new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    getAddressPort(Constants.FLINK_CONF_DIR);
-                } catch (IOException e) {
-                    MessagesController.addErrorMessage("Failed to find Flink JobManager info.");
-                    logger.log(Level.SEVERE,"Could not load configuration from \".yarn-properties\". Are you sure Flink is running on Yarn with configuration directory as "+Constants.FLINK_CONF_DIR+"?");
-                }
-                FlinkRunnerSimple.FlinkBuilder b = new FlinkRunnerSimple.FlinkBuilder(new File(jc.getFilePath(KEY_JOB_JAR)), jobjarmain, host, port);
-                b.setParallelism(paral);
-                b.setJobArgs(parseArgs(jobArgs).split(" "));
-                FlinkRunnerSimple p = b.build();
-                try {
-                    p.runJob();
-                } catch (IOException | ProgramInvocationException | YarnException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                    MessagesController.addErrorMessage("Failed to run job.");
-                }
-            }
-        };
-        exc.execute(c);
-
+         @Override
+         public void run() {
+         try {
+         getAddressPort(Constants.FLINK_CONF_DIR);
+         } catch (IOException e) {
+         MessagesController.addErrorMessage("Failed to find Flink JobManager info.");
+         logger.log(Level.SEVERE,"Could not load configuration from \".yarn-properties\". Are you sure Flink is running on Yarn with configuration directory as "+Constants.FLINK_CONF_DIR+"?");
+         }
+         FlinkRunnerSimple.FlinkBuilder b = new FlinkRunnerSimple.FlinkBuilder(new File(jc.getFilePath(KEY_JOB_JAR)), jobjarmain, host, port);
+         b.setParallelism(paral);
+         b.setJobArgs(parseArgs(jobArgs).split(" "));
+         FlinkRunnerSimple p = b.build();
+         try {
+         p.runJob();
+         } catch (IOException | ProgramInvocationException | YarnException ex) {
+         logger.log(Level.SEVERE, null, ex);
+         MessagesController.addErrorMessage("Failed to run job.");
+         }
+         }
+         };
+         exc.execute(c);
+         */
+        try {
+            FlinkRunner.maint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private String parseArgs(String s) {
