@@ -12,6 +12,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.primefaces.context.RequestContext;
+import se.kth.bbc.security.ua.AccountStatusIF;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.People;
 
@@ -74,17 +75,17 @@ public class Gauth implements Serializable {
         /* Log  out from the existing logged in user*/
         if (req.getRemoteUser() != null) {
             return logout();
-       
+
         }
-        
+
         user = mgr.getUser(username);
-        if(user == null){
+        if (user == null) {
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid user", null));
-            return ("index");
+            return ("login");
         }
-        
+
         //
         userid = user.getUid();
 
@@ -103,14 +104,28 @@ public class Gauth implements Serializable {
             if (val > 5) {
                 mgr.deactivateUser(userid);
             }
-            
+
             // inform the use about invalid credentials
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid password",null));
-            return ("index");
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid password", null));
+            return ("login");
         }
-        
+
+        /* if first time user loggsin after password request enforce password change*/
+        if (user.getActive() == AccountStatusIF.ACCOUNT_PENDING) {
+            return ("reset");
+        }
+
+        if (user.getActive() == AccountStatusIF.ACCOUNT_BLOCKED) {
+
+            // inform the use about the blocked account
+            RequestContext.getCurrentInstance().update("growl");
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Blocked account", null));
+            return ("login");
+        }
+
         // go to welcome page
         return ("indexPage");
     }

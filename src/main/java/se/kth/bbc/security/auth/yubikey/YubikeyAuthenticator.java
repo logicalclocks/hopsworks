@@ -32,9 +32,6 @@ public class YubikeyAuthenticator implements Serializable {
     @EJB
     private UserManager mgr;
 
-    @EJB
-    private YubikeyManager umgr;
-
     private String username;
     private String password;
     private String otpCode;
@@ -89,13 +86,6 @@ public class YubikeyAuthenticator implements Serializable {
         this.mgr = mgr;
     }
 
-    public YubikeyManager getUmgr() {
-        return umgr;
-    }
-
-    public void setUmgr(YubikeyManager umgr) {
-        this.umgr = umgr;
-    }
 
     public String getOtpCode() {
         return otpCode;

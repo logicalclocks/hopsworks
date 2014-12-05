@@ -9,41 +9,36 @@
       xmlns:f="http://java.sun.com/jsf/core">
 
     <h:head>
-        <title>BiobankCloud - Reset Password</title>
+        <title>BiobankCloud - Sign in</title>
         <h:outputStylesheet name="css/jsfcrud.css"/>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
     </h:head>
 
     <h:body >
-         <ui:insert name="titleBar" >
+        <ui:insert name="titleBar" >
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
-        
+
         <p:growl for="userRegistered" life="20000" showDetail="true"/>
         <p:growl for="loginFail" life="20000" showDetail="true"/>
- 
-                <h:form>
-                    
-                    
-                <h:panelGrid columns="2" id="matchGrid" cellpadding="5">                   
-                    
-                    
-                 <h:outputLabel for="uname" value="Username: " />
-                 <h:outputLabel for="uname" value="#{resetPassword.username}" />
-                 
-                 
-                    <h:outputLabel for="question" value="#{resetPassword.question}" />
-                    <p:password id="answer" value="#{resetPassword.answer}"  label="answer" required="true" />
+        <h:form>
+            <h:panelGrid columns="2" cellpadding="5">
 
+                <p:messages id="messages" showDetail="true" autoUpdate="true" />
+
+                <h:panelGrid columns="2" id="matchGrid" cellpadding="5">                   
+                    <h:outputLabel for="pwd1" value="Password 1: *" />
+                    <p:password id="pwd1" value="#{resetPassword.passwd1}" match="pwd2" label="Password 1" required="true" />
+
+                    <h:outputLabel for="pwd2" value="Password 2: *" />
+                    <p:password id="pwd2" value="#{resetPassword.passwd2}" label="Password 2" required="true" />
                 </h:panelGrid>
+
                     <div class="register_actions">
-                        <p:commandButton styleClass="team_button button-save" type="submit" 
-                                         value="Send" action="#{resetPassword.sendTmpPassword()}" >
-                            
-                        </p:commandButton>     
+                        <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{resetPassword.changePassword()}" />
                     </div>
-        
-                </h:form>
+        </h:form>
+
 
     </h:body>
 </html>

@@ -13,6 +13,6 @@
                           validate-atmost-once-period-in-seconds="0" wrap-jdbc-objects="false">
         <property name="URL" value="jdbc:mysql://localhost:3306/kthfs?zeroDateTimeBehavior=convertToNull"/>
         <property name="User" value="root"/>
-        <property name="Password" value=""/>
+        <property name="Password" value="biobankcloud"/>
     </jdbc-connection-pool>
 </resources>

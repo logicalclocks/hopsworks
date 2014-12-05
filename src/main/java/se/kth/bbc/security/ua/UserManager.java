@@ -3,6 +3,7 @@ package se.kth.bbc.security.ua;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -15,8 +16,10 @@ import se.kth.bbc.security.ua.model.PeopleGroup;
  *
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
-@Stateless 
+@Stateless
 public class UserManager {
+
+    private static final Logger logger = Logger.getLogger(UserRegistration.class.getName());
 
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
@@ -57,17 +60,11 @@ public class UserManager {
         user.setOrcid(orcid);
         user.setTitle(title);
         user.setActivated(new Timestamp(new Date().getTime()));
-        
-        /* 
-         * inactive: -1
-         * blocked:   0
-         * active:    1     
-         */
-        user.setActive(-1);
+        user.setActive(AccountStatusIF.ACCOUNT_INACTIVE);
         /*
          * offline: -1
          * online:   1  
-        */
+         */
         user.setIsonline(-1);
         user.setSecurityQuestion(question);
         user.setSecurityAnswer(answer);
@@ -107,11 +104,7 @@ public class UserManager {
     public boolean deactivateUser(int id) {
         People p = (People) em.find(People.class, id);
         if (p != null) {
-            /* inactive: -1
-             * blocked:   0
-             * active:    1     
-             */
-            p.setActive(0);
+            p.setActive(AccountStatusIF.ACCOUNT_INACTIVE);
             em.merge(p);
         }
         return true;
@@ -120,6 +113,13 @@ public class UserManager {
     public boolean resetPassword(int id, String pass) {
         People p = (People) em.find(People.class, id);
         p.setPassword(pass);
+        em.merge(p);
+        return true;
+    }
+
+    public boolean updateStatus(int id, short stat) {
+        People p = (People) em.find(People.class, id);
+        p.setActive(stat);
         em.merge(p);
         return true;
     }
@@ -193,7 +193,6 @@ public class UserManager {
         return null;
     }
 
-    
     public boolean isUsernameTaken(String username) {
 
         List existing = em.createQuery(
@@ -202,9 +201,10 @@ public class UserManager {
         return (existing.size() > 0);
     }
 
-    public String getSecurityQuestion (String username) {
-        Query query = em.createNativeQuery("SELECT security_question FROM People p where p.email ='" + username + "'");
-        String result  = (String) query.getSingleResult();
-        return result;
+    public String getSecurityQuestion(String username) {
+        
+            Query query = em.createNativeQuery("SELECT security_question FROM People p where p.email ='" + username + "'");
+            String result = (String) query.getSingleResult();
+            return result;
     }
 }

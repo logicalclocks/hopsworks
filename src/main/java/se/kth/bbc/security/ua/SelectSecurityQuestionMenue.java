@@ -9,19 +9,32 @@ package se.kth.bbc.security.ua;
  *
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
-import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 
 @ManagedBean
-@RequestScoped
-public class SelectSecurityQuestionMenue {
-    
+@SessionScoped
+public class SelectSecurityQuestionMenue implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private static final Logger logger = Logger.getLogger(UserRegistration.class.getName());
+
     private String username;
 
+    public SelectSecurityQuestionMenue(){
+        questions = new HashMap<>();
+        questions.put("Who is your favorite historical figure?", "history");
+        questions.put("What is name of your favorite teacher?", "teacher");
+        questions.put("What is your first phone number?", "phone");
+        questions.put("What is the name of your favorite childhood friend?", "phone");
+
+    }
     public String getUsername() {
         return username;
     }
@@ -29,12 +42,10 @@ public class SelectSecurityQuestionMenue {
     public void setUsername(String username) {
         this.username = username;
     }
+
     private String question;
     private Map<String, String> questions = new HashMap<>();
 
-    @EJB
-    private UserManager mgr;
-     
     @PostConstruct
     public void init() {
         // security questions
@@ -45,7 +56,7 @@ public class SelectSecurityQuestionMenue {
         questions.put("What is the name of your favorite childhood friend?", "phone");
 
     }
-    
+
     public String getQuestion() {
         return question;
     }
@@ -56,6 +67,15 @@ public class SelectSecurityQuestionMenue {
 
     public Map<String, String> getQuestions() {
         return questions;
+    }
+
+    public String getUserQuestion( String value) {
+        for (Object o : questions.keySet()) {
+           if (questions.get(o).equals(value)) {
+                return (String)o;
+            }
+        }
+        return null;
     }
     
 }

@@ -23,15 +23,14 @@ public class Email {
             InternetAddress[] address = {new InternetAddress(to)};
             message.setRecipients(Message.RecipientType.TO, address);
             message.setSubject(subject);
-            message.setContent(body, "text/html; charset=utf-8");
-            
-            message.setHeader("X-Mailer", "BBC email service www.biobankcloud.com");
+            message.setContent(body, "text/html");
             
             // set the timestamp
             message.setSentDate(new Date());
             message.setText(body);
-
-            Transport.send(message);
+            Transport transport = mailSession.getTransport();  
+            transport.connect();
+            transport.send(message);
         } catch (MessagingException ex) {
             ex.printStackTrace();
         }

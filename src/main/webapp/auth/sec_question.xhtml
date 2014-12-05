@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core">
+
+    <h:head>
+        <title>BiobankCloud - Security Question</title>
+        <h:outputStylesheet name="css/jsfcrud.css"/>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    </h:head>
+
+    <h:body >
+        <ui:insert name="titleBar" >
+            <ui:include src="/bbc/lims/titleBar.xhtml" />       
+        </ui:insert>
+
+        <p:growl for="userRegistered" life="20000" showDetail="true"/>
+        <p:growl for="loginFail" life="20000" showDetail="true"/>
+
+        <h:form>
+
+            <h:panelGrid columns="2">
+                <p:outputLabel for="uname" value="Enter username"/>
+
+                <p:inputText id="uname" required="true" label="email" size="40"
+                             requiredMessage="Please enter your email address."
+                             validatorMessage="Invalid email format"
+                             value="#{selectSecurityQuestionMenue.username}">
+
+                    <f:validateRegex
+                        pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+
+                </p:inputText>
+                <p:watermark for="uname" value="Email Address" />
+                <p:message for="uname" />
+
+            </h:panelGrid>
+
+            <p:commandButton value="Continue" style="margin:20px"
+                             action="#{resetPassword.findQuestion}" >
+                
+                <f:param name="username" value="#{selectSecurityQuestionMenue.username}" />
+            </p:commandButton>
+
+        </h:form>
+
+    </h:body>
+</html>
