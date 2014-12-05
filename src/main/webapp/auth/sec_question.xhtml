@@ -24,29 +24,32 @@
 
         <h:form>
 
-            <h:panelGrid columns="2">
-                <p:outputLabel for="uname" value="Enter username"/>
+            <div class="content" align="center">
+                <h3 class="page_title" align="center" style="color: gray">
+                    Please enter your username
+                </h3>
 
-                <p:inputText id="uname" required="true" label="email" size="40"
-                             requiredMessage="Please enter your email address."
-                             validatorMessage="Invalid email format"
-                             value="#{selectSecurityQuestionMenue.username}">
+                <h:panelGrid columns="1" >
 
-                    <f:validateRegex
-                        pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+                    <p:inputText id="uname" required="true" label="email" size="40"
+                                 requiredMessage="Please enter your email address."
+                                 validatorMessage="Invalid email format"
+                                 value="#{resetPassword.username}">
 
-                </p:inputText>
-                <p:watermark for="uname" value="Email Address" />
-                <p:message for="uname" />
+                        <f:validateRegex
+                            pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
 
-            </h:panelGrid>
+                    </p:inputText>
+                    <p:watermark for="uname" value="Email Address" />
+                    <p:messages id="messages" autoUpdate="true"/>
+                </h:panelGrid>
+                <p:commandButton value="Continue" style="margin:20px"
+                                 action="#{resetPassword.findQuestion}" >
 
-            <p:commandButton value="Continue" style="margin:20px"
-                             action="#{resetPassword.findQuestion}" >
-                
-                <f:param name="username" value="#{selectSecurityQuestionMenue.username}" />
-            </p:commandButton>
+                    <f:param name="username" value="#{resetPassword.username}" />
+                </p:commandButton>
 
+            </div>          
         </h:form>
 
     </h:body>

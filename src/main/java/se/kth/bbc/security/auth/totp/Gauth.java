@@ -82,11 +82,10 @@ public class Gauth implements Serializable {
         if (user == null) {
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid user", null));
-            return ("login");
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid username", null));
+            return ("");
         }
 
-        //
         userid = user.getUid();
 
         try {
@@ -109,21 +108,21 @@ public class Gauth implements Serializable {
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid password", null));
-            return ("login");
+            return ("");
         }
-
-        /* if first time user loggsin after password request enforce password change*/
+        
         if (user.getActive() == AccountStatusIF.ACCOUNT_PENDING) {
             return ("reset");
         }
 
+                
         if (user.getActive() == AccountStatusIF.ACCOUNT_BLOCKED) {
 
             // inform the use about the blocked account
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Blocked account", null));
-            return ("login");
+            return ("");
         }
 
         // go to welcome page
@@ -135,11 +134,10 @@ public class Gauth implements Serializable {
         HttpSession sess = (HttpSession) ctx.getExternalContext().getSession(false);
 
         if (null != sess) {
-            sess.removeAttribute("username");
             sess.invalidate();
         }
         mgr.setOnline(userid, -1);
-        return ("login");
+        return ("welcome");
     }
 
 }

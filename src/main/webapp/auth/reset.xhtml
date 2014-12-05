@@ -9,7 +9,7 @@
       xmlns:f="http://java.sun.com/jsf/core">
 
     <h:head>
-        <title>BiobankCloud - Sign in</title>
+        <title>BiobankCloud - Password reset</title>
         <h:outputStylesheet name="css/jsfcrud.css"/>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
     </h:head>
@@ -21,24 +21,29 @@
 
         <p:growl for="userRegistered" life="20000" showDetail="true"/>
         <p:growl for="loginFail" life="20000" showDetail="true"/>
+        
         <h:form>
-            <h:panelGrid columns="2" cellpadding="5">
-
-                <p:messages id="messages" showDetail="true" autoUpdate="true" />
-
-                <h:panelGrid columns="2" id="matchGrid" cellpadding="5">                   
-                    <h:outputLabel for="pwd1" value="Password 1: *" />
+         <div class="content">
+             <h3 class="page_title" align="center">
+                                Reset password
+                            </h3>
+                
+            <h:panelGrid columns="1" id="matchGrid" styleClass="Signin" cellpadding="5">                   
+                    <h:outputLabel for="pwd1" value="New Password" />
                     <p:password id="pwd1" value="#{resetPassword.passwd1}" match="pwd2" label="Password 1" required="true" />
 
-                    <h:outputLabel for="pwd2" value="Password 2: *" />
+                    <h:outputLabel for="pwd2" value="Re-enter" />
                     <p:password id="pwd2" value="#{resetPassword.passwd2}" label="Password 2" required="true" />
                 </h:panelGrid>
 
-                    <div class="register_actions">
-                        <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{resetPassword.changePassword()}" />
-                    </div>
+                <p:messages id="messages" showDetail="true" autoUpdate="true" />
+                <br></br> 
+                <div class="register_actions" align="center">
+                             <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{resetPassword.changePassword()}" />
+                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" style="margin-left: 55px"/>
+                </div>
+         </div>
         </h:form>
-
 
     </h:body>
 </html>

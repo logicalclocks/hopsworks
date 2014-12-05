@@ -8,7 +8,6 @@ package se.kth.bbc.security.ua;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -16,8 +15,9 @@ import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
-import javax.faces.validator.ValidatorException;
 import javax.mail.MessagingException;
+import javax.servlet.http.HttpSession;
+import org.primefaces.context.RequestContext;
 import se.kth.bbc.security.ua.model.People;
 
 /**
@@ -26,11 +26,10 @@ import se.kth.bbc.security.ua.model.People;
  */
 @ManagedBean
 @SessionScoped
-public class ResetPassword implements Serializable{
+public class ResetPassword implements Serializable {
 
-    
     private static final long serialVersionUID = 1L;
-   
+
     private static final Logger logger = Logger.getLogger(UserRegistration.class.getName());
 
     private String username;
@@ -45,18 +44,19 @@ public class ResetPassword implements Serializable{
     }
     private String passwd2;
     private String answer;
+
     private String question;
 
     private People people;
 
     @EJB
     private UserManager mgr;
-    
+
     @EJB
     private Email emailUtil;
 
     private SelectSecurityQuestionMenue secMgr;
-    
+
     public People getPeople() {
         return people;
     }
@@ -73,8 +73,6 @@ public class ResetPassword implements Serializable{
         this.emailUtil = emailUtil;
     }
 
-    ;
-   
     public String getAnswer() {
         return answer;
     }
@@ -108,23 +106,25 @@ public class ResetPassword implements Serializable{
     }
 
     //TODO: This hsould be changed to a url and then enforcing the password for reset upon first login
-    public void sendTmpPassword() throws MessagingException {
+    public String sendTmpPassword() throws MessagingException {
 
-        if(this.username==null) {
-        
-                        FacesMessage facesMsg = new FacesMessage(
-                        "Wrong username");
-                facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-                throw new ValidatorException(facesMsg);
-
-        }
         people = mgr.getUser(this.username);
+
         try {
             if (!SecurityUtils.converToSHA256(answer).equals(people.getSecurityAnswer())) {
-                FacesMessage facesMsg = new FacesMessage(
-                        "Wrong security question answer");
-                facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-                throw new ValidatorException(facesMsg);
+
+                FacesContext context = FacesContext.getCurrentInstance();
+                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong answer", null));
+
+                // Lock the account if 5 tmies wrong answer  
+                int val = people.getFalseLogin();
+                mgr.increaseLockNum(people.getUid(), val + 1);
+                if (val > 5) {
+                    mgr.deactivateUser(people.getUid());
+                    return ("welcome");
+                }
+                val = 0;
+                return "";
             }
 
             // reset the old password with a new one
@@ -134,13 +134,14 @@ public class ResetPassword implements Serializable{
             // make the account pending until it will be reset by user upon first login
             mgr.updateStatus(people.getUid(), AccountStatusIF.ACCOUNT_PENDING);
             String message = buildResetMessage(random_password);
-          
+
             // sned the new password to the user email
             emailUtil.sendEmail(people.getEmail(), "reset password", message);
 
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException ex) {
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return ("password_sent");
     }
 
     /**
@@ -156,33 +157,46 @@ public class ResetPassword implements Serializable{
         return urlFormat;
     }
 
-    public void changePassword() {
+    public String changePassword() {
 
         people = mgr.getUser(username);
+
+        if (people == null) {
+            return ("welcome");
+        }
+
         try {
             // reset the old password with a new one
             mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(passwd1));
 
             // make the account active until it will be reset by user upon first login
             mgr.updateStatus(people.getUid(), AccountStatusIF.ACCOUNT_ACTIVE);
-
+            
+            // logout user
+            FacesContext context = FacesContext.getCurrentInstance();
+            HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
+            session.invalidate();
+            return ("password_changed");
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
         }
-
+        return ("reset");
     }
 
     public String findQuestion() {
-        
-        FacesContext fc = FacesContext.getCurrentInstance();
-        Map<String,String> params = 
-        fc.getExternalContext().getRequestParameterMap();
-        this.username =  (String) params.get("username"); 
-        String quest = mgr.getSecurityQuestion(this.username);
-        secMgr = new SelectSecurityQuestionMenue();
-        question = secMgr.getUserQuestion(quest);
 
-        return "reset_password";
+        people = mgr.getUser(this.username);
+        if (people == null) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found", null));
+            return "";
+        }
+
+        String quest = people.getSecurityQuestion();
+        secMgr = new SelectSecurityQuestionMenue();
+        this.question = secMgr.getUserQuestion(quest);
+
+        return ("reset_password");
     }
-    
+
 }

@@ -5,6 +5,8 @@
  */
 package se.kth.bbc.security.ua;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIInput;
@@ -42,7 +44,7 @@ public class PasswordValidator implements Validator {
         if (password == null || password.isEmpty() || confirmPassword == null
                 || confirmPassword.isEmpty()) {
             FacesMessage facesMsg = new FacesMessage(
-                    "PAssword is empty");
+                    "Password is empty");
             facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
             throw new ValidatorException(facesMsg);
 
@@ -78,14 +80,16 @@ public class PasswordValidator implements Validator {
     }
 
     /**
-     * To check a string if it contains alphanumeric values: MyPassww232¤!#.
+     * To check a string if it contains alphanumeric values: MyPassww132.
      *
      * @param s
      * @return
      */
     public boolean isAlphaNumeric(String s) {
-        String pattern = "^[a-zA-Z0-9]*$";
-        if (s.matches(pattern)) {
+      Pattern pattern = Pattern.compile("^([A-Za-z]|[0-9])+$");
+      Matcher matcher = pattern.matcher(s);
+
+        if (matcher.find()) {
             return true;
         }
         return false;

@@ -27,16 +27,18 @@
             <div class="Signin">            
                 <h:panelGrid columns="1" >  
                     <h1>Sign in with Yubikey</h1>     
-                    <p:outputLabel for="username" value="E-mail" />
-                    <p:inputText id="username" value="#{yubikeyAuthenticator.username}" required="true"
-                                 >
-                    </p:inputText>
-
+                    <p:outputLabel for="username" value="Username" />
+                    <p:inputText id="username" value="#{yubikeyAuthenticator.username}" required="true" requiredMessage="Enter userame"/>
+                     <p:watermark for="username" value="Email Address" />
+          
                     <p:outputLabel for="password" value="Password" />
-                    <p:password id="password" value="#{yubikeyAuthenticator.password}" required="true"/>
-
+                    <p:password id="password" value="#{yubikeyAuthenticator.password}" required="true" requiredMessage="Enter password"/>
+                    <p:watermark for="password" value="Password" />
+          
                     <p:outputLabel for="otp" value="PIN" />
-                    <p:password id="otp" value="#{yubikeyAuthenticator.otpCode}" required="true"/>
+                    <p:password id="otp" value="#{yubikeyAuthenticator.otpCode}" required="true" requiredMessage="Enter PIN"/>
+                    <p:watermark for="otp" value="Press the Yubikey button" />
+
                     <p:messages id="messages" autoUpdate="true" />
 
                     <div align="left ">

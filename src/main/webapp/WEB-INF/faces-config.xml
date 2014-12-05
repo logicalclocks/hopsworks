@@ -78,6 +78,11 @@
             <redirect/>
         </navigation-case>
 
+         <navigation-case>
+            <from-outcome>password_changed</from-outcome>
+            <to-view-id>/auth/password_changed.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
         <navigation-case>
             <from-outcome>sec_question</from-outcome>
             <to-view-id>/auth/sec_question.xhtml</to-view-id>

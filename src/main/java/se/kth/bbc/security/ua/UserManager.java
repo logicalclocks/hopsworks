@@ -104,7 +104,7 @@ public class UserManager {
     public boolean deactivateUser(int id) {
         People p = (People) em.find(People.class, id);
         if (p != null) {
-            p.setActive(AccountStatusIF.ACCOUNT_INACTIVE);
+            p.setActive(AccountStatusIF.ACCOUNT_BLOCKED);
             em.merge(p);
         }
         return true;
@@ -201,10 +201,4 @@ public class UserManager {
         return (existing.size() > 0);
     }
 
-    public String getSecurityQuestion(String username) {
-        
-            Query query = em.createNativeQuery("SELECT security_question FROM People p where p.email ='" + username + "'");
-            String result = (String) query.getSingleResult();
-            return result;
-    }
 }
