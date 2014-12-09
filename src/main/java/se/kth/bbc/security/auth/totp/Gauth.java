@@ -79,6 +79,8 @@ public class Gauth implements Serializable {
         }
 
         user = mgr.getUser(username);
+        
+        // return if username is wrong
         if (user == null) {
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
@@ -86,6 +88,25 @@ public class Gauth implements Serializable {
             return ("");
         }
 
+        // return if user not activated
+        if (user.getStatus() == AccountStatusIF.ACCOUNT_INACTIVE) {
+            RequestContext.getCurrentInstance().update("growl");
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not activated", null));
+            return ("");
+        }
+
+        // return if used is bloked
+        if (user.getStatus()== AccountStatusIF.ACCOUNT_BLOCKED) {
+            // inform the use about the blocked account
+            RequestContext.getCurrentInstance().update("growl");
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Blocked account", null));
+            return ("");
+        }
+        
+    
+        
         userid = user.getUid();
 
         try {
@@ -111,18 +132,9 @@ public class Gauth implements Serializable {
             return ("");
         }
         
+        // reset the password after first login
         if (user.getStatus()== AccountStatusIF.ACCOUNT_PENDING) {
             return ("reset");
-        }
-
-                
-        if (user.getStatus()== AccountStatusIF.ACCOUNT_BLOCKED) {
-
-            // inform the use about the blocked account
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Blocked account", null));
-            return ("");
         }
 
         // go to welcome page

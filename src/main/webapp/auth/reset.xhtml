@@ -21,14 +21,14 @@
 
         <p:growl for="userRegistered" life="20000" showDetail="true"/>
         <p:growl for="loginFail" life="20000" showDetail="true"/>
-        
+
         <h:form>
-         <div class="content">
-             <h3 class="page_title" align="center">
-                                Reset password
-                            </h3>
-                
-            <h:panelGrid columns="1" id="matchGrid" styleClass="Signin" cellpadding="5">                   
+            <div class="content">
+                <h3 class="page_title" align="center">
+                    Reset password
+                </h3>
+
+                <h:panelGrid columns="1" id="matchGrid" styleClass="Signin" cellpadding="5">                   
                     <h:outputLabel for="pwd1" value="New Password" />
                     <p:password id="pwd1" value="#{resetPassword.passwd1}" match="pwd2" label="Password 1" required="true" />
 
@@ -39,10 +39,10 @@
                 <p:messages id="messages" showDetail="true" autoUpdate="true" />
                 <br></br> 
                 <div class="register_actions" align="center">
-                             <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{resetPassword.changePassword()}" />
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" style="margin-left: 55px"/>
+                    <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{resetPassword.changePassword()}" />
+                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" style="margin-left: 55px"/>
                 </div>
-         </div>
+            </div>
         </h:form>
 
     </h:body>

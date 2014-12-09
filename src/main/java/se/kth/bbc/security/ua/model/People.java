@@ -52,6 +52,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "People.findBySecurityQuestion", query = "SELECT p FROM People p WHERE p.securityQuestion = :securityQuestion"),
     @NamedQuery(name = "People.findBySecurityAnswer", query = "SELECT p FROM People p WHERE p.securityAnswer = :securityAnswer")})
 public class People implements Serializable {
+    @OneToMany(mappedBy = "peopleuid")
+    private Collection<Yubikey> yubikeyCollection;
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -118,8 +120,6 @@ public class People implements Serializable {
     private String securityAnswer;
     @OneToMany(mappedBy = "peopleuid")
     private Collection<Login> loginCollection;
-    @OneToMany(mappedBy = "peopleuid")
-    private Collection<Yubikey> yubikeyCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "people")
     private Collection<PeopleGroup> peopleGroupCollection;
 
@@ -288,16 +288,6 @@ public class People implements Serializable {
 
     @XmlTransient
     @JsonIgnore
-    public Collection<Yubikey> getYubikeyCollection() {
-        return yubikeyCollection;
-    }
-
-    public void setYubikeyCollection(Collection<Yubikey> yubikeyCollection) {
-        this.yubikeyCollection = yubikeyCollection;
-    }
-
-    @XmlTransient
-    @JsonIgnore
     public Collection<PeopleGroup> getPeopleGroupCollection() {
         return peopleGroupCollection;
     }
@@ -329,6 +319,16 @@ public class People implements Serializable {
     @Override
     public String toString() {
         return "se.kth.bbc.security.ua.model.People[ uid=" + uid + " ]";
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<Yubikey> getYubikeyCollection() {
+        return yubikeyCollection;
+    }
+
+    public void setYubikeyCollection(Collection<Yubikey> yubikeyCollection) {
+        this.yubikeyCollection = yubikeyCollection;
     }
     
 }

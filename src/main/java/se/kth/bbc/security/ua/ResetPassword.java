@@ -17,7 +17,6 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpSession;
-import org.primefaces.context.RequestContext;
 import se.kth.bbc.security.ua.model.People;
 
 /**
@@ -106,7 +105,7 @@ public class ResetPassword implements Serializable {
     }
 
     //TODO: This hsould be changed to a url and then enforcing the password for reset upon first login
-    public String sendTmpPassword() throws MessagingException {
+    public String sendTmpPassword() {
 
         people = mgr.getUser(this.username);
 
@@ -123,23 +122,27 @@ public class ResetPassword implements Serializable {
                     mgr.deactivateUser(people.getUid());
                     return ("welcome");
                 }
-                val = 0;
                 return "";
             }
 
-            // reset the old password with a new one
+            // generate a radndom password
             String random_password = SecurityUtils.getRandomString();
-            mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(random_password));
 
             // make the account pending until it will be reset by user upon first login
             mgr.updateStatus(people.getUid(), AccountStatusIF.ACCOUNT_PENDING);
             String message = buildResetMessage(random_password);
 
             // sned the new password to the user email
-            emailUtil.sendEmail(people.getEmail(), "reset password", message);
+            emailUtil.sendEmail(people.getEmail(), "Password reset", message);
 
-        } catch (UnsupportedEncodingException | NoSuchAlgorithmException ex) {
+            // reset the old password with a new one
+            mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(random_password));
+
+        } catch (UnsupportedEncodingException | NoSuchAlgorithmException | MessagingException ex) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset password!", "null"));
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
+            return ("");
         }
         return ("password_sent");
     }
@@ -171,7 +174,7 @@ public class ResetPassword implements Serializable {
 
             // make the account active until it will be reset by user upon first login
             mgr.updateStatus(people.getUid(), AccountStatusIF.ACCOUNT_ACTIVE);
-            
+
             // logout user
             FacesContext context = FacesContext.getCurrentInstance();
             HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
@@ -183,20 +186,23 @@ public class ResetPassword implements Serializable {
         return ("reset");
     }
 
+    /**
+     * Get the user security question
+     * @return 
+     */
     public String findQuestion() {
 
         people = mgr.getUser(this.username);
         if (people == null) {
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found", null));
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, " Could not find the question!", "null"));
             return "";
         }
-
+        
         String quest = people.getSecurityQuestion();
         secMgr = new SelectSecurityQuestionMenue();
         this.question = secMgr.getUserQuestion(quest);
 
         return ("reset_password");
     }
-
 }

@@ -3,6 +3,7 @@ package se.kth.kthfsdashboard.user;
 import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collection;
 import javax.xml.bind.DatatypeConverter;
 import java.util.Date;
 import java.util.List;
@@ -10,6 +11,8 @@ import java.util.Random;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  *
@@ -30,6 +33,18 @@ import javax.validation.constraints.Size;
     @NamedQuery(name = "Username.findByPassword", query = "SELECT r FROM Username r WHERE r.password = :password"),
     @NamedQuery(name = "Username.findByName", query = "SELECT r.email FROM Username r")})
 public class Username implements Serializable {
+    @Basic(optional = false)
+    @NotNull
+    @Lob
+    @Column(name = "SALT")
+    private byte[] salt;
+    @JoinTable(name = "USERS_GROUPS", joinColumns = {
+        @JoinColumn(name = "email", referencedColumnName = "EMAIL")}, inverseJoinColumns = {
+        @JoinColumn(name = "email", referencedColumnName = "EMAIL")})
+    @ManyToMany
+    private Collection<Username> usernameCollection;
+    @ManyToMany(mappedBy = "usernameCollection")
+    private Collection<Username> usernameCollection1;
 
     //Constants to reflect the request status of a user. At creation, status is set to request.
     public static final int STATUS_REQUEST = -1;
@@ -62,11 +77,6 @@ public class Username implements Serializable {
     @Column(name = "REGISTEREDON")
     @Temporal(TemporalType.TIMESTAMP)
     private Date registeredOn;
-    @Basic(optional = false)
-    @NotNull
-    @Lob
-    @Column(name = "SALT")
-    private byte[] salt;
     @Basic(optional = false)
     @NotNull
     @Column(name = "STATUS")
@@ -124,13 +134,6 @@ public class Username implements Serializable {
         this.groups = groups;
     }
 
-    public byte[] getSalt() {
-        return salt;
-    }
-
-    public void setSalt(byte[] salt) {
-        this.salt = salt;
-    }
 
     public String getEmail() {
         return email;
@@ -260,5 +263,33 @@ public class Username implements Serializable {
     
     public Group getExtraGroup(){
         return extraGroup;
+    }
+
+    public byte[] getSalt() {
+        return salt;
+    }
+
+    public void setSalt(byte[] salt) {
+        this.salt = salt;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<Username> getUsernameCollection() {
+        return usernameCollection;
+    }
+
+    public void setUsernameCollection(Collection<Username> usernameCollection) {
+        this.usernameCollection = usernameCollection;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<Username> getUsernameCollection1() {
+        return usernameCollection1;
+    }
+
+    public void setUsernameCollection1(Collection<Username> usernameCollection1) {
+        this.usernameCollection1 = usernameCollection1;
     }
 }
