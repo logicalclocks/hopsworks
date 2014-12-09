@@ -12,6 +12,7 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.flink.client.program.Client;
 import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.yarn.Utils;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.log4j.chainsaw.Main;
 
@@ -58,7 +59,8 @@ public class FlinkRunner {
 //		public static final String ENV_SLOTS = "_SLOTS";
 //		public static final String ENV_DYNAMIC_PROPERTIES = "_DYNAMIC_PROPERTIES";
         //todo: make more elegant
-        while (yarnRunner.getApplicationReport().getYarnApplicationState() != YarnApplicationState.RUNNING && yarnRunner.getApplicationReport().getYarnApplicationState() != YarnApplicationState.FAILED) {
+        while (yarnRunner.getApplicationReport().getYarnApplicationState() != YarnApplicationState.RUNNING && yarnRunner.getApplicationReport().getYarnApplicationState() != YarnApplicationState.FAILED 
+                && yarnRunner.getApplicationReport().getYarnApplicationState() != YarnApplicationState.KILLED) {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -68,7 +70,10 @@ public class FlinkRunner {
         }
 
         String amHost = yarnRunner.getApplicationReport().getHost();
-        Integer amPort = yarnRunner.getApplicationReport().getRpcPort();
+        //TODO: get from conf.
+        int jmPort = 6123;
+        jmPort = Utils.offsetPort(jmPort, yarnRunner.getApplicationReport().getApplicationId().getId());
+        Integer amPort = jmPort;//yarnRunner.getApplicationReport().getRpcPort();
 
         InetSocketAddress yarnAddress = InetSocketAddress.createUnresolved(
                 amHost, amPort);

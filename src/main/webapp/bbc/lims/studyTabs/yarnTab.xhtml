@@ -17,7 +17,7 @@
                             <span>
                                 <h:outputLabel value="Application Master jar"/>
                             </span>
-                            <p:fileUpload required="true" multiple="false" label="Select" mode="advanced" allowTypes="/(\.|\/)(jar)$/" fileUploadListener="#{yarnController.handleAMUpload}" update="@form"/>
+                            <p:fileUpload required="true" multiple="false" auto="true" label="Select" mode="advanced" allowTypes="/(\.|\/)(jar)$/" fileUploadListener="#{yarnController.handleAMUpload}" update="@form"/>
                             <h:outputLabel value="#{yarnController.appName}"/>
                         </h:panelGrid>
                     </div>
@@ -34,7 +34,7 @@
                     <div>
                         Upload files to be included in AM container:
                         <h:panelGrid columns="1">
-                            <p:fileUpload multiple="true" label="Browse" mode="advanced" fileUploadListener="#{yarnController.extraFileUploads}"/>
+                            <p:fileUpload multiple="true" label="Browse" auto="true" mode="advanced" fileUploadListener="#{yarnController.extraFileUploads}"/>
                         </h:panelGrid>
                     </div>
                     <br/>
