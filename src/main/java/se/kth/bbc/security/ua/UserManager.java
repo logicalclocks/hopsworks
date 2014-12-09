@@ -60,7 +60,7 @@ public class UserManager {
         user.setOrcid(orcid);
         user.setTitle(title);
         user.setActivated(new Timestamp(new Date().getTime()));
-        user.setActive(AccountStatusIF.ACCOUNT_INACTIVE);
+        user.setStatus(AccountStatusIF.ACCOUNT_INACTIVE);
         /*
          * offline: -1
          * online:   1  
@@ -104,7 +104,7 @@ public class UserManager {
     public boolean deactivateUser(int id) {
         People p = (People) em.find(People.class, id);
         if (p != null) {
-            p.setActive(AccountStatusIF.ACCOUNT_BLOCKED);
+            p.setStatus(AccountStatusIF.ACCOUNT_BLOCKED);
             em.merge(p);
         }
         return true;
@@ -119,7 +119,7 @@ public class UserManager {
 
     public boolean updateStatus(int id, short stat) {
         People p = (People) em.find(People.class, id);
-        p.setActive(stat);
+        p.setStatus(stat);
         em.merge(p);
         return true;
     }

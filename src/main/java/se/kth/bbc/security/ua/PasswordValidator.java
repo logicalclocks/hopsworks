@@ -59,7 +59,7 @@ public class PasswordValidator implements Validator {
 
         }
 
-        if (isAlphaNumeric(password)) {
+        if (!isAlphaNumeric(password)) {
             uiInputConfirmPassword.setValid(false);
             FacesMessage facesMsg = new FacesMessage(
                     "password is not alpha-numeric");

@@ -46,7 +46,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "People.findByMobile", query = "SELECT p FROM People p WHERE p.mobile = :mobile"),
     @NamedQuery(name = "People.findByOrcid", query = "SELECT p FROM People p WHERE p.orcid = :orcid"),
     @NamedQuery(name = "People.findByFalseLogin", query = "SELECT p FROM People p WHERE p.falseLogin = :falseLogin"),
-    @NamedQuery(name = "People.findByActive", query = "SELECT p FROM People p WHERE p.active = :active"),
+    @NamedQuery(name = "People.findByStatus", query = "SELECT p FROM People p WHERE p.status = :status"),
     @NamedQuery(name = "People.findByIsonline", query = "SELECT p FROM People p WHERE p.isonline = :isonline"),
     @NamedQuery(name = "People.findBySecret", query = "SELECT p FROM People p WHERE p.secret = :secret"),
     @NamedQuery(name = "People.findBySecurityQuestion", query = "SELECT p FROM People p WHERE p.securityQuestion = :securityQuestion"),
@@ -101,8 +101,8 @@ public class People implements Serializable {
     private int falseLogin;
     @Basic(optional = false)
     @NotNull
-    @Column(name = "active")
-    private int active;
+    @Column(name = "status")
+    private int status;
     @Basic(optional = false)
     @NotNull
     @Column(name = "isonline")
@@ -130,13 +130,13 @@ public class People implements Serializable {
         this.uid = uid;
     }
 
-    public People(Integer uid, String username, String password, Date activated, int falseLogin, int active, int isonline) {
+    public People(Integer uid, String username, String password, Date activated, int falseLogin, int status, int isonline) {
         this.uid = uid;
         this.username = username;
         this.password = password;
         this.activated = activated;
         this.falseLogin = falseLogin;
-        this.active = active;
+        this.status = status;
         this.isonline = isonline;
     }
 
@@ -236,12 +236,12 @@ public class People implements Serializable {
         this.falseLogin = falseLogin;
     }
 
-    public int getActive() {
-        return active;
+    public int getStatus() {
+        return status;
     }
 
-    public void setActive(int active) {
-        this.active = active;
+    public void setStatus(int status) {
+        this.status = status;
     }
 
     public int getIsonline() {

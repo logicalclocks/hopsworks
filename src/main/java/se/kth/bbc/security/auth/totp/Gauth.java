@@ -111,12 +111,12 @@ public class Gauth implements Serializable {
             return ("");
         }
         
-        if (user.getActive() == AccountStatusIF.ACCOUNT_PENDING) {
+        if (user.getStatus()== AccountStatusIF.ACCOUNT_PENDING) {
             return ("reset");
         }
 
                 
-        if (user.getActive() == AccountStatusIF.ACCOUNT_BLOCKED) {
+        if (user.getStatus()== AccountStatusIF.ACCOUNT_BLOCKED) {
 
             // inform the use about the blocked account
             RequestContext.getCurrentInstance().update("growl");
