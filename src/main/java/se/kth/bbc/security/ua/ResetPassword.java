@@ -16,6 +16,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import se.kth.bbc.security.ua.model.People;
 
@@ -31,6 +32,7 @@ public class ResetPassword implements Serializable {
 
     private static final Logger logger = Logger.getLogger(UserRegistration.class.getName());
 
+     
     private String username;
     private String passwd1;
 
@@ -163,10 +165,20 @@ public class ResetPassword implements Serializable {
     }
 
     public String changePassword() {
+        FacesContext ctx = FacesContext.getCurrentInstance();
+        HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
 
-        people = mgr.getUser(username);
+            
+        if (req.getRemoteUser() == null) {
+             return ("welcome");
+        }
+        
+        people = mgr.getUser(req.getRemoteUser());
 
         if (people == null) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
+            session.invalidate();
             return ("welcome");
         }
 
