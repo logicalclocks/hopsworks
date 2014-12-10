@@ -9,20 +9,17 @@ and open the template in the editor.
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-      >
+        
+      xmlns:f="http://java.sun.com/jsf/core">
     <body>
         <ui:composition>
             <h:form class="stylelayout" id="formToolbar">  
-                <p:toolbar styleClass="MainToolbar">  
+                <p:toolbar styleClass="MainToolbar">
                     <p:toolbarGroup align="left">  
                         <p:commandLink value="BiobankCloud" action="indexPage" rendered="#{userMB.loggedIn}"/>
                         <p:commandLink value="BiobankCloud" action="welcome" rendered="#{!userMB.loggedIn}"/>
                     </p:toolbarGroup> 
-
-                    <p:toolbarGroup align="left">              
-                    </p:toolbarGroup>  
-
-                    
+                  
                     <p:toolbarGroup align="right" rendered="#{userMB.loggedIn}">
                         <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{userMB.adminUser}"/>
                         <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  

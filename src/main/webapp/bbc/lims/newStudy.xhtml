@@ -29,7 +29,7 @@
                             <ul class="main_menu"></ul>
                             <div class="content_study">    
                                 <div class="study_new_holder">
-                                    <p:messages autoUpdate="true" closable="true"/>
+                                  <p:messages autoUpdate="true" closable="true" showDetail="true"/>
                                     <h3 class="page_title" align="left">New Study</h3>
                                     <br/>
                                     <br/>
@@ -38,9 +38,9 @@
                                     <div class="clear_fix study_name_holder">
                                         <label for="study_name" class="study_name" style="float: left; font-size: 16px;">Study name</label>
                                         <div class="input">
-                                            <h:inputText  styleClass="xxlarge" id="studyName" value="#{studyManagedBean.study.name}" validatorMessage="Study name cannot be empty!" onclick="(this.value = '')">
+                                          <h:inputText  styleClass="xxlarge" id="studyName" value="#{newStudyController.newStudyName}" validatorMessage="Study name cannot be empty!" onclick="(this.value = '')">
                                             </h:inputText>
-                                            <h:commandButton id="addStudy" class="styled-button" value="Create Study" type="submit" action="#{studyManagedBean.createStudy}"/>
+                                          <h:commandButton id="addStudy" class="styled-button" value="Create Study" type="submit" action="#{newStudyController.createStudy()}"/>
                                         </div>
                                     </div>
                                     <hr/>
@@ -50,6 +50,15 @@
                                     <!--        </h:form>-->
                                 </div>
                             </div>
+                            
+                            <h:outputLabel value="Choose a template" for="templateChooser"/>
+                            <p:selectOneMenu id="templateChooser" widgetVar="chooser" value="#{newStudyController.chosenTemplate}">
+                              <f:selectItems value="#{newStudyController.studyTemplates}"/>
+                              <p:ajax update="@form" process="@form"/>
+                            </p:selectOneMenu>
+                            <p:selectManyCheckbox value="#{newStudyController.customServices}" id="serviceSelection" widgetVar="serviceSelector" rendered="#{newStudyController.shouldShowSelector()}" layout="grid" columns="3">
+                                <f:selectItems value="#{newStudyController.availableServices}" var="sel" itemValue="#{sel.getName()}" itemLabel="#{sel.toString()}"/>
+                            </p:selectManyCheckbox>
                         </h:form>
                     </div>
 

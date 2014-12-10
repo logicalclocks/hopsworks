@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"   
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -23,7 +23,14 @@
                 <p:layoutUnit position="center">
                     <div class="container">
                         <h1>#{studyManagedBean.studyName} </h1>
-                        <p:commandButton value="Remove" rendered="#{studyManagedBean.currentOwner}" type="button" style="float:right;margin-top: 26px;" onclick="PF('removeStudyDlg').show();"/>
+                        <h:form>
+                            <p:commandButton id="toolsBtn" value="Study..." type="button" rendered="#{studyManagedBean.currentOwner}" style="float:right;margin-top: 26px;"/>  
+                            <p:menu overlay="true" trigger="toolsBtn" my="left top" at="left bottom" >  
+                                <p:menuitem value="Edit services" onclick="PF('editServicesDlg').show()"/> 
+                                <p:separator/>
+                                <p:menuitem value="Remove" onclick="PF('removeStudyDlg').show();"/> 
+                            </p:menu> 
+                        </h:form>
                         <div class="content"> 
                             <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="studyTabs">
                                 <p:tab id="showTab" title="Show">
@@ -31,7 +38,6 @@
                                         <ui:include src="/bbc/lims/studyTabs/studyShowTab.xhtml"/>
                                     </ui:insert>
                                 </p:tab>
-
                                 <p:tab id="teamTab" title="Team" rendered="#{studyManagedBean.renderComponentList() != null}">
                                     <ui:insert name="teamTab">
                                         <ui:include src="/bbc/lims/studyTabs/teamTab.xhtml"/>
@@ -42,22 +48,22 @@
                                         <ui:include src="/bbc/lims/studyTabs/browser.xhtml"/>
                                     </ui:insert>
                                 </p:tab>
-<!--                                <p:tab id="workflows" title="Experiments" rendered="#{studyManagedBean.renderComponentList() != null}">
+                                <!-- TODO: figure out how to do this with a loop?-->
+                                <p:tab id="flink" title="Flink" rendered="#{studyManagedBean.shouldDrawTab('FLINK')}">
+                                    <ui:insert name="flinkTab">
+                                        <ui:include src="/bbc/lims/studyTabs/flinkTab.xhtml"/>
+                                    </ui:insert>
+                                </p:tab>
+                                <p:tab id="cuneiform" title="Cuneiform" rendered="#{studyManagedBean.shouldDrawTab('CUNEIFORM')}">
                                     <ui:insert name="workflowsTab">
                                         <ui:include src="/bbc/lims/studyTabs/studyWorkflowTab.xhtml"/>
                                     </ui:insert>
-                                </p:tab>-->
-<!--
-                                <p:tab id="yarn" title="Yarn">
+                                </p:tab>
+                                <p:tab id="yarn" title="Yarn" rendered="#{studyManagedBean.shouldDrawTab('YARN')}">
                                     <ui:insert name="yarn">
                                         <ui:include src="/bbc/lims/studyTabs/yarnTab.xhtml"/>
                                     </ui:insert>
                                     <p:commandButton action="#{studyManagedBean.test()}" value="test"/>
-                                </p:tab>-->
-                                <p:tab id="flink" title="Flink">
-                                    <ui:insert name="flink">
-                                        <ui:include src="/bbc/lims/studyTabs/flinkTab.xhtml"/>
-                                    </ui:insert>
                                 </p:tab>
 
                             </p:tabView>
@@ -121,6 +127,13 @@
                     <p:commandButton value="Create" action="#{fileOperationsMB.createSampleDir()}" oncomplete="PF('addSampleDlg').hide()"/>
                     <p:commandButton type="button" value="Cancel" onclick="PF('addSampleDlg').hide()"/>
                 </h:form>
+            </p:dialog>
+            <p:dialog id="editServicesDialog" widgetVar="editServicesDlg" closable="true" draggable="false" modal="true" resizable="false" header="Edit services">
+                <p:selectManyCheckbox layout="grid" value="#{studyManagedBean.selectedServices}" columns="3">
+                    <f:selectItems value="#{newStudyController.availableServices}"/>
+                </p:selectManyCheckbox>
+                <p:commandButton value="Update" actionListener="#{studyManagedBean.updateServices()}" oncomplete="PF('editServicesDlg').hide()"/>
+                <p:commandButton value="Cancel" type="button" onclick="PF('editServicesDlg').hide()"/>
             </p:dialog>
         </h:body>
     </f:view>

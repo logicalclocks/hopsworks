@@ -31,7 +31,7 @@ public class ActivityController {
     public static final String REMOVED_FILE = " removed a file ";
     public static final String REMOVED_STUDY = " removed study ";
     // Flag constants
-    public static final String CTE_FLAG_STUDY = "STUDY";
+    public static final String FLAG_STUDY = "STUDY";
 
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
