@@ -20,18 +20,18 @@
             <ui:insert name="titleBar" >
                 <ui:include src="/bbc/lims/titleBar.xhtml" />       
             </ui:insert>
-
             <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser">
 
                 <p:layoutUnit position="center">
                     <div class="container">
-                        <ul class="main_menu"></ul>
+                        <ul class="register_actions">
+                            <h3 align="left">Request Mobile Account</h3>
+                        </ul>
+
                         <div class="content">
-                            <h3 class="page_title" align="left">
-                                Request Yubikey account
-                            </h3>
-                            <hr/>
+
                             <h:form id="registration" class="new_user_content"> 
+
                                 <h:panelGrid columns="2" style="font-size: 12px;">			
                                     <h:outputLabel for="fname" value="First name: " style="font-weight:bold"/>
                                     <h:inputText id="fname" value="#{userRegistration.fname}" size="40"
@@ -120,7 +120,7 @@
                                                    binding="#{confirmPassword}"
                                                    required="true">
                                     </h:inputSecret>
-                                
+
                                     <p:spacer></p:spacer>
                                     <p:messages id="messages" autoUpdate="true" />
 

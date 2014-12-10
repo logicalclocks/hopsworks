@@ -1428,9 +1428,8 @@ img .browser .s16 {
 }
 
 .new_user_content{
-    
-    width: 90%;
-    min-height: 800px;
+    width: 50%;
+    min-height: 400px;
     height: auto !important;
     margin-bottom: 18px;
     

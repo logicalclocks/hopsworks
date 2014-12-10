@@ -1,7 +1,7 @@
 body {
     margin: 5px;
     font-family: Arial,sans-serif;
-
+    background:#f4f4f4 url(../images/bg.gif) repeat top left;
 }
 
 .MainButton {
@@ -544,7 +544,7 @@ body {
     border-width: 1px; 
     border-style: solid; 
     border-color: lightgray; 
-    background-color: #F0F0F0; 
+    background-color: black; 
     border-radius: 6px;  
     padding: 20px;   
 }

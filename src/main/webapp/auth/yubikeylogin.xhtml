@@ -23,13 +23,18 @@
         <p:growl for="userRegistered" life="20000" showDetail="true"/>
         <p:growl for="loginFail" life="20000" showDetail="true"/>
 
-        <h:form id="hoplogin">                  
+        <h:form>                  
             <div class="Signin">            
-                <h:panelGrid columns="1" >  
-                    <h1>Sign in with Yubikey</h1>     
+                <h:panelGrid columns="2">
+                    <h:graphicImage library="images" name="chor.jpg" width="70" height="70"/> 
+                    <h3 style="color: #00B233"> BiobankCloud Login</h3>     
+                </h:panelGrid>
+                <br></br>
+
+                <h:panelGrid columns="1" style="color:yellow"> 
                     <p:outputLabel for="username" value="Username" />
                     <p:inputText id="username" value="#{yubikeyAuthenticator.username}" required="true" requiredMessage="Enter userame"/>
-                     <p:watermark for="username" value="Email Address" />
+                    <p:watermark for="username" value="Email" />
           
                     <p:outputLabel for="password" value="Password" />
                     <p:password id="password" value="#{yubikeyAuthenticator.password}" required="true" requiredMessage="Enter password"/>

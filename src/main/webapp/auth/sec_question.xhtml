@@ -43,12 +43,18 @@
                     <p:watermark for="uname" value="Email Address" />
                     <p:messages id="messages" autoUpdate="true"/>
                 </h:panelGrid>
-                <p:commandButton value="Continue" style="margin:20px"
+
+                     <div class="register_actions">
+                <p:commandButton value="Continue" 
                                  action="#{resetPassword.findQuestion}" >
 
                     <f:param name="username" value="#{resetPassword.username}" />
                 </p:commandButton>
 
+                         <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" />
+                </div>
+                
+                
             </div>          
         </h:form>
 

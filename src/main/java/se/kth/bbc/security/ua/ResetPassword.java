@@ -110,6 +110,8 @@ public class ResetPassword implements Serializable {
         people = mgr.getUser(this.username);
 
         try {
+            
+            
             if (!SecurityUtils.converToSHA256(answer).equals(people.getSecurityAnswer())) {
 
                 FacesContext context = FacesContext.getCurrentInstance();
