@@ -76,7 +76,6 @@ public class PasswordValidator implements Validator {
             throw new ValidatorException(facesMsg);
 
         }
-
     }
 
     /**

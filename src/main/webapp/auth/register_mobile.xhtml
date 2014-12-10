@@ -8,14 +8,12 @@
       xmlns:p="http://primefaces.org/ui"
       >
     <f:view contentType="text/html">
-
         <h:head>
             <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
         </h:head>
-
 
         <h:body>
             <ui:insert name="titleBar" >
@@ -98,7 +96,6 @@
                                     <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{userRegistration.registerMobileUser()}" />
                                     <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" style="margin-left: 55px"/>
                                 </div>
-
                             </h:form>     
                         </div>
                     </div> 

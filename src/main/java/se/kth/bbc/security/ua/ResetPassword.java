@@ -5,7 +5,6 @@
  */
 package se.kth.bbc.security.ua;
 
-import com.google.inject.Inject;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -54,7 +53,7 @@ public class ResetPassword implements Serializable {
     @EJB
     private UserManager mgr;
 
-    @Inject
+    @EJB
     private EmailBean emailBean;
 
     private SelectSecurityQuestionMenue secMgr;
@@ -126,7 +125,7 @@ public class ResetPassword implements Serializable {
 
             String message = buildResetMessage(random_password);
             
-              logger.info("Entering email");
+            logger.info("Entering email");
       
             // sned the new password to the user email
             emailBean.sendEmail(people.getEmail(), "Password reset", message);
@@ -204,7 +203,7 @@ public class ResetPassword implements Serializable {
         people = mgr.getUser(this.username);
         if (people == null) {
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, " Could not find the question!", "null"));
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found!", "null"));
             return "";
         }
         

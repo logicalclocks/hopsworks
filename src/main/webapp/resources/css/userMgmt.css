@@ -171,18 +171,18 @@ h1 {
     overflow: hidden;
 }
 
+
 .register_actions{
-    
-    padding-top: 17px;
-    padding-right: 20px;
-    padding-bottom: 18px;
-    padding-left: 165px;
-    margin-top: 18px;
-    margin-bottom: 18px;
-    background-color: lightblue;
-    border-top: 1px solid #e5e5e5;
-    width: 400px;
-    height: 28px;
+padding-top: 17px;
+padding-right: 20px;
+padding-bottom: 18px;
+padding-left: 165px;
+margin-top: 18px;
+margin-bottom: 18px;
+background-color: #f5f5f5;
+border-top: 1px solid #e5e5e5;
+width: 970px;
+height: 28px;
 }
 
 .ui-button-remove {

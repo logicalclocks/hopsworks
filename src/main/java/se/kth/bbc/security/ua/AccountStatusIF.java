@@ -11,8 +11,8 @@ package se.kth.bbc.security.ua;
  */
 public interface AccountStatusIF {
     public static int ACCOUNT_INACTIVE = -1;
-    public static short ACCOUNT_PENDING = 0;
-    public static short ACCOUNT_ACTIVE = 1;
+    public static int ACCOUNT_PENDING = 0;
+    public static int ACCOUNT_ACTIVE = 1;
     public static int ACCOUNT_BLOCKED = 2;
     
 }

@@ -5,15 +5,13 @@ import java.util.logging.Logger;
 import javax.mail.*;
 import javax.mail.internet.*;
 import javax.annotation.Resource;
-import javax.faces.bean.SessionScoped;
-import javax.inject.Named;
+import javax.ejb.Stateless;
 
 /**
  *
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
-@Named
-@SessionScoped
+@Stateless
 public class EmailBean{
 
     
@@ -24,17 +22,24 @@ public class EmailBean{
 
     public void sendEmail(String to, String subject, String body) throws MessagingException {
         
-        logger.info("### email "+ to + "  "+ subject+ "  "+ body);
         MimeMessage message = new MimeMessage(mailSession);
         message.setFrom(new InternetAddress(mailSession.getProperty("mail.from")));
         InternetAddress[] address = {new InternetAddress(to)};
         message.setRecipients(Message.RecipientType.TO, address);
         message.setSubject(subject);
-        message.setContent(body, "text/html");
+        String content = "Greetings!\n\nThere have been a password reset request on your behalf.\n\nPlease use the temporary password"
+                + " sent to you as below. You will be required to change your passsword when you login first time.\n\n";        
+        
+        String current = "Pasword:" + body+ "\n\n\n";
+        
+        String ending ="If you have any questions please contact support@biobankcloud.com";
+        
+        String pass_mess = content + current + ending;
+        message.setContent(pass_mess, "text/html");
 
         // set the timestamp
         message.setSentDate(new Date());
-        message.setText(body);
+        message.setText(pass_mess);
         Transport.send(message);
     }
 }

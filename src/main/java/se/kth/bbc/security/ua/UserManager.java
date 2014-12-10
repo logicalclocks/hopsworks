@@ -117,13 +117,14 @@ public class UserManager {
         return true;
     }
 
-    public boolean updateStatus(int id, short stat) {
+    public boolean updateStatus(int id, int stat) {
         People p = (People) em.find(People.class, id);
         p.setStatus(stat);
         em.merge(p);
         return true;
     }
 
+      
     public List<People> findInactivateUsers() {
         Query query = em.createNativeQuery("SELECT * FROM People p where p.active !=1 ");
         List<People> people = query.getResultList();
@@ -200,5 +201,4 @@ public class UserManager {
                 .getResultList();
         return (existing.size() > 0);
     }
-
 }

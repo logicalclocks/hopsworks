@@ -285,8 +285,14 @@
         <dependency>
                 <groupId>javax.mail</groupId>
                 <artifactId>mail</artifactId>
-                <version>1.4</version>
+                <version>1.5.0-b01</version>
         </dependency>
+        <dependency>
+                <groupId>com.sun.mail</groupId>
+                <artifactId>smtp</artifactId>
+                <version>1.5.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>

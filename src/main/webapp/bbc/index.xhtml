@@ -27,7 +27,6 @@
 <!--            <p:commandLink styleClass="sideMenuItem New" action="#{bbcController.showNewUserManagementDialog()}"/>-->
         </ui:define>
 
-
         <ui:define name="content">
 
             <p:outputPanel id="panelSamples" >
@@ -36,13 +35,12 @@
                     <p:tab id="tab1Welcome" title="Welcome">
                         <p:panel styleClass="BbcPanel">
                             <p:spacer width="1" height="20" />
-                            <h3>Welcome #{userController.loginName}!</h3>
+                                <h3>Welcome #{userController.loginName}!</h3>
                             <p:separator id="separator"/>
                             <p:spacer width="1" height="20"/>
                             <p:outputLabel value="This website is intended to help researchers initiate collaborations. Here you can find information about sample collections containing human biological material as well as survey and register data associated with the donors."/>
 
                         </p:panel>
-
 
                     </p:tab>
                     <p:tab id="tab2Org" title="Organizations">
@@ -1033,8 +1031,6 @@
                 </h:form>      
             </p:dialog>
             <!--Find Sample Collection Dialog - End-->
-
-
         </ui:define>
 
     </ui:composition>
