@@ -5,6 +5,7 @@
  */
 package se.kth.bbc.security.ua;
 
+import com.google.inject.Inject;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -53,8 +54,8 @@ public class ResetPassword implements Serializable {
     @EJB
     private UserManager mgr;
 
-    @EJB
-    private Email emailUtil;
+    @Inject
+    private EmailBean emailBean;
 
     private SelectSecurityQuestionMenue secMgr;
 
@@ -64,14 +65,6 @@ public class ResetPassword implements Serializable {
 
     public void setPeople(People people) {
         this.people = people;
-    }
-
-    public Email getEmailUtil() {
-        return emailUtil;
-    }
-
-    public void setEmailUtil(Email emailUtil) {
-        this.emailUtil = emailUtil;
     }
 
     public String getAnswer() {
@@ -113,7 +106,6 @@ public class ResetPassword implements Serializable {
 
         try {
             
-            
             if (!SecurityUtils.converToSHA256(answer).equals(people.getSecurityAnswer())) {
 
                 FacesContext context = FacesContext.getCurrentInstance();
@@ -132,22 +124,26 @@ public class ResetPassword implements Serializable {
             // generate a radndom password
             String random_password = SecurityUtils.getRandomString();
 
+            String message = buildResetMessage(random_password);
+            
+              logger.info("Entering email");
+      
+            // sned the new password to the user email
+            emailBean.sendEmail(people.getEmail(), "Password reset", message);
+
             // make the account pending until it will be reset by user upon first login
             mgr.updateStatus(people.getUid(), AccountStatusIF.ACCOUNT_PENDING);
-            String message = buildResetMessage(random_password);
-
-            // sned the new password to the user email
-            emailUtil.sendEmail(people.getEmail(), "Password reset", message);
 
             // reset the old password with a new one
             mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(random_password));
-
+  
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException | MessagingException ex) {
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset password!", "null"));
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
             return ("");
         }
+      
         return ("password_sent");
     }
 
@@ -168,7 +164,6 @@ public class ResetPassword implements Serializable {
         FacesContext ctx = FacesContext.getCurrentInstance();
         HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
 
-            
         if (req.getRemoteUser() == null) {
              return ("welcome");
         }

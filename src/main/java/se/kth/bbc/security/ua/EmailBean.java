@@ -1,22 +1,30 @@
 package se.kth.bbc.security.ua;
 
 import java.util.Date;
+import java.util.logging.Logger;
 import javax.mail.*;
 import javax.mail.internet.*;
 import javax.annotation.Resource;
-import javax.ejb.Stateless;
+import javax.faces.bean.SessionScoped;
+import javax.inject.Named;
 
 /**
  *
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
-@Stateless
-public class Email {
+@Named
+@SessionScoped
+public class EmailBean{
+
+    
+    private static final Logger logger = Logger.getLogger(UserRegistration.class.getName());
 
     @Resource(lookup = "mail/BBCMail")
     private Session mailSession;
 
     public void sendEmail(String to, String subject, String body) throws MessagingException {
+        
+        logger.info("### email "+ to + "  "+ subject+ "  "+ body);
         MimeMessage message = new MimeMessage(mailSession);
         message.setFrom(new InternetAddress(mailSession.getProperty("mail.from")));
         InternetAddress[] address = {new InternetAddress(to)};
