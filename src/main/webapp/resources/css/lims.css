@@ -432,7 +432,7 @@
     
     display: inline-block;
     width: 90%;
-    height: 207px;
+    height: 100%;
 }
 
 .page_title {
@@ -864,6 +864,10 @@ label{
    
 }
 
+.ui-selectmanycheckbox label {
+    text-align: left;
+}
+
 .input{
    
    display: block;
@@ -875,7 +879,7 @@ label{
 
 .input .xxlarge{
     
-    width: 540px;
+    width: 63%;
     height: 18px;
     border-bottom: 1px;
     border-left: 2px;

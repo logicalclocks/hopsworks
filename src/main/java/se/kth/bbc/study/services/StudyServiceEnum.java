@@ -5,28 +5,38 @@ package se.kth.bbc.study.services;
  * @author stig
  */
 public enum StudyServiceEnum {
-  CUNEIFORM ("Cuneiform"),
-  FLINK ("Flink"),
-  SAMPLES ("Samples"),
-  STUDY_INFO ("Study Info"),
-  SPARK ("Spark"),
-  ADAM ("Adam"),
-  MAPREDUCE("Mapreduce"),
-  YARN("Yarn");
-  
-  private final String service;
-  
-  private StudyServiceEnum(String service){
-    this.service = service;
-  }
+  CUNEIFORM,
+  FLINK,
+  SAMPLES,
+  STUDY_INFO,
+  SPARK,
+  ADAM,
+  MAPREDUCE,
+  YARN;
+
   
   @Override
   public String toString(){
-    return service;
-  }
-  
-  public String getName(){
-    return this.name();
-  }
+    switch(this){
+      case CUNEIFORM:
+        return "Cuneiform";
+      case FLINK:
+        return "Flink";
+      case SAMPLES:
+        return "Samples";
+      case STUDY_INFO:
+        return "Study info";
+      case SPARK:
+        return "Spark";
+      case ADAM:
+        return "Adam";
+      case MAPREDUCE:
+        return "MapReduce";
+      case YARN:
+        return "Yarn";
+      default:
+        return "";
+    }
+  }  
   
 }

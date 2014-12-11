@@ -129,11 +129,14 @@
                 </h:form>
             </p:dialog>
             <p:dialog id="editServicesDialog" widgetVar="editServicesDlg" closable="true" draggable="false" modal="true" resizable="false" header="Edit services">
-                <p:selectManyCheckbox layout="grid" value="#{studyManagedBean.selectedServices}" columns="3">
-                    <f:selectItems value="#{newStudyController.availableServices}"/>
-                </p:selectManyCheckbox>
-                <p:commandButton value="Update" actionListener="#{studyManagedBean.updateServices()}" oncomplete="PF('editServicesDlg').hide()"/>
-                <p:commandButton value="Cancel" type="button" onclick="PF('editServicesDlg').hide()"/>
+                <h:form>
+                    <p:selectManyCheckbox layout="grid" value="#{studyManagedBean.selectedServices}" columns="3">
+                        <f:converter converterId="studyServiceConverter"/>
+                        <f:selectItems id="servVals" value="#{newStudyController.availableServices}"/>
+                    </p:selectManyCheckbox>
+                    <p:commandButton value="Update" actionListener="#{studyManagedBean.updateServices()}" oncomplete="PF('editServicesDlg').hide()" update="@all"/>
+                    <p:commandButton value="Cancel" type="button" onclick="PF('editServicesDlg').hide()"/>
+                </h:form>
             </p:dialog>
         </h:body>
     </f:view>

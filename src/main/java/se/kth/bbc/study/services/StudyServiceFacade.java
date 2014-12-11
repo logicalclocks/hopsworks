@@ -1,5 +1,6 @@
 package se.kth.bbc.study.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -26,7 +27,7 @@ public class StudyServiceFacade extends AbstractFacade<StudyServices> {
     super(StudyServices.class);
   }
 
-  public List<String> findEnabledServicesForStudy(String studyname) {
+  public List<StudyServiceEnum> findEnabledServicesForStudy(String studyname) {
     //TODO: why does this return String?
     Query q = em.createNamedQuery("StudyServices.findServicesByStudy",
             StudyServiceEnum.class);
@@ -34,29 +35,40 @@ public class StudyServiceFacade extends AbstractFacade<StudyServices> {
     return q.getResultList();
   }
 
+  //TODO: write tests for this
   public void persistServicesForStudy(String studyname,
           StudyServiceEnum[] services) {
-    //TODO: Probably not the most efficient way of doing this.
-    for(StudyServices se:getAllStudyServicesForStudy(studyname)){
-      if(!arrayContains(services, StudyServiceEnum.valueOf(se.studyServicePK.getService()))){
-        em.remove(se);
-      }
+    //TODO: use copy instead
+    List<StudyServices> newSrvs = new ArrayList<>(services.length);
+    List<StudyServices> toPersist = new ArrayList<>(services.length);
+    for(StudyServiceEnum sse:services){
+      StudyServices c = new StudyServices(studyname,sse);
+      newSrvs.add(c);
+      toPersist.add(c);
+    }    
+    List<StudyServices> current = getAllStudyServicesForStudy(studyname);
+    
+    toPersist.removeAll(current);
+    current.removeAll(newSrvs);
+    
+    for(StudyServices se: toPersist){
+      em.persist(se);
     }
-    for(StudyServiceEnum se:services){
-      em.persist(new StudyServices(studyname,se.name()));
+    for(StudyServices se: current){
+      em.remove(se);
     }
   }
 
   public void addServiceForStudy(String studyname, StudyServiceEnum service) {
     if (!findEnabledServicesForStudy(studyname).contains(service)) {
-      StudyServices ss = new StudyServices(studyname, service.name());
+      StudyServices ss = new StudyServices(studyname, service);
       em.persist(ss);
     }
   }
 
   public void removeServiceForStudy(String studyname, StudyServiceEnum service) {
     StudyServices c = em.find(StudyServices.class, new StudyServicePK(studyname,
-            service.name()));
+            service));
     if (c != null) {
       em.remove(c);
     }
@@ -71,7 +83,7 @@ public class StudyServiceFacade extends AbstractFacade<StudyServices> {
     return false;
   }
 
-  private List<StudyServices> getAllStudyServicesForStudy(String studyname) {
+  public List<StudyServices> getAllStudyServicesForStudy(String studyname) {
     Query q = em.createNamedQuery("StudyServices.findByStudy",
             StudyServices.class);
     q.setParameter("study", studyname);

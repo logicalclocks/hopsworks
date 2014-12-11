@@ -4,6 +4,8 @@ import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -21,15 +23,14 @@ public class StudyServicePK implements Serializable {
   private String study;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-          max = 9)
+  @Enumerated(EnumType.STRING)
   @Column(name = "service")
-  private String service;
+  private StudyServiceEnum service;
 
   public StudyServicePK() {
   }
 
-  public StudyServicePK(String study, String service) {
+  public StudyServicePK(String study, StudyServiceEnum service) {
     this.study = study;
     this.service = service;
   }
@@ -42,11 +43,11 @@ public class StudyServicePK implements Serializable {
     this.study = study;
   }
 
-  public String getService() {
+  public StudyServiceEnum getService() {
     return service;
   }
 
-  public void setService(String service) {
+  public void setService(StudyServiceEnum service) {
     this.service = service;
   }
 
@@ -70,7 +71,7 @@ public class StudyServicePK implements Serializable {
       return false;
     }
     if ((this.service == null && other.service != null) ||
-            (this.service != null && !this.service.equals(other.service))) {
+            (this.service != null && this.service != other.service)) {
       return false;
     }
     return true;

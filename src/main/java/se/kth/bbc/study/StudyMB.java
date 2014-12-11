@@ -612,8 +612,9 @@ public class StudyMB implements Serializable {
     
     
   public StudyServiceEnum[] getSelectedServices() {
-    List<String> services = studyServices.findEnabledServicesForStudy(studyName);
+    List<StudyServiceEnum> services = studyServices.findEnabledServicesForStudy(studyName);
     StudyServiceEnum[] reArr = new StudyServiceEnum[services.size()];
+    return services.toArray(reArr);
     /*
      * Was:
      * 
@@ -629,17 +630,17 @@ public class StudyMB implements Serializable {
      * and left me completely puzzled. So a manual array copy :(  
      * 
      */
-    
+    /*
     for(int i=0;i<services.size();i++){
       reArr[i] = StudyServiceEnum.valueOf(services.get(i));
     }
     
     return reArr;
-
+*/
   }
   
   public boolean shouldDrawTab(String service){    
-    return studyServices.findEnabledServicesForStudy(studyName).contains(service);
+    return studyServices.findEnabledServicesForStudy(studyName).contains(StudyServiceEnum.valueOf(service));
   }
   
   public void setSelectedServices(StudyServiceEnum[] selectedServices){
@@ -647,6 +648,7 @@ public class StudyMB implements Serializable {
   }
   
   public void updateServices(){
+    System.out.println(selectedServices);
     studyServices.persistServicesForStudy(studyName, selectedServices);
   }
   

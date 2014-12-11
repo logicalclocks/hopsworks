@@ -45,7 +45,7 @@ public class StudyServices implements Serializable {
     this.studyServicePK = studyServicePK;
   }
 
-  public StudyServices(String study, String service) {
+  public StudyServices(String study, StudyServiceEnum service) {
     this.studyServicePK = new StudyServicePK(study, service);
   }
 
