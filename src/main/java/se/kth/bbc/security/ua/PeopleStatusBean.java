@@ -40,9 +40,8 @@ public class PeopleStatusBean {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
     }
     
-    
-    public boolean loggedIn() {
-        return getRequest().getRemoteUser() != null;
+    public boolean isAnyAdminUser() {
+        return getRequest().isUserInRole("BBC_ADMIN") || getRequest().isUserInRole("BBC_RESEARCHER");
     }
     
     public boolean isBBCAdmin() {
