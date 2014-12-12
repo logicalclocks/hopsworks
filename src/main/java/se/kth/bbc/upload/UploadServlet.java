@@ -70,11 +70,6 @@ public class UploadServlet extends HttpServlet {
         }
 
         if (finished) {
-            int extPos = info.resumableFilename.lastIndexOf(".");
-            if (extPos == -1) {
-                return;
-            }
-            String fileType = info.resumableFilename.substring(extPos + 1);
             try {
                 fileOps.copyAfterUploading(info.resumableFilename, uploadPath + info.resumableFilename);
             } catch (IOException e) {
