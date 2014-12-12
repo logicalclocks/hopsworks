@@ -9,7 +9,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -52,8 +51,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "People.findBySecurityQuestion", query = "SELECT p FROM People p WHERE p.securityQuestion = :securityQuestion"),
     @NamedQuery(name = "People.findBySecurityAnswer", query = "SELECT p FROM People p WHERE p.securityAnswer = :securityAnswer")})
 public class People implements Serializable {
-    @OneToMany(mappedBy = "peopleuid")
-    private Collection<Yubikey> yubikeyCollection;
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -120,8 +117,8 @@ public class People implements Serializable {
     private String securityAnswer;
     @OneToMany(mappedBy = "peopleuid")
     private Collection<Login> loginCollection;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "people")
-    private Collection<PeopleGroup> peopleGroupCollection;
+    @OneToMany(mappedBy = "peopleuid")
+    private Collection<Yubikey> yubikeyCollection;
 
     public People() {
     }
@@ -288,12 +285,12 @@ public class People implements Serializable {
 
     @XmlTransient
     @JsonIgnore
-    public Collection<PeopleGroup> getPeopleGroupCollection() {
-        return peopleGroupCollection;
+    public Collection<Yubikey> getYubikeyCollection() {
+        return yubikeyCollection;
     }
 
-    public void setPeopleGroupCollection(Collection<PeopleGroup> peopleGroupCollection) {
-        this.peopleGroupCollection = peopleGroupCollection;
+    public void setYubikeyCollection(Collection<Yubikey> yubikeyCollection) {
+        this.yubikeyCollection = yubikeyCollection;
     }
 
     @Override
@@ -319,16 +316,6 @@ public class People implements Serializable {
     @Override
     public String toString() {
         return "se.kth.bbc.security.ua.model.People[ uid=" + uid + " ]";
-    }
-
-    @XmlTransient
-    @JsonIgnore
-    public Collection<Yubikey> getYubikeyCollection() {
-        return yubikeyCollection;
-    }
-
-    public void setYubikeyCollection(Collection<Yubikey> yubikeyCollection) {
-        this.yubikeyCollection = yubikeyCollection;
     }
     
 }

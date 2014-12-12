@@ -55,8 +55,14 @@ h3 small, .link_logout {
 
 .property_editor {
     margin-left: 18px;
-}
+   font-weight:bold;
 
+ }
+
+ .change_lable {
+   font-weight:bold;
+
+ }
 .command_link {
     margin-left: 10px;
     color:#1385e5 !important;

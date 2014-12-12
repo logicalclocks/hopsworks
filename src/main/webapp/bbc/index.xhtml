@@ -35,7 +35,7 @@
                     <p:tab id="tab1Welcome" title="Welcome">
                         <p:panel styleClass="BbcPanel">
                             <p:spacer width="1" height="20" />
-                                <h3>Welcome #{userController.loginName}!</h3>
+                            <h3>Welcome #{peopleAministration.loginName}!</h3>
                             <p:separator id="separator"/>
                             <p:spacer width="1" height="20"/>
                             <p:outputLabel value="This website is intended to help researchers initiate collaborations. Here you can find information about sample collections containing human biological material as well as survey and register data associated with the donors."/>
@@ -147,7 +147,7 @@
                         <p:tab title="Registered Users">
                             <p:panel styleClass="BbcNewSamplePanel" style="">
                                 <h:panelGrid columns="10">                                 
-<!--                                    <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" paginator="true" rows="10"
+<!--                                    <p:dataTable id="userdataTable" var="user" value="#{peopleAministration.allUsers}" paginator="true" rows="10"
                                                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
                                                             rowsPerPageTemplate="10,20,50,100">
                                                    <f:facet name="header">
@@ -158,7 +158,7 @@
                                                        <f:facet name="header">
                                                            <h:outputText value="Name" />
                                                        </f:facet>
-                                                       <h:outputText value="#{user.name}" />
+                                                       <h:outputText value="#{user.fname} " />
                                                    </p:column>
 
                                                    <p:column>
@@ -179,7 +179,7 @@
                                                        <f:facet name="header">
                                                            <h:outputText value="Mobile Number" />
                                                        </f:facet>
-                                                       <h:outputText value="#{user.mobileNum}" />
+                                                       <h:outputText value="#{user.mobile}" />
                                                    </p:column>
                                                    
                                                     <p:column>
@@ -204,39 +204,39 @@
                    <h:panelGrid id="grid" columns="4" cellpadding="5">                                 
                   
                             <h:outputLabel for="name" value="Name:" style="font-weight:bold"/>					
-                            <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}"/>
+                            <p:inputText id="name" required="true" label="Name" value="#{peopleAministration.user.fname}"/>
                             <p:message for="name" />
                             <h:outputText value=""/>
 
                             <h:outputLabel for="email" value="Email:" style="font-weight:bold"/>					
-                            <p:inputText id="email"  required="true" label="Email" value="#{userController.user.email}">
+                            <p:inputText id="email"  required="true" label="Email" value="#{peopleAministration.user.email}">
                             </p:inputText>
                             <p:message for="email" />
                             <h:outputText value="" />
 
                             <h:outputLabel for="uname" value="Username:" style="font-weight:bold"/>					
-                            <p:inputText id="uname" required="true" label="Username" value="#{userController.user.name}">
+                            <p:inputText id="uname" required="true" label="Username" value="#{peopleAministration.user.username}">
                             </p:inputText>
                             <p:message for="uname" />
                             <h:outputText value="" />
 
                             <h:outputLabel for="password" value="Password:" style="font-weight:bold"/>					
-                            <p:password id="password" label="password" required="true" value="#{userController.user.password}">
+                            <p:password id="password" label="password" required="true" value="#{peopleAministration.user.password}">
                             </p:password>
                             <p:message for="password" />
                             <h:outputText value=""/>
                                 
                             <h:outputLabel for="mobile" value="Mobile Number:" style="font-weight:bold"/>					
-                            <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" validatorMessage="Only contain numbers">
+                            <p:inputText id="mobile" label="Mobile Number" value="#{peopleAministration.user.mobile}" validatorMessage="Only contain numbers">
                             </p:inputText>
                             <p:message for="mobile"/>
                             <h:outputText value=""/>
 
                            <!--<h:outputLabel for="popupCal" value="Registered Date:" style="font-weight:bold"/>
-                            <p:calendar id="popupCal" value="#{userController.user.registeredOn}" pattern="yyyy-MM-dd HH:mm:ss"/>-->
+                             <p:calendar id="popupCal" value="#{peopleAministration.user.activated}" pattern="yyyy-MM-dd HH:mm:ss"/>-->
                            
                      </h:panelGrid>
-                   <p:commandButton update="grid" value="Add" icon="ui-icon-person" style="margin-right:10px" action="#{userController.addUser()}"/>
+                   <p:commandButton update="grid" value="Add" icon="ui-icon-person" style="margin-right:10px" action="#{peopleAministration.addUser()}"/>
              </p:panel>
            </h:form>
                         

@@ -6,28 +6,23 @@
 package se.kth.bbc.security.ua.model;
 
 import java.io.Serializable;
-import java.util.Collection;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  *
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "Group")
+@Table(name = "BBCGroup")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "BBCGroup.findAll", query = "SELECT b FROM BBCGroup b"),
@@ -49,8 +44,6 @@ public class BBCGroup implements Serializable {
     @Size(max = 200)
     @Column(name = "group_desc")
     private String groupDesc;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "bBCGroup")
-    private Collection<PeopleGroup> peopleGroupCollection;
 
     public BBCGroup() {
     }
@@ -86,16 +79,6 @@ public class BBCGroup implements Serializable {
 
     public void setGroupDesc(String groupDesc) {
         this.groupDesc = groupDesc;
-    }
-
-    @XmlTransient
-    @JsonIgnore
-    public Collection<PeopleGroup> getPeopleGroupCollection() {
-        return peopleGroupCollection;
-    }
-
-    public void setPeopleGroupCollection(Collection<PeopleGroup> peopleGroupCollection) {
-        this.peopleGroupCollection = peopleGroupCollection;
     }
 
     @Override

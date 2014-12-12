@@ -32,7 +32,6 @@ public class ResetPassword implements Serializable {
 
     private static final Logger logger = Logger.getLogger(UserRegistration.class.getName());
 
-     
     private String username;
     private String passwd1;
 
@@ -44,6 +43,16 @@ public class ResetPassword implements Serializable {
         this.question = question;
     }
     private String passwd2;
+    private String current;
+
+    public String getCurrent() {
+        return current;
+    }
+
+    public void setCurrent(String current) {
+        this.current = current;
+    }
+
     private String answer;
 
     private String question;
@@ -104,7 +113,7 @@ public class ResetPassword implements Serializable {
         people = mgr.getUser(this.username);
 
         try {
-            
+
             if (!SecurityUtils.converToSHA256(answer).equals(people.getSecurityAnswer())) {
 
                 FacesContext context = FacesContext.getCurrentInstance();
@@ -124,9 +133,9 @@ public class ResetPassword implements Serializable {
             String random_password = SecurityUtils.getRandomString();
 
             String message = buildResetMessage(random_password);
-            
+
             logger.info("Entering email");
-      
+
             // sned the new password to the user email
             emailBean.sendEmail(people.getEmail(), "Password reset", message);
 
@@ -135,14 +144,14 @@ public class ResetPassword implements Serializable {
 
             // reset the old password with a new one
             mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(random_password));
-  
+
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException | MessagingException ex) {
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset password!", "null"));
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
             return ("");
         }
-      
+
         return ("password_sent");
     }
 
@@ -164,9 +173,9 @@ public class ResetPassword implements Serializable {
         HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
 
         if (req.getRemoteUser() == null) {
-             return ("welcome");
+            return ("welcome");
         }
-        
+
         people = mgr.getUser(req.getRemoteUser());
 
         if (people == null) {
@@ -196,7 +205,8 @@ public class ResetPassword implements Serializable {
 
     /**
      * Get the user security question
-     * @return 
+     *
+     * @return
      */
     public String findQuestion() {
 
@@ -206,11 +216,46 @@ public class ResetPassword implements Serializable {
             context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found!", "null"));
             return "";
         }
-        
+
         String quest = people.getSecurityQuestion();
         secMgr = new SelectSecurityQuestionMenue();
         this.question = secMgr.getUserQuestion(quest);
 
         return ("reset_password");
     }
+
+    public String changeProfilePassword() {
+        FacesContext ctx = FacesContext.getCurrentInstance();
+        HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
+
+        if (req.getRemoteUser() == null) {
+            return ("welcome");
+        }
+
+        people = mgr.getUser(req.getRemoteUser());
+
+        if (people == null) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
+            session.invalidate();
+            return ("welcome");
+        }
+
+        try {
+            if (SecurityUtils.converToSHA256(this.current).equals(people.getPassword())) {
+                // reset the old password with a new one
+                mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(passwd1));
+                logger.info("#### password changed  ");
+                return ("profile_password_changed");
+            } else {
+                FacesContext context = FacesContext.getCurrentInstance();
+                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
+                return "";
+            }
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
+            Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return ("profile");
+    }
+
 }

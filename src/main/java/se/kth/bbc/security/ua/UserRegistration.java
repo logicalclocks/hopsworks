@@ -254,6 +254,7 @@ public class UserRegistration implements Serializable {
                     SecurityUtils.converToSHA256(password), otpSecret, security_question, SecurityUtils.converToSHA256(security_answer));
 
             mgr.registerGroup(uid, GroupsIf.BBC_GUEST);
+            mgr.registerAddress(uid);
             qrCode = QRCodeGenerator.getQRCode(mail, Gauth.ISSUER, otpSecret);
 
             // Reset the values

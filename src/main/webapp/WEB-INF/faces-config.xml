@@ -9,8 +9,6 @@
 
     
     <navigation-rule>      
-        
-                
         <navigation-case>
             <from-outcome>welcome</from-outcome>
             <to-view-id>/index.xhtml</to-view-id>
@@ -83,6 +81,7 @@
             <to-view-id>/auth/password_changed.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+        
         <navigation-case>
             <from-outcome>sec_question</from-outcome>
             <to-view-id>/auth/sec_question.xhtml</to-view-id>
@@ -94,7 +93,30 @@
             <to-view-id>/auth/reset.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+        
+        <navigation-case>
+            <from-outcome>profile_password</from-outcome>
+            <to-view-id>/auth/profile_password.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        
+          <navigation-case>
+            <from-outcome>profile_password_changed</from-outcome>
+            <to-view-id>/auth/profile_password_changed.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
   
+         <navigation-case>
+            <from-outcome>change_sec_question</from-outcome>
+            <to-view-id>/auth/change_sec_question.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        <navigation-case>
+            <from-outcome>profile</from-outcome>
+            <to-view-id>/bbc/lims/profile.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+    
         <navigation-case>
             <from-outcome>userMgmt</from-outcome>
             <to-view-id>/bbc/lims/userManagement.xhtml</to-view-id>

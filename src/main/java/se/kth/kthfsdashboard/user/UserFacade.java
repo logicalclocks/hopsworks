@@ -10,6 +10,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.security.ua.model.People;
 
 /**
  *
@@ -102,5 +103,4 @@ public class UserFacade extends AbstractFacade<Username> {
         query.setParameter("status", status);
         return query.getResultList();
     }
-
 }

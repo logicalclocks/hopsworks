@@ -8,6 +8,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.People;
 import se.kth.bbc.security.ua.model.PeopleGroup;
@@ -73,7 +74,16 @@ public class UserManager {
     }
 
     public boolean registerGroup(int uid, int gidNumber) {
-        PeopleGroup p = new PeopleGroup(uid, gidNumber);
+        PeopleGroup p = new PeopleGroup();
+        p.setUid(uid);
+        p.setGid(gidNumber);
+        em.persist(p);
+        return true;
+    }
+    
+    public boolean registerAddress(int uid) {
+        Address p = new Address();
+        p.setUid(uid);
         em.persist(p);
         return true;
     }
@@ -124,9 +134,25 @@ public class UserManager {
         return true;
     }
 
+    public boolean updateGroup(int uid, int gid) {
+        TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid", PeopleGroup.class);
+        query.setParameter("uid", uid);
+        PeopleGroup p = (PeopleGroup) query.getSingleResult();
+        p.setGid(gid);
+        em.merge(p);
+        return true;
+    }
+
+    public String getPeopleGroupName(int uid) {
+        TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid", PeopleGroup.class);
+        query.setParameter("uid", uid);
+        PeopleGroup p = (PeopleGroup) query.getSingleResult();
+        return new BBCGroups().getGroupName(p.getGid());
+    }
+
       
     public List<People> findInactivateUsers() {
-        Query query = em.createNativeQuery("SELECT * FROM People p where p.active !=1 ");
+        Query query = em.createNativeQuery("SELECT * FROM People p WHERE p.active = "+ AccountStatusIF.ACCOUNT_INACTIVE );
         List<People> people = query.getResultList();
         return people;
     }
@@ -195,10 +221,67 @@ public class UserManager {
     }
 
     public boolean isUsernameTaken(String username) {
-
         List existing = em.createQuery(
                 "SELECT p FROM People p WHERE p.email ='" + username + "'")
                 .getResultList();
         return (existing.size() > 0);
+    }
+    
+    
+    public List<People> findAllByName() {
+        TypedQuery<People> query = em.createNamedQuery("People.findAllByName", People.class);
+        return query.getResultList();
+    }
+
+    public List<People> findAllUsers() {
+        TypedQuery<People> query = em.createNamedQuery("People.findAll", People.class);
+        return query.getResultList();
+    }
+
+    public void persist(People user) {
+        em.persist(user);
+    }
+
+    public void update(People user) {
+        em.merge(user);
+    }
+    
+    public void updateAddress(Address add) {
+        em.merge(add);
+    }
+
+    public void removeByEmail(String email) {
+        People user = findByEmail(email);
+        if (user != null) {
+        TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid", PeopleGroup.class);
+        query.setParameter("uid", user.getUid());
+        PeopleGroup p = (PeopleGroup) query.getSingleResult();
+        em.remove(p);
+        em.remove(user);
+       }
+    }
+ 
+    /**
+     * Get user by status
+     * @param status
+     * @return 
+     */
+    public List<People> findAllByStatus(int status) {
+        TypedQuery<People> query = em.createNamedQuery("People.findByStatus", People.class);
+        query.setParameter("status", status);
+        return query.getResultList();
+    }
+    
+
+    public People findByEmail(String email) {
+        TypedQuery<People> query = em.createNamedQuery("People.findByEmail", People.class);
+        query.setParameter("email", email);
+        return query.getSingleResult();
+    }
+
+     public Address findAddress(int uid) {
+        TypedQuery<Address> query = em.createNamedQuery("Address.findByUid", Address.class);
+        query.setParameter("uid", uid);
+        return query.getSingleResult();
     }
 }

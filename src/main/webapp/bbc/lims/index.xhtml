@@ -69,7 +69,7 @@
                                                 Studies<small>(#{studyManagedBean.countJoinedStudy()})</small>
                                             </c:if>
                                             <span class="right">
-                                                <p:commandButton value="New Study" type="button" rendered="#{userMB.anyAdminUser}" icon="ui-icon-plus" onclick="window.location.href = 'newStudy.xhtml'"/>
+                                                <p:commandButton value="New Study" type="button" rendered="#{peopleStatusBean.anyAdminUser}" icon="ui-icon-plus" onclick="window.location.href = 'newStudy.xhtml'"/>
                                             </span>
                                         </h:panelGroup>
                                         <p:tabView id="tabViewSummary" styleClass="ui-tabs" dynamic="true" cache="false" activeIndex="#{studyManagedBean.tabIndex}">
@@ -146,10 +146,10 @@
                     </div>
                 </p:layoutUnit>
             </p:layout>
-            <p:dialog draggable="false" resizable="false" styleClass="requestPopup" position="right bottom" header="Open user requests" visible="#{indexController.checkForRequests()}">
+            <p:dialog draggable="false" resizable="false" styleClass="requestPopup" position="right bottom" header="Open user requests" visible="#{uaIndexController.checkForRequests()}">
                 <div align="center">
                     There are open user requests!<br/>
-                    <p:commandButton action="#{userController.openRequests}" value="View requests" styleClass="viewReqButton">
+                    <p:commandButton action="#{peopleAministration.openRequests}" value="View requests" styleClass="viewReqButton">
                     </p:commandButton>
                 </div>
             </p:dialog>

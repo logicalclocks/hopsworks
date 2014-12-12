@@ -29,16 +29,18 @@
                         <div class="content">
                             <!-- Avatar and name, email -->
                             <div class="profile_avatar_holder">
-                                <img src="#{profileController.gravatar}" />
+                                <img src="#{profileManager.gravatar}" />
                             </div>
-                            <h3 class="page_title">
-                                #{profileController.user.name}
+                            <h3 class="page_title" >
+                                #{profileManager.user.fname} #{profileManager.user.lname}
                                 <br></br>
                                 <small>
-                                    #{profileController.loginName}
+                                    #{profileManager.user.email}
                                 </small>
+                                <br></br>
+
                                 <div class="right">
-                                    <p:commandLink value="Logout" action="#{authBackingBean.logout}" styleClass="link_logout"/>
+                                    <p:commandLink value="Logout" action="#{gauth.logout}" styleClass="link_logout"/>
                                 </div>
                             </h3>
                             <hr></hr>
@@ -46,28 +48,90 @@
                             <!-- edit content-->
                             <h:form id="editUserData">
                                 <h:panelGrid id="infoGrid" columns="3" style="font-size: 12px;">    
-                                    <h:outputLabel for="name" value="Name" styleClass="changeLabel"/>					
-                                    <p:inputText id="name" label="Name" value="#{profileController.user.name}" autocomplete="off" validatorMessage="Name cannot be empty" styleClass="property_editor">
+
+
+                                    <h:outputLabel for="fname" value="First Name"  styleClass="changeLabel"/>					
+                                    <p:inputText id="fname" label="fName" value="#{profileManager.user.fname}" autocomplete="off"  validatorMessage="Cannot be empty" styleClass="property_editor">
                                         <f:validateRequired/> <!-- For some reason, the 'required'-attribute did not show the specified validation message...-->
                                     </p:inputText>
-                                    <p:message for="name"/>
+                                    <p:message for="fname"/>
 
-                                    <h:outputLabel for="mobile" value="Mobile" styleClass="changeLabel"/>					
-                                    <p:inputText id="mobile" label="Mobile Number" value="#{profileController.user.mobileNum}" autocomplete="off" validatorMessage="Only Numbers (10 digits)" styleClass="property_editor">
+                                    <h:outputLabel for="lname" value="Last Name" styleClass="changeLabel" />					
+                                    <p:inputText id="lname" label="lName" value="#{profileManager.user.lname}"  autocomplete="off" validatorMessage="Cannot be empty" styleClass="property_editor">
+                                        <f:validateRequired/> <!-- For some reason, the 'required'-attribute did not show the specified validation message...-->
+                                    </p:inputText>
+                                    <p:message for="lname"/>
+
+                                    <h:outputLabel for="title" value="Title" styleClass="changeLabel" />					
+                                    <p:inputText id="title" label="title" value="#{profileManager.user.title }"  autocomplete="off" validatorMessage="Cannot be empty" styleClass="property_editor">
+                                        <f:validateRequired/> <!-- For some reason, the 'required'-attribute did not show the specified validation message...-->
+                                    </p:inputText>
+                                    <p:message for="title"/>
+
+                                    <h:outputLabel for="org" value="Organization" styleClass="changeLabel" />					
+                                    <p:inputText id="org" label="org" value="#{profileManager.user.homeOrg }"  autocomplete="off" validatorMessage="Cannot be empty" styleClass="property_editor">
+                                        <f:validateRequired/> <!-- For some reason, the 'required'-attribute did not show the specified validation message...-->
+                                    </p:inputText>
+                                    <p:message for="org"/>
+
+                                    <h:outputLabel for="orcid" value="Orcid" styleClass="changeLabel" />					
+                                    <p:inputText id="orcid" label="orcid" value="#{profileManager.user.orcid }"  autocomplete="off" validatorMessage="16 digits Orcid ID wrong" styleClass="property_editor">
+                                        <f:validateRequired/> <!-- For some reason, the 'required'-attribute did not show the specified validation message...-->
+                                    </p:inputText>
+                                    <p:message for="orcid"/>
+
+                                    <h:outputLabel for="mobile" value="Mobile" styleClass="changeLabel" />					
+                                    <p:inputText id="mobile" label="Mobile Number" value="#{profileManager.user.mobile}"   autocomplete="off" validatorMessage="Only Numbers (10 digits)" styleClass="property_editor">
                                         <f:validateRegex pattern="[0-9]{10,10}"/>                                
                                     </p:inputText>
                                     <p:message for="mobile"/>
 
-                                    <h:outputLabel for="password" value="Password" styleClass="changeLabel"/>					
-                                    <p:inputText id="password" label="Password" value="********" styleClass="property_editor" disabled="true"/>
-                                    <p:commandLink id="changePwdLink" value="Change" styleClass="command_link" actionListener="#{profileController.changePasswordForm}" update=":growl">
-                                        <p:ajax event="dialogReturn" listener="#{profileController.onPwdChanged}"/>
+                                    <h:outputLabel for="address1" value="Address1" styleClass="changeLabel"  />
+                                    <h:inputText id="address1" value="#{profileManager.userAddress.address1}"  autocomplete="off" styleClass="property_editor">
+                                    </h:inputText>
+                                    <p:message for="address1"/>
+
+                                    <h:outputLabel for="address2" value="Address2" styleClass="changeLabel" />
+                                    <h:inputText id="address2" value="#{profileManager.userAddress.address2}"  autocomplete="off" styleClass="property_editor" >
+                                    </h:inputText>
+                                    <p:message for="address2"/>
+                                    <h:outputLabel for="address3" value="Address3" styleClass="changeLabel"  />
+                                    <h:inputText id="address3" value="#{profileManager.userAddress.address3}"  autocomplete="off" styleClass="property_editor" >
+                                    </h:inputText>
+                                    <p:message for="address3"/>
+                                    <h:outputLabel for="city" value="City" styleClass="changeLabel" />
+                                    <h:inputText id="city" value="#{profileManager.userAddress.city}"  autocomplete="off"  styleClass="property_editor">
+                                    </h:inputText>
+                                    <p:message for="city"/>
+                                    <h:outputLabel for="zip" value="Postal code:" styleClass="changeLabel"/>
+                                    <h:inputText id="zip" value="#{profileManager.userAddress.postalcode}"  autocomplete="off"  styleClass="property_editor">
+                                    </h:inputText>
+                                    <p:message for="zip"/>
+                                    <h:outputLabel for="country" value="Country:" styleClass="changeLabel"  />
+                                    <h:inputText id="country" value="#{profileManager.userAddress.country}"   autocomplete="off" styleClass="property_editor">
+                                    </h:inputText>
+                                    <p:message for="country"/>
+
+                                    <h:outputLabel for="sec" value="Security Question"  styleClass="changeLabel"/>					
+
+                                    <p:commandLink value="Change"   action="change_sec_question" styleClass="command_link"  >
+
                                     </p:commandLink>
+                                    <p:spacer></p:spacer>  
+
+                                    <h:outputLabel for="password" value="Password"  styleClass="changeLabel"/>					
+
+                                    <p:commandLink value="Change"   action="profile_password" styleClass="command_link"  >
+
+                                    </p:commandLink>
+                                    <p:spacer></p:spacer>   
 
                                 </h:panelGrid>
 
                                 <div class="actions">
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{profileController.updateUser()}" validateClient="true" update=":bbcMainLayout"/>
+                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{profileManager.updateUser()}" validateClient="true" update=":bbcMainLayout"/>
+                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="indexPage" validateClient="true" update=":bbcMainLayout"/>
+
                                 </div>
 
                             </h:form>                            

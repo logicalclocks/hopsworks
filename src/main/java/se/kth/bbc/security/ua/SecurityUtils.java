@@ -55,8 +55,9 @@ public class SecurityUtils {
 
     /**
      * Generate a random password to be sent to the user
+     *
      * @param length
-     * @return 
+     * @return
      */
     public static String getRandomString() {
         // password length

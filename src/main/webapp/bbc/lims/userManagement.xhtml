@@ -22,7 +22,7 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
 
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser" rendered="#{userMB.adminUser}">  
+            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.BBCAdmin}">  
 
                 <p:layoutUnit position="center">
                     <div class="container">
@@ -33,30 +33,36 @@
                                     <h:form id="userdataForm">
                                         <p:contextMenu for="userdataTable">
                                             <p:menuitem value="View" update="userDetail" icon="ui-icon-search" oncomplete="PF('userDialog').show()"/>
-                                            <p:menuitem value="Delete" update="userdataTable" icon="ui-icon-close" actionListener="#{userController.deleteUser()}"/>
+                                            <p:menuitem value="Delete" update="userdataTable" icon="ui-icon-close" actionListener="#{peopleAministration.deleteUser()}"/>
                                         </p:contextMenu>
                                         <p:growl id="growl" life="2000"/>
-                                        <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
-                                                     selectionMode="single" rowKey="#{user.email}" selection="#{userController.selectedUser}" style="table-layout: fixed" scrollable="false">
+                                        <p:dataTable id="userdataTable" var="user" value="#{peopleAministration.allUsers}" filteredValue="#{peopleAministration.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
+                                                     selectionMode="single" rowKey="#{user.email}" selection="#{peopleAministration.selectedUser}" style="table-layout: fixed" scrollable="false">
 
-                                            <p:column id="nameColumn" filterBy="name" headerText="Name" style="width:32%; font-size: 12px; text-align: left;">
-                                                <h:outputText value="#{user.name}" />
+                                            <p:column id="nameColumn" filterBy="fname" headerText="Fisrt Name" style="width:32%; font-size: 12px; text-align: left;">
+                                                <h:outputText value="#{user.fname}" />
+                                            </p:column>
+
+                                            <p:column id="lnameColumn" filterBy="lname" headerText="Last Name" style="width:32%; font-size: 12px; text-align: left;">
+                                                <h:outputText value="#{user.lname}" />
                                             </p:column>
 
                                             <p:column id="emailColumn" filterBy="email" headerText="Email" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{user.email}" />
                                             </p:column>
 
-                                            <p:column id="mobileNumColumn" headerText="Mobile Number" style="width:32%;font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{user.mobileNum}" />
+                                            <p:column id="mobileNumColumn" filterBy="mobile"  headerText="Mobile Number" style="width:32%;font-size: 12px;text-align: left;">
+                                                <h:outputText value="#{user.mobile}" />
                                             </p:column>
 
-
-                                            <p:column id="removeColumn" style="width:4%;">
-                                                <p:commandLink styleClass="ui-button-remove fa fa-minus"  value="" action="#{userController.deleteUser(user)}" update="@form">
-                                                    <p:confirm header="Remove user" message="Are you sure you want to remove this user?" icon="ui-icon-alert"/>
-                                                </p:commandLink>
+                                            <p:column id="statusCol"  filterBy="status"  headerText="Status" style="width:32%;font-size: 12px;text-align: left;">
+                                                <h:outputText value="#{user.status}" />
                                             </p:column>
+            
+                                            <p:column id="roleNameCol" style="width:32%;font-size: 12px;text-align: left;">
+                                                <h:outputText value="#{peopleAministration.getUserRole(user)}" />
+                                            </p:column>
+
                                         </p:dataTable>
 
                                         <p:dialog id="dialog" header="Selected User" widgetVar="userDialog" draggable="true" resizable="false" width="350" showEffect="clip" hideEffect="fold">
@@ -64,13 +70,13 @@
                                                 <h:panelGrid id="display" columns="2" cellpadding="4">
 
                                                     <h:outputText value="Name:" style="font-size: 12px;font-weight: bold;text-align: left;" />
-                                                    <h:outputText value="#{userController.selectedUser.name}" />
+                                                    <h:outputText value="#{peopleAministration.selectedUser.fname}" />
 
                                                     <h:outputText value="Email:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
-                                                    <h:outputText value="#{userController.selectedUser.email}" />
+                                                    <h:outputText value="#{peopleAministration.selectedUser.email}" />
 
                                                     <h:outputText value="Registered On:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
-                                                    <h:outputText value="#{userController.selectedUser.registeredOn}" />
+                                                    <h:outputText value="#{peopleAministration.selectedUser.activated}" />
 
                                                 </h:panelGrid>
                                             </p:outputPanel>                   
@@ -83,44 +89,44 @@
 
                                     </h:form>   
                                 </p:tab>                 
-
+                                
+                                        
+                                
                                 <p:tab title="User requests" id="requests">
                                     <h:form id="reqdataForm">
-                                        <p:dataTable id="userReqTable" var="req" value="#{userController.allRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
-                                                     rowKey="#{req.email}" selection="#{userController.selectedUsers}" editable="true" editMode="cell">
+                                        <p:dataTable id="userReqTable" var="req" value="#{peopleAministration.allRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
+                                                     rowKey="#{req.email}" selection="#{peopleAministration.selectedUsers}" editable="true" editMode="cell">
 
-
-                                            <f:facet name="header" class="header-button-group">
-                                                <p:commandButton value="Allow selection" actionListener="#{userController.allowSelectedUsers}" update="@form"/>
-                                                <p:commandButton value="Reject selection" actionListener="#{userController.denySelectedUsers}" update="@form"/>
-                                            </f:facet>
 
                                             <p:column selectionMode="multiple" style="width:10px;" disabledSelection="false"/>
 
-                                            <p:column id="nameColumn" headerText="Name" style="font-size: 12px; text-align: left;">
-                                                <h:outputText value="#{req.name}" />
+                                            <p:column id="nameColumn" headerText="First Name" style="font-size: 12px; text-align: left;">
+                                                <h:outputText value="#{req.fname}" />
                                             </p:column>
-
+                                            <p:column id="lnameCol" headerText="Last Name" style="font-size: 12px; text-align: left;">
+                                                <h:outputText value="#{req.lname}" />
+                                            </p:column>
+                                            
                                             <p:column id="emailColumn" headerText="Email" style="font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{req.email}" />
                                             </p:column>
 
                                             <p:column id="mobileNumColumn" headerText="Mobile Number" style="font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{req.mobileNum}" />
+                                                <h:outputText value="#{req.mobile}" />
                                             </p:column>
 
                                             <p:column id="roleColumn" headerText="Role">
-                                                <p:selectOneMenu id="roleChoose" value="#{req.extraGroup}" editable="false">
-                                                    <f:selectItems value="#{userController.groups}"/>
+                                                <p:selectOneMenu id="roleChoose" value="#{peopleAministration.selected_group}" editable="false">
+                                                    <f:selectItems value="#{peopleAministration.groups}"/>
                                                 </p:selectOneMenu>
                                             </p:column>
 
                                             <p:column id="actionColumn" headerText="Action">
                                                 <h:panelGrid columns="2" style="width: auto">                                                    
-                                                    <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{userController.rejectUser(req)}" update="@form">
+                                                    <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{peopleAministration.rejectUser(req)}" update="@form">
                                                         <p:confirm header="Reject user" message="Are you sure you want to reject this user?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
-                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" actionListener="#{userController.allowUser(req)}" update="@form">
+                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" actionListener="#{peopleAministration.activateUser()}" update="@form">
                                                         <p:confirm header="Allow user" message="Allow selected user?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                 </h:panelGrid>
@@ -134,13 +140,97 @@
 
 
                                     </h:form>
+                                    </p:tab>
+                                
+                                       <p:tab title="Modify Users" id="Modfiy">
+                                    <h:form id="usermodifyForm">
+                                        <p:contextMenu for="userdataTable">
+                                            <p:menuitem value="View" update="userDetail" icon="ui-icon-search" oncomplete="PF('userDialog').show()"/>
+                                            <p:menuitem value="Delete" update="userdataTable" icon="ui-icon-close" actionListener="#{peopleAministration.deleteUser()}"/>
+                                        </p:contextMenu>
+                                        <p:growl id="growl" life="2000"/>
+                                        <p:dataTable id="userdataTable" var="user" value="#{peopleAministration.allUsers}" filteredValue="#{peopleAministration.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
+                                                     selectionMode="single" rowKey="#{user.email}" selection="#{peopleAministration.selectedUser}" style="table-layout: fixed" scrollable="false">
+
+                                            
+                                            <p:column id="unameCol"  filterBy="username"  headerText="Username" style="width:32%;font-size: 12px;text-align: left;">
+                                                <h:outputText value="#{user.username}" />
+                                            </p:column>
+
+                                            
+                                            <p:column id="nameColumn" filterBy="fname" headerText="Fisrt Name" style="width:32%; font-size: 12px; text-align: left;">
+                                                <h:outputText value="#{user.fname}" />
+                                            </p:column>
+
+                                            <p:column id="lnameColumn" filterBy="lname" headerText="Last Name" style="width:32%; font-size: 12px; text-align: left;">
+                                                <h:outputText value="#{user.lname}" />
+                                            </p:column>
+
+                                            <p:column id="emailColumn" filterBy="email" headerText="Email" style="width:32%;font-size: 12px;text-align: left;">
+                                                <h:outputText value="#{user.email}" />
+                                            </p:column>
+
+                                            
+                                             <p:column id="statCol" headerText="New Status"  style="width:32%;font-size: 12px;text-align: left;">
+                                                 <p:selectOneMenu id="statChoos" value="#{peopleAministration.selected_status}" editable="false">
+                                                  <f:selectItem itemValue="-1" itemLabel="Inactive" />
+                                                    <f:selectItem itemValue="0" itemLabel="Pending" />
+                                                  <f:selectItem itemValue="1" itemLabel="Active" />
+                                                  <f:selectItem itemValue="2" itemLabel="Blocked" />
+                                                
+                                                </p:selectOneMenu>
+                                            </p:column>
+                                            
+                                 
+                                             <p:column id="roleColumn1" headerText="New Role"  style="width:32%;font-size: 12px;text-align: left;">
+                                                <p:selectOneMenu id="roleChoose1" value="#{peopleAministration.selected_group}" editable="false">
+                                                    <f:selectItems value="#{peopleAministration.groups}" />
+                                                </p:selectOneMenu>
+                                            </p:column>
+
+                                            
+                                            <p:column id="actionUserColumn" headerText="Action" style="width:20%;font-size: 12px;text-align: left;">
+                                                <h:panelGrid columns="2" style="width: auto">                                                    
+                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" actionListener="#{peopleAministration.modifyUser(user)}" update="@form">
+                                                        <p:confirm header="Modify user" message="Modify selected user?" icon="ui-icon-alert"/>
+                                                    </p:commandLink>
+                                                    <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{peopleAministration.deleteUser(user)}" update="@form">
+                                                        <p:confirm header="Delete user" message="Are you sure you want to delete this user?" icon="ui-icon-alert"/>
+                                                    </p:commandLink>
+                          
+                                                </h:panelGrid>
+                                            </p:column>
+                                        </p:dataTable>
+
+                                        <p:dialog id="dialog" header="Selected User" widgetVar="userDialog" draggable="true" resizable="false" width="350" showEffect="clip" hideEffect="fold">
+                                            <p:outputPanel id="userDetail" style="text-align:center;">
+                                                <h:panelGrid id="display" columns="2" cellpadding="4">
+
+                                                    <h:outputText value="Name:" style="font-size: 12px;font-weight: bold;text-align: left;" />
+                                                    <h:outputText value="#{peopleAministration.selectedUser.fname}" />
+
+                                                    <h:outputText value="Email:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
+                                                    <h:outputText value="#{peopleAministration.selectedUser.email}" />
+
+                                                    <h:outputText value="Registered On:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
+                                                    <h:outputText value="#{peopleAministration.selectedUser.activated}" />
+
+                                                </h:panelGrid>
+                                            </p:outputPanel>                   
+                                        </p:dialog>
+                                        <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                                            <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                                            <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+                                        </p:confirmDialog>
 
 
-                                </p:tab>
+                                    </h:form>   
+                                </p:tab>                 
+                    
                             </p:tabView>
 
                             <script>
-                                userMgmtTabview.select(#{userController.tabIndex});
+                                userMgmtTabview.select(#{peopleAministration.tabIndex});
                             </script>
                         </div>
                     </div> 
