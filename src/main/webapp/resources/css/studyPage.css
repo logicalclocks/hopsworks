@@ -373,3 +373,7 @@ h1 {
     width: 2%;
     min-width: 10px;
 }
+
+.historyPanel {
+  float: left;
+}

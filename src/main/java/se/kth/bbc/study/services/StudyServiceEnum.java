@@ -1,5 +1,7 @@
 package se.kth.bbc.study.services;
 
+//TODO: change into a separate entity associated with a table in db?
+
 /**
  *
  * @author stig

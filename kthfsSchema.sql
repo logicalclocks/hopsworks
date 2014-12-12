@@ -84,6 +84,32 @@ LOCK TABLES `Alerts` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `COLLECTION_TYPES`
+--
+
+DROP TABLE IF EXISTS `COLLECTION_TYPES`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `COLLECTION_TYPES` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `definition` varchar(2000) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `COLLECTION_TYPES`
+--
+
+LOCK TABLES `COLLECTION_TYPES` WRITE;
+/*!40000 ALTER TABLE `COLLECTION_TYPES` DISABLE KEYS */;
+INSERT INTO `COLLECTION_TYPES` VALUES (1,'Case-control','A case-control study design compares two groups of subjects: those with the disease or condition under study (cases) and a very similar group of subjects who do not have the disease or condition (controls).'),(2,'Cohort','A form of longitudinal study for the analysis of risk factors following a group of people who do not have a disease, and uses correlations to determine the absolute risk of subject contraction.'),(3,'Cross-sectional','A type of observational study that involves data collection from a population, or a representative subset, at one specific point in time.'),(4,'Longitudinal','Research studies involving repeated observations of the same entity over time. In the biobank context, longitudinal studies sample a group of people in a given time period, and study them at intervals by the acquisition and analyses of data and/or samples over time.'),(5,'Twin-study','Twin studies measure the contribution of genetics (as opposed to environment) to a given trait or condition of interest.'),(6,'Quality control','A quality control testing study design type is where some aspect of the experiment is quality controlled for the purposes of quality assurance.'),(7,'Population-based','Study done at the population level or among the population groups, generally to find the cause, incidence or spread of the disease or to see the response to the treatment, nutrition or environment.'),(8,'Disease specific','A study or biobank for which material and information is collected from subjects that have already developed a particular disease.'),(9,'Birth cohort','A corhort study for which the subjects are followed from the time of birth usually including information about gestation and follow up.'),(10,'Other',NULL);
+/*!40000 ALTER TABLE `COLLECTION_TYPES` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `ClusterEntities`
 --
 
@@ -276,7 +302,7 @@ CREATE TABLE `Inodes` (
   KEY `pid_2` (`pid`,`isDir`),
   KEY `name` (`name`),
   CONSTRAINT `Inodes_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `Inodes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=281 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=311 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -285,7 +311,7 @@ CREATE TABLE `Inodes` (
 
 LOCK TABLES `Inodes` WRITE;
 /*!40000 ALTER TABLE `Inodes` DISABLE KEYS */;
-INSERT INTO `Inodes` VALUES (12,'Projects',NULL,'2014-10-23 12:07:44',1,0,'available'),(277,'1',12,'2014-12-10 17:17:08',1,0,'available'),(278,'Results',277,'2014-12-10 17:17:08',1,0,'available'),(279,'Cuneiform',277,'2014-12-10 17:17:08',1,0,'available'),(280,'Samples',277,'2014-12-10 17:17:08',1,0,'available');
+INSERT INTO `Inodes` VALUES (12,'Projects',NULL,'2014-10-23 12:07:44',1,0,'available'),(294,'Test',12,'2014-12-11 10:21:12',1,0,'available'),(295,'Results',294,'2014-12-11 10:21:12',1,0,'available'),(296,'Cuneiform',294,'2014-12-11 10:21:12',1,0,'available'),(297,'Samples',294,'2014-12-11 10:21:12',1,0,'available'),(298,'Custom',12,'2014-12-11 10:21:27',1,0,'available'),(299,'Results',298,'2014-12-11 10:21:27',1,0,'available'),(300,'Cuneiform',298,'2014-12-11 10:21:27',1,0,'available');
 /*!40000 ALTER TABLE `Inodes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -651,7 +677,7 @@ CREATE TABLE `StudyTeam` (
 
 LOCK TABLES `StudyTeam` WRITE;
 /*!40000 ALTER TABLE `StudyTeam` DISABLE KEYS */;
-INSERT INTO `StudyTeam` VALUES ('1','jdowling@sics.se','Master','2014-12-10 17:17:06');
+INSERT INTO `StudyTeam` VALUES ('Custom','faramir.steward@gondor.me','Researcher','2014-12-12 10:34:58'),('Custom','jdowling@sics.se','Master','2014-12-11 10:21:27'),('Test','jdowling@sics.se','Master','2014-12-11 10:21:12');
 /*!40000 ALTER TABLE `StudyTeam` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -762,7 +788,7 @@ CREATE TABLE `activity` (
   `flag` enum('DATA','STUDY','TEAM','USERS') DEFAULT NULL,
   `activity_on` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=364 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=372 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -771,7 +797,7 @@ CREATE TABLE `activity` (
 
 LOCK TABLES `activity` WRITE;
 /*!40000 ALTER TABLE `activity` DISABLE KEYS */;
-INSERT INTO `activity` VALUES (361,' created new study ','jdowling@sics.se','2014-12-10 16:28:15','STUDY','TestStudy'),(362,' removed study ','jdowling@sics.se','2014-12-10 16:28:20','STUDY','TestStudy'),(363,' created new study ','jdowling@sics.se','2014-12-10 17:17:06','STUDY','1');
+INSERT INTO `activity` VALUES (369,' created new study ','jdowling@sics.se','2014-12-11 10:21:12','STUDY','Test'),(370,' created new study ','jdowling@sics.se','2014-12-11 10:21:27','STUDY','Custom'),(371,' added new member faramir.steward@gondor.me ','jdowling@sics.se','2014-12-12 10:34:58','STUDY','Custom');
 /*!40000 ALTER TABLE `activity` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -791,6 +817,32 @@ SET character_set_client = utf8;
  1 AS `studyname`,
  1 AS `timestamp`*/;
 SET character_set_client = @saved_cs_client;
+
+--
+-- Table structure for table `collection_type`
+--
+
+DROP TABLE IF EXISTS `collection_type`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `collection_type` (
+  `collection_id` varchar(255) NOT NULL DEFAULT '',
+  `type_id` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`collection_id`,`type_id`),
+  KEY `type_id` (`type_id`),
+  CONSTRAINT `collection_type_ibfk_1` FOREIGN KEY (`collection_id`) REFERENCES `samplecollection` (`id`),
+  CONSTRAINT `collection_type_ibfk_2` FOREIGN KEY (`type_id`) REFERENCES `COLLECTION_TYPES` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `collection_type`
+--
+
+LOCK TABLES `collection_type` WRITE;
+/*!40000 ALTER TABLE `collection_type` DISABLE KEYS */;
+/*!40000 ALTER TABLE `collection_type` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `dataset`
@@ -864,6 +916,119 @@ LOCK TABLES `dataset_study` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `job_execution_files`
+--
+
+DROP TABLE IF EXISTS `job_execution_files`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `job_execution_files` (
+  `job_id` bigint(20) unsigned NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `path` varchar(255) NOT NULL,
+  PRIMARY KEY (`job_id`,`name`),
+  CONSTRAINT `job_execution_files_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `job_execution_files`
+--
+
+LOCK TABLES `job_execution_files` WRITE;
+/*!40000 ALTER TABLE `job_execution_files` DISABLE KEYS */;
+/*!40000 ALTER TABLE `job_execution_files` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `job_input_files`
+--
+
+DROP TABLE IF EXISTS `job_input_files`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `job_input_files` (
+  `job_id` bigint(20) unsigned NOT NULL,
+  `path` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  PRIMARY KEY (`job_id`,`name`),
+  CONSTRAINT `job_input_files_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `job_input_files`
+--
+
+LOCK TABLES `job_input_files` WRITE;
+/*!40000 ALTER TABLE `job_input_files` DISABLE KEYS */;
+/*!40000 ALTER TABLE `job_input_files` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `job_output_files`
+--
+
+DROP TABLE IF EXISTS `job_output_files`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `job_output_files` (
+  `job_id` bigint(20) unsigned NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `path` varchar(255) NOT NULL,
+  PRIMARY KEY (`job_id`,`name`),
+  CONSTRAINT `job_output_files_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `job_output_files`
+--
+
+LOCK TABLES `job_output_files` WRITE;
+/*!40000 ALTER TABLE `job_output_files` DISABLE KEYS */;
+/*!40000 ALTER TABLE `job_output_files` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `jobhistory`
+--
+
+DROP TABLE IF EXISTS `jobhistory`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `jobhistory` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(128) DEFAULT NULL,
+  `submission_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `study` varchar(128) NOT NULL,
+  `user` varchar(255) NOT NULL,
+  `state` varchar(128) NOT NULL,
+  `execution_duration` bigint(20) DEFAULT NULL,
+  `args` varchar(255) DEFAULT NULL,
+  `stdout_path` varchar(255) DEFAULT NULL,
+  `stderr_path` varchar(255) DEFAULT NULL,
+  `type` varchar(128) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id` (`id`),
+  KEY `study` (`study`),
+  KEY `user` (`user`),
+  CONSTRAINT `jobhistory_ibfk_1` FOREIGN KEY (`study`) REFERENCES `study` (`name`),
+  CONSTRAINT `jobhistory_ibfk_2` FOREIGN KEY (`user`) REFERENCES `USERS` (`EMAIL`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `jobhistory`
+--
+
+LOCK TABLES `jobhistory` WRITE;
+/*!40000 ALTER TABLE `jobhistory` DISABLE KEYS */;
+INSERT INTO `jobhistory` VALUES (1,'testje','2014-12-12 15:07:00','Custom','jdowling@sics.se','FINISHED',5,NULL,NULL,NULL,'FLINK');
+/*!40000 ALTER TABLE `jobhistory` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `sample`
 --
 
@@ -910,6 +1075,34 @@ LOCK TABLES `sample_study` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `samplecollection`
+--
+
+DROP TABLE IF EXISTS `samplecollection`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `samplecollection` (
+  `id` varchar(255) NOT NULL,
+  `acronym` varchar(1024) NOT NULL,
+  `name` varchar(1024) NOT NULL,
+  `description` varchar(2000) DEFAULT NULL,
+  `contact` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `contact` (`contact`),
+  CONSTRAINT `samplecollection_ibfk_1` FOREIGN KEY (`contact`) REFERENCES `USERS` (`EMAIL`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `samplecollection`
+--
+
+LOCK TABLES `samplecollection` WRITE;
+/*!40000 ALTER TABLE `samplecollection` DISABLE KEYS */;
+/*!40000 ALTER TABLE `samplecollection` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `study`
 --
 
@@ -933,7 +1126,7 @@ CREATE TABLE `study` (
 
 LOCK TABLES `study` WRITE;
 /*!40000 ALTER TABLE `study` DISABLE KEYS */;
-INSERT INTO `study` VALUES ('1','jdowling@sics.se','2014-12-10 17:17:06');
+INSERT INTO `study` VALUES ('Custom','jdowling@sics.se','2014-12-11 10:21:27'),('Test','jdowling@sics.se','2014-12-11 10:21:12');
 /*!40000 ALTER TABLE `study` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1009,7 +1202,7 @@ CREATE TABLE `study_services` (
 
 LOCK TABLES `study_services` WRITE;
 /*!40000 ALTER TABLE `study_services` DISABLE KEYS */;
-INSERT INTO `study_services` VALUES ('1','CUNEIFORM'),('1','FLINK'),('1','SAMPLES'),('1','STUDY_INFO'),('1','SPARK'),('1','ADAM'),('1','MAPREDUCE'),('1','YARN');
+INSERT INTO `study_services` VALUES ('Custom','CUNEIFORM'),('Custom','FLINK'),('Custom','SAMPLES'),('Custom','STUDY_INFO'),('Test','FLINK');
 /*!40000 ALTER TABLE `study_services` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1092,4 +1285,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-12-10 18:22:04
+-- Dump completed on 2014-12-12 16:17:49
