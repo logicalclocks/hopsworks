@@ -211,7 +211,16 @@
          </auth-constraint>
     </security-constraint>
   
-      
+          <security-constraint>
+      <web-resource-collection>
+        <web-resource-name>Viewpoint Secure URLs</web-resource-name>
+        <url-pattern>/*</url-pattern>
+      </web-resource-collection>
+      <user-data-constraint>
+        <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+      </user-data-constraint>
+    </security-constraint>
+    
     <login-config>
         <auth-method>BASIC</auth-method>
         <realm-name>GauthRealm</realm-name>
@@ -219,6 +228,7 @@
             <form-login-page>/index.xhtml</form-login-page>
             <form-error-page>/error.xhtml</form-error-page>
         </form-login-config>
+
     </login-config>
     <!--   <error-page>
        <error-code>404</error-code>

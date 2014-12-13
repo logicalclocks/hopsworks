@@ -137,6 +137,7 @@ public class Gauth implements Serializable {
             return ("reset");
         }
 
+        
         // go to welcome page
         return ("indexPage");
     }

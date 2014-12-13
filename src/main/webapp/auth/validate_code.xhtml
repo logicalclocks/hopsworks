@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core">
+
+    <h:head>
+        <title>BiobankCloud - Password reset</title>
+        <h:outputStylesheet name="css/jsfcrud.css"/>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    </h:head>
+
+    <h:body >
+        <ui:insert name="titleBar" >
+            <ui:include src="/bbc/lims/titleBar.xhtml" />       
+        </ui:insert>
+
+        <p:growl for="userRegistered" life="20000" showDetail="true"/>
+        <p:growl for="loginFail" life="20000" showDetail="true"/>
+
+        <h:form>
+            <div class="content">
+                <h3 class="page_title" align="center">
+                    Code validation
+                </h3>
+                
+                <h:panelGrid columns="1" class="Signin">
+                    <h:outputLabel for="tcode" value="Enter the temp code sent to your email"/>
+                    <p:password id="tcode" value="#{recoverySelector.tmpCode}" label="Password 1" required="true" 
+                                requiredMessage="Enter new password"/>
+      
+                <p:messages id="messages"  autoUpdate="true" />
+                </h:panelGrid>
+                <br></br> 
+                <div class="register_actions" align="center">
+                    <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{recoverySelector.validateTmpCode()}">
+                    </p:commandButton>
+                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this"/>
+                </div>
+            </div>
+        </h:form>
+
+    </h:body>
+</html>

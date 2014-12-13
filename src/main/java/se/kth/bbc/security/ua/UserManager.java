@@ -143,6 +143,14 @@ public class UserManager {
         return true;
     }
 
+    public boolean updateSecret(int id, String sec) {
+        People p = (People) em.find(People.class, id);
+        p.setSecret(sec);
+        em.merge(p);
+        return true;
+    }
+
+    
     public boolean updateGroup(int uid, int gid) {
         TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid", PeopleGroup.class);
         query.setParameter("uid", uid);

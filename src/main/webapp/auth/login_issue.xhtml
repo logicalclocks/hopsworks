@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core">
+
+    <h:head>
+        <title>BiobankCloud - Security Question</title>
+        <h:outputStylesheet name="css/jsfcrud.css"/>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    </h:head>
+
+    <h:body >
+        <ui:insert name="titleBar" >
+            <ui:include src="/bbc/lims/titleBar.xhtml" />       
+        </ui:insert>
+
+        <p:growl for="userRegistered" life="20000" showDetail="true"/>
+        <p:growl for="loginFail" life="20000" showDetail="true"/>
+
+        <h:form>
+
+            <div class="content" align="center">
+                <h3 class="page_title" align="center" style="color: gray">
+                    Please enter your username
+                </h3>
+    
+    <p:outputPanel id="customPanel" style="margin-bottom:10px">
+        <p:selectOneRadio id="customRadio" value="#{recoverySelector.console}" layout="custom">
+            <f:selectItem itemLabel="Forgot Passwor" itemValue="Password" />
+            <f:selectItem itemLabel="Lost mobile device" itemValue="Mobile" />
+            <f:selectItem itemLabel="Lost Yubikey device" itemValue="Yubikey" />
+        </p:selectOneRadio>
+ 
+
+        <h:panelGrid columns="2" cellpadding="5">
+            <p:radioButton id="opt1" for="customRadio" itemIndex="0" />
+            <h:outputLabel for="opt1" value="Forgot Password" />
+        
+            <p:radioButton id="opt2" for="customRadio" itemIndex="1" />
+            <h:outputLabel for="opt2" value="Lost mobile device" />
+        
+            <p:radioButton id="opt3" for="customRadio" itemIndex="2" />
+            <h:outputLabel for="opt3" value="Lost Yubikey device" />
+        </h:panelGrid>
+   </p:outputPanel>
+        
+                <div class="register_actions">
+                <p:commandButton value="Continue" 
+                                 action="#{recoverySelector.redirect()}" >
+                </p:commandButton>
+                       
+            <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" />
+                       
+                     </div>
+             
+            
+         </div>
+        </h:form>
+
+    </h:body>
+</html>

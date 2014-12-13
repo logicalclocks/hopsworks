@@ -14,5 +14,11 @@ public interface AccountStatusIF {
     public static int ACCOUNT_PENDING = 0;
     public static int ACCOUNT_ACTIVE = 1;
     public static int ACCOUNT_BLOCKED = 2;
-    
+ 
+    // lost mobile device
+    public static int MOBILE_LOST = 3;
+
+    // lost yubikey device
+    public static int YUBIKEY_LOST = 4;
+
 }

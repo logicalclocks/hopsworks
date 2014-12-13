@@ -93,7 +93,33 @@
             <to-view-id>/auth/reset.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+
+        <navigation-case>
+            <from-outcome>mobile_recovery</from-outcome>
+            <to-view-id>/auth/mobile_recovery.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
         
+        
+        <navigation-case>
+            <from-outcome>mobile_recovery</from-outcome>
+            <to-view-id>/auth/yubikey_recovery.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        
+        <navigation-case>
+            <from-outcome>validate_code</from-outcome>
+            <to-view-id>/auth/validate_code.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        
+        <navigation-case>
+            <from-outcome>login_issue</from-outcome>
+            <to-view-id>/auth/login_issue.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        
+
         <navigation-case>
             <from-outcome>profile_password</from-outcome>
             <to-view-id>/auth/profile_password.xhtml</to-view-id>
