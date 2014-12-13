@@ -46,7 +46,7 @@
                             <hr></hr>
 
                             <!-- edit content-->
-                            <h:form id="editUserData">
+                            <h:form id="editUserData" >
                                 <h:panelGrid id="infoGrid" columns="3" style="font-size: 12px;">    
 
 
@@ -85,52 +85,53 @@
                                         <f:validateRegex pattern="[0-9]{10,10}"/>                                
                                     </p:inputText>
                                     <p:message for="mobile"/>
-
-                                    <h:outputLabel for="address1" value="Address1" styleClass="changeLabel"  />
-                                    <h:inputText id="address1" value="#{profileManager.userAddress.address1}"  autocomplete="off" styleClass="property_editor">
-                                    </h:inputText>
-                                    <p:message for="address1"/>
-
-                                    <h:outputLabel for="address2" value="Address2" styleClass="changeLabel" />
-                                    <h:inputText id="address2" value="#{profileManager.userAddress.address2}"  autocomplete="off" styleClass="property_editor" >
-                                    </h:inputText>
-                                    <p:message for="address2"/>
-                                    <h:outputLabel for="address3" value="Address3" styleClass="changeLabel"  />
-                                    <h:inputText id="address3" value="#{profileManager.userAddress.address3}"  autocomplete="off" styleClass="property_editor" >
-                                    </h:inputText>
-                                    <p:message for="address3"/>
+             
+                                    <h:outputLabel for="address1" value="co" styleClass="changeLabel" />					
+                                    <p:inputText id="address1" label="co" value="#{profileManager.address.address1}"  autocomplete="off" validatorMessage="Cannot be empty" styleClass="property_editor">
+                                    </p:inputText>
+                                    <p:spacer></p:spacer>  
+                       
+                                    <h:outputLabel for="address2" value="Street" styleClass="changeLabel" />
+                                    <p:inputText id="address2" label="address2" value="#{profileManager.address.address2}"  autocomplete="off" styleClass="property_editor" >
+                                    </p:inputText>
+                                    <p:spacer></p:spacer>  
+                                    
+                                    <h:outputLabel for="postalcode" value="Postal code:" styleClass="changeLabel"/>
+                                    <p:inputText id="postalcode" label="zip" value="#{profileManager.address.postalcode}"  styleClass="property_editor">
+                                    </p:inputText>
+                                    <p:spacer></p:spacer>  
+    
                                     <h:outputLabel for="city" value="City" styleClass="changeLabel" />
-                                    <h:inputText id="city" value="#{profileManager.userAddress.city}"  autocomplete="off"  styleClass="property_editor">
-                                    </h:inputText>
-                                    <p:message for="city"/>
-                                    <h:outputLabel for="zip" value="Postal code:" styleClass="changeLabel"/>
-                                    <h:inputText id="zip" value="#{profileManager.userAddress.postalcode}"  autocomplete="off"  styleClass="property_editor">
-                                    </h:inputText>
-                                    <p:message for="zip"/>
-                                    <h:outputLabel for="country" value="Country:" styleClass="changeLabel"  />
-                                    <h:inputText id="country" value="#{profileManager.userAddress.country}"   autocomplete="off" styleClass="property_editor">
-                                    </h:inputText>
-                                    <p:message for="country"/>
+                                    <p:inputText id="city" label="city" value="#{profileManager.address.city}"    styleClass="property_editor">
+                                    </p:inputText>
+                                    <p:spacer></p:spacer>  
+  
+                                    <h:outputLabel for="state" value="State" styleClass="changeLabel" />
+                                    <p:inputText id="state" label="state" value="#{profileManager.address.state}"  styleClass="property_editor">
+                                    </p:inputText>
+                                    <p:spacer></p:spacer>  
+  
+                                    <h:outputLabel for="country" value="Country" styleClass="changeLabel"  />
+                                    <p:inputText id="country" label="country" value="#{profileManager.address.country}"   styleClass="property_editor">
+                                    </p:inputText>
+                                    <p:spacer></p:spacer>  
 
                                     <h:outputLabel for="sec" value="Security Question"  styleClass="changeLabel"/>					
-
-                                    <p:commandLink value="Change"   action="change_sec_question" styleClass="command_link"  >
-
+                                    <p:commandLink id="sec" value="Change"   action="change_sec_question" styleClass="command_link"  >
                                     </p:commandLink>
                                     <p:spacer></p:spacer>  
 
                                     <h:outputLabel for="password" value="Password"  styleClass="changeLabel"/>					
-
-                                    <p:commandLink value="Change"   action="profile_password" styleClass="command_link"  >
-
+                                    <p:commandLink id ="password" value="Change"   action="profile_password" styleClass="command_link"  >
                                     </p:commandLink>
                                     <p:spacer></p:spacer>   
 
                                 </h:panelGrid>
 
                                 <div class="actions">
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{profileManager.updateUser()}" validateClient="true" update=":bbcMainLayout"/>
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="indexPage" validateClient="true" update=":bbcMainLayout"/>
+                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{profileManager.updateUser()}" validateClient="true"  update=":bbcMainLayout" >
+                                    </p:commandButton> 
+                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="indexPage"/>
 
                                 </div>
 

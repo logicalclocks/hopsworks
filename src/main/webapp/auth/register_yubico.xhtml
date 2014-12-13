@@ -15,7 +15,6 @@
             <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
         </h:head>
 
-
         <h:body>
             <ui:insert name="titleBar" >
                 <ui:include src="/bbc/lims/titleBar.xhtml" />       
@@ -61,19 +60,14 @@
                                         <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                     </h:inputText>
 
-                                    <h:outputLabel for="address1" value="Address1" style="font-weight:bold" />
+                                    <h:outputLabel for="address1" value="co" style="font-weight:bold" />
                                     <h:inputText id="address1" value="#{userRegistration.address1}" required="true" size="40"
-                                                 requiredMessage="Enter address1">
+                                                 requiredMessage="Enter co">
                                     </h:inputText>
 
-                                    <h:outputLabel for="address2" value="Address2" style="font-weight:bold" />
+                                    <h:outputLabel for="address2" value="Street" style="font-weight:bold" />
                                     <h:inputText id="address2" value="#{userRegistration.address2}" required="true"
-                                                 requiredMessage="Enter address2" size="40">
-                                    </h:inputText>
-
-                                    <h:outputLabel for="address3" value="Address3" style="font-weight:bold" />
-                                    <h:inputText id="address3" value="#{userRegistration.address3}"  required="true"
-                                                 requiredMessage="Enter address3" size="40">
+                                                 requiredMessage="Enter street" size="40">
                                     </h:inputText>
 
                                     <h:outputLabel for="city" value="City" style="font-weight:bold" />

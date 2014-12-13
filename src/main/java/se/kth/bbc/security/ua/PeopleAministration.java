@@ -147,16 +147,6 @@ public class PeopleAministration implements Serializable {
         requests.remove(user);
     }
 
-    public void deleteUser() {
-        try {
-            userManager.removeByEmail(user.getEmail());
-            
-        } catch (EJBException ejb) {
-            MessagesController.addErrorMessage("Error", "Delete operation failed.");
-        }
-        MessagesController.addInfoMessage(user.getFname() + "successfully removed.");
-    }
-
     public void updateUser() {
         try {
             userManager.update(user);

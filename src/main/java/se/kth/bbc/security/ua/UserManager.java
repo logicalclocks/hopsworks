@@ -20,7 +20,7 @@ import se.kth.bbc.security.ua.model.PeopleGroup;
 @Stateless
 public class UserManager {
 
-    private static final Logger logger = Logger.getLogger(UserRegistration.class.getName());
+    private static final Logger logger = Logger.getLogger(UserManager.class.getName());
 
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
@@ -127,6 +127,15 @@ public class UserManager {
         return true;
     }
 
+    public boolean resetSecQuestion(int id, String  question, String ans) {
+        People p = (People) em.find(People.class, id);
+        p.setSecurityQuestion(question);
+        p.setSecurityAnswer(question);
+        em.merge(p);
+        return true;
+    }
+
+    
     public boolean updateStatus(int id, int stat) {
         People p = (People) em.find(People.class, id);
         p.setStatus(stat);

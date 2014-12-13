@@ -12,24 +12,49 @@
         <title>BiobankCloud - Password reset</title>
         <h:outputStylesheet name="css/jsfcrud.css"/>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-    </h:head>
+    </h:head>                                                    
 
     <h:body >
         <ui:insert name="titleBar" >
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
 
-        <p:growl for="userRegistered" life="20000" showDetail="true"/>
-        <p:growl for="loginFail" life="20000" showDetail="true"/>
-
-        <h:form>
-            <div class="content">
-                <h3 class="page_title" align="center">
-                    Change Security Question
+        <h:form id="reset_password">
+            <div class="content" align="center">
+                <h3 class="page_title" align="center" style="color: gray">
+                    Please answer the security question:
                 </h3>
-                    Under construction!
+
+
+                <h:panelGrid columns="2" >
+
+                    <h:outputLabel for="sec_question" value="Security Question " styleClass="changeLabel" />
+                    <p:selectOneMenu id="console" value="#{resetPassword.question}" effect="fold" required="true"
+                                     requiredMessage="Select Security Question">
+                        <f:selectItem itemLabel="Select One" itemValue="" />
+                        <f:selectItems value="#{selectSecurityQuestionMenue.questions}" />
+                    </p:selectOneMenu>  
+
+                    <h:outputLabel for="ans" value="Answer " styleClass="changeLabel" />
+                    <p:inputText id="ans" label="ans" value="#{resetPassword.answer}" 
+                                 required="true"
+                                 requiredMessage="Answer Security Question" />
+
+                    <h:outputLabel for="cur" value="Password" styleClass="changeLabel" />
+                    <p:password id="cur" value="#{resetPassword.current}" required="true" requiredMessage="Enter password"  />
+
+                    <p:spacer></p:spacer>
+                    <p:messages id="messages" autoUpdate="true"/>
+                </h:panelGrid>    
+                <div class="register_actions">
+                    <p:commandButton styleClass="team_button button-save" type="submit" value="Submit"  action="#{resetPassword.changeSecQuestion()}">
+                    </p:commandButton>    
+
+                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="profile" process="@this" />
+                </div>
             </div>
-              </h:form>
-                    <p:commandLink id="signupLink" value="Back to my profile" action="profile" style="text-align: right"/>
+
+        </h:form>
+
     </h:body>
 </html>

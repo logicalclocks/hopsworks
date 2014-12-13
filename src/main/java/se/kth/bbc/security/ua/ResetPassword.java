@@ -14,6 +14,7 @@ import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
+
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
@@ -30,10 +31,21 @@ public class ResetPassword implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger logger = Logger.getLogger(UserRegistration.class.getName());
+    private static final Logger logger = Logger.getLogger(ResetPassword.class.getName());
 
     private String username;
     private String passwd1;
+    private String passwd2;
+    private String current;
+
+    private String answer;
+    private String question;
+    private People people;
+    @EJB
+    private UserManager mgr;
+    @EJB
+    private EmailBean emailBean;
+    private SelectSecurityQuestionMenue secMgr;
 
     public String getQuestion() {
         return question;
@@ -42,8 +54,6 @@ public class ResetPassword implements Serializable {
     public void setQuestion(String question) {
         this.question = question;
     }
-    private String passwd2;
-    private String current;
 
     public String getCurrent() {
         return current;
@@ -52,20 +62,6 @@ public class ResetPassword implements Serializable {
     public void setCurrent(String current) {
         this.current = current;
     }
-
-    private String answer;
-
-    private String question;
-
-    private People people;
-
-    @EJB
-    private UserManager mgr;
-
-    @EJB
-    private EmailBean emailBean;
-
-    private SelectSecurityQuestionMenue secMgr;
 
     public People getPeople() {
         return people;
@@ -107,7 +103,10 @@ public class ResetPassword implements Serializable {
         this.passwd2 = passwd2;
     }
 
-    //TODO: This hsould be changed to a url and then enforcing the password for reset upon first login
+    /**
+     *
+     * @return
+     */
     public String sendTmpPassword() {
 
         people = mgr.getUser(this.username);
@@ -132,12 +131,10 @@ public class ResetPassword implements Serializable {
             // generate a radndom password
             String random_password = SecurityUtils.getRandomString();
 
-            String message = buildResetMessage(random_password);
-
-            logger.info("Entering email");
+            String mess = buildPasswordResetMessage(random_password);
 
             // sned the new password to the user email
-            emailBean.sendEmail(people.getEmail(), "Password reset", message);
+            emailBean.sendEmail(people.getEmail(), "Password reset", mess);
 
             // make the account pending until it will be reset by user upon first login
             mgr.updateStatus(people.getUid(), AccountStatusIF.ACCOUNT_PENDING);
@@ -155,19 +152,50 @@ public class ResetPassword implements Serializable {
         return ("password_sent");
     }
 
+    private String buildPasswordResetMessage(String random_password) {
+
+        String content = "Greetings!\n\nThere have been a password reset request on your behalf.\n\nPlease use the temporary password"
+                + " sent to you as below. You will be required to change your passsword when you login first time.\n\n";
+
+        String tmp_pass = "Pasword:" + random_password + "\n\n\n";
+        String ending = "If you have any questions please contact support@biobankcloud.com";
+
+        return content + tmp_pass + ending;
+    }
+
     /**
-     * Build a URL and send to user to reset their passwords
+     * Construct a message for security question change
      *
      * @param random_password
      * @return
      */
-    private String buildResetMessage(String random_password) {
+    private String buildSecResetMessage() {
 
-        // TODO: make a url
-        String urlFormat = random_password;
-        return urlFormat;
+        String l1 = "Greetings!\n\nThere have been a security question change reset request on your behalf.\n\n";
+        String l2 = "Your security question is changed successfully\n\n\n";
+        String l3 = "If you have any questions please contact support@biobankcloud.com";
+
+        return l1 + l2 + l3;
     }
 
+    /**
+     * Construct message for profile password change
+     *
+     * @return
+     */
+    private String buildResetMessage() {
+
+        String l1 = "Greetings!\n\nThere have been a password change reset request on your behalf.\n\n";
+        String l2 = "Your password is changed successfully\n\n\n";
+        String l3 = "If you have any questions please contact support@biobankcloud.com";
+
+        return l1 + l2 + l3;
+    }
+
+    /**
+     *
+     * @return
+     */
     public String changePassword() {
         FacesContext ctx = FacesContext.getCurrentInstance();
         HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
@@ -192,15 +220,74 @@ public class ResetPassword implements Serializable {
             // make the account active until it will be reset by user upon first login
             mgr.updateStatus(people.getUid(), AccountStatusIF.ACCOUNT_ACTIVE);
 
+            // send email    
+            String message = buildResetMessage();
+            emailBean.sendEmail(people.getEmail(), "Password reset", message);
+
             // logout user
             FacesContext context = FacesContext.getCurrentInstance();
             HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
             session.invalidate();
             return ("password_changed");
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset password!", "null"));
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
+            return ("");
+
         }
-        return ("reset");
+    }
+
+    /**
+     *
+     * @return
+     */
+    public String changeSecQuestion() {
+        FacesContext ctx = FacesContext.getCurrentInstance();
+        HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
+
+        if (req.getRemoteUser() == null) {
+            return ("welcome");
+        }
+
+        people = mgr.getUser(req.getRemoteUser());
+
+        if (this.answer.isEmpty() || this.answer == null || this.current == null || this.current.isEmpty()) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "No entry", "null"));
+            return ("");
+        }
+
+        if (people == null) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
+            session.invalidate();
+            return ("welcome");
+        }
+
+        try {
+            if (SecurityUtils.converToSHA256(this.current).equals(people.getPassword())) {
+
+                // update the security question
+                mgr.resetSecQuestion(people.getUid(), this.question, SecurityUtils.converToSHA256(this.answer));
+
+                // send email    
+                String message = buildSecResetMessage();
+                emailBean.sendEmail(people.getEmail(), "BBC profile update", message);
+                this.answer ="";
+                return ("sec_question_changed");
+            } else {
+                FacesContext context = FacesContext.getCurrentInstance();
+                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
+                return "";
+            }
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset!", "null"));
+            Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
+            return ("");
+        }
+
     }
 
     /**
@@ -220,10 +307,14 @@ public class ResetPassword implements Serializable {
         String quest = people.getSecurityQuestion();
         secMgr = new SelectSecurityQuestionMenue();
         this.question = secMgr.getUserQuestion(quest);
-
+        
         return ("reset_password");
     }
 
+    /**
+     *
+     * @return
+     */
     public String changeProfilePassword() {
         FacesContext ctx = FacesContext.getCurrentInstance();
         HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
@@ -241,21 +332,38 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
+//        passwd1 = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("passwd1");
+//        passwd2 = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("passwd2");
+//        current = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("current");
+        if (passwd1 == null || passwd2 == null) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "No password entry", "null"));
+            return ("");
+        }
+
         try {
-            if (SecurityUtils.converToSHA256(this.current).equals(people.getPassword())) {
+
+            if (SecurityUtils.converToSHA256(current).equals(people.getPassword())) {
+
                 // reset the old password with a new one
                 mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(passwd1));
-                logger.info("#### password changed  ");
+
+                // send email    
+                String message = buildResetMessage();
+                emailBean.sendEmail(people.getEmail(), "Password reset", message);
+
                 return ("profile_password_changed");
             } else {
                 FacesContext context = FacesContext.getCurrentInstance();
                 context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
                 return "";
             }
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset!", "null"));
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
+            return ("");
         }
-        return ("profile");
     }
 
 }

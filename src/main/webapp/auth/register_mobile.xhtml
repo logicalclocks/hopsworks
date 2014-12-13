@@ -74,7 +74,6 @@
                                                  requiredMessage="Answer Security Question" />
 
                                     <h:outputLabel for="password0" value="Password: " style="font-weight:bold"/>
-
                                     <p:password id="password0" value="#{userRegistration.password}" 
                                                 required="true" size="40"
                                                 requiredMessage="Select a password">
@@ -88,7 +87,7 @@
                                                 binding="#{confirmPassword}"
                                                 required="true">
                                     </p:password>
-
+                                    
                                     <p:spacer></p:spacer>
                                     <p:messages id="messages" autoUpdate="true" />
                                 </h:panelGrid>

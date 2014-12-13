@@ -30,13 +30,15 @@
 
                 <h:panelGrid columns="1" id="matchGrid" styleClass="Signin" cellpadding="5">                   
                     <h:outputLabel for="pwd1" value="New Password"/>
-                    <p:password id="pwd1" value="#{resetPassword.passwd1}" match="pwd2" label="Password 1" required="true" />
+                    <p:password id="pwd1" value="#{resetPassword.passwd1}" match="pwd2" label="Password 1" required="true" 
+                                requiredMessage="Enter new password"/>
 
                     <h:outputLabel for="pwd2" value="Re-enter"/>
-                    <p:password id="pwd2" value="#{resetPassword.passwd2}" label="Password 2" required="true" />
+                    <p:password id="pwd2" value="#{resetPassword.passwd2}" label="Password 2" required="true"
+                                />
                 </h:panelGrid>
 
-                <p:messages id="messages" showDetail="true" autoUpdate="true" />
+                <p:messages id="messages"  autoUpdate="true" />
                 <br></br> 
                 <div class="register_actions" align="center">
                     <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{resetPassword.changePassword()}">

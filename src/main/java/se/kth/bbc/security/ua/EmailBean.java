@@ -28,19 +28,12 @@ public class EmailBean{
         InternetAddress[] address = {new InternetAddress(to)};
         message.setRecipients(Message.RecipientType.TO, address);
         message.setSubject(subject);
-        String content = "Greetings!\n\nThere have been a password reset request on your behalf.\n\nPlease use the temporary password"
-                + " sent to you as below. You will be required to change your passsword when you login first time.\n\n";        
-        
-        String current = "Pasword:" + body+ "\n\n\n";
-        
-        String ending ="If you have any questions please contact support@biobankcloud.com";
-        
-        String pass_mess = content + current + ending;
-        message.setContent(pass_mess, "text/html");
+        message.setContent(body, "text/html");
 
         // set the timestamp
         message.setSentDate(new Date());
-        message.setText(pass_mess);
+        
+        message.setText(body);
         Transport.send(message);
     }
 }

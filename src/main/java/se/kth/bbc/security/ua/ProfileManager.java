@@ -31,6 +31,8 @@ import se.kth.kthfsdashboard.user.UserController;
 @SessionScoped
 public class ProfileManager implements Serializable {
 
+    private static final Logger logger = Logger.getLogger(ProfileManager.class.getName());
+
     public static final String DEFAULT_GRAVATAR = "resources/images/icons/default-icon.jpg";
 
     private static final long serialVersionUID = 1L;
@@ -44,7 +46,6 @@ public class ProfileManager implements Serializable {
             try {
                 user = userManager.findByEmail(getLoginName());
             } catch (IOException ex) {
-                //TODO: fix
                 Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
             }
@@ -53,20 +54,19 @@ public class ProfileManager implements Serializable {
         return user;
     }
 
-    public Address getUserAddress() {
+    public Address getAddress() {
         if (user == null) {
             try {
                 user = userManager.findByEmail(getLoginName());
-                this.address = userManager.findAddress(user.getUid());
             } catch (IOException ex) {
-                //TODO: fix
                 Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
             }
         }
-        this.address = userManager.findAddress(user.getUid());
-        return this.address;
+            address = userManager.findAddress(user.getUid());
+        return address;
     }
+
 
     public String getLoginName() throws IOException {
         FacesContext context = FacesContext.getCurrentInstance();
@@ -88,6 +88,7 @@ public class ProfileManager implements Serializable {
         String email;
         try {
             email = getLoginName();
+        
         } catch (IOException ex) {
             Logger.getLogger(UserController.class.getName()).log(Level.SEVERE, null, ex);
             return DEFAULT_GRAVATAR;
