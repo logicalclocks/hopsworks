@@ -44,14 +44,14 @@
                     <p:watermark for="otp" value="One time mobile password" />
 
                     <p:messages id="messages" autoUpdate="true"/>
-                    <div align="left ">
-                        <h:panelGroup >
+
+                    <h:panelGrid columns="2">
+                            <p:commandButton id="loginButton" value="Sign in" action="#{gauth.login()}" styleClass="MainButton"/>
                             <p:commandButton  value="New User" action="register_mobile" immediate="true" styleClass="MainButton">
                                 <f:param name="username" value="#{resetPassword.username}" />
                             </p:commandButton>   
-                            <p:commandButton id="loginButton" value="Sign in" action="#{gauth.login()}" styleClass="MainButton"/>
-                        </h:panelGroup>
-                    </div>
+                        
+                    </h:panelGrid>
                 </h:panelGrid>
             </div>
         </h:form> 

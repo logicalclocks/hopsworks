@@ -33,26 +33,24 @@
 
                 <h:panelGrid columns="1"> 
                     <p:outputLabel for="username" value="Username" />
-                    <p:inputText id="username" value="#{yubikeyAuthenticator.username}" required="true" requiredMessage="Enter userame"/>
+                    <p:inputText id="username" value="#{gauth.username}" required="true" requiredMessage="Enter userame"/>
                     <p:watermark for="username" value="Email" />
           
                     <p:outputLabel for="password" value="Password" />
-                    <p:password id="password" value="#{yubikeyAuthenticator.password}" required="true" requiredMessage="Enter password"/>
+                    <p:password id="password" value="#{gauth.password}" required="true" requiredMessage="Enter password"/>
                     <p:watermark for="password" value="Password" />
           
                     <p:outputLabel for="otp" value="PIN" />
-                    <p:password id="otp" value="#{yubikeyAuthenticator.otpCode}" required="true" requiredMessage="Enter PIN"/>
+                    <p:password id="otp" value="#{gauth.otpCode}" required="true" requiredMessage="Enter PIN"/>
                     <p:watermark for="otp" value="Press the Yubikey button" />
 
+                    <p:spacer></p:spacer>
                     <p:messages id="messages" autoUpdate="true" />
-
-                    <div align="left ">
-                        <h:panelGroup >
-                            <p:commandButton  value="New User" action="register_yubico" immediate="true" styleClass="MainButton"/>
-                            <p:commandButton id="loginButton" value="Sign in" action="#{yubikeyAuthenticator.login()}"  styleClass="MainButton"/>
-                        </h:panelGroup>
-                    </div>
-                </h:panelGrid>
+                    <h:panelGrid columns="2" >             
+                    <p:commandButton id="loginButton" value="Sign in" action="#{gauth.yubikeyLogin()}"  styleClass="MainButton"/>
+                    <p:commandButton  value="New User" action="register_yubico"  styleClass="MainButton"/>
+                    </h:panelGrid>             
+                   </h:panelGrid>
             </div>
         </h:form> 
        <div align="center">

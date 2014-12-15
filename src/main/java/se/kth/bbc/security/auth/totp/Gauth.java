@@ -26,6 +26,7 @@ public class Gauth implements Serializable {
 
     private static final long serialVersionUID = 1L;
     public static final String ISSUER = "BiobankCloud";
+    private final String YUBIKEY_USER_MARKER = "YUBIKEY_USER_MARKER";
 
     @EJB
     private UserManager mgr;
@@ -142,6 +143,79 @@ public class Gauth implements Serializable {
         return ("indexPage");
     }
 
+     public String yubikeyLogin()
+            throws NoSuchAlgorithmException, InvalidKeyException {
+        FacesContext ctx = FacesContext.getCurrentInstance();
+        HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
+
+        /* Log  out from the existing logged in user*/
+        if (req.getRemoteUser() != null) {
+            return logout();
+
+        }
+
+        user = mgr.getUser(username);
+        
+        // return if username is wrong
+        if (user == null) {
+            RequestContext.getCurrentInstance().update("growl");
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid username", null));
+            return ("");
+        }
+
+        // return if user not activated
+        if (user.getStatus() == AccountStatusIF.ACCOUNT_INACTIVE) {
+            RequestContext.getCurrentInstance().update("growl");
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not activated", null));
+            return ("");
+        }
+
+        // return if used is bloked
+        if (user.getStatus()== AccountStatusIF.ACCOUNT_BLOCKED) {
+            // inform the use about the blocked account
+            RequestContext.getCurrentInstance().update("growl");
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Blocked account", null));
+            return ("");
+        }
+        
+        userid = user.getUid();
+
+        try {
+            // concatenate the static password with the otp due to limitations of passing two passwords to glassfish
+            req.login(this.username, this.password + this.otpCode + this.YUBIKEY_USER_MARKER);
+            // Reset the lock for failed accounts
+            mgr.resetLock(userid);
+            // Set the onlne flag
+            mgr.setOnline(userid, 1);
+
+        } catch (ServletException ex) {
+            // if more than five times block the account
+            int val = user.getFalseLogin();
+            mgr.increaseLockNum(userid, val + 1);
+            if (val > 5) {
+                mgr.deactivateUser(userid);
+            }
+
+            // inform the use about invalid credentials
+            RequestContext.getCurrentInstance().update("growl");
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid password", null));
+            return ("");
+        }
+        
+        // reset the password after first login
+        if (user.getStatus()== AccountStatusIF.ACCOUNT_PENDING) {
+            return ("reset");
+        }
+       
+        // go to welcome page
+        return ("indexPage");
+    }
+
+    
     public String logout() {
         FacesContext ctx = FacesContext.getCurrentInstance();
         HttpSession sess = (HttpSession) ctx.getExternalContext().getSession(false);
