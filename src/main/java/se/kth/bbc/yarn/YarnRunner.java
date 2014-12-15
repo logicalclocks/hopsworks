@@ -22,7 +22,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -46,7 +45,6 @@ import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.EnvironmentVariableFacade;
 
 /**
@@ -431,31 +429,7 @@ public class YarnRunner {
         Map<String, String> env = new HashMap<>();
 
         // Add AM environment vars.
-        env.putAll(amEnvironment);
-        
-
-        
-        
-                env.put(Client.FLINK_JAR_PATH,"hdfs://localhost:9000/user/stig/"+localResourcesBasePath.replaceAll("\\$APPID", appId.toString())+"/"+amLocalResources.get(appMasterLocalName).destination);
-                env.put(Client.ENV_APP_ID, appId.toString());
-                        FileSystem fs = FileSystem.get(conf);
-                env.put(Client.ENV_CLIENT_HOME_DIR, fs.getHomeDirectory().toString());
-		env.put(Client.ENV_APP_NUMBER, String.valueOf(appId.getId()));
-                env.put(Client.ENV_SLOTS, String.valueOf(1));
-                env.put(Client.ENV_AM_PRC_PORT,String.valueOf(10245));
-                env.put(Client.ENV_CLIENT_SHIP_FILES,"");
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        env.putAll(amEnvironment);        
         
         //Set classpath
         setUpClassPath(env);

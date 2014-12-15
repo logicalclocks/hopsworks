@@ -1,4 +1,4 @@
-package se.kth.bbc.workflows;
+package se.kth.bbc.cuneiform;
 
 import java.io.Serializable;
 import java.util.Objects;

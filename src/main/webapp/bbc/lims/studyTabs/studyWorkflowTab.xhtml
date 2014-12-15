@@ -20,9 +20,9 @@ and open the template in the editor.
                     <span>
                         <h:outputLabel value="App name"/>
                     </span>
-                    <p:selectOneMenu  id="workflowChooser" value="#{experimentController.selectedWorkflow}" style="width:150px">
-                        <f:selectItem itemLabel="Select..." itemValue="" noSelectionOption="true" rendered="#{not experimentController.flowfileSet}" />
-                        <f:selectItems value="#{experimentController.workflowNames}"/>
+                    <p:selectOneMenu  id="workflowChooser" value="#{cuneiformController.selectedWorkflow}" style="width:150px">
+                        <f:selectItem itemLabel="Select..." itemValue="" noSelectionOption="true" rendered="#{not cuneiformController.flowfileSet}" />
+                        <f:selectItems value="#{cuneiformController.workflowNames}"/>
                     </p:selectOneMenu>
 
                     <p:commandButton value="Upload" type="button" onclick="PF('uploadDlg').show()"/>
@@ -61,14 +61,14 @@ and open the template in the editor.
                                         Choose a workflow file
                                     </h:outputLabel>  
                                     <br/><br/>
-                                    <p:selectOneMenu  id="workflowChooser" value="#{experimentController.selectedWorkflow}" style="width:150px">
+                                    <p:selectOneMenu  id="workflowChooser" value="#{cuneiformController.selectedWorkflow}" style="width:150px">
                                         <p:ajax update="descField" />
                                         <f:selectItem itemLabel="Select..." itemValue="" noSelectionOption="true" />
-                                        <f:selectItems value="#{experimentController.workflowNames}"/>
+                                        <f:selectItems value="#{cuneiformController.workflowNames}"/>
                                     </p:selectOneMenu>
-                                    <p:commandButton id="uploadWorkflow" value="Upload file" action="#{experimentController.doSomething}"/>
+                                    <p:commandButton id="uploadWorkflow" value="Upload file" action="#{cuneiformController.doSomething}"/>
                                     <h3> Description </h3>
-                                    <p:inputTextarea id="descField" widgetVar="desc" readonly="true" value="#{empty experimentController.flowfile?'Select workflow':experimentController.flowfile.description}" />
+                                    <p:inputTextarea id="descField" widgetVar="desc" readonly="true" value="#{empty cuneiformController.flowfile?'Select workflow':cuneiformController.flowfile.description}" />
                                 </h:form>
                             </div>
                         </p:panel>

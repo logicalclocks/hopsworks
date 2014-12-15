@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -26,8 +25,8 @@ public class JobController implements Serializable {
 
     private static final Logger logger = Logger.getLogger(JobController.class.getName());
 
-    private Map<String, String> variables = new HashMap<>();
-    private Map<String, String> files = new HashMap<>();
+    private final Map<String, String> variables = new HashMap<>();
+    private final Map<String, String> files = new HashMap<>();
 
     private String basePath = null;
 
