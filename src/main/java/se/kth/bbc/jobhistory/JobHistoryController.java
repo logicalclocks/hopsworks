@@ -12,7 +12,7 @@ import se.kth.bbc.study.StudyMB;
  *
  * @author stig
  */
-@ManagedBean
+@ManagedBean(name="jobHistoryController")
 @RequestScoped
 public class JobHistoryController implements Serializable{
   

@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import org.apache.flink.yarn.Client;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -77,6 +76,8 @@ public class YarnRunner {
     private final Map<String, SourceDestinationPair> amLocalResources;
     private final Map<String, String> amEnvironment;
     private final String localResourcesBasePath;
+    private final String stdOutPath;
+    private final String stdErrPath;
 
     //Non-constructor-passed attributes
     private final Configuration conf;
@@ -104,6 +105,8 @@ public class YarnRunner {
         }
         this.localResourcesBasePath = builder.localResourcesBasePath;
         this.appMasterLocalName = builder.appMasterLocalName;
+        this.stdErrPath = builder.stdErrPath;
+        this.stdOutPath = builder.stdOutPath;
     }
 
     public static class Builder {
@@ -135,6 +138,10 @@ public class YarnRunner {
         private Map<String, String> amEnvironment = null;
         //Path where the application master expects its local resources to be (added to fs.getHomeDirectory)
         private String localResourcesBasePath;
+        //Path to file where stdout should be written
+        private String stdOutPath;
+        //Path to file where stderr should be written
+        private String stdErrPath;
 
         //Hadoop Configuration
         private Configuration conf;
@@ -170,6 +177,16 @@ public class YarnRunner {
         public Builder appMasterMainClass(String amMainClass) {
             this.appMasterMainClass = amMainClass;
             return this;
+        }
+        
+        public Builder stdOutPath(String path){
+          this.stdOutPath = path;
+          return this;
+        }
+        
+        public Builder stdErrPath(String path){
+          this.stdErrPath = path;
+          return this;
         }
 
         /**
@@ -547,9 +564,9 @@ public class YarnRunner {
         vargs.add(amArgs);
         
         vargs.add("1>");
-        vargs.add(ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/jobmanager-stdout.log");
+        vargs.add(stdOutPath);
         vargs.add("2>");
-        vargs.add(ApplicationConstants.LOG_DIR_EXPANSION_VAR + "/jobmanager-stderr.log");
+        vargs.add(stdErrPath);
         
         // Get final commmand
         StringBuilder amcommand = new StringBuilder();

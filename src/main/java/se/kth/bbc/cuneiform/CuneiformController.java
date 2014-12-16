@@ -1,52 +1,29 @@
 package se.kth.bbc.cuneiform;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Maps;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
-/*
- * import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
- * import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
- * import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
- */
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Serializable;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
-import javax.ejb.EJB;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
-import javax.faces.event.AjaxBehaviorEvent;
-import org.apache.hadoop.fs.Path;
-import org.primefaces.component.selectbooleancheckbox.SelectBooleanCheckbox;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.UploadedFile;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.study.StudyMB;
-import se.kth.bbc.study.fb.Inode;
-import se.kth.bbc.study.fb.InodeFacade;
-import se.kth.bbc.fileoperations.FileSystemOperations;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.yarn.JobController;
+import se.kth.bbc.yarn.YarnRunner;
 
 /**
  * Controller for the Cuneiform tab in StudyPage.
@@ -151,6 +128,21 @@ public class CuneiformController implements Serializable {
   
   public void setFreeVars(List<CuneiformParameter> vars){
     this.freevars = vars;
+  }
+  
+  public void startWorkflow(){
+    YarnRunner.Builder b = new YarnRunner.Builder(Constants.HIWAY_JAR_PATH,"Hiway.jar");
+    b.appMasterMainClass("de.huberlin.wbi.hiway.app.am.CuneiformApplicationMaster");
+    b.stdErrPath("hdfs:///tmp/stderr.log");
+    b.stdOutPath("hdfs:///tmp/stdout.log");
+    YarnRunner r = b.build();
+    try {
+      r.startAppMaster();
+    } catch (YarnException | IOException ex) {
+      Logger.getLogger(CuneiformController.class.getName()).
+              log(Level.SEVERE, "Failed to start app master", ex);
+      MessagesController.addErrorMessage("Failed to start app master. See logs.");
+    }
   }
 
 }
