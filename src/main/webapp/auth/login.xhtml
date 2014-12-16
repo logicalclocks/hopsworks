@@ -34,15 +34,24 @@
                 <br></br>
                 <h:panelGrid columns="1"> 
                     <p:outputLabel for="uname" value="Username"/>
-                    <p:inputText id="uname" value="#{gauth.username}" required="true" requiredMessage="Enter userame"/>
+                    <p:inputText id="uname" value="#{gauth.username}" required="true" 
+                      validatorMessage="Email is not valid format" >
+                        <f:validateRegex pattern="[\w\.-]*[a-zA-Z0-9_]@[\w\.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z\.]*[a-zA-Z]" />
+                    
+                    </p:inputText>   
                     <p:watermark for="uname" value="Email" />
 
                     <p:outputLabel for="password" value="Password" />
-                    <p:password id="password" value="#{gauth.password}" required="true" requiredMessage="Enter Password"/>
+                    <p:password id="password" value="#{gauth.password}" required="true" requiredMessage="Enter Password"
+                                validatorMessage="Password must be at least 6 charachter alpanumeric">
+                        <f:validateLength minimum="6"/>   
+                    </p:password>
                     <p:watermark for="password" value="Password" />
 
                     <p:outputLabel for="otp" value="PIN" />
-                    <p:password id="otp" value="#{gauth.otpCode}" required="true" requiredMessage="Enter PIN"/>
+                    <p:password id="otp" value="#{gauth.otpCode}" required="true" validatorMessage="PIN must be 6 digits" >
+                        <f:validateLength minimum="6" maximum="6"/> 
+                    </p:password>   
                     <p:watermark for="otp" value="One time mobile password" />
 
                     <p:messages id="messages" autoUpdate="true"/>

@@ -76,9 +76,8 @@ public class Gauth implements Serializable {
         /* Log  out from the existing logged in user*/
         if (req.getRemoteUser() != null) {
             return logout();
-
         }
-
+        
         user = mgr.getUser(username);
         
         // return if username is wrong

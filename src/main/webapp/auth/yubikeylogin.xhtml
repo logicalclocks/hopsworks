@@ -31,30 +31,38 @@
                 </h:panelGrid>
                 <br></br>
 
-                <h:panelGrid columns="1"> 
-                    <p:outputLabel for="username" value="Username" />
-                    <p:inputText id="username" value="#{gauth.username}" required="true" requiredMessage="Enter userame"/>
+                <h:panelGrid columns="1">
+                    <p:outputLabel for="username" value="Username"/>
+                    <p:inputText id="username" value="#{gauth.username}" required="true" 
+                    validatorMessage="Email is not valid format" >
+                        <f:validateRegex pattern="[\w\.-]*[a-zA-Z0-9_]@[\w\.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z\.]*[a-zA-Z]" />
+                    </p:inputText>
                     <p:watermark for="username" value="Email" />
-          
+                  
                     <p:outputLabel for="password" value="Password" />
-                    <p:password id="password" value="#{gauth.password}" required="true" requiredMessage="Enter password"/>
+                    <p:password id="password" value="#{gauth.password}" required="true" 
+                    validatorMessage="Password must be at least 6 charachter alpanumeric">
+                        <f:validateLength minimum="6"/>   
+                    </p:password>    
                     <p:watermark for="password" value="Password" />
-          
+
                     <p:outputLabel for="otp" value="PIN" />
-                    <p:password id="otp" value="#{gauth.otpCode}" required="true" requiredMessage="Enter PIN"/>
+                    <p:password id="otp" value="#{gauth.otpCode}" required="true" validatorMessage="PIN must be 44 digits">
+                       <f:validateLength minimum="44" maximum="44"/> 
+                    </p:password>
                     <p:watermark for="otp" value="Press the Yubikey button" />
 
                     <p:spacer></p:spacer>
                     <p:messages id="messages" autoUpdate="true" />
                     <h:panelGrid columns="2" >             
-                    <p:commandButton id="loginButton" value="Sign in" action="#{gauth.yubikeyLogin()}"  styleClass="MainButton"/>
-                    <p:commandButton  value="New User" action="register_yubico"  styleClass="MainButton"/>
+                        <p:commandButton id="loginButton" value="Sign in" action="#{gauth.yubikeyLogin()}"  styleClass="MainButton"/>
+                        <p:commandButton  value="New User" action="register_yubico"  styleClass="MainButton" immediate="true"/>
                     </h:panelGrid>             
-                   </h:panelGrid>
+                </h:panelGrid>
             </div>
         </h:form> 
-       <div align="center">
-            <p:commandLink id="signupLink" value="Can't login?" action="reset_password" style="text-align: right"/>
+        <div align="center">
+            <p:commandLink id="signupLink" value="Can't login?" action="login_issue" style="text-align: right"/>
         </div>
         <br/>
     </h:body>

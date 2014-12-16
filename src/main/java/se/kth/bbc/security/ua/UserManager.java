@@ -12,6 +12,7 @@ import javax.persistence.TypedQuery;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.People;
 import se.kth.bbc.security.ua.model.PeopleGroup;
+import se.kth.bbc.security.ua.model.Yubikey;
 
 /**
  *
@@ -40,10 +41,11 @@ public class UserManager {
      * @param otpSecret
      * @param question
      * @param answer
+     * @param yubikey
      * @return
      */
     public String register(String fname, String lname, String email, String title, String org, String tel,
-            String orcid, int uid, String password, String otpSecret, String question, String answer) {
+            String orcid, int uid, String password, String otpSecret, String question, String answer, short yubikey) {
 
         /* assigne a username*/
         String uname = "meb" + uid;
@@ -69,6 +71,7 @@ public class UserManager {
         user.setIsonline(-1);
         user.setSecurityQuestion(question);
         user.setSecurityAnswer(answer);
+        user.setYubikeyUser(yubikey);
         em.persist(user);
         return uname;
     }
@@ -174,6 +177,12 @@ public class UserManager {
         return people;
     }
 
+    public boolean registerYubikey(int uid) {
+        Yubikey yk = new Yubikey();
+        yk.setPeopleuid(new People(uid));
+        em.persist(yk);
+        return true;
+    }
     /**
      * Register Yubikey user's delivery address.
      *
@@ -301,4 +310,6 @@ public class UserManager {
         query.setParameter("uid", uid);
         return query.getSingleResult();
     }
+
+   
 }

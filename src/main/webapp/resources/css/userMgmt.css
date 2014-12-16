@@ -144,12 +144,14 @@ and open the template in the editor.
     text-align: center;
     min-height: 900px;
     height: auto !important;
+    overflow: auto;
 }
 
 .BbcMainLayoutUser .ui-widget-content {
     border-width: 0px;  
-    overflow-y: hidden;
-    overflow-x: hidden;
+    overflow-y: auto;
+    overflow-x: auto;
+    overflow: auto;
     //overflow-y: auto;
     //////////////////////
 }

@@ -249,14 +249,16 @@ public class UserRegistration implements Serializable {
             /* generates a UNIX compliant account*/
             int uid = mgr.lastUserID() + 1;
             String otpSecret = SecurityUtils.calculateSecretKey();
-
+            short yubikey = -1;
             username = mgr.register(fname, lname, mail, title, org, tel, orcid, uid,
-                    SecurityUtils.converToSHA256(password), otpSecret, security_question, SecurityUtils.converToSHA256(security_answer));
+                    SecurityUtils.converToSHA256(password), otpSecret, security_question,
+                    SecurityUtils.converToSHA256(security_answer), yubikey);
 
             mgr.registerGroup(uid, GroupsIf.BBC_GUEST);
             mgr.registerAddress(uid);
+            
             qrCode = QRCodeGenerator.getQRCode(mail, Gauth.ISSUER, otpSecret);
-
+           
             // Reset the values
             fname = "";
             lname = "";
@@ -283,10 +285,11 @@ public class UserRegistration implements Serializable {
         try {
             /* generates a UNIX compliant account*/
             int uid = mgr.lastUserID() + 1;
-            String otpSecret = SecurityUtils.calculateSecretKey();
 
+            short yubikey = 1;
+            String otp ="-1";
             username = mgr.register(fname, lname, mail, title, org, tel, orcid, uid,
-                    SecurityUtils.converToSHA256(password), otpSecret, security_question, SecurityUtils.converToSHA256(security_answer));
+                    SecurityUtils.converToSHA256(password), otp, security_question, SecurityUtils.converToSHA256(security_answer), yubikey);
 
             mgr.registerGroup(uid, GroupsIf.BBC_GUEST);
             mgr.registerAddress(uid, address1, address2, address3, city, state, country, postalcode);

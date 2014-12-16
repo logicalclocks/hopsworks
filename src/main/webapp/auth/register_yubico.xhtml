@@ -19,17 +19,17 @@
             <ui:insert name="titleBar" >
                 <ui:include src="/bbc/lims/titleBar.xhtml" />       
             </ui:insert>
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser">
+            <p:layout id="bbcMainLayoutYubikey" styleClass="BbcMainLayoutUser">
 
                 <p:layoutUnit position="center">
                     <div class="container">
                         <ul class="register_actions">
-                            <h3 align="left">Request Mobile Account</h3>
+                            <h3 align="left">Request Yubikey Account</h3>
                         </ul>
 
                         <div class="content">
 
-                            <h:form id="registration" class="new_user_content"> 
+                            <h:form id="yubikey_registration" class="new_user_content"> 
 
                                 <h:panelGrid columns="2" style="font-size: 12px;">			
                                     <h:outputLabel for="fname" value="First name: " style="font-weight:bold"/>

@@ -1432,6 +1432,7 @@ img .browser .s16 {
     min-height: 400px;
     height: auto !important;
     margin-bottom: 18px;
+    overflow: auto;
     
 }
 

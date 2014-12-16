@@ -49,7 +49,8 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "People.findByIsonline", query = "SELECT p FROM People p WHERE p.isonline = :isonline"),
     @NamedQuery(name = "People.findBySecret", query = "SELECT p FROM People p WHERE p.secret = :secret"),
     @NamedQuery(name = "People.findBySecurityQuestion", query = "SELECT p FROM People p WHERE p.securityQuestion = :securityQuestion"),
-    @NamedQuery(name = "People.findBySecurityAnswer", query = "SELECT p FROM People p WHERE p.securityAnswer = :securityAnswer")})
+    @NamedQuery(name = "People.findBySecurityAnswer", query = "SELECT p FROM People p WHERE p.securityAnswer = :securityAnswer"),
+    @NamedQuery(name = "People.findByYubikeyUser", query = "SELECT p FROM People p WHERE p.yubikeyUser = :yubikeyUser")})
 public class People implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -115,6 +116,8 @@ public class People implements Serializable {
     @Size(max = 128)
     @Column(name = "security_answer")
     private String securityAnswer;
+    @Column(name = "yubikey_user")
+    private Short yubikeyUser;
     @OneToMany(mappedBy = "peopleuid")
     private Collection<Login> loginCollection;
     @OneToMany(mappedBy = "peopleuid")
@@ -271,6 +274,14 @@ public class People implements Serializable {
 
     public void setSecurityAnswer(String securityAnswer) {
         this.securityAnswer = securityAnswer;
+    }
+
+    public Short getYubikeyUser() {
+        return yubikeyUser;
+    }
+
+    public void setYubikeyUser(Short yubikeyUser) {
+        this.yubikeyUser = yubikeyUser;
     }
 
     @XmlTransient
