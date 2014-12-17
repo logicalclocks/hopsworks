@@ -100,7 +100,7 @@ public class ProfileManager implements Serializable {
 
     public void updateUser() {
         try {
-            userManager.update(user);
+            userManager.updatePeople(user);
             userManager.updateAddress(address);
 
         } catch (EJBException ejb) {

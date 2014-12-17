@@ -44,8 +44,9 @@ public class UserManager {
      * @param yubikey
      * @return
      */
-    public String register(String fname, String lname, String email, String title, String org, String tel,
-            String orcid, int uid, String password, String otpSecret, String question, String answer, short yubikey) {
+    public String register(String fname, String lname, String email, String title, String org,
+                String tel, String orcid, int uid, String password, String otpSecret, 
+                String question, String answer, int status, short yubikey) {
 
         /* assigne a username*/
         String uname = "meb" + uid;
@@ -63,7 +64,7 @@ public class UserManager {
         user.setOrcid(orcid);
         user.setTitle(title);
         user.setActivated(new Timestamp(new Date().getTime()));
-        user.setStatus(AccountStatusIF.ACCOUNT_INACTIVE);
+        user.setStatus(status);
         /*
          * offline: -1
          * online:   1  
@@ -172,14 +173,14 @@ public class UserManager {
 
       
     public List<People> findInactivateUsers() {
-        Query query = em.createNativeQuery("SELECT * FROM People p WHERE p.active = "+ AccountStatusIF.ACCOUNT_INACTIVE );
+        Query query = em.createNativeQuery("SELECT * FROM People p WHERE p.active = "+ AccountStatusIF.MOBILE_ACCOUNT_INACTIVE );
         List<People> people = query.getResultList();
         return people;
     }
 
     public boolean registerYubikey(int uid) {
         Yubikey yk = new Yubikey();
-        yk.setPeopleuid(new People(uid));
+        yk.setUid(uid);
         em.persist(yk);
         return true;
     }
@@ -253,6 +254,21 @@ public class UserManager {
         return (existing.size() > 0);
     }
     
+    public boolean findYubikeyUsersByStatus(int status) {
+        List existing = em.createQuery(
+       "SELECT p FROM People p WHERE p.status ='" + AccountStatusIF.MOBILE_ACCOUNT_INACTIVE + "' AND p.yubikey_user = "+ status)
+                .getResultList();
+      return (existing.size() > 0);
+    }
+    
+    
+     public Yubikey findYubikey(int uid) {
+       TypedQuery<Yubikey> query = em.createNamedQuery("Yubikey.findByUid", Yubikey.class);
+       query.setParameter("uid", uid);
+       return query.getSingleResult();
+         
+     }
+    
     
     public List<People> findAllByName() {
         TypedQuery<People> query = em.createNamedQuery("People.findAllByName", People.class);
@@ -268,8 +284,12 @@ public class UserManager {
         em.persist(user);
     }
 
-    public void update(People user) {
+    public void updatePeople(People user) {
         em.merge(user);
+    }
+    
+    public void updateYubikey(Yubikey yubi) {
+        em.merge(yubi);
     }
     
     public void updateAddress(Address add) {
@@ -310,6 +330,5 @@ public class UserManager {
         query.setParameter("uid", uid);
         return query.getSingleResult();
     }
-
    
 }

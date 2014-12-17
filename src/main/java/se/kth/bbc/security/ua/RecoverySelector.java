@@ -192,8 +192,9 @@ public class RecoverySelector implements Serializable{
     
     private String buildTempResetMessage(String random_password) {
 
-        String content = "Greetings!\n\nThere have been a mobile device reset request on your behalf.\n\nPlease use the temporary password"
-                + " sent to you as below. You need to validate the code to get a new setup.\n\n";
+        String content = "Greetings!\n\nThere have been a mobile device reset request on your behalf.\n\n"
+                + "Please use the temporary password"
+                + "sent to you as below. You need to validate the code to get a new setup.\n\n";
 
         String tmp_pass = "Code:" + random_password + "\n\n\n";
         String ending = "If you have any questions please contact support@biobankcloud.com";
@@ -203,7 +204,8 @@ public class RecoverySelector implements Serializable{
 
      private String buildYubResetMessage(String msg) {
 
-        String content = "Greetings!\n\nThere have been a Yubikey device reset request on your behalf.\n\n You will receive a device within 48 hours.\n\n";
+        String content = "Greetings!\n\nThere have been a Yubikey device reset request on your behalf.\n\n"
+                + "You will receive a device within 48 hours.\n\n";
 
         String ending = "If you have any questions please contact support@biobankcloud.com";
 
@@ -226,7 +228,8 @@ public class RecoverySelector implements Serializable{
                 
                 String message = buildYubResetMessage("");
                 email.sendEmail(people.getEmail(), "Yubikey request", message);
-                
+                people.setStatus(AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE);
+                um.updatePeople(people);
                 return "yubico";
             } else {
                 FacesContext context = FacesContext.getCurrentInstance();

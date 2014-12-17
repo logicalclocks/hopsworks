@@ -34,6 +34,12 @@
         </navigation-case>
 
         <navigation-case>
+            <from-outcome>activate_yubikey</from-outcome>
+            <to-view-id>/auth/activate_yubikey.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <navigation-case>
             <from-outcome>yubico</from-outcome>
             <to-view-id>/auth/yubico.xhtml</to-view-id>
             <redirect/>

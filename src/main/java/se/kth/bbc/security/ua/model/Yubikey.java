@@ -10,9 +10,9 @@ import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -31,7 +31,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "Yubikey.findAll", query = "SELECT y FROM Yubikey y"),
-    @NamedQuery(name = "Yubikey.findByYubidnum", query = "SELECT y FROM Yubikey y WHERE y.yubidnum = :yubidnum"),
     @NamedQuery(name = "Yubikey.findBySerial", query = "SELECT y FROM Yubikey y WHERE y.serial = :serial"),
     @NamedQuery(name = "Yubikey.findByVersion", query = "SELECT y FROM Yubikey y WHERE y.version = :version"),
     @NamedQuery(name = "Yubikey.findByNotes", query = "SELECT y FROM Yubikey y WHERE y.notes = :notes"),
@@ -43,15 +42,11 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Yubikey.findByAesSecret", query = "SELECT y FROM Yubikey y WHERE y.aesSecret = :aesSecret"),
     @NamedQuery(name = "Yubikey.findByPublicId", query = "SELECT y FROM Yubikey y WHERE y.publicId = :publicId"),
     @NamedQuery(name = "Yubikey.findByAccessed", query = "SELECT y FROM Yubikey y WHERE y.accessed = :accessed"),
-    @NamedQuery(name = "Yubikey.findByStatus", query = "SELECT y FROM Yubikey y WHERE y.status = :status")})
+    @NamedQuery(name = "Yubikey.findByStatus", query = "SELECT y FROM Yubikey y WHERE y.status = :status"),
+    @NamedQuery(name = "Yubikey.findByYubidnum", query = "SELECT y FROM Yubikey y WHERE y.yubidnum = :yubidnum"),
+    @NamedQuery(name = "Yubikey.findByUid", query = "SELECT y FROM Yubikey y WHERE y.uid = :uid")})
 public class Yubikey implements Serializable {
     private static final long serialVersionUID = 1L;
-    @Id
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 45)
-    @Column(name = "yubidnum")
-    private String yubidnum;
     @Size(max = 10)
     @Column(name = "serial")
     private String serial;
@@ -87,29 +82,28 @@ public class Yubikey implements Serializable {
     private Date accessed;
     @Column(name = "status")
     private Integer status;
-    @JoinColumn(name = "People_uid", referencedColumnName = "uid")
-    @ManyToOne
-    private People peopleuid;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Basic(optional = false)
+    @Column(name = "yubidnum")
+    private Integer yubidnum;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "uid")
+    private int uid;
 
     public Yubikey() {
     }
 
-    public Yubikey(String yubidnum) {
+    public Yubikey(Integer yubidnum) {
         this.yubidnum = yubidnum;
     }
 
-    public Yubikey(String yubidnum, Date created, Date accessed) {
+    public Yubikey(Integer yubidnum, Date created, Date accessed, int uid) {
         this.yubidnum = yubidnum;
         this.created = created;
         this.accessed = accessed;
-    }
-
-    public String getYubidnum() {
-        return yubidnum;
-    }
-
-    public void setYubidnum(String yubidnum) {
-        this.yubidnum = yubidnum;
+        this.uid = uid;
     }
 
     public String getSerial() {
@@ -208,12 +202,20 @@ public class Yubikey implements Serializable {
         this.status = status;
     }
 
-    public People getPeopleuid() {
-        return peopleuid;
+    public Integer getYubidnum() {
+        return yubidnum;
     }
 
-    public void setPeopleuid(People peopleuid) {
-        this.peopleuid = peopleuid;
+    public void setYubidnum(Integer yubidnum) {
+        this.yubidnum = yubidnum;
+    }
+
+    public int getUid() {
+        return uid;
+    }
+
+    public void setUid(int uid) {
+        this.uid = uid;
     }
 
     @Override

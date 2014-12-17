@@ -89,7 +89,7 @@ public class Gauth implements Serializable {
         }
 
         // return if user not activated
-        if (user.getStatus() == AccountStatusIF.ACCOUNT_INACTIVE) {
+        if (user.getStatus() == AccountStatusIF.MOBILE_ACCOUNT_INACTIVE) {
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not activated", null));
@@ -164,7 +164,7 @@ public class Gauth implements Serializable {
         }
 
         // return if user not activated
-        if (user.getStatus() == AccountStatusIF.ACCOUNT_INACTIVE) {
+        if (user.getStatus() == AccountStatusIF.MOBILE_ACCOUNT_INACTIVE) {
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not activated", null));

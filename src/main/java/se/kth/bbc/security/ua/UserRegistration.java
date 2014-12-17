@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
+import javax.mail.MessagingException;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.security.auth.totp.Gauth;
 import se.kth.bbc.security.auth.totp.QRCodeGenerator;
@@ -252,7 +253,7 @@ public class UserRegistration implements Serializable {
             short yubikey = -1;
             username = mgr.register(fname, lname, mail, title, org, tel, orcid, uid,
                     SecurityUtils.converToSHA256(password), otpSecret, security_question,
-                    SecurityUtils.converToSHA256(security_answer), yubikey);
+                    SecurityUtils.converToSHA256(security_answer), AccountStatusIF.MOBILE_ACCOUNT_INACTIVE, yubikey);
 
             mgr.registerGroup(uid, GroupsIf.BBC_GUEST);
             mgr.registerAddress(uid);
@@ -279,8 +280,10 @@ public class UserRegistration implements Serializable {
         return ("qrcode");
     }
 
-    
-    public String registerYubikey() throws UnsupportedEncodingException, NoSuchAlgorithmException, IOException {
+     @EJB
+    private EmailBean emailBean;
+   
+    public String registerYubikey() throws UnsupportedEncodingException, NoSuchAlgorithmException, IOException, MessagingException {
 
         try {
             /* generates a UNIX compliant account*/
@@ -288,12 +291,16 @@ public class UserRegistration implements Serializable {
 
             short yubikey = 1;
             String otp ="-1";
-            username = mgr.register(fname, lname, mail, title, org, tel, orcid, uid,
-                    SecurityUtils.converToSHA256(password), otp, security_question, SecurityUtils.converToSHA256(security_answer), yubikey);
+             logger.info("Username: "+ password);    
+            logger.info("Pass: "+ password);
+            username = mgr.register(fname, lname, mail, title, org,
+                    tel, orcid, uid, SecurityUtils.converToSHA256(password), otp, 
+                    security_question, SecurityUtils.converToSHA256(security_answer), AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE, yubikey);
 
             mgr.registerGroup(uid, GroupsIf.BBC_GUEST);
             mgr.registerAddress(uid, address1, address2, address3, city, state, country, postalcode);
-            
+            mgr.registerYubikey(uid);
+            emailBean.sendEmail(mail, "Yubikey Request", buildYubikeyRequestMessage());
             // Reset the values
             fname = "";
             lname = "";
@@ -320,4 +327,14 @@ public class UserRegistration implements Serializable {
         }
         return ("yubico");
     }
+    
+     private String buildYubikeyRequestMessage() {
+
+        String l1 = "Greetings!\n\nThere have been a Yubikey account request your behalf.\n\n";
+        String l2 = "You will receive a Yubikey within 48 hours to your address.\n\n\n";
+        String l3 = "If you have any questions please contact support@biobankcloud.com";
+
+        return l1 + l2 + l3;
+    }
+
 }

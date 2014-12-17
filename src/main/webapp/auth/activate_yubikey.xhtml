@@ -26,7 +26,7 @@
                 <p:layoutUnit position="center">
                     <div class="container">
                         <ul class="register_actions">
-                            <h3 align="left">Request Yubikey Account</h3>
+                            <h3 align="left">Activate Yubikey Account</h3>
                         </ul>
 
                         <div class="content">
@@ -35,27 +35,27 @@
 
                                 <h:panelGrid columns="2" style="font-size: 12px;">			
                                     <h:outputLabel for="fname" value="First name: " style="font-weight:bold"/>
-                                    <h:inputText id="fname" value="#{userRegistration.fname}" size="40"
+                                    <h:inputText id="fname" value="#{peopleAministration.selectedYubikyUser.fname}" size="40"
                                                  required="true"
                                                  requiredMessage="Enter Name" />
 
                                     <h:outputLabel for="lname" value="Lirst name: " style="font-weight:bold"/>
-                                    <h:inputText id="lname" value="#{userRegistration.lname}" size="40"
+                                    <h:inputText id="lname" value="#{peopleAministration.selectedYubikyUser.lname}" size="40"
                                                  required="true"
                                                  requiredMessage="Last Name"/>
 
                                     <h:outputLabel for="email" value="Email" style="font-weight:bold"/>
-                                    <h:inputText id="email" value="#{userRegistration.mail}" size="40"
+                                    <h:inputText id="email" value="#{peopleAministration.selectedYubikyUser.email}" size="40"
                                                  required="true"
                                                  requiredMessage="Enter Email"
                                                  validatorMessage="Invalid email format">
                                         <f:validateRegex
                                             pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
-                                        <f:validator binding="#{usernameValidator}" />
+                             
                                     </h:inputText>    
 
                                     <h:outputLabel for="tel" value="Mobile: " style="font-weight:bold"/>
-                                    <h:inputText id="tel" value="#{userRegistration.tel}" size="40"
+                                    <h:inputText id="tel" value="#{peopleAministration.selectedYubikyUser.mobile}" size="40"
                                                  required="true"
                                                  requiredMessage="Enter Mobile"
                                                  validatorMessage="Invalid mobile number">
@@ -63,59 +63,36 @@
                                     </h:inputText>
 
                                     <h:outputLabel for="address1" value="co" style="font-weight:bold" />
-                                    <h:inputText id="address1" value="#{userRegistration.address1}" required="true" size="40"
+                                    <h:inputText id="address1" value="#{peopleAministration.address.address1}" required="true" size="40"
                                                  requiredMessage="Enter co">
                                     </h:inputText>
 
                                     <h:outputLabel for="address2" value="Street" style="font-weight:bold" />
-                                    <h:inputText id="address2" value="#{userRegistration.address2}" required="true"
+                                    <h:inputText id="address2" value="#{peopleAministration.address.address2}" required="true"
                                                  requiredMessage="Enter street" size="40">
                                     </h:inputText>
 
-                                    <h:outputLabel for="city1" value="City" style="font-weight:bold" />
-                                    <h:inputText id="city1" value="#{userRegistration.city}"  required="true"
+                                    <h:outputLabel for="city" value="City" style="font-weight:bold" />
+                                    <h:inputText id="city" value="#{peopleAministration.address.city}"  required="true"
                                                  requiredMessage="Enter city" size="40">
                                     </h:inputText>
 
-                                    <h:outputLabel for="zip1" value="Postal code:" style="font-weight:bold" />
-                                    <h:inputText id="zip1" value="#{userRegistration.postalcode}" required="true"
+                                    <h:outputLabel for="zip" value="Postal code:" style="font-weight:bold" />
+                                    <h:inputText id="zip" value="#{peopleAministration.address.postalcode}" required="true"
                                                  requiredMessage="Enter postalcode" size="40">
                                     </h:inputText>
 
-                                    <h:outputLabel for="country1" value="Country:" style="font-weight:bold" />
-                                    <h:inputText id="country1" value="#{userRegistration.country}"  required="true"
+                                    <h:outputLabel for="country" value="Country:" style="font-weight:bold" />
+                                    <h:inputText id="country" value="#{peopleAministration.address.country}"  required="true"
+                                                 requiredMessage="Enter your country" size="40">
+                                    </h:inputText>
+                                    
+                                    <h:outputLabel for="creds" value="Credentials:" style="font-weight:bold" />
+                                    <h:inputText id="creds" value="#{peopleAministration.credentials}"  required="true"
                                                  requiredMessage="Enter your country" size="40">
                                     </h:inputText>
 
-                                    <h:outputLabel for="sec_question1" value="Security Question: " style="font-weight:bold"/>
-                                    <p:selectOneMenu id="console1" value="#{userRegistration.security_question}" effect="fold" required="true"
-                                                     requiredMessage="Select security question" >
-                                        <f:selectItem itemLabel="Select One" itemValue="" />
-                                        <f:selectItems value="#{selectSecurityQuestionMenue.questions}" />
-                                    </p:selectOneMenu>  
-
-                                    <h:outputLabel for="answer1" value="Answer:" style="font-weight:bold"/>
-                                    <h:inputText id="answer1" value="#{userRegistration.security_answer}" size="40"
-                                                 required="true"
-                                                 requiredMessage="Enter answer">
-                                    </h:inputText>  
-
-                                    <h:outputLabel for="pass0" value="Password: " style="font-weight:bold"/>
-
-                                    <h:inputSecret id="pass0" value="#{userRegistration.password}" 
-                                                   required="true" size="40"
-                                                   requiredMessage="Enter password">
-                                        <f:validator validatorId="passwordValidator" />
-                                        <f:attribute name="confirmPassword" value="#{confirmPassword}" />
-                                    </h:inputSecret>
-
-                                    <h:outputLabel for="pass" value="Password again:" style="font-weight:bold"/>
-                                    <h:inputSecret id="pas" value="#{userRegistration.passwordAgain}" size="40"
-                                                   requiredMessage="Re-enter a password"
-                                                   binding="#{confirmPassword}"
-                                                   required="true">
-                                    </h:inputSecret>
-
+                                    
                                     <p:spacer></p:spacer>
                                     <p:messages id="messages" autoUpdate="true" />
 
@@ -124,8 +101,8 @@
                                 </h:panelGrid>
 
                                 <div class="register_actions">
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{userRegistration.registerYubikey()}" />
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" style="margin-left: 55px"/>
+                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{peopleAministration.activateYubikey()}" />
+                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="userMgmt" process="@this" style="margin-left: 55px"/>
                                 </div>
 
                             </h:form>     

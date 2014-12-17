@@ -85,12 +85,8 @@ public class PasswordValidator implements Validator {
      * @return
      */
     public boolean isAlphaNumeric(String s) {
-      Pattern pattern = Pattern.compile("^([A-Za-z]|[0-9])+$");
+      Pattern pattern = Pattern.compile("^(?=.*[0-9])(?=.*[a-zA-Z])(?=\\S+$).{6,}$");
       Matcher matcher = pattern.matcher(s);
-
-        if (matcher.find()) {
-            return true;
-        }
-        return false;
+        return matcher.matches();
     }
 }

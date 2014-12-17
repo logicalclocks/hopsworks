@@ -14,8 +14,8 @@
 
 .BbcMainLayoutTeam .ui-widget-content {
     border-width: 0px;  
-    overflow-y: hidden;
-    overflow-x: hidden;
+   //overflow-y: auto;
+   // overflow-x: hidden;
     height: auto !important;
 }
 .BbcMainLayoutTeam::-webkit-scrollbar {
@@ -1432,8 +1432,7 @@ img .browser .s16 {
     min-height: 400px;
     height: auto !important;
     margin-bottom: 18px;
-    overflow: auto;
-    
+    overflow-y: auto;
 }
 
 .new_user_content .clear_fixing{

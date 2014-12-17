@@ -120,8 +120,6 @@ public class People implements Serializable {
     private Short yubikeyUser;
     @OneToMany(mappedBy = "peopleuid")
     private Collection<Login> loginCollection;
-    @OneToMany(mappedBy = "peopleuid")
-    private Collection<Yubikey> yubikeyCollection;
 
     public People() {
     }
@@ -292,16 +290,6 @@ public class People implements Serializable {
 
     public void setLoginCollection(Collection<Login> loginCollection) {
         this.loginCollection = loginCollection;
-    }
-
-    @XmlTransient
-    @JsonIgnore
-    public Collection<Yubikey> getYubikeyCollection() {
-        return yubikeyCollection;
-    }
-
-    public void setYubikeyCollection(Collection<Yubikey> yubikeyCollection) {
-        this.yubikeyCollection = yubikeyCollection;
     }
 
     @Override
