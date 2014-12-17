@@ -1,4 +1,4 @@
-package se.kth.bbc.yarn;
+package se.kth.bbc.flink;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -21,6 +21,7 @@ import org.primefaces.model.UploadedFile;
 import se.kth.bbc.flink.FlinkRunner;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.study.StudyMB;
+import se.kth.bbc.yarn.JobController;
 
 /**
  *

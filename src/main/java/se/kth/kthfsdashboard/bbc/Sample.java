@@ -3,7 +3,6 @@ package se.kth.kthfsdashboard.bbc;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.*;
-import se.kth.kthfsdashboard.utils.FormatUtils;
 
 /**
  *
@@ -25,7 +24,8 @@ public class Sample implements Serializable {
     }
     
     public String getLastUpdatedFormatted() {
-        return FormatUtils.dateNoTime(lastUpdated);
+//        return FormatUtils.dateNoTime(lastUpdated);
+      return "";
     }
 
     public void setLastUpdated(Date lastUpdated) {

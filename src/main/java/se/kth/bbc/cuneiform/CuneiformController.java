@@ -91,7 +91,7 @@ public class CuneiformController implements Serializable {
       TopLevelContext tlc = StaticNodeVisitor.createTlc(txt);
       List<String> freenames = StaticNodeVisitor.getFreeVarNameList(tlc);
       this.freevars = new ArrayList<>(freenames.size());
-      for(String s: freenames){
+      for (String s : freenames) {
         this.freevars.add(new CuneiformParameter(s, null));
       }
     } catch (HasFailedException | IOException e) {
@@ -105,9 +105,10 @@ public class CuneiformController implements Serializable {
     //Read the cf-file
     String wfPath = jc.getFilePath(KEY_WORKFLOW_FILE);
     File f = new File(wfPath);
-    List<String> lines = Files.readAllLines(Paths.get(wfPath), Charset.defaultCharset());
+    List<String> lines = Files.readAllLines(Paths.get(wfPath), Charset.
+            defaultCharset());
     StringBuilder workflowBuilder = new StringBuilder();
-    for(String s:lines){ //TODO: check: does this guarantee line order, is this needed?
+    for (String s : lines) { //TODO: check: does this guarantee line order, is this needed?
       workflowBuilder.append(s);
     }
     return workflowBuilder.toString();
@@ -121,28 +122,56 @@ public class CuneiformController implements Serializable {
   public void setStudy(StudyMB study) {
     this.study = study;
   }
-  
-  public List<CuneiformParameter> getFreeVars(){
+
+  public List<CuneiformParameter> getFreeVars() {
     return freevars;
   }
-  
-  public void setFreeVars(List<CuneiformParameter> vars){
+
+  public void setFreeVars(List<CuneiformParameter> vars) {
     this.freevars = vars;
   }
-  
-  public void startWorkflow(){
-    YarnRunner.Builder b = new YarnRunner.Builder(Constants.HIWAY_JAR_PATH,"Hiway.jar");
-    b.appMasterMainClass("de.huberlin.wbi.hiway.app.am.CuneiformApplicationMaster");
-    b.stdErrPath("hdfs:///tmp/stderr.log");
-    b.stdOutPath("hdfs:///tmp/stdout.log");
+
+  public void startWorkflow() {
+    YarnRunner.Builder b = new YarnRunner.Builder(Constants.HIWAY_JAR_PATH,
+            "Hiway.jar");
+    b.appMasterMainClass(
+            "de.huberlin.wbi.hiway.app.am.CuneiformApplicationMaster");
+    b.stdErrPath("/tmp/stderr.log");
+    b.stdOutPath("/tmp/stdout.log");
+    
+    b.localResourcesBasePath("/user/"+Constants.YARN_USER+"/hiway/"+YarnRunner.APPID_PLACEHOLDER);
+
+    //construct AM arguments
+    StringBuilder args = new StringBuilder("--workflow ");
+    args.append(getFileName(jc.getFilePath(KEY_WORKFLOW_FILE)));
+    args.append(" --appid ");
+    args.append(YarnRunner.APPID_PLACEHOLDER);
+
+    b.appMasterArgs(args.toString());
+
+    //Pass on workflow file
+    String wfPath = jc.getFilePath(KEY_WORKFLOW_FILE);
+    b.addLocalResource(getFileName(wfPath), wfPath, getFileName(wfPath));
+
     YarnRunner r = b.build();
+
+    //TODO: move to separate thread.
     try {
       r.startAppMaster();
+      MessagesController.addInfoMessage("App master started!");
     } catch (YarnException | IOException ex) {
       Logger.getLogger(CuneiformController.class.getName()).
               log(Level.SEVERE, "Failed to start app master", ex);
-      MessagesController.addErrorMessage("Failed to start app master. See logs.");
+      MessagesController.
+              addErrorMessage("Failed to start app master. See logs.");
     }
+  }
+
+  //TODO: move this method to a Utils class (similar method is used elsewhere)
+  private static String getFileName(String path) {
+    int lastSlash = path.lastIndexOf("/");
+    int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
+    return path.substring(startName);
   }
 
 }

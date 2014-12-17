@@ -6,10 +6,6 @@
         <param-value>Production</param-value>
     </context-param>
     <context-param>
-        <param-name>facelets.SKIP_COMMENTS</param-name>
-        <param-value>true</param-value>
-    </context-param>
-    <context-param>
         <param-name>com.sun.faces.verifyObjects</param-name>
         <param-value>false</param-value>
     </context-param>
@@ -20,10 +16,6 @@
     <context-param>
         <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
         <param-value>server</param-value>
-    </context-param>
-    <context-param>
-        <param-name>facelets.SKIP_COMMENTS</param-name>
-        <param-value>true</param-value>
     </context-param>
     <context-param>
         <param-name>Webhdfs-http</param-name>
@@ -57,24 +49,6 @@
     <welcome-file-list>
         <welcome-file>index.xhtml</welcome-file>
     </welcome-file-list>
-    <!--  REST  -->
-    <servlet>
-        <servlet-name>Jersey REST Service</servlet-name>
-        <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
-        <init-param>
-            <param-name>com.sun.jersey.config.property.packages</param-name>
-            <param-value>se.kth.kthfsdashboard.rest.resources</param-value>
-        </init-param>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>Jersey REST Service</servlet-name>
-        <url-pattern>/rest/*</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>Jersey REST Service</servlet-name>
-        <url-pattern>/resources/*</url-pattern>
-    </servlet-mapping>
     <servlet>
         <servlet-name>UploadServlet</servlet-name>
         <servlet-class>se.kth.bbc.upload.UploadServlet</servlet-class>
