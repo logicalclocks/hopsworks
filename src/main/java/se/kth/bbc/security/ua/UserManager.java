@@ -13,7 +13,6 @@ import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.People;
 import se.kth.bbc.security.ua.model.PeopleGroup;
 import se.kth.bbc.security.ua.model.Yubikey;
-import sun.security.x509.AccessDescription;
 
 /**
  *
@@ -298,23 +297,25 @@ public class UserManager {
     }
 
     public void removeByEmail(String email) {
-        People user = findByEmail(email);
-        if (user != null) {
+        People u = findByEmail(email);
+        if (u != null) {
         TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid", PeopleGroup.class);
-        query.setParameter("uid", user.getUid());
+        query.setParameter("uid", u.getUid());
         PeopleGroup p = (PeopleGroup) query.getSingleResult();
     
         TypedQuery<Address> ad =  em.createNamedQuery("Address.findByUid", Address.class);
-        ad.setParameter("uid", user.getUid());
-     Address a = (Address) ad.getSingleResult();
+        ad.setParameter("uid", u.getUid());
+        Address a = (Address) ad.getSingleResult();
        
-        if(user.getYubikeyUser()==1) {
-            Yubikey y = (Yubikey) em.createNamedQuery("Yubikey.findByUid", Yubikey.class);
-            em.remove(y);
+        if(u.getYubikeyUser()==1) {
+            TypedQuery<Yubikey> yk =  em.createNamedQuery("Yubikey.findByUid", Yubikey.class);
+             yk.setParameter("uid", u.getUid());
+             Yubikey y = (Yubikey) yk.getSingleResult();
+             em.remove(y);
          }
         
         em.remove(p);
-        em.remove(user);
+        em.remove(u);
         em.remove(a);
        }
     }

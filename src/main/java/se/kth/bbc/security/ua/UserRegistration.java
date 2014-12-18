@@ -347,7 +347,7 @@ public class UserRegistration implements Serializable {
     private String buildMobileRequestMessage() {
 
         String l1 = "Greetings!\n\nThere have been a Mobile account request your behalf.\n\n";
-        String l2 = "Your account will ne activated within 48 after approval.\n\n\n";
+        String l2 = "Your account will be activated within 48 after approval.\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
         return l1 + l2 + l3;
