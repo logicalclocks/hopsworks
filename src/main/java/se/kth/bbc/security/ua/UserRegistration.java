@@ -27,6 +27,8 @@ public class UserRegistration implements Serializable {
 
     @EJB
     private UserManager mgr;
+    @EJB
+    private EmailBean emailBean;
 
     private String fname;
     private String lname;
@@ -255,11 +257,17 @@ public class UserRegistration implements Serializable {
                     SecurityUtils.converToSHA256(password), otpSecret, security_question,
                     SecurityUtils.converToSHA256(security_answer), AccountStatusIF.MOBILE_ACCOUNT_INACTIVE, yubikey);
 
+            // register group
             mgr.registerGroup(uid, GroupsIf.BBC_GUEST);
+           
+            // create address entry
             mgr.registerAddress(uid);
             
+            // generate qr code to be displayed to user
             qrCode = QRCodeGenerator.getQRCode(mail, Gauth.ISSUER, otpSecret);
-           
+            
+            // notify user about the request
+            emailBean.sendEmail(mail, "Mobile account request", buildMobileRequestMessage());
             // Reset the values
             fname = "";
             lname = "";
@@ -276,12 +284,11 @@ public class UserRegistration implements Serializable {
         } catch (NoSuchAlgorithmException | IOException | WriterException e) {
             logger.log(Level.INFO, "Error {0}", e.getMessage());
             return null;
+        } catch (MessagingException ex) {
+            Logger.getLogger(UserRegistration.class.getName()).log(Level.SEVERE, null, ex);
         }
         return ("qrcode");
     }
-
-     @EJB
-    private EmailBean emailBean;
    
     public String registerYubikey() throws UnsupportedEncodingException, NoSuchAlgorithmException, IOException, MessagingException {
 
@@ -328,10 +335,19 @@ public class UserRegistration implements Serializable {
         return ("yubico");
     }
     
-     private String buildYubikeyRequestMessage() {
+    private String buildYubikeyRequestMessage() {
 
         String l1 = "Greetings!\n\nThere have been a Yubikey account request your behalf.\n\n";
         String l2 = "You will receive a Yubikey within 48 hours to your address.\n\n\n";
+        String l3 = "If you have any questions please contact support@biobankcloud.com";
+
+        return l1 + l2 + l3;
+    }
+
+    private String buildMobileRequestMessage() {
+
+        String l1 = "Greetings!\n\nThere have been a Mobile account request your behalf.\n\n";
+        String l2 = "Your account will ne activated within 48 after approval.\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
         return l1 + l2 + l3;

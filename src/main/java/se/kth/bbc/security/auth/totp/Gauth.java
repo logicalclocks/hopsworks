@@ -3,16 +3,20 @@ package se.kth.bbc.security.auth.totp;
 import java.io.Serializable;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
+import javax.mail.MessagingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.primefaces.context.RequestContext;
 import se.kth.bbc.security.ua.AccountStatusIF;
+import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.People;
 
@@ -30,6 +34,10 @@ public class Gauth implements Serializable {
 
     @EJB
     private UserManager mgr;
+
+    
+    @EJB
+    private EmailBean emailBean;
 
     private String username;
     private String password;
@@ -130,6 +138,12 @@ public class Gauth implements Serializable {
             mgr.increaseLockNum(userid, val + 1);
             if (val > 5) {
                 mgr.deactivateUser(userid);
+                try {
+                    emailBean.sendEmail(user.getEmail(), "Account blocked", accountBlockedMessage());
+                } catch (MessagingException ex1) {
+                    Logger.getLogger(Gauth.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+                
             }
 
             // inform the use about invalid credentials
@@ -212,6 +226,11 @@ public class Gauth implements Serializable {
             mgr.increaseLockNum(userid, val + 1);
             if (val > 5) {
                 mgr.deactivateUser(userid);
+                try {
+                    emailBean.sendEmail(user.getEmail(), "Account blocked", accountBlockedMessage());
+                } catch (MessagingException ex1) {
+                    Logger.getLogger(Gauth.class.getName()).log(Level.SEVERE, null, ex1);
+                }
             }
 
             // inform the use about invalid credentials
@@ -242,4 +261,10 @@ public class Gauth implements Serializable {
         return ("welcome");
     }
 
+    
+    private String  accountBlockedMessage() {
+        String l1 = "Greetings!\n\n.Your account in the Biobankcloud is blocked due to frequent false login attempts.\n\n";
+        String l2 = "If you have any questions please contact support@biobankcloud.com";
+        return l1 + l2 ;
+    }
 }

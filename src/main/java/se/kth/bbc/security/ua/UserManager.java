@@ -13,6 +13,7 @@ import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.People;
 import se.kth.bbc.security.ua.model.PeopleGroup;
 import se.kth.bbc.security.ua.model.Yubikey;
+import sun.security.x509.AccessDescription;
 
 /**
  *
@@ -302,8 +303,19 @@ public class UserManager {
         TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid", PeopleGroup.class);
         query.setParameter("uid", user.getUid());
         PeopleGroup p = (PeopleGroup) query.getSingleResult();
+    
+        TypedQuery<Address> ad =  em.createNamedQuery("Address.findByUid", Address.class);
+        ad.setParameter("uid", user.getUid());
+     Address a = (Address) ad.getSingleResult();
+       
+        if(user.getYubikeyUser()==1) {
+            Yubikey y = (Yubikey) em.createNamedQuery("Yubikey.findByUid", Yubikey.class);
+            em.remove(y);
+         }
+        
         em.remove(p);
         em.remove(user);
+        em.remove(a);
        }
     }
  
