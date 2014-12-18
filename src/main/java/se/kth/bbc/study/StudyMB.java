@@ -33,7 +33,6 @@ import se.kth.bbc.activity.UsersGroups;
 import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.fileoperations.FileSystemOperations;
-import se.kth.bbc.flink.FlinkRunner;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
@@ -279,12 +278,7 @@ public class StudyMB implements Serializable {
     }
 
     public boolean checkOwnerForSamples() {
-
-        if (getUsername().equals(getCreator())) {
-            return true;
-        } else {
-            return false;
-        }
+      return getUsername().equals(getCreator());
     }
 
     public String checkCurrentUser(String email) {
@@ -422,15 +416,19 @@ public class StudyMB implements Serializable {
     }
 
     public void onTabChange(TabChangeEvent event) {
-        if (event.getTab().getTitle().equals("All")) {
-            setTabIndex(0);
-        } else if (event.getTab().getTitle().equals("Personal")) {
-            setTabIndex(1);
-        } else if (event.getTab().getTitle().equals("Joined")) {
-            setTabIndex(2);
-        } else {
-            //
-        }
+      switch (event.getTab().getTitle()) {
+        case "All":
+          setTabIndex(0);
+          break;
+        case "Personal":
+          setTabIndex(1);
+          break;
+        case "Joined":
+          setTabIndex(2);
+          break;
+        default:
+          break;
+      }
 
     }
 
@@ -648,7 +646,6 @@ public class StudyMB implements Serializable {
   }
   
   public void updateServices(){
-    System.out.println(selectedServices);
     studyServices.persistServicesForStudy(studyName, selectedServices);
   }
   

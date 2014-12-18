@@ -1,4 +1,4 @@
-package se.kth.bbc.yarn;
+package se.kth.bbc.jobs.yarn;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,14 +50,14 @@ import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
-import se.kth.bbc.lims.Constants;
+import se.kth.bbc.jobs.CancellableJob;
 import se.kth.bbc.lims.EnvironmentVariableFacade;
 
 /**
  *
  * @author stig
  */
-public class YarnRunner {
+public class YarnRunner implements CancellableJob{
 
   public static final String APPID_PLACEHOLDER = "$APPID";
   private static final String APPID_REGEX = "\\$APPID";
@@ -652,7 +652,8 @@ public class YarnRunner {
    * @throws YarnException
    * @throws IOException
    */
-  public void forceKillApplication() throws YarnException, IOException {
+  @Override
+  public void cancelJob() throws YarnException, IOException {
         // TODO clarify whether multiple jobs with the same app id can be submitted and be running at
     // the same time.
     // If yes, can we kill a particular attempt only?
@@ -683,6 +684,10 @@ public class YarnRunner {
   public ApplicationReport getApplicationReport() throws YarnException,
           IOException {
     return yarnClient.getApplicationReport(appId);
+  }
+  
+  public YarnApplicationState getApplicationState() throws YarnException, IOException{
+    return yarnClient.getApplicationReport(appId).getYarnApplicationState();
   }
 
   public FinalApplicationStatus getFinalYarnApplicationState() throws

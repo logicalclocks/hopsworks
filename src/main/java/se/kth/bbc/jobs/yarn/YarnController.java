@@ -1,5 +1,6 @@
-package se.kth.bbc.yarn;
+package se.kth.bbc.jobs.yarn;
 
+import se.kth.bbc.jobs.JobController;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;

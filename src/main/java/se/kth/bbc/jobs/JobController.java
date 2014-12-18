@@ -1,4 +1,4 @@
-package se.kth.bbc.yarn;
+package se.kth.bbc.jobs;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,7 +18,7 @@ import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 
 /**
- *
+ * General controller for starting jobs from the web interface.
  * @author stig
  */
 public class JobController implements Serializable {

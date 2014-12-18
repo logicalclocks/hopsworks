@@ -1,4 +1,4 @@
-package se.kth.bbc.jobhistory;
+package se.kth.bbc.jobs.jobhistory;
 
 import java.io.Serializable;
 import java.util.List;

@@ -1,4 +1,4 @@
-package se.kth.bbc.flink;
+package se.kth.bbc.jobs.flink;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package se.kth.bbc.flink;
+package se.kth.bbc.jobs.flink;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,8 +16,8 @@ import org.apache.flink.yarn.Utils;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.log4j.chainsaw.Main;
 
-import se.kth.bbc.yarn.YarnRunner;
-import se.kth.bbc.yarn.YarnRunner.Builder;
+import se.kth.bbc.jobs.yarn.YarnRunner;
+import se.kth.bbc.jobs.yarn.YarnRunner.Builder;
 
 /**
  *

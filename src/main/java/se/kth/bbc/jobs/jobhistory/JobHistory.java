@@ -1,4 +1,4 @@
-package se.kth.bbc.jobhistory;
+package se.kth.bbc.jobs.jobhistory;
 
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -23,6 +23,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.study.TrackStudy;
 import se.kth.kthfsdashboard.user.Username;
@@ -69,9 +70,18 @@ import se.kth.kthfsdashboard.user.Username;
           query
           = "SELECT j FROM JobHistory j WHERE j.type = :type AND j.study.name = :studyname")})
 public class JobHistory implements Serializable {
+
+  public static final String STATE_FINISHED = YarnApplicationState.FINISHED.toString();
+  public static final String STATE_RUNNING = YarnApplicationState.RUNNING.toString();
+  public static final String STATE_ACCEPTED = YarnApplicationState.ACCEPTED.toString();
+  public static final String STATE_FAILED = YarnApplicationState.FAILED.toString();
+  public static final String STATE_KILLED = YarnApplicationState.KILLED.toString();
+  public static final String STATE_NEW = YarnApplicationState.NEW.toString();
+  public static final String STATE_NEW_SAVING = YarnApplicationState.NEW_SAVING.toString();
+  public static final String STATE_SUBMITTED = YarnApplicationState.SUBMITTED.toString();
+  public static final String STATE_FRAMEWORK_FAILURE = "Framework Failure";
   
-  public static final String STATE_FINISHED = "Finished";
-  
+
   private static final long serialVersionUID = 1L;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -126,7 +136,7 @@ public class JobHistory implements Serializable {
 
   public JobHistory() {
   }
-  
+
   public JobHistory(Date submissionTime, String state) {
     this.submissionTime = submissionTime;
     this.state = state;
@@ -267,8 +277,8 @@ public class JobHistory implements Serializable {
       return false;
     }
     JobHistory other = (JobHistory) object;
-    if ((this.id == null && other.id != null) ||
-            (this.id != null && !this.id.equals(other.id))) {
+    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
+            equals(other.id))) {
       return false;
     }
     return true;
@@ -278,9 +288,9 @@ public class JobHistory implements Serializable {
   public String toString() {
     return "se.kth.bbc.job.JobHistory[ id=" + id + " ]";
   }
-  
-  public boolean isFinished(){
+
+  public boolean isFinished() {
     return STATE_FINISHED.equals(this.state);
   }
-  
+
 }

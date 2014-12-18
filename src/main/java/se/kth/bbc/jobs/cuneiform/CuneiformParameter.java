@@ -1,4 +1,4 @@
-package se.kth.bbc.cuneiform;
+package se.kth.bbc.jobs.cuneiform;
 
 import java.io.Serializable;
 import java.util.Objects;

@@ -1,4 +1,4 @@
-package se.kth.bbc.jobhistory;
+package se.kth.bbc.jobs.jobhistory;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
@@ -12,7 +12,7 @@ import javax.validation.constraints.Size;
  * @author stig
  */
 @Embeddable
-public class JobOutputFilePK implements Serializable {
+public class JobExecutionFilePK implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "job_id")
@@ -24,10 +24,10 @@ public class JobOutputFilePK implements Serializable {
   @Column(name = "name")
   private String name;
 
-  public JobOutputFilePK() {
+  public JobExecutionFilePK() {
   }
 
-  public JobOutputFilePK(long jobId, String name) {
+  public JobExecutionFilePK(long jobId, String name) {
     this.jobId = jobId;
     this.name = name;
   }
@@ -59,10 +59,10 @@ public class JobOutputFilePK implements Serializable {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof JobOutputFilePK)) {
+    if (!(object instanceof JobExecutionFilePK)) {
       return false;
     }
-    JobOutputFilePK other = (JobOutputFilePK) object;
+    JobExecutionFilePK other = (JobExecutionFilePK) object;
     if (this.jobId != other.jobId) {
       return false;
     }
@@ -75,7 +75,7 @@ public class JobOutputFilePK implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.job.JobOutputFilePK[ jobId=" + jobId + ", name=" + name +
+    return "se.kth.bbc.job.JobExecutionFilePK[ jobId=" + jobId + ", name=" + name +
             " ]";
   }
   

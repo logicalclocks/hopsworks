@@ -1,4 +1,4 @@
-package se.kth.bbc.flink;
+package se.kth.bbc.jobs.flink;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,10 +18,10 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
-import se.kth.bbc.flink.FlinkRunner;
+import se.kth.bbc.jobs.flink.FlinkRunner;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.study.StudyMB;
-import se.kth.bbc.yarn.JobController;
+import se.kth.bbc.jobs.JobController;
 
 /**
  *
