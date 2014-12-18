@@ -38,6 +38,7 @@ public class ProfileManager implements Serializable {
     private static final long serialVersionUID = 1L;
     @EJB
     private UserManager userManager;
+
     private People user;
     private Address address;
 
@@ -45,6 +46,7 @@ public class ProfileManager implements Serializable {
         if (user == null) {
             try {
                 user = userManager.findByEmail(getLoginName());
+                address = userManager.findAddress(user.getUid());
             } catch (IOException ex) {
                 Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
@@ -55,18 +57,8 @@ public class ProfileManager implements Serializable {
     }
 
     public Address getAddress() {
-        if (user == null) {
-            try {
-                user = userManager.findByEmail(getLoginName());
-            } catch (IOException ex) {
-                Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null, ex);
-                return null;
-            }
-        }
-            address = userManager.findAddress(user.getUid());
-        return address;
+        return this.address;
     }
-
 
     public String getLoginName() throws IOException {
         FacesContext context = FacesContext.getCurrentInstance();
@@ -88,7 +80,7 @@ public class ProfileManager implements Serializable {
         String email;
         try {
             email = getLoginName();
-        
+
         } catch (IOException ex) {
             Logger.getLogger(UserController.class.getName()).log(Level.SEVERE, null, ex);
             return DEFAULT_GRAVATAR;

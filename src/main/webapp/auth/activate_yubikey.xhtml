@@ -87,15 +87,21 @@
                                                  requiredMessage="Enter your country" size="40">
                                     </h:inputText>
                                     
-                                    <h:outputLabel for="creds" value="Credentials:" style="font-weight:bold" />
-                                    <h:inputText id="creds" value="#{peopleAministration.credentials}"  required="true"
+                                    <h:outputLabel for="seri" value="Serial" style="font-weight:bold" />
+                                    <h:inputText id="ser" value="#{peopleAministration.serial}"  required="true"
                                                  requiredMessage="Enter your country" size="40">
                                     </h:inputText>
-
+                        
+                                    <h:outputLabel for="pid" value="Public Id" style="font-weight:bold" />
+                                    <h:inputText id="pid" value="#{peopleAministration.pubid}"  required="true"
+                                                 requiredMessage="Enter your country" size="40">
+                                    </h:inputText>
+                                                            
+                                    <h:outputLabel for="secret" value="Secret" style="font-weight:bold" />
+                                    <h:inputText id="secret" value="#{peopleAministration.secret}"  required="true"
+                                                 requiredMessage="Enter your country" size="40">
+                                    </h:inputText>
                                     
-                                    <p:spacer></p:spacer>
-                                    <p:messages id="messages" autoUpdate="true" />
-
                                     <p:spacer></p:spacer>
 
                                 </h:panelGrid>

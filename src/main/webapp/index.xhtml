@@ -8,7 +8,7 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:f="http://java.sun.com/jsf/core">
 
-     <h:head>
+    <h:head>
         <title>BiobankCloud - Sign in</title>
         <h:outputStylesheet name="css/jsfcrud.css"/>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
@@ -33,7 +33,7 @@
                 <h:panelGrid columns="1"> 
                     <p:outputLabel for="uname" value="Username"/>
                     <p:inputText id="uname" value="#{gauth.username}" required="true" 
-                    validatorMessage="Email is not valid format" >
+                                 validatorMessage="Email is not valid format" >
                         <f:validateRegex pattern="[\w\.-]*[a-zA-Z0-9_]@[\w\.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z\.]*[a-zA-Z]" />
                     </p:inputText>
                     <p:watermark for="uname" value="Email" />
@@ -54,11 +54,11 @@
                     <p:messages id="messages" autoUpdate="true" showDetail="false"/>
 
                     <h:panelGrid columns="2">
-                            <p:commandButton id="loginButton" value="Sign in" action="#{gauth.login()}" styleClass="MainButton"/>
-                            <p:commandButton  value="New User" action="register_mobile" immediate="true" styleClass="MainButton">
-                                <f:param name="username" value="#{resetPassword.username}" />
-                            </p:commandButton>   
-                        
+                        <p:commandButton id="loginButton" value="Sign in" action="#{gauth.login()}" styleClass="MainButton"/>
+                        <p:commandButton  value="New User" action="register_mobile" immediate="true" styleClass="MainButton">
+                            <f:param name="username" value="#{resetPassword.username}" />
+                        </p:commandButton>   
+
                     </h:panelGrid>
                 </h:panelGrid>
             </div>

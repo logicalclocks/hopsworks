@@ -61,18 +61,20 @@ public class PeopleAministration implements Serializable {
     // Yubikey public id. 12 chars: vviehlefjvcb
     private String pubid;
 
-    // Yubikey public id. eg. f1bda8c978766d50c25d48d72ed516e0
-    private String credentials;
+    public String getSecret() {
+        return secret;
+    }
+
+    public void setSecret(String secret) {
+        this.secret = secret;
+    }
+
+    // Yubikey serial no 
     private String serial;
 
-    public String getCredentials() {
-        return credentials;
-    }
-
-    public void setCredentials(String credentials) {
-        this.credentials = credentials;
-    }
-
+    //f1bda8c978766d50c25d48d72ed516e0
+    private String secret;
+    
     
     public String getPubid() {
         return pubid;
@@ -355,24 +357,17 @@ public class PeopleAministration implements Serializable {
             
         Yubikey yubi = userManager.findYubikey(selectedYubikyUser.getUid());
     
-        try {
-        
-        List list = parseCredentials(credentials);
         yubi.setStatus(1);
-       
-        yubi.setSerial((String) list.get(0));
-        yubi.setPublicId((String) list.get(1));
-        yubi.setAesSecret((String) list.get(3));
-            yubi.setCreated(getTimeStamp((String) list.get(4)));
-            yubi.setAccessed(getTimeStamp((String) list.get(4)));
+        yubi.setSerial(serial);
+        yubi.setPublicId(pubid);
+        yubi.setAesSecret(secret);
+        yubi.setCreated(new Date());
+        yubi.setAccessed(new Date());
         yubi.setCounter(0);
         yubi.setSessionUse(0);
         yubi.setHigh(0);
         yubi.setLow(0);
         userManager.updateYubikey(yubi);
-        } catch (ParseException ex) {
-            Logger.getLogger(PeopleAministration.class.getName()).log(Level.SEVERE, null, ex);
-        }
         return "print_address";
     }
 
