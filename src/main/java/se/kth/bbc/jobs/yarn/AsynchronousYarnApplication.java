@@ -30,6 +30,8 @@ public class AsynchronousYarnApplication {
   //TODO: get from some kind of configuration
   private static final int MAX_STATE_POLL_RETRIES = 10;
   private static final int POLL_TIMEOUT_INTERVAL = 1; //in seconds
+  
+  private boolean registered = false;
 
   @EJB
   private RunningJobTracker jobTracker;
@@ -43,8 +45,14 @@ public class AsynchronousYarnApplication {
    * <p>
    * @param runner
    */
-  public void handleExecution(Long id, YarnRunner runner) {
-    registerJob(id, runner);
+  @Asynchronous
+  public void handleExecution(Long id, YarnRunner runner) throws IllegalStateException{
+    if(!registered){
+      //The Asynchronous annotation must be on a public method, so calling a private
+      // asynchronous method does not work. This makes that registerJob() has to be called
+      // from the calling entity. Hence, assert it has been called and throw an IllegalStateException if not.
+      throw new IllegalStateException("Attempting to run job without registering first.");
+    }
     runAndMonitor(id, runner);
     try {
       updateJobState(id,
@@ -56,8 +64,6 @@ public class AsynchronousYarnApplication {
     unregisterJob(id);
   }
 
-  //Netbeans shows error here while there should be none. (I believe)
-  @Asynchronous
   private void runAndMonitor(Long id, YarnRunner runner) {
     //TODO: remove local files, write stdout, stderr, outputfiles,...
     try {
@@ -70,13 +76,14 @@ public class AsynchronousYarnApplication {
     monitor(runner);
   }
 
-  private boolean registerJob(Long id, CancellableJob job) {
+  public boolean registerJob(Long id, CancellableJob job) {
     try {
       jobTracker.registerJob(id, job);
     } catch (IllegalStateException e) {
       logger.log(Level.SEVERE, "Failed to register job.", e);
       return false;
     }
+    registered = true;
     return true;
   }
 

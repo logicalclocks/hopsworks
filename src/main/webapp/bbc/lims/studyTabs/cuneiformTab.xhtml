@@ -45,14 +45,14 @@
                         </div>
 
                         <div>
-                            <p:commandButton value="Execute" action="#{cuneiformController.startWorkflow()}"/>
+                            <p:commandButton value="Execute" action="#{cuneiformController.startWorkflow()}" update="@form"/>
                         </div>
                     </div>
-<!--                    <p:poll interval="300" listener="#{cuneiformController.jobFinished}" update="image" rendered="#{cuneiformController.started}"/>
+                    <p:poll interval="5" listener="#{cuneiformController.isJobFinished()}" update="image"/>
                     <h:panelGroup id="image">
-                        <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{not cuneiformController.jobFinished}"/>
-                        <h:outputText value="FINISHED!!!" rendered="#{cuneiformController.jobFinished}"/>
-                    </h:panelGroup>-->
+                        <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformController.jobStarted and not cuneiformController.jobFinished}"/>
+                        <h:outputText value="FINISHED!!!" rendered="#{cuneiformController.jobStarted and cuneiformController.jobFinished}"/>
+                    </h:panelGroup>
                 </h:form>
             </h:panelGrid>
         </ui:composition>

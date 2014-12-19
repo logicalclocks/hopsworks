@@ -147,6 +147,7 @@ public class CuneiformController implements Serializable {
   }
 
   public void startWorkflow() {
+    started = true;
     YarnRunner.Builder b = new YarnRunner.Builder(Constants.HIWAY_JAR_PATH,
             "Hiway.jar");
     b.appMasterMainClass(
@@ -178,6 +179,7 @@ public class CuneiformController implements Serializable {
             getStudyName(), "CUNEIFORM", args.toString(), null,
             "/tmp/stderr.log", "/tmp/stdout.log", null, null);
     if (jobhistoryid != null) {
+      submitter.registerJob(jobhistoryid, r);
       submitter.handleExecution(jobhistoryid, r);
       MessagesController.addInfoMessage("App master started!");
     } else {
@@ -185,7 +187,6 @@ public class CuneiformController implements Serializable {
       MessagesController.addErrorMessage(
               "Failed to write job history. Aborting execution.");
     }
-    started = true;
   }
 
   //TODO: move this method to a Utils class (similar method is used elsewhere)
@@ -199,7 +200,7 @@ public class CuneiformController implements Serializable {
     return !runningJobs.isJobRunning(jobhistoryid);
   }
   
-  public boolean isStarted(){
+  public boolean isJobStarted(){
     return started;
   }
 
