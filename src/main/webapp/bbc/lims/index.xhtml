@@ -146,10 +146,10 @@
                     </div>
                 </p:layoutUnit>
             </p:layout>
-            <p:dialog draggable="false" resizable="false" styleClass="requestPopup" position="right bottom" header="Open user requests" visible="#{peopleStatusBean.open_reauests}">
+            <p:dialog draggable="false" resizable="false" styleClass="requestPopup" position="right bottom" header="Open user requests" visible="#{peopleStatusBean.checkForRequests()}">
                 <div align="center">
                     There are open user requests!<br/>
-                    <p:commandButton action="#{peopleAministration.openRequests}" value="View requests" styleClass="viewReqButton">
+                    <p:commandButton action="#{peopleStatusBean.openRequests()}" value="View requests" styleClass="viewReqButton">
                     </p:commandButton>
                 </div>
             </p:dialog>

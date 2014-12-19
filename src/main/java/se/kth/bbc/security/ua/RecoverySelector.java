@@ -148,7 +148,7 @@ public class RecoverySelector implements Serializable {
                 String random = SecurityUtils.getRandomString();
                 um.updateSecret(people.getUid(), random);
                 String message = buildTempResetMessage(random);
-                email.sendEmail(people.getEmail(), "Tmp code", message);
+                email.sendEmail(people.getEmail(), "BBC Temporary Code", message);
 
                 return "validate_code";
             } else {
@@ -242,7 +242,7 @@ public class RecoverySelector implements Serializable {
                 if (val > 5) {
                     um.deactivateUser(people.getUid());
                     try {
-                        email.sendEmail(people.getEmail(), "Account blocked", accountBlockedMessage());
+                        email.sendEmail(people.getEmail(), "BBC Account Blocked", accountBlockedMessage());
                     } catch (MessagingException ex1) {
                         Logger.getLogger(Gauth.class.getName()).log(Level.SEVERE, null, ex1);
                     }
@@ -260,14 +260,16 @@ public class RecoverySelector implements Serializable {
     }
 
     private String accountBlockedMessage() {
-        String l1 = "Greetings!\n\n.Your account in the Biobankcloud is blocked due to frequent false attempts.\n\n";
+        String l1 = "Greetings!\n\n"
+                + "Your account in the Biobankcloud is blocked due to frequent false attempts.\n\n";
         String l2 = "If you have any questions please contact support@biobankcloud.com";
         return l1 + l2;
     }
     
     private String buildTempResetMessage(String random_password) {
 
-        String content = "Greetings!\n\nThere have been a mobile device reset request on your behalf.\n\n"
+        String content = "Greetings!\n\n"
+                + "There have been a mobile device reset request on your behalf.\n\n"
                 + "Please use the temporary password"
                 + "sent to you as below. You need to validate the code to get a new setup.\n\n";
 
@@ -279,7 +281,8 @@ public class RecoverySelector implements Serializable {
 
     private String buildYubResetMessage(String msg) {
 
-        String content = "Greetings!\n\nThere have been a Yubikey device reset request on your behalf.\n\n"
+        String content = "Greetings!\n\n"
+                + "There have been a Yubikey device reset request on your behalf.\n\n"
                 + "You will receive a device within 48 hours.\n\n";
 
         String ending = "If you have any questions please contact support@biobankcloud.com";

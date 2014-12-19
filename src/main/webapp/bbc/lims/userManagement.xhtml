@@ -22,7 +22,7 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
 
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.BBCAdmin}">  
+            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.adminUser}">  
 
                 <p:layoutUnit position="center">
                     <div class="container">
@@ -280,7 +280,7 @@
                             </p:tabView>
 
                             <script>
-                                userMgmtTabview.select(#{peopleAministration.tabIndex});
+                                userMgmtTabview.select(#{peopleStatusBean.tabIndex});
                             </script>
                         </div>
                     </div> 

@@ -94,8 +94,6 @@ public class PeopleAministration implements Serializable {
         this.address = address;
     }
 
-    private int tabIndex;
-
     // for mobile users activation
     private List<People> requests;
 
@@ -322,20 +320,6 @@ public class PeopleAministration implements Serializable {
         this.questions = questions;
     }
 
-    public void setTabIndex(int index) {
-        this.tabIndex = index;
-    }
-
-    public int getTabIndex() {
-        int oldindex = tabIndex;
-        tabIndex = 0;
-        return oldindex;
-    }
-
-    public String openRequests() {
-        this.tabIndex = 1;
-        return "userMgmt";
-    }
 
     public String activateYubikey() {
         // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
@@ -392,7 +376,8 @@ public class PeopleAministration implements Serializable {
     }
 
     private String accountActivatedMessage(String username) {
-        String l1 = "Greetings!\n\n. Your request for access the BiobankCloud is approved.\n\n";
+        String l1 = "Greetings!\n\n"
+                  + "Your request for access the BiobankCloud is approved.\n\n";
         String l2 = "You can login with the username: " + username + "\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
@@ -400,13 +385,15 @@ public class PeopleAministration implements Serializable {
     }
 
     private String accountBlockedMessage() {
-        String l1 = "Greetings!\n\n. Your account in the Biobankcloud is blocked.\n\n";
+        String l1 = "Greetings!\n\n"
+                +   "Your account in the Biobankcloud is blocked.\n\n";
         String l2 = "If you have any questions please contact support@biobankcloud.com";
         return l1 + l2;
     }
 
     private String accountRejectedMessage() {
-        String l1 = "Greetings!\n\n. Your Biobankcloud account request is rejected.\n\n";
+        String l1 = "Greetings!\n\n"
+                +   "Your Biobankcloud account request is rejected.\n\n";
         String l2 = "If you have any questions please contact support@biobankcloud.com";
         return l1 + l2;
     }

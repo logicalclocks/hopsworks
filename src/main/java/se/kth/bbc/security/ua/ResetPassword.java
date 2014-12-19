@@ -134,7 +134,7 @@ public class ResetPassword implements Serializable {
             String mess = buildPasswordResetMessage(random_password);
 
             // sned the new password to the user email
-            emailBean.sendEmail(people.getEmail(), "Password reset", mess);
+            emailBean.sendEmail(people.getEmail(), "BBC Password Reset", mess);
 
             // make the account pending until it will be reset by user upon first login
             mgr.updateStatus(people.getUid(), AccountStatusIF.ACCOUNT_PENDING);
@@ -154,10 +154,11 @@ public class ResetPassword implements Serializable {
 
     private String buildPasswordResetMessage(String random_password) {
 
-        String content = "Greetings!\n\nThere have been a password reset request on your behalf.\n\nPlease use the temporary password"
+        String content = "Greetings!\n\n"
+                + "There have been a password reset request on your behalf.\n\nPlease use the temporary password"
                 + " sent to you as below. You will be required to change your passsword when you login first time.\n\n";
 
-        String tmp_pass = "Pasword:" + random_password + "\n\n\n";
+        String tmp_pass = "Password:" + random_password + "\n\n\n";
         String ending = "If you have any questions please contact support@biobankcloud.com";
 
         return content + tmp_pass + ending;
@@ -185,7 +186,8 @@ public class ResetPassword implements Serializable {
      */
     private String buildResetMessage() {
 
-        String l1 = "Greetings!\n\nThere have been a password change reset request on your behalf.\n\n";
+        String l1 = "Greetings!\n\n"
+                + "There have been a password change reset request on your behalf.\n\n";
         String l2 = "Your password is changed successfully\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
@@ -222,7 +224,7 @@ public class ResetPassword implements Serializable {
 
             // send email    
             String message = buildResetMessage();
-            emailBean.sendEmail(people.getEmail(), "Password reset", message);
+            emailBean.sendEmail(people.getEmail(), "BBC Password Reset", message);
 
             // logout user
             FacesContext context = FacesContext.getCurrentInstance();
@@ -273,7 +275,7 @@ public class ResetPassword implements Serializable {
 
                 // send email    
                 String message = buildSecResetMessage();
-                emailBean.sendEmail(people.getEmail(), "BBC profile update", message);
+                emailBean.sendEmail(people.getEmail(), "BBC Profile Update", message);
                 this.answer ="";
                 return ("sec_question_changed");
             } else {
@@ -332,9 +334,6 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
-//        passwd1 = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("passwd1");
-//        passwd2 = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("passwd2");
-//        current = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("current");
         if (passwd1 == null || passwd2 == null) {
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "No password entry", "null"));
@@ -350,7 +349,7 @@ public class ResetPassword implements Serializable {
 
                 // send email    
                 String message = buildResetMessage();
-                emailBean.sendEmail(people.getEmail(), "Password reset", message);
+                emailBean.sendEmail(people.getEmail(), "Password Reset", message);
 
                 return ("profile_password_changed");
             } else {
