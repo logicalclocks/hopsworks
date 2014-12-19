@@ -1,3 +1,0 @@
-#${GFHOME}/bin/asadmin create-javamail-resource --mailhost=smtp.gmail.com --mailuser=aligh.workbox@gmail.com --fromaddress=aligh.workbox@gmail.com --enabled=true  --storeprotocol=imap --storeprotocolclass=com.sun.mail.imap.IMAPStore --transprotocol smtp --transprotocolclass com.sun.mail.smtp.SMTPSSLTransport --property mail-smtp.user=aligh.workbox@gmail.com:mail-smtp.port=465:mail-smtp.password=KTHPDC123#:mail-smtp.auth=true:mail-smtp.socketFactory.fallback=false:mail-smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory:mail-smtp.socketFactory.port=465:mail-smtp.starttls.enable=true mail/BBCMail
-
-
