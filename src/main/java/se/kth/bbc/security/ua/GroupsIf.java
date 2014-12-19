@@ -17,4 +17,7 @@ public interface GroupsIf {
    final short BBC_GUEST = 1003;
    final short AUDITOR = 1004;
    final short ETHICS_BOARD = 1005;
+   final short SYS_ADMIN = 1006;
+   final short BBC_USER = 1007;
+
 }

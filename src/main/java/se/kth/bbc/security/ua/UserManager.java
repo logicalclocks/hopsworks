@@ -77,6 +77,12 @@ public class UserManager {
         return uname;
     }
 
+    /**
+     * Register a new group for user
+     * @param uid
+     * @param gidNumber
+     * @return 
+     */
     public boolean registerGroup(int uid, int gidNumber) {
         PeopleGroup p = new PeopleGroup();
         p.setUid(uid);
@@ -85,6 +91,11 @@ public class UserManager {
         return true;
     }
     
+    /**
+     * Register an address for new users
+     * @param uid
+     * @return 
+     */
     public boolean registerAddress(int uid) {
         Address p = new Address();
         p.setUid(uid);
@@ -134,7 +145,7 @@ public class UserManager {
     public boolean resetSecQuestion(int id, String  question, String ans) {
         People p = (People) em.find(People.class, id);
         p.setSecurityQuestion(question);
-        p.setSecurityAnswer(question);
+        p.setSecurityAnswer(ans);
         em.merge(p);
         return true;
     }
@@ -153,7 +164,6 @@ public class UserManager {
         em.merge(p);
         return true;
     }
-
     
     public boolean updateGroup(int uid, int gid) {
         TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid", PeopleGroup.class);
@@ -162,13 +172,6 @@ public class UserManager {
         p.setGid(gid);
         em.merge(p);
         return true;
-    }
-
-    public String getPeopleGroupName(int uid) {
-        TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid", PeopleGroup.class);
-        query.setParameter("uid", uid);
-        PeopleGroup p = (PeopleGroup) query.getSingleResult();
-        return new BBCGroups().getGroupName(p.getGid());
     }
 
       
@@ -338,10 +341,21 @@ public class UserManager {
         return query.getSingleResult();
     }
 
-     public Address findAddress(int uid) {
+    public Address findAddress(int uid) {
         TypedQuery<Address> query = em.createNamedQuery("Address.findByUid", Address.class);
         query.setParameter("uid", uid);
         return query.getSingleResult();
     }
-   
+
+    /**
+     * Get all groups based on user id
+     * @param uid 
+     * @return 
+     */
+    public List<String> findGroups(int uid) {
+        String sql = "SELECT group_name FROM BBCGroup INNER JOIN People_Group ON (People_Group.gid = BBCGroup.gid AND People_Group.uid = "+ uid+" )";
+        List existing = em.createNativeQuery(sql).getResultList();
+        return existing;
+    }
+    
 }

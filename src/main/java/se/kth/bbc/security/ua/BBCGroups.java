@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -21,7 +20,8 @@ public class BBCGroups implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger logger = Logger.getLogger(UserRegistration.class.getName());
+    private Map<String, Integer> groups = new HashMap<>();
+    private String group;
 
     public BBCGroups(){
         groups = new HashMap<>();
@@ -30,11 +30,10 @@ public class BBCGroups implements Serializable {
         groups.put("BBC_GUEST", 1003);
         groups.put("AUDITOR", 1004);
         groups.put("ETHICS_BOARD", 1005);
-
+//        groups.put("SYS_ADMIN", 1006);
+        groups.put("BBC_USER", 1007);
     }
 
-    private String group;
-    private Map<String, Integer> groups = new HashMap<>();
 
     @PostConstruct
     public void init() {
@@ -45,7 +44,8 @@ public class BBCGroups implements Serializable {
         groups.put("BBC_GUEST", 1003);
         groups.put("AUDITOR", 1004);
         groups.put("ETHICS_BOARD", 1005);
-
+  //      groups.put("SYS_ADMIN", 1006);
+        groups.put("BBC_USER", 1007);
     }
 
    public Integer getGroupNum( String value) {
@@ -82,5 +82,4 @@ public class BBCGroups implements Serializable {
     public void setGroups(Map<String, Integer> groups) {
         this.groups = groups;
     }
-}    
-    
+}   

@@ -27,138 +27,32 @@ import se.kth.bbc.security.ua.model.People;
  *
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
-
 @ManagedBean
 @SessionScoped
-public class RecoverySelector implements Serializable{
-    
+public class RecoverySelector implements Serializable {
+
     private static final long serialVersionUID = 1L;
-   
+
     @EJB
     private UserManager um;
-    
-    @EJB 
+
+    @EJB
     private EmailBean email;
-    
+
     private People people;
-    
-    private String console;   
-    
+
+    private String console;
+
     // Quick response code URL
     private String qrUrl = "Pass";
     private StreamedContent qrCode;
 
-     //@ManagedProperty(value="#{recoverySelector.uname}")
-     private String uname;
+    //@ManagedProperty(value="#{recoverySelector.uname}")
+    private String uname;
     private String tmpCode;
     private String passwd;
 
-    public String getPasswd() {
-        return passwd;
-    }
-
-    public void setPasswd(String passwd) {
-        this.passwd = passwd;
-    }
-    
-    public String getConsole() {
-        return console;
-    }
- 
-    public void setConsole(String console) {
-        this.console = console;
-    }
-
-    
-    public String redirect(){
-    
-        if(console.equals("Password"))
-            return "sec_question";
-        
-        if(console.equals("Mobile"))
-            return "mobile_recovery";
-        
-        if(console.equals("Yubikey"))
-            return "yubikey_recovery";
-        
-        
-        return "";
-    }
-    
-    private static final Logger logger = Logger.getLogger(ResetPassword.class.getName());
-
-    public String sendQrCode() {
-    
-        people = um.findByEmail(uname);
-        
-        if (people == null) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found!", "null"));
-            return "";
-        }
-        try {
-       
-            if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))){
-                
-                String random = SecurityUtils.getRandomString();
-                um.updateSecret(people.getUid(), random);
-                String message = buildTempResetMessage(random);
-                email.sendEmail(people.getEmail(), "Tmp code", message);
-                
-                return "validate_code";
-            } else {
-                FacesContext context = FacesContext.getCurrentInstance();
-                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
-                return "";
-            }
-        } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (UnsupportedEncodingException ex) {
-            Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (MessagingException ex) {
-            Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        return "";
-    }
-    
-    
-    public String validateTmpCode() {
-    
-        people = um.findByEmail(this.uname);
-       
-        if (people == null) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found!", "null"));
-            return "";
-        }
-
-           if(people.getSecret() == null ? tmpCode == null : people.getSecret().equals(this.tmpCode)){
-          
-               
-            try {
-                String otpSecret = SecurityUtils.calculateSecretKey();
-
-                um.updateSecret(people.getUid(), otpSecret);
-                qrCode = QRCodeGenerator.getQRCode(people.getEmail(), Gauth.ISSUER, otpSecret);
-                return "qrcode";
-               
-            } catch (IOException ex) {
-                Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (WriterException ex) {
-                Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-                
-            } else {
-                FacesContext context = FacesContext.getCurrentInstance();
-                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
-                return "";
-            }
-           return "";
-       }
-
-    public String getQrUrl() {
+        public String getQrUrl() {
         return qrUrl;
     }
 
@@ -189,6 +83,187 @@ public class RecoverySelector implements Serializable{
     public void setTmpCode(String tmpCode) {
         this.tmpCode = tmpCode;
     }
+
+    public String getPasswd() {
+        return passwd;
+    }
+
+    public void setPasswd(String passwd) {
+        this.passwd = passwd;
+    }
+
+    public String getConsole() {
+        return console;
+    }
+
+    public void setConsole(String console) {
+        this.console = console;
+    }
+
+    public String redirect() {
+
+        if (console.equals("Password")) {
+            return "sec_question";
+        }
+
+        if (console.equals("Mobile")) {
+            return "mobile_recovery";
+        }
+
+        if (console.equals("Yubikey")) {
+            return "yubikey_recovery";
+        }
+
+        return "";
+    }
+
+    private static final Logger logger = Logger.getLogger(ResetPassword.class.getName());
+
+    public String sendQrCode() {
+
+        people = um.findByEmail(uname);
+
+        if (people == null) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found!", "null"));
+            return "";
+        }
+
+        
+        if (people.getStatus() == AccountStatusIF.ACCOUNT_BLOCKED ) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is blocked!", "null"));
+            return "";
+        }
+        if (people.getYubikeyUser() == 1) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "No Mobile user found", "null"));
+            return "";
+        }
+
+        try {
+
+            if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
+
+                String random = SecurityUtils.getRandomString();
+                um.updateSecret(people.getUid(), random);
+                String message = buildTempResetMessage(random);
+                email.sendEmail(people.getEmail(), "Tmp code", message);
+
+                return "validate_code";
+            } else {
+                FacesContext context = FacesContext.getCurrentInstance();
+                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
+                return "";
+            }
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
+            Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return "";
+    }
+
+    public String validateTmpCode() {
+
+        people = um.findByEmail(this.uname);
+
+        if (people == null) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found!", "null"));
+            return "";
+        }
+
+        if (people.getSecret() == null ? tmpCode == null : people.getSecret().equals(this.tmpCode)) {
+
+            try {
+                String otpSecret = SecurityUtils.calculateSecretKey();
+
+                um.updateSecret(people.getUid(), otpSecret);
+                qrCode = QRCodeGenerator.getQRCode(people.getEmail(), Gauth.ISSUER, otpSecret);
+                return "qrcode";
+
+            } catch (IOException | WriterException ex) {
+                Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        } else {
+            int val = people.getFalseLogin();
+            um.increaseLockNum(people.getUid(), val + 1);
+            if (val > 5) {
+                um.deactivateUser(people.getUid());
+                try {
+                    email.sendEmail(people.getEmail(), "Account blocked", accountBlockedMessage());
+                } catch (MessagingException ex1) {
+                    Logger.getLogger(Gauth.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            }
+
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
+            return "";
+        }
+        return "";
+    }
+
+    public String sendYubiReq() {
+
+        people = um.findByEmail(uname);
+
+        if (people == null) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found!", "null"));
+            return "";
+        }
+
+        if (people.getStatus() == AccountStatusIF.ACCOUNT_BLOCKED ) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is blocked!", "null"));
+            return "";
+        }
+
+        if (people.getYubikeyUser() != 1) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "No Yubikey user found", "null"));
+            return "";
+        }
+
+        try {
+            if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
+
+                String message = buildYubResetMessage("");
+                email.sendEmail(people.getEmail(), "Yubikey request", message);
+                people.setStatus(AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE);
+                um.updatePeople(people);
+                return "yubico";
+            } else {
+
+                int val = people.getFalseLogin();
+                um.increaseLockNum(people.getUid(), val + 1);
+                if (val > 5) {
+                    um.deactivateUser(people.getUid());
+                    try {
+                        email.sendEmail(people.getEmail(), "Account blocked", accountBlockedMessage());
+                    } catch (MessagingException ex1) {
+                        Logger.getLogger(Gauth.class.getName()).log(Level.SEVERE, null, ex1);
+                    }
+                }
+                FacesContext context = FacesContext.getCurrentInstance();
+                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
+                return "";
+            }
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
+            Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return "";
+
+    }
+
+    private String accountBlockedMessage() {
+        String l1 = "Greetings!\n\n.Your account in the Biobankcloud is blocked due to frequent false attempts.\n\n";
+        String l2 = "If you have any questions please contact support@biobankcloud.com";
+        return l1 + l2;
+    }
     
     private String buildTempResetMessage(String random_password) {
 
@@ -202,7 +277,7 @@ public class RecoverySelector implements Serializable{
         return content + tmp_pass + ending;
     }
 
-     private String buildYubResetMessage(String msg) {
+    private String buildYubResetMessage(String msg) {
 
         String content = "Greetings!\n\nThere have been a Yubikey device reset request on your behalf.\n\n"
                 + "You will receive a device within 48 hours.\n\n";
@@ -212,36 +287,4 @@ public class RecoverySelector implements Serializable{
         return content + msg + ending;
     }
 
-     
-    public String sendYubiReq (){
-    
-     people = um.findByEmail(uname);
-        
-        if (people == null) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found!", "null"));
-            return "";
-        }
-        try {
-       
-            if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))){
-                
-                String message = buildYubResetMessage("");
-                email.sendEmail(people.getEmail(), "Yubikey request", message);
-                people.setStatus(AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE);
-                um.updatePeople(people);
-                return "yubico";
-            } else {
-                FacesContext context = FacesContext.getCurrentInstance();
-                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
-                return "";
-            }
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
-            Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        return "";
- 
-        
-    }
 }

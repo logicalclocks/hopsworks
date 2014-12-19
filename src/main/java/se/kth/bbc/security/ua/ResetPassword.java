@@ -239,8 +239,8 @@ public class ResetPassword implements Serializable {
     }
 
     /**
-     *
-     * @return
+     * Change security question in through profile
+     * @return 
      */
     public String changeSecQuestion() {
         FacesContext ctx = FacesContext.getCurrentInstance();

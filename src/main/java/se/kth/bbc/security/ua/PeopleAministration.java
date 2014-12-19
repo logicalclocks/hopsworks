@@ -31,7 +31,6 @@ import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.People;
 import se.kth.bbc.security.ua.model.Yubikey;
-
 /**
  *
  * @author Ali Gholami <gholami@pdc.kth.se>
@@ -43,6 +42,7 @@ public class PeopleAministration implements Serializable {
     private static final Logger logger = Logger.getLogger(PeopleAministration.class.getName());
 
     private static final long serialVersionUID = 1L;
+    
     @EJB
     private UserManager userManager;
 
@@ -115,9 +115,9 @@ public class PeopleAministration implements Serializable {
 
     private String selected_group;
     private String selected_status;
-
-    public String getUserRole(People user) {
-        return userManager.getPeopleGroupName(user.getUid());
+    
+    public List <String> getUserRole(People p) {
+        return userManager.findGroups(p.getUid());
     }
 
     public People getUser() {
@@ -410,4 +410,6 @@ public class PeopleAministration implements Serializable {
         String l2 = "If you have any questions please contact support@biobankcloud.com";
         return l1 + l2;
     }
+    
+
 }

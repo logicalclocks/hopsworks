@@ -94,10 +94,10 @@
     
     <!-- declare the roles relevant for our webapp -->
     <security-role>
-        <role-name>ADMIN</role-name>
+        <role-name>SYS_ADMIN</role-name>
     </security-role>
     <security-role>
-        <role-name>AGENT</role-name>
+        <role-name>BBC_USER</role-name>
     </security-role>
     <security-role>
         <role-name>BBC_ADMIN</role-name>
@@ -113,14 +113,15 @@
     </security-role>
     <security-role>
         <role-name>ETHICS_BOARD</role-name>
-    </security-role>    
+    </security-role>
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>Secured Content</web-resource-name>
             <url-pattern>/sauron/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-            <role-name>BBC_ADMIN</role-name>
+             <role-name>SYS_ADMIN</role-name>
+             <role-name>BBC_ADMIN</role-name>
         </auth-constraint>
         <!-- we always want https! -->
         <!--        <user-data-constraint>
@@ -134,7 +135,8 @@
             <url-pattern>/rest/collectd/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-            <role-name>BBC_ADMIN</role-name>
+             <role-name>SYS_ADMIN</role-name>
+             <role-name>BBC_ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
     <security-constraint>
@@ -143,9 +145,9 @@
             <url-pattern>/bbc/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
+            <role-name>SYS_ADMIN</role-name>
             <role-name>BBC_ADMIN</role-name>
             <role-name>BBC_RESEARCHER</role-name>
-            <role-name>BBC_GUEST</role-name>
         </auth-constraint>
     </security-constraint>
     <security-constraint>
@@ -154,6 +156,7 @@
             <url-pattern>/bbc/lims/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
+            <role-name>SYS_ADMIN</role-name>
             <role-name>BBC_ADMIN</role-name>
             <role-name>BBC_RESEARCHER</role-name>
             <role-name>BBC_GUEST</role-name>
@@ -176,6 +179,7 @@
             <url-pattern>/wf/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
+            <role-name>SYS_ADMIN</role-name>
             <role-name>BBC_ADMIN</role-name>
            <role-name>BBC_RESEARCHER</role-name>
          </auth-constraint>

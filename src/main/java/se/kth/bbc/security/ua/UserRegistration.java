@@ -8,10 +8,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
-import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.security.auth.totp.Gauth;
@@ -308,6 +306,7 @@ public class UserRegistration implements Serializable {
                     security_question, SecurityUtils.converToSHA256(security_answer), AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE, yubikey);
 
             mgr.registerGroup(uid, GroupsIf.BBC_GUEST);
+
             mgr.registerAddress(uid, address1, address2, address3, city, state, country, postalcode);
             mgr.registerYubikey(uid);
             emailBean.sendEmail(mail, "Yubikey Request", buildYubikeyRequestMessage());
