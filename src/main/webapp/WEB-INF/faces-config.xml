@@ -6,7 +6,6 @@
               xmlns="http://java.sun.com/xml/ns/javaee" 
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
               xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd">
-
     
     <navigation-rule>      
         <navigation-case>
@@ -35,26 +34,25 @@
 
         <navigation-case>
             <from-outcome>activate_yubikey</from-outcome>
-            <to-view-id>/auth/activate_yubikey.xhtml</to-view-id>
+            <to-view-id>/auth/protected/activate_yubikey.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
 
         <navigation-case>
             <from-outcome>yubico</from-outcome>
-            <to-view-id>/auth/yubico.xhtml</to-view-id>
+            <to-view-id>/auth/protected/yubico.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
 
         <navigation-case>
             <from-outcome>qrcode</from-outcome>
-            <to-view-id>/auth/qrcode.xhtml</to-view-id>
+            <to-view-id>/auth/protected/qrcode.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         
-        
         <navigation-case>
             <from-outcome>login</from-outcome>
-            <to-view-id>/auth/login.xhtml</to-view-id>
+            <to-view-id>/auth/protected/login.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
 
@@ -66,7 +64,7 @@
 
         <navigation-case>
             <from-outcome>logout</from-outcome>
-            <to-view-id>/auth/login.xhtml</to-view-id>
+            <to-view-id>/index.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
 
@@ -84,7 +82,7 @@
 
          <navigation-case>
             <from-outcome>password_changed</from-outcome>
-            <to-view-id>/auth/password_changed.xhtml</to-view-id>
+            <to-view-id>/auth/protected/password_changed.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         
@@ -96,7 +94,7 @@
 
         <navigation-case>
             <from-outcome>reset</from-outcome>
-            <to-view-id>/auth/reset.xhtml</to-view-id>
+            <to-view-id>/auth/protected/reset.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
 
@@ -105,7 +103,6 @@
             <to-view-id>/auth/mobile_recovery.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
-        
         
         <navigation-case>
             <from-outcome>mobile_recovery</from-outcome>
@@ -134,7 +131,7 @@
         
           <navigation-case>
             <from-outcome>profile_password_changed</from-outcome>
-            <to-view-id>/auth/profile_password_changed.xhtml</to-view-id>
+            <to-view-id>/auth/protected/profile_password_changed.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
   

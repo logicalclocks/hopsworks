@@ -8,8 +8,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
+import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.security.auth.totp.Gauth;
@@ -249,6 +251,7 @@ public class UserRegistration implements Serializable {
     public String registerMobileUser() throws UnsupportedEncodingException, NoSuchAlgorithmException, IOException {
 
         try {
+            
             /* generates a UNIX compliant account*/
             int uid = mgr.lastUserID() + 1;
             String otpSecret = SecurityUtils.calculateSecretKey();

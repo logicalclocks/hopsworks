@@ -198,7 +198,7 @@
       <security-constraint>
         <web-resource-collection>
             <web-resource-name>User authentication</web-resource-name>
-            <url-pattern>/auth/*</url-pattern>
+            <url-pattern>/auth/protected/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
             <role-name>BBC_ADMIN</role-name>

@@ -87,12 +87,12 @@
                                                 binding="#{confirmPassword}"
                                                 required="true">
                                     </p:password>
-                                    
                                     <p:spacer></p:spacer>
+                                    
                                     <p:messages id="messages" autoUpdate="true" />
                                 </h:panelGrid>
                                 <div class="register_actions">
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{userRegistration.registerMobileUser()}" />
+                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{userRegistration.registerMobileUser()}"/>
                                     <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" style="margin-left: 55px"/>
                                 </div>
                             </h:form>     

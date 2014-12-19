@@ -3,33 +3,26 @@
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:p="http://primefaces.org/ui"
-      xmlns:ui="http://java.sun.com/jsf/facelets">
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui">
 
+    <h:head>
+        <title>#{settingsController.name} - Error</title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    </h:head>
 
-    <ui:composition template="layout.xhtml">
+    <h:body >
 
-        <ui:define name="title">
-            #{settingsController.name} - Failed Login
-        </ui:define>
+        <div align="center">
+            <br/>          
 
-        <ui:define name="css">
-        </ui:define>
-
-        <ui:define name="scripts">
-
-        </ui:define>
-
-        <ui:define name="content">
-
-            <p:panel header="Login Error">
-                Sorry, you made an Error. Please try again: <a href="/index.xhtml" >Login</a>
-            </p:panel>
-        </ui:define>
-
-    </ui:composition>    
-
-
+        </div>
+        <p:panel header="Error" style="width: 300px; margin: 0 auto;">
+            <h:form>
+                <p align="left"> Wrong username/password!</p>   
+                Please try again: 
+                <h:commandLink value="Login" action="welcome"  immediate="true"/> 
+            </h:form>
+        </p:panel>
+    </h:body>  
 </html>
-
-
