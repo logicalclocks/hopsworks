@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,6 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.primefaces.event.FileUploadEvent;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.lims.Constants;
@@ -47,6 +47,7 @@ public class CuneiformController implements Serializable {
   private List<CuneiformParameter> freevars;
   private Long jobhistoryid;
   private boolean started = false;
+  private String jobName;
 
   @ManagedProperty(value = "#{studyManagedBean}")
   private StudyMB study;
@@ -56,9 +57,12 @@ public class CuneiformController implements Serializable {
 
   @EJB
   private JobHistoryFacade history;
-  
+
   @EJB
   private RunningJobTracker runningJobs;
+
+  @ManagedProperty(value="#{studyManagedBean}")
+  private StudyMB studyMB;
 
   private final JobController jc = new JobController();
 
@@ -68,6 +72,18 @@ public class CuneiformController implements Serializable {
 
   public void setWorkflowName(String name) {
     this.workflowname = name;
+  }
+
+  public String getJobName() {
+    return jobName;
+  }
+
+  public void setJobName(String name) {
+    this.jobName = name;
+  }
+  
+  public void setStudyMB(StudyMB studyMB){
+    this.studyMB = studyMB;
   }
 
   @PostConstruct
@@ -91,7 +107,7 @@ public class CuneiformController implements Serializable {
       init();
       return;
     }
-    //TODO: display spinner
+    workflowname = event.getFile().getFileName();
     inspectWorkflow();
   }
 
@@ -148,13 +164,16 @@ public class CuneiformController implements Serializable {
 
   public void startWorkflow() {
     started = true;
+
+    if (jobName == null || jobName.isEmpty()) {
+      jobName = "Untitled job";
+    }
+
     YarnRunner.Builder b = new YarnRunner.Builder(Constants.HIWAY_JAR_PATH,
             "Hiway.jar");
     b.appMasterMainClass(
             "de.huberlin.wbi.hiway.app.am.CuneiformApplicationMaster");
-    b.stdErrPath("/tmp/stderr.log");
-    b.stdOutPath("/tmp/stdout.log");
-    b.appName("Cuneiform " + workflowname);
+    b.appName("Cuneiform " + jobName);
 
     b.localResourcesBasePath("/user/" + Constants.YARN_USER + "/hiway/"
             + YarnRunner.APPID_PLACEHOLDER);
@@ -171,19 +190,35 @@ public class CuneiformController implements Serializable {
     String wfPath = jc.getFilePath(KEY_WORKFLOW_FILE);
     b.addLocalResource(getFileName(wfPath), wfPath, getFileName(wfPath));
 
+    try {
+      //Create temp folder for stdout and -err
+      Path p = Files.createTempDirectory("something");
+      b.stdErrPath(Paths.get(p.toString(), "stderr.log").toString());
+      b.stdOutPath(Paths.get(p.toString(), "stdout.log").toString());
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, "Unable to create temp directory. Stdout and stderr will be unavailable.", ex);
+      //TODO: make this clear in DB
+    }
     //Get the YarnRunner instance
     YarnRunner r = b.build();
 
     //TODO: include input and execution files
-    jobhistoryid = history.create(workflowname, study.getUsername(), study.
+    jobhistoryid = history.create(jobName, study.getUsername(), study.
             getStudyName(), "CUNEIFORM", args.toString(), null,
             "/tmp/stderr.log", "/tmp/stdout.log", null, null);
     if (jobhistoryid != null) {
+      submitter.setStdOutFinalDestination(studyMB.getHdfsRootPath()
+              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
+              + File.separator + "stdout.log");
+      submitter.setStdErrFinalDestination(studyMB.getHdfsRootPath()
+              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
+              + File.separator + "stderr.log");
       submitter.registerJob(jobhistoryid, r);
       submitter.handleExecution(jobhistoryid, r);
       MessagesController.addInfoMessage("App master started!");
     } else {
-      logger.log(Level.SEVERE,"Failed to persist JobHistory. Aborting execution.");
+      logger.log(Level.SEVERE,
+              "Failed to persist JobHistory. Aborting execution.");
       MessagesController.addErrorMessage(
               "Failed to write job history. Aborting execution.");
     }
@@ -195,12 +230,12 @@ public class CuneiformController implements Serializable {
     int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
     return path.substring(startName);
   }
-  
-  public boolean isJobFinished(){
+
+  public boolean isJobFinished() {
     return !runningJobs.isJobRunning(jobhistoryid);
   }
-  
-  public boolean isJobStarted(){
+
+  public boolean isJobStarted() {
     return started;
   }
 

@@ -8,11 +8,11 @@ package se.kth.bbc.lims;
  */
 public class Constants {
 
-    public static final String server = "LOCAL";
-    //public static final String server = "SNURRAN";
+    //public static final String server = "LOCAL";
+    public static final String server = "SNURRAN";
 
     public static final String UPLOAD_DIR = server.equals("LOCAL") ? "/home/stig/tst" : "/tmp";
-    public static final String NAMENODE_URI = server.equals("LOCAL") ? "hdfs://localhost:29211":"hdfs://snurran.sics.se:9999";
+    public static final String NAMENODE_URI = server.equals("LOCAL") ? "hdfs://193.10.66.125:29211":"hdfs://snurran.sics.se:9999";
     
     public static final String LOCAL_APPMASTER_DIR = server.equals("LOCAL") ? "/home/stig/tst/appMaster" : "/tmp/appMaster";
     public static final String LOCAL_EXTRA_DIR = server.equals("LOCAL") ? "/home/stig/tst/extraFiles" : "/tmp/extraFiles";
@@ -24,4 +24,6 @@ public class Constants {
     public static final String HIWAY_JAR_PATH = "LOCAL".equals(server)? "/srv/hiway-0.2.0-SNAPSHOT/hiway-core-0.2.0-SNAPSHOT.jar" : "/home/glassfish/stig/hiway-core-0.2.0-SNAPSHOT.jar";
     
     public static final String YARN_USER = "LOCAL".equals(server)? "stig":"glassfish";
+    
+    public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH = "Cuneiform/Output/";
 }

@@ -782,4 +782,16 @@ public class YarnRunner implements CancellableJob{
     }
 
   }  
+  
+  /*
+   * Getters
+   */
+  
+  public final String getStdOutPath(){
+    return stdOutPath;
+  }
+  
+  public final String getStdErrPath(){
+    return stdErrPath;
+  }
 }

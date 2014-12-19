@@ -8,6 +8,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.exceptions.YarnException;
+import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.CancellableJob;
 import se.kth.bbc.jobs.RunningJobTracker;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
@@ -30,7 +31,7 @@ public class AsynchronousYarnApplication {
   //TODO: get from some kind of configuration
   private static final int MAX_STATE_POLL_RETRIES = 10;
   private static final int POLL_TIMEOUT_INTERVAL = 1; //in seconds
-  
+
   private boolean registered = false;
 
   @EJB
@@ -39,6 +40,12 @@ public class AsynchronousYarnApplication {
   @EJB
   private JobHistoryFacade jobHistoryFacade;
 
+  @EJB
+  private FileOperations fops;
+
+  private String stdOutFinalDestination;
+  private String stdErrFinalDestination;
+
   /**
    * Takes care of the execution of the job represented by YarnRunner.
    * Registers the running job and then asynchronously runs and monitors it.
@@ -46,12 +53,14 @@ public class AsynchronousYarnApplication {
    * @param runner
    */
   @Asynchronous
-  public void handleExecution(Long id, YarnRunner runner) throws IllegalStateException{
-    if(!registered){
+  public void handleExecution(Long id, YarnRunner runner) throws
+          IllegalStateException {
+    if (!registered) {
       //The Asynchronous annotation must be on a public method, so calling a private
       // asynchronous method does not work. This makes that registerJob() has to be called
       // from the calling entity. Hence, assert it has been called and throw an IllegalStateException if not.
-      throw new IllegalStateException("Attempting to run job without registering first.");
+      throw new IllegalStateException(
+              "Attempting to run job without registering first.");
     }
     runAndMonitor(id, runner);
     try {
@@ -60,6 +69,12 @@ public class AsynchronousYarnApplication {
     } catch (YarnException | IOException ex) {
       logger.log(Level.SEVERE, "Failed to get final Yarn application state", ex);
       updateJobState(id, JobHistory.STATE_FRAMEWORK_FAILURE);
+    }
+    try {
+      copyStdOutNErr(id, runner.getStdOutPath(), runner.getStdErrPath());
+    }catch(IOException e){
+      //TODO: how should we handle this? Update state? Create file? Put entry in db saying
+      //std was not copied?
     }
     unregisterJob(id);
   }
@@ -137,15 +152,37 @@ public class AsynchronousYarnApplication {
         failures++;
       }
     }
-    
-    if(failures >= MAX_STATE_POLL_RETRIES){
+
+    if (failures >= MAX_STATE_POLL_RETRIES) {
       try {
-        logger.log(Level.SEVERE, "Killing application because unable to poll for status.");
+        logger.log(Level.SEVERE,
+                "Killing application because unable to poll for status.");
         runner.cancelJob();
       } catch (YarnException | IOException ex) {
-        logger.log(Level.SEVERE, "Failed to cancel job after failing to poll for status.", ex);
-      }      
+        logger.log(Level.SEVERE,
+                "Failed to cancel job after failing to poll for status.", ex);
+      }
     }
 
+  }
+
+  private void copyStdOutNErr(Long id, String stdOutLocal, String stdErrLocal) throws
+          IOException {
+    if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
+      fops.copyToHDFSFromPath(stdOutLocal, stdOutFinalDestination, null);
+      jobHistoryFacade.updateStdOutPath(id, stdOutLocal);
+    }
+    if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
+      fops.copyToHDFSFromPath(stdErrLocal, stdErrFinalDestination, null);
+      jobHistoryFacade.updateStdErrPath(id, stdErrLocal);
+    }
+  }
+
+  public void setStdOutFinalDestination(String path) {
+    this.stdOutFinalDestination = path;
+  }
+
+  public void setStdErrFinalDestination(String path) {
+    this.stdErrFinalDestination = path;
   }
 }

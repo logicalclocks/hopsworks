@@ -9,52 +9,73 @@
       xmlns:c="http://java.sun.com/jsp/jstl/core">
     <body>
         <ui:composition>
-            <h:panelGrid columns="2">
-                <p:panel styleClass="historyPanel" header="History">
-                    <ui:insert name="history">
-                        <ui:include src="/bbc/lims/studyTabs/HistoryPanel.xhtml">
-                            <ui:param name="type" value="CUNEIFORM" />
-                        </ui:include>
-                    </ui:insert>
-                </p:panel>
-                <h:form id="cuneiForm">
-                    <p:growl autoUpdate="true" showDetail="true"/>
-                    <div class="workflow-head">
-                        <div>
-                            <h:panelGrid columns="1">
-                                <span>
-                                    <h:outputLabel value="Upload workflow file"/>
-                                </span>
-                                <p:fileUpload required="true" auto="true" multiple="false" 
-                                              label="Select" mode="advanced" allowTypes="/(\.|\/)(cf)$/" 
-                                              fileUploadListener="#{cuneiformController.workflowUpload}" 
-                                              update="@form"/>
-                                <h:outputLabel value="#{cuneiformController.workflowName}"/>
-                            </h:panelGrid>
-                        </div>
+            <div>
+                <h1 style="float:none;">
+                    Cuneiform jobs
+                </h1>
+            </div>
+            <div>
+                <h:panelGrid columns="3" styleClass="jobPanel" columnClasses="historyColumn,runColumn,resultsColumn">
+                    <p:scrollPanel styleClass="historyPanel">
+                        <h3>
+                            History
+                        </h3>
+                        <ui:insert name="history">
+                            <ui:include src="/bbc/lims/studyTabs/HistoryPanel.xhtml">
+                                <ui:param name="type" value="CUNEIFORM" />
+                            </ui:include>
+                        </ui:insert>
+                    </p:scrollPanel>
+                    <h:form id="cuneiForm"> <!-- Pun intended -->
+                        <h3>
+                            Run configuration
+                        </h3>
+                        <p:growl autoUpdate="true" showDetail="true"/>
+                        <div class="workflow-head">
+                            <div>
+                                <h:panelGrid columns="2">
+                                    <h:outputLabel for="JobName" value="Job name"/>
+                                    <h:inputText id="JobName" value="#{cuneiformController.jobName}"/>
 
-                        <h:graphicImage id="loadImg" class="browser s16" library="images/icons" name="ajax-loader.gif" style="display:none" />
+                                    <h:outputLabel value="Upload workflow file" for="wfUploader"/>
+                                    <p:fileUpload required="true" auto="true" multiple="false" 
+                                                  label="Select" mode="advanced" allowTypes="/(\.|\/)(cf)$/" 
+                                                  fileUploadListener="#{cuneiformController.workflowUpload}" 
+                                                  update="@form" id="wfUploader" process="@form"/>
 
-                        <div>
-                            <h:panelGrid columns="2" rendered="#{cuneiformController.workflowUploaded}">
-                                <ui:repeat value="#{cuneiformController.freeVars}" var="variable">
-                                    <h:inputText value="#{variable.name}" readonly="true"/>
-                                    <h:inputText value="#{variable.value}"/>
-                                </ui:repeat>
-                            </h:panelGrid>
-                        </div>
+                                    <h:outputLabel value="Uploaded file"/>
+                                    <h:outputLabel value="#{cuneiformController.workflowName==null ? 'No file uploaded yet' : cuneiformController.workflowName}"/>
+                                </h:panelGrid>
+                            </div>
 
-                        <div>
-                            <p:commandButton value="Execute" action="#{cuneiformController.startWorkflow()}" update="@form"/>
+                            <h:graphicImage id="loadImg" class="browser s16" library="images/icons" name="ajax-loader.gif" style="display:none" />
+
+                            <div>
+                                <h:panelGrid columns="2" rendered="#{cuneiformController.workflowUploaded}">
+                                    <ui:repeat value="#{cuneiformController.freeVars}" var="variable">
+                                        <h:inputText value="#{variable.name}" readonly="true"/>
+                                        <h:inputText value="#{variable.value}"/>
+                                    </ui:repeat>
+                                </h:panelGrid>
+                            </div>
+
+                            <div>
+                                <p:commandButton value="Execute" action="#{cuneiformController.startWorkflow()}" update="@form"/>
+                            </div>
                         </div>
-                    </div>
-                    <p:poll interval="5" listener="#{cuneiformController.isJobFinished()}" update="image"/>
-                    <h:panelGroup id="image">
-                        <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformController.jobStarted and not cuneiformController.jobFinished}"/>
-                        <h:outputText value="FINISHED!!!" rendered="#{cuneiformController.jobStarted and cuneiformController.jobFinished}"/>
-                    </h:panelGroup>
-                </h:form>
-            </h:panelGrid>
+                    </h:form>
+                    <h:form>
+                        <h3>
+                            Results
+                        </h3>
+                        <p:poll interval="5" listener="#{cuneiformController.isJobFinished()}" update="image"/>
+                        <h:panelGroup id="image">
+                            <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformController.jobStarted and not cuneiformController.jobFinished}"/>
+                            <h:outputText value="FINISHED!!!" rendered="#{cuneiformController.jobStarted and cuneiformController.jobFinished}"/>
+                        </h:panelGroup>
+                    </h:form>
+                </h:panelGrid>
+            </div>
         </ui:composition>
     </body>
 </html>

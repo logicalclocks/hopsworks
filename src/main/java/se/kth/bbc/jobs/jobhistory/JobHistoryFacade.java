@@ -23,10 +23,10 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-  
+
   @EJB
   private UserFacade users;
-  
+
   @EJB
   private StudyFacade studies;
 
@@ -80,17 +80,19 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     q.setParameter("id", id);
     return q.getSingleResult();
   }
-  
-  public Long create(String jobname, String userEmail, String studyname, String type,
-          String args, String state, String stdOutPath, String stdErrPath, 
-          Collection<JobExecutionFile> execFiles, Collection<JobInputFile> inputFiles){
+
+  public Long create(String jobname, String userEmail, String studyname,
+          String type,
+          String args, String state, String stdOutPath, String stdErrPath,
+          Collection<JobExecutionFile> execFiles,
+          Collection<JobInputFile> inputFiles) {
     Username user = users.findByEmail(userEmail);
     TrackStudy study = studies.findByName(studyname);
     Date submission = new Date();
-    if(state == null || state.isEmpty()){
+    if (state == null || state.isEmpty()) {
       state = JobHistory.STATE_NEW;
     }
-    
+
     JobHistory jh = new JobHistory(submission, state);
     jh.setName(jobname);
     jh.setUser(user);
@@ -101,10 +103,22 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     jh.setStderrPath(stdErrPath);
     jh.setJobExecutionFileCollection(execFiles);
     jh.setJobInputFileCollection(inputFiles);
-    
+
     em.persist(jh);
     em.flush();
     return jh.getId();
+  }
+
+  public void updateStdOutPath(Long id, String stdOutPath) {
+    JobHistory jh = findById(id);
+    jh.setStdoutPath(stdOutPath);
+    em.merge(jh);
+  }
+
+  public void updateStdErrPath(Long id, String stdErrPath) {
+    JobHistory jh = findById(id);
+    jh.setStderrPath(stdErrPath);
+    em.merge(jh);
   }
 
 }

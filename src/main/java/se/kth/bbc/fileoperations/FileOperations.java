@@ -66,6 +66,44 @@ public class FileOperations {
     public void copyToHDFS(String localFilename, String destination, Inode inode) throws IOException {
         //Get the local file
         File localfile = getLocalFile(localFilename);
+        
+        String dirs = getDirPart(destination);
+        mkDir(dirs);
+
+        //Update the status of the Inode
+        if (inode != null) {
+            inode.setStatus(Inode.COPYING);
+            inode.setSize((int) localfile.length());
+            inodes.persist(inode);
+        } else {
+            inode = inodes.createAndPersistFile(destination, localfile.length(), Inode.COPYING);
+        }
+
+        //Actually copy to HDFS
+        boolean success = false;
+        Path destp = new Path(destination);
+        try {
+            fsOps.copyToHDFS(destp, new FileInputStream(localfile));
+            success = true;
+        } catch (IOException|URISyntaxException ex) {
+            logger.log(Level.SEVERE, "Error while copying to HDFS", ex);
+            throw new IOException(ex);
+        }
+
+        //Update status
+        //TODO: if fails, shoud local file be removed and Inode as well? Or retry? How to handle this?
+        if (success) {
+            inode.setStatus(Inode.AVAILABLE);
+            inodes.update(inode);
+        }
+    }
+    
+    public void copyToHDFSFromPath(String path, String destination, Inode inode) throws IOException {
+      //Get the local file
+        File localfile = new File(path);
+        
+        String dirs = getDirPart(destination);
+        mkDir(dirs);
 
         //Update the status of the Inode
         if (inode != null) {
@@ -205,6 +243,11 @@ public class FileOperations {
     public void copyAfterUploading(String localFilename, String destination) throws IOException{
         Inode node = inodes.getInodeAtPath(destination);
         copyToHDFS(localFilename, destination, node);
+    }
+    
+    private static String getDirPart(String path){
+      int lastSlash = path.lastIndexOf("/");
+      return path.substring(0,lastSlash);
     }
 
 }

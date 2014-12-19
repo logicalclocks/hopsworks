@@ -376,4 +376,25 @@ h1 {
 
 .historyPanel {
   float: left;
+  max-height: 850px;
+}
+
+.jobPanel td{
+  vertical-align: top;
+}
+
+.jobPanel {
+  width: 100%;
+}
+
+.historyColumn {
+  width: 25%;
+}
+
+.runColumn {
+  width: 35%;
+}
+
+.resultsColumn {
+  width: 40%;
 }
