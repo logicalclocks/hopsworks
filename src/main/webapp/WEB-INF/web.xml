@@ -271,7 +271,7 @@
           <url-pattern>/auth/yubikeylogin.xhtml</url-pattern>   
           <url-pattern>/auth/register_mobile.xhtml</url-pattern>
           <url-pattern>/auth/register_yubico.xhtml</url-pattern>
-      </filter-mapping>
+     </filter-mapping>
     
        
     <!-- To upload from pages with pretty URL!-->
