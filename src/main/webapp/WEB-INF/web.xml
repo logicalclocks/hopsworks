@@ -261,7 +261,7 @@
           <filter-name>Login Filter</filter-name>
           <url-pattern>/index.xhtml</url-pattern>
           <url-pattern>/auth/login.xhtml</url-pattern>
-          <url-pattern>/auth/login.xhtml</url-pattern>   
+          <url-pattern>/auth/yubikeylogin.xhtml</url-pattern>   
           <url-pattern>/auth/register_mobile.xhtml</url-pattern>
           <url-pattern>/auth/register_yubico.xhtml</url-pattern>
       </filter-mapping>
