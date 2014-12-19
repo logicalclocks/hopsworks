@@ -101,5 +101,5 @@ public class ProfileManager implements Serializable {
         }
         MessagesController.addInfoMessage("Success", "Profile updated successfully.");
     }
-
+    
 }

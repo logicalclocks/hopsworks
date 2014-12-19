@@ -60,7 +60,7 @@ public class PeopleStatusBean implements Serializable{
     }
     
      public boolean checkForRequests() {
-        if (getRequest().isUserInRole("ADMIN") || getRequest().isUserInRole("BBC_ADMIN")) {
+        if (getRequest().isUserInRole("BBC_ADMIN")) {
             //return false if no requests
             open_reauests = !(userManager.findAllByStatus(AccountStatusIF.MOBILE_ACCOUNT_INACTIVE).isEmpty()) || !(userManager.findAllByStatus(AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE).isEmpty());
         }
@@ -72,6 +72,9 @@ public class PeopleStatusBean implements Serializable{
         getRequest().getSession().invalidate();
         return "welcome";
     }
-
+    
+    public boolean isLoggedIn(){
+        return getRequest().getRemoteUser() != null;
+    }
     
 }

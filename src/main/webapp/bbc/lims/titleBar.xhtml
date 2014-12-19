@@ -15,21 +15,21 @@ and open the template in the editor.
             <h:form class="stylelayout" id="formToolbar">  
                 <p:toolbar styleClass="MainToolbar">  
                     <p:toolbarGroup align="left">  
-                        <p:commandLink value="BiobankCloud" action="indexPage" rendered="#{userMB.loggedIn}"/>
-                        <p:commandLink value="BiobankCloud" action="welcome" rendered="#{!userMB.loggedIn}"/>
+                        <p:commandLink value="BiobankCloud" action="indexPage" rendered="#{peopleStatusBean.loggedIn}"/>
+                        <p:commandLink value="BiobankCloud" action="welcome" rendered="#{!peopleStatusBean.loggedIn}"/>
                     </p:toolbarGroup> 
 
                     <p:toolbarGroup align="left">              
                     </p:toolbarGroup>  
 
                     
-                    <p:toolbarGroup align="right" rendered="#{userMB.loggedIn}">
-                        <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{userMB.adminUser}"/>
-                        <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
+                    <p:toolbarGroup align="right" rendered="#{peopleStatusBean.loggedIn}">
+                        <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{peopleStatusBean.anyAdminUser}"/>
+                        <p:commandButton id="userBtn" value=" #{profileManager.loginName}" type="button" icon="ui-icon-person"/>  
                         <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
                             <p:menuitem value="View profile" action="profile.xhtml" update=":formToolbar:messages" ajax="false" /> 
                             <p:separator/>
-                            <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
+                            <p:menuitem value="Logout" action='#{peopleStatusBean.logOut()}' update=":formToolbar:messages" ajax="false"/> 
                         </p:menu>  
                     </p:toolbarGroup>  
 
