@@ -186,13 +186,13 @@ public class PeopleAministration implements Serializable {
     }
 
     public void rejectUser(People user1) throws MessagingException {
-         
+
         if (user1 == null) {
-             MessagesController.addErrorMessage("Error", "Null user!");
+            MessagesController.addErrorMessage("Error", "Null user!");
         }
         try {
-             userManager.removeByEmail(user1.getEmail());
-             allUsers.remove(user1);
+            userManager.removeByEmail(user1.getEmail());
+            allUsers.remove(user1);
         } catch (EJBException ejb) {
             MessagesController.addErrorMessage("Error", "Rejection failed");
         }
@@ -214,7 +214,12 @@ public class PeopleAministration implements Serializable {
         Principal principal = request.getUserPrincipal();
 
         try {
-            return principal.getName();
+            People p = userManager.findByEmail(principal.getName());
+            if (p != null) {
+                return p.getFname() + " " + p.getLname();
+            } else {
+                return principal.getName();
+            }
         } catch (Exception ex) {
             ExternalContext extContext = FacesContext.getCurrentInstance().getExternalContext();
             System.err.println(extContext.getRequestContextPath());

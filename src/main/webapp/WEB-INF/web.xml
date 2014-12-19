@@ -252,6 +252,21 @@
         <filter-name>PrimeFaces FileUpload Filter</filter-name>
         <servlet-name>Faces Servlet</servlet-name>
     </filter-mapping>
+    
+    <filter>
+        <filter-name>Login Filter</filter-name>
+        <filter-class>se.kth.bbc.security.auth.totp.LoginFilter</filter-class>
+    </filter>
+    <filter-mapping>
+          <filter-name>Login Filter</filter-name>
+          <url-pattern>/index.xhtml</url-pattern>
+          <url-pattern>/auth/login.xhtml</url-pattern>
+          <url-pattern>/auth/login.xhtml</url-pattern>   
+          <url-pattern>/auth/register_mobile.xhtml</url-pattern>
+          <url-pattern>/auth/register_yubico.xhtml</url-pattern>
+      </filter-mapping>
+    
+       
     <!-- To upload from pages with pretty URL!-->
     <!--    <filter-mapping>
         <filter-name>PrimeFaces FileUpload Filter</filter-name>
