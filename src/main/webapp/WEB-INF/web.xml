@@ -112,8 +112,7 @@
             <url-pattern>/sauron/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-            <role-name>ADMIN</role-name>
-            <role-name>BBC_GUEST</role-name>
+            <role-name>BBC_ADMIN</role-name>
         </auth-constraint>
         <!-- we always want https! -->
         <!--        <user-data-constraint>
@@ -127,8 +126,7 @@
             <url-pattern>/rest/collectd/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-            <role-name>AGENT</role-name>
-            <role-name>ADMIN</role-name>
+            <role-name>BBC_ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
     <security-constraint>
@@ -140,7 +138,6 @@
             <role-name>BBC_ADMIN</role-name>
             <role-name>BBC_RESEARCHER</role-name>
             <role-name>BBC_GUEST</role-name>
-            <role-name>ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
     <security-constraint>
@@ -152,7 +149,6 @@
             <role-name>BBC_ADMIN</role-name>
             <role-name>BBC_RESEARCHER</role-name>
             <role-name>BBC_GUEST</role-name>
-            <role-name>ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
    
@@ -163,7 +159,6 @@
         </web-resource-collection>
         <auth-constraint>
             <role-name>BBC_ADMIN</role-name>
-            <role-name>ADMIN</role-name>
             <role-name>BBC_GUEST</role-name>
         </auth-constraint>
     </security-constraint>
@@ -175,7 +170,6 @@
         <auth-constraint>
             <role-name>BBC_RESEARCHER</role-name>
             <role-name>BBC_ADMIN</role-name>
-            <role-name>ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
     <security-constraint>
@@ -184,8 +178,8 @@
             <url-pattern>/rest/agent/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-            <role-name>AGENT</role-name>
-            <role-name>ADMIN</role-name>
+            <role-name>BBC_AGENT</role-name>
+            <role-name>BBC_ADMIN</role-name>
         </auth-constraint>
     </security-constraint>
     <!-- Authentication for file upload -->
@@ -203,15 +197,17 @@
   
       <security-constraint>
         <web-resource-collection>
-            <web-resource-name>User administration</web-resource-name>
-            <url-pattern>/ua/*</url-pattern>
+            <web-resource-name>User authentication</web-resource-name>
+            <url-pattern>/auth/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
             <role-name>BBC_ADMIN</role-name>
+            <role-name>BBC_RESEARCHER</role-name>
+            <role-name>BBC_GUEST</role-name>
          </auth-constraint>
     </security-constraint>
   
-          <security-constraint>
+    <security-constraint>
       <web-resource-collection>
         <web-resource-name>Viewpoint Secure URLs</web-resource-name>
         <url-pattern>/*</url-pattern>
