@@ -5,6 +5,8 @@
  */
 package se.kth.bbc.security.ua;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
@@ -22,8 +24,12 @@ import javax.faces.validator.ValidatorException;
 @RequestScoped
 public class UsernameValidator implements Validator {
 
-      @EJB
+    @EJB
     private UserManager mgr;
+ 
+    private static final String EMAIL_PATTERN
+            = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
+            + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
 
     /**
      * Ensure the the username is available.
@@ -37,12 +43,28 @@ public class UsernameValidator implements Validator {
     public void validate(FacesContext context, UIComponent component,
             Object value) throws ValidatorException {
 
-        if (mgr.isUsernameTaken(value.toString())) {
+        String uname = value.toString();
+
+        if (!isValidEmail(uname)) {
+            FacesMessage facesMsg = new FacesMessage(
+                    "Invalid email format");
+            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+            throw new ValidatorException(facesMsg);
+        }
+
+        if (mgr.isUsernameTaken(uname)) {
             FacesMessage facesMsg = new FacesMessage(
                     "Username is already taken");
             facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
             throw new ValidatorException(facesMsg);
         }
+
+    }
+
+    public boolean isValidEmail(String u) {
+        Pattern pattern = Pattern.compile(EMAIL_PATTERN);
+        Matcher matcher = pattern.matcher(u);
+        return matcher.matches();
 
     }
 }

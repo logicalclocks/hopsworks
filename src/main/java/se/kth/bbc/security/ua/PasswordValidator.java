@@ -22,6 +22,9 @@ import javax.faces.validator.ValidatorException;
 @FacesValidator("passwordValidator")
 public class PasswordValidator implements Validator {
 
+    
+    final String PASSWORD_PATTERNN= "^(?=.*[0-9])(?=.*[a-zA-Z])(?=\\S+$).{6,}$";
+    
     /**
      * Ensure the password presented by user during registration is qualified.
      *
@@ -85,7 +88,7 @@ public class PasswordValidator implements Validator {
      * @return
      */
     public boolean isAlphaNumeric(String s) {
-      Pattern pattern = Pattern.compile("^(?=.*[0-9])(?=.*[a-zA-Z])(?=\\S+$).{6,}$");
+      Pattern pattern = Pattern.compile(PASSWORD_PATTERNN);
       Matcher matcher = pattern.matcher(s);
         return matcher.matches();
     }
