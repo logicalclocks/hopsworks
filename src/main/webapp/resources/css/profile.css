@@ -6,6 +6,8 @@
 .ui-widget, .ui-widget .ui-widget .ui-widget-content {
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-size: 12px;  
+    font-weight:bold;
+
 }
 
 .BbcMainLayoutProfile {

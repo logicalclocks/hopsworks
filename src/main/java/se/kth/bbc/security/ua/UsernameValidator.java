@@ -7,6 +7,7 @@ package se.kth.bbc.security.ua;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.accessibility.AccessibleRole;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
@@ -15,6 +16,9 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
+import javax.servlet.http.HttpServletRequest;
+import org.primefaces.extensions.component.masterdetail.MasterDetail;
+import se.kth.bbc.security.ua.model.People;
 
 /**
  *
@@ -26,7 +30,7 @@ public class UsernameValidator implements Validator {
 
     @EJB
     private UserManager mgr;
- 
+
     private static final String EMAIL_PATTERN
             = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
             + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
@@ -53,10 +57,27 @@ public class UsernameValidator implements Validator {
         }
 
         if (mgr.isUsernameTaken(uname)) {
-            FacesMessage facesMsg = new FacesMessage(
-                    "Username is already taken");
-            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-            throw new ValidatorException(facesMsg);
+
+            // if it's a profile change ignore 
+            if (getRequest().getRemoteUser() != null) {
+                People p = mgr.findByEmail(getRequest().getRemoteUser());
+                if (p.getEmail().equals(uname)) {
+                    ;
+                } else {
+
+                    FacesMessage facesMsg = new FacesMessage(
+                            "Email is already taken");
+                    facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+                    throw new ValidatorException(facesMsg);
+                }
+            } else {
+                FacesMessage facesMsg = new FacesMessage(
+                        "Email is already taken");
+                facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+                throw new ValidatorException(facesMsg);
+
+            }
+
         }
 
     }
@@ -67,4 +88,9 @@ public class UsernameValidator implements Validator {
         return matcher.matches();
 
     }
+
+    private HttpServletRequest getRequest() {
+        return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+    }
+
 }

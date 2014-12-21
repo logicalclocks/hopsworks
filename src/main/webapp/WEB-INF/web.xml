@@ -201,7 +201,7 @@
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>User authentication</web-resource-name>
-            <url-pattern>/auth/protected/*</url-pattern>
+            <url-pattern>/security/protected/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
            <role-name>SYS_ADMIN</role-name>
@@ -260,10 +260,10 @@
     <filter-mapping>
         <filter-name>Login Filter</filter-name>
         <url-pattern>/index.xhtml</url-pattern>
-        <url-pattern>/auth/login.xhtml</url-pattern>
-        <url-pattern>/auth/yubikeylogin.xhtml</url-pattern>
-        <url-pattern>/auth/register_mobile.xhtml</url-pattern>
-        <url-pattern>/auth/register_yubico.xhtml</url-pattern>
+        <url-pattern>/security/login.xhtml</url-pattern>
+        <url-pattern>/security/yubikeylogin.xhtml</url-pattern>
+        <url-pattern>/security/register_mobile.xhtml</url-pattern>
+        <url-pattern>/security/register_yubico.xhtml</url-pattern>
     </filter-mapping>
     <!-- To upload from pages with pretty URL!-->
     <!--    <filter-mapping>

@@ -14,6 +14,12 @@ body {
     background:#f4f4f4 url(../images/bg.gif) repeat top left;
 }
 
+.ui-widget, .ui-widget .ui-widget .ui-widget-content {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 12px;  
+    font-weight:bold;
+}
+
 .RegistrationMainLayout {
     text-align: center;
 }
