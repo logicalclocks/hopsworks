@@ -12,7 +12,6 @@ package se.kth.bbc.security.ua;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -22,8 +21,6 @@ import javax.faces.bean.SessionScoped;
 public class SelectSecurityQuestionMenue implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
-    private static final Logger logger = Logger.getLogger(SelectSecurityQuestionMenue.class.getName());
 
     private String username;
 

@@ -6,12 +6,12 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-      >
+
+      xmlns:c="http://java.sun.com/jsp/jstl/core">
     <f:view contentType="text/html">
         <h:head>
             <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
         </h:head>
 
@@ -20,19 +20,58 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml" />       
             </ui:insert>
 
-            <p:layout id="bbcMainMobileLayout"  styleClass="BbcMainLayoutUser">
+            <p:layout id="bbcMainMobileLayout"  styleClass="RegistrationMainLayout">
 
-                <p:layoutUnit position="center" style="min-width:300px; min-height:700px;">
-                        <div class="container">
-                   
-                    <ul class="register_banner">
+                <p:layoutUnit position="east" style="width:100px; height: 400px;">
+                    <div class="container">
+                        <ul class="register_banner">
+                            <h3 align="left">Why mobile two-step verification?</h3>
+                        </ul>
+
+                        <div align="left" style="font-weight:bold">     
+                            <p >
+                                It's easier than you think for someone to steal your password.
+                                <br></br>
+                                Any of these common actions could put you at risk of having your password stolen:
+                                <ul>
+                                    <ui:fragment rendered="true"><li>Using the same password on more than one site</li></ui:fragment>
+                                    <ui:fragment rendered="true"><li>Downloading software from the Internet</li></ui:fragment>
+                                    <ui:fragment rendered="true"><li>Clicking on links in email messages</li></ui:fragment>
+                                </ul>
+                                2-Step Verification can help keep bad guys out, even if they have your password.
+                              <br></br>
+                              In order to use mobile verification you need to install Google Authenticator app in your smart device.
+                              <br></br>
+                               After successful registration a code will be generated and you need to scan it through your mobile device.
+                              <br></br>
+                              
+                              <div align="center">
+                              <p:graphicImage library="images" name="icons/qrcode.png" height="100px;" width="100px;"></p:graphicImage>
+                              </div>
+                            <br></br>
+                            After loading the code every 30 seconds a new one time password will be generated-
+                            <br></br>
+                            You will be required to provide this one time PIN in addition to your password.
+                            
+                            </p>
+                        </div>
+                          <div align="right">
+                             <p:graphicImage library="images" name="icons/gauth.png" height="300px;" width="200px;"></p:graphicImage>
+                           </div>
+                          
+                    </div>
+                </p:layoutUnit>    
+
+                <p:layoutUnit position="center" style="width:100px; height: 400px">
+                    <div class="container">
+                        <ul class="register_banner">
                             <h3 align="left">Request Mobile Account</h3>
                         </ul>
 
                         <div class="content">
 
-                        <h:form id="registration" class="new_user"> 
-                            <h:panelGrid columns="2">			
+                            <h:form id="registration" class="new_user"> 
+                                <h:panelGrid columns="2">			
                                     <p:outputLabel for="fname" value="First name" style="font-weight:bold"/>
                                     <p:inputText id="fname" value="#{userRegistration.fname}" size="40"
                                                  required="true"
@@ -59,11 +98,14 @@
                                     </p:inputText>
 
                                     <p:outputLabel for="sec_question" value="Security Question" style="font-weight:bold"/>
-                                    <p:selectOneMenu id="sec_question" value="#{userRegistration.security_question}" effect="fold"
+                                    <p:selectOneMenu id="sec_question" value="#{userRegistration.security_question}" 
                                                      required="true"
                                                      requiredMessage="Select Security Question">
-                                        <f:selectItem itemLabel="Select One" itemValue="" />
-                                        <f:selectItems value="#{selectSecurityQuestionMenue.questions}" />
+                                        <f:selectItem itemLabel="Select Security Question" itemValue="" />
+                                        <f:selectItem itemLabel="Who is your favorite historical figure?" itemValue="history" />
+                                        <f:selectItem itemLabel="What is name of your favorite teacher?" itemValue="teacher" />
+                                        <f:selectItem itemLabel="What is your first phone number?" itemValue="phone" />
+                                        <f:selectItem itemLabel="What is the name of your favorite childhood friend?" itemValue="friend" />
                                     </p:selectOneMenu>  
 
                                     <p:outputLabel for="answer" value="Answer" style="font-weight:bold"/>
@@ -75,7 +117,7 @@
                                     <p:password id="password0" value="#{userRegistration.password}" 
                                                 required="true" size="40"
                                                 requiredMessage="Enter password">
-                                     <f:validator validatorId="passwordValidator" />
+                                        <f:validator validatorId="passwordValidator" />
                                         <f:attribute name="confirmPassword" value="#{confirmPassword}" />
                                     </p:password>
 
@@ -85,15 +127,15 @@
                                                 binding="#{confirmPassword}"
                                                 required="true">
                                     </p:password>
-               
-                            
-                                   <p:outputLabel for="captcha" value="Enter the text" style="font-weight:bold"/>
-                                   <p:captcha id ="captcha" label="Captcha" required="true" 
-                                              requiredMessage="Enter a refreshed text"/>
-       
+
+
+                                    <p:outputLabel for="captcha" value="Enter the text" style="font-weight:bold"/>
+                                    <p:captcha id ="captcha" label="Captcha" required="true" 
+                                               requiredMessage="Enter a refreshed text"/>
+
                                     <p:spacer></p:spacer>
-                                    <p:messages id="messages" autoUpdate="true" />
-                                    
+                                    <p:messages id="messages" autoUpdate="true" closable="true"/>
+
                                 </h:panelGrid>
                                 <div class="register_banner">
                                     <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{userRegistration.registerMobileUser()}"/>
@@ -101,8 +143,10 @@
                                 </div>
                             </h:form>     
                         </div>
-                  </div>
-              </p:layoutUnit>
+                    </div>
+                </p:layoutUnit>
+
+
             </p:layout>
         </h:body>
     </f:view>
