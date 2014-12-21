@@ -7,7 +7,7 @@
     <context-param>
         <param-name>primefaces.PRIVATE_CAPTCHA_KEY</param-name>
         <param-value>6LcIf_8SAAAAAApk-GuqRydfQEE31lurGKKa58RK</param-value>
-    </context-param>    
+    </context-param>
     <context-param>
         <param-name>javax.faces.PROJECT_STAGE</param-name>
         <!--        <param-value>Development</param-value>-->
@@ -16,7 +16,7 @@
     <context-param>
         <param-name>facelets.SKIP_COMMENTS</param-name>
         <param-value>true</param-value>
-    </context-param>    
+    </context-param>
     <context-param>
         <param-name>com.sun.faces.verifyObjects</param-name>
         <param-value>false</param-value>
@@ -91,7 +91,6 @@
         <servlet-name>UploadServlet</servlet-name>
         <url-pattern>/bbc/uploader</url-pattern>
     </servlet-mapping>
-    
     <!-- declare the roles relevant for our webapp -->
     <security-role>
         <role-name>SYS_ADMIN</role-name>
@@ -123,7 +122,7 @@
             <role-name>SYS_ADMIN</role-name>
             <role-name>BBC_ADMIN</role-name>
             <role-name>BBC_USER</role-name>
-          </auth-constraint>
+        </auth-constraint>
         <!-- we always want https! -->
         <!--        <user-data-constraint>
             <description>highest supported transport security level</description>
@@ -147,10 +146,10 @@
             <url-pattern>/bbc/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-             <role-name>SYS_ADMIN</role-name>
-             <role-name>BBC_ADMIN</role-name>
-             <role-name>BBC_USER</role-name>
-             <role-name>BBC_RESEARCHER</role-name>
+           <role-name>SYS_ADMIN</role-name>
+            <role-name>BBC_ADMIN</role-name>
+            <role-name>BBC_RESEARCHER</role-name>
+            <role-name>BBC_USER</role-name>
         </auth-constraint>
     </security-constraint>
     <security-constraint>
@@ -159,23 +158,22 @@
             <url-pattern>/bbc/lims/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-            <role-name>SYS_ADMIN</role-name>
             <role-name>BBC_ADMIN</role-name>
-            <role-name>BBC_USER</role-name>
             <role-name>BBC_RESEARCHER</role-name>
+            <role-name>SYS_ADMIN</role-name>
+            <role-name>BBC_USER</role-name>
         </auth-constraint>
     </security-constraint>
-   
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>BiobankCloud Researcher Private pages</web-resource-name>
             <url-pattern>/wf/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-            <role-name>SYS_ADMIN</role-name>
-            <role-name>BBC_ADMIN</role-name>
+           <role-name>SYS_ADMIN</role-name>
+             <role-name>BBC_ADMIN</role-name>
             <role-name>BBC_USER</role-name>
-         </auth-constraint>
+        </auth-constraint>
     </security-constraint>
     <security-constraint>
         <web-resource-collection>
@@ -183,9 +181,9 @@
             <url-pattern>/rest/agent/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-             <role-name>SYS_ADMIN</role-name>
-             <role-name>BBC_ADMIN</role-name>
-             <role-name>BBC_USER</role-name>
+            <role-name>BBC_ADMIN</role-name>
+            <role-name>SYS_ADMIN</role-name>
+            <role-name>BBC_USER</role-name>
         </auth-constraint>
     </security-constraint>
     <!-- Authentication for file upload -->
@@ -200,30 +198,27 @@
             <role-name>BBC_USER</role-name>
         </auth-constraint>
     </security-constraint>
-  
-      <security-constraint>
+    <security-constraint>
         <web-resource-collection>
             <web-resource-name>User authentication</web-resource-name>
             <url-pattern>/auth/protected/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-            <role-name>SYS_ADMIN</role-name>
-            <role-name>BBC_ADMIN</role-name>
-            <role-name>BBC_USER</role-name>
+           <role-name>SYS_ADMIN</role-name>
+             <role-name>BBC_ADMIN</role-name>
             <role-name>BBC_RESEARCHER</role-name>
+            <role-name>BBC_USER</role-name>
         </auth-constraint>
     </security-constraint>
-  
     <security-constraint>
-      <web-resource-collection>
-        <web-resource-name>Viewpoint Secure URLs</web-resource-name>
-        <url-pattern>/*</url-pattern>
-      </web-resource-collection>
-      <user-data-constraint>
-        <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-      </user-data-constraint>
+        <web-resource-collection>
+            <web-resource-name>Viewpoint Secure URLs</web-resource-name>
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <user-data-constraint>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>
     </security-constraint>
-    
     <login-config>
         <auth-method>BASIC</auth-method>
         <realm-name>GauthRealm</realm-name>
@@ -231,7 +226,6 @@
             <form-login-page>/index.xhtml</form-login-page>
             <form-error-page>/error.xhtml</form-error-page>
         </form-login-config>
-
     </login-config>
     <!--   <error-page>
        <error-code>404</error-code>
@@ -259,21 +253,18 @@
         <filter-name>PrimeFaces FileUpload Filter</filter-name>
         <servlet-name>Faces Servlet</servlet-name>
     </filter-mapping>
-    
     <filter>
         <filter-name>Login Filter</filter-name>
         <filter-class>se.kth.bbc.security.auth.totp.LoginFilter</filter-class>
     </filter>
     <filter-mapping>
-          <filter-name>Login Filter</filter-name>
-          <url-pattern>/index.xhtml</url-pattern>
-          <url-pattern>/auth/login.xhtml</url-pattern>
-          <url-pattern>/auth/yubikeylogin.xhtml</url-pattern>   
-          <url-pattern>/auth/register_mobile.xhtml</url-pattern>
-          <url-pattern>/auth/register_yubico.xhtml</url-pattern>
-     </filter-mapping>
-    
-       
+        <filter-name>Login Filter</filter-name>
+        <url-pattern>/index.xhtml</url-pattern>
+        <url-pattern>/auth/login.xhtml</url-pattern>
+        <url-pattern>/auth/yubikeylogin.xhtml</url-pattern>
+        <url-pattern>/auth/register_mobile.xhtml</url-pattern>
+        <url-pattern>/auth/register_yubico.xhtml</url-pattern>
+    </filter-mapping>
     <!-- To upload from pages with pretty URL!-->
     <!--    <filter-mapping>
         <filter-name>PrimeFaces FileUpload Filter</filter-name>

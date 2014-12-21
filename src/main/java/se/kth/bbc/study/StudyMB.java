@@ -257,7 +257,7 @@ public class StudyMB implements Serializable {
     }
 
     public String getUsername() {
-        return getRequest().getUserPrincipal().getName();
+        return getRequest().getRemoteUser();
     }
 
     public StudyRoleTypes[] getTeam() {

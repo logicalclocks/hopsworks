@@ -64,6 +64,7 @@ public class PeopleAministration implements Serializable {
     // Yubikey public id. 12 chars: vviehlefjvcb
     private String pubid;
 
+    
     public String getSecret() {
         return secret;
     }
@@ -118,6 +119,10 @@ public class PeopleAministration implements Serializable {
         return userManager.findGroups(p.getUid());
     }
 
+    public String getUserStatus(People p) {
+        return Integer.toString(userManager.findByEmail(p.getEmail()).getStatus());
+    }
+    
     public People getUser() {
         return user;
     }
@@ -127,6 +132,7 @@ public class PeopleAministration implements Serializable {
     }
 
     public String getSelected_status() {
+   
         return selected_status;
     }
 
@@ -292,8 +298,10 @@ public class PeopleAministration implements Serializable {
     }
 
     public void modifyUser(People user1) {
-        userManager.updateGroup(user1.getUid(), Integer.parseInt(selected_group));
         userManager.updateStatus(user1.getUid(), Integer.parseInt(selected_status));
+        userManager.updateGroup(user1.getUid(), Integer.parseInt(selected_group));
+        MessagesController.addInfoMessage("Success", "User modified");
+
     }
 
     public String getSec_answer() {

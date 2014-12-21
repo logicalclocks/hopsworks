@@ -6,6 +6,8 @@
 package se.kth.bbc.security.ua;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
@@ -21,6 +23,8 @@ import se.kth.bbc.security.ua.model.People;
 @ManagedBean
 @RequestScoped
 public class PeopleStatusBean implements Serializable{
+
+    private static final Logger logger = Logger.getLogger(UserManager.class.getName());
 
     private boolean open_reauests = false;
     
@@ -69,7 +73,8 @@ public class PeopleStatusBean implements Serializable{
      * @return 
      */
     public boolean isSYSAdmin() {
-        return (getRequest().isUserInRole("SYS_ADMIN"));
+        People p = userManager.findByEmail(getRequest().getRemoteUser());
+        return userManager.findGroups(p.getUid()).contains("SYS_ADMIN");
     }
     
     /**
@@ -77,7 +82,10 @@ public class PeopleStatusBean implements Serializable{
      * @return 
      */
     public boolean isAdminUser(){
-        return (getRequest().isUserInRole("SYS_ADMIN") || getRequest().isUserInRole("BBC_ADMIN"));
+        People p = userManager.findByEmail(getRequest().getRemoteUser());
+        List<String> roles = userManager.findGroups(p.getUid());
+            
+        return (roles.contains("SYS_ADMIN") || roles.contains("BBC_ADMIN"));
     }
 
    
@@ -86,7 +94,8 @@ public class PeopleStatusBean implements Serializable{
      * @return 
      */
     public boolean isBBCAdmin() {
-        return getRequest().isUserInRole("BBC_ADMIN");
+        People p = userManager.findByEmail(getRequest().getRemoteUser());
+        return userManager.findGroups(p.getUid()).contains("BBC_ADMIN");    
     }
 
     
@@ -95,9 +104,12 @@ public class PeopleStatusBean implements Serializable{
      * @return 
      */
     
-    public boolean isAnyAdminUser() {
-        return (getRequest().isUserInRole("SYS_ADMIN") || getRequest().isUserInRole("BBC_ADMIN") || getRequest().isUserInRole("BBC_RESEARCHER"));
-    }
+    public boolean isAnyAuthorizedRole() {
+
+        People p = userManager.findByEmail(getRequest().getRemoteUser());
+        List<String> roles = userManager.findGroups(p.getUid());
+        return  (roles.contains("SYS_ADMIN") || roles.contains("BBC_ADMIN") || roles.contains("BBC_USER")|| roles.contains("BBC_RESEARCHER") );
+     }  
     
     
     /**
@@ -105,7 +117,7 @@ public class PeopleStatusBean implements Serializable{
      * @return 
      */
      public boolean checkForRequests() {
-        if (getRequest().isUserInRole("SYS_ADMIN")||getRequest().isUserInRole("BBC_ADMIN")) {
+        if (isAdminUser()) {
             //return false if no requests
             open_reauests = !(userManager.findAllByStatus(AccountStatusIF.MOBILE_ACCOUNT_INACTIVE).isEmpty()) || !(userManager.findAllByStatus(AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE).isEmpty());
         }

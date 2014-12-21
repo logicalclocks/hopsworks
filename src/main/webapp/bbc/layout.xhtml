@@ -33,7 +33,7 @@
                     <p:commandButton id="userBtn" value=" #{peopleAministration.loginName}" type="button" icon="ui-icon-person"/>  
                     <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
                         <p:menuitem value="Change Password" action='profile_password' update=":formToolbar:messages" ajax="false" />  
-                        <p:menuitem value="BBC Services" action="userMgmt" update=":formToolbar:messages" ajax="false" rendered="#{peopleStatusBean.anyAdminUser}"/>
+                        <p:menuitem value="BBC Services" action="userMgmt" update=":formToolbar:messages" ajax="false" rendered="#{peopleStatusBean.anyAuthorizedRole}"/>
                        <p:separator/>
                        <p:menuitem value="Logout" action='#{peopleStatusBean.logOut()}' update=":formToolbar:messages" ajax="false"/> 
                     </p:menu>  

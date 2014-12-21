@@ -12,7 +12,7 @@
         <h:head>
             <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
             <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
         </h:head>
@@ -22,9 +22,9 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
 
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.adminUser}">  
+            <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.SYSAdmin}">  
 
-                <p:layoutUnit position="center">
+                <p:layoutUnit id="centerLayout" position="center">
                     <div class="container">
                         <h1>User management</h1>
                         <div class="content">
@@ -56,7 +56,7 @@
                                             </p:column>
 
                                             <p:column id="statusCol"  filterBy="status"  headerText="Status" style="width:32%;font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{user.status}" />
+                                                <h:outputText value="#{peopleAministration.getUserStatus(user)}" />
                                             </p:column>
             
                                             <p:column id="roleNameCol" style="width:32%;font-size: 12px;text-align: left;">
@@ -192,16 +192,17 @@
                                     </h:form>
                                     </p:tab>
                                 
-                                       <p:tab title="Modify Users" id="Modfiy">
+                                <p:tab title="Modify Users" id="Modfiy" >
                                     <h:form id="usermodifyForm">
                                         <p:contextMenu for="userdataTable">
                                             <p:menuitem value="View" update="userDetail" icon="ui-icon-search" oncomplete="PF('userDialog').show()"/>
                                             <p:menuitem value="Delete" update="userdataTable" icon="ui-icon-close" actionListener="#{peopleAministration.rejectUser(muser)}"/>
                                         </p:contextMenu>
                                         <p:growl id="growl" life="2000"/>
-                                        <p:dataTable id="userdataTable" var="muser" value="#{peopleAministration.allUsers}" filteredValue="#{peopleAministration.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
-                                                     selectionMode="single" rowKey="#{muser.email}" selection="#{peopleAministration.selectedUser}" style="table-layout: fixed" scrollable="false">
+                                        <p:dataTable id="userdataTable" var="muser" value="#{peopleAministration.allUsers}" filteredValue="#{peopleAministration.filteredUsers}" widgetVar="moUsersTable" emptyMessage="No users found with given criteria"
+                                          rowKey="#{muser.email}" selection="#{peopleAministration.selectedUser}" style="table-layout: fixed" scrollable="false" >
 
+                                            <p:column selectionMode="single" style="width:10px;" disabledSelection="false"/>
                                             
                                             <p:column id="unameCol"  filterBy="username"  headerText="Username" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{muser.username}" />
@@ -224,7 +225,7 @@
                                              <p:column id="statCol" headerText="Status"  style="width:32%;font-size: 12px;text-align: left;">
                                                  <p:selectOneMenu id="statChoose" value="#{peopleAministration.selected_status}" editable="false">
                                                   <f:selectItem itemValue="-1" itemLabel="Inactive" />
-                                                    <f:selectItem itemValue="0" itemLabel="Pending" />
+                                                  <f:selectItem itemValue="0" itemLabel="Pending" />
                                                   <f:selectItem itemValue="1" itemLabel="Active" />
                                                   <f:selectItem itemValue="2" itemLabel="Blocked" />
                                                 
@@ -241,7 +242,7 @@
                                             
                                             <p:column id="actionUserColumn" headerText="Action" style="width:20%;font-size: 12px;text-align: left;">
                                                 <h:panelGrid columns="2" style="width: auto">                                                    
-                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" actionListener="#{peopleAministration.modifyUser(muser)}" update="@form">
+                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" actionListener="#{peopleAministration.modifyUser(muser)}" update="@all">
                                                         <p:confirm header="Modify user" message="Modify selected user?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{peopleAministration.rejectUser(muser)}" update="@form">
