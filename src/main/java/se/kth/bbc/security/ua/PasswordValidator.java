@@ -56,7 +56,7 @@ public class PasswordValidator implements Validator {
         if (password.length() < 6) {
             uiInputConfirmPassword.setValid(false);
             FacesMessage facesMsg = new FacesMessage(
-                    "Password must be at least 6 characters");
+                    "Password must contain at least 6 characters.");
             facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
             throw new ValidatorException(facesMsg);
 
@@ -65,7 +65,7 @@ public class PasswordValidator implements Validator {
         if (!isAlphaNumeric(password)) {
             uiInputConfirmPassword.setValid(false);
             FacesMessage facesMsg = new FacesMessage(
-                    "password is not alpha-numeric");
+                    "There should be at least one numbder in the password");
             facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
             throw new ValidatorException(facesMsg);
 
@@ -84,7 +84,7 @@ public class PasswordValidator implements Validator {
     /**
      * To check a string if it contains alphanumeric values: MyPassww132.
      *
-     * @param s
+     * @param s 
      * @return
      */
     public boolean isAlphaNumeric(String s) {
