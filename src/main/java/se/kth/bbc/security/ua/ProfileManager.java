@@ -8,6 +8,7 @@ package se.kth.bbc.security.ua;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.Principal;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -38,6 +39,15 @@ public class ProfileManager implements Serializable {
     private static final long serialVersionUID = 1L;
     @EJB
     private UserManager userManager;
+
+    // for mobile users activation
+    private List<People> requests;
+
+    // for user activation
+    private List<People> yubikey_requests;
+
+    // for yubikey administration page
+    private People selectedYubikyUser;
 
     private People user;
     private Address address;
@@ -101,5 +111,7 @@ public class ProfileManager implements Serializable {
         }
         MessagesController.addInfoMessage("Success", "Profile updated successfully.");
     }
+
+  
     
 }

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+    <f:view contentType="text/html">
+
+        <h:head>
+            <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />            
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/profile.css']}" />            
+
+        </h:head>
+
+        <h:body>
+            <ui:insert name="titleBar" >
+                <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
+            </ui:insert>
+
+            <p:layout id="userAdminProfileMainLayout" rendered="#{peopleStatusBean.SYSAdmin}">  
+                <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
+                <p:layoutUnit position="center">
+                    <div class="container">
+                        <div class="content">
+
+                            <div class="profile_avatar_holder">
+                                <img src="#{profileManager.gravatar}" />
+                            </div>
+                            <h3 class="page_title" >
+                                #{peopleAministration.editingUser.fname} #{peopleAministration.editingUser.lname}
+                                <br></br>
+                                <small>
+                                    #{peopleAministration.editingUser.username}
+                                </small>
+                                <br></br>
+
+                            </h3>
+                            <hr></hr>
+
+                            <!-- edit content-->
+                            <h:form id="editProfileData" >
+                                <h:panelGrid id="profileGrid" columns="3">    
+
+
+                                    <p:outputLabel for="statChoose" value="Status" 
+                                                   styleClass="changeLabel" />					
+
+                                    <p:selectOneMenu id="statChoose" value="#{peopleAministration.selected_status}" 
+                                                     styleClass="property_editor"
+                                                     editable="false">
+                                        <f:selectItem itemValue="#{peopleAministration.editingUser.status}" itemLabel="Select Status" />
+                                        <f:selectItem itemValue="-1" itemLabel="Inactive" />
+                                        <f:selectItem itemValue="0" itemLabel="Pending" />
+                                        <f:selectItem itemValue="1" itemLabel="Active" />
+                                        <f:selectItem itemValue="2" itemLabel="Blocked" />
+
+                                    </p:selectOneMenu>
+                                    <p:spacer></p:spacer>            
+
+                                    <p:outputLabel for="addRole" value="Add Role" 
+                                                   styleClass="changeLabel" />					
+
+                                    <p:selectOneMenu id="addRole" value="#{peopleAministration.new_group}" 
+                                                     styleClass="property_editor"
+                                                     editable="false">
+                                        <f:selectItem itemValue="" itemLabel="Add Role" noSelectionOption="true"/>
+                                        <f:selectItems value="#{peopleAministration.new_groups}" />
+                                    </p:selectOneMenu>
+                                    <p:spacer></p:spacer>            
+
+
+                                    <p:outputLabel for="removeRole" value="Remove Role" 
+                                                   styleClass="changeLabel" />					
+
+                                    <p:selectOneMenu id="removeRole" value="#{peopleAministration.selected_group}"
+                                                     styleClass="property_editor"
+                                                     editable="false">
+                                        <f:selectItem itemValue="" itemLabel="Remove Role" noSelectionOption="true"
+                                                      />
+                                        <f:selectItems value="#{peopleAministration.current_groups}" />
+                                    </p:selectOneMenu>
+                                    <p:spacer></p:spacer>            
+
+
+                                </h:panelGrid>
+
+                                <div class="register_banner">
+
+                                    <p:commandButton  type="submit" id="profsub" value="Save"
+                                                      update=":userAdminProfileMainLayout" 
+                                                      actionListener="#{peopleAministration.updateUserByAdmin()}"/> 
+
+                                    <p:commandButton type="submit" value="Back" action="userMgmt" immediate="true"/>
+
+
+                                </div>
+                            </h:form>                            
+                        </div>
+                    </div>                    
+                </p:layoutUnit>
+            </p:layout>
+        </h:body>
+    </f:view>
+</html>

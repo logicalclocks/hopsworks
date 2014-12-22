@@ -30,7 +30,7 @@ public class BBCGroups implements Serializable {
         groups.put("BBC_GUEST", 1003);
         groups.put("AUDITOR", 1004);
         groups.put("ETHICS_BOARD", 1005);
-//        groups.put("SYS_ADMIN", 1006);
+        groups.put("SYS_ADMIN", 1006);
         groups.put("BBC_USER", 1007);
     }
 
@@ -44,17 +44,21 @@ public class BBCGroups implements Serializable {
         groups.put("BBC_GUEST", 1003);
         groups.put("AUDITOR", 1004);
         groups.put("ETHICS_BOARD", 1005);
-  //      groups.put("SYS_ADMIN", 1006);
+        groups.put("SYS_ADMIN", 1006);
         groups.put("BBC_USER", 1007);
     }
 
    public Integer getGroupNum( String value) {
-        for (Object o : groups.keySet()) {
-           if (groups.get(o).equals(value)) {
-                return (Integer)o;
-            }
-        }
-        return -1;
+    
+       for (Entry<String, Integer> entrySet : groups.entrySet()) {
+           String key = entrySet.getKey();
+           Integer value1 = entrySet.getValue();
+           
+           if(key.equals(value))
+               return value1;
+       }
+       
+       return -1;
     }
     
    public String getGroupName(int gid) {

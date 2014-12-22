@@ -140,7 +140,7 @@
             <to-view-id>/security/profile_password_changed.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
-  
+ 
         <navigation-case>
             <from-outcome>change_sec_question</from-outcome>
             <to-view-id>/security/protected/change_sec_question.xhtml</to-view-id>
@@ -151,6 +151,13 @@
             <to-view-id>/security/protected/profile.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+        
+         <navigation-case>
+            <from-outcome>admin_profile</from-outcome>
+            <to-view-id>/security/protected/admin_profile.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+  
     
         <navigation-case>
             <from-outcome>userMgmt</from-outcome>

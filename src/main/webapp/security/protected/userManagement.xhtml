@@ -60,7 +60,7 @@
                                             </p:column>
 
                                             <p:column id="statusCol"  filterBy="status"  headerText="Status" style="width:32%;font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{peopleAministration.getUserStatus(user)}" />
+                                                <h:outputText value="#{peopleAministration.user.status}" />
                                             </p:column>
             
                                             <p:column id="roleNameCol" style="width:32%;font-size: 12px;text-align: left;">
@@ -225,7 +225,7 @@
                                                 <h:outputText value="#{muser.email}" />
                                             </p:column>
 
-                                            
+<!--                                            
                                              <p:column id="statCol" headerText="Status"  style="width:32%;font-size: 12px;text-align: left;">
                                                  <p:selectOneMenu id="statChoose" value="#{peopleAministration.selected_status}" editable="false">
                                                   <f:selectItem itemValue="-1" itemLabel="Inactive" />
@@ -242,11 +242,11 @@
                                                     <f:selectItems value="#{peopleAministration.groups}" />
                                                 </p:selectOneMenu>
                                             </p:column>
-
+-->
                                             
                                             <p:column id="actionUserColumn" headerText="Action" style="width:20%;font-size: 12px;text-align: left;">
                                                 <h:panelGrid columns="2" style="width: auto">                                                    
-                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" actionListener="#{peopleAministration.modifyUser(muser)}" update="@all">
+                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" action="#{peopleAministration.modifyUser(muser)}" update="@form">
                                                         <p:confirm header="Modify user" message="Modify selected user?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                     <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{peopleAministration.rejectUser(muser)}" update="@form">

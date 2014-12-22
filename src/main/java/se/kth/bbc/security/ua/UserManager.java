@@ -20,9 +20,9 @@ import se.kth.bbc.security.ua.model.Yubikey;
  */
 @Stateless
 public class UserManager {
-
+    
     private static final Logger logger = Logger.getLogger(UserManager.class.getName());
-
+    
     @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
 
@@ -45,12 +45,12 @@ public class UserManager {
      * @return
      */
     public String register(String fname, String lname, String email, String title, String org,
-                String tel, String orcid, int uid, String password, String otpSecret, 
-                String question, String answer, int status, short yubikey) {
+            String tel, String orcid, int uid, String password, String otpSecret,
+            String question, String answer, int status, short yubikey) {
 
         /* assigne a username*/
         String uname = "meb" + uid;
-
+        
         People user = new People();
         user.setUsername(uname);
         user.setPassword(password);
@@ -79,9 +79,10 @@ public class UserManager {
 
     /**
      * Register a new group for user
+     *
      * @param uid
      * @param gidNumber
-     * @return 
+     * @return
      */
     public boolean registerGroup(int uid, int gidNumber) {
         PeopleGroup p = new PeopleGroup();
@@ -90,11 +91,12 @@ public class UserManager {
         em.persist(p);
         return true;
     }
-    
+
     /**
      * Register an address for new users
+     *
      * @param uid
-     * @return 
+     * @return
      */
     public boolean registerAddress(int uid) {
         Address p = new Address();
@@ -102,7 +104,7 @@ public class UserManager {
         em.persist(p);
         return true;
     }
-
+    
     public boolean increaseLockNum(int id, int val) {
         People p = (People) em.find(People.class, id);
         if (p != null) {
@@ -111,21 +113,21 @@ public class UserManager {
         }
         return true;
     }
-
+    
     public boolean setOnline(int id, int val) {
         People p = (People) em.find(People.class, id);
         p.setIsonline(val);
         em.merge(p);
         return true;
     }
-
+    
     public boolean resetLock(int id) {
         People p = (People) em.find(People.class, id);
         p.setFalseLogin(0);
         em.merge(p);
         return true;
     }
-
+    
     public boolean deactivateUser(int id) {
         People p = (People) em.find(People.class, id);
         if (p != null) {
@@ -134,22 +136,21 @@ public class UserManager {
         }
         return true;
     }
-
+    
     public boolean resetPassword(int id, String pass) {
         People p = (People) em.find(People.class, id);
         p.setPassword(pass);
         em.merge(p);
         return true;
     }
-
-    public boolean resetSecQuestion(int id, String  question, String ans) {
+    
+    public boolean resetSecQuestion(int id, String question, String ans) {
         People p = (People) em.find(People.class, id);
         p.setSecurityQuestion(question);
         p.setSecurityAnswer(ans);
         em.merge(p);
         return true;
     }
-
     
     public boolean updateStatus(int id, int stat) {
         People p = (People) em.find(People.class, id);
@@ -157,7 +158,7 @@ public class UserManager {
         em.merge(p);
         return true;
     }
-
+    
     public boolean updateSecret(int id, String sec) {
         People p = (People) em.find(People.class, id);
         p.setSecret(sec);
@@ -173,20 +174,20 @@ public class UserManager {
         em.merge(p);
         return true;
     }
-
-      
+    
     public List<People> findInactivateUsers() {
-        Query query = em.createNativeQuery("SELECT * FROM People p WHERE p.active = "+ AccountStatusIF.MOBILE_ACCOUNT_INACTIVE );
+        Query query = em.createNativeQuery("SELECT * FROM People p WHERE p.active = " + AccountStatusIF.MOBILE_ACCOUNT_INACTIVE);
         List<People> people = query.getResultList();
         return people;
     }
-
+    
     public boolean registerYubikey(int uid) {
         Yubikey yk = new Yubikey();
         yk.setUid(uid);
         em.persist(yk);
         return true;
     }
+
     /**
      * Register Yubikey user's delivery address.
      *
@@ -201,7 +202,7 @@ public class UserManager {
      * @return
      */
     public boolean registerAddress(int uid, String address1, String address2, String address3, String city, String state, String country, String postalcode) {
-
+        
         Address add = new Address();
         add.setUid(uid);
         add.setAddress1(address1);
@@ -226,7 +227,7 @@ public class UserManager {
 
         // For the first user in the table as uid
         int uid = 10000;
-
+        
         if (obj == null) {
             return uid;
         }
@@ -243,13 +244,13 @@ public class UserManager {
         List existing = em.createQuery(
                 "SELECT p FROM People p WHERE p.email ='" + username + "'")
                 .getResultList();
-
+        
         if (existing.size() > 0) {
             return (People) existing.get(0);
         }
         return null;
     }
-
+    
     public boolean isUsernameTaken(String username) {
         List existing = em.createQuery(
                 "SELECT p FROM People p WHERE p.email ='" + username + "'")
@@ -259,34 +260,32 @@ public class UserManager {
     
     public boolean findYubikeyUsersByStatus(int status) {
         List existing = em.createQuery(
-       "SELECT p FROM People p WHERE p.status ='" + AccountStatusIF.MOBILE_ACCOUNT_INACTIVE + "' AND p.yubikey_user = "+ status)
+                "SELECT p FROM People p WHERE p.status ='" + AccountStatusIF.MOBILE_ACCOUNT_INACTIVE + "' AND p.yubikey_user = " + status)
                 .getResultList();
-      return (existing.size() > 0);
+        return (existing.size() > 0);
     }
     
-    
-     public Yubikey findYubikey(int uid) {
-       TypedQuery<Yubikey> query = em.createNamedQuery("Yubikey.findByUid", Yubikey.class);
-       query.setParameter("uid", uid);
-       return query.getSingleResult();
-         
-     }
-    
+    public Yubikey findYubikey(int uid) {
+        TypedQuery<Yubikey> query = em.createNamedQuery("Yubikey.findByUid", Yubikey.class);
+        query.setParameter("uid", uid);
+        return query.getSingleResult();
+        
+    }
     
     public List<People> findAllByName() {
         TypedQuery<People> query = em.createNamedQuery("People.findAllByName", People.class);
         return query.getResultList();
     }
-
+    
     public List<People> findAllUsers() {
         TypedQuery<People> query = em.createNamedQuery("People.findAll", People.class);
         return query.getResultList();
     }
-
+    
     public void persist(People user) {
         em.persist(user);
     }
-
+    
     public void updatePeople(People user) {
         em.merge(user);
     }
@@ -298,35 +297,36 @@ public class UserManager {
     public void updateAddress(Address add) {
         em.merge(add);
     }
-
+    
     public void removeByEmail(String email) {
         People u = findByEmail(email);
         if (u != null) {
-        TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid", PeopleGroup.class);
-        query.setParameter("uid", u.getUid());
-        PeopleGroup p = (PeopleGroup) query.getSingleResult();
-    
-        TypedQuery<Address> ad =  em.createNamedQuery("Address.findByUid", Address.class);
-        ad.setParameter("uid", u.getUid());
-        Address a = (Address) ad.getSingleResult();
-       
-        if(u.getYubikeyUser()==1) {
-            TypedQuery<Yubikey> yk =  em.createNamedQuery("Yubikey.findByUid", Yubikey.class);
-             yk.setParameter("uid", u.getUid());
-             Yubikey y = (Yubikey) yk.getSingleResult();
-             em.remove(y);
-         }
-        
-        em.remove(p);
-        em.remove(u);
-        em.remove(a);
-       }
+            TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid", PeopleGroup.class);
+            query.setParameter("uid", u.getUid());
+            PeopleGroup p = (PeopleGroup) query.getSingleResult();
+            
+            TypedQuery<Address> ad = em.createNamedQuery("Address.findByUid", Address.class);
+            ad.setParameter("uid", u.getUid());
+            Address a = (Address) ad.getSingleResult();
+            
+            if (u.getYubikeyUser() == 1) {
+                TypedQuery<Yubikey> yk = em.createNamedQuery("Yubikey.findByUid", Yubikey.class);
+                yk.setParameter("uid", u.getUid());
+                Yubikey y = (Yubikey) yk.getSingleResult();
+                em.remove(y);
+            }
+            
+            em.remove(p);
+            em.remove(u);
+            em.remove(a);
+        }
     }
- 
+
     /**
      * Get user by status
+     *
      * @param status
-     * @return 
+     * @return
      */
     public List<People> findAllByStatus(int status) {
         TypedQuery<People> query = em.createNamedQuery("People.findByStatus", People.class);
@@ -334,13 +334,12 @@ public class UserManager {
         return query.getResultList();
     }
     
-
     public People findByEmail(String email) {
         TypedQuery<People> query = em.createNamedQuery("People.findByEmail", People.class);
         query.setParameter("email", email);
         return query.getSingleResult();
     }
-
+    
     public Address findAddress(int uid) {
         TypedQuery<Address> query = em.createNamedQuery("Address.findByUid", Address.class);
         query.setParameter("uid", uid);
@@ -349,13 +348,26 @@ public class UserManager {
 
     /**
      * Get all groups based on user id
-     * @param uid 
-     * @return 
+     *
+     * @param uid
+     * @return
      */
     public List<String> findGroups(int uid) {
-        String sql = "SELECT group_name FROM BBCGroup INNER JOIN People_Group ON (People_Group.gid = BBCGroup.gid AND People_Group.uid = "+ uid+" )";
+        String sql = "SELECT group_name FROM BBCGroup INNER JOIN People_Group ON (People_Group.gid = BBCGroup.gid AND People_Group.uid = " + uid + " )";
         List existing = em.createNativeQuery(sql).getResultList();
         return existing;
+    }
+    
+    
+    /**
+     * Remove user's group based on uid/gid
+     * @param uid
+     * @param gid 
+     */
+    public void removeGroup(int uid, int gid) {
+        String sql = "delete from PeopleGroup p where (p.uid = " + uid +" and "+ " p.gid= "+ gid+ ")";
+        em.createQuery(sql).executeUpdate();
+        
     }
     
 }

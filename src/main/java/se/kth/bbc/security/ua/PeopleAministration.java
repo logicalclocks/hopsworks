@@ -12,6 +12,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -31,6 +32,7 @@ import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.People;
 import se.kth.bbc.security.ua.model.Yubikey;
+
 /**
  *
  * @author Ali Gholami <gholami@pdc.kth.se>
@@ -42,7 +44,7 @@ public class PeopleAministration implements Serializable {
     private static final Logger logger = Logger.getLogger(PeopleAministration.class.getName());
 
     private static final long serialVersionUID = 1L;
-    
+
     @EJB
     private UserManager userManager;
 
@@ -53,18 +55,61 @@ public class PeopleAministration implements Serializable {
 
     private String sec_answer;
 
-    Map<String, Integer> groups;
     Map<String, String> questions;
     private List<People> filteredUsers;
     private List<People> selectedUsers;
     private List<People> allUsers;
 
+    // for mobile users activation
+    private List<People> requests;
+
+    // for user activation
+    private List<People> yubikey_requests;
+
+    // for yubikey administration page
+    private People selectedYubikyUser;
+
     private Address address;
+
+    // to remove an existing group
+    private String selected_group;
+
+    // to assign a new stauts
+    private String selected_status;
+
+    // to assign a new group
+    private String new_group;
+
+    // all groups
+    Map<String, Integer> groups;
+
+    // all existing groups belong tp
+    Map<String, Integer> current_groups;
+
+    // all possible new groups user doesnt belong to
+    Map<String, Integer> new_groups;
+
+    public String getNew_group() {
+        return new_group;
+    }
+
+    public void setNew_group(String new_group) {
+        this.new_group = new_group;
+    }
 
     // Yubikey public id. 12 chars: vviehlefjvcb
     private String pubid;
 
-    
+    private People editingUser;
+
+    public People getEditingUser() {
+        return editingUser;
+    }
+
+    public void setEditingUser(People editingUser) {
+        this.editingUser = editingUser;
+    }
+
     public String getSecret() {
         return secret;
     }
@@ -95,15 +140,6 @@ public class PeopleAministration implements Serializable {
         this.address = address;
     }
 
-    // for mobile users activation
-    private List<People> requests;
-
-    // for user activation
-    private List<People> yubikey_requests;
-
-    // for yubikey administration page
-    private People selectedYubikyUser;
-
     public List<People> getYubikey_requests() {
         return yubikey_requests;
     }
@@ -112,17 +148,15 @@ public class PeopleAministration implements Serializable {
         this.yubikey_requests = yubikey_requests;
     }
 
-    private String selected_group;
-    private String selected_status;
-    
-    public List <String> getUserRole(People p) {
+    public List<String> getUserRole(People p) {
         return userManager.findGroups(p.getUid());
     }
 
-    public String getUserStatus(People p) {
-        return Integer.toString(userManager.findByEmail(p.getEmail()).getStatus());
-    }
-    
+    /*
+     public String getUserStatus(People p) {
+     return Integer.toString(userManager.findByEmail(p.getEmail()).getStatus());
+     }
+     */
     public People getUser() {
         return user;
     }
@@ -131,8 +165,49 @@ public class PeopleAministration implements Serializable {
         this.user = user;
     }
 
+    /**
+     * Filter the current groups
+     *
+     * @return
+     */
+    public Map<String, Integer> getCurrent_groups() {
+
+        List<String> list = userManager.findGroups(editingUser.getUid());
+
+        Map<String, Integer> filter = new HashMap<>();
+
+        BBCGroups bbc = new BBCGroups();
+
+        for (String next : list) {
+            filter.put(next, bbc.getGroupNum(next));
+        }
+        current_groups = filter;
+
+        return filter;
+    }
+
+    public void setCurrent_groups(Map<String, Integer> current_groups) {
+        this.current_groups = current_groups;
+    }
+
+    public Map<String, Integer> getNew_groups() {
+        List<String> list = userManager.findGroups(editingUser.getUid());
+
+        Map<String, Integer> filter = new BBCGroups().getGroups();
+
+        for (String next : list) {
+            filter.remove(next);
+        }
+        new_groups = filter;
+        return filter;
+    }
+
+    public void setNew_groups(Map<String, Integer> new_groups) {
+        this.new_groups = new_groups;
+    }
+
     public String getSelected_status() {
-   
+
         return selected_status;
     }
 
@@ -152,6 +227,8 @@ public class PeopleAministration implements Serializable {
     public void initGroups() {
         groups = new BBCGroups().getGroups();
         questions = new SelectSecurityQuestionMenue().getQuestions();
+       // new_groups = getNew_groups();
+        // current_groups = getCurrent_groups();
     }
 
     public void setFilteredUsers(List<People> filteredUsers) {
@@ -290,6 +367,7 @@ public class PeopleAministration implements Serializable {
      * To reject user requests
      *
      * @param user1
+     * @throws javax.mail.MessagingException
      */
     public void blockUser(People user1) throws MessagingException {
         userManager.updateStatus(user1.getUid(), AccountStatusIF.ACCOUNT_BLOCKED);
@@ -297,11 +375,10 @@ public class PeopleAministration implements Serializable {
         requests.remove(user1);
     }
 
-    public void modifyUser(People user1) {
-        userManager.updateStatus(user1.getUid(), Integer.parseInt(selected_status));
-        userManager.updateGroup(user1.getUid(), Integer.parseInt(selected_group));
-        MessagesController.addInfoMessage("Success", "User modified");
-
+    public String modifyUser(People user1) {
+        this.editingUser = user1;
+        this.address = userManager.findAddress(user1.getUid());
+        return "admin_profile";
     }
 
     public String getSec_answer() {
@@ -327,7 +404,6 @@ public class PeopleAministration implements Serializable {
     public void setQuestions(Map<String, String> questions) {
         this.questions = questions;
     }
-
 
     public String activateYubikey() {
         // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
@@ -385,7 +461,7 @@ public class PeopleAministration implements Serializable {
 
     private String accountActivatedMessage(String username) {
         String l1 = "Greetings!\n\n"
-                  + "Your request for access the BiobankCloud is approved.\n\n";
+                + "Your request for access the BiobankCloud is approved.\n\n";
         String l2 = "You can login with the username: " + username + "\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
@@ -394,17 +470,46 @@ public class PeopleAministration implements Serializable {
 
     private String accountBlockedMessage() {
         String l1 = "Greetings!\n\n"
-                +   "Your account in the Biobankcloud is blocked.\n\n";
+                + "Your account in the Biobankcloud is blocked.\n\n";
         String l2 = "If you have any questions please contact support@biobankcloud.com";
         return l1 + l2;
     }
 
     private String accountRejectedMessage() {
         String l1 = "Greetings!\n\n"
-                +   "Your Biobankcloud account request is rejected.\n\n";
+                + "Your Biobankcloud account request is rejected.\n\n";
         String l2 = "If you have any questions please contact support@biobankcloud.com";
         return l1 + l2;
     }
-    
+
+    /**
+     * Update user roles from profile by admin
+     */
+    public void updateUserByAdmin() {
+        try {
+
+            // update status
+            if (!selected_status.isEmpty() || selected_status != null) {
+
+                userManager.updateStatus(editingUser.getUid(), Integer.parseInt(selected_status));
+            }
+
+            // register a new group
+            if (new_group != null) {
+
+                userManager.registerGroup(editingUser.getUid(), Integer.parseInt(new_group));
+            }
+
+            // remove a group
+            if (selected_group != null) {
+                userManager.removeGroup(editingUser.getUid(), Integer.parseInt(selected_group));
+            }
+
+        } catch (EJBException ejb) {
+            MessagesController.addErrorMessage("Error: Update failed.");
+            return;
+        }
+        MessagesController.addInfoMessage("Success", "User updated successfully.");
+    }
 
 }
