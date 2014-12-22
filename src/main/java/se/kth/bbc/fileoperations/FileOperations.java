@@ -41,6 +41,17 @@ public class FileOperations {
         Path location = new Path(inode.getPath());
         return fsOps.getInputStream(location);
     }
+    
+    /**
+     * Get an InputStream for the file on the given path.
+     * @param path The file to read.
+     * @return Inputstream from the file in the file system.
+     * @throws IOException 
+     */
+    public InputStream getInputStream(String path) throws IOException {
+      Path location = new Path(path);
+      return fsOps.getInputStream(location);
+    }
 
     public boolean mkDir(String path) throws IOException {
         Path location = new Path(path);

@@ -27,8 +27,8 @@ and open the template in the editor.
                         <h:outputLabel value="State:"/>
                         <h:outputLabel value="#{job.state}"/>
                         
-                        <h:outputLabel value="Execution time:" rendered="#{job.finished}"/>
-                        <h:outputLabel value="#{job.executionDuration}" rendered="#{job.finished}"/>
+                        <h:outputLabel value="Execution time:" rendered="#{job.finished and job.executionDuration>0}"/>
+                        <h:outputLabel value="#{job.executionDuration} ms" rendered="#{job.finished and job.executionDuration>0}"/>
                     </h:panelGrid>
                 </p:panel>
             </ui:repeat>

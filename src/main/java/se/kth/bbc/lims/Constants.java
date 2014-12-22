@@ -8,8 +8,8 @@ package se.kth.bbc.lims;
  */
 public class Constants {
 
-    //public static final String server = "LOCAL";
-    public static final String server = "SNURRAN";
+    public static final String server = "LOCAL";
+    //public static final String server = "SNURRAN";
 
     public static final String UPLOAD_DIR = server.equals("LOCAL") ? "/home/stig/tst" : "/tmp";
     public static final String NAMENODE_URI = server.equals("LOCAL") ? "hdfs://193.10.66.125:29211":"hdfs://snurran.sics.se:9999";

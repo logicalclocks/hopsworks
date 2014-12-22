@@ -5,6 +5,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -20,6 +21,9 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
+import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
@@ -45,9 +49,14 @@ public class CuneiformController implements Serializable {
   private String workflowname;
   private boolean workflowUploaded = false;
   private List<CuneiformParameter> freevars;
+  private List<CuneiformParameter> targetVars;
   private Long jobhistoryid;
   private boolean started = false;
+  private boolean finished = false;
   private String jobName;
+
+  private String stdoutPath;
+  private String stderrPath;
 
   @ManagedProperty(value = "#{studyManagedBean}")
   private StudyMB study;
@@ -61,8 +70,8 @@ public class CuneiformController implements Serializable {
   @EJB
   private RunningJobTracker runningJobs;
 
-  @ManagedProperty(value="#{studyManagedBean}")
-  private StudyMB studyMB;
+  @EJB
+  private FileOperations fops;
 
   private final JobController jc = new JobController();
 
@@ -80,10 +89,6 @@ public class CuneiformController implements Serializable {
 
   public void setJobName(String name) {
     this.jobName = name;
-  }
-  
-  public void setStudyMB(StudyMB studyMB){
-    this.studyMB = studyMB;
   }
 
   @PostConstruct
@@ -125,6 +130,12 @@ public class CuneiformController implements Serializable {
       for (String s : freenames) {
         this.freevars.add(new CuneiformParameter(s, null));
       }
+      
+      List<String> targetnames = StaticNodeVisitor.getTargetVarNameList(tlc);
+      this.targetVars = new ArrayList<>(targetnames.size());
+      for(String s: targetnames) {
+        this.targetVars.add(new CuneiformParameter(s,null));
+      }
     } catch (HasFailedException | IOException e) {
       MessagesController.addErrorMessage(
               "Failed to load the free variables of the given workflow file.");
@@ -157,13 +168,20 @@ public class CuneiformController implements Serializable {
   public List<CuneiformParameter> getFreeVars() {
     return freevars;
   }
+  
+  public List<CuneiformParameter> getTargetVars() {
+    return targetVars;
+  }
 
   public void setFreeVars(List<CuneiformParameter> vars) {
     this.freevars = vars;
   }
+  
+  public void setTargetVars(List<CuneiformParameter> vars){
+    this.targetVars = vars;
+  }
 
   public void startWorkflow() {
-    started = true;
 
     if (jobName == null || jobName.isEmpty()) {
       jobName = "Untitled job";
@@ -192,11 +210,13 @@ public class CuneiformController implements Serializable {
 
     try {
       //Create temp folder for stdout and -err
-      Path p = Files.createTempDirectory("something");
+      Path p = Files.createTempDirectory("BBCTMP");
       b.stdErrPath(Paths.get(p.toString(), "stderr.log").toString());
       b.stdOutPath(Paths.get(p.toString(), "stdout.log").toString());
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Unable to create temp directory. Stdout and stderr will be unavailable.", ex);
+      logger.log(Level.SEVERE,
+              "Unable to create temp directory. Stdout and stderr will be unavailable.",
+              ex);
       //TODO: make this clear in DB
     }
     //Get the YarnRunner instance
@@ -207,10 +227,10 @@ public class CuneiformController implements Serializable {
             getStudyName(), "CUNEIFORM", args.toString(), null,
             "/tmp/stderr.log", "/tmp/stdout.log", null, null);
     if (jobhistoryid != null) {
-      submitter.setStdOutFinalDestination(studyMB.getHdfsRootPath()
+      submitter.setStdOutFinalDestination(study.getHdfsRootPath()
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
               + File.separator + "stdout.log");
-      submitter.setStdErrFinalDestination(studyMB.getHdfsRootPath()
+      submitter.setStdErrFinalDestination(study.getHdfsRootPath()
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
               + File.separator + "stderr.log");
       submitter.registerJob(jobhistoryid, r);
@@ -222,6 +242,7 @@ public class CuneiformController implements Serializable {
       MessagesController.addErrorMessage(
               "Failed to write job history. Aborting execution.");
     }
+    started = true;
   }
 
   //TODO: move this method to a Utils class (similar method is used elsewhere)
@@ -231,12 +252,106 @@ public class CuneiformController implements Serializable {
     return path.substring(startName);
   }
 
+  /**
+   * Check the progress of the running job. If it is finished, loads the
+   * stdout and stderr logs.
+   */
+  public void checkProgress() {
+    if (started) {
+      boolean done = !runningJobs.isJobRunning(jobhistoryid);
+      if (done) {
+        stdoutPath = history.findById(jobhistoryid).getStdoutPath();
+        stderrPath = history.findById(jobhistoryid).getStderrPath();
+        //Read stdout
+        /*
+         * StringBuilder stdOutBuilder = new StringBuilder();
+         * try (InputStream in = fops.getInputStream(stdOutPath)) {
+         * BufferedReader reader = new BufferedReader(new
+         * InputStreamReader(in));
+         * String line = null;
+         * while ((line = reader.readLine()) != null) {
+         * stdOutBuilder.append(line);
+         * //stdOutBuilder.append("\n");
+         * }
+         * } catch (IOException e) {
+         * logger.log(Level.SEVERE, "Failed loading stdout", e);
+         * stdOutBuilder.append("ERROR LOADING STDOUT");
+         * }
+         * stdout = stdOutBuilder.toString();
+         */
+        //Read stdErr
+       /*
+         * StringBuilder stdErrBuilder = new StringBuilder();
+         * try (InputStream in = fops.getInputStream(stdErrPath)) {
+         * BufferedReader reader = new BufferedReader(new
+         * InputStreamReader(in));
+         * String line = null;
+         * while ((line = reader.readLine()) != null) {
+         * stdErrBuilder.append(line);
+         * //stdErrBuilder.append("\n");
+         * }
+         * } catch (IOException e) {
+         * logger.log(Level.SEVERE, "Failed loading stderr", e);
+         * stdErrBuilder.append("ERROR LOADING STDERR");
+         * }
+         * stderr = stdErrBuilder.toString();
+         */
+        finished = true;
+      }
+    }
+  }
+
   public boolean isJobFinished() {
-    return !runningJobs.isJobRunning(jobhistoryid);
+    return finished;
   }
 
   public boolean isJobStarted() {
     return started;
+  }
+
+  /*
+   * public String getStdOut(){
+   * return stdout;
+   * }
+   *
+   * public String getStdErr(){
+   * return stderr;
+   * }
+   */
+  public StreamedContent downloadStdout() {
+
+    StreamedContent sc = null;
+    try {
+      InputStream is = fops.getInputStream(stdoutPath);
+      String extension = "log";
+      String filename = "stdout.log";
+
+      sc = new DefaultStreamedContent(is, extension, filename);
+      logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
+              stdoutPath);
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, "Failed to download stdout", ex);
+      MessagesController.addErrorMessage(MessagesController.ERROR,
+              "Download failed.");
+    }
+    return sc;
+  }
+
+  public StreamedContent downloadStderr() {
+    StreamedContent sc = null;
+    try {
+      InputStream is = fops.getInputStream(stderrPath);
+      String extension = "log";
+      String filename = "stderr.log";
+
+      sc = new DefaultStreamedContent(is, extension, filename);
+      logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
+              stderrPath);
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, "Failed to download stderr", ex);
+      MessagesController.addErrorMessage("Download failed.");
+    }
+    return sc;
   }
 
 }

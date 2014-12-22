@@ -1,5 +1,6 @@
 package se.kth.bbc.jobs.yarn;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,6 +54,7 @@ public class AsynchronousYarnApplication {
    * @param runner
    */
   @Asynchronous
+  //Netbeans shows an error here, but unrightly so.
   public void handleExecution(Long id, YarnRunner runner) throws
           IllegalStateException {
     if (!registered) {
@@ -62,14 +64,21 @@ public class AsynchronousYarnApplication {
       throw new IllegalStateException(
               "Attempting to run job without registering first.");
     }
+    //Run the job
+    long startTime = System.currentTimeMillis();
     runAndMonitor(id, runner);
+    //Check how long it took.
+    long endTime = System.currentTimeMillis();
+    long duration = endTime - startTime;
+    //Update info
     try {
-      updateJobState(id,
-              runner.getApplicationReport().getYarnApplicationState().toString());
+      jobHistoryFacade.update(id,
+              runner.getApplicationReport().getYarnApplicationState().toString(),duration);
     } catch (YarnException | IOException ex) {
       logger.log(Level.SEVERE, "Failed to get final Yarn application state", ex);
-      updateJobState(id, JobHistory.STATE_FRAMEWORK_FAILURE);
+      jobHistoryFacade.update(id, JobHistory.STATE_FRAMEWORK_FAILURE);
     }
+    //Copy stdout and stderr to hdfs.
     try {
       copyStdOutNErr(id, runner.getStdOutPath(), runner.getStdErrPath());
     }catch(IOException e){
@@ -77,6 +86,7 @@ public class AsynchronousYarnApplication {
       //std was not copied?
     }
     unregisterJob(id);
+    removeTempFiles(runner.getStdOutPath());
   }
 
   private void runAndMonitor(Long id, YarnRunner runner) {
@@ -86,7 +96,7 @@ public class AsynchronousYarnApplication {
     } catch (YarnException | IOException ex) {
       logger.log(Level.SEVERE, "Failed to start app master.", ex);
       //TODO: probably doesn't make much sense, check what should happen. (In relation to state changing in handleExecution().)
-      updateJobState(id, JobHistory.STATE_FRAMEWORK_FAILURE);
+      jobHistoryFacade.update(id, JobHistory.STATE_FRAMEWORK_FAILURE);
     }
     monitor(runner);
   }
@@ -110,10 +120,6 @@ public class AsynchronousYarnApplication {
       return false;
     }
     return true;
-  }
-
-  private void updateJobState(Long id, String state) {
-    jobHistoryFacade.update(id, state);
   }
 
   private void monitor(YarnRunner runner) {
@@ -170,11 +176,11 @@ public class AsynchronousYarnApplication {
           IOException {
     if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
       fops.copyToHDFSFromPath(stdOutLocal, stdOutFinalDestination, null);
-      jobHistoryFacade.updateStdOutPath(id, stdOutLocal);
+      jobHistoryFacade.updateStdOutPath(id, stdOutFinalDestination);
     }
     if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
       fops.copyToHDFSFromPath(stdErrLocal, stdErrFinalDestination, null);
-      jobHistoryFacade.updateStdErrPath(id, stdErrLocal);
+      jobHistoryFacade.updateStdErrPath(id, stdErrFinalDestination);
     }
   }
 
@@ -184,5 +190,23 @@ public class AsynchronousYarnApplication {
 
   public void setStdErrFinalDestination(String path) {
     this.stdErrFinalDestination = path;
+  }
+  
+  private void removeTempFiles(String outpath){
+    int lastslash = outpath.lastIndexOf("/");
+    String folderpath = outpath.substring(0,lastslash);
+    File tmpFolder = new File(folderpath);
+    deleteFolder(tmpFolder);
+  }
+  
+  private void deleteFolder(File folder){
+    for(File f:folder.listFiles()){
+      if(f.isDirectory()){
+        deleteFolder(f);
+      }else{
+        f.delete();
+      }
+    }
+    folder.delete();
   }
 }

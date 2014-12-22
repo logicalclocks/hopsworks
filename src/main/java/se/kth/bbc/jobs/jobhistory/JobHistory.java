@@ -68,7 +68,7 @@ import se.kth.kthfsdashboard.user.Username;
           = "SELECT j FROM JobHistory j WHERE j.type = :type"),
   @NamedQuery(name = "JobHistory.findByStudyAndType",
           query
-          = "SELECT j FROM JobHistory j WHERE j.type = :type AND j.study.name = :studyname")})
+          = "SELECT j FROM JobHistory j WHERE j.type = :type AND j.study.name = :studyname ORDER BY j.submissionTime DESC")})
 public class JobHistory implements Serializable {
 
   public static final String STATE_FINISHED = YarnApplicationState.FINISHED.toString();

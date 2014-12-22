@@ -4,9 +4,7 @@
       xmlns:f="http://java.sun.com/jsf/core" 
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui"
-
-      xmlns:c="http://java.sun.com/jsp/jstl/core">
+      xmlns:p="http://primefaces.org/ui">
     <body>
         <ui:composition>
             <div>
@@ -48,9 +46,9 @@
                                 </h:panelGrid>
                             </div>
 
-                            <h:graphicImage id="loadImg" class="browser s16" library="images/icons" name="ajax-loader.gif" style="display:none" />
-
+                            <!--
                             <div>
+                                <h3> Free variables </h3>
                                 <h:panelGrid columns="2" rendered="#{cuneiformController.workflowUploaded}">
                                     <ui:repeat value="#{cuneiformController.freeVars}" var="variable">
                                         <h:inputText value="#{variable.name}" readonly="true"/>
@@ -58,6 +56,17 @@
                                     </ui:repeat>
                                 </h:panelGrid>
                             </div>
+                            
+                            <div>
+                                <h3> Target variables </h3>
+                                <h:panelGrid columns="2" rendered="#{cuneiformController.workflowUploaded}">
+                                    <ui:repeat value="#{cuneiformController.targetVars}" var="variable">
+                                        <h:inputText value="#{variable.name}" readonly="true"/>
+                                        <h:inputText value="#{variable.value}"/>
+                                    </ui:repeat>
+                                </h:panelGrid>
+                            </div>
+                            -->
 
                             <div>
                                 <p:commandButton value="Execute" action="#{cuneiformController.startWorkflow()}" update="@form"/>
@@ -68,11 +77,23 @@
                         <h3>
                             Results
                         </h3>
-                        <p:poll interval="5" listener="#{cuneiformController.isJobFinished()}" update="image"/>
+                        <p:poll interval="5" listener="#{cuneiformController.checkProgress()}" update="@form" stop="#{cuneiformController.jobFinished}" />
                         <h:panelGroup id="image">
                             <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformController.jobStarted and not cuneiformController.jobFinished}"/>
-                            <h:outputText value="FINISHED!!!" rendered="#{cuneiformController.jobStarted and cuneiformController.jobFinished}"/>
+                            <h:outputText value="FINISHED" rendered="#{cuneiformController.jobStarted and cuneiformController.jobFinished}"/>
                         </h:panelGroup>
+                        <div>
+                            <p:commandLink rendered="#{cuneiformController.jobFinished}" ajax="false">
+                                <strong>stdout.log</strong>
+                                <p:fileDownload value="#{cuneiformController.downloadStdout()}"/>
+                            </p:commandLink>
+                        </div>
+                        <div>
+                            <p:commandLink rendered="#{cuneiformController.jobFinished}" ajax="false">
+                                <strong>stderr.log</strong>
+                                <p:fileDownload value="#{cuneiformController.downloadStderr()}"/>
+                            </p:commandLink>
+                        </div>
                     </h:form>
                 </h:panelGrid>
             </div>

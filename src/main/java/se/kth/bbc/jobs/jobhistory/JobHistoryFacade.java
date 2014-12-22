@@ -1,5 +1,6 @@
 package se.kth.bbc.jobs.jobhistory;
 
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -52,6 +53,13 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     //TODO: check if state is a final one, if so: update execution time
     JobHistory jh = findById(id);
     jh.setState(newState);
+    em.merge(jh);
+  }
+  
+  public void update(Long id, String newState, long executionTime){
+    JobHistory jh = findById(id);
+    jh.setState(newState);
+    jh.setExecutionDuration(BigInteger.valueOf(executionTime));
     em.merge(jh);
   }
 
