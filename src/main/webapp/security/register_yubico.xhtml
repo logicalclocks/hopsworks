@@ -169,7 +169,7 @@
                                 </h:panelGrid>
 
                                 <div class="register_banner">
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{userRegistration.registerYubikey()}" />
+                                    <p:commandButton styleClass="team_button button-save" type="submit" oncomplete="Recaptcha.reload();" value="Register" action="#{userRegistration.registerYubikey()}" />
                                     <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" style="margin-left: 55px"/>
                                 </div>
 

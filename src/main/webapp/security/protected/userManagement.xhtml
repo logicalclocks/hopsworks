@@ -200,7 +200,7 @@
                                     <h:form id="usermodifyForm">
                                         <p:contextMenu for="userdataTable">
                                             <p:menuitem value="View" update="userDetail" icon="ui-icon-search" oncomplete="PF('userDialog').show()"/>
-                                            <p:menuitem value="Delete" update="userdataTable" icon="ui-icon-close" actionListener="#{peopleAministration.rejectUser(muser)}"/>
+                                            <p:menuitem value="Delete" update=":userdataTable" icon="ui-icon-close" action="#{peopleAministration.rejectUser(muser)}"/>
                                         </p:contextMenu>
                                         <p:growl id="growl" life="2000"/>
                                         <p:dataTable id="userdataTable" var="muser" value="#{peopleAministration.allUsers}" filteredValue="#{peopleAministration.filteredUsers}" widgetVar="moUsersTable" emptyMessage="No users found with given criteria"

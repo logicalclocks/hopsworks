@@ -290,12 +290,12 @@ public class PeopleAministration implements Serializable {
                 allUsers.remove(user1);
             else 
                  MessagesController.addErrorMessage("Error", "Could not delete the user!");
-        
+            
         } catch (EJBException ejb) {
             MessagesController.addErrorMessage("Error", "Rejection failed");
         }
 
-        emailBean.sendEmail(user1.getEmail(), "Account rejected", accountRejectedMessage());
+        emailBean.sendEmail(user1.getEmail(), "BBC Account Request", accountRejectedMessage());
         MessagesController.addInfoMessage(user1.getEmail() + " was rejected.");
     }
 
