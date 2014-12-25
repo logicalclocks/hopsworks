@@ -284,8 +284,13 @@ public class PeopleAministration implements Serializable {
             MessagesController.addErrorMessage("Error", "Null user!");
         }
         try {
-            userManager.removeByEmail(user1.getEmail());
-            allUsers.remove(user1);
+            boolean removeByEmail = userManager.removeByEmail(user1.getEmail());
+        
+            if(removeByEmail)
+                allUsers.remove(user1);
+            else 
+                 MessagesController.addErrorMessage("Error", "Could not delete the user!");
+        
         } catch (EJBException ejb) {
             MessagesController.addErrorMessage("Error", "Rejection failed");
         }

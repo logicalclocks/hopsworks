@@ -299,7 +299,8 @@ public class UserManager {
         em.merge(add);
     }
     
-    public void removeByEmail(String email) {
+    public boolean removeByEmail(String email) {
+        boolean success = false;
         People u = findByEmail(email);
         if (u != null) {
             TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid", PeopleGroup.class);
@@ -320,7 +321,10 @@ public class UserManager {
             em.remove(p);
             em.remove(u);
             em.remove(a);
+            success = true;
         }
+     
+        return success;
     }
 
     /**
