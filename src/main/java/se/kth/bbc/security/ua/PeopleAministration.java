@@ -89,6 +89,10 @@ public class PeopleAministration implements Serializable {
     // all possible new groups user doesnt belong to
     Map<String, Integer> new_groups;
 
+
+    // when admin change status of user
+    private int changed_status;
+    
     public String getNew_group() {
         return new_group;
     }
@@ -152,6 +156,14 @@ public class PeopleAministration implements Serializable {
         return userManager.findGroups(p.getUid());
     }
 
+    
+    public int getChanged_status(People p) {
+        return userManager.findByEmail(p.getEmail()).getStatus();
+    }
+
+    public void setChanged_status(int changed_status) {
+        this.changed_status = changed_status;
+    }
     /*
      public String getUserStatus(People p) {
      return Integer.toString(userManager.findByEmail(p.getEmail()).getStatus());
@@ -487,16 +499,13 @@ public class PeopleAministration implements Serializable {
      */
     public void updateUserByAdmin() {
         try {
-
             // update status
             if (!selected_status.isEmpty() || selected_status != null) {
-
                 userManager.updateStatus(editingUser.getUid(), Integer.parseInt(selected_status));
             }
 
             // register a new group
             if (new_group != null) {
-
                 userManager.registerGroup(editingUser.getUid(), Integer.parseInt(new_group));
             }
 
@@ -504,7 +513,16 @@ public class PeopleAministration implements Serializable {
             if (selected_group != null) {
                 userManager.removeGroup(editingUser.getUid(), Integer.parseInt(selected_group));
             }
+            
+            if((selected_group ==null || selected_group.isEmpty()) && 
+                (new_group== null || new_group.isEmpty())   &&
+                (selected_status == null || selected_status!=null)) {
+            
+                MessagesController.addErrorMessage("Error", "No selection made!");
 
+            }   
+                    
+            
         } catch (EJBException ejb) {
             MessagesController.addErrorMessage("Error: Update failed.");
             return;

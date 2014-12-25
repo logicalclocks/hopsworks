@@ -60,7 +60,7 @@
                                             </p:column>
 
                                             <p:column id="statusCol"  filterBy="status"  headerText="Status" style="width:32%;font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{peopleAministration.user.status}" />
+                                                <h:outputText value="#{peopleAministration.getChanged_status(user)}" />
                                             </p:column>
             
                                             <p:column id="roleNameCol" style="width:32%;font-size: 12px;text-align: left;">
