@@ -285,10 +285,16 @@ public class PeopleAministration implements Serializable {
         }
         try {
             boolean removeByEmail = userManager.removeByEmail(user1.getEmail());
-        
-            if(removeByEmail)
+       
+            // update the user request table
+            if(removeByEmail){
                 allUsers.remove(user1);
-            else 
+                if(user1.getYubikeyUser()==1)
+                    yubikey_requests.remove(user1);
+                else
+                    requests.remove(user1);
+            }
+                else 
                  MessagesController.addErrorMessage("Error", "Could not delete the user!");
             
         } catch (EJBException ejb) {
