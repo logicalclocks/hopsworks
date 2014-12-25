@@ -7,7 +7,6 @@ package se.kth.bbc.security.ua;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.accessibility.AccessibleRole;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
@@ -17,7 +16,6 @@ import javax.faces.context.FacesContext;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
 import javax.servlet.http.HttpServletRequest;
-import org.primefaces.extensions.component.masterdetail.MasterDetail;
 import se.kth.bbc.security.ua.model.People;
 
 /**
@@ -31,9 +29,8 @@ public class UsernameValidator implements Validator {
     @EJB
     private UserManager mgr;
 
-    private static final String EMAIL_PATTERN
-            = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
-            + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+    private static final String EMAIL_PATTERN = "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@"
+            + "((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
 
     /**
      * Ensure the the username is available.
