@@ -10,10 +10,9 @@
     <f:view contentType="text/html">
 
         <h:head>
-            <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+            <title><ui:insert name="title">BioBankCloud LIMS Profile</ui:insert></title>
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />            
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/profile.css']}" />            
 
         </h:head>
 
@@ -22,84 +21,76 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
 
-            <p:layout id="userAdminProfileMainLayout" rendered="#{peopleStatusBean.SYSAdmin}">  
+            <p:layout  style="margin:0px auto; border: 0px none; width: 40%; ">  
                 <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
-                <p:layoutUnit position="center">
-                    <div class="container">
-                        <div class="content">
 
-                            <div class="profile_avatar_holder">
-                                <img src="#{profileManager.gravatar}" />
-                            </div>
-                            <h3 class="page_title" >
-                                #{peopleAministration.editingUser.fname} #{peopleAministration.editingUser.lname}
-                                <br></br>
-                                <small>
-                                    #{peopleAministration.editingUser.username}
-                                </small>
-                                <br></br>
+                <p:layoutUnit position="north">
+                    <img src="#{profileManager.gravatar}" />
+                    <h3>
+                        #{profileManager.user.fname} #{profileManager.user.lname}
+                        <br></br>
+                        <small>
+                            #{profileManager.user.username}
+                        </small>
+                    </h3>
+                </p:layoutUnit>
 
-                            </h3>
-                            <hr></hr>
+                <p:layoutUnit position="center" style="height: 250px;">
+                    <h:form >
+                        <h:panelGrid  columns="3" >    
 
-                            <!-- edit content-->
-                            <h:form id="editProfileData" >
-                                <h:panelGrid id="profileGrid" columns="3">    
+                            <p:outputLabel for="statChoose" value="Status"/>					
 
+                            <p:selectOneMenu id="statChoose" 
+                                             value="#{peopleAministration.selected_status}" 
+                                             editable="false">
+                                <f:selectItem itemValue="#{peopleAministration.editingUser.status}"
+                                              itemLabel="Select Status"
+                                              />
+                                <f:selectItem itemValue="-1" itemLabel="Inactive" />
+                                <f:selectItem itemValue="0" itemLabel="Pending" />
+                                <f:selectItem itemValue="1" itemLabel="Active" />
+                                <f:selectItem itemValue="2" itemLabel="Blocked" />
 
-                                    <p:outputLabel for="statChoose" value="Status" 
-                                                   styleClass="changeLabel" />					
+                            </p:selectOneMenu>
+                            <p:spacer></p:spacer>            
 
-                                    <p:selectOneMenu id="statChoose" value="#{peopleAministration.selected_status}" 
-                                                     styleClass="property_editor"
-                                                     editable="false">
-                                        <f:selectItem itemValue="#{peopleAministration.editingUser.status}" itemLabel="Select Status" />
-                                        <f:selectItem itemValue="-1" itemLabel="Inactive" />
-                                        <f:selectItem itemValue="0" itemLabel="Pending" />
-                                        <f:selectItem itemValue="1" itemLabel="Active" />
-                                        <f:selectItem itemValue="2" itemLabel="Blocked" />
+                            <p:outputLabel for="addRole" value="Add Role" 
+                                           />					
 
-                                    </p:selectOneMenu>
-                                    <p:spacer></p:spacer>            
-
-                                    <p:outputLabel for="addRole" value="Add Role" 
-                                                   styleClass="changeLabel" />					
-
-                                    <p:selectOneMenu id="addRole" value="#{peopleAministration.new_group}" 
-                                                     styleClass="property_editor"
-                                                     editable="false">
-                                        <f:selectItem itemValue="" itemLabel="Add Role" noSelectionOption="true"/>
-                                        <f:selectItems value="#{peopleAministration.new_groups}" />
-                                    </p:selectOneMenu>
-                                    <p:spacer></p:spacer>            
+                            <p:selectOneMenu id="addRole"
+                                             value="#{peopleAministration.new_group}" 
+                                             editable="false">
+                                <f:selectItem itemValue="" 
+                                              itemLabel="Add Role" 
+                                              noSelectionOption="true"
+                                              />
+                                <f:selectItems value="#{peopleAministration.new_groups}" />
+                            </p:selectOneMenu>
+                            <p:spacer></p:spacer>            
 
 
-                                    <p:outputLabel for="removeRole" value="Remove Role" 
-                                                   styleClass="changeLabel" />					
+                            <p:outputLabel for="removeRole" value="Remove Role" />					
 
-                                    <p:selectOneMenu id="removeRole" value="#{peopleAministration.selected_group}"
-                                                     styleClass="property_editor"
-                                                     editable="false">
-                                        <f:selectItem itemValue="" itemLabel="Remove Role" noSelectionOption="true"
-                                                      />
-                                        <f:selectItems value="#{peopleAministration.current_groups}" />
-                                    </p:selectOneMenu>
-                                    <p:spacer></p:spacer>            
+                            <p:selectOneMenu id="removeRole" 
+                                             value="#{peopleAministration.selected_group}">
+                                <f:selectItem itemValue="" itemLabel="Remove Role" 
+                                              noSelectionOption="true"/>
+                                <f:selectItems value="#{peopleAministration.current_groups}" />
+                            </p:selectOneMenu>
+                            <p:spacer></p:spacer>            
 
-                                </h:panelGrid>
+                        </h:panelGrid>
 
-                                <div class="register_banner">
+                        <div class="register_banner">
 
-                                    <p:commandButton  type="submit" id="profsub" value="Save"
-                                                      action="#{peopleAministration.updateUserByAdmin()}"/> 
+                            <p:commandButton  type="submit" id="profsub" value="Update"
+                                              action="#{peopleAministration.updateUserByAdmin()}"/> 
 
-                                    <p:commandButton type="submit" value="Back" action="userMgmt" immediate="true"/>
+                            <p:commandButton type="submit" value="Back" action="userMgmt" immediate="true"/>
 
-
-                                </div>
-                            </h:form>                            
-                        </div>
-                    </div>                    
+                        </div>         
+                    </h:form>                            
                 </p:layoutUnit>
             </p:layout>
         </h:body>

@@ -25,12 +25,12 @@
             <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.SYSAdmin}">  
 
                 <p:layoutUnit id="centerLayout" position="center">
-                     
+
                     <div class="container">
-                    <div align="left">
-                       <h2>User Administration</h2>
-                     </div>
-                
+                        <div align="left">
+                            <h2>User Administration</h2>
+                        </div>
+
                         <div class="content">
                             <p:tabView id="tabViewNew" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="userMgmtTabview">
                                 <p:tab title="Registered Users" id="Registered">
@@ -62,7 +62,7 @@
                                             <p:column id="statusCol"  filterBy="status"  headerText="Status" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{peopleAministration.getChanged_status(user)}" />
                                             </p:column>
-            
+
                                             <p:column id="roleNameCol" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{peopleAministration.getUserRole(user)}" />
                                             </p:column>
@@ -93,9 +93,9 @@
 
                                     </h:form>   
                                 </p:tab>                 
-                                
-                                        
-                                
+
+
+
                                 <p:tab title="Mobile Request" id="requests">
                                     <h:form id="reqdataForm">
                                         <p:dataTable id="userReqTable" var="req" value="#{peopleAministration.allRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
@@ -110,7 +110,7 @@
                                             <p:column id="lnameCol" headerText="Last Name" style="font-size: 12px; text-align: left;">
                                                 <h:outputText value="#{req.lname}" />
                                             </p:column>
-                                            
+
                                             <p:column id="emailColumn" headerText="Email" style="font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{req.email}" />
                                             </p:column>
@@ -144,9 +144,9 @@
 
 
                                     </h:form>
-                                    </p:tab>
-                                
-                                 <p:tab title="Yubikey Requests" id="yrequests">
+                                </p:tab>
+
+                                <p:tab title="Yubikey Requests" id="yrequests">
                                     <h:form id="yubikeyReqdataForm">
                                         <p:dataTable id="yubikeyUserReqTable" var="yreq" value="#{peopleAministration.allYubikeyRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
                                                      rowKey="#{yreq.email}" selection="#{peopleAministration.selectedUsers}" editable="true" editMode="cell">
@@ -160,7 +160,7 @@
                                             <p:column id="ylnameCol" headerText="Last Name" style="font-size: 12px; text-align: left;">
                                                 <h:outputText value="#{yreq.lname}" />
                                             </p:column>
-                                            
+
                                             <p:column id="yemailColumn" headerText="Email" style="font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{yreq.email}" />
                                             </p:column>
@@ -194,25 +194,25 @@
 
 
                                     </h:form>
-                                    </p:tab>
-                                
+                                </p:tab>
+
                                 <p:tab title="Modify Users" id="Modfiy" >
                                     <h:form id="usermodifyForm">
-                                        <p:contextMenu for="userdataTable">
-                                            <p:menuitem value="View" update="userDetail" icon="ui-icon-search" oncomplete="PF('userDialog').show()"/>
-                                            <p:menuitem value="Delete" update=":userdataTable" icon="ui-icon-close" action="#{peopleAministration.rejectUser(muser)}"/>
-                                        </p:contextMenu>
                                         <p:growl id="growl" life="2000"/>
-                                        <p:dataTable id="userdataTable" var="muser" value="#{peopleAministration.allUsers}" filteredValue="#{peopleAministration.filteredUsers}" widgetVar="moUsersTable" emptyMessage="No users found with given criteria"
-                                          rowKey="#{muser.email}" selection="#{peopleAministration.selectedUser}" style="table-layout: fixed" scrollable="false" >
 
-                                            <p:column selectionMode="single" style="width:10px;" disabledSelection="false"/>
+                                        <p:dataTable id="userdataTable" var="muser" 
+                                                     value="#{peopleAministration.allUsers}" 
+                                                     filteredValue="#{peopleAministration.filteredUsers}" 
+                                                     widgetVar="usersTable" emptyMessage="No users found with given criteria"
+                                                     selectionMode="single" rowKey="#{muser.email}" 
+                                                     selection="#{peopleAministration.selectedUser}" 
+                                                     style="table-layout: fixed" scrollable="false">
+
                                             
                                             <p:column id="unameCol"  filterBy="username"  headerText="Username" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{muser.username}" />
                                             </p:column>
 
-                                            
                                             <p:column id="nameColumn" filterBy="fname" headerText="Fisrt Name" style="width:32%; font-size: 12px; text-align: left;">
                                                 <h:outputText value="#{muser.fname}" />
                                             </p:column>
@@ -225,25 +225,6 @@
                                                 <h:outputText value="#{muser.email}" />
                                             </p:column>
 
-<!--                                            
-                                             <p:column id="statCol" headerText="Status"  style="width:32%;font-size: 12px;text-align: left;">
-                                                 <p:selectOneMenu id="statChoose" value="#{peopleAministration.selected_status}" editable="false">
-                                                  <f:selectItem itemValue="-1" itemLabel="Inactive" />
-                                                  <f:selectItem itemValue="0" itemLabel="Pending" />
-                                                  <f:selectItem itemValue="1" itemLabel="Active" />
-                                                  <f:selectItem itemValue="2" itemLabel="Blocked" />
-                                                
-                                                </p:selectOneMenu>
-                                            </p:column>
-                                            
-                                 
-                                             <p:column id="roleColumn1" headerText="Role"  style="width:32%;font-size: 12px;text-align: left;">
-                                                <p:selectOneMenu id="roleChoose1" value="#{peopleAministration.selected_group}" editable="false">
-                                                    <f:selectItems value="#{peopleAministration.groups}" />
-                                                </p:selectOneMenu>
-                                            </p:column>
--->
-                                            
                                             <p:column id="actionUserColumn" headerText="Action" style="width:20%;font-size: 12px;text-align: left;">
                                                 <h:panelGrid columns="2" style="width: auto">                                                    
                                                     <p:commandLink styleClass="ui-button-allow fa fa-check" action="#{peopleAministration.modifyUser(muser)}" update="@form">
@@ -252,10 +233,10 @@
                                                     <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{peopleAministration.rejectUser(muser)}" update="@form">
                                                         <p:confirm header="Delete user" message="Are you sure you want to delete this user?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
-                          
+
                                                 </h:panelGrid>
                                             </p:column>
-                                        </p:dataTable>
+                                        </p:dataTable>                                            
 
                                         <p:dialog id="dialog" header="Selected User" widgetVar="userDialog" draggable="true" resizable="false" width="350" showEffect="clip" hideEffect="fold">
                                             <p:outputPanel id="userDetail" style="text-align:center;">
@@ -278,10 +259,9 @@
                                             <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
                                         </p:confirmDialog>
 
-
                                     </h:form>   
                                 </p:tab>                 
-                    
+
                             </p:tabView>
 
                             <script>

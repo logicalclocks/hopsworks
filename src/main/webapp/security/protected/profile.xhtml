@@ -10,11 +10,10 @@
     <f:view contentType="text/html">
 
         <h:head>
-            <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+            <title><ui:insert name="title">BioBankCloud LIMS Profile</ui:insert></title>
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />            
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/profile.css']}" />            
-        
+         
         </h:head>
 
         <h:body>
@@ -22,173 +21,165 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
 
-            <p:layout id="profileMainLayout" >  
+            <p:layout  style="margin:0px auto; border: 0px none; width: 50%; ">  
                 <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
-                <p:layoutUnit position="center">
-                    <div class="container">
-                        <div class="content">
-        
-                            <div class="profile_avatar_holder">
-                                <img src="#{profileManager.gravatar}" />
-                            </div>
-                            <h3 class="page_title" >
-                                #{profileManager.user.fname} #{profileManager.user.lname}
-                                <br></br>
-                                <small>
-                                    #{profileManager.user.username}
-                                </small>
-                                <br></br>
+               
+                
+                <p:layoutUnit position="north">
+                    <img src="#{profileManager.gravatar}" />
+                    <h3>
+                        #{profileManager.user.fname} #{profileManager.user.lname}
+                        <br></br>
+                        <small>
+                            #{profileManager.user.username}
+                        </small>
+                    </h3>
+               </p:layoutUnit>
+                
+                <p:layoutUnit position="center" style="height: 600px;">
+                    <h:form >
+                        <h:panelGrid  columns="3">    
 
-                            </h3>
-                            <hr></hr>
+                            <p:outputLabel for="fname" value="First Name"  
+                                           />					
+                            <p:inputText id="fname" label="fName" value="#{profileManager.user.fname}"
+                                         autocomplete="off" 
+                                         validatorMessage="First name is required" 
+                                         required="true"
+                                         >
+                            </p:inputText>
+                            <p:message for="fname"/>
 
-                            <!-- edit content-->
-                            <h:form id="editProfileData" >
-                                <h:panelGrid id="profileGrid" columns="3">    
+                            <p:outputLabel for="lname" value="Last Name" 
+                                           />					
+                            <p:inputText id="lname" label="lName" value="#{profileManager.user.lname}"  
+                                         validatorMessage="Last name is requried" 
+                                         required="true"
+                                         >
+                            </p:inputText>
+                            <p:message for="lname"/>
 
-                                    <p:outputLabel for="fname" value="First Name"  
-                                                   styleClass="changeLabel"/>					
-                                    <p:inputText id="fname" label="fName" value="#{profileManager.user.fname}"
-                                                 autocomplete="off"  validatorMessage="First name is required" 
-                                                 styleClass="property_editor">
-                                        <f:validateRequired/> <!-- For some reason, the 'required'-attribute did not show the specified validation message...-->
-                                    </p:inputText>
-                                    <p:message for="fname"/>
+                            <p:outputLabel for="email" value="Email"
+                                           />					
+                            <p:inputText id="email" label="email" value="#{profileManager.user.email }" 
+                                         autocomplete="off" 
+                                         validatorMessage="Email is required" 
+                                         required="true"
+                                         >
+                                <f:validator binding="#{usernameValidator}" />
+                            </p:inputText>
+                            <p:message for="email"/>
 
-                                    <p:outputLabel for="lname" value="Last Name" 
-                                                   styleClass="changeLabel" />					
-                                    <p:inputText id="lname" label="lName" value="#{profileManager.user.lname}"  
-                                                 autocomplete="off" validatorMessage="Last name is requried" 
-                                                 styleClass="property_editor">
-                                        <f:validateRequired/> <!-- For some reason, the 'required'-attribute did not show the specified validation message...-->
-                                    </p:inputText>
-                                    <p:message for="lname"/>
+                            <p:outputLabel for="title" value="Title"
+                                           />					
+                            <p:selectOneMenu id="title" value="#{profileManager.user.title}" >
+                                <f:selectItem itemValue="" itemLabel="Select Title" />
+                                <f:selectItem itemValue="Mrs" itemLabel="Mrs" />
+                                <f:selectItem itemValue="MS" itemLabel="MS" />
+                                <f:selectItem itemValue="Miss" itemLabel="Miss" />
+                                <f:selectItem itemValue="Mr" itemLabel="Mr" />
+                                <f:selectItem itemValue="Prof" itemLabel="Prof" />
+                                <f:selectItem itemValue="Dr" itemLabel="Dr" />
 
-                                    <p:outputLabel for="email" value="Email"
-                                                   styleClass="changeLabel" />					
-                                    <p:inputText id="email" label="email" value="#{profileManager.user.email }" 
-                                                 autocomplete="off" validatorMessage="Email is required" 
-                                                 styleClass="property_editor">
-                                    <f:validator binding="#{usernameValidator}" />
-                                        <f:validateRequired/>
-                                    </p:inputText>
-                                    <p:message for="email"/>
+                            </p:selectOneMenu>             
+                            <p:spacer></p:spacer>
 
-                                    <p:outputLabel for="title" value="Title"
-                                                   styleClass="changeLabel" 
-                                                   />					
-                                    <p:selectOneMenu id="title" value="#{profileManager.user.title}" 
-                                                                styleClass="property_editor"
-                                                     >
-                                                  <f:selectItem itemValue="" itemLabel="Select Title" />
-                                                  <f:selectItem itemValue="Mrs" itemLabel="Mrs" />
-                                                  <f:selectItem itemValue="MS" itemLabel="MS" />
-                                                  <f:selectItem itemValue="Miss" itemLabel="Miss" />
-                                                  <f:selectItem itemValue="Mr" itemLabel="Mr" />
-                                                  <f:selectItem itemValue="Prof" itemLabel="Prof" />
-                                                  <f:selectItem itemValue="Dr" itemLabel="Dr" />
-
-                                    </p:selectOneMenu>             
-                                    <p:spacer></p:spacer>
-
-                                    <p:outputLabel for="org" value="Organization" 
-                                                   styleClass="changeLabel" />					
-                                    <p:inputText id="org" label="org" value="#{profileManager.user.homeOrg }" 
-                                                 autocomplete="off" 
-                                                 styleClass="property_editor">
-                                        <f:validateRequired/> <!-- For some reason, the 'required'-attribute did not show the specified validation message...-->
-                                    </p:inputText>
-                                    <p:spacer></p:spacer>
+                            <p:outputLabel for="org" value="Organization" 
+                                           />					
+                            <p:inputText id="org" label="org" value="#{profileManager.user.homeOrg }" 
+                                         autocomplete="off" 
+                                         >
+                            </p:inputText>
+                            <p:spacer></p:spacer>
 
 
-                                    <p:outputLabel for="orcid" value="Orcid" 
-                                                   styleClass="changeLabel" />					
-                                    <p:inputText id="orcid" label="orcid" value="#{profileManager.user.orcid }" 
-                                                 autocomplete="off" validatorMessage="16 digits Orcid ID wrong" 
-                                                 styleClass="property_editor">
-                                        <f:validateRequired/> <!-- For some reason, the 'required'-attribute did not show the specified validation message...-->
-                                    </p:inputText>
-                                    <p:message for="orcid"/>
+                            <p:outputLabel for="orcid" value="Orcid" 
+                                           />					
+                            <p:inputText id="orcid" label="orcid" value="#{profileManager.user.orcid }" 
+                                         autocomplete="off"
+                                         validatorMessage="16 digits Orcid ID wrong" 
+                                         >
+                            </p:inputText>
+                            <p:message for="orcid"/>
 
-                                    <p:outputLabel for="mobile" value="Mobile" 
-                                                   styleClass="changeLabel" />					
-                                    <p:inputText id="mobile" label="Mobile Number" 
-                                                 value="#{profileManager.user.mobile}"  
-                                                               
-                                                 autocomplete="off" validatorMessage="Only Numbers (10 digits)" 
-                                                 styleClass="property_editor">
-                                        <f:validateRegex pattern="[0-9]{10,10}"/>                                
-                                    </p:inputText>
-                                    <p:message for="mobile"/>
+                            <p:outputLabel for="mobile" value="Mobile" 
+                                           />					
+                            <p:inputText id="mobile" label="Mobile Number" 
+                                         value="#{profileManager.user.mobile}"  
+                                         autocomplete="off" 
+                                         >
+                            </p:inputText>
+                            <p:message for="mobile"/>
 
-                                    <p:outputLabel for="add1" value="co" 
-                                                   styleClass="changeLabel" />					
-                                    <p:inputText id="add1" label="co" value="#{profileManager.address.address1}" 
-                                autocomplete="off" validatorMessage="Cannot be empty" 
-                                                 styleClass="property_editor">
-                                    </p:inputText>
-                                    <p:spacer></p:spacer>  
+                            <p:outputLabel for="add1" value="co" 
+                                           />					
+                            <p:inputText id="add1" label="co" value="#{profileManager.address.address1}" 
+                                         autocomplete="off" 
+                                         >
+                            </p:inputText>
+                            <p:spacer></p:spacer>  
 
-                                    <p:outputLabel for="add2" value="Street"
-                                                   styleClass="changeLabel" />
-                                    <p:inputText id="add2" label="address2" value="#{profileManager.address.address2}" 
-                                                 autocomplete="off" styleClass="property_editor" >
-                                    </p:inputText>
-                                    <p:spacer></p:spacer>  
+                            <p:outputLabel for="add2" value="Street"
+                                           />
+                            <p:inputText id="add2" label="address2" 
+                                         value="#{profileManager.address.address2}" 
+                                         autocomplete="off" 
+                                         >
+                            </p:inputText>
+                            <p:spacer></p:spacer>  
 
-                                    <p:outputLabel for="pc" value="Postal code:" 
-                                                   styleClass="changeLabel"/>
-                                    <p:inputText id="pc" label="zip" value="#{profileManager.address.postalcode}" 
-                                                 styleClass="property_editor">
-                                    </p:inputText>
-                                    <p:spacer></p:spacer>  
+                            <p:outputLabel for="pc" value="Postal code:" 
+                                           />
+                            <p:inputText id="pc" label="zip" value="#{profileManager.address.postalcode}" 
+                                         >
+                            </p:inputText>
+                            <p:spacer></p:spacer>  
 
-                                    <p:outputLabel for="cit" value="City" 
-                                                   styleClass="changeLabel" />
-                                    <p:inputText id="cit" label="city" value="#{profileManager.address.city}"   
-                                                 styleClass="property_editor">
-                                    </p:inputText>
-                                    <p:spacer></p:spacer>  
+                            <p:outputLabel for="cit" value="City" 
+                                           />
+                            <p:inputText id="cit" label="city" value="#{profileManager.address.city}"   
+                                         >
+                            </p:inputText>
+                            <p:spacer></p:spacer>  
 
-                                    <p:outputLabel for="st" value="State"
-                                                   styleClass="changeLabel" />
-                                    <p:inputText id="st" label="state"  value="#{profileManager.address.state}" 
-                                                 styleClass="property_editor">
-                                    </p:inputText>
-                                    <p:spacer></p:spacer>  
+                            <p:outputLabel for="st" value="State"
+                                           />
+                            <p:inputText id="st" label="state"  value="#{profileManager.address.state}" 
+                                         >
+                            </p:inputText>
+                            <p:spacer></p:spacer>  
 
-                                    <p:outputLabel for="co" value="Country" 
-                                                   styleClass="changeLabel"  />
-                                    <p:inputText id="co" label="country" value="#{profileManager.address.country}"   
-                                                 styleClass="property_editor">
-                                    </p:inputText>
-                                    <p:spacer></p:spacer>  
+                            <p:outputLabel for="co" value="Country" 
+                                           />
+                            <p:inputText id="co" label="country" value="#{profileManager.address.country}"   
+                                         >
+                            </p:inputText>
+                            <p:spacer></p:spacer>  
 
-                                    <p:outputLabel for="sec" value="Security Question" 
-                                                   styleClass="changeLabel"/>					
-                                    <p:commandLink id="sec" value="Change"   action="change_sec_question"
-                                                   styleClass="command_link"  >
-                                    </p:commandLink>
-                                    <p:spacer></p:spacer>  
+                            <p:outputLabel for="sec" value="Security Question" 
+                                           />					
+                            <p:commandLink id="sec" value="Change"   action="change_sec_question"
+                                           styleClass="command_link">
+                            </p:commandLink>
+                            <p:spacer></p:spacer>  
 
-                                    <p:outputLabel for="password" value="Password"  
-                                                   styleClass="changeLabel"/>					
-                                    <p:commandLink id ="password" value="Change"   action="profile_password"
-                                                   styleClass="command_link"  >
-                                    </p:commandLink>
-                                    <p:spacer></p:spacer>   
+                            <p:outputLabel for="password" value="Password"  
+                                           />					
+                            <p:commandLink id ="password" value="Change"
+                                           action="profile_password"
+                                          styleClass="command_link"
+                                           >
+                            </p:commandLink>
+                            <p:spacer></p:spacer>   
 
-                                </h:panelGrid>
+                        </h:panelGrid>
 
-                                <div class="register_banner">
-                                    <p:commandButton  type="submit" id="mysub" value="Save" 
-                                                      actionListener="#{profileManager.updateUser()}"/> 
-                                    <p:commandButton type="submit" value="Cancel" action="indexPage"  />
-
-                                </div>
-                             </h:form>                            
+                        <div class="register_banner">
+                        <p:commandButton  type="submit" id="mysub" value="Save" 
+                                          actionListener="#{profileManager.updateUser()}"/> 
+                        <p:commandButton type="submit" value="Cancel" action="indexPage"  />
                         </div>
-                    </div>                    
+                    </h:form>                            
                 </p:layoutUnit>
             </p:layout>
         </h:body>
