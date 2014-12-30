@@ -9,13 +9,13 @@
       xmlns:f="http://java.sun.com/jsf/core">
 
     <h:head>
-        <title>BiobankCloud - Sign in</title>
+        <title>BiobankCloud - Sign in with Certificate</title>
         <h:outputStylesheet name="css/jsfcrud.css"/>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-
     </h:head>
 
-    <h:body>
+    <h:body >
+
         <ui:insert name="titleBar" >
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
@@ -23,54 +23,47 @@
         <p:growl for="userRegistered" life="20000" showDetail="true"/>
         <p:growl for="loginFail" life="20000" showDetail="true"/>
 
-        <h:form >                  
+        <h:form>                  
             <div class="Signin">            
                 <h:panelGrid columns="2">
                     <h:graphicImage library="images" name="chor.jpg" width="70" height="70"/> 
-                    <h3>Mobile Login</h3>     
+                    <h3>Yubikey Login</h3>     
                 </h:panelGrid>
                 <br></br>
-                <h:panelGrid columns="1"> 
-                    <p:outputLabel for="uname" value="Username"/>
-                    <p:inputText id="uname" value="#{gauth.username}" required="true" 
-                                 validatorMessage="Email is not valid format" >
+
+                <h:panelGrid columns="1">
+                    <p:outputLabel for="username" value="Username"/>
+                    <p:inputText id="username" value="#{gauth.username}" required="true" 
+                    validatorMessage="Email is not valid format" >
                         <f:validateRegex pattern="[\w\.-]*[a-zA-Z0-9_]@[\w\.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z\.]*[a-zA-Z]" />
                     </p:inputText>
-                    <p:watermark for="uname" value="Email" />
-
+                    <p:watermark for="username" value="Email" />
+                  
                     <p:outputLabel for="password" value="Password" />
                     <p:password id="password" value="#{gauth.password}" required="true" 
-                                validatorMessage="Password must be at least 6 charachter alpanumeric">
+                    validatorMessage="Password must be at least 6 charachter alpanumeric">
                         <f:validateLength minimum="6"/>   
-                    </p:password>
+                    </p:password>    
                     <p:watermark for="password" value="Password" />
 
                     <p:outputLabel for="otp" value="PIN" />
-                    <p:password id="otp" value="#{gauth.otpCode}" required="true"  validatorMessage="PIN must be 6 digits" >
-                        <f:validateLength minimum="6" maximum="6"/> 
-                    </p:password>   
-                    <p:watermark for="otp" value="One time mobile password" />
+                    <p:password id="otp" value="#{gauth.otpCode}" required="true" validatorMessage="PIN must be 44 digits">
+                       <f:validateLength minimum="44" maximum="44"/> 
+                    </p:password>
+                    <p:watermark for="otp" value="Press the Yubikey button" />
 
+                    <p:spacer></p:spacer>
                     <p:messages id="messages" autoUpdate="true" showDetail="false" closable="true"/>
-
-                    <h:panelGrid columns="2">
-                        <p:commandButton id="loginButton" value="Sign in" action="#{gauth.login()}" styleClass="MainButton"/>
-                        <p:commandButton  value="New User" action="register_mobile" immediate="true" styleClass="MainButton">
-                            <f:param name="username" value="#{resetPassword.username}" />
-                        </p:commandButton>   
-
-                    </h:panelGrid>
+                    <h:panelGrid columns="2" >             
+                        <p:commandButton id="loginButton" value="Sign in" action="#{gauth.certificateLogin()}"  styleClass="MainButton"/>
+          <p:commandButton  value="New User" action="register_yubico"  styleClass="MainButton" immediate="true"/>
+                     
+                    </h:panelGrid>             
                 </h:panelGrid>
             </div>
         </h:form> 
-
         <div align="center">
-            <p:commandLink id="signupLink" value="Yubikey user" action="yubikeylogin" style="text-align: right"/>
-            &nbsp;
-       <!--     <p:commandLink id="certLogin" value="Certificate user" action="certlogin" style="text-align: right"/>
-            &nbsp; -->
-            <p:commandLink  value="Can't login?"  action="login_issue" style="text-align: right"/>
-    
+            <p:commandLink id="signupLink" value="Can't login?" action="login_issue" style="text-align: right"/>
         </div>
         <br/>
     </h:body>

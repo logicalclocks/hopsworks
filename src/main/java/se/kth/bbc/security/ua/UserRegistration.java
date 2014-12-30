@@ -268,7 +268,7 @@ public class UserRegistration implements Serializable {
             qrCode = QRCodeGenerator.getQRCode(mail, Gauth.ISSUER, otpSecret);
             
             // notify user about the request
-            emailBean.sendEmail(mail, "Mobile account request", buildMobileRequestMessage());
+            emailBean.sendEmail(mail, "Confirmation Email", buildMobileRequestMessage());
             // Reset the values
             fname = "";
             lname = "";
@@ -299,8 +299,6 @@ public class UserRegistration implements Serializable {
 
             short yubikey = 1;
             String otp ="-1";
-             logger.info("Username: "+ password);    
-            logger.info("Pass: "+ password);
             username = mgr.register(fname, lname, mail, title, org,
                     tel, orcid, uid, SecurityUtils.converToSHA256(password), otp, 
                     security_question, SecurityUtils.converToSHA256(security_answer), AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE, yubikey);
@@ -309,7 +307,7 @@ public class UserRegistration implements Serializable {
 
             mgr.registerAddress(uid, address1, address2, address3, city, state, country, postalcode);
             mgr.registerYubikey(uid);
-            emailBean.sendEmail(mail, "Yubikey Request", buildYubikeyRequestMessage());
+            emailBean.sendEmail(mail, "Confirmation Email", buildYubikeyRequestMessage());
             // Reset the values
             fname = "";
             lname = "";
@@ -339,8 +337,8 @@ public class UserRegistration implements Serializable {
     
     private String buildYubikeyRequestMessage() {
 
-        String l1 = "Greetings!\n\nThere have been a Yubikey account request your behalf.\n\n";
-        String l2 = "You will receive a Yubikey within 48 hours to your address.\n\n\n";
+        String l1 = "Greetings!\n\nWe receieved your yubikey account request for the BiobankCloud.\n\n";
+        String l2 = "You will receive a Yubikey device within 48 hours in your address.\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
         return l1 + l2 + l3;
@@ -348,8 +346,8 @@ public class UserRegistration implements Serializable {
 
     private String buildMobileRequestMessage() {
 
-        String l1 = "Greetings!\n\nThere have been a Mobile account request your behalf.\n\n";
-        String l2 = "Your account will be activated within 48 after approval.\n\n\n";
+        String l1 = "Greetings!\n\nWe received your mobile account request for the BiobankCloud.\n\n";
+        String l2 = "Your account will be activated within 48 hours.\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
         return l1 + l2 + l3;

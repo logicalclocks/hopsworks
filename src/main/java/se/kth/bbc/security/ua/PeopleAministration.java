@@ -301,7 +301,7 @@ public class PeopleAministration implements Serializable {
             MessagesController.addErrorMessage("Error", "Rejection failed");
         }
 
-        emailBean.sendEmail(user1.getEmail(), "BBC Account Request", accountRejectedMessage());
+        emailBean.sendEmail(user1.getEmail(), "BBC Account", accountRejectedMessage());
         MessagesController.addInfoMessage(user1.getEmail() + " was rejected.");
     }
 
@@ -484,7 +484,7 @@ public class PeopleAministration implements Serializable {
 
     private String accountActivatedMessage(String username) {
         String l1 = "Greetings!\n\n"
-                + "Your request for access the BiobankCloud is approved.\n\n";
+                + "Your account request to access the BiobankCloud is approved.\n\n";
         String l2 = "You can login with the username: " + username + "\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 

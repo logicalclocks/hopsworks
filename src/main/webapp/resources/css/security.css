@@ -2278,3 +2278,8 @@ ui-wizard {
     float:left;
 }
 
+.command_link {
+    margin-left: 10px;
+    color:#1385e5 !important;
+    text-decoration: underline;
+}
