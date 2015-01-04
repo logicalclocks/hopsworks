@@ -339,7 +339,7 @@ public class PeopleAministration implements Serializable {
      */
     public List<People> getAllRequests() {
         if (requests == null) {
-            requests = userManager.findAllByStatus(AccountStatusIF.MOBILE_ACCOUNT_INACTIVE);
+            requests = userManager.findAllByStatus(AccountStatus.MOBILE_ACCOUNT_INACTIVE);
         }
         return requests;
     }
@@ -351,7 +351,7 @@ public class PeopleAministration implements Serializable {
      */
     public List<People> getAllYubikeyRequests() {
         if (yubikey_requests == null) {
-            yubikey_requests = userManager.findAllByStatus(AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE);
+            yubikey_requests = userManager.findAllByStatus(AccountStatus.YUBIKEY_ACCOUNT_INACTIVE);
         }
         return yubikey_requests;
     }
@@ -371,14 +371,14 @@ public class PeopleAministration implements Serializable {
      */
     public void activateUser(People user1) throws MessagingException {
         userManager.updateGroup(user1.getUid(), Integer.parseInt(selected_group));
-        userManager.updateStatus(user1.getUid(), AccountStatusIF.ACCOUNT_ACTIVE);
+        userManager.updateStatus(user1.getUid(), AccountStatus.ACCOUNT_ACTIVE);
         emailBean.sendEmail(user1.getEmail(), "BBC account", accountActivatedMessage(user1.getEmail()));
         requests.remove(user1);
     }
 
     public String activateYubikeyUser(People user1) {
         userManager.updateGroup(user1.getUid(), Integer.parseInt(selected_group));
-        userManager.updateStatus(user1.getUid(), AccountStatusIF.ACCOUNT_ACTIVE);
+        userManager.updateStatus(user1.getUid(), AccountStatus.ACCOUNT_ACTIVE);
         selectedYubikyUser = user1;
         address = userManager.findAddress(user1.getUid());
 
@@ -393,7 +393,7 @@ public class PeopleAministration implements Serializable {
      * @throws javax.mail.MessagingException
      */
     public void blockUser(People user1) throws MessagingException {
-        userManager.updateStatus(user1.getUid(), AccountStatusIF.ACCOUNT_BLOCKED);
+        userManager.updateStatus(user1.getUid(), AccountStatus.ACCOUNT_BLOCKED);
         emailBean.sendEmail(user1.getEmail(), "Account Blocked", accountBlockedMessage());
         requests.remove(user1);
     }

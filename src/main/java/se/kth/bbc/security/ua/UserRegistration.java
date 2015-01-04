@@ -12,8 +12,8 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.mail.MessagingException;
 import org.primefaces.model.StreamedContent;
-import se.kth.bbc.security.auth.totp.CustomAuthentication;
-import se.kth.bbc.security.auth.totp.QRCodeGenerator;
+import se.kth.bbc.security.auth.CustomAuthentication;
+import se.kth.bbc.security.auth.QRCodeGenerator;
 
 /**
  *
@@ -256,10 +256,10 @@ public class UserRegistration implements Serializable {
             short yubikey = -1;
             username = mgr.register(fname, lname, mail, title, org, tel, orcid, uid,
                     SecurityUtils.converToSHA256(password), otpSecret, security_question,
-                    SecurityUtils.converToSHA256(security_answer), AccountStatusIF.MOBILE_ACCOUNT_INACTIVE, yubikey);
+                    SecurityUtils.converToSHA256(security_answer), AccountStatus.MOBILE_ACCOUNT_INACTIVE, yubikey);
 
             // register group
-            mgr.registerGroup(uid, GroupsIf.BBC_GUEST);
+            mgr.registerGroup(uid, GroupsNumber.BBC_GUEST);
            
             // create address entry
             mgr.registerAddress(uid);
@@ -301,9 +301,9 @@ public class UserRegistration implements Serializable {
             String otp ="-1";
             username = mgr.register(fname, lname, mail, title, org,
                     tel, orcid, uid, SecurityUtils.converToSHA256(password), otp, 
-                    security_question, SecurityUtils.converToSHA256(security_answer), AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE, yubikey);
+                    security_question, SecurityUtils.converToSHA256(security_answer), AccountStatus.YUBIKEY_ACCOUNT_INACTIVE, yubikey);
 
-            mgr.registerGroup(uid, GroupsIf.BBC_GUEST);
+            mgr.registerGroup(uid, GroupsNumber.BBC_GUEST);
 
             mgr.registerAddress(uid, address1, address2, address3, city, state, country, postalcode);
             mgr.registerYubikey(uid);

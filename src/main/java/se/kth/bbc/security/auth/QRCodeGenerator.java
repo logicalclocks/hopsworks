@@ -1,4 +1,4 @@
-package se.kth.bbc.security.auth.totp;
+package se.kth.bbc.security.auth;
 
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;

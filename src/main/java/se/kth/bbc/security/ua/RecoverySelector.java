@@ -19,8 +19,8 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import org.primefaces.model.StreamedContent;
-import se.kth.bbc.security.auth.totp.CustomAuthentication;
-import se.kth.bbc.security.auth.totp.QRCodeGenerator;
+import se.kth.bbc.security.auth.CustomAuthentication;
+import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.bbc.security.ua.model.People;
 
 /**
@@ -130,7 +130,7 @@ public class RecoverySelector implements Serializable {
         }
 
         
-        if (people.getStatus() == AccountStatusIF.ACCOUNT_BLOCKED ) {
+        if (people.getStatus() == AccountStatus.ACCOUNT_BLOCKED ) {
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is blocked!", "null"));
             return "";
@@ -215,7 +215,7 @@ public class RecoverySelector implements Serializable {
             return "";
         }
 
-        if (people.getStatus() == AccountStatusIF.ACCOUNT_BLOCKED ) {
+        if (people.getStatus() == AccountStatus.ACCOUNT_BLOCKED ) {
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is blocked!", "null"));
             return "";
@@ -232,7 +232,7 @@ public class RecoverySelector implements Serializable {
 
                 String message = buildYubResetMessage("");
                 email.sendEmail(people.getEmail(), "Yubikey request", message);
-                people.setStatus(AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE);
+                people.setStatus(AccountStatus.YUBIKEY_ACCOUNT_INACTIVE);
                 um.updatePeople(people);
                 return "yubico";
             } else {

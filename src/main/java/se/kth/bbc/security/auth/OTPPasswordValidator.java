@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package se.kth.bbc.security.auth.totp;
+package se.kth.bbc.security.auth;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;

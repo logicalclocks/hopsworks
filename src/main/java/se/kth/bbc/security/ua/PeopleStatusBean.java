@@ -119,7 +119,7 @@ public class PeopleStatusBean implements Serializable{
      public boolean checkForRequests() {
         if (isAdminUser()) {
             //return false if no requests
-            open_reauests = !(userManager.findAllByStatus(AccountStatusIF.MOBILE_ACCOUNT_INACTIVE).isEmpty()) || !(userManager.findAllByStatus(AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE).isEmpty());
+            open_reauests = !(userManager.findAllByStatus(AccountStatus.MOBILE_ACCOUNT_INACTIVE).isEmpty()) || !(userManager.findAllByStatus(AccountStatus.YUBIKEY_ACCOUNT_INACTIVE).isEmpty());
         }
       return open_reauests;
     }

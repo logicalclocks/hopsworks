@@ -146,9 +146,9 @@
             <url-pattern>/bbc/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-           <role-name>SYS_ADMIN</role-name>
             <role-name>BBC_ADMIN</role-name>
             <role-name>BBC_RESEARCHER</role-name>
+            <role-name>SYS_ADMIN</role-name>
             <role-name>BBC_USER</role-name>
         </auth-constraint>
     </security-constraint>
@@ -170,8 +170,8 @@
             <url-pattern>/wf/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-           <role-name>SYS_ADMIN</role-name>
-             <role-name>BBC_ADMIN</role-name>
+            <role-name>BBC_ADMIN</role-name>
+            <role-name>SYS_ADMIN</role-name>
             <role-name>BBC_USER</role-name>
         </auth-constraint>
     </security-constraint>
@@ -204,9 +204,9 @@
             <url-pattern>/security/protected/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
-           <role-name>SYS_ADMIN</role-name>
-             <role-name>BBC_ADMIN</role-name>
+            <role-name>BBC_ADMIN</role-name>
             <role-name>BBC_RESEARCHER</role-name>
+            <role-name>SYS_ADMIN</role-name>
             <role-name>BBC_USER</role-name>
         </auth-constraint>
     </security-constraint>
@@ -219,7 +219,6 @@
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
         </user-data-constraint>
     </security-constraint>
-
     <login-config>
         <auth-method>BASIC</auth-method>
         <realm-name>CauthRealm</realm-name>
@@ -228,8 +227,6 @@
             <form-error-page>/error.xhtml</form-error-page>
         </form-login-config>
     </login-config>
-
-
     <!--   <error-page>
        <error-code>404</error-code>
        <location>/error</location>
@@ -258,7 +255,7 @@
     </filter-mapping>
     <filter>
         <filter-name>Login Filter</filter-name>
-        <filter-class>se.kth.bbc.security.auth.totp.LoginFilter</filter-class>
+        <filter-class>se.kth.bbc.security.auth.LoginFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>Login Filter</filter-name>
@@ -269,7 +266,6 @@
         <url-pattern>/security/register_yubico.xhtml</url-pattern>
         <url-pattern>/security/index.xhtml</url-pattern>
         <url-pattern>/security/protected/index.xhtml</url-pattern>
-    
     </filter-mapping>
     <!-- To upload from pages with pretty URL!-->
     <!--    <filter-mapping>

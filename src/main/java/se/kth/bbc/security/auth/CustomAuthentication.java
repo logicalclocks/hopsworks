@@ -1,4 +1,4 @@
-package se.kth.bbc.security.auth.totp;
+package se.kth.bbc.security.auth;
 
 import java.io.Serializable;
 import java.security.InvalidKeyException;
@@ -15,7 +15,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.primefaces.context.RequestContext;
-import se.kth.bbc.security.ua.AccountStatusIF;
+import se.kth.bbc.security.ua.AccountStatus;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.People;
@@ -106,7 +106,7 @@ public class CustomAuthentication implements Serializable {
         }
     
         // return if user not activated
-        if (user.getStatus() == AccountStatusIF.MOBILE_ACCOUNT_INACTIVE) {
+        if (user.getStatus() == AccountStatus.MOBILE_ACCOUNT_INACTIVE) {
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not activated", null));
@@ -114,14 +114,23 @@ public class CustomAuthentication implements Serializable {
         }
 
         // return if used is bloked
-        if (user.getStatus()== AccountStatusIF.ACCOUNT_BLOCKED) {
+        if (user.getStatus()== AccountStatus.ACCOUNT_BLOCKED) {
             // inform the use about the blocked account
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Blocked account", null));
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is blocked", null));
             return ("");
         }
-        
+
+        // return if used is bloked
+        if (user.getStatus()== AccountStatus.ACCOUNT_DEACTIVATED) {
+            // inform the use about the blocked account
+            RequestContext.getCurrentInstance().update("growl");
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is deactivaed", null));
+            return ("");
+        }
+
         userid = user.getUid();
 
         try {
@@ -154,7 +163,7 @@ public class CustomAuthentication implements Serializable {
         }
         
         // reset the password after first login
-        if (user.getStatus()== AccountStatusIF.ACCOUNT_PENDING) {
+        if (user.getStatus()== AccountStatus.ACCOUNT_PENDING) {
             return ("reset");
         }
 
@@ -194,7 +203,7 @@ public class CustomAuthentication implements Serializable {
         }
         
         // return if user not activated
-        if (user.getStatus() == AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE) {
+        if (user.getStatus() == AccountStatus.YUBIKEY_ACCOUNT_INACTIVE) {
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not activated", null));
@@ -202,13 +211,23 @@ public class CustomAuthentication implements Serializable {
         }
 
         // return if used is bloked
-        if (user.getStatus()== AccountStatusIF.ACCOUNT_BLOCKED) {
+        if (user.getStatus()== AccountStatus.ACCOUNT_BLOCKED) {
             // inform the use about the blocked account
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Blocked account", null));
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is blocked", null));
             return ("");
         }
+        
+        // return if used is bloked
+        if (user.getStatus()== AccountStatus.ACCOUNT_DEACTIVATED) {
+            // inform the use about the blocked account
+            RequestContext.getCurrentInstance().update("growl");
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is deactivaed", null));
+            return ("");
+        }
+
         
         userid = user.getUid();
 
@@ -241,7 +260,7 @@ public class CustomAuthentication implements Serializable {
         }
         
         // reset the password after first login
-        if (user.getStatus()== AccountStatusIF.ACCOUNT_PENDING) {
+        if (user.getStatus()== AccountStatus.ACCOUNT_PENDING) {
             return ("reset");
         }
        
@@ -287,7 +306,7 @@ public class CustomAuthentication implements Serializable {
         }
         
         // return if user not activated
-        if (user.getStatus() == AccountStatusIF.YUBIKEY_ACCOUNT_INACTIVE) {
+        if (user.getStatus() == AccountStatus.YUBIKEY_ACCOUNT_INACTIVE) {
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not activated", null));
@@ -295,7 +314,7 @@ public class CustomAuthentication implements Serializable {
         }
 
         // return if used is bloked
-        if (user.getStatus()== AccountStatusIF.ACCOUNT_BLOCKED) {
+        if (user.getStatus()== AccountStatus.ACCOUNT_BLOCKED) {
             // inform the use about the blocked account
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
@@ -334,7 +353,7 @@ public class CustomAuthentication implements Serializable {
         }
         
         // reset the password after first login
-        if (user.getStatus()== AccountStatusIF.ACCOUNT_PENDING) {
+        if (user.getStatus()== AccountStatus.ACCOUNT_PENDING) {
             return ("reset");
         }
        
