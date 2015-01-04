@@ -35,10 +35,6 @@
                             <p:tabView id="tabViewNew" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="userMgmtTabview">
                                 <p:tab title="Registered Users" id="Registered">
                                     <h:form id="userdataForm">
-                                        <p:contextMenu for="userdataTable">
-                                            <p:menuitem value="View" update="userDetail" icon="ui-icon-search" oncomplete="PF('userDialog').show()"/>
-                                            <p:menuitem value="Delete" update="userdataTable" icon="ui-icon-close" actionListener="#{peopleAministration.rejectUser(user)}"/>
-                                        </p:contextMenu>
                                         <p:growl id="growl" life="2000"/>
                                         <p:dataTable id="userdataTable" var="user" value="#{peopleAministration.allUsers}" filteredValue="#{peopleAministration.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
                                                      selectionMode="single" rowKey="#{user.email}" selection="#{peopleAministration.selectedUser}" style="table-layout: fixed" scrollable="false">
@@ -69,22 +65,6 @@
 
                                         </p:dataTable>
 
-                                        <p:dialog id="dialog" header="Selected User" widgetVar="userDialog" draggable="true" resizable="false" width="350" showEffect="clip" hideEffect="fold">
-                                            <p:outputPanel id="userDetail" style="text-align:center;">
-                                                <h:panelGrid id="display" columns="2" cellpadding="4">
-
-                                                    <h:outputText value="Name:" style="font-size: 12px;font-weight: bold;text-align: left;" />
-                                                    <h:outputText value="#{peopleAministration.selectedUser.fname}" />
-
-                                                    <h:outputText value="Email:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
-                                                    <h:outputText value="#{peopleAministration.selectedUser.email}" />
-
-                                                    <h:outputText value="Registered On:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
-                                                    <h:outputText value="#{peopleAministration.selectedUser.activated}" />
-
-                                                </h:panelGrid>
-                                            </p:outputPanel>                   
-                                        </p:dialog>
                                         <p:confirmDialog global="true" severity="alert" showEffect="fade">
                                             <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
                                             <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
@@ -226,33 +206,14 @@
 
                                             <p:column id="actionUserColumn" headerText="Action" style="width:20%;font-size: 12px;text-align: left;">
                                                 <h:panelGrid columns="2" style="width: auto">                                                    
-                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" action="#{peopleAministration.modifyUser(muser)}" update="@form">
+                                                    <p:commandLink  action="#{peopleAministration.modifyUser(muser)}" update="@form">
+                                                        <h:graphicImage name="images/icons/edit.png"  width="20px" height="20px"/>
                                                         <p:confirm header="Modify user" message="Modify selected user?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
-                                                    <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{peopleAministration.rejectUser(muser)}" update="@form">
-                                                        <p:confirm header="Delete user" message="Are you sure you want to delete this user?" icon="ui-icon-alert"/>
-                                                    </p:commandLink>
-
                                                 </h:panelGrid>
                                             </p:column>
                                         </p:dataTable>                                            
 
-                                        <p:dialog id="dialog" header="Selected User" widgetVar="userDialog" draggable="true" resizable="false" width="350" showEffect="clip" hideEffect="fold">
-                                            <p:outputPanel id="userDetail" style="text-align:center;">
-                                                <h:panelGrid id="display" columns="2" cellpadding="4">
-
-                                                    <h:outputText value="Name:" style="font-size: 12px;font-weight: bold;text-align: left;" />
-                                                    <h:outputText value="#{peopleAministration.selectedUser.fname}" />
-
-                                                    <h:outputText value="Email:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
-                                                    <h:outputText value="#{peopleAministration.selectedUser.email}" />
-
-                                                    <h:outputText value="Registered On:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
-                                                    <h:outputText value="#{peopleAministration.selectedUser.activated}" />
-
-                                                </h:panelGrid>
-                                            </p:outputPanel>                   
-                                        </p:dialog>
                                         <p:confirmDialog global="true" severity="alert" showEffect="fade">
                                             <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
                                             <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>

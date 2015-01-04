@@ -219,14 +219,17 @@
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
         </user-data-constraint>
     </security-constraint>
+
     <login-config>
         <auth-method>BASIC</auth-method>
-        <realm-name>GauthRealm</realm-name>
+        <realm-name>CauthRealm</realm-name>
         <form-login-config>
             <form-login-page>/index.xhtml</form-login-page>
             <form-error-page>/error.xhtml</form-error-page>
         </form-login-config>
     </login-config>
+
+
     <!--   <error-page>
        <error-code>404</error-code>
        <location>/error</location>

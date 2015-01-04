@@ -85,24 +85,28 @@
                                     <p:outputLabel for="fname" value="First name" style="font-weight:bold"/>
                                     <p:inputText id="fname" value="#{userRegistration.fname}" size="40"
                                                  required="true"
+                                                 autocomplete="off"
                                                  requiredMessage="Enter Name" />
 
                                     <p:outputLabel for="lname" value="Last name" style="font-weight:bold"/>
                                     <p:inputText id="lname" value="#{userRegistration.lname}" size="40"
                                                  required="true"
+                                                 autocomplete="off"
                                                  requiredMessage="Last Name"/>
 
                                     <p:outputLabel for="email" value="Email" style="font-weight:bold"/>
                                     <p:inputText id="email" value="#{userRegistration.mail}" size="40"
                                                  required="true"
+                                                 autocomplete="off"
                                                  requiredMessage="Enter Email">
                                         <f:validator binding="#{usernameValidator}" />
                                     </p:inputText>    
 
                                     <p:outputLabel for="tel" value="Mobile" style="font-weight:bold"/>
                                     <p:inputText id="tel" value="#{userRegistration.tel}" size="40"
+                                                 autocomplete="off"
                                                  validatorMessage="Invalid phone number">
-                                        <f:validateRegex pattern="^([+]?[\d]+)?$" />
+                                            <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                     </p:inputText>
 
                                     <p:outputLabel for="sec_question" value="Security Question" style="font-weight:bold"/>
@@ -119,11 +123,13 @@
                                     <p:outputLabel for="answer" value="Answer" style="font-weight:bold"/>
                                     <p:inputText id="answer" value="#{userRegistration.security_answer}" size="40"
                                                  required="true"
+                                                 autocomplete="off"
                                                  requiredMessage="Answer Security Question" />
 
                                     <p:outputLabel for="password0" value="Password" style="font-weight:bold"/>
                                     <p:password id="password0" value="#{userRegistration.password}" 
                                                 required="true" size="40"
+                                                autocomplete="off"
                                                 requiredMessage="Enter password">
                                         <f:validator validatorId="passwordValidator" />
                                         <f:attribute name="confirmPassword" value="#{confirmPassword}" />
@@ -132,6 +138,7 @@
                                     <p:outputLabel for="password" value="Password again" style="font-weight:bold"/>
                                     <p:password id="password" value="#{userRegistration.passwordAgain}" size="40"
                                                 requiredMessage="Re-enter password"
+                                                autocomplete="off"
                                                 binding="#{confirmPassword}"
                                                 required="true">
                                     </p:password>
@@ -147,7 +154,7 @@
                                 </h:panelGrid>
                                 <div class="register_banner">
                                     <p:commandButton styleClass="team_button button-save" type="submit" value="Register" oncomplete="Recaptcha.reload();" action="#{userRegistration.registerMobileUser()}"/>
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" style="margin-left: 55px"/>
+                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" immediate="true" style="margin-left: 55px"/>
                                 </div>
                             </h:form>     
                         </p:layoutUnit>

@@ -26,7 +26,7 @@ import se.kth.bbc.security.ua.model.People;
  */
 @ManagedBean
 @RequestScoped
-public class Gauth implements Serializable {
+public class CustomAuthentication implements Serializable {
 
     private static final long serialVersionUID = 1L;
     public static final String ISSUER = "BiobankCloud";
@@ -141,7 +141,7 @@ public class Gauth implements Serializable {
                 try {
                     emailBean.sendEmail(user.getEmail(), "Account blocked", accountBlockedMessage());
                 } catch (MessagingException ex1) {
-                    Logger.getLogger(Gauth.class.getName()).log(Level.SEVERE, null, ex1);
+                    Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
                 }
                 
             }
@@ -229,7 +229,7 @@ public class Gauth implements Serializable {
                 try {
                     emailBean.sendEmail(user.getEmail(), "Account blocked", accountBlockedMessage());
                 } catch (MessagingException ex1) {
-                    Logger.getLogger(Gauth.class.getName()).log(Level.SEVERE, null, ex1);
+                    Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
                 }
             }
 
@@ -322,7 +322,7 @@ public class Gauth implements Serializable {
                 try {
                     emailBean.sendEmail(user.getEmail(), "BBC Account", accountBlockedMessage());
                 } catch (MessagingException ex1) {
-                    Logger.getLogger(Gauth.class.getName()).log(Level.SEVERE, null, ex1);
+                    Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
                 }
             }
 

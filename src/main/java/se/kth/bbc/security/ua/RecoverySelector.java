@@ -19,7 +19,7 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import org.primefaces.model.StreamedContent;
-import se.kth.bbc.security.auth.totp.Gauth;
+import se.kth.bbc.security.auth.totp.CustomAuthentication;
 import se.kth.bbc.security.auth.totp.QRCodeGenerator;
 import se.kth.bbc.security.ua.model.People;
 
@@ -179,7 +179,7 @@ public class RecoverySelector implements Serializable {
                 String otpSecret = SecurityUtils.calculateSecretKey();
 
                 um.updateSecret(people.getUid(), otpSecret);
-                qrCode = QRCodeGenerator.getQRCode(people.getEmail(), Gauth.ISSUER, otpSecret);
+                qrCode = QRCodeGenerator.getQRCode(people.getEmail(), CustomAuthentication.ISSUER, otpSecret);
                 return "qrcode";
 
             } catch (IOException | WriterException ex) {
@@ -194,7 +194,7 @@ public class RecoverySelector implements Serializable {
                 try {
                     email.sendEmail(people.getEmail(), "Account blocked", accountBlockedMessage());
                 } catch (MessagingException ex1) {
-                    Logger.getLogger(Gauth.class.getName()).log(Level.SEVERE, null, ex1);
+                    Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
                 }
             }
 
@@ -244,7 +244,7 @@ public class RecoverySelector implements Serializable {
                     try {
                         email.sendEmail(people.getEmail(), "BBC Account Blocked", accountBlockedMessage());
                     } catch (MessagingException ex1) {
-                        Logger.getLogger(Gauth.class.getName()).log(Level.SEVERE, null, ex1);
+                        Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
                     }
                 }
                 FacesContext context = FacesContext.getCurrentInstance();

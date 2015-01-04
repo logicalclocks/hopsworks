@@ -12,7 +12,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.mail.MessagingException;
 import org.primefaces.model.StreamedContent;
-import se.kth.bbc.security.auth.totp.Gauth;
+import se.kth.bbc.security.auth.totp.CustomAuthentication;
 import se.kth.bbc.security.auth.totp.QRCodeGenerator;
 
 /**
@@ -265,7 +265,7 @@ public class UserRegistration implements Serializable {
             mgr.registerAddress(uid);
             
             // generate qr code to be displayed to user
-            qrCode = QRCodeGenerator.getQRCode(mail, Gauth.ISSUER, otpSecret);
+            qrCode = QRCodeGenerator.getQRCode(mail, CustomAuthentication.ISSUER, otpSecret);
             
             // notify user about the request
             emailBean.sendEmail(mail, "Confirmation Email", buildMobileRequestMessage());

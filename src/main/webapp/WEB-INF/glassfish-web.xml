@@ -5,6 +5,7 @@
   <security-role-mapping>
     <role-name>SYS_ADMIN</role-name>
     <group-name>SYS_ADMIN</group-name>
+     <principal-name>CN=Ali Gholami,OU=PDC,O=KTH,L=Stockholm,ST=Stockholm,C=SE</principal-name>
   </security-role-mapping>
   <security-role-mapping>
     <role-name>BBC_USER</role-name>
