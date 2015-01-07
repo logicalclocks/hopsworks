@@ -50,7 +50,7 @@ public class StudyTeamController {
      * @return 
      */
     public List<User> findTeamMembersByName(String name, String role){
-        Query query = em.createNativeQuery("SELECT CONCAT(fname, ' ', lname) AS NAME, email,uid FROM USERS WHERE email IN (SELECT team_member FROM StudyTeam WHERE name=? AND team_role=?)" , User.class)
+        Query query = em.createNativeQuery("SELECT fname,lname,email,uid FROM USERS WHERE email IN (SELECT team_member FROM StudyTeam WHERE name=? AND team_role=?)" , User.class)
                     .setParameter(1, name).setParameter(2, role);
         return query.getResultList();
     
