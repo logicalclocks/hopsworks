@@ -51,7 +51,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import se.kth.bbc.jobs.CancellableJob;
-import se.kth.bbc.lims.EnvironmentVariableFacade;
+import se.kth.bbc.lims.Constants;
 
 /**
  *
@@ -121,8 +121,6 @@ public class YarnRunner implements CancellableJob{
   }
 
   public static class Builder {
-
-    private EnvironmentVariableFacade environmentVariableFacade;
 
         //Required attributes
     //Path to the application master jar
@@ -286,30 +284,13 @@ public class YarnRunner implements CancellableJob{
       return new YarnRunner(this);
     }
 
-    private EnvironmentVariableFacade lookupEnvironmentVariableFacadeBean()
-            throws NamingException {
-      Context c = new InitialContext();
-      return (EnvironmentVariableFacade) c.lookup(
-              "java:global/Hop_Dashboard/EnvironmentVariableFacade!se.kth.bbc.lims.EnvironmentVariableFacade");
-    }
-
     private void setConfiguration() throws IllegalStateException {
       //Get the path to the Yarn configuration file from environment variables
       String yarnConfDir = System.getenv("YARN_CONF_DIR");
-      //If not found in environment variables: try DB
+      //If not found in environment variables: warn and use default
       if (yarnConfDir == null) {
-        try {
-          environmentVariableFacade = lookupEnvironmentVariableFacadeBean();
-        } catch (NamingException e) {
-          logger.log(Level.SEVERE, "Could not find Environment bean.", e);
-          throw new IllegalStateException();
-        }
-        yarnConfDir = environmentVariableFacade.getValue("YARN_CONF_DIR");
-      }
-      //If still not found: throw exception
-      if (yarnConfDir == null) {
-        logger.log(Level.SEVERE, "No configuration path set!");
-        throw new IllegalStateException("No configuration path set.");
+        logger.log(Level.WARNING,"Environment variable YARN_CONF_DIR not found, using default "+Constants.DEFAULT_YARN_CONF_DIR);
+        yarnConfDir = Constants.DEFAULT_YARN_CONF_DIR;
       }
 
       //Get the configuration file at found path

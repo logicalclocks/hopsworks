@@ -26,5 +26,6 @@ public class Constants {
     
     public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH = "Cuneiform/Output/";
     
-    public static final String DEFAULT_CONF_PATH = "/srv/hadoop/etc/hadoop/";
+    public static final String DEFAULT_HADOOP_CONF_DIR = "/srv/hadoop/etc/hadoop/";
+    public static final String DEFAULT_YARN_CONF_DIR = "/srv/hadoop/etc/hadoop/";
 }

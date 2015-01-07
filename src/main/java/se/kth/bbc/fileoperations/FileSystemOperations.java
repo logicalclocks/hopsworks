@@ -100,8 +100,8 @@ public class FileSystemOperations {
     String coreConfDir = System.getenv("HADOOP_CONF_DIR");
     //If still not found: throw exception
     if (coreConfDir == null) {
-      logger.log(Level.WARNING, "No configuration path set, using default: "+Constants.DEFAULT_CONF_PATH);
-      coreConfDir = Constants.DEFAULT_CONF_PATH;
+      logger.log(Level.WARNING, "No configuration path set, using default: "+Constants.DEFAULT_HADOOP_CONF_DIR);
+      coreConfDir = Constants.DEFAULT_HADOOP_CONF_DIR;
     }
 
     //Get the configuration file at found path
@@ -113,7 +113,7 @@ public class FileSystemOperations {
       throw new IllegalStateException("No conf file");
     }
 
-    //Set the Configuration object for the returned YarnClient
+    //Set the Configuration object for the hdfs client
     Path yarnPath = new Path(confFile.getAbsolutePath());
     Configuration conf = new Configuration();
     conf.addResource(yarnPath);    
