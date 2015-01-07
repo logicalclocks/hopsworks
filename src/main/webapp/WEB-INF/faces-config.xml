@@ -93,6 +93,12 @@
         </navigation-case>
 
         <navigation-case>
+            <from-outcome>sec_question_changed</from-outcome>
+            <to-view-id>/security/sec_question_changed.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <navigation-case>
             <from-outcome>reset</from-outcome>
             <to-view-id>/security/reset.xhtml</to-view-id>
             <redirect/>

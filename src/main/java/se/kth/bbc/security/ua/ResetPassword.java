@@ -276,7 +276,6 @@ public class ResetPassword implements Serializable {
                 // send email    
                 String message = buildSecResetMessage();
                 emailBean.sendEmail(people.getEmail(), "BBC Profile Update", message);
-                this.answer ="";
                 return ("sec_question_changed");
             } else {
                 FacesContext context = FacesContext.getCurrentInstance();

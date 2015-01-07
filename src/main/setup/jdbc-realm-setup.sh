@@ -1,4 +1,4 @@
-#!/bin/sh
+l#!/bin/sh
 /home/x/.netbeans/7.1.2/config/GF3_1/bin/asaadmin create-auth-realm --classname com.sun.enterprise.security.auth.realm.jdbc.JDBCRealm --property jaas-context=jdbcRealm:datasource-jndi="jdbc/kthfs":user-table=users:user-name-column=email:password-column=password:group-table=users_groups:group-name-column=groupname:digest-algorithm=none userMgmtJdbcRealm
 #/home/glassfish/glassfish/glassfish3/bin/asaadmin create-auth-realm --classname com.sun.enterprise.security.auth.realm.jdbc.JDBCRealm --property jaas-context=jdbcRealm:datasource-jndi="jdbc/kthfs":user-table=users:user-name-column=email:password-column=password:group-table=users_groups:group-name-column=groupname:digest-algorithm=none userMgmtJdbcRealm
  
