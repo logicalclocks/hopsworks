@@ -20,9 +20,8 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.Address;
-import se.kth.bbc.security.ua.model.People;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.kthfsdashboard.user.Gravatar;
-import se.kth.kthfsdashboard.user.UserController;
 
 /**
  *
@@ -41,18 +40,18 @@ public class ProfileManager implements Serializable {
     private UserManager userManager;
 
     // for mobile users activation
-    private List<People> requests;
+    private List<User> requests;
 
     // for user activation
-    private List<People> yubikey_requests;
+    private List<User> yubikey_requests;
 
     // for yubikey administration page
-    private People selectedYubikyUser;
+    private User selectedYubikyUser;
 
-    private People user;
+    private User user;
     private Address address;
 
-    public People getUser() {
+    public User getUser() {
         if (user == null) {
             try {
                 user = userManager.findByEmail(getLoginName());
@@ -92,7 +91,7 @@ public class ProfileManager implements Serializable {
             email = getLoginName();
 
         } catch (IOException ex) {
-            Logger.getLogger(UserController.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null, ex);
             return DEFAULT_GRAVATAR;
         }
         String url = Gravatar.getUrl(email, 60);

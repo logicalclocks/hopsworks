@@ -35,8 +35,8 @@ import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.flink.FlinkRunner;
 import se.kth.bbc.lims.MessagesController;
-import se.kth.kthfsdashboard.user.UserFacade;
-import se.kth.kthfsdashboard.user.Username;
+import se.kth.bbc.security.ua.UserManager;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *
@@ -68,7 +68,7 @@ public class StudyMB implements Serializable {
     private StudyTeamController studyTeamController;
 
     @EJB
-    private UserFacade userFacade;
+    private UserManager userMgr;
 
     @EJB
     private UserGroupsController userGroupsController;
@@ -89,7 +89,7 @@ public class StudyMB implements Serializable {
     private ActivityMB activity;
 
     private TrackStudy study;
-    private List<Username> usernames;
+    private List<User> usernames;
     private StudyTeam studyTeamEntry;
     private List<Theme> selectedUsernames;
     private List<Theme> themes;
@@ -116,11 +116,11 @@ public class StudyMB implements Serializable {
         this.activity = activity;
     }
 
-    public List<Username> getUsersNameList() {
-        return userFacade.findAllUsers();
+    public List<User> getUsersNameList() {
+        return userMgr.findAllUsers();
     }
 
-    public List<Username> getUsersname() {
+    public List<User> getUsersname() {
         return usernames;
     }
 
@@ -213,11 +213,11 @@ public class StudyMB implements Serializable {
     }
 
     public List<Theme> addThemes() {
-        List<Username> list = userFacade.filterUsersBasedOnStudy(getStudyName());
+        List<User> list = userMgr.filterUsersBasedOnStudy(getStudyName());
         themes = new ArrayList<>();
         int i = 0;
-        for (Username user : list) {
-            themes.add(new Theme(i, user.getName(), user.getEmail()));
+        for (User user : list) {
+            themes.add(new Theme(i, user.getFname() + " " + user.getLname(), user.getEmail()));
             i++;
         }
 
@@ -563,10 +563,10 @@ public class StudyMB implements Serializable {
         List<UserGroup> groupedUsers = new ArrayList<>();
         StudyRoleTypes[] roles = StudyRoleTypes.values();
         for (StudyRoleTypes role : roles) {
-            List<Username> mems = studyTeamController.findTeamMembersByName(studyName, role.getTeam());
+            List<User> mems = studyTeamController.findTeamMembersByName(studyName, role.getTeam());
             if (!mems.isEmpty()) {
                 List<RoledUser> roleMems = new ArrayList<>();
-                for (Username u : mems) {
+                for (User u : mems) {
                     roleMems.add(new RoledUser(u.getEmail(), u.getName(), role));
                 }
                 groupedUsers.add(new UserGroup(role, roleMems));

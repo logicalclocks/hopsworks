@@ -14,7 +14,7 @@ import javax.faces.bean.RequestScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
-import se.kth.bbc.security.ua.model.People;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *
@@ -33,7 +33,7 @@ public class PeopleStatusBean implements Serializable{
     @EJB
     private UserManager userManager;
 
-    private People user;
+    private User user;
 
     public boolean isOpen_reauests() {
         return checkForRequests();
@@ -43,7 +43,7 @@ public class PeopleStatusBean implements Serializable{
         this.open_reauests = open_reauests;
     }
 
-    public People getUser() {
+    public User getUser() {
         if (user == null) {
             ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
             String userEmail = context.getUserPrincipal().getName();
@@ -73,7 +73,7 @@ public class PeopleStatusBean implements Serializable{
      * @return 
      */
     public boolean isSYSAdmin() {
-        People p = userManager.findByEmail(getRequest().getRemoteUser());
+        User p = userManager.findByEmail(getRequest().getRemoteUser());
         return userManager.findGroups(p.getUid()).contains("SYS_ADMIN");
     }
     
@@ -82,7 +82,7 @@ public class PeopleStatusBean implements Serializable{
      * @return 
      */
     public boolean isAdminUser(){
-        People p = userManager.findByEmail(getRequest().getRemoteUser());
+        User p = userManager.findByEmail(getRequest().getRemoteUser());
         List<String> roles = userManager.findGroups(p.getUid());
             
         return (roles.contains("SYS_ADMIN") || roles.contains("BBC_ADMIN"));
@@ -94,7 +94,7 @@ public class PeopleStatusBean implements Serializable{
      * @return 
      */
     public boolean isBBCAdmin() {
-        People p = userManager.findByEmail(getRequest().getRemoteUser());
+        User p = userManager.findByEmail(getRequest().getRemoteUser());
         return userManager.findGroups(p.getUid()).contains("BBC_ADMIN");    
     }
 
@@ -106,7 +106,7 @@ public class PeopleStatusBean implements Serializable{
     
     public boolean isAnyAuthorizedRole() {
 
-        People p = userManager.findByEmail(getRequest().getRemoteUser());
+        User p = userManager.findByEmail(getRequest().getRemoteUser());
         List<String> roles = userManager.findGroups(p.getUid());
         return  (roles.contains("SYS_ADMIN") || roles.contains("BBC_ADMIN") || roles.contains("BBC_USER")|| roles.contains("BBC_RESEARCHER") );
      }  

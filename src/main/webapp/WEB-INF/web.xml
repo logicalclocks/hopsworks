@@ -115,22 +115,6 @@
     </security-role>
     <security-constraint>
         <web-resource-collection>
-            <web-resource-name>Secured Content</web-resource-name>
-            <url-pattern>/sauron/*</url-pattern>
-        </web-resource-collection>
-        <auth-constraint>
-            <role-name>SYS_ADMIN</role-name>
-            <role-name>BBC_ADMIN</role-name>
-            <role-name>BBC_USER</role-name>
-        </auth-constraint>
-        <!-- we always want https! -->
-        <!--        <user-data-constraint>
-            <description>highest supported transport security level</description>
-            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint>-->
-    </security-constraint>
-    <security-constraint>
-        <web-resource-collection>
             <web-resource-name>Secured Content for agents sending alerts data</web-resource-name>
             <url-pattern>/rest/collectd/*</url-pattern>
         </web-resource-collection>

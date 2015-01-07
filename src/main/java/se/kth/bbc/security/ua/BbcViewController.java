@@ -8,7 +8,7 @@ import java.io.Serializable;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
-import se.kth.bbc.security.ua.model.People;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *   
@@ -21,7 +21,7 @@ public class BbcViewController implements Serializable{
 
     @EJB
     private UserManager um;
-    private People current_user;
+    private User current_user;
         
     public BbcViewController(){
         
@@ -66,11 +66,11 @@ public class BbcViewController implements Serializable{
         return um.findGroups(current_user.getUid()).contains("SYS_ADMIN");
     }
 
-    public People getCurrent_user() {
+    public User getCurrent_user() {
         return current_user;
     }
 
-    public void setCurrent_user(People current_user) {
+    public void setCurrent_user(User current_user) {
         this.current_user = current_user;
     }
     

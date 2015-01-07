@@ -30,7 +30,7 @@ import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.Address;
-import se.kth.bbc.security.ua.model.People;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.ua.model.Yubikey;
 
 /**
@@ -51,23 +51,23 @@ public class PeopleAministration implements Serializable {
     @EJB
     private EmailBean emailBean;
 
-    private People user;
+    private User user;
 
     private String sec_answer;
 
     Map<String, String> questions;
-    private List<People> filteredUsers;
-    private List<People> selectedUsers;
-    private List<People> allUsers;
+    private List<User> filteredUsers;
+    private List<User> selectedUsers;
+    private List<User> allUsers;
 
     // for mobile users activation
-    private List<People> requests;
+    private List<User> requests;
 
     // for user activation
-    private List<People> yubikey_requests;
+    private List<User> yubikey_requests;
 
     // for yubikey administration page
-    private People selectedYubikyUser;
+    private User selectedYubikyUser;
 
     private Address address;
 
@@ -104,13 +104,13 @@ public class PeopleAministration implements Serializable {
     // Yubikey public id. 12 chars: vviehlefjvcb
     private String pubid;
 
-    private People editingUser;
+    private User editingUser;
 
-    public People getEditingUser() {
+    public User getEditingUser() {
         return editingUser;
     }
 
-    public void setEditingUser(People editingUser) {
+    public void setEditingUser(User editingUser) {
         this.editingUser = editingUser;
     }
 
@@ -144,20 +144,20 @@ public class PeopleAministration implements Serializable {
         this.address = address;
     }
 
-    public List<People> getYubikey_requests() {
+    public List<User> getYubikey_requests() {
         return yubikey_requests;
     }
 
-    public void setYubikey_requests(List<People> yubikey_requests) {
+    public void setYubikey_requests(List<User> yubikey_requests) {
         this.yubikey_requests = yubikey_requests;
     }
 
-    public List<String> getUserRole(People p) {
+    public List<String> getUserRole(User p) {
         return userManager.findGroups(p.getUid());
     }
 
     
-    public int getChanged_status(People p) {
+    public int getChanged_status(User p) {
         return userManager.findByEmail(p.getEmail()).getStatus();
     }
 
@@ -169,11 +169,11 @@ public class PeopleAministration implements Serializable {
      return Integer.toString(userManager.findByEmail(p.getEmail()).getStatus());
      }
      */
-    public People getUser() {
+    public User getUser() {
         return user;
     }
 
-    public void setUser(People user) {
+    public void setUser(User user) {
         this.user = user;
     }
 
@@ -243,26 +243,26 @@ public class PeopleAministration implements Serializable {
         // current_groups = getCurrent_groups();
     }
 
-    public void setFilteredUsers(List<People> filteredUsers) {
+    public void setFilteredUsers(List<User> filteredUsers) {
         this.filteredUsers = filteredUsers;
     }
 
-    public List<People> getFilteredUsers() {
+    public List<User> getFilteredUsers() {
         return filteredUsers;
     }
 
-    public List<People> getAllUsers() {
+    public List<User> getAllUsers() {
         if (allUsers == null) {
             allUsers = userManager.findAllUsers();
         }
         return allUsers;
     }
 
-    public List<People> getUsersNameList() {
+    public List<User> getUsersNameList() {
         return userManager.findAllUsers();
     }
 
-    public List<People> getAllUsersName() {
+    public List<User> getAllUsersName() {
         return userManager.findAllByName();
     }
 
@@ -270,15 +270,15 @@ public class PeopleAministration implements Serializable {
         return groups;
     }
 
-    public People getSelectedUser() {
+    public User getSelectedUser() {
         return user;
     }
 
-    public void setSelectedUser(People user) {
+    public void setSelectedUser(User user) {
         this.user = user;
     }
 
-    public void rejectUser(People user1) throws MessagingException {
+    public void rejectUser(User user1) throws MessagingException {
 
         if (user1 == null) {
             MessagesController.addErrorMessage("Error", "Null user!");
@@ -318,7 +318,7 @@ public class PeopleAministration implements Serializable {
         Principal principal = request.getUserPrincipal();
 
         try {
-            People p = userManager.findByEmail(principal.getName());
+            User p = userManager.findByEmail(principal.getName());
             if (p != null) {
                 return p.getFname() + " " + p.getLname();
             } else {
@@ -337,7 +337,7 @@ public class PeopleAministration implements Serializable {
      *
      * @return
      */
-    public List<People> getAllRequests() {
+    public List<User> getAllRequests() {
         if (requests == null) {
             requests = userManager.findAllByStatus(AccountStatus.MOBILE_ACCOUNT_INACTIVE);
         }
@@ -349,18 +349,18 @@ public class PeopleAministration implements Serializable {
      *
      * @return
      */
-    public List<People> getAllYubikeyRequests() {
+    public List<User> getAllYubikeyRequests() {
         if (yubikey_requests == null) {
             yubikey_requests = userManager.findAllByStatus(AccountStatus.YUBIKEY_ACCOUNT_INACTIVE);
         }
         return yubikey_requests;
     }
 
-    public List<People> getSelectedUsers() {
+    public List<User> getSelectedUsers() {
         return selectedUsers;
     }
 
-    public void setSelectedUsers(List<People> users) {
+    public void setSelectedUsers(List<User> users) {
         this.selectedUsers = users;
     }
 
@@ -369,14 +369,14 @@ public class PeopleAministration implements Serializable {
      *
      * @param user1
      */
-    public void activateUser(People user1) throws MessagingException {
+    public void activateUser(User user1) throws MessagingException {
         userManager.updateGroup(user1.getUid(), Integer.parseInt(selected_group));
         userManager.updateStatus(user1.getUid(), AccountStatus.ACCOUNT_ACTIVE);
         emailBean.sendEmail(user1.getEmail(), "BBC account", accountActivatedMessage(user1.getEmail()));
         requests.remove(user1);
     }
 
-    public String activateYubikeyUser(People user1) {
+    public String activateYubikeyUser(User user1) {
         userManager.updateGroup(user1.getUid(), Integer.parseInt(selected_group));
         userManager.updateStatus(user1.getUid(), AccountStatus.ACCOUNT_ACTIVE);
         selectedYubikyUser = user1;
@@ -392,13 +392,13 @@ public class PeopleAministration implements Serializable {
      * @param user1
      * @throws javax.mail.MessagingException
      */
-    public void blockUser(People user1) throws MessagingException {
+    public void blockUser(User user1) throws MessagingException {
         userManager.updateStatus(user1.getUid(), AccountStatus.ACCOUNT_BLOCKED);
         emailBean.sendEmail(user1.getEmail(), "Account Blocked", accountBlockedMessage());
         requests.remove(user1);
     }
 
-    public String modifyUser(People user1) {
+    public String modifyUser(User user1) {
         this.editingUser = user1;
         this.address = userManager.findAddress(user1.getUid());
         return "admin_profile";
@@ -408,11 +408,11 @@ public class PeopleAministration implements Serializable {
         return sec_answer;
     }
 
-    public People getSelectedYubikyUser() {
+    public User getSelectedYubikyUser() {
         return selectedYubikyUser;
     }
 
-    public void setSelectedYubikyUser(People selectedYubikyUser) {
+    public void setSelectedYubikyUser(User selectedYubikyUser) {
         this.selectedYubikyUser = selectedYubikyUser;
     }
 

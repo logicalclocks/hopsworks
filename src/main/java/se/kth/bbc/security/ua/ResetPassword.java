@@ -19,7 +19,7 @@ import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import se.kth.bbc.security.ua.model.People;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *
@@ -40,7 +40,7 @@ public class ResetPassword implements Serializable {
 
     private String answer;
     private String question;
-    private People people;
+    private User people;
     @EJB
     private UserManager mgr;
     @EJB
@@ -63,11 +63,11 @@ public class ResetPassword implements Serializable {
         this.current = current;
     }
 
-    public People getPeople() {
+    public User getPeople() {
         return people;
     }
 
-    public void setPeople(People people) {
+    public void setPeople(User people) {
         this.people = people;
     }
 

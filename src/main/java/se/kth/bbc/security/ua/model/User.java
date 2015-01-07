@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package se.kth.bbc.security.ua.model;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -14,44 +14,41 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  *
- * @author Ali Gholami <gholami@pdc.kth.se>
+ * @author jdowling
  */
 @Entity
-@Table(name = "People")
+@Table(name = "USERS")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "People.findAll", query = "SELECT p FROM People p"),
-    @NamedQuery(name = "People.findByUid", query = "SELECT p FROM People p WHERE p.uid = :uid"),
-    @NamedQuery(name = "People.findByUsername", query = "SELECT p FROM People p WHERE p.username = :username"),
-    @NamedQuery(name = "People.findByPassword", query = "SELECT p FROM People p WHERE p.password = :password"),
-    @NamedQuery(name = "People.findByEmail", query = "SELECT p FROM People p WHERE p.email = :email"),
-    @NamedQuery(name = "People.findByFname", query = "SELECT p FROM People p WHERE p.fname = :fname"),
-    @NamedQuery(name = "People.findByLname", query = "SELECT p FROM People p WHERE p.lname = :lname"),
-    @NamedQuery(name = "People.findByActivated", query = "SELECT p FROM People p WHERE p.activated = :activated"),
-    @NamedQuery(name = "People.findByHomeOrg", query = "SELECT p FROM People p WHERE p.homeOrg = :homeOrg"),
-    @NamedQuery(name = "People.findByTitle", query = "SELECT p FROM People p WHERE p.title = :title"),
-    @NamedQuery(name = "People.findByMobile", query = "SELECT p FROM People p WHERE p.mobile = :mobile"),
-    @NamedQuery(name = "People.findByOrcid", query = "SELECT p FROM People p WHERE p.orcid = :orcid"),
-    @NamedQuery(name = "People.findByFalseLogin", query = "SELECT p FROM People p WHERE p.falseLogin = :falseLogin"),
-    @NamedQuery(name = "People.findByStatus", query = "SELECT p FROM People p WHERE p.status = :status"),
-    @NamedQuery(name = "People.findByIsonline", query = "SELECT p FROM People p WHERE p.isonline = :isonline"),
-    @NamedQuery(name = "People.findBySecret", query = "SELECT p FROM People p WHERE p.secret = :secret"),
-    @NamedQuery(name = "People.findBySecurityQuestion", query = "SELECT p FROM People p WHERE p.securityQuestion = :securityQuestion"),
-    @NamedQuery(name = "People.findBySecurityAnswer", query = "SELECT p FROM People p WHERE p.securityAnswer = :securityAnswer"),
-    @NamedQuery(name = "People.findByYubikeyUser", query = "SELECT p FROM People p WHERE p.yubikeyUser = :yubikeyUser")})
-public class People implements Serializable {
+    @NamedQuery(name = "User.findAll", query = "SELECT u FROM User u"),
+    @NamedQuery(name = "User.findByUid", query = "SELECT u FROM User u WHERE u.uid = :uid"),
+    @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username"),
+    @NamedQuery(name = "User.findByPassword", query = "SELECT u FROM User u WHERE u.password = :password"),
+    @NamedQuery(name = "User.findByEmail", query = "SELECT u FROM User u WHERE u.email = :email"),
+    @NamedQuery(name = "User.findByFname", query = "SELECT u FROM User u WHERE u.fname = :fname"),
+    @NamedQuery(name = "User.findByLname", query = "SELECT u FROM User u WHERE u.lname = :lname"),
+    @NamedQuery(name = "User.findByActivated", query = "SELECT u FROM User u WHERE u.activated = :activated"),
+    @NamedQuery(name = "User.findByHomeOrg", query = "SELECT u FROM User u WHERE u.homeOrg = :homeOrg"),
+    @NamedQuery(name = "User.findByTitle", query = "SELECT u FROM User u WHERE u.title = :title"),
+    @NamedQuery(name = "User.findByMobile", query = "SELECT u FROM User u WHERE u.mobile = :mobile"),
+    @NamedQuery(name = "User.findByOrcid", query = "SELECT u FROM User u WHERE u.orcid = :orcid"),
+    @NamedQuery(name = "User.findByFalseLogin", query = "SELECT u FROM User u WHERE u.falseLogin = :falseLogin"),
+    @NamedQuery(name = "User.findByStatus", query = "SELECT u FROM User u WHERE u.status = :status"),
+    @NamedQuery(name = "User.findByIsonline", query = "SELECT u FROM User u WHERE u.isonline = :isonline"),
+    @NamedQuery(name = "User.findBySecret", query = "SELECT u FROM User u WHERE u.secret = :secret"),
+    @NamedQuery(name = "User.findBySecurityQuestion", query = "SELECT u FROM User u WHERE u.securityQuestion = :securityQuestion"),
+    @NamedQuery(name = "User.findBySecurityAnswer", query = "SELECT u FROM User u WHERE u.securityAnswer = :securityAnswer"),
+    @NamedQuery(name = "User.findByYubikeyUser", query = "SELECT u FROM User u WHERE u.yubikeyUser = :yubikeyUser")})
+public class User implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -118,17 +115,15 @@ public class People implements Serializable {
     private String securityAnswer;
     @Column(name = "yubikey_user")
     private Short yubikeyUser;
-    @OneToMany(mappedBy = "peopleuid")
-    private Collection<Login> loginCollection;
 
-    public People() {
+    public User() {
     }
 
-    public People(Integer uid) {
+    public User(Integer uid) {
         this.uid = uid;
     }
 
-    public People(Integer uid, String username, String password, Date activated, int falseLogin, int status, int isonline) {
+    public User(Integer uid, String username, String password, Date activated, int falseLogin, int status, int isonline) {
         this.uid = uid;
         this.username = username;
         this.password = password;
@@ -281,16 +276,11 @@ public class People implements Serializable {
     public void setYubikeyUser(Short yubikeyUser) {
         this.yubikeyUser = yubikeyUser;
     }
-
-    @XmlTransient
-    @JsonIgnore
-    public Collection<Login> getLoginCollection() {
-        return loginCollection;
+    
+    public String getName() {
+        return getFname() + " " + getLname();
     }
-
-    public void setLoginCollection(Collection<Login> loginCollection) {
-        this.loginCollection = loginCollection;
-    }
+    
 
     @Override
     public int hashCode() {
@@ -302,10 +292,10 @@ public class People implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof People)) {
+        if (!(object instanceof User)) {
             return false;
         }
-        People other = (People) object;
+        User other = (User) object;
         if ((this.uid == null && other.uid != null) || (this.uid != null && !this.uid.equals(other.uid))) {
             return false;
         }
@@ -314,7 +304,7 @@ public class People implements Serializable {
 
     @Override
     public String toString() {
-        return "se.kth.bbc.security.ua.model.People[ uid=" + uid + " ]";
+        return "se.kth.bbc.security.ua.model.User[ uid=" + uid + " ]";
     }
     
 }

@@ -18,7 +18,7 @@ import org.primefaces.context.RequestContext;
 import se.kth.bbc.security.ua.AccountStatus;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.security.ua.model.People;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *
@@ -42,7 +42,7 @@ public class CustomAuthentication implements Serializable {
     private String username;
     private String password;
     private String otpCode;
-    private People user;
+    private User user;
     private int userid;
 
     public String getUsername() {

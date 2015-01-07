@@ -13,7 +13,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import se.kth.kthfsdashboard.user.Username;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *
@@ -49,8 +49,8 @@ public class StudyTeamController {
      * @param role
      * @return 
      */
-    public List<Username> findTeamMembersByName(String name, String role){
-        Query query = em.createNativeQuery("SELECT NAME, EMAIL FROM USERS WHERE EMAIL IN (SELECT team_member FROM StudyTeam WHERE name=? AND team_role=?)" , Username.class)
+    public List<User> findTeamMembersByName(String name, String role){
+        Query query = em.createNativeQuery("SELECT NAME, EMAIL FROM USERS WHERE EMAIL IN (SELECT team_member FROM StudyTeam WHERE name=? AND team_role=?)" , User.class)
                     .setParameter(1, name).setParameter(2, role);
         return query.getResultList();
     

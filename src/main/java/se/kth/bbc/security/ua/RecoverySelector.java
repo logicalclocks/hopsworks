@@ -21,7 +21,7 @@ import javax.mail.MessagingException;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
-import se.kth.bbc.security.ua.model.People;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *
@@ -39,7 +39,7 @@ public class RecoverySelector implements Serializable {
     @EJB
     private EmailBean email;
 
-    private People people;
+    private User people;
 
     private String console;
 

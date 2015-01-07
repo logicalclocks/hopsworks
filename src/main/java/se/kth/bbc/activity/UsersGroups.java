@@ -15,7 +15,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.kthfsdashboard.user.Username;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *
@@ -36,7 +36,7 @@ public class UsersGroups implements Serializable {
     protected UsersGroupsPK usersGroupsPK;
     @JoinColumn(name = "email", referencedColumnName = "EMAIL", insertable = false, updatable = false)
     @ManyToOne(optional = false)
-    private Username username;
+    private User username;
 
     public UsersGroups() {
     }
@@ -57,11 +57,11 @@ public class UsersGroups implements Serializable {
         this.usersGroupsPK = usersGroupsPK;
     }
 
-    public Username getUsername() {
+    public User getUsername() {
         return username;
     }
 
-    public void setUsername(Username username) {
+    public void setUsername(User username) {
         this.username = username;
     }
 

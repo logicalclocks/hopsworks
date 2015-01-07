@@ -2,7 +2,7 @@
 <persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
   <persistence-unit name="kthfsPU" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-    <jta-data-source>jdbc/kthfs</jta-data-source>
+    <jta-data-source>jdbc/lims</jta-data-source>
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
@@ -12,9 +12,8 @@
       <property name="eclipselink.jpa.uppercase-column-names" value="true"/>
     </properties>
   </persistence-unit>
-  <!-- <persistence-unit name="ndb" transaction-type="JTA">
+  <persistence-unit name="ndb" transaction-type="JTA">
     <jta-data-source>jndi/hop</jta-data-source>
     <properties/>
   </persistence-unit>
-  -->
 </persistence>

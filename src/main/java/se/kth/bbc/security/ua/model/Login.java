@@ -57,7 +57,7 @@ public class Login implements Serializable {
     private Date logout;
     @JoinColumn(name = "People_uid", referencedColumnName = "uid")
     @ManyToOne
-    private People peopleuid;
+    private User peopleuid;
 
     public Login() {
     }
@@ -106,11 +106,11 @@ public class Login implements Serializable {
         this.logout = logout;
     }
 
-    public People getPeopleuid() {
+    public User getPeopleuid() {
         return peopleuid;
     }
 
-    public void setPeopleuid(People peopleuid) {
+    public void setPeopleuid(User peopleuid) {
         this.peopleuid = peopleuid;
     }
 

@@ -16,7 +16,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
 import javax.servlet.http.HttpServletRequest;
-import se.kth.bbc.security.ua.model.People;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *
@@ -57,7 +57,7 @@ public class UsernameValidator implements Validator {
 
             // if it's a profile change ignore 
             if (getRequest().getRemoteUser() != null) {
-                People p = mgr.findByEmail(getRequest().getRemoteUser());
+                User p = mgr.findByEmail(getRequest().getRemoteUser());
                 if (p.getEmail().equals(uname)) {
                     ;
                 } else {
