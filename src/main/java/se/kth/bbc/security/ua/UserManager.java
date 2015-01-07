@@ -243,7 +243,7 @@ public class UserManager {
      */
     public User getUser(String username) {
         List existing = em.createQuery(
-                "SELECT p FROM USERS p WHERE p.email ='" + username + "'")
+                "SELECT p FROM User p WHERE p.email ='" + username + "'")
                 .getResultList();
 
         if (existing.size() > 0) {
@@ -254,14 +254,14 @@ public class UserManager {
 
     public boolean isUsernameTaken(String username) {
         List existing = em.createQuery(
-                "SELECT p FROM USERS p WHERE p.email ='" + username + "'")
+                "SELECT p FROM User p WHERE p.email ='" + username + "'")
                 .getResultList();
         return (existing.size() > 0);
     }
 
     public boolean findYubikeyUsersByStatus(int status) {
         List existing = em.createQuery(
-                "SELECT p FROM USERS p WHERE p.status ='" + AccountStatus.MOBILE_ACCOUNT_INACTIVE + "' AND p.yubikey_user = " + status)
+                "SELECT p FROM User p WHERE p.status ='" + AccountStatus.MOBILE_ACCOUNT_INACTIVE + "' AND p.yubikey_user = " + status)
                 .getResultList();
         return (existing.size() > 0);
     }
