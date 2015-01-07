@@ -316,7 +316,7 @@ public class PeopleAministration implements Serializable {
         try {
             User p = userManager.findByEmail(principal.getName());
             if (p != null) {
-                return p.getFname() + " " + p.getLname();
+                return p.getName();
             } else {
                 return principal.getName();
             }

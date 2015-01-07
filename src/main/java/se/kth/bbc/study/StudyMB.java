@@ -217,7 +217,7 @@ public class StudyMB implements Serializable {
         themes = new ArrayList<>();
         int i = 0;
         for (User user : list) {
-            themes.add(new Theme(i, user.getFname() + " " + user.getLname(), user.getEmail()));
+            themes.add(new Theme(i, user.getName(), user.getEmail()));
             i++;
         }
 
