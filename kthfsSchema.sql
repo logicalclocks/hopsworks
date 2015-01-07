@@ -37,53 +37,6 @@ CREATE TABLE `Address` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Address`
---
-
-LOCK TABLES `Address` WRITE;
-/*!40000 ALTER TABLE `Address` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Address` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Alerts`
---
-
-DROP TABLE IF EXISTS `Alerts`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Alerts` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `CURRENTVALUE` varchar(32) DEFAULT NULL,
-  `FAILUREMAX` varchar(32) DEFAULT NULL,
-  `FAILUREMIN` varchar(32) DEFAULT NULL,
-  `WARNINGMAX` varchar(32) DEFAULT NULL,
-  `WARNINGMIN` varchar(32) DEFAULT NULL,
-  `AGENTTIME` bigint(20) DEFAULT NULL,
-  `ALERTTIME` datetime DEFAULT NULL,
-  `DATASOURCE` varchar(128) DEFAULT NULL,
-  `HOSTID` varchar(256) DEFAULT NULL,
-  `MESSAGE` varchar(1024) NOT NULL,
-  `PLUGIN` varchar(128) DEFAULT NULL,
-  `PLUGININSTANCE` varchar(128) DEFAULT NULL,
-  `PROVIDER` int(11) DEFAULT NULL,
-  `SEVERITY` int(11) DEFAULT NULL,
-  `TYPE` varchar(128) DEFAULT NULL,
-  `TYPEINSTANCE` varchar(128) DEFAULT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Alerts`
---
-
-LOCK TABLES `Alerts` WRITE;
-/*!40000 ALTER TABLE `Alerts` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Alerts` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `COLLECTION_TYPES`
 --
 
@@ -100,71 +53,6 @@ CREATE TABLE `COLLECTION_TYPES` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `COLLECTION_TYPES`
---
-
-LOCK TABLES `COLLECTION_TYPES` WRITE;
-/*!40000 ALTER TABLE `COLLECTION_TYPES` DISABLE KEYS */;
-INSERT INTO `COLLECTION_TYPES` VALUES (1,'Case-control','A case-control study design compares two groups of subjects: those with the disease or condition under study (cases) and a very similar group of subjects who do not have the disease or condition (controls).'),(2,'Cohort','A form of longitudinal study for the analysis of risk factors following a group of people who do not have a disease, and uses correlations to determine the absolute risk of subject contraction.'),(3,'Cross-sectional','A type of observational study that involves data collection from a population, or a representative subset, at one specific point in time.'),(4,'Longitudinal','Research studies involving repeated observations of the same entity over time. In the biobank context, longitudinal studies sample a group of people in a given time period, and study them at intervals by the acquisition and analyses of data and/or samples over time.'),(5,'Twin-study','Twin studies measure the contribution of genetics (as opposed to environment) to a given trait or condition of interest.'),(6,'Quality control','A quality control testing study design type is where some aspect of the experiment is quality controlled for the purposes of quality assurance.'),(7,'Population-based','Study done at the population level or among the population groups, generally to find the cause, incidence or spread of the disease or to see the response to the treatment, nutrition or environment.'),(8,'Disease specific','A study or biobank for which material and information is collected from subjects that have already developed a particular disease.'),(9,'Birth cohort','A corhort study for which the subjects are followed from the time of birth usually including information about gestation and follow up.'),(10,'Other',NULL);
-/*!40000 ALTER TABLE `COLLECTION_TYPES` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `ClusterEntities`
---
-
-DROP TABLE IF EXISTS `ClusterEntities`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `ClusterEntities` (
-  `ID` bigint(20) NOT NULL,
-  `CLUSTERNAME` varchar(255) DEFAULT NULL,
-  `CLUSTERTYPE` varchar(255) DEFAULT NULL,
-  `YAMLCONTENT` text,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `ClusterEntities`
---
-
-LOCK TABLES `ClusterEntities` WRITE;
-/*!40000 ALTER TABLE `ClusterEntities` DISABLE KEYS */;
-/*!40000 ALTER TABLE `ClusterEntities` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Commands`
---
-
-DROP TABLE IF EXISTS `Commands`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Commands` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `CLUSTER` varchar(48) NOT NULL,
-  `COMMAND` varchar(256) NOT NULL,
-  `END_TIME` datetime DEFAULT NULL,
-  `HOSTID` varchar(128) NOT NULL,
-  `ROLE_` varchar(48) NOT NULL,
-  `SERVICE` varchar(48) NOT NULL,
-  `START_TIME` datetime DEFAULT NULL,
-  `STATUS` int(11) DEFAULT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Commands`
---
-
-LOCK TABLES `Commands` WRITE;
-/*!40000 ALTER TABLE `Commands` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Commands` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `Env_vars`
 --
 
@@ -177,50 +65,6 @@ CREATE TABLE `Env_vars` (
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Env_vars`
---
-
-LOCK TABLES `Env_vars` WRITE;
-/*!40000 ALTER TABLE `Env_vars` DISABLE KEYS */;
-INSERT INTO `Env_vars` VALUES ('HADOOP_CLASSPATH','/home/stig/cuneiform/hadoop-2.4.0/etc/hadoop:/home/stig/cuneiform/hadoop-2.4.0/share/hadoop/common/lib/*:/home/stig/cuneiform/hadoop-2.4.0/share/hadoop/common/*:/home/stig/cuneiform/hadoop-2.4.0/share/hadoop/hdfs:/home/stig/cuneiform/hadoop-2.4.0/share/hadoop/hdfs/lib/*:/home/stig/cuneiform/hadoop-2.4.0/share/hadoop/hdfs/*:/home/stig/cuneiform/hadoop-2.4.0/share/hadoop/yarn/lib/*:/home/stig/cuneiform/hadoop-2.4.0/share/hadoop/yarn/*:/home/stig/cuneiform/hadoop-2.4.0/share/hadoop/mapreduce/lib/*:/home/stig/cuneiform/hadoop-2.4.0/share/hadoop/mapreduce/*:/home/stig/cuneiform/hadoop-2.4.0/contrib/capacity-scheduler/*.jar'),('YARN_CONF_DIR','/home/stig/projects/hadoop-2.4.0/etc/hadoop');
-/*!40000 ALTER TABLE `Env_vars` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Graphs`
---
-
-DROP TABLE IF EXISTS `Graphs`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Graphs` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `CHARTS` longblob,
-  `GRAPHID` varchar(64) NOT NULL,
-  `GROUP_` varchar(64) NOT NULL,
-  `GROUPRANK` int(11) DEFAULT NULL,
-  `PLUGIN` varchar(48) DEFAULT NULL,
-  `PLUGININSTANCE` varchar(48) DEFAULT NULL,
-  `RANK` int(11) DEFAULT NULL,
-  `SELECTED` tinyint(1) DEFAULT '0',
-  `TARGET` varchar(64) NOT NULL,
-  `TITLE` varchar(48) DEFAULT NULL,
-  `VAR` varchar(64) DEFAULT NULL,
-  `VERTICALLABEL` varchar(64) DEFAULT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Graphs`
---
-
-LOCK TABLES `Graphs` WRITE;
-/*!40000 ALTER TABLE `Graphs` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Graphs` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `Group`
@@ -236,50 +80,6 @@ CREATE TABLE `Group` (
   PRIMARY KEY (`gid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Group`
---
-
-LOCK TABLES `Group` WRITE;
-/*!40000 ALTER TABLE `Group` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Group` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Hosts`
---
-
-DROP TABLE IF EXISTS `Hosts`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Hosts` (
-  `HOSTID` varchar(128) NOT NULL,
-  `CORES` int(11) DEFAULT NULL,
-  `DISKCAPACITY` bigint(20) DEFAULT NULL,
-  `DISKUSED` bigint(20) DEFAULT NULL,
-  `HOSTNAME_` varchar(128) NOT NULL,
-  `LASTHEARTBEAT` bigint(20) DEFAULT NULL,
-  `LOAD1` double DEFAULT NULL,
-  `LOAD15` double DEFAULT NULL,
-  `LOAD5` double DEFAULT NULL,
-  `MEMORYCAPACITY` bigint(20) DEFAULT NULL,
-  `MEMORYUSED` bigint(20) DEFAULT NULL,
-  `PRIVATEIP` varchar(15) DEFAULT NULL,
-  `PUBLICIP` varchar(15) DEFAULT NULL,
-  `REGISTERED` tinyint(1) DEFAULT '0',
-  PRIMARY KEY (`HOSTID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Hosts`
---
-
-LOCK TABLES `Hosts` WRITE;
-/*!40000 ALTER TABLE `Hosts` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Hosts` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `Inodes`
@@ -302,48 +102,8 @@ CREATE TABLE `Inodes` (
   KEY `pid_2` (`pid`,`isDir`),
   KEY `name` (`name`),
   CONSTRAINT `Inodes_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `Inodes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=311 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=419 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Inodes`
---
-
-LOCK TABLES `Inodes` WRITE;
-/*!40000 ALTER TABLE `Inodes` DISABLE KEYS */;
-INSERT INTO `Inodes` VALUES (12,'Projects',NULL,'2014-10-23 12:07:44',1,0,'available'),(294,'Test',12,'2014-12-11 10:21:12',1,0,'available'),(295,'Results',294,'2014-12-11 10:21:12',1,0,'available'),(296,'Cuneiform',294,'2014-12-11 10:21:12',1,0,'available'),(297,'Samples',294,'2014-12-11 10:21:12',1,0,'available'),(298,'Custom',12,'2014-12-11 10:21:27',1,0,'available'),(299,'Results',298,'2014-12-11 10:21:27',1,0,'available'),(300,'Cuneiform',298,'2014-12-11 10:21:27',1,0,'available');
-/*!40000 ALTER TABLE `Inodes` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Jobs`
---
-
-DROP TABLE IF EXISTS `Jobs`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Jobs` (
-  `ID` bigint(20) NOT NULL,
-  `COMPLETED` tinyint(1) DEFAULT '0',
-  `COMPLETIONTIME` bigint(20) DEFAULT NULL,
-  `DATERUN` varchar(255) DEFAULT NULL,
-  `EXECUTEDBY` varchar(255) DEFAULT NULL,
-  `GRAPHDOT` text,
-  `NAME` varchar(255) DEFAULT NULL,
-  `TABLEJOB` text,
-  `UNIQUEID` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Jobs`
---
-
-LOCK TABLES `Jobs` WRITE;
-/*!40000 ALTER TABLE `Jobs` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Jobs` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `Login`
@@ -365,75 +125,6 @@ CREATE TABLE `Login` (
   CONSTRAINT `fk_login_people` FOREIGN KEY (`People_uid`) REFERENCES `People` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Login`
---
-
-LOCK TABLES `Login` WRITE;
-/*!40000 ALTER TABLE `Login` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Login` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `NodeProgress`
---
-
-DROP TABLE IF EXISTS `NodeProgress`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `NodeProgress` (
-  `ID` bigint(20) NOT NULL,
-  `CLUSTER` varchar(255) DEFAULT NULL,
-  `IP` varchar(255) DEFAULT NULL,
-  `LOGINUSER` varchar(255) DEFAULT NULL,
-  `NODEID` varchar(255) DEFAULT NULL,
-  `NODEROLE` varchar(255) DEFAULT NULL,
-  `PHASE` varchar(255) DEFAULT NULL,
-  `PREVIOUSPHASE` varchar(255) DEFAULT NULL,
-  `PRIVATEKEY` text,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `NodeProgress`
---
-
-LOCK TABLES `NodeProgress` WRITE;
-/*!40000 ALTER TABLE `NodeProgress` DISABLE KEYS */;
-/*!40000 ALTER TABLE `NodeProgress` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `PaasCredentials`
---
-
-DROP TABLE IF EXISTS `PaasCredentials`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `PaasCredentials` (
-  `ID` bigint(20) NOT NULL,
-  `ACCESSKEY` varchar(255) DEFAULT NULL,
-  `ACCOUNTID` varchar(255) DEFAULT NULL,
-  `DASHBOARDIP` varchar(255) DEFAULT NULL,
-  `EMAIL` varchar(255) DEFAULT NULL,
-  `KEYSTONEURL` varchar(255) DEFAULT NULL,
-  `PRIVATEKEY` text,
-  `PROVIDER` varchar(255) DEFAULT NULL,
-  `PUBLICKEY` text,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `PaasCredentials`
---
-
-LOCK TABLES `PaasCredentials` WRITE;
-/*!40000 ALTER TABLE `PaasCredentials` DISABLE KEYS */;
-/*!40000 ALTER TABLE `PaasCredentials` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `People`
@@ -465,16 +156,6 @@ CREATE TABLE `People` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `People`
---
-
-LOCK TABLES `People` WRITE;
-/*!40000 ALTER TABLE `People` DISABLE KEYS */;
-INSERT INTO `People` VALUES (10001,'meb10001','d7e6ee64d871d3fdfc6e5acb6f83a60f7c1c273ac1d35ec740f1a6e1ca42f548','stigviaene@sics.se','Stig','Viaene','2014-12-08 10:37:54',NULL,NULL,'0123456789',NULL,0,-1,-1,'GDRZ7FEOIOWMSDSE','history','d30af076b0dc85cc5b0074b403f74770b73af84a70c2f77f7a3609d0db23112e');
-/*!40000 ALTER TABLE `People` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `People_Group`
 --
 
@@ -492,15 +173,6 @@ CREATE TABLE `People_Group` (
   CONSTRAINT `fk_people` FOREIGN KEY (`uid`) REFERENCES `People` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `People_Group`
---
-
-LOCK TABLES `People_Group` WRITE;
-/*!40000 ALTER TABLE `People_Group` DISABLE KEYS */;
-/*!40000 ALTER TABLE `People_Group` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `Roles`
@@ -524,39 +196,6 @@ CREATE TABLE `Roles` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Roles`
---
-
-LOCK TABLES `Roles` WRITE;
-/*!40000 ALTER TABLE `Roles` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Roles` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `SEQUENCE`
---
-
-DROP TABLE IF EXISTS `SEQUENCE`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `SEQUENCE` (
-  `SEQ_NAME` varchar(50) NOT NULL,
-  `SEQ_COUNT` decimal(38,0) DEFAULT NULL,
-  PRIMARY KEY (`SEQ_NAME`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `SEQUENCE`
---
-
-LOCK TABLES `SEQUENCE` WRITE;
-/*!40000 ALTER TABLE `SEQUENCE` DISABLE KEYS */;
-INSERT INTO `SEQUENCE` VALUES ('SEQ_GEN',0);
-/*!40000 ALTER TABLE `SEQUENCE` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `STUDY_GROUPS`
 --
 
@@ -569,50 +208,6 @@ CREATE TABLE `STUDY_GROUPS` (
   PRIMARY KEY (`email`,`groupname`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `STUDY_GROUPS`
---
-
-LOCK TABLES `STUDY_GROUPS` WRITE;
-/*!40000 ALTER TABLE `STUDY_GROUPS` DISABLE KEYS */;
-/*!40000 ALTER TABLE `STUDY_GROUPS` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Samples`
---
-
-DROP TABLE IF EXISTS `Samples`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Samples` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `DATAADMINSTRATOR` longblob,
-  `DESCRIPTION` varchar(1024) DEFAULT NULL,
-  `DIAGNOSIS` longblob,
-  `ENGLISHNAME` varchar(512) DEFAULT NULL,
-  `LASTUPDATED` datetime DEFAULT NULL,
-  `ORGANIZATION` varchar(512) DEFAULT NULL,
-  `OTHERINFORMATION` varchar(1024) DEFAULT NULL,
-  `RESPONSIBLE` varchar(512) DEFAULT NULL,
-  `SAMPLECOLLECTION` longblob,
-  `SAMPLEDONORS` longblob,
-  `SAMPLES` longblob,
-  `STUDY` longblob,
-  `SWEDISHNAME` varchar(512) DEFAULT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Samples`
---
-
-LOCK TABLES `Samples` WRITE;
-/*!40000 ALTER TABLE `Samples` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Samples` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Temporary view structure for view `StudyDetails`
@@ -644,15 +239,6 @@ CREATE TABLE `StudyRoles` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `StudyRoles`
---
-
-LOCK TABLES `StudyRoles` WRITE;
-/*!40000 ALTER TABLE `StudyRoles` DISABLE KEYS */;
-/*!40000 ALTER TABLE `StudyRoles` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `StudyTeam`
 --
 
@@ -670,16 +256,6 @@ CREATE TABLE `StudyTeam` (
   CONSTRAINT `fk_study_studyTeam` FOREIGN KEY (`name`) REFERENCES `study` (`name`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `StudyTeam`
---
-
-LOCK TABLES `StudyTeam` WRITE;
-/*!40000 ALTER TABLE `StudyTeam` DISABLE KEYS */;
-INSERT INTO `StudyTeam` VALUES ('Custom','faramir.steward@gondor.me','Researcher','2014-12-12 10:34:58'),('Custom','jdowling@sics.se','Master','2014-12-11 10:21:27'),('Test','jdowling@sics.se','Master','2014-12-11 10:21:12');
-/*!40000 ALTER TABLE `StudyTeam` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `USERS`
@@ -701,16 +277,6 @@ CREATE TABLE `USERS` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `USERS`
---
-
-LOCK TABLES `USERS` WRITE;
-/*!40000 ALTER TABLE `USERS` DISABLE KEYS */;
-INSERT INTO `USERS` VALUES ('aragorn@whitree.go','0123456789','Aragorn Arathornson','61646D696E','2014-09-25 11:49:03',']tQP‹QM',0),('boromir.steward@gondor.me','0123456789','Boromir','61646D696E','2014-09-25 11:49:47','/”∆ÉFÈ˚',0),('faramir.steward@gondor.me','0123456789','Faramir','61646D696E','2014-09-25 11:50:06','ìﬁ\"àZ!Éæ',0),('frodo@underhill.sh','0123456789','Frodo Baggins','61646D696E','2014-09-25 11:51:18','≤;˚ù,XÉ',0),('gandalf@grey.me','0123456789','Gandalf','61646D696E','2014-09-25 11:51:41','(Ç€5ÒÃY(',0),('jdowling@sics.se','0123456789','Admin','61646D696E','2014-09-08 12:05:03','slqiehzl',0),('johnny@slager.be','0258963147','Johnny Turbo','61646D696E','2014-09-30 08:24:00','ﬁa¯≤*BV',0),('pipi@sterk.se','0123456789','Pipi Langkous','61646D696E','2014-10-13 10:40:29','$›/¨Nø<',-1);
-/*!40000 ALTER TABLE `USERS` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `USERS_GROUPS`
 --
 
@@ -726,16 +292,6 @@ CREATE TABLE `USERS_GROUPS` (
   CONSTRAINT `USERS_GROUPS_ibfk_1` FOREIGN KEY (`email`) REFERENCES `USERS` (`EMAIL`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `USERS_GROUPS`
---
-
-LOCK TABLES `USERS_GROUPS` WRITE;
-/*!40000 ALTER TABLE `USERS_GROUPS` DISABLE KEYS */;
-INSERT INTO `USERS_GROUPS` VALUES ('aragorn@whitree.go','USER'),('boromir.steward@gondor.me','USER'),('faramir.steward@gondor.me','USER'),('frodo@underhill.sh','USER'),('gandalf@grey.me','USER'),('jdowling@sics.se','ADMIN'),('johnny@slager.be','ADMIN'),('pipi@sterk.se','GUEST');
-/*!40000 ALTER TABLE `USERS_GROUPS` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `Yubikey`
@@ -765,15 +321,6 @@ CREATE TABLE `Yubikey` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `Yubikey`
---
-
-LOCK TABLES `Yubikey` WRITE;
-/*!40000 ALTER TABLE `Yubikey` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Yubikey` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `activity`
 --
 
@@ -788,18 +335,8 @@ CREATE TABLE `activity` (
   `flag` enum('DATA','STUDY','TEAM','USERS') DEFAULT NULL,
   `activity_on` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=372 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=383 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `activity`
---
-
-LOCK TABLES `activity` WRITE;
-/*!40000 ALTER TABLE `activity` DISABLE KEYS */;
-INSERT INTO `activity` VALUES (369,' created new study ','jdowling@sics.se','2014-12-11 10:21:12','STUDY','Test'),(370,' created new study ','jdowling@sics.se','2014-12-11 10:21:27','STUDY','Custom'),(371,' added new member faramir.steward@gondor.me ','jdowling@sics.se','2014-12-12 10:34:58','STUDY','Custom');
-/*!40000 ALTER TABLE `activity` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Temporary view structure for view `activitydetails`
@@ -836,86 +373,6 @@ CREATE TABLE `collection_type` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `collection_type`
---
-
-LOCK TABLES `collection_type` WRITE;
-/*!40000 ALTER TABLE `collection_type` DISABLE KEYS */;
-/*!40000 ALTER TABLE `collection_type` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `dataset`
---
-
-DROP TABLE IF EXISTS `dataset`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `dataset` (
-  `name` varchar(255) NOT NULL,
-  `owner` varchar(255) DEFAULT NULL,
-  `timestamp` datetime DEFAULT NULL,
-  PRIMARY KEY (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `dataset`
---
-
-LOCK TABLES `dataset` WRITE;
-/*!40000 ALTER TABLE `dataset` DISABLE KEYS */;
-/*!40000 ALTER TABLE `dataset` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `dataset_requests`
---
-
-DROP TABLE IF EXISTS `dataset_requests`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `dataset_requests` (
-  `reason` varchar(255) DEFAULT NULL,
-  `study_id` int(11) NOT NULL,
-  `dataset_id` int(11) NOT NULL,
-  PRIMARY KEY (`study_id`,`dataset_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `dataset_requests`
---
-
-LOCK TABLES `dataset_requests` WRITE;
-/*!40000 ALTER TABLE `dataset_requests` DISABLE KEYS */;
-/*!40000 ALTER TABLE `dataset_requests` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `dataset_study`
---
-
-DROP TABLE IF EXISTS `dataset_study`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `dataset_study` (
-  `id` int(11) NOT NULL,
-  `Dataset_id` int(11) NOT NULL,
-  PRIMARY KEY (`id`,`Dataset_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `dataset_study`
---
-
-LOCK TABLES `dataset_study` WRITE;
-/*!40000 ALTER TABLE `dataset_study` DISABLE KEYS */;
-/*!40000 ALTER TABLE `dataset_study` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `job_execution_files`
 --
 
@@ -930,15 +387,6 @@ CREATE TABLE `job_execution_files` (
   CONSTRAINT `job_execution_files_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `job_execution_files`
---
-
-LOCK TABLES `job_execution_files` WRITE;
-/*!40000 ALTER TABLE `job_execution_files` DISABLE KEYS */;
-/*!40000 ALTER TABLE `job_execution_files` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `job_input_files`
@@ -957,15 +405,6 @@ CREATE TABLE `job_input_files` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `job_input_files`
---
-
-LOCK TABLES `job_input_files` WRITE;
-/*!40000 ALTER TABLE `job_input_files` DISABLE KEYS */;
-/*!40000 ALTER TABLE `job_input_files` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `job_output_files`
 --
 
@@ -980,15 +419,6 @@ CREATE TABLE `job_output_files` (
   CONSTRAINT `job_output_files_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `job_output_files`
---
-
-LOCK TABLES `job_output_files` WRITE;
-/*!40000 ALTER TABLE `job_output_files` DISABLE KEYS */;
-/*!40000 ALTER TABLE `job_output_files` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `jobhistory`
@@ -1015,64 +445,8 @@ CREATE TABLE `jobhistory` (
   KEY `user` (`user`),
   CONSTRAINT `jobhistory_ibfk_1` FOREIGN KEY (`study`) REFERENCES `study` (`name`),
   CONSTRAINT `jobhistory_ibfk_2` FOREIGN KEY (`user`) REFERENCES `USERS` (`EMAIL`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `jobhistory`
---
-
-LOCK TABLES `jobhistory` WRITE;
-/*!40000 ALTER TABLE `jobhistory` DISABLE KEYS */;
-INSERT INTO `jobhistory` VALUES (1,'testje','2014-12-12 15:07:00','Custom','jdowling@sics.se','FINISHED',5,NULL,NULL,NULL,'FLINK');
-/*!40000 ALTER TABLE `jobhistory` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `sample`
---
-
-DROP TABLE IF EXISTS `sample`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `sample` (
-  `id` int(11) NOT NULL,
-  `person_id` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `sample`
---
-
-LOCK TABLES `sample` WRITE;
-/*!40000 ALTER TABLE `sample` DISABLE KEYS */;
-/*!40000 ALTER TABLE `sample` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `sample_study`
---
-
-DROP TABLE IF EXISTS `sample_study`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `sample_study` (
-  `study_id` int(11) NOT NULL,
-  `sample_id` int(11) NOT NULL,
-  PRIMARY KEY (`study_id`,`sample_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `sample_study`
---
-
-LOCK TABLES `sample_study` WRITE;
-/*!40000 ALTER TABLE `sample_study` DISABLE KEYS */;
-/*!40000 ALTER TABLE `sample_study` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `samplecollection`
@@ -1094,15 +468,6 @@ CREATE TABLE `samplecollection` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `samplecollection`
---
-
-LOCK TABLES `samplecollection` WRITE;
-/*!40000 ALTER TABLE `samplecollection` DISABLE KEYS */;
-/*!40000 ALTER TABLE `samplecollection` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `study`
 --
 
@@ -1119,39 +484,6 @@ CREATE TABLE `study` (
   CONSTRAINT `fk_study_users` FOREIGN KEY (`username`) REFERENCES `USERS` (`EMAIL`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `study`
---
-
-LOCK TABLES `study` WRITE;
-/*!40000 ALTER TABLE `study` DISABLE KEYS */;
-INSERT INTO `study` VALUES ('Custom','jdowling@sics.se','2014-12-11 10:21:27'),('Test','jdowling@sics.se','2014-12-11 10:21:12');
-/*!40000 ALTER TABLE `study` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `study_dataset_permissions`
---
-
-DROP TABLE IF EXISTS `study_dataset_permissions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `study_dataset_permissions` (
-  `study_id` int(11) NOT NULL,
-  `dataset_id` int(11) NOT NULL,
-  PRIMARY KEY (`study_id`,`dataset_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `study_dataset_permissions`
---
-
-LOCK TABLES `study_dataset_permissions` WRITE;
-/*!40000 ALTER TABLE `study_dataset_permissions` DISABLE KEYS */;
-/*!40000 ALTER TABLE `study_dataset_permissions` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `study_group_members`
@@ -1173,15 +505,6 @@ CREATE TABLE `study_group_members` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `study_group_members`
---
-
-LOCK TABLES `study_group_members` WRITE;
-/*!40000 ALTER TABLE `study_group_members` DISABLE KEYS */;
-/*!40000 ALTER TABLE `study_group_members` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `study_services`
 --
 
@@ -1195,16 +518,6 @@ CREATE TABLE `study_services` (
   CONSTRAINT `study_services_ibfk_1` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `study_services`
---
-
-LOCK TABLES `study_services` WRITE;
-/*!40000 ALTER TABLE `study_services` DISABLE KEYS */;
-INSERT INTO `study_services` VALUES ('Custom','CUNEIFORM'),('Custom','FLINK'),('Custom','SAMPLES'),('Custom','STUDY_INFO'),('Test','FLINK');
-/*!40000 ALTER TABLE `study_services` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Temporary view structure for view `v_People_Group`
@@ -1285,4 +598,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-12-12 16:17:49
+-- Dump completed on 2015-01-07 14:15:59
