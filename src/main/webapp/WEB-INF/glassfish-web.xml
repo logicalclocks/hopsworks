@@ -2,35 +2,6 @@
 <!DOCTYPE glassfish-web-app PUBLIC "-//GlassFish.org//DTD GlassFish Application Server 3.1 Servlet 3.0//EN" "http://glassfish.org/dtds/glassfish-web-app_3_0-1.dtd">
 <glassfish-web-app error-url="">
   <property name="allowLinking" value="true"/>
-  <security-role-mapping>
-    <role-name>SYS_ADMIN</role-name>
-    <group-name>SYS_ADMIN</group-name>
-     <principal-name>CN=Ali Gholami,OU=PDC,O=KTH,L=Stockholm,ST=Stockholm,C=SE</principal-name>
-  </security-role-mapping>
-  <security-role-mapping>
-    <role-name>BBC_USER</role-name>
-    <group-name>BBC_USER</group-name>
-  </security-role-mapping>
   <parameter-encoding default-charset="UTF-8"/>
   <context-root>/hop-dashboard</context-root>
-  <security-role-mapping>
-    <role-name>BBC_RESEARCHER</role-name>
-    <group-name>BBC_RESEARCHER</group-name>
-  </security-role-mapping>
-  <security-role-mapping>
-    <role-name>BBC_GUEST</role-name>
-    <group-name>BBC_GUEST</group-name>
-  </security-role-mapping>
-  <security-role-mapping>
-    <role-name>AUDITOR</role-name>
-    <group-name>AUDITOR</group-name>
-  </security-role-mapping>
-  <security-role-mapping>
-    <role-name>BBC_ADMIN</role-name>
-    <group-name>BBC_ADMIN</group-name>
-  </security-role-mapping>
-  <security-role-mapping>
-    <role-name>ETHICS_BOARD</role-name>
-    <group-name>ETHICS_BOARD</group-name>
-  </security-role-mapping>
 </glassfish-web-app>

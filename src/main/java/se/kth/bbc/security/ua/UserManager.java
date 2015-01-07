@@ -23,7 +23,7 @@ public class UserManager {
 
     private static final Logger logger = Logger.getLogger(UserManager.class.getName());
 
-    @PersistenceContext(unitName = "kthfsPU")
+    @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
 
     /**
@@ -273,13 +273,8 @@ public class UserManager {
 
     }
 
-    public List<User> findAllByName() {
-        TypedQuery<User> query = em.createNamedQuery("People.findAllByName", User.class);
-        return query.getResultList();
-    }
-
     public List<User> findAllUsers() {
-        TypedQuery<User> query = em.createNamedQuery("People.findAll", User.class);
+        TypedQuery<User> query = em.createNamedQuery("User.findAll", User.class);
         return query.getResultList();
     }
 
@@ -334,13 +329,13 @@ public class UserManager {
      * @return
      */
     public List<User> findAllByStatus(int status) {
-        TypedQuery<User> query = em.createNamedQuery("People.findByStatus", User.class);
+        TypedQuery<User> query = em.createNamedQuery("User.findByStatus", User.class);
         query.setParameter("status", status);
         return query.getResultList();
     }
 
     public User findByEmail(String email) {
-        TypedQuery<User> query = em.createNamedQuery("People.findByEmail", User.class);
+        TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
         query.setParameter("email", email);
         return query.getSingleResult();
     }

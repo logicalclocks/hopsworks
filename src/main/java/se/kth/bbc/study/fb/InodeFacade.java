@@ -14,7 +14,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 @Stateless
 public class InodeFacade extends AbstractFacade<Inode> {
 
-    @PersistenceContext(unitName = "kthfsPU")
+    @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
 
     @Override

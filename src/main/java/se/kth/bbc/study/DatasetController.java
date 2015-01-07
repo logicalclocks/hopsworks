@@ -19,7 +19,7 @@ import javax.persistence.TypedQuery;
 @Stateless
 public class DatasetController {
      
-    @PersistenceContext(unitName = "kthfsPU")
+    @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
        
     protected EntityManager getEntityManager() {

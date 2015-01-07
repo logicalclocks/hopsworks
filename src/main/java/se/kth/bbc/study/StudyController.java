@@ -21,7 +21,7 @@ import javax.persistence.TypedQuery;
 @Stateless
 public class StudyController {
 
-    @PersistenceContext(unitName = "kthfsPU")
+    @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
 
     protected EntityManager getEntityManager() {

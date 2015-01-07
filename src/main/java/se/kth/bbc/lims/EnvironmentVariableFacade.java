@@ -14,7 +14,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 @Stateless
 public class EnvironmentVariableFacade extends AbstractFacade<EnvironmentVariable> {
 
-    @PersistenceContext(unitName = "kthfsPU")
+    @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
 
     @Override

@@ -22,7 +22,7 @@ import se.kth.bbc.security.ua.model.User;
 @Stateless
 public class StudyTeamController {
     
-    @PersistenceContext(unitName = "kthfsPU")
+    @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
 
     protected EntityManager getEntityManager() {

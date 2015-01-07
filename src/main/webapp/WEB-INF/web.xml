@@ -66,7 +66,7 @@
         <welcome-file>index.xhtml</welcome-file>
     </welcome-file-list>
     <!--  REST  -->
-    <servlet>
+<!--    <servlet>
         <servlet-name>Jersey REST Service</servlet-name>
         <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
         <init-param>
@@ -82,7 +82,7 @@
     <servlet-mapping>
         <servlet-name>Jersey REST Service</servlet-name>
         <url-pattern>/resources/*</url-pattern>
-    </servlet-mapping>
+    </servlet-mapping>-->
     <servlet>
         <servlet-name>UploadServlet</servlet-name>
         <servlet-class>se.kth.bbc.upload.UploadServlet</servlet-class>
@@ -113,17 +113,6 @@
     <security-role>
         <role-name>ETHICS_BOARD</role-name>
     </security-role>
-    <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>Secured Content for agents sending alerts data</web-resource-name>
-            <url-pattern>/rest/collectd/*</url-pattern>
-        </web-resource-collection>
-        <auth-constraint>
-            <role-name>SYS_ADMIN</role-name>
-            <role-name>BBC_ADMIN</role-name>
-            <role-name>BBC_USER</role-name>
-        </auth-constraint>
-    </security-constraint>
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>BiobankCloud Guest pages</web-resource-name>
@@ -171,7 +160,7 @@
         </auth-constraint>
     </security-constraint>
     <!-- Authentication for file upload -->
-    <security-constraint>
+<!--    <security-constraint>
         <web-resource-collection>
             <web-resource-name>Privileged file upload policy</web-resource-name>
             <url-pattern>/rest/bbcuploader/*</url-pattern>
@@ -181,7 +170,7 @@
             <role-name>BBC_ADMIN</role-name>
             <role-name>BBC_USER</role-name>
         </auth-constraint>
-    </security-constraint>
+    </security-constraint>-->
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>User authentication</web-resource-name>

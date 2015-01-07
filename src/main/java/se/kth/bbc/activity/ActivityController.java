@@ -33,7 +33,7 @@ public class ActivityController {
     // Flag constants
     public static final String CTE_FLAG_STUDY = "STUDY";
 
-    @PersistenceContext(unitName = "kthfsPU")
+    @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
 
     protected EntityManager getEntityManager() {

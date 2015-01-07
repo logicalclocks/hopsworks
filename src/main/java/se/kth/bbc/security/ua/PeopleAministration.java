@@ -262,10 +262,6 @@ public class PeopleAministration implements Serializable {
         return userManager.findAllUsers();
     }
 
-    public List<User> getAllUsersName() {
-        return userManager.findAllByName();
-    }
-
     public Map<String, Integer> getGroups() {
         return groups;
     }

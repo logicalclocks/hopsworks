@@ -19,7 +19,7 @@ import javax.persistence.Query;
 @Stateless
 public class UserGroupsController {
     
-    @PersistenceContext(unitName = "kthfsPU")
+    @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
 
     protected EntityManager getEntityManager() {
