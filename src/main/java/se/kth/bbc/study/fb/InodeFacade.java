@@ -72,6 +72,13 @@ public class InodeFacade extends AbstractFacade<Inode> {
     return z;
   }
 
+  /**
+   * Creates the inode-dir (and its parent dirs) if it doesn't exist or returns the existing inode dir.
+   * Equivalent of: mkdir -p
+   * @param path
+   * @param status
+   * @return the Inode for the directory (whether it already exists or has just been created)
+   */
   public Inode createAndPersistDir(String path, String status) {
     while (path.startsWith("/")) {
       path = path.substring(1);
