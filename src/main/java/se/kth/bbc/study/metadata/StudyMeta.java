@@ -1,21 +1,24 @@
 package se.kth.bbc.study.metadata;
 
 import java.io.Serializable;
-import java.util.Collection;
+import java.util.List;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import se.kth.bbc.study.TrackStudy;
 
 /**
  *
@@ -40,6 +43,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 public class StudyMeta implements Serializable {
   private static final long serialVersionUID = 1L;
   @Size(max = 128)
+  @NotNull
   @Column(name = "id")
   private String id;
   @Id
@@ -52,12 +56,40 @@ public class StudyMeta implements Serializable {
   @Size(max = 2000)
   @Column(name = "description")
   private String description;
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "studyMeta")
-  private Collection<StudyDesign> studyDesignCollection;
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "studyMeta")
-  private Collection<StudyInclusionCriteria> studyInclusionCriteriaCollection;
+  @JoinColumn(name = "studyname",
+          referencedColumnName = "name",
+          insertable
+          = false,
+          updatable = false)
+  @OneToOne(optional = false)
+  private TrackStudy trackStudy;
+  @ElementCollection(targetClass = CollectionTypeStudyDesignEnum.class)
+  @CollectionTable(name="STUDY_DESIGN",joinColumns=@JoinColumn(name="study_id",referencedColumnName = "id"))
+  @Column(name="design")
+  @Enumerated(EnumType.STRING)
+  private List<CollectionTypeStudyDesignEnum> studyDesignList;
+   @ElementCollection(targetClass = InclusionCriteriumEnum.class)
+  @CollectionTable(name="STUDY_INCLUSION_CRITERIA",joinColumns=@JoinColumn(name="study_id",referencedColumnName = "id"))
+  @Column(name="criterium")
+  @Enumerated(EnumType.STRING)
+  private List<InclusionCriteriumEnum> inclusionCriteriaList;
+
+  public List<CollectionTypeStudyDesignEnum> getStudyDesignList() {
+    return studyDesignList;
+  }
+
+  public void setStudyDesignList(List<CollectionTypeStudyDesignEnum> studyDesignList) {
+    this.studyDesignList = studyDesignList;
+  }
+
+  public List<InclusionCriteriumEnum> getInclusionCriteriaList() {
+    return inclusionCriteriaList;
+  }
+
+  public void setInclusionCriteriaList(
+          List<InclusionCriteriumEnum> inclusionCriteriaList) {
+    this.inclusionCriteriaList = inclusionCriteriaList;
+  }
 
   public StudyMeta() {
   }
@@ -90,26 +122,12 @@ public class StudyMeta implements Serializable {
     this.description = description;
   }
 
-  @XmlTransient
-  @JsonIgnore
-  public Collection<StudyDesign> getStudyDesignCollection() {
-    return studyDesignCollection;
+  public TrackStudy getTrackStudy() {
+    return trackStudy;
   }
 
-  public void setStudyDesignCollection(
-          Collection<StudyDesign> studyDesignCollection) {
-    this.studyDesignCollection = studyDesignCollection;
-  }
-
-  @XmlTransient
-  @JsonIgnore
-  public Collection<StudyInclusionCriteria> getStudyInclusionCriteriaCollection() {
-    return studyInclusionCriteriaCollection;
-  }
-
-  public void setStudyInclusionCriteriaCollection(
-          Collection<StudyInclusionCriteria> studyInclusionCriteriaCollection) {
-    this.studyInclusionCriteriaCollection = studyInclusionCriteriaCollection;
+  public void setTrackStudy(TrackStudy trackStudy) {
+    this.trackStudy = trackStudy;
   }
 
   @Override

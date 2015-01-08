@@ -11,6 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -19,6 +20,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import se.kth.bbc.study.metadata.StudyMeta;
 
 /**
  *
@@ -35,6 +37,9 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "TrackStudy.findOwner", query = "SELECT t.username FROM TrackStudy t WHERE t.name = :name"),
     @NamedQuery(name = "TrackStudy.countStudyByOwner", query = "SELECT count(t.name) FROM TrackStudy t WHERE t.username = :username")})
 public class TrackStudy implements Serializable {
+  @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "trackStudy")
+  private StudyMeta studyMeta;
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -123,5 +128,13 @@ public class TrackStudy implements Serializable {
     public String toString() {
         return "se.kth.bbc.study.TrackStudy[ name=" + name + " ]";
     }
+
+  public StudyMeta getStudyMeta() {
+    return studyMeta;
+  }
+
+  public void setStudyMeta(StudyMeta studyMeta) {
+    this.studyMeta = studyMeta;
+  }
     
 }

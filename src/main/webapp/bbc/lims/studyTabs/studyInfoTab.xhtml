@@ -13,20 +13,35 @@
                 </h1>
             </div>
             <div>
-                <h:form>
+                <h:form id="studyInfoForm">
                     <p:growl autoUpdate="true" showDetail="true"/>
-                    <h:panelGrid columns="2">
+                    <h:panelGrid columns="3">
                         <h:outputLabel value="Id" for="studyId"/>
-                        <h:inputText value="#{studyMetaController.metadata.id}" id="studyId"/>
+                        <h:inputText value="#{studyMetaController.metadata.id}" id="studyId" required="true" requiredMessage="An id is required if metadata is entered."/>
+                        <p:message for="studyId"/>
 
                         <h:outputLabel value="Name" for="studyName"/>
                         <h:inputText value="#{studyMetaController.metadata.studyname}" id="studyName" readonly="true" />
+                        <h:commandLink/>
 
                         <h:outputLabel value="Description" for="description"/>
                         <h:inputTextarea value="#{studyMetaController.metadata.description}" id="description" />
+                        <h:commandLink/>
+
+                        <h:outputLabel value="Study design" for="studyDesignList"/>
+                        <p:dataList id="studyDesignList" value="#{studyMetaController.studyDesignDual.target}" var="item">
+                            #{item.toString()}
+                        </p:dataList>
+                        <p:commandLink styleClass="fa fa-edit" oncomplete="PF('editStudyDesignDlg').show()" type="button" process="@this"/>
+
+                        <h:outputLabel value="Inclusion criteria" for="inclusionCriteriaList"/>
+                        <p:dataList id="inclusionCriteriaList" value="#{studyMetaController.inclusionCriteriaDual.target}" var="item">
+                            #{item.toString()}
+                        </p:dataList>
+                        <p:commandLink styleClass="fa fa-edit" oncomplete="PF('editInclusionCriteriaDlg').show()" type="button" process="@this"/>
 
                     </h:panelGrid>
-                    <p:commandButton value="Save changes" actionListener="#{studyMetaController.updateMetadata()}"/>
+                    <p:commandButton value="Save" actionListener="#{studyMetaController.updateMetadata()}"/>
                 </h:form>
             </div>
         </ui:composition>

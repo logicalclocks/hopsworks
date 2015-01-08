@@ -142,6 +142,26 @@
                     <p:commandButton value="Cancel" type="button" onclick="PF('editServicesDlg').hide()"/>
                 </h:form>
             </p:dialog>
+            <p:dialog id="editStudyDesignDialog" widgetVar="editStudyDesignDlg" closable="true" draggable="false" modal="true" header="Edit study design" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO')}">
+                <h:form>
+                    <p:pickList id="studyDesignPick" value="#{studyMetaController.studyDesignDual}" 
+                                var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="collectionTypeEnumConverter">
+                        <f:facet name="sourceCaption">Available</f:facet>
+                        <f:facet name="targetCaption">Selected</f:facet>
+                    </p:pickList>
+                    <p:commandButton value="OK" oncomplete="PF('editStudyDesignDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('studyInfoForm')}"/>
+                </h:form>
+            </p:dialog>
+            <p:dialog id="editInclusionCriteriaDialog" widgetVar="editInclusionCriteriaDlg" closable="true" draggable="false" modal="true" header="Edit inclusion criteria" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO')}">
+                <h:form>
+                    <p:pickList id="inclusionCriteriaPick" value="#{studyMetaController.inclusionCriteriaDual}" 
+                                var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="inclusionCriteriumEnumConverter">
+                        <f:facet name="sourceCaption">Available</f:facet>
+                        <f:facet name="targetCaption">Selected</f:facet>
+                    </p:pickList>
+                    <p:commandButton value="OK" oncomplete="PF('editInclusionCriteriaDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('studyInfoForm')}"/>
+                </h:form>
+            </p:dialog>
         </h:body>
     </f:view>
 </html>

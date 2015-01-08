@@ -37,8 +37,19 @@ public class StudyMetaFacade extends AbstractFacade<StudyMeta> {
     }
   }
 
+  /*TODO: this must be the most idiotic update function ever written... But:
+   * Writing
+   *  em.merge(meta);
+   * for some reason fails. The resulting queries insert study_id null in the STUDY_DESIGN table.
+   * I have not yet figured out why...
+   */
   public void update(StudyMeta meta) {
-    em.merge(meta);
+    StudyMeta old = findByStudyname(meta.getStudyname());
+    if (old != null) {
+      em.remove(old);
+      em.flush();
+    }
+    em.persist(meta);
   }
 
 }
