@@ -27,13 +27,10 @@
 
         <h:form>                  
             <div class="Signin">            
-                <h:panelGrid columns="2">
-                    <h:graphicImage library="images" name="chor.jpg" width="70" height="70"/> 
-                    <h3> Mobile Login</h3>     
-                </h:panelGrid>
+                <h2 align="center">Mobile Login</h2>     
                 <br></br>
                 <h:panelGrid columns="1"> 
-                    <p:outputLabel for="uname" value="Username"/>
+                    <p:outputLabel for="uname" value="Username" style="font-size: 12px; font-weight: bold;"/>
                     <p:inputText id="uname" value="#{customAuthentication.username}" required="true" 
                                            requiredMessage="Enter Email"
                         validatorMessage="Email is not valid format" >
@@ -43,7 +40,7 @@
                     </p:inputText>   
                     <p:watermark for="uname" value="Email" />
 
-                    <p:outputLabel for="password" value="Password" />
+                    <p:outputLabel for="password" value="Password" style="font-size: 12px; font-weight: bold;"/>
                     <p:password id="password" value="#{customAuthentication.password}"
                                 required="true" requiredMessage="Enter Password"
                                 validatorMessage="Password must be at least 6 charachter alpanumeric">
@@ -51,7 +48,7 @@
                     </p:password>
                     <p:watermark for="password" value="Password" />
 
-                    <p:outputLabel for="otp" value="PIN" />
+                    <p:outputLabel for="otp" value="PIN" style="font-size: 12px; font-weight: bold;" />
                     <p:password id="otp" value="#{customAuthentication.otpCode}" 
                                 required="true" 
                                  requiredMessage="Enter PIN"
@@ -73,7 +70,6 @@
         <div align="center">
             <p:commandLink id="signupLink" value="Yubikey auth" action="yubikeylogin" style="text-align: right"/>
                       &nbsp;
-  
             <p:commandLink id="signupLink" value="Cancel" action="welcome" style="text-align: right"/>
         </div>
         <br/>
