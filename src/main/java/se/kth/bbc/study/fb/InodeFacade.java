@@ -3,6 +3,7 @@ package se.kth.bbc.study.fb;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.kthfsdashboard.user.AbstractFacade;
@@ -30,7 +31,11 @@ public class InodeFacade extends AbstractFacade<Inode> {
     TypedQuery<Inode> query = em.createNamedQuery("Inode.findByName",
             Inode.class);
     query.setParameter("name", name);
-    return query.getSingleResult();
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
   }
 
   public List<Inode> findByParent(Inode parent) {
@@ -49,7 +54,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    */
   private Inode createAndPersistInode(String path, boolean dir, long size,
           String status) {
-        //TODO: update size and modified date of parent
+    //TODO: update size and modified date of parent
     //TODO: make all occurences of 'size' in application longs.
     Inode parent = getLastCreatedNodeOnPath(path);
     String[] p = path.split("/");
@@ -61,23 +66,32 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
     return z;
   }
-  
-  private Inode createAndPersistInode(Inode parent, String name, boolean dir, long size, String status){
-    Inode z = new Inode(name, parent, dir, (int) size, status);
-    parent.addChild(z);
 
-    em.persist(parent);
+  private Inode createAndPersistInode(Inode parent, String name, boolean dir,
+          long size, String status) {
+    Inode z;
+    if (parent != null) {
+      z = new Inode(name, parent, dir, (int) size, status);
+      parent.addChild(z);
+      em.persist(parent);
+    } else {
+      z = new Inode(name, parent, dir, (int) size, status);
+    }
     em.persist(z);
 
     return z;
+
   }
 
   /**
-   * Creates the inode-dir (and its parent dirs) if it doesn't exist or returns the existing inode dir.
+   * Creates the inode-dir (and its parent dirs) if it doesn't exist or returns
+   * the existing inode dir.
    * Equivalent of: mkdir -p
+   * <p>
    * @param path
    * @param status
-   * @return the Inode for the directory (whether it already exists or has just been created)
+   * @return the Inode for the directory (whether it already exists or has just
+   * been created)
    */
   public Inode createAndPersistDir(String path, String status) {
     while (path.startsWith("/")) {
@@ -85,6 +99,9 @@ public class InodeFacade extends AbstractFacade<Inode> {
     }
     String[] p = path.split("/");
     Inode root = findByName(p[0]);
+    if (root == null) {
+      root = createAndPersistInode(null, p[0], true, 0, status);
+    }
     Inode curr = root;
     for (int i = 1; i < p.length; i++) {
       String s = p[i];
@@ -126,6 +143,11 @@ public class InodeFacade extends AbstractFacade<Inode> {
     return true;
   }
 
+  /**
+   * 
+   * @param path
+   * @return null if no such Inode found
+   */
   private Inode getInode(String path) {
     // Get the path components
     String[] p;
@@ -141,6 +163,9 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
     //Get the right root node
     Inode curr = getRootNode(p[0]);
+    if(curr == null){
+      return null;
+    }
     //Move down the path
     for (int i = 1; i < p.length; i++) {
       Inode next = curr.getChild(p[i]);
@@ -157,8 +182,11 @@ public class InodeFacade extends AbstractFacade<Inode> {
     TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName",
             Inode.class);
     query.setParameter("name", name);
-    return query.getSingleResult(); //Sure to give a single result because both all children of same parent "null" so name is unique
-    //TODO: enforce uniqueness of folder and file name under same parent in Inodes table!
+    try {
+      return query.getSingleResult(); //Sure to give a single result because all children of same parent "null" so name is unique
+    } catch (NoResultException e) {
+      return null;
+    }
   }
 
   /**

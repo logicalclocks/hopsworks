@@ -58,14 +58,14 @@ public class NewStudyController implements Serializable {
 
   @EJB
   private StudyTeamController studyTeamFacade;
-  
+
   @EJB
   private FileOperations fileOps;
 
   //TODO: restructure, only use EJBs here, move methods from controller to mb to controller and rename to facade
   @ManagedProperty(value = "#{activityBean}")
   private transient ActivityMB activity;
-  
+
   @ManagedProperty(value = "#{studyManagedBean}")
   private transient StudyMB studies;
 
@@ -76,8 +76,8 @@ public class NewStudyController implements Serializable {
   public void setActivity(ActivityMB activity) {
     this.activity = activity;
   }
-  
-  public void setStudies(StudyMB studies){
+
+  public void setStudies(StudyMB studies) {
     this.studies = studies;
   }
 
@@ -132,6 +132,13 @@ public class NewStudyController implements Serializable {
         String username = getUsername();
         Date now = new Date();
         study = new TrackStudy(newStudyName, username, now);
+        //create folder structure
+        mkStudyDIR(study.getName());
+        logger.log(Level.INFO, "{0} - study directory created successfully.",
+                study.
+                getName());
+
+        //Persist study object
         studyFacade.persistStudy(study);
         //Add the desired services
         persistServices();
@@ -140,21 +147,27 @@ public class NewStudyController implements Serializable {
                 ActivityController.FLAG_STUDY);
         //update role information in study
         addStudyMaster(study.getName());
-        //create folder structure
-        mkStudyDIR(study.getName());
-        logger.log(Level.INFO, "{0} - study was created successfully.", study.
+        logger.log(Level.INFO, "{0} - study created successfully.", study.
                 getName());
 
         return loadNewStudy();
       } else {
-        MessagesController.addErrorMessage("A study with this name already exists!");
-        logger.log(Level.SEVERE, "Study with name {0} already exists!", newStudyName);
+        MessagesController.addErrorMessage(
+                "A study with this name already exists!");
+        logger.log(Level.SEVERE, "Study with name {0} already exists!",
+                newStudyName);
         return null;
       }
 
-    } catch (IOException | EJBException | URISyntaxException exp) {
-      MessagesController.addErrorMessage("Study could not be created.");
-      logger.log(Level.SEVERE, "Study was not created!");
+    } catch (IOException e) {
+      MessagesController.addErrorMessage(
+              "Study folder could not be created in HDFS.");
+      logger.log(Level.SEVERE, "Error creating study folder in HDFS.", e);
+      return null;
+    } catch (EJBException ex) {
+      MessagesController.addErrorMessage(
+              "Study Inode could not be created in DB.");
+      logger.log(Level.SEVERE, "Error creating study Inode in DB.", ex);
       return null;
     }
 
@@ -191,8 +204,7 @@ public class NewStudyController implements Serializable {
   }
 
   //create study on HDFS
-  private void mkStudyDIR(String studyName) throws IOException,
-          URISyntaxException {
+  private void mkStudyDIR(String studyName) throws IOException{
 
     String rootDir = FileSystemOperations.DIR_ROOT;
     String studyPath = File.separator + rootDir + File.separator + studyName;
@@ -208,17 +220,16 @@ public class NewStudyController implements Serializable {
     fileOps.mkDir(cuneiformPath);
     fileOps.mkDir(samplesPath);
   }
-  
-  
+
   //load the necessary information for displaying the study page
-  private String loadNewStudy(){
+  private String loadNewStudy() {
     studies.setStudyName(newStudyName);
     studies.setCreator(getUsername());
     return studies.checkAccess();
   }
-  
-  private void persistServices(){
-    switch(chosenTemplate){
+
+  private void persistServices() {
+    switch (chosenTemplate) {
       case TEMPLATE_BBC:
         studyServices.persistServicesForStudy(newStudyName, SERVICES_BBC);
         break;
