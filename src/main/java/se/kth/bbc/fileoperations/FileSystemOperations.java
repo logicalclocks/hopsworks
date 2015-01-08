@@ -105,18 +105,33 @@ public class FileSystemOperations {
     }
 
     //Get the configuration file at found path
-    Path confPath = new Path(coreConfDir);
-    File confFile = new File(coreConfDir , "core-site.xml");
-    if (!confFile.exists()) {
+    File hadoopConfFile = new File(coreConfDir , "core-site.xml");
+    if (!hadoopConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
-              confFile);
-      throw new IllegalStateException("No conf file");
+              hadoopConfFile);
+      throw new IllegalStateException("No hadoop conf file: hadoop-site.xml");
+    }
+    File yarnConfFile = new File(coreConfDir , "yarn-site.xml");
+    if (!yarnConfFile.exists()) {
+      logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
+              yarnConfFile);
+      throw new IllegalStateException("No yarn conf file: yarn-site.xml");
+    }
+    File hdfsConfFile = new File(coreConfDir , "hdfs-site.xml");
+    if (!hdfsConfFile.exists()) {
+      logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
+              hdfsConfFile);
+      throw new IllegalStateException("No hdfs conf file: hdfs-site.xml");
     }
 
     //Set the Configuration object for the hdfs client
-    Path yarnPath = new Path(confFile.getAbsolutePath());
+    Path yarnPath = new Path(yarnConfFile.getAbsolutePath());
+    Path hdfsPath = new Path(hdfsConfFile.getAbsolutePath());
+    Path hadoopPath = new Path(hadoopConfFile.getAbsolutePath());
     Configuration conf = new Configuration();
+    conf.addResource(hadoopPath);    
     conf.addResource(yarnPath);    
+    conf.addResource(hdfsPath);    
     FileSystem fs = FileSystem.get(conf);
     return fs;
   }
