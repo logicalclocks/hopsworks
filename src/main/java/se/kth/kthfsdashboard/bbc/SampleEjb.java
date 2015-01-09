@@ -20,16 +20,16 @@ public class SampleEjb {
     public SampleEjb() {
     }
 
-    public List<Sample> findAll() {
-        TypedQuery<Sample> query = em.createNamedQuery("Samples.findAll", Sample.class);
+    public List<SampleOld> findAll() {
+        TypedQuery<SampleOld> query = em.createNamedQuery("Samples.findAll", SampleOld.class);
         return query.getResultList();
     }
     
-    public void persistSample(Sample sample) {
+    public void persistSample(SampleOld sample) {
         em.persist(sample);
     }
     
-    public void removeSample(Sample sample) {
+    public void removeSample(SampleOld sample) {
        em.remove(sample);
     }
     

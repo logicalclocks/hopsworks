@@ -108,7 +108,7 @@ CREATE TABLE `Inodes` (
   KEY `pid_2` (`pid`,`isDir`),
   KEY `name` (`name`),
   CONSTRAINT `Inodes_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `Inodes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=436 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=440 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -217,7 +217,9 @@ CREATE TABLE `SAMPLECOLLECTIONS` (
   `study` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `contact` (`contact`),
-  CONSTRAINT `SAMPLECOLLECTIONS_ibfk_1` FOREIGN KEY (`contact`) REFERENCES `USERS` (`EMAIL`)
+  KEY `study` (`study`),
+  CONSTRAINT `SAMPLECOLLECTIONS_ibfk_1` FOREIGN KEY (`contact`) REFERENCES `USERS` (`EMAIL`),
+  CONSTRAINT `SAMPLECOLLECTIONS_ibfk_2` FOREIGN KEY (`study`) REFERENCES `study` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -258,12 +260,18 @@ DROP TABLE IF EXISTS `SAMPLES`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `SAMPLES` (
-  `samplecollection_id` varchar(255) NOT NULL DEFAULT '',
-  `id` varchar(30) NOT NULL,
-  `parent_id` varchar(30) DEFAULT NULL,
+  `samplecollection_id` varchar(255) NOT NULL,
+  `id` varchar(255) NOT NULL,
+  `parent_id` varchar(255) DEFAULT NULL,
   `sampled_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `anatomical_site` int(16) DEFAULT NULL,
-  PRIMARY KEY (`samplecollection_id`,`id`)
+  PRIMARY KEY (`id`),
+  KEY `samplecollection_id` (`samplecollection_id`),
+  KEY `parent_id` (`parent_id`),
+  KEY `anatomical_site` (`anatomical_site`),
+  CONSTRAINT `SAMPLES_ibfk_1` FOREIGN KEY (`samplecollection_id`) REFERENCES `SAMPLECOLLECTIONS` (`id`),
+  CONSTRAINT `SAMPLES_ibfk_2` FOREIGN KEY (`parent_id`) REFERENCES `SAMPLES` (`id`),
+  CONSTRAINT `SAMPLES_ibfk_3` FOREIGN KEY (`anatomical_site`) REFERENCES `ANATOMICAL_PARTS` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -275,11 +283,10 @@ DROP TABLE IF EXISTS `SAMPLE_MATERIAL`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `SAMPLE_MATERIAL` (
-  `collection_id` varchar(255) NOT NULL DEFAULT '',
-  `sample_id` varchar(30) NOT NULL DEFAULT '',
+  `sample_id` varchar(255) NOT NULL,
   `type` varchar(128) NOT NULL,
-  PRIMARY KEY (`collection_id`,`sample_id`,`type`),
-  CONSTRAINT `SAMPLE_MATERIAL_ibfk_1` FOREIGN KEY (`collection_id`, `sample_id`) REFERENCES `SAMPLES` (`samplecollection_id`, `id`)
+  PRIMARY KEY (`sample_id`,`type`),
+  CONSTRAINT `SAMPLE_MATERIAL_ibfk_1` FOREIGN KEY (`sample_id`) REFERENCES `SAMPLES` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -578,7 +585,7 @@ CREATE TABLE `jobhistory` (
   KEY `study` (`study`),
   CONSTRAINT `jobhistory_ibfk_2` FOREIGN KEY (`user`) REFERENCES `USERS` (`EMAIL`),
   CONSTRAINT `jobhistory_ibfk_3` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=73 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -712,4 +719,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-01-08 19:48:18
+-- Dump completed on 2015-01-09 19:36:24

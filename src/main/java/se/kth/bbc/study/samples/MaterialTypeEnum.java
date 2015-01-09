@@ -1,4 +1,4 @@
-package se.kth.bbc.study.metadata;
+package se.kth.bbc.study.samples;
 
 /**
  *

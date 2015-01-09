@@ -167,6 +167,27 @@
                     <p:commandButton value="OK" oncomplete="PF('editInclusionCriteriaDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('studyInfoForm')}"/>
                 </h:form>
             </p:dialog>
+            <p:dialog id="editCollectionTypesDialog" widgetVar="editCollectionTypesDlg" closable="true" draggable="false" modal="true" header="Edit collection types" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+                <h:form>
+                    <p:pickList id="collectionTypesPick" value="#{samplesController.collectionTypeDualList}" 
+                                var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="collectionTypeEnumConverter">
+                        <f:facet name="sourceCaption">Available</f:facet>
+                        <f:facet name="targetCaption">Selected</f:facet>
+                    </p:pickList>
+                    <p:commandButton value="OK" oncomplete="PF('editCollectionTypesDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('samplesForm')}"/>
+                </h:form>
+            </p:dialog>
+
+            <p:dialog id="editMaterialTypesDialog" widgetVar="editMaterialTypesDlg" closable="true" draggable="false" modal="true" header="Edit collection types" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+                <h:form>
+                    <p:pickList id="materialTypesPick" value="#{samplesController.materialTypeDualList}" 
+                                var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="materialTypeEnumConverter">
+                        <f:facet name="sourceCaption">Available</f:facet>
+                        <f:facet name="targetCaption">Selected</f:facet>
+                    </p:pickList>
+                    <p:commandButton value="OK" oncomplete="PF('editMaterialTypesDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('samplesForm')}"/>
+                </h:form>
+            </p:dialog>
         </h:body>
     </f:view>
 </html>

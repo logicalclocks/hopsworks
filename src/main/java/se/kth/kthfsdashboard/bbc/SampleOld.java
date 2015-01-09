@@ -13,7 +13,7 @@ import javax.persistence.*;
 @NamedQueries({
    @NamedQuery(name = "Samples.findAll", query = "SELECT s FROM Sample s"),
 })
-public class Sample implements Serializable {
+public class SampleOld implements Serializable {
 
     public Long getId() {
         return id;
@@ -159,7 +159,7 @@ public class Sample implements Serializable {
    private Samples samples;
    private SampleDonors sampleDonors;
    
-   public Sample() {
+   public SampleOld() {
    }
 
 

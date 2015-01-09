@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -17,10 +18,13 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.study.TrackStudy;
 import se.kth.bbc.study.metadata.CollectionTypeStudyDesignEnum;
 import se.kth.kthfsdashboard.user.Username;
@@ -47,8 +51,13 @@ import se.kth.kthfsdashboard.user.Username;
           = "SELECT s FROM Samplecollection s WHERE s.name = :name"),
   @NamedQuery(name = "Samplecollection.findByDescription",
           query
-          = "SELECT s FROM Samplecollection s WHERE s.description = :description")})
+          = "SELECT s FROM Samplecollection s WHERE s.description = :description"),
+  @NamedQuery(name = "Samplecollection.findByStudyname", query = 
+          "SELECT s FROM Samplecollection s WHERE s.study.name = :studyname")})
 public class Samplecollection implements Serializable {
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "samplecollectionId")
+  private Collection<Sample> sampleCollection;
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -202,6 +211,16 @@ public class Samplecollection implements Serializable {
   @Override
   public String toString() {
     return "se.kth.bbc.study.samples.Samplecollection[ id=" + id + " ]";
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<Sample> getSampleCollection() {
+    return sampleCollection;
+  }
+
+  public void setSampleCollection(Collection<Sample> sampleCollection) {
+    this.sampleCollection = sampleCollection;
   }
 
 }

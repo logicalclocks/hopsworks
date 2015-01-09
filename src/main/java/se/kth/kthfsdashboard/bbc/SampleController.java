@@ -11,13 +11,13 @@ import org.primefaces.context.RequestContext;
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
-@ManagedBean
+@ManagedBean(name = "oldSampleController")
 @RequestScoped
 public class SampleController implements Serializable {
 
     @EJB
     private SampleEjb sampleEjb;
-    private Sample sample = new Sample();
+    private SampleOld sample = new SampleOld();
     private boolean create;
     private boolean show;
     
@@ -38,11 +38,11 @@ public class SampleController implements Serializable {
         System.out.println("*** Created: " + sample.getSwedishName());        
     }
 
-    public Sample getSample() {
+    public SampleOld getSample() {
         return sample;
     }
 
-    public void setSample(Sample sample) {
+    public void setSample(SampleOld sample) {
         System.out.println("HERE");
         this.sample = sample;
     }

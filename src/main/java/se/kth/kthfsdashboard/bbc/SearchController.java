@@ -17,8 +17,8 @@ public class SearchController implements Serializable {
 
     @EJB
     private SampleEjb sampleEjb;
-    private Sample sample = new Sample();
-    private List<Sample> samples;
+    private SampleOld sample = new SampleOld();
+    private List<SampleOld> samples;
     private boolean showSamples;
     
     public SearchController() {
@@ -37,15 +37,15 @@ public class SearchController implements Serializable {
         RequestContext.getCurrentInstance().execute("dlgFindSampleCollection.hide()");
     }
 
-    public Sample getSample() {        
+    public SampleOld getSample() {        
         return sample;
     }
 
-    public void setSample(Sample sample) {
+    public void setSample(SampleOld sample) {
         this.sample = sample;
     }
 
-    public List<Sample> getSamples() {
+    public List<SampleOld> getSamples() {
         samples = sampleEjb.findAll();        
         System.out.println("Found " + samples.size() + " samples");        
         return samples;

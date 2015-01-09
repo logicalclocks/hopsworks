@@ -7,29 +7,80 @@
       xmlns:p="http://primefaces.org/ui">
     <body>
         <ui:composition>
-            <div>
-                <h1 style="float:none;">
-                    Samples
-                </h1>
-            </div>
-            <h:form>
-                <p:accordionPanel value="#{tabbedView.cars}" var="car">
-                    <p:tab title="Car - #{car.id}">
-                        <h:panelGrid columns="2" cellpadding="5">
-                            <f:facet name="header">
-                                <p:graphicImage name="demo/images/car/#{car.brand}-big.gif" />
-                            </f:facet>                   
-                            <h:outputText value="Brand:" style="font-weight: bold" />
-                            <h:outputText value="#{car.brand}" />
+            <h:form styleClass="samples" id="samplesForm">
+                <p:growl for="updateSuccess updateFail" autoUpdate="true"/>
+                <p:panelGrid columns="1">
+                    <p:panel id="samplecollections">
+                        <div>
+                            <h2 style="float:none;">
+                                Collections
+                            </h2>
+                        </div>
+                        <h:panelGrid columns="2" columnClasses="firstColumn,secondColumn">
+                            <p:dataTable var="coll" value="#{samplesController.samplecollection}">
+                                <p:column headerText="Collections">
+                                    <p:commandLink value="#{coll.name}" actionListener="#{samplesController.selectCollection(coll.id)}" update="@form :#{p:component('editCollectionTypesDialog')}"/>
+                                </p:column>
+                            </p:dataTable>
+                            <h:panelGrid columns="2" columnClasses="firstColumn,secondColumn,thirdColumn" id="collectionInfo" rendered="#{samplesController.collectionSelected}">
+                                <h:outputLabel value="Id" for="collectionid"/>
+                                <h:inputText value="#{samplesController.selectedCollection.id}" id="collectionid" required="true" requiredMessage="An id is required." readonly="true"/>
 
-                            <h:outputText value="Year:" style="font-weight: bold" />
-                            <h:outputText value="#{car.year}" />
+                                <h:outputLabel value="Acronym" for="collectionAcronym"/>
+                                <h:inputText value="#{samplesController.selectedCollection.acronym}" id="collectionAcronym"/>
 
-                            <h:outputText value="Color:" style="font-weight: bold" />
-                            <h:outputText value="#{car.color}" />
+                                <h:outputLabel value="Name" for="collectionname"/>
+                                <h:inputText value="#{samplesController.selectedCollection.name}" id="collectionname"/>
+
+                                <h:outputLabel value="Description" for="collectionDescription"/>
+                                <h:inputTextarea value="#{samplesController.selectedCollection.description}" id="collectionDescription" />
+
+                                <h:outputLabel value="Collection types" for="collectionTypeList"/>
+                                <h:panelGrid columns="2">
+                                    <p:dataList id="collectionTypeList" value="#{samplesController.selectedCollection.collectionTypeList}" var="item" emptyMessage="No collection type set">
+                                        #{item.toString()}
+                                    </p:dataList>
+                                    <p:commandLink styleClass="fa fa-edit" oncomplete="PF('editCollectionTypesDlg').show()" type="button" process="@this"/>
+                                </h:panelGrid>
+
+                            </h:panelGrid>
+                            <h:outputText value="Select a collection in the panel on the left." rendered="#{not samplesController.collectionSelected}"/>
                         </h:panelGrid>
-                    </p:tab>
-                </p:accordionPanel>
+                    </p:panel>
+                    <p:panel id="samples" rendered="#{samplesController.collectionSelected}">
+                        <div>
+                            <h2 style="float:none;">
+                                Samples in #{samplesController.selectedCollection.name}
+                            </h2>
+                        </div>
+                        <h:panelGrid columns="2" columnClasses="firstColumn,secondColumn">
+                            <p:dataTable var="sample" value="#{samplesController.selectedCollection.sampleCollection}" emptyMessage="Empty collection">
+                                <p:column headerText="Samples">
+                                    <p:commandLink value="#{sample.id}" actionListener="#{samplesController.selectSample(sample.id)}" update="@form :#{p:component('editMaterialTypesDialog')}"/>
+                                </p:column>
+                            </p:dataTable>
+                            <h:panelGrid id="sampleInfo" rendered="#{samplesController.sampleSelected}" columns="2" columnClasses="firstColumn,secondColumn,thirdColumn" >
+                                <h:outputLabel value="Id" for="sampleid"/>
+                                <h:inputText value="#{samplesController.selectedSample.id}" id="sampleid" required="true" requiredMessage="An id is required." readonly="true"/>
+
+                                <h:outputLabel value="Parent id" for="parentId"/>
+                                <h:inputText value="#{samplesController.selectedSample.parentId}" id="parentId"/>
+
+                                <h:outputLabel value="Sampled time" for="sampledTime"/>
+                                <h:inputText value="#{samplesController.selectedSample.sampledTime}" id="sampledTime"/>
+
+                                <h:outputLabel value="Material types" for="materialTypeList"/>
+                                <h:panelGrid columns="2">
+                                    <p:dataList id="materialTypeList" value="#{samplesController.selectedSample.materialTypeList}" var="item" emptyMessage="No material type set">
+                                        #{item.toString()}
+                                    </p:dataList>
+                                    <p:commandLink styleClass="fa fa-edit" oncomplete="PF('editMaterialTypesDlg').show()" type="button" process="@this"/>
+                                </h:panelGrid>
+                            </h:panelGrid>
+                            <h:outputText value="Select a sample in the panel on the left." rendered="#{not samplesController.sampleSelected}"/>
+                        </h:panelGrid>
+                    </p:panel>
+                </p:panelGrid>
             </h:form>
         </ui:composition>
     </body>

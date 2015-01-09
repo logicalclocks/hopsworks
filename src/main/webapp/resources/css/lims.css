@@ -2376,3 +2376,38 @@ ui-wizard {
 .studyInfo input,textarea,.ui-datalist-data {
   width: 185px;
 }
+
+.samples .firstColumn {
+  width: 20%;
+  vertical-align: top;
+}
+
+.samples .secondColumn {
+  width: 75%;
+}
+
+.samples.thirdColumn {
+  width: 5%;
+}
+
+.samples .secondColumn input,textarea {
+  width: 185px;
+}
+
+.samples .firstColumn table table {
+  margin-left:18px;
+}
+
+.samples .ui-panelgrid {
+  border: none;
+}
+
+.samples .ui-panelgrid .ui-panelgrid-cell {
+  border: none;
+}
+
+.samples .ui-datalist-data {
+  padding-left: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
