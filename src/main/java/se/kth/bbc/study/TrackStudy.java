@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.study.metadata.StudyMeta;
+import se.kth.bbc.study.samples.Samplecollection;
 
 /**
  *
@@ -37,6 +38,8 @@ import se.kth.bbc.study.metadata.StudyMeta;
     @NamedQuery(name = "TrackStudy.findOwner", query = "SELECT t.username FROM TrackStudy t WHERE t.name = :name"),
     @NamedQuery(name = "TrackStudy.countStudyByOwner", query = "SELECT count(t.name) FROM TrackStudy t WHERE t.username = :username")})
 public class TrackStudy implements Serializable {
+  @OneToMany(mappedBy = "study")
+  private Collection<Samplecollection> samplecollectionCollection;
   @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "trackStudy")
   private StudyMeta studyMeta;
@@ -135,6 +138,17 @@ public class TrackStudy implements Serializable {
 
   public void setStudyMeta(StudyMeta studyMeta) {
     this.studyMeta = studyMeta;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<Samplecollection> getSamplecollectionCollection() {
+    return samplecollectionCollection;
+  }
+
+  public void setSamplecollectionCollection(
+          Collection<Samplecollection> samplecollectionCollection) {
+    this.samplecollectionCollection = samplecollectionCollection;
   }
     
 }

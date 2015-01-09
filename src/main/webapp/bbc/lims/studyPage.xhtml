@@ -69,6 +69,11 @@
                                         <ui:include src="/bbc/lims/studyTabs/studyInfoTab.xhtml"/>
                                     </ui:insert>
                                 </p:tab>
+                                <p:tab id="samples" title="Samples" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+                                    <ui:insert name="samples">
+                                        <ui:include src="/bbc/lims/studyTabs/samplesTab.xhtml"/>
+                                    </ui:insert>
+                                </p:tab>
 
                             </p:tabView>
                         </div>
