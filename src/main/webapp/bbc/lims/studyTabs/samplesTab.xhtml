@@ -8,7 +8,8 @@
     <body>
         <ui:composition>
             <h:form styleClass="samples" id="samplesForm">
-                <p:growl for="updateSuccess updateFail" autoUpdate="true"/>
+                <p:growl for="updateSuccess" autoUpdate="true" showDetail="true"/>
+                <p:growl for="updateSuccess" autoUpdate="true" showDetail="true"/>
                 <p:panelGrid columns="1">
                     <p:panel id="samplecollections">
                         <div>
@@ -22,9 +23,9 @@
                                     <p:commandLink value="#{coll.name}" actionListener="#{samplesController.selectCollection(coll.id)}" update="@form :#{p:component('editCollectionTypesDialog')}"/>
                                 </p:column>
                             </p:dataTable>
-                            <h:panelGrid columns="2" columnClasses="firstColumn,secondColumn,thirdColumn" id="collectionInfo" rendered="#{samplesController.collectionSelected}">
+                            <h:panelGrid columns="2" columnClasses="firstColumn,secondColumn" id="collectionInfo" rendered="#{samplesController.collectionSelected}">
                                 <h:outputLabel value="Id" for="collectionid"/>
-                                <h:inputText value="#{samplesController.selectedCollection.id}" id="collectionid" required="true" requiredMessage="An id is required." readonly="true"/>
+                                <h:inputText value="#{samplesController.selectedCollection.id}" id="collectionid" readonly="true"/>
 
                                 <h:outputLabel value="Acronym" for="collectionAcronym"/>
                                 <h:inputText value="#{samplesController.selectedCollection.acronym}" id="collectionAcronym"/>
@@ -45,6 +46,9 @@
 
                             </h:panelGrid>
                             <h:outputText value="Select a collection in the panel on the left." rendered="#{not samplesController.collectionSelected}"/>
+
+                            <p:commandButton value="Add collection" />
+                            <p:commandButton value="Save" action="#{samplesController.updateSampleCollection()}" update="@form" disabled="#{not samplesController.collectionSelected}"/>
                         </h:panelGrid>
                     </p:panel>
                     <p:panel id="samples" rendered="#{samplesController.collectionSelected}">
@@ -59,15 +63,20 @@
                                     <p:commandLink value="#{sample.id}" actionListener="#{samplesController.selectSample(sample.id)}" update="@form :#{p:component('editMaterialTypesDialog')}"/>
                                 </p:column>
                             </p:dataTable>
-                            <h:panelGrid id="sampleInfo" rendered="#{samplesController.sampleSelected}" columns="2" columnClasses="firstColumn,secondColumn,thirdColumn" >
+                            <h:panelGrid id="sampleInfo" rendered="#{samplesController.sampleSelected}" columns="2" columnClasses="firstColumn,secondColumn">
                                 <h:outputLabel value="Id" for="sampleid"/>
-                                <h:inputText value="#{samplesController.selectedSample.id}" id="sampleid" required="true" requiredMessage="An id is required." readonly="true"/>
+                                <h:inputText value="#{samplesController.selectedSample.id}" id="sampleid" readonly="true"/>
+                                
+                                <!-- TODO: completely clueless here. Adding these fields again makes the save-button not work anymore -->
+                                
+<!--                                <h:outputText value="try out"/>
+                                <h:inputText value="#{samplesController.selectedSample.parentId}" id="parentId"/>-->
 
-                                <h:outputLabel value="Parent id" for="parentId"/>
-                                <h:inputText value="#{samplesController.selectedSample.parentId}" id="parentId"/>
+                                <!--                              <h:outputLabel value="Parent id" for="parentId"/>
+                                                              <h:inputText value="#{samplesController.selectedSample.parentId}" id="parentId"/>
 
                                 <h:outputLabel value="Sampled time" for="sampledTime"/>
-                                <h:inputText value="#{samplesController.selectedSample.sampledTime}" id="sampledTime"/>
+                                <h:inputText value="#{samplesController.selectedSample.sampledTime}" id="sampledTime"/>-->
 
                                 <h:outputLabel value="Material types" for="materialTypeList"/>
                                 <h:panelGrid columns="2">
@@ -78,6 +87,9 @@
                                 </h:panelGrid>
                             </h:panelGrid>
                             <h:outputText value="Select a sample in the panel on the left." rendered="#{not samplesController.sampleSelected}"/>
+
+                            <p:commandButton value="Add sample" />
+                            <p:commandButton value="Save" action="#{samplesController.updateSample()}" update="@form" disabled="#{not samplesController.sampleSelected}"/>
                         </h:panelGrid>
                     </p:panel>
                 </p:panelGrid>

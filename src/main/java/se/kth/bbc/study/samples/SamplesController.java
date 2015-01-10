@@ -135,6 +135,7 @@ public class SamplesController {
 
   public void setCollectionTypeDualList(
           DualListModel<CollectionTypeStudyDesignEnum> duallist) {
+    System.out.println("called set collection type: "+duallist.getTarget());
     this.selectedCollection.setCollectionTypeList(duallist.getTarget());
   }
 
@@ -154,10 +155,12 @@ public class SamplesController {
   }
 
   public void setMaterialTypeDualList(DualListModel<MaterialTypeEnum> duallist) {
+    System.out.println("called set material type: "+duallist.getTarget());
     this.selectedSample.setMaterialTypeList(duallist.getTarget());
   }
 
   public void updateSampleCollection() {
+    System.out.println("called update collection");
     try {
       samplecollectionFacade.update(selectedCollection);
       MessagesController.addInfoMessage(MessagesController.SUCCESS,
@@ -170,6 +173,7 @@ public class SamplesController {
   }
 
   public void updateSample() {
+    System.out.println("Called update sample");
     try {
       sampleFacade.update(selectedSample);
       MessagesController.addInfoMessage(MessagesController.SUCCESS,
@@ -178,6 +182,15 @@ public class SamplesController {
       logger.log(Level.SEVERE, "Failed to update sample metadata", e);
       MessagesController.addErrorMessage(MessagesController.ERROR,
               "Failed to update data.", "updateFail");
+    }
+  }
+  
+  public void updateAll(){
+    if(selectedCollection != null){
+      updateSampleCollection();
+      if(selectedSample != null){
+        updateSample();
+      }
     }
   }
 

@@ -48,7 +48,7 @@ public enum CollectionTypeStudyDesignEnum {
       case BIRTH_COHORT:
         return "Birth cohort";
       case OTHER:
-        return "";
+        return "Other";
       default:
         return null;
     }
