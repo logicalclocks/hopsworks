@@ -91,8 +91,11 @@ public class FileSystemOperations {
    */
   public boolean rm(Path location, boolean recursive) throws IOException {
     FileSystem fs = getFs();
-    boolean retVal = fs.delete(location, recursive);
-    return retVal;
+    if(fs.exists(location)){
+      return fs.delete(location, recursive);
+    }else{
+      return true;
+    }
   }
 
   private FileSystem getFs() throws IOException {

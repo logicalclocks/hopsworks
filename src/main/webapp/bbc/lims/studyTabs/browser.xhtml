@@ -43,7 +43,7 @@ and open the template in the editor.
                                 <strong>#{inode.name}</strong>
                             </p:commandLink>
 
-                            <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false">
+                            <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false" disabled="#{inode.status != 'available'}">
                                 <strong>#{inode.name}</strong>
                                 <p:fileDownload value="#{fileOperationsMB.downloadFile(inode)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                             </p:commandLink>

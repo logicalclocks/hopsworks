@@ -50,8 +50,7 @@ public class InodesMB implements Serializable {
 
     @PostConstruct
     public void init() {
-        //TODO: implement a better way to find inodes that represent root folders
-        root = inodes.findByName(study.getStudyName());
+        root = inodes.getStudyRoot(study.getStudyName());
         cwd = root;
     }
 
