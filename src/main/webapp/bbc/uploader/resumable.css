@@ -122,13 +122,14 @@ form{
         vertical-align: middle;
         border-color: rgba(0,0,0,0.1) rgba(0,0,0,0.1) rgba(0,0,0,0.25);
         background-image: linear-gradient(to bottom, #62c462, #51a351);
-        color: #fff;
+        color: #111;
         text-shadow: 0 -1px 0 rgba(0,0,0,0.25);
         padding:6px 10px;
 	border-radius:5px;
 	-moz-border-radius:5px;
 	-webkit-border-radius:5px;
-	border:1px solid #459A00;
+	
+        border: 1px solid gray;
         margin-left: 10px;
         margin-bottom: 8px;
         margin-right: 0px;
@@ -138,12 +139,13 @@ form{
     }
 
 .button-add-data {
-         background: #00B233;
+         background: lightblue;
  }
 
 .button-add-data:hover {
-        background: #00BD36;
+        background: lightblue;
     }  
+
 
 /* Baseline */
 body, p, h1, h2, h3, h4, h5, h6 {font:normal 12px/1.3em Helvetica, Arial, sans-serif; color:#333; }
