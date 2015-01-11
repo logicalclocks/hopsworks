@@ -32,6 +32,7 @@ import se.kth.bbc.jobs.RunningJobTracker;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.yarn.AsynchronousYarnApplication;
 import se.kth.bbc.jobs.yarn.YarnRunner;
+import se.kth.bbc.lims.StagingManager;
 
 /**
  * Controller for the Cuneiform tab in StudyPage.
@@ -72,6 +73,9 @@ public class CuneiformController implements Serializable {
 
   @EJB
   private FileOperations fops;
+  
+  @EJB
+  private StagingManager stagingManager;
 
   private final JobController jc = new JobController();
 
@@ -94,7 +98,8 @@ public class CuneiformController implements Serializable {
   @PostConstruct
   public void init() {
     try {
-      jc.setBasePath(study.getStudyName(), study.getUsername());
+      String path = stagingManager.getStagingPath() + File.separator + study.getUsername() + File.separator + study.getStudyName();
+      jc.setBasePath(path);
     } catch (IOException c) {
       logger.log(Level.SEVERE, "Failed to create directory structure.", c);
       MessagesController.addErrorMessage(

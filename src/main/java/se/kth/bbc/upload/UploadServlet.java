@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.study.fb.InodesMB;
 
 /**
@@ -19,10 +20,11 @@ import se.kth.bbc.study.fb.InodesMB;
  */
 public class UploadServlet extends HttpServlet {
 
-    public static final String UPLOAD_DIR = Constants.UPLOAD_DIR;
-
     @EJB
     private FileOperations fileOps;
+    
+    @EJB
+    private StagingManager stagingManager;
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -96,7 +98,7 @@ public class UploadServlet extends HttpServlet {
     }
 
     private ResumableInfo getResumableInfo(HttpServletRequest request) throws ServletException {
-        String base_dir = UPLOAD_DIR;
+        String base_dir = stagingManager.getStagingPath();
 
         int resumableChunkSize = HttpUtils.toInt(request.getParameter("resumableChunkSize"), -1);
         long resumableTotalSize = HttpUtils.toLong(request.getParameter("resumableTotalSize"), -1);

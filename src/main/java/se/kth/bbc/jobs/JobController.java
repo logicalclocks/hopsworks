@@ -61,8 +61,12 @@ public class JobController implements Serializable {
         out.close();
     }
 
-    public void setBasePath(String study, String email) throws IOException {
-        this.basePath = Constants.JOB_UPLOAD_DIR + File.separator + email + File.separator + study + File.separator;
+    public void setBasePath(String basepath) throws IOException {
+        if(basepath.endsWith(File.separator)){
+          basePath = basepath;
+        }else{
+          basePath = basepath + File.separator;
+        }
 
         Path p = Paths.get(basePath);
         boolean success = p.toFile().mkdirs();

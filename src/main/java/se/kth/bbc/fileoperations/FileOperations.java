@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import org.apache.hadoop.fs.Path;
+import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.study.fb.Inode;
 import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.upload.UploadServlet;
@@ -30,6 +31,8 @@ public class FileOperations {
     private FileSystemOperations fsOps;
     @EJB
     private InodeFacade inodes;
+    @EJB
+    private StagingManager stagingManager;
 
     /**
      * Get an InputStream for the file represented by Inode <i>inode</i>.
@@ -173,12 +176,12 @@ public class FileOperations {
         }
     }
 
-    private static File getLocalFile(String localFilename) {
+    private File getLocalFile(String localFilename) {
         return new File(getLocalFilePath(localFilename));
     }
 
-    private static String getLocalFilePath(String localFilename) {
-        return UploadServlet.UPLOAD_DIR + File.separator + localFilename;
+    private String getLocalFilePath(String localFilename) {
+        return stagingManager.getStagingPath() + File.separator + localFilename;
     }
 
     /**

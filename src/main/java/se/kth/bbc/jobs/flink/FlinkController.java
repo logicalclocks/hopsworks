@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
@@ -22,6 +23,7 @@ import se.kth.bbc.jobs.flink.FlinkRunner;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.jobs.JobController;
+import se.kth.bbc.lims.StagingManager;
 
 /**
  *
@@ -41,6 +43,9 @@ public class FlinkController implements Serializable {
   @ManagedProperty(value = "#{studyManagedBean}")
   private transient StudyMB study;
 
+  @EJB
+  private StagingManager stagingManager;
+
   private String jobjarmain;
   private String jobArgs;
   private int paral = 1;
@@ -52,7 +57,9 @@ public class FlinkController implements Serializable {
   @PostConstruct
   public void init() {
     try {
-      jc.setBasePath(study.getStudyName(), study.getUsername());
+      String path = stagingManager.getStagingPath() + File.separator + "jobs"
+              + File.separator + study.getUsername() + File.separator + study.getStudyName();
+      jc.setBasePath(path);
     } catch (IOException c) {
       logger.log(Level.SEVERE, "Failed to create directory structure.", c);
       MessagesController.addErrorMessage(
@@ -108,7 +115,9 @@ public class FlinkController implements Serializable {
       jc.handleFileUpload(key, event);
     } catch (IllegalStateException e) {
       try {
-        jc.setBasePath(study.getStudyName(), study.getUsername());
+        String path = stagingManager.getStagingPath() + File.separator + "jobs" + File.separator + study.
+                getUsername() + File.separator + study.getStudyName();
+        jc.setBasePath(path);
         jc.handleFileUpload(key, event);
       } catch (IOException c) {
         logger.log(Level.SEVERE, "Failed to create directory structure.", c);
