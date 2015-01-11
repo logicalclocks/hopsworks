@@ -1,5 +1,6 @@
 package se.kth.bbc.study.samples;
 
+import java.util.Date;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -53,6 +54,13 @@ public class SampleFacade extends AbstractFacade<Sample> {
       em.flush();
     }
     em.persist(meta);
+  }
+  
+  public void persist(Sample s){
+    if(s.getSampledTime() == null){
+      s.setSampledTime(new Date());
+    }
+    em.persist(s);
   }
 
 }

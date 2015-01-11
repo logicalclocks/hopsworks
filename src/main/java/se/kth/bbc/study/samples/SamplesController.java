@@ -1,5 +1,7 @@
 package se.kth.bbc.study.samples;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -10,6 +12,9 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.primefaces.model.DualListModel;
+import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.fileoperations.FileOperationsManagedBean;
+import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.study.metadata.CollectionTypeStudyDesignEnum;
@@ -33,12 +38,17 @@ public class SamplesController {
 
   @EJB
   private SampleFacade sampleFacade;
+  
+  @EJB
+  private FileOperations fileOps;
 
   private boolean collectionSelected = false;
   private boolean sampleSelected = false;
 
   private Samplecollection selectedCollection;
   private Sample selectedSample;
+
+  private String newSampleId;
 
   public List<Samplecollection> getSamplecollection() {
     return samplecollectionFacade.findByStudyname(study.getStudyName());
@@ -82,6 +92,14 @@ public class SamplesController {
 
   public void setSelectedSample(Sample selectedSample) {
     this.selectedSample = selectedSample;
+  }
+
+  public String getNewSampleId() {
+    return newSampleId;
+  }
+
+  public void setNewSampleId(String newSampleId) {
+    this.newSampleId = newSampleId;
   }
 
   public void selectCollection(String id) {
@@ -135,7 +153,7 @@ public class SamplesController {
 
   public void setCollectionTypeDualList(
           DualListModel<CollectionTypeStudyDesignEnum> duallist) {
-    System.out.println("called set collection type: "+duallist.getTarget());
+    System.out.println("called set collection type: " + duallist.getTarget());
     this.selectedCollection.setCollectionTypeList(duallist.getTarget());
   }
 
@@ -155,7 +173,7 @@ public class SamplesController {
   }
 
   public void setMaterialTypeDualList(DualListModel<MaterialTypeEnum> duallist) {
-    System.out.println("called set material type: "+duallist.getTarget());
+    System.out.println("called set material type: " + duallist.getTarget());
     this.selectedSample.setMaterialTypeList(duallist.getTarget());
   }
 
@@ -184,12 +202,65 @@ public class SamplesController {
               "Failed to update data.", "updateFail");
     }
   }
-  
-  public void updateAll(){
-    if(selectedCollection != null){
+
+  public void updateAll() {
+    if (selectedCollection != null) {
       updateSampleCollection();
-      if(selectedSample != null){
+      if (selectedSample != null) {
         updateSample();
+      }
+    }
+  }
+
+  public void createNewSample() {
+    if (newSampleId == null) {
+      //should never happen
+      return;
+    }
+    Sample s = new Sample(newSampleId);
+    s.setSamplecollectionId(selectedCollection);
+    try {
+      sampleFacade.persist(s);
+      //To refresh the selectedCollection
+      selectedCollection = samplecollectionFacade.findById(selectedCollection.getId());
+    } catch (EJBException e) {
+      MessagesController.addErrorMessage("Adding sample failed",
+              "Failed to create sample", "message");
+      logger.log(Level.SEVERE,"Error while persisting new sample.",e);
+      return;
+    }
+    try{
+      createSampleDir(newSampleId);
+    }catch(IOException e){
+      MessagesController.addErrorMessage("Failed to create directory structure", "An error occurred while creating the directory structure for this sample. A database record has been added.", "message");
+      logger.log(Level.SEVERE,"Error while creating sample directory structure.",e);
+    }
+    MessagesController.addInfoMessage("Success", "Sample has been added", "message");
+  }
+
+  private void createSampleDir(String sampleId) throws IOException{
+    //Construct path
+    String path = File.separator + FileSystemOperations.DIR_ROOT
+            + File.separator + study.getStudyName()
+            + File.separator + FileSystemOperations.DIR_SAMPLES
+            + File.separator + selectedCollection.getId()
+            + File.separator + sampleId;
+
+    //create dirs in fs
+    boolean success;
+    //TODO: make validator for existing sample ids
+    //add all (sub)directories
+    String[] folders = {path,
+      path + File.separator + FileSystemOperations.DIR_BAM,
+      path + File.separator + FileSystemOperations.DIR_FASTQ,
+      path + File.separator + FileSystemOperations.DIR_VCF};
+
+    for (String s : folders) {
+      success = fileOps.mkDir(s);
+      if (!success) {
+        MessagesController.addErrorMessage(MessagesController.ERROR,
+                "Failed to create folder " + s + ".");
+        return;
       }
     }
   }

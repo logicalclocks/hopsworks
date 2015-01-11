@@ -42,7 +42,7 @@
                                             </h:inputText>
                                             <p:selectOneMenu id="templateChooser" widgetVar="chooser" value="#{newStudyController.chosenTemplate}">
                                                 <f:selectItems value="#{newStudyController.studyTemplates}"/>
-                                                <p:ajax update="@form" process="@form"/>
+                                                <p:ajax update="@form" process="@this"/>
                                             </p:selectOneMenu>
                                             <h:commandButton id="addStudy" class="styled-button" value="Create Study" type="submit" action="#{newStudyController.createStudy()}"/>
                                         </div>
@@ -52,7 +52,7 @@
                                         All created studies are private. You choose who can see the study and share it with others.
                                     </p>
                                     <p align="left">
-                                        Select services:
+                                        <h:outputText value="Select services:" rendered="#{newStudyController.shouldShowSelector()}"/>
                                     </p>
                                     <p:selectManyCheckbox value="#{newStudyController.customServices}" id="serviceSelection" widgetVar="serviceSelector" rendered="#{newStudyController.shouldShowSelector()}" layout="grid" columns="3">
                                         <f:converter converterId="studyServiceConverter"/>

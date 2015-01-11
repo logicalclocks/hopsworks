@@ -10,6 +10,7 @@
             <h:form styleClass="samples" id="samplesForm">
                 <p:growl for="updateSuccess" autoUpdate="true" showDetail="true"/>
                 <p:growl for="updateSuccess" autoUpdate="true" showDetail="true"/>
+                <p:growl for="message" autoUpdate="true" showDetail="true"/>
                 <p:panelGrid columns="1">
                     <p:panel id="samplecollections">
                         <div>
@@ -88,7 +89,8 @@
                             </h:panelGrid>
                             <h:outputText value="Select a sample in the panel on the left." rendered="#{not samplesController.sampleSelected}"/>
 
-                            <p:commandButton value="Add sample" />
+                        <p:commandButton id="addData" value="Add sample" 
+                                         type="button" onclick="PF('addSampleDlg').show()" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                             <p:commandButton value="Save" action="#{samplesController.updateSample()}" update="@form" disabled="#{not samplesController.sampleSelected}"/>
                         </h:panelGrid>
                     </p:panel>

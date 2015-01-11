@@ -64,7 +64,7 @@ public class Sample implements Serializable {
   @ManyToOne
   private AnatomicalPart anatomicalSite;
   @OneToMany(mappedBy = "parentId")
-  private Collection<Sample> sampleCollection;
+  private Collection<Sample> childSamplesCollection;
   @JoinColumn(name = "parent_id",
           referencedColumnName = "id")
   @ManyToOne
@@ -119,12 +119,12 @@ public class Sample implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public Collection<Sample> getSampleCollection() {
-    return sampleCollection;
+  public Collection<Sample> getChildSamplesCollection() {
+    return childSamplesCollection;
   }
 
-  public void setSampleCollection(Collection<Sample> sampleCollection) {
-    this.sampleCollection = sampleCollection;
+  public void setChildSamplesCollection(Collection<Sample> childSamplesCollection) {
+    this.childSamplesCollection = childSamplesCollection;
   }
 
   public Sample getParentId() {
