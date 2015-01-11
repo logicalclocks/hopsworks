@@ -11,6 +11,9 @@ import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.primefaces.model.DualListModel;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.fileoperations.FileOperationsManagedBean;
@@ -18,6 +21,7 @@ import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.study.metadata.CollectionTypeStudyDesignEnum;
+import se.kth.kthfsdashboard.user.UserFacade;
 
 /**
  *
@@ -38,9 +42,12 @@ public class SamplesController {
 
   @EJB
   private SampleFacade sampleFacade;
-  
+
   @EJB
   private FileOperations fileOps;
+
+  @EJB
+  private UserFacade userfacade;
 
   private boolean collectionSelected = false;
   private boolean sampleSelected = false;
@@ -49,6 +56,7 @@ public class SamplesController {
   private Sample selectedSample;
 
   private String newSampleId;
+  private Samplecollection newCollection = new Samplecollection();
 
   public List<Samplecollection> getSamplecollection() {
     return samplecollectionFacade.findByStudyname(study.getStudyName());
@@ -100,6 +108,14 @@ public class SamplesController {
 
   public void setNewSampleId(String newSampleId) {
     this.newSampleId = newSampleId;
+  }
+
+  public Samplecollection getNewCollection() {
+    return newCollection;
+  }
+
+  public void setNewCollection(Samplecollection newCollection) {
+    this.newCollection = newCollection;
   }
 
   public void selectCollection(String id) {
@@ -215,6 +231,9 @@ public class SamplesController {
   public void createNewSample() {
     if (newSampleId == null) {
       //should never happen
+      MessagesController.addErrorMessage("Error",
+              "An error occurred while trying to create a new sample. Please try again.",
+              "message");
       return;
     }
     Sample s = new Sample(newSampleId);
@@ -222,23 +241,28 @@ public class SamplesController {
     try {
       sampleFacade.persist(s);
       //To refresh the selectedCollection
-      selectedCollection = samplecollectionFacade.findById(selectedCollection.getId());
+      selectedCollection = samplecollectionFacade.findById(selectedCollection.
+              getId());
     } catch (EJBException e) {
       MessagesController.addErrorMessage("Adding sample failed",
               "Failed to create sample", "message");
-      logger.log(Level.SEVERE,"Error while persisting new sample.",e);
+      logger.log(Level.SEVERE, "Error while persisting new sample.", e);
       return;
     }
-    try{
+    try {
       createSampleDir(newSampleId);
-    }catch(IOException e){
-      MessagesController.addErrorMessage("Failed to create directory structure", "An error occurred while creating the directory structure for this sample. A database record has been added.", "message");
-      logger.log(Level.SEVERE,"Error while creating sample directory structure.",e);
+    } catch (IOException e) {
+      MessagesController.addErrorMessage("Failed to create directory structure",
+              "An error occurred while creating the directory structure for this sample. A database record has been added however.",
+              "message");
+      logger.log(Level.SEVERE,
+              "Error while creating sample directory structure.", e);
     }
-    MessagesController.addInfoMessage("Success", "Sample has been added", "message");
+    MessagesController.addInfoMessage("Success", "Sample has been added",
+            "message");
   }
 
-  private void createSampleDir(String sampleId) throws IOException{
+  private void createSampleDir(String sampleId) throws IOException {
     //Construct path
     String path = File.separator + FileSystemOperations.DIR_ROOT
             + File.separator + study.getStudyName()
@@ -263,6 +287,67 @@ public class SamplesController {
         return;
       }
     }
+  }
+
+  private void createSampleCollectionDir(String collectionId) throws IOException {
+    //Construct path
+    String path = File.separator + FileSystemOperations.DIR_ROOT
+            + File.separator + study.getStudyName()
+            + File.separator + FileSystemOperations.DIR_SAMPLES
+            + File.separator + collectionId;
+
+    //create dir in fs
+    boolean success;
+    //TODO: make validator for existing sample ids
+
+    success = fileOps.mkDir(path);
+    if (!success) {
+      MessagesController.addErrorMessage(MessagesController.ERROR,
+              "Failed to create folder " + path + ".");
+    }
+
+  }
+
+  public void createNewCollection() {
+    if (newCollection == null) {
+      //should never happen
+      MessagesController.addErrorMessage("Error",
+              "An error occurred while trying to create a new sample collection. Please try again.",
+              "message");
+      return;
+    }
+    try {
+      newCollection.setContact(userfacade.findByEmail(getUsername()));
+      newCollection.setStudy(study.getStudy());
+      samplecollectionFacade.persist(newCollection);
+    } catch (EJBException e) {
+      MessagesController.addErrorMessage("Adding collection failed",
+              "Failed to create collection", "message");
+      logger.log(Level.SEVERE, "Error while persisting new collection.", e);
+      return;
+    }
+    try {
+      createSampleCollectionDir(newCollection.getId());
+    } catch (IOException e) {
+      MessagesController.addErrorMessage("Failed to create directory structure",
+              "An error occurred while creating the directory structure for this sample collection. A database record has been added however.",
+              "message");
+      logger.log(Level.SEVERE,
+              "Error while creating sample collection directory.", e);
+    }
+    MessagesController.addInfoMessage("Success",
+            "Sample collection has been added", "message");
+    newCollection = new Samplecollection();
+  }
+
+  //TODO: move these to a common class
+  private HttpServletRequest getRequest() {
+    return (HttpServletRequest) FacesContext.getCurrentInstance().
+            getExternalContext().getRequest();
+  }
+
+  private String getUsername() {
+    return getRequest().getUserPrincipal().getName();
   }
 
 }

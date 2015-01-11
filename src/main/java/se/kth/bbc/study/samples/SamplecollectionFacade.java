@@ -59,5 +59,9 @@ public class SamplecollectionFacade extends AbstractFacade<Samplecollection> {
     }
     em.persist(meta);
   }
+  
+  public void persist(Samplecollection s){
+    em.persist(s);
+  }
 
 }

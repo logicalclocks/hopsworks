@@ -127,7 +127,7 @@
                     <p:commandButton value="Cancel" type="button" onclick="PF('createFolderDlg').hide()"/>
                 </h:form>
             </p:dialog>
-            <p:dialog id="addSampleDialog" widgetVar="addSampleDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample">
+            <p:dialog id="addSampleDialog" widgetVar="addSampleDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
                 <h:form>
                     <p:outputLabel for="sampleName" value="Sample ID"/>
                     <!--  TODO: add check on existing samples -->
@@ -186,6 +186,26 @@
                         <f:facet name="targetCaption">Selected</f:facet>
                     </p:pickList>
                     <p:commandButton value="OK" oncomplete="PF('editMaterialTypesDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('samplesForm')}"/>
+                </h:form>
+            </p:dialog>
+
+            <p:dialog id="addCollectionDialog" widgetVar="addCollectionDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample collection" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+                <h:form>
+                    <h:panelGrid columns="2">
+                        <p:outputLabel for="collId" value="Collection ID"/>
+                        <!--  TODO: add check on existing collections -->
+                        <p:inputText id="collId" required="true" value="#{samplesController.newCollection.id}"/>
+                        
+                        <p:outputLabel for="collAcro" value="Acronym"/>
+                        <!--  TODO: add check on existing collections -->
+                        <p:inputText id="collAcro" required="true" value="#{samplesController.newCollection.acronym}"/>
+                        
+                        <p:outputLabel for="collName" value="Name"/>
+                        <!--  TODO: add check on existing collections -->
+                        <p:inputText id="collName" required="true" value="#{samplesController.newCollection.name}"/>
+                    </h:panelGrid>
+                    <p:commandButton value="Create" action="#{samplesController.createNewCollection()}" oncomplete="PF('addCollectionDlg').hide()" update=":#{p:component('samplesForm')}"/>
+                    <p:commandButton type="button" value="Cancel" onclick="PF('addCollectionDlg').hide()"/>
                 </h:form>
             </p:dialog>
         </h:body>

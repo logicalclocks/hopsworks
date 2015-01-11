@@ -158,7 +158,7 @@ public class StudyMB implements Serializable {
 
     public TrackStudy getStudy() {
         if (study == null) {
-            study = new TrackStudy();
+            study = studyController.findByName(studyName);
         }
         return study;
     }
