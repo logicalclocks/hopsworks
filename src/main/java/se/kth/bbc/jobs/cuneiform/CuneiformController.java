@@ -29,6 +29,7 @@ import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.RunningJobTracker;
+import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.yarn.AsynchronousYarnApplication;
 import se.kth.bbc.jobs.yarn.YarnRunner;
@@ -55,6 +56,8 @@ public class CuneiformController implements Serializable {
   private boolean started = false;
   private boolean finished = false;
   private String jobName;
+  
+  private String finalState;
 
   private String stdoutPath;
   private String stderrPath;
@@ -197,8 +200,14 @@ public class CuneiformController implements Serializable {
     b.appMasterMainClass(
             "de.huberlin.wbi.hiway.app.am.CuneiformApplicationMaster");
     b.appName("Cuneiform " + jobName);
+    
+    String machineUser = System.getProperty("user.name");
+    if(machineUser == null){
+      machineUser = Constants.DEFAULT_YARN_USER;
+      logger.log(Level.WARNING,"Username not found in system properties, using default \"glassfish\"");
+    }
 
-    b.localResourcesBasePath("/user/" + Constants.YARN_USER + "/hiway/"
+    b.localResourcesBasePath("/user/" + machineUser + "/hiway/"
             + YarnRunner.APPID_PLACEHOLDER);
 
     //construct AM arguments
@@ -267,6 +276,7 @@ public class CuneiformController implements Serializable {
       if (done) {
         stdoutPath = history.findById(jobhistoryid).getStdoutPath();
         stderrPath = history.findById(jobhistoryid).getStderrPath();
+        finalState = history.findById(jobhistoryid).getState();
         //Read stdout
         /*
          * StringBuilder stdOutBuilder = new StringBuilder();
@@ -357,6 +367,23 @@ public class CuneiformController implements Serializable {
       MessagesController.addErrorMessage("Download failed.");
     }
     return sc;
+  }
+  
+  public String getFinalState(){
+    if(!finished){
+      return JobHistory.STATE_RUNNING;
+    }else{
+      return finalState;
+    }
+  }
+  
+  public boolean shouldShowDownload(){
+    if(!finished){
+      return false;
+    }else if(JobHistory.STATE_FINISHED.equals(finalState)){
+      return true;
+    }
+    return false;
   }
 
 }

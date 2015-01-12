@@ -8,14 +8,11 @@ package se.kth.bbc.lims;
  */
 public class Constants {
 
-    //public static final String server = "LOCAL";
-    public static final String server = "SNURRAN";
-
     //Local path to the hiway jar
     public static final String HIWAY_JAR_PATH = "/srv/hiway/hiway-core-0.2.0-SNAPSHOT.jar";
     
     //User under which yarn is run
-    public static final String YARN_USER = "LOCAL".equals(server)? "stig":"glassfish";
+    public static final String DEFAULT_YARN_USER = "glassfish";
     
     //Relative output path (within hdfs study folder) which to write cuneiform output to
     public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH = "Cuneiform/Output/";

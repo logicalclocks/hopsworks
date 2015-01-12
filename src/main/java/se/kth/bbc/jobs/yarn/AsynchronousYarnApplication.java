@@ -97,6 +97,7 @@ public class AsynchronousYarnApplication {
       logger.log(Level.SEVERE, "Failed to start app master.", ex);
       //TODO: probably doesn't make much sense, check what should happen. (In relation to state changing in handleExecution().)
       jobHistoryFacade.update(id, JobHistory.STATE_FRAMEWORK_FAILURE);
+      return;
     }
     monitor(runner);
   }
