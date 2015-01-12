@@ -1,4 +1,4 @@
-package se.kth.bbc.study.samples;
+package se.kth.bbc.study.samples.validators;
 
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
@@ -8,6 +8,7 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
+import se.kth.bbc.study.samples.SamplecollectionFacade;
 
 /**
  *
@@ -15,21 +16,18 @@ import javax.faces.validator.ValidatorException;
  */
 @ManagedBean
 @RequestScoped
-public class UniqueSampleValidator implements Validator{
+public class UniqueCollectionIdValidator implements Validator{
   
   @EJB
-  private SampleFacade sampleFacade;
+  private SamplecollectionFacade collectionFacade;
 
   @Override
   public void validate(FacesContext context, UIComponent component, Object value)
           throws ValidatorException {
-    System.out.println("Validator called.");
-    String sdf = value.toString();
-    if(sampleFacade.existsSampleWithId(value.toString())){ 
+    if(collectionFacade.existsCollectionWithId(value.toString())){ 
 			FacesMessage msg = 
 				new FacesMessage(FacesMessage.SEVERITY_ERROR,"Non-unique id.", 
-						"A sample with this ID already exists.");
-      System.out.println("Non-unique id: aborting");
+						"A collection with this ID already exists.");
 			throw new ValidatorException(msg); 
 		}
   }

@@ -28,14 +28,16 @@ public class SamplecollectionFacade extends AbstractFacade<Samplecollection> {
   }
 
   public List<Samplecollection> findByStudyname(String studyname) {
-    TypedQuery<Samplecollection> q = em.createNamedQuery("Samplecollection.findByStudyname",
+    TypedQuery<Samplecollection> q = em.createNamedQuery(
+            "Samplecollection.findByStudyname",
             Samplecollection.class);
     q.setParameter("studyname", studyname);
     return q.getResultList();
   }
-  
-  public Samplecollection findById(String id){
-    TypedQuery<Samplecollection> q = em.createNamedQuery("Samplecollection.findById",
+
+  public Samplecollection findById(String id) {
+    TypedQuery<Samplecollection> q = em.createNamedQuery(
+            "Samplecollection.findById",
             Samplecollection.class);
     q.setParameter("id", id);
     try {
@@ -45,10 +47,12 @@ public class SamplecollectionFacade extends AbstractFacade<Samplecollection> {
     }
   }
 
-  /*TODO: this must be the most idiotic update function ever written... But:
+  /*
+   * TODO: this must be the most idiotic update function ever written... But:
    * Writing
-   *  em.merge(meta);
-   * for some reason fails. The resulting queries insert study_id null in the STUDY_DESIGN table.
+   * em.merge(meta);
+   * for some reason fails. The resulting queries insert study_id null in the
+   * STUDY_DESIGN table.
    * I have not yet figured out why...
    */
   public void update(Samplecollection meta) {
@@ -59,9 +63,35 @@ public class SamplecollectionFacade extends AbstractFacade<Samplecollection> {
     }
     em.persist(meta);
   }
-  
-  public void persist(Samplecollection s){
+
+  public void persist(Samplecollection s) {
     em.persist(s);
+  }
+
+  /**
+   * Check if a collection with this id already exists.
+   * <p>
+   * @param id
+   * @return
+   */
+  public boolean existsCollectionWithId(String id) {
+    TypedQuery<Samplecollection> q = em.createNamedQuery(
+            "Samplecollection.findById", Samplecollection.class);
+    q.setParameter("id", id);
+    return q.getResultList().size() > 0;
+  }
+
+  /**
+   * Check if a collection with this acronym already exists.
+   * <p>
+   * @param acronym
+   * @return
+   */
+  public boolean existsCollectionWithAcronym(String acronym) {
+    TypedQuery<Samplecollection> q = em.createNamedQuery(
+            "Samplecollection.findByAcronym", Samplecollection.class);
+    q.setParameter("acronym", acronym);
+    return q.getResultList().size() > 0;
   }
 
 }

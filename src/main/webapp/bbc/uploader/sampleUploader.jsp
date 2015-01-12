@@ -66,7 +66,7 @@
       
           <div style="width: 90%;height: 25px;"></div>  
           <a href="../lims/studyPage.xhtml" >
-                  <input type="button" class="button-add button-add-data" value="Upload file"/>
+                  <input type="button" class="button-add button-add-data" value="Return"/>
             </a>
       <script>
         var r = new Resumable({

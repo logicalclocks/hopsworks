@@ -194,20 +194,28 @@
 
             <p:dialog id="addCollectionDialog" widgetVar="addCollectionDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample collection" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
                 <h:form>
-                    <h:panelGrid columns="2">
+                    <h:panelGrid columns="3">
                         <p:outputLabel for="collId" value="Collection ID"/>
                         <!--  TODO: add check on existing collections -->
-                        <p:inputText id="collId" required="true" value="#{samplesController.newCollection.id}"/>
+                        <p:inputText id="collId" required="true" value="#{samplesController.newCollection.id}"> 
+                            <f:validator binding="#{uniqueCollectionIdValidator}"/> 
+                        </p:inputText>
+                        <p:message for="collId"/>
 
                         <p:outputLabel for="collAcro" value="Acronym"/>
                         <!--  TODO: add check on existing collections -->
-                        <p:inputText id="collAcro" required="true" value="#{samplesController.newCollection.acronym}"/>
+                        <p:inputText id="collAcro" required="true" value="#{samplesController.newCollection.acronym}"> 
+                            <f:validator binding="#{uniqueCollectionAcronymValidator}"/> 
+                        </p:inputText>
+                        <p:message for="collAcro"/>
 
                         <p:outputLabel for="collName" value="Name"/>
                         <!--  TODO: add check on existing collections -->
                         <p:inputText id="collName" required="true" value="#{samplesController.newCollection.name}"/>
                     </h:panelGrid>
-                    <p:commandButton value="Create" action="#{samplesController.createNewCollection()}" oncomplete="PF('addCollectionDlg').hide()" update=":#{p:component('samplesForm')}"/>
+                    <p:commandButton value="Create" action="#{samplesController.createNewCollection()}" 
+                                     oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addCollectionDlg').hide()" 
+                                     update="@form :#{p:component('samplesForm')}"/>
                     <p:commandButton type="button" value="Cancel" onclick="PF('addCollectionDlg').hide()"/>
                 </h:form>
             </p:dialog>

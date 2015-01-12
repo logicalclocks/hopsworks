@@ -21,7 +21,7 @@
                         <h:panelGrid columns="2" columnClasses="firstColumn,secondColumn">
                             <p:dataTable var="coll" value="#{samplesController.samplecollection}">
                                 <p:column headerText="Collections">
-                                    <p:commandLink value="#{coll.name}" actionListener="#{samplesController.selectCollection(coll.id)}" update="@form :#{p:component('editCollectionTypesDialog')}"/>
+                                    <p:commandLink value="#{coll.acronym}" actionListener="#{samplesController.selectCollection(coll.id)}" update="@form :#{p:component('editCollectionTypesDialog')}"/>
                                 </p:column>
                             </p:dataTable>
                             <h:panelGrid columns="2" columnClasses="firstColumn,secondColumn" id="collectionInfo" rendered="#{samplesController.collectionSelected}">
