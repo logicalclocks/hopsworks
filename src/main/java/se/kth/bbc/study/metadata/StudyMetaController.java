@@ -58,11 +58,11 @@ public class StudyMetaController implements Serializable {
       metadata.setInclusionCriteriaList(inclusionCriteriaDual.getTarget());
       studyMetaFacade.update(metadata);
     } catch (EJBException ejb) {
-      MessagesController.addErrorMessage("Update failed.");
+      MessagesController.addErrorMessage("Failed","Update failed.","updateMessage");
       return;
     }
     MessagesController.
-            addInfoMessage("Success", "Metadata has been updated.");
+            addInfoMessage("Success", "Metadata has been updated.","updateMessage");
   }
 
   @PostConstruct

@@ -265,7 +265,7 @@ public class SamplesController {
     String path = File.separator + FileSystemOperations.DIR_ROOT
             + File.separator + study.getStudyName()
             + File.separator + FileSystemOperations.DIR_SAMPLES
-            + File.separator + selectedCollection.getId()
+            + File.separator + selectedCollection.getAcronym()
             + File.separator + sampleId;
 
     //create dirs in fs
@@ -287,12 +287,12 @@ public class SamplesController {
     }
   }
 
-  private void createSampleCollectionDir(String collectionId) throws IOException {
+  private void createSampleCollectionDir(String folderName) throws IOException {
     //Construct path
     String path = File.separator + FileSystemOperations.DIR_ROOT
             + File.separator + study.getStudyName()
             + File.separator + FileSystemOperations.DIR_SAMPLES
-            + File.separator + collectionId;
+            + File.separator + folderName;
 
     //create dir in fs
     boolean success;
@@ -325,7 +325,7 @@ public class SamplesController {
       return;
     }
     try {
-      createSampleCollectionDir(newCollection.getId());
+      createSampleCollectionDir(newCollection.getAcronym());
     } catch (IOException e) {
       MessagesController.addErrorMessage("Failed to create directory structure",
               "An error occurred while creating the directory structure for this sample collection. A database record has been added however.",

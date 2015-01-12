@@ -2404,3 +2404,8 @@ ui-wizard {
   margin-top: 0px;
   margin-bottom: 0px;
 }
+
+.historyForm label {
+  margin-bottom: 0;
+  padding-top: 0;
+}

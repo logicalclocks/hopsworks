@@ -33,7 +33,6 @@ import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
-import se.kth.bbc.jobs.yarn.AsynchronousYarnApplication;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.StagingManager;
 
@@ -345,6 +344,9 @@ public class CuneiformController implements Serializable {
    * return stderr;
    * }
    */
+  
+  //TODO: move download methods to JobHistoryController
+  
   public StreamedContent downloadStdout() {
     try {
       String extension = "log";
@@ -375,7 +377,7 @@ public class CuneiformController implements Serializable {
     InputStream is = fops.getInputStream(path);
     StreamedContent sc = new DefaultStreamedContent(is, extension, filename);
     logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
-            stderrPath);
+            path);
     return sc;
   }
 
