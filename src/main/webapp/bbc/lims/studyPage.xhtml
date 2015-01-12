@@ -131,9 +131,12 @@
                 <h:form>
                     <p:outputLabel for="sampleName" value="Sample ID"/>
                     <!--  TODO: add check on existing samples -->
-                    <p:inputText id="sampleName" required="true" value="#{samplesController.newSampleId}"/>
+                    <p:inputText id="sampleName" required="true" value="#{samplesController.newSampleId}" placeholder="id"> 
+                        <f:validator binding="#{uniqueSampleValidator}"/> 
+                    </p:inputText>
+                    <p:message for="sampleName"/>
 
-                    <p:commandButton value="Create" action="#{samplesController.createNewSample()}" oncomplete="PF('addSampleDlg').hide()" update=":#{p:component('samplesForm')}"/>
+                    <p:commandButton value="Create" action="#{samplesController.createNewSample()}" oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addSampleDlg').hide()" update="@form :#{p:component('samplesForm')}"/>
                     <p:commandButton type="button" value="Cancel" onclick="PF('addSampleDlg').hide()"/>
                 </h:form>
             </p:dialog>
@@ -195,11 +198,11 @@
                         <p:outputLabel for="collId" value="Collection ID"/>
                         <!--  TODO: add check on existing collections -->
                         <p:inputText id="collId" required="true" value="#{samplesController.newCollection.id}"/>
-                        
+
                         <p:outputLabel for="collAcro" value="Acronym"/>
                         <!--  TODO: add check on existing collections -->
                         <p:inputText id="collAcro" required="true" value="#{samplesController.newCollection.acronym}"/>
-                        
+
                         <p:outputLabel for="collName" value="Name"/>
                         <!--  TODO: add check on existing collections -->
                         <p:inputText id="collName" required="true" value="#{samplesController.newCollection.name}"/>

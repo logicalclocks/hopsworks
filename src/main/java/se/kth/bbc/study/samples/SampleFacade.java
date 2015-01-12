@@ -62,5 +62,16 @@ public class SampleFacade extends AbstractFacade<Sample> {
     }
     em.persist(s);
   }
+  
+  /**
+   * Check if a sample with this id already exists.
+   * @param id
+   * @return 
+   */
+  public boolean existsSampleWithId(String id){
+    TypedQuery<Sample> q = em.createNamedQuery("Sample.findById", Sample.class);
+    q.setParameter("id", id);
+    return q.getResultList().size() > 0;
+  }
 
 }

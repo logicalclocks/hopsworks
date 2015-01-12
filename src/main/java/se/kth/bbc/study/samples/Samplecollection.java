@@ -70,8 +70,8 @@ public class Samplecollection implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
-          max = 1024)
-  @Column(name = "acronym")
+          max = 255)
+  @Column(name = "acronym",unique = true)
   private String acronym;
   @Basic(optional = false)
   @NotNull
