@@ -31,6 +31,8 @@ import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.RunningJobTracker;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.JobOutputFile;
+import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.yarn.AsynchronousYarnApplication;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.StagingManager;
@@ -56,7 +58,7 @@ public class CuneiformController implements Serializable {
   private boolean started = false;
   private boolean finished = false;
   private String jobName;
-  
+
   private String finalState;
 
   private String stdoutPath;
@@ -66,17 +68,20 @@ public class CuneiformController implements Serializable {
   private StudyMB study;
 
   @EJB
-  private AsynchronousYarnApplication submitter;
+  private AsynchronousCuneiformJob submitter;
 
   @EJB
   private JobHistoryFacade history;
+
+  @EJB
+  private JobOutputFileFacade jobOutputFacade;
 
   @EJB
   private RunningJobTracker runningJobs;
 
   @EJB
   private FileOperations fops;
-  
+
   @EJB
   private StagingManager stagingManager;
 
@@ -101,7 +106,8 @@ public class CuneiformController implements Serializable {
   @PostConstruct
   public void init() {
     try {
-      String path = stagingManager.getStagingPath() + File.separator + study.getUsername() + File.separator + study.getStudyName();
+      String path = stagingManager.getStagingPath() + File.separator + study.
+              getUsername() + File.separator + study.getStudyName();
       jc.setBasePath(path);
     } catch (IOException c) {
       logger.log(Level.SEVERE, "Failed to create directory structure.", c);
@@ -138,11 +144,11 @@ public class CuneiformController implements Serializable {
       for (String s : freenames) {
         this.freevars.add(new CuneiformParameter(s, null));
       }
-      
+
       List<String> targetnames = StaticNodeVisitor.getTargetVarNameList(tlc);
       this.targetVars = new ArrayList<>(targetnames.size());
-      for(String s: targetnames) {
-        this.targetVars.add(new CuneiformParameter(s,null));
+      for (String s : targetnames) {
+        this.targetVars.add(new CuneiformParameter(s, null));
       }
     } catch (HasFailedException | IOException e) {
       MessagesController.addErrorMessage(
@@ -176,7 +182,7 @@ public class CuneiformController implements Serializable {
   public List<CuneiformParameter> getFreeVars() {
     return freevars;
   }
-  
+
   public List<CuneiformParameter> getTargetVars() {
     return targetVars;
   }
@@ -184,8 +190,8 @@ public class CuneiformController implements Serializable {
   public void setFreeVars(List<CuneiformParameter> vars) {
     this.freevars = vars;
   }
-  
-  public void setTargetVars(List<CuneiformParameter> vars){
+
+  public void setTargetVars(List<CuneiformParameter> vars) {
     this.targetVars = vars;
   }
 
@@ -195,16 +201,19 @@ public class CuneiformController implements Serializable {
       jobName = "Untitled job";
     }
 
+    String resultName = "results";
+
     YarnRunner.Builder b = new YarnRunner.Builder(Constants.HIWAY_JAR_PATH,
             "Hiway.jar");
     b.appMasterMainClass(
             "de.huberlin.wbi.hiway.app.am.CuneiformApplicationMaster");
     b.appName("Cuneiform " + jobName);
-    
+
     String machineUser = System.getProperty("user.name");
-    if(machineUser == null){
+    if (machineUser == null) {
       machineUser = Constants.DEFAULT_YARN_USER;
-      logger.log(Level.WARNING,"Username not found in system properties, using default \"glassfish\"");
+      logger.log(Level.WARNING,
+              "Username not found in system properties, using default \"glassfish\"");
     }
 
     b.localResourcesBasePath("/user/" + machineUser + "/hiway/"
@@ -215,6 +224,8 @@ public class CuneiformController implements Serializable {
     args.append(getFileName(jc.getFilePath(KEY_WORKFLOW_FILE)));
     args.append(" --appid ");
     args.append(YarnRunner.APPID_PLACEHOLDER);
+    args.append(" --summary ");
+    args.append(resultName);
 
     b.appMasterArgs(args.toString());
 
@@ -248,7 +259,8 @@ public class CuneiformController implements Serializable {
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
               + File.separator + "stderr.log";
       submitter.registerJob(jobhistoryid, r);
-      submitter.handleExecution(jobhistoryid, r, stdOutFinalDestination, stdErrFinalDestination);
+      submitter.handleExecution(jobhistoryid, r, stdOutFinalDestination,
+              stdErrFinalDestination, resultName);
       MessagesController.addInfoMessage("App master started!");
     } else {
       logger.log(Level.SEVERE,
@@ -334,56 +346,104 @@ public class CuneiformController implements Serializable {
    * }
    */
   public StreamedContent downloadStdout() {
-
-    StreamedContent sc = null;
     try {
-      InputStream is = fops.getInputStream(stdoutPath);
       String extension = "log";
       String filename = "stdout.log";
-
-      sc = new DefaultStreamedContent(is, extension, filename);
-      logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
-              stdoutPath);
+      return downloadFile(stdoutPath,extension,filename);
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Failed to download stdout", ex);
+      logger.log(Level.SEVERE, "Failed to download stdout. JobId: "+jobhistoryid+", path: "+stdoutPath, ex);
       MessagesController.addErrorMessage(MessagesController.ERROR,
               "Download failed.");
     }
-    return sc;
+    return null;
   }
 
   public StreamedContent downloadStderr() {
-    StreamedContent sc = null;
+    String extension = "log";
+    String filename = "stderr.log";
     try {
-      InputStream is = fops.getInputStream(stderrPath);
-      String extension = "log";
-      String filename = "stderr.log";
-
-      sc = new DefaultStreamedContent(is, extension, filename);
-      logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
-              stderrPath);
+      return downloadFile(stderrPath, extension, filename);
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Failed to download stderr", ex);
+      logger.log(Level.SEVERE, "Failed to download stderr. JobId: "+jobhistoryid+", path: "+stderrPath, ex);
       MessagesController.addErrorMessage("Download failed.");
     }
+    return null;
+  }
+
+  private StreamedContent downloadFile(String path, String extension,
+          String filename) throws IOException {
+    InputStream is = fops.getInputStream(path);
+    StreamedContent sc = new DefaultStreamedContent(is, extension, filename);
+    logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
+            stderrPath);
     return sc;
   }
-  
-  public String getFinalState(){
-    if(!finished){
+
+  public String getFinalState() {
+    if (!finished) {
       return JobHistory.STATE_RUNNING;
-    }else{
+    } else {
       return finalState;
     }
   }
-  
-  public boolean shouldShowDownload(){
-    if(!finished){
+
+  public boolean shouldShowDownload() {
+    if (!finished) {
       return false;
-    }else if(JobHistory.STATE_FINISHED.equals(finalState)){
+    } else if (JobHistory.STATE_FINISHED.equals(finalState)) {
       return true;
     }
     return false;
+  }
+
+  public boolean hasOutputFiles() {
+    return jobOutputFacade.findOutputFilesForJobid(jobhistoryid).size() > 0;
+  }
+
+  public List<String> getOutputFileNames() {
+    List<JobOutputFile> files = jobOutputFacade.findOutputFilesForJobid(
+            jobhistoryid);
+    List<String> names = new ArrayList<>(files.size());
+    for (JobOutputFile file : files) {
+      names.add(file.getJobOutputFilePK().getName());
+    }
+    return names;
+  }
+
+  public StreamedContent downloadOutput(String name) {
+    //find file from facade, get input stream from path
+    JobOutputFile file = jobOutputFacade.findByNameAndJobId(name, jobhistoryid);
+    if (file == null) {
+      //should never happen
+      MessagesController.addErrorMessage(
+              "Something went wrong while downloading " + name + ".");
+      logger.log(Level.SEVERE,
+              "Trying to download an output file that does not exist. JobId:{0}, filename: {1}",
+              new Object[]{jobhistoryid,
+                name});
+      return null;
+    }
+    String path = file.getPath();
+    
+    
+    String extension = getExtension(name);
+    try {
+      return downloadFile(path, extension, name);
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, "Failed to download output file "+name+". Jobid: "+jobhistoryid+", path: "+path, ex);
+      MessagesController.addErrorMessage("Download failed.");
+    }
+    return null;
+  }
+  
+  //TODO: put in utilities class
+  private static String getExtension(String filename){
+    int lastDot = filename.lastIndexOf(".");
+    if(lastDot < 0){
+      return "";
+    }else{
+      return filename.substring(lastDot);
+    }
   }
 
 }

@@ -33,7 +33,10 @@ import javax.xml.bind.annotation.XmlRootElement;
           = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.name = :name"),
   @NamedQuery(name = "JobOutputFile.findByPath",
           query
-          = "SELECT j FROM JobOutputFile j WHERE j.path = :path")})
+          = "SELECT j FROM JobOutputFile j WHERE j.path = :path"),
+  @NamedQuery(name = "JobOutputFile.findByNameAndJobId",
+          query
+          = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.name = :name AND j.jobOutputFilePK.jobId = :jobId")})
 public class JobOutputFile implements Serializable {
   private static final long serialVersionUID = 1L;
   @EmbeddedId

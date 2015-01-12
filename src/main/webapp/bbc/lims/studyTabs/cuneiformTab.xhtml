@@ -83,17 +83,35 @@
                             <h:outputText value="FINISHED" rendered="#{cuneiformController.jobStarted and cuneiformController.jobFinished}"/>
                         </h:panelGroup>
                         <div>
-                            <p:commandLink rendered="#{cuneiformController.jobFinished}" ajax="false">
-                                <strong>stdout.log</strong>
-                                <p:fileDownload value="#{cuneiformController.downloadStdout()}"/>
-                            </p:commandLink>
+                            <h:panelGroup id="outputFilesGroup" rendered="#{cuneiformController.jobFinished}" >
+                                <h:outputText value="Results:"/>
+                                <ui:repeat value="#{cuneiformController.outputFileNames}" var="file">
+                                    <div>
+                                        <p:commandLink ajax="false">
+                                            <strong>#{file}</strong>
+                                            <p:fileDownload value="#{cuneiformController.downloadOutput(file)}"/>
+                                        </p:commandLink>
+                                    </div>
+                                </ui:repeat>
+                            </h:panelGroup>
                         </div>
-                        <div>
-                            <p:commandLink rendered="#{cuneiformController.jobFinished}" ajax="false">
-                                <strong>stderr.log</strong>
-                                <p:fileDownload value="#{cuneiformController.downloadStderr()}"/>
-                            </p:commandLink>
-                        </div>
+                        <h:panelGroup rendered="#{cuneiformController.jobFinished}" >
+                            <div>
+                                <h:outputText value="Logs:"/>
+                            </div>
+                            <div>
+                                <p:commandLink ajax="false">
+                                    <strong>stdout.log</strong>
+                                    <p:fileDownload value="#{cuneiformController.downloadStdout()}"/>
+                                </p:commandLink>
+                            </div>
+                            <div>
+                                <p:commandLink ajax="false">
+                                    <strong>stderr.log</strong>
+                                    <p:fileDownload value="#{cuneiformController.downloadStderr()}"/>
+                                </p:commandLink>
+                            </div>
+                        </h:panelGroup>
                     </h:form>
                 </h:panelGrid>
             </div>

@@ -272,5 +272,10 @@ public class FileOperations {
     int lastSlash = path.lastIndexOf("/");
     return path.substring(0, lastSlash);
   }
+  
+  public String cat(String path) throws IOException{
+    Path p = new Path(path);
+    return fsOps.cat(p);
+  }
 
 }

@@ -609,9 +609,9 @@ public class YarnRunner implements CancellableJob{
     // Set params for Application Master
     vargs.add(amArgs);
 
-    vargs.add("1>");
+    vargs.add("1>&1 | tee AppMaster.stdout >");
     vargs.add(stdOutPath);
-    vargs.add("2>");
+    vargs.add("2>&2 | tee AppMaster.stderr >");
     vargs.add(stdErrPath);
 
     // Get final commmand
@@ -774,5 +774,9 @@ public class YarnRunner implements CancellableJob{
   
   public final String getStdErrPath(){
     return stdErrPath;
+  }
+  
+  public final String getLocalResourcesBasePath(){
+    return localResourcesBasePath;
   }
 }

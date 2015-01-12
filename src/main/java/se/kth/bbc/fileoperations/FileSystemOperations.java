@@ -1,8 +1,10 @@
 package se.kth.bbc.fileoperations;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,9 +24,10 @@ import se.kth.bbc.lims.Constants;
 @Stateless
 public class FileSystemOperations {
 
-    //TODO: use fs.copyFromLocalFile
+  //TODO: use fs.copyFromLocalFile
   private static final Logger logger = Logger.getLogger(
           FileSystemOperations.class.getName());
+
   public static final String DIR_ROOT = "Projects";
   public static final String DIR_SAMPLES = "Samples";
   public static final String DIR_CUNEIFORM = "Cuneiform";
@@ -91,36 +94,37 @@ public class FileSystemOperations {
    */
   public boolean rm(Path location, boolean recursive) throws IOException {
     FileSystem fs = getFs();
-    if(fs.exists(location)){
+    if (fs.exists(location)) {
       return fs.delete(location, recursive);
-    }else{
+    } else {
       return true;
     }
   }
 
-  private FileSystem getFs() throws IOException {
-    
+  private static FileSystem getFs() throws IOException {
+
     String coreConfDir = System.getenv("HADOOP_CONF_DIR");
     //If still not found: throw exception
     if (coreConfDir == null) {
-      logger.log(Level.WARNING, "No configuration path set, using default: "+Constants.DEFAULT_HADOOP_CONF_DIR);
+      logger.log(Level.WARNING, "No configuration path set, using default: "
+              + Constants.DEFAULT_HADOOP_CONF_DIR);
       coreConfDir = Constants.DEFAULT_HADOOP_CONF_DIR;
     }
 
     //Get the configuration file at found path
-    File hadoopConfFile = new File(coreConfDir , "core-site.xml");
+    File hadoopConfFile = new File(coreConfDir, "core-site.xml");
     if (!hadoopConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               hadoopConfFile);
       throw new IllegalStateException("No hadoop conf file: hadoop-site.xml");
     }
-    File yarnConfFile = new File(coreConfDir , "yarn-site.xml");
+    File yarnConfFile = new File(coreConfDir, "yarn-site.xml");
     if (!yarnConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               yarnConfFile);
       throw new IllegalStateException("No yarn conf file: yarn-site.xml");
     }
-    File hdfsConfFile = new File(coreConfDir , "hdfs-site.xml");
+    File hdfsConfFile = new File(coreConfDir, "hdfs-site.xml");
     if (!hdfsConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               hdfsConfFile);
@@ -132,11 +136,24 @@ public class FileSystemOperations {
     Path hdfsPath = new Path(hdfsConfFile.getAbsolutePath());
     Path hadoopPath = new Path(hadoopConfFile.getAbsolutePath());
     Configuration conf = new Configuration();
-    conf.addResource(hadoopPath);    
-    conf.addResource(yarnPath);    
-    conf.addResource(hdfsPath);    
+    conf.addResource(hadoopPath);
+    conf.addResource(yarnPath);
+    conf.addResource(hdfsPath);
     FileSystem fs = FileSystem.get(conf);
     return fs;
+  }
+
+  public String cat(Path file) throws IOException{
+    StringBuilder out = new StringBuilder();
+    FileSystem fs = getFs();
+    BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(file)));
+    String line;
+    line = br.readLine();
+    while (line != null) {
+      out.append(line + "\n");
+      line = br.readLine();
+    }
+    return out.toString();
   }
 
 }
