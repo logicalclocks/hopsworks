@@ -26,7 +26,7 @@
                         <div class="content"> 
                             
                             <!--    <div id="frame">-->
-      <h1 class="page_title" align="left">Dataset(s) uploader</h1>
+      <h1 class="page_title" align="left">File Uploader</h1>
 <!--      <hr/>-->
                 <script src="../js/jquery.min.js"></script>
                 <script src="resumable.js"></script>
@@ -41,7 +41,7 @@
       </div>
 
       <div class="resumable-drop" ondragenter="jQuery(this).addClass('resumable-dragover');" ondragend="jQuery(this).removeClass('resumable-dragover');" ondrop="jQuery(this).removeClass('resumable-dragover');">
-        Drag &amp; Drop Genomic data here to upload or
+        Drag &amp; Drop a file into this box to upload or
         <a class="resumable-browse">
             <u>Select data from your computer</u>
         </a>
@@ -66,7 +66,7 @@
       
           <div style="width: 90%;height: 25px;"></div>  
           <a href="../lims/studyPage.xhtml" >
-                  <input type="button" class="button-add button-add-data" value="Check Uploaded Samples"/>
+                  <input type="button" class="button-add button-add-data" value="Upload file"/>
             </a>
       <script>
         var r = new Resumable({
