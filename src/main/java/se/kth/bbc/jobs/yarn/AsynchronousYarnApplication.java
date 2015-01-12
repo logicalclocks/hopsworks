@@ -33,8 +33,6 @@ public class AsynchronousYarnApplication {
   private static final int MAX_STATE_POLL_RETRIES = 10;
   private static final int POLL_TIMEOUT_INTERVAL = 1; //in seconds
 
-  private boolean registered = false;
-
   @EJB
   private RunningJobTracker jobTracker;
 
@@ -44,9 +42,6 @@ public class AsynchronousYarnApplication {
   @EJB
   private FileOperations fops;
 
-  private String stdOutFinalDestination;
-  private String stdErrFinalDestination;
-
   /**
    * Takes care of the execution of the job represented by YarnRunner.
    * Registers the running job and then asynchronously runs and monitors it.
@@ -55,9 +50,9 @@ public class AsynchronousYarnApplication {
    */
   @Asynchronous
   //Netbeans shows an error here, but unrightly so.
-  public void handleExecution(Long id, YarnRunner runner) throws
+  public void handleExecution(Long id, YarnRunner runner, String stdOutFinalPath, String stdErrFinalPath) throws
           IllegalStateException {
-    if (!registered) {
+    if (!jobTracker.isJobRunning(id)) {
       //The Asynchronous annotation must be on a public method, so calling a private
       // asynchronous method does not work. This makes that registerJob() has to be called
       // from the calling entity. Hence, assert it has been called and throw an IllegalStateException if not.
@@ -80,7 +75,7 @@ public class AsynchronousYarnApplication {
     }
     //Copy stdout and stderr to hdfs.
     try {
-      copyStdOutNErr(id, runner.getStdOutPath(), runner.getStdErrPath());
+      copyStdOutNErr(id, runner.getStdOutPath(), stdOutFinalPath, runner.getStdErrPath(), stdErrFinalPath);
     }catch(IOException e){
       //TODO: how should we handle this? Update state? Create file? Put entry in db saying
       //std was not copied?
@@ -109,7 +104,6 @@ public class AsynchronousYarnApplication {
       logger.log(Level.SEVERE, "Failed to register job.", e);
       return false;
     }
-    registered = true;
     return true;
   }
 
@@ -173,7 +167,7 @@ public class AsynchronousYarnApplication {
 
   }
 
-  private void copyStdOutNErr(Long id, String stdOutLocal, String stdErrLocal) throws
+  private void copyStdOutNErr(Long id, String stdOutLocal, String stdOutFinalDestination, String stdErrLocal, String stdErrFinalDestination) throws
           IOException {
     if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
       fops.copyToHDFSFromPath(stdOutLocal, stdOutFinalDestination, null);
@@ -183,14 +177,6 @@ public class AsynchronousYarnApplication {
       fops.copyToHDFSFromPath(stdErrLocal, stdErrFinalDestination, null);
       jobHistoryFacade.updateStdErrPath(id, stdErrFinalDestination);
     }
-  }
-
-  public void setStdOutFinalDestination(String path) {
-    this.stdOutFinalDestination = path;
-  }
-
-  public void setStdErrFinalDestination(String path) {
-    this.stdErrFinalDestination = path;
   }
   
   private void removeTempFiles(String outpath){

@@ -241,14 +241,14 @@ public class CuneiformController implements Serializable {
             getStudyName(), "CUNEIFORM", args.toString(), null,
             "/tmp/stderr.log", "/tmp/stdout.log", null, null);
     if (jobhistoryid != null) {
-      submitter.setStdOutFinalDestination(study.getHdfsRootPath()
+      String stdOutFinalDestination = study.getHdfsRootPath()
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
-              + File.separator + "stdout.log");
-      submitter.setStdErrFinalDestination(study.getHdfsRootPath()
+              + File.separator + "stdout.log";
+      String stdErrFinalDestination = study.getHdfsRootPath()
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
-              + File.separator + "stderr.log");
+              + File.separator + "stderr.log";
       submitter.registerJob(jobhistoryid, r);
-      submitter.handleExecution(jobhistoryid, r);
+      submitter.handleExecution(jobhistoryid, r, stdOutFinalDestination, stdErrFinalDestination);
       MessagesController.addInfoMessage("App master started!");
     } else {
       logger.log(Level.SEVERE,
