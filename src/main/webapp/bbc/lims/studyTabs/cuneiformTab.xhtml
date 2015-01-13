@@ -46,27 +46,31 @@
                                 </h:panelGrid>
                             </div>
 
-                            <!--
-                            <div>
-                                <h3> Free variables </h3>
-                                <h:panelGrid columns="2" rendered="#{cuneiformController.workflowUploaded}">
-                                    <ui:repeat value="#{cuneiformController.freeVars}" var="variable">
-                                        <h:inputText value="#{variable.name}" readonly="true"/>
-                                        <h:inputText value="#{variable.value}"/>
-                                    </ui:repeat>
-                                </h:panelGrid>
-                            </div>
-                            
-                            <div>
-                                <h3> Target variables </h3>
-                                <h:panelGrid columns="2" rendered="#{cuneiformController.workflowUploaded}">
-                                    <ui:repeat value="#{cuneiformController.targetVars}" var="variable">
-                                        <h:inputText value="#{variable.name}" readonly="true"/>
-                                        <h:inputText value="#{variable.value}"/>
-                                    </ui:repeat>
-                                </h:panelGrid>
-                            </div>
-                            -->
+                            <h:panelGroup rendered="#{cuneiformController.workflowUploaded}">
+                                <div>
+                                    <h3> Free variables </h3>
+                                    <h:panelGrid columns="2">
+                                        <ui:repeat value="#{cuneiformController.freeVars}" var="variable">
+                                            <h:inputText value="#{variable.name}" readonly="true"/>
+                                            <p:fileUpload required="true" auto="true" multiple="false" 
+                                                  label="Select" mode="advanced" 
+                                                  fileUploadListener="#{cuneiformController.inputFileUpload}" 
+                                                  update="@form" process="@form" rendered="#{not cuneiformController.isFileUploadedForVar(variable.name)}">
+                                                <f:attribute name="name" value="#{variable.name}" />
+                                            </p:fileUpload>
+                                            <h:outputText rendered="#{cuneiformController.isFileUploadedForVar(variable.name)}" value="#{variable.value}"/>
+                                        </ui:repeat>
+                                    </h:panelGrid>
+                                </div>
+
+                                <div class="targetVars">                                
+                                    <h3> Target variables</h3>
+                                    Select variables to query.
+                                    <p:selectManyCheckbox id="targetVars" value="#{cuneiformController.queryVars}" layout="grid" columns="3">
+                                        <f:selectItems value="#{cuneiformController.targetVars}" var="target" itemLabel="#{target}" itemValue="#{target}" />
+                                    </p:selectManyCheckbox>
+                                </div>
+                            </h:panelGroup>
 
                             <div>
                                 <p:commandButton value="Execute" action="#{cuneiformController.startWorkflow()}" update="@form"/>

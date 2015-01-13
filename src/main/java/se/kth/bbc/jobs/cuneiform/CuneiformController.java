@@ -3,9 +3,12 @@ package se.kth.bbc.jobs.cuneiform;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -48,13 +51,15 @@ import se.kth.bbc.lims.StagingManager;
 public class CuneiformController implements Serializable {
 
   private static final String KEY_WORKFLOW_FILE = "WORKFLOW";
+  private static final String KEY_PREFIX_TARGET = "TARGET_";
   private static final Logger logger = Logger.getLogger(
           CuneiformController.class.getName());
 
   private String workflowname;
   private boolean workflowUploaded = false;
   private List<CuneiformParameter> freevars;
-  private List<CuneiformParameter> targetVars;
+  private List<String> targetVars;
+  private List<String> queryVars; //The target variables that should be queried
   private Long jobhistoryid;
   private boolean started = false;
   private boolean finished = false;
@@ -104,6 +109,14 @@ public class CuneiformController implements Serializable {
     this.jobName = name;
   }
 
+  public List<String> getQueryVars() {
+    return queryVars;
+  }
+
+  public void setQueryVars(List<String> queryVars) {
+    this.queryVars = queryVars;
+  }
+
   @PostConstruct
   public void init() {
     try {
@@ -111,7 +124,8 @@ public class CuneiformController implements Serializable {
               getUsername() + File.separator + study.getStudyName();
       jc.setBasePath(path);
     } catch (IOException c) {
-      logger.log(Level.SEVERE, "Failed to create directory structure.", c);
+      logger.log(Level.SEVERE,
+              "Failed to initialize staging folder for uploading.", c);
       MessagesController.addErrorMessage(
               "Failed to initialize Yarn controller. Running Yarn jobs will not work.");
     }
@@ -122,13 +136,48 @@ public class CuneiformController implements Serializable {
       jc.handleFileUpload(KEY_WORKFLOW_FILE, event);
       workflowUploaded = true;
     } catch (IllegalStateException e) {
-      MessagesController.addErrorMessage("Failed to upload file.");
-      logger.log(Level.SEVERE, "Illegal state in jobController.");
-      init();
+      MessagesController.addErrorMessage("Failed to upload workflow file "
+              + event.getFile().getFileName());
+      logger.log(Level.SEVERE,
+              "Illegal state in jobController while trying to upload workflow file.",
+              e);
+      init(); //just try to fix it...
       return;
     }
     workflowname = event.getFile().getFileName();
     inspectWorkflow();
+  }
+
+  public void inputFileUpload(FileUploadEvent event) {
+    String inputVarName = (String) event.getComponent().getAttributes().get(
+            "name");
+    try {
+      String filename = event.getFile().getFileName();
+      jc.handleFileUpload(filename, event);
+      jc.putVariable(KEY_PREFIX_TARGET + inputVarName, filename);
+      bindFreeVar(inputVarName, filename);
+    } catch (IllegalStateException e) {
+      MessagesController.addErrorMessage("Failed to upload input file " + event.
+              getFile().getFileName() + " for input variable " + inputVarName);
+      logger.log(Level.SEVERE,
+              "Illegal state in jobController while trying to upload input file "
+              + event.getFile().getFileName() + " for input variable "
+              + inputVarName + ", workflow file: " + workflowname + ".",
+              e);
+    }
+  }
+
+  public boolean isFileUploadedForVar(String name) {
+    return jc.containsVariableKey(KEY_PREFIX_TARGET + name);
+  }
+
+  private void bindFreeVar(String name, String value) {
+    for (CuneiformParameter cp : freevars) {
+      if (cp.getName().equals(name)) {
+        cp.setValue(value);
+        break;
+      }
+    }
   }
 
   public boolean isWorkflowUploaded() {
@@ -146,12 +195,8 @@ public class CuneiformController implements Serializable {
         this.freevars.add(new CuneiformParameter(s, null));
       }
 
-      List<String> targetnames = StaticNodeVisitor.getTargetVarNameList(tlc);
-      this.targetVars = new ArrayList<>(targetnames.size());
-      for (String s : targetnames) {
-        this.targetVars.add(new CuneiformParameter(s, null));
-      }
-    } catch (HasFailedException | IOException e) {
+      targetVars = StaticNodeVisitor.getTargetVarNameList(tlc);
+    } catch (Exception e) {//HasFailedException, IOException, but sometimes other exceptions are thrown?
       MessagesController.addErrorMessage(
               "Failed to load the free variables of the given workflow file.");
     }
@@ -184,7 +229,7 @@ public class CuneiformController implements Serializable {
     return freevars;
   }
 
-  public List<CuneiformParameter> getTargetVars() {
+  public List<String> getTargetVars() {
     return targetVars;
   }
 
@@ -192,7 +237,7 @@ public class CuneiformController implements Serializable {
     this.freevars = vars;
   }
 
-  public void setTargetVars(List<CuneiformParameter> vars) {
+  public void setTargetVars(List<String> vars) {
     this.targetVars = vars;
   }
 
@@ -200,6 +245,15 @@ public class CuneiformController implements Serializable {
 
     if (jobName == null || jobName.isEmpty()) {
       jobName = "Untitled job";
+    }
+    try {
+      prepWorkflowFile();
+    } catch (IOException e) {
+      logger.log(Level.SEVERE,
+              "An error occured while binding parameters in workflow file "
+              + workflowname + ".", e);
+      MessagesController.addErrorMessage(
+              "An error occured while binding parameters in the workflow file. Aborting execution.");
     }
 
     String resultName = "results";
@@ -272,7 +326,7 @@ public class CuneiformController implements Serializable {
     started = true;
   }
 
-  //TODO: move this method to a Utils class (similar method is used elsewhere)
+  //TODO: move to a utilities class (similar method is used elsewhere)
   private static String getFileName(String path) {
     int lastSlash = path.lastIndexOf("/");
     int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
@@ -460,6 +514,37 @@ public class CuneiformController implements Serializable {
     } else {
       return type;
     }
+  }
+
+  private void prepWorkflowFile() throws IOException {
+    StringBuilder extraLines = new StringBuilder(); //Contains the extra workflow lines
+    String foldername = study.getStudyName() + File.separator + study.
+            getUsername() + File.separator + workflowname + File.separator
+            + "input" + File.separator; //folder to which files will be uploaded
+    String absoluteHDFSfoldername = "/user/" + System.getProperty("user.name")
+            + "/" + foldername;
+    //find out which free variables were bound (the ones that have a non-null value)
+    for (CuneiformParameter cp : freevars) {
+      if (cp.getValue() != null) {
+        //copy the input file to where cuneiform expects it
+        fops.copyFromLocalNoInode(jc.getFilePath(cp.getValue()),
+                absoluteHDFSfoldername + File.separator + cp.getValue());
+        //add a line to the workflow file
+        extraLines.append(cp.getName()).append(" = '").append(foldername).
+                append(File.separator).append(cp.getValue()).append("';\n");
+      }
+    }
+    // for all selected target vars: add "<varname>;" to file
+    for (String targetVarName : queryVars) {
+      extraLines.append(targetVarName).append(";\n");
+    }
+    //actually write to workflow file
+    String wfPath = jc.getFilePath(KEY_WORKFLOW_FILE);
+    try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(
+            wfPath, true)))) {
+      out.print(extraLines);
+    }
+    logger.log(Level.INFO, extraLines.toString());
   }
 
 }

@@ -90,6 +90,10 @@ public class JobController implements Serializable {
     public Map<String, String> getFiles() {
         return new HashMap<>(files);
     }
+    
+    public boolean containsVariableKey(String key){
+      return variables.containsKey(key);
+    }
 
-    //TO DO: clean up folder after job has been started (or stopped?)...
+    //TODO: clean up folder after job has been started (or stopped?)...
 }

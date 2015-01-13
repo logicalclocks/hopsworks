@@ -155,5 +155,10 @@ public class FileSystemOperations {
     }
     return out.toString();
   }
+  
+  public void copyFromLocal(Path source, Path destination) throws IOException{
+    FileSystem fs = getFs();
+    fs.copyFromLocalFile(false, source, destination);
+  }
 
 }

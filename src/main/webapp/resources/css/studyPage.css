@@ -397,3 +397,7 @@ h1 {
 .resultsColumn {
   width: 40%;
 }
+
+.workflow-head .targetVars td {
+  vertical-align: middle;
+}

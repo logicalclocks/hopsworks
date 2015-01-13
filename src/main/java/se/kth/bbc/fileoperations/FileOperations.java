@@ -278,4 +278,16 @@ public class FileOperations {
     return fsOps.cat(p);
   }
 
+  /**
+   * Copy a file from local filesystem to HDFS. Do not create an Inode for the file.
+   * (Used internally for prepping running jobs.)
+   * @param localPath
+   * @param hdfsPath 
+   */
+  public void copyFromLocalNoInode(String localPath, String hdfsPath) throws IOException{
+    Path source = new Path(localPath);
+    Path destination = new Path(hdfsPath);
+    fsOps.copyFromLocal(source, destination);
+  }
+  
 }
