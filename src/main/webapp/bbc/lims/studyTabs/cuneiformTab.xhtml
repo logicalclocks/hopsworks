@@ -80,7 +80,7 @@
                         <p:poll interval="5" listener="#{cuneiformController.checkProgress()}" update="@form" stop="#{cuneiformController.jobFinished}" />
                         <h:panelGroup id="image">
                             <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformController.jobStarted and not cuneiformController.jobFinished}"/>
-                            <h:outputText value="FINISHED" rendered="#{cuneiformController.jobStarted and cuneiformController.jobFinished}"/>
+                            <h:outputText value="#{cuneiformController.finalState}" rendered="#{cuneiformController.jobStarted and cuneiformController.jobFinished}"/>
                         </h:panelGroup>
                         <div>
                             <h:panelGroup id="outputFilesGroup" rendered="#{cuneiformController.jobFinished}" >

@@ -20,6 +20,8 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -163,7 +165,7 @@ public class CuneiformController implements Serializable {
     List<String> lines = Files.readAllLines(Paths.get(wfPath), Charset.
             defaultCharset());
     StringBuilder workflowBuilder = new StringBuilder();
-    for (String s : lines) { //TODO: check: does this guarantee line order, is this needed?
+    for (String s : lines) {
       workflowBuilder.append(s);
     }
     return workflowBuilder.toString();
@@ -344,16 +346,15 @@ public class CuneiformController implements Serializable {
    * return stderr;
    * }
    */
-  
   //TODO: move download methods to JobHistoryController
-  
   public StreamedContent downloadStdout() {
     try {
       String extension = "log";
       String filename = "stdout.log";
-      return downloadFile(stdoutPath,extension,filename);
+      return downloadFile(stdoutPath, filename);
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Failed to download stdout. JobId: "+jobhistoryid+", path: "+stdoutPath, ex);
+      logger.log(Level.SEVERE, "Failed to download stdout. JobId: "
+              + jobhistoryid + ", path: " + stdoutPath, ex);
       MessagesController.addErrorMessage(MessagesController.ERROR,
               "Download failed.");
     }
@@ -364,18 +365,20 @@ public class CuneiformController implements Serializable {
     String extension = "log";
     String filename = "stderr.log";
     try {
-      return downloadFile(stderrPath, extension, filename);
+      return downloadFile(stderrPath, filename);
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Failed to download stderr. JobId: "+jobhistoryid+", path: "+stderrPath, ex);
+      logger.log(Level.SEVERE, "Failed to download stderr. JobId: "
+              + jobhistoryid + ", path: " + stderrPath, ex);
       MessagesController.addErrorMessage("Download failed.");
     }
     return null;
   }
 
-  private StreamedContent downloadFile(String path, String extension,
+  private StreamedContent downloadFile(String path,
           String filename) throws IOException {
     InputStream is = fops.getInputStream(path);
-    StreamedContent sc = new DefaultStreamedContent(is, extension, filename);
+    StreamedContent sc = new DefaultStreamedContent(is, getMimeType(filename),
+            filename);
     logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
             path);
     return sc;
@@ -426,25 +429,36 @@ public class CuneiformController implements Serializable {
       return null;
     }
     String path = file.getPath();
-    
-    
     String extension = getExtension(name);
     try {
-      return downloadFile(path, extension, name);
+      return downloadFile(path, name);
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Failed to download output file "+name+". Jobid: "+jobhistoryid+", path: "+path, ex);
+      logger.log(Level.SEVERE, "Failed to download output file " + name
+              + ". Jobid: " + jobhistoryid + ", path: " + path, ex);
       MessagesController.addErrorMessage("Download failed.");
     }
     return null;
   }
-  
+
   //TODO: put in utilities class
-  private static String getExtension(String filename){
+  private static String getExtension(String filename) {
     int lastDot = filename.lastIndexOf(".");
-    if(lastDot < 0){
+    if (lastDot < 0) {
       return "";
-    }else{
+    } else {
       return filename.substring(lastDot);
+    }
+  }
+
+  //TODO: put in utilities class
+  private String getMimeType(String filename) {
+    HttpServletRequest hsr = (HttpServletRequest) FacesContext.
+            getCurrentInstance().getExternalContext().getRequest();
+    String type = hsr.getSession().getServletContext().getMimeType(filename);
+    if (type == null) {
+      return "text/plain";
+    } else {
+      return type;
     }
   }
 

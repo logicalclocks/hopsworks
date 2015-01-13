@@ -10,6 +10,8 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
+import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.fileoperations.FileOperations;
@@ -46,10 +48,10 @@ public class JobHistoryController implements Serializable {
 
   public StreamedContent downloadFile(String path) {
     String filename = getFileName(path);
-    String extension = getExtension(filename);
     try {
       InputStream is = fops.getInputStream(path);
-      StreamedContent sc = new DefaultStreamedContent(is, extension, filename);
+      StreamedContent sc = new DefaultStreamedContent(is, getMimeType(filename),
+              filename);
       logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
               path);
       return sc;
@@ -75,5 +77,17 @@ public class JobHistoryController implements Serializable {
     int lastSlash = path.lastIndexOf("/");
     int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
     return path.substring(startName);
+  }
+
+  //TODO: put in utilities class
+  private String getMimeType(String filename) {
+    HttpServletRequest hsr = (HttpServletRequest) FacesContext.
+            getCurrentInstance().getExternalContext().getRequest();
+    String type = hsr.getSession().getServletContext().getMimeType(filename);
+    if (type == null) {
+      return "text/plain";
+    } else {
+      return type;
+    }
   }
 }
