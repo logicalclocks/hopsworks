@@ -133,6 +133,8 @@ public class CuneiformController implements Serializable {
 
   public void workflowUpload(FileUploadEvent event) {
     try {
+      jc.clearFiles();
+      jc.clearVariables();
       jc.handleFileUpload(KEY_WORKFLOW_FILE, event);
       workflowUploaded = true;
     } catch (IllegalStateException e) {
@@ -196,6 +198,7 @@ public class CuneiformController implements Serializable {
       }
 
       targetVars = StaticNodeVisitor.getTargetVarNameList(tlc);
+      queryVars = new ArrayList<>();
     } catch (Exception e) {//HasFailedException, IOException, but sometimes other exceptions are thrown?
       MessagesController.addErrorMessage(
               "Failed to load the free variables of the given workflow file.");

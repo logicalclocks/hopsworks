@@ -94,6 +94,14 @@ public class JobController implements Serializable {
     public boolean containsVariableKey(String key){
       return variables.containsKey(key);
     }
+    
+    public void clearVariables(){
+      variables.clear();
+    }
+    
+    public void clearFiles(){
+      files.clear();
+    }
 
     //TODO: clean up folder after job has been started (or stopped?)...
 }
