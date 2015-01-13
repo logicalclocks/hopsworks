@@ -258,6 +258,7 @@ public class SamplesController {
     }
     MessagesController.addInfoMessage("Success", "Sample has been added",
             "message");
+    selectSample(s.getId());
   }
 
   private void createSampleDir(String sampleId) throws IOException {
@@ -335,6 +336,7 @@ public class SamplesController {
     }
     MessagesController.addInfoMessage("Success",
             "Sample collection has been added", "message");
+    selectCollection(newCollection.getId());
     newCollection = new Samplecollection();
   }
 

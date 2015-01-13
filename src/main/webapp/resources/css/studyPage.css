@@ -391,13 +391,25 @@ h1 {
 }
 
 .runColumn {
-  width: 35%;
+  width: 50%;
+}
+
+.runColumn form {
+    margin-left: 40px;
 }
 
 .resultsColumn {
-  width: 40%;
+  width: 25%;
 }
 
 .workflow-head .targetVars td {
   vertical-align: middle;
+}
+
+.historyColumn .ui-panel-title {
+    font-size: 16px;
+}
+
+.jobPanel h3 {
+    font-size: 20px;
 }
