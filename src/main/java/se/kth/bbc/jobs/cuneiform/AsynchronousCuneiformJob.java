@@ -2,8 +2,6 @@ package se.kth.bbc.jobs.cuneiform;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Asynchronous;
@@ -26,10 +24,12 @@ import se.kth.bbc.jobs.yarn.YarnRunner;
 
 /**
  * TODO: REMOVE THIS CLASS. VERY BADLY DESIGNED, IMPLEMENT DECORATOR INSTEAD
+ * <p>
  * @author stig
  */
 @Stateless
-public class AsynchronousCuneiformJob{
+public class AsynchronousCuneiformJob {
+
   private static final Logger logger = Logger.getLogger(
           AsynchronousYarnApplication.class.getName());
 
@@ -45,7 +45,7 @@ public class AsynchronousCuneiformJob{
 
   @EJB
   private FileOperations fops;
-  
+
   @EJB
   private JobOutputFileFacade jobOutputFacade;
 
@@ -57,7 +57,8 @@ public class AsynchronousCuneiformJob{
    */
   @Asynchronous
   //Netbeans shows an error here, but unrightly so.
-  public void handleExecution(Long id, YarnRunner runner, String stdOutFinalPath, String stdErrFinalPath, String summaryFile) throws
+  public void handleExecution(Long id, YarnRunner runner, String stdOutFinalPath,
+          String stdErrFinalPath, String summaryFile) throws
           IllegalStateException {
     if (!jobTracker.isJobRunning(id)) {
       //The Asynchronous annotation must be on a public method, so calling a private
@@ -75,20 +76,38 @@ public class AsynchronousCuneiformJob{
     //Update info
     try {
       jobHistoryFacade.update(id,
-              runner.getApplicationReport().getYarnApplicationState().toString(),duration);
+              runner.getApplicationReport().getYarnApplicationState().toString(),
+              duration);
     } catch (YarnException | IOException ex) {
       logger.log(Level.SEVERE, "Failed to get final Yarn application state", ex);
       jobHistoryFacade.update(id, JobHistory.STATE_FRAMEWORK_FAILURE);
     }
     //Copy stdout and stderr to hdfs.
     try {
-      copyStdOutNErr(id, runner.getStdOutPath(), stdOutFinalPath, runner.getStdErrPath(), stdErrFinalPath);
-      String resultsPath = runner.getLocalResourcesBasePath() + "/" + summaryFile;
-      parseAndHandleJsonOutput(id, resultsPath);
-    }catch(IOException|JSONException e){
+      copyStdOutNErr(id, runner.getStdOutPath(), stdOutFinalPath, runner.
+              getStdErrPath(), stdErrFinalPath);
+    } catch (IOException e) {
       //TODO: how should we handle this? Update state? Create file? Put entry in db saying
       //std was not copied?
-      logger.log(Level.SEVERE,"Error while copying out result files.",e);
+      logger.
+              log(Level.SEVERE,
+                      "Error while copying out log files for yarn job.", e);
+    }
+    try {
+      if (runner.getApplicationState() == YarnApplicationState.FINISHED) {
+        //i.e. job finished
+        String resultsPath = runner.getLocalResourcesBasePath() + "/"
+                + summaryFile;
+        parseAndHandleJsonOutput(id, resultsPath);
+      }
+    } catch (IOException | JSONException e) {
+      logger.
+              log(Level.SEVERE,
+                      "Error while copying over result files. Aborting", e);
+    } catch (YarnException e) {
+      logger.log(Level.INFO,
+              "Could not retrieve application state to copy result files. Assuming failed.",
+              e);
     }
     unregisterJob(id);
     removeTempFiles(runner.getStdOutPath());
@@ -177,7 +196,9 @@ public class AsynchronousCuneiformJob{
 
   }
 
-  private void copyStdOutNErr(Long id, String stdOutLocal, String stdOutFinalDestination, String stdErrLocal, String stdErrFinalDestination) throws
+  private void copyStdOutNErr(Long id, String stdOutLocal,
+          String stdOutFinalDestination, String stdErrLocal,
+          String stdErrFinalDestination) throws
           IOException {
     if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
       fops.copyToHDFSFromPath(stdOutLocal, stdOutFinalDestination, null);
@@ -188,42 +209,43 @@ public class AsynchronousCuneiformJob{
       jobHistoryFacade.updateStdErrPath(id, stdErrFinalDestination);
     }
   }
-  
-  private void removeTempFiles(String outpath){
+
+  private void removeTempFiles(String outpath) {
     int lastslash = outpath.lastIndexOf("/");
-    String folderpath = outpath.substring(0,lastslash);
+    String folderpath = outpath.substring(0, lastslash);
     File tmpFolder = new File(folderpath);
     deleteFolder(tmpFolder);
   }
-  
-  private void deleteFolder(File folder){
-    for(File f:folder.listFiles()){
-      if(f.isDirectory()){
+
+  private void deleteFolder(File folder) {
+    for (File f : folder.listFiles()) {
+      if (f.isDirectory()) {
         deleteFolder(f);
-      }else{
+      } else {
         f.delete();
       }
     }
     folder.delete();
   }
-  
-  private void parseAndHandleJsonOutput(Long jobId, String hdfsPath) throws IOException, JSONException{
+
+  private void parseAndHandleJsonOutput(Long jobId, String hdfsPath) throws
+          IOException, JSONException {
     String json = fops.cat(hdfsPath);
     JSONObject jobj = new JSONObject(json);
     JSONArray outputpaths = jobj.getJSONArray("output");
-    for(int i=0;i<outputpaths.length();i++){
+    for (int i = 0; i < outputpaths.length(); i++) {
       String outfile = outputpaths.getString(i);
       JobOutputFile file = new JobOutputFile(jobId, getFileName(outfile));
       file.setPath(outfile);
       jobOutputFacade.persist(file);
     }
   }
-  
-    //TODO: move this method to a Utils class (similar method is used elsewhere)
+
+  //TODO: move this method to a Utils class (similar method is used elsewhere)
   private static String getFileName(String path) {
     int lastSlash = path.lastIndexOf("/");
     int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
     return path.substring(startName);
   }
-  
+
 }

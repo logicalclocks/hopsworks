@@ -520,7 +520,7 @@ public class CuneiformController implements Serializable {
     StringBuilder extraLines = new StringBuilder(); //Contains the extra workflow lines
     String foldername = study.getStudyName() + File.separator + study.
             getUsername() + File.separator + workflowname + File.separator
-            + "input" + File.separator; //folder to which files will be uploaded
+            + "input"; //folder to which files will be uploaded
     String absoluteHDFSfoldername = "/user/" + System.getProperty("user.name")
             + "/" + foldername;
     //find out which free variables were bound (the ones that have a non-null value)
@@ -535,8 +535,10 @@ public class CuneiformController implements Serializable {
       }
     }
     // for all selected target vars: add "<varname>;" to file
-    for (String targetVarName : queryVars) {
-      extraLines.append(targetVarName).append(";\n");
+    if (queryVars != null) {
+      for (String targetVarName : queryVars) {
+        extraLines.append(targetVarName).append(";\n");
+      }
     }
     //actually write to workflow file
     String wfPath = jc.getFilePath(KEY_WORKFLOW_FILE);
