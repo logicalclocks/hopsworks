@@ -107,9 +107,8 @@ CREATE TABLE `Inodes` (
   KEY `pid` (`pid`),
   KEY `pid_2` (`pid`,`isDir`),
   KEY `name` (`name`),
-  CONSTRAINT `FK_Inodes_pid` FOREIGN KEY (`pid`) REFERENCES `Inodes` (`id`),
   CONSTRAINT `Inodes_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `Inodes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=549 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=565 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -220,8 +219,6 @@ CREATE TABLE `SAMPLECOLLECTIONS` (
   UNIQUE KEY `acronym` (`acronym`),
   KEY `FK_SAMPLECOLLECTIONS_study` (`study`),
   KEY `FK_SAMPLECOLLECTIONS_contact` (`contact`),
-  CONSTRAINT `FK_SAMPLECOLLECTIONS_contact` FOREIGN KEY (`contact`) REFERENCES `USERS` (`EMAIL`),
-  CONSTRAINT `FK_SAMPLECOLLECTIONS_study` FOREIGN KEY (`study`) REFERENCES `study` (`name`),
   CONSTRAINT `SAMPLECOLLECTIONS_ibfk_1` FOREIGN KEY (`contact`) REFERENCES `USERS` (`EMAIL`),
   CONSTRAINT `SAMPLECOLLECTIONS_ibfk_2` FOREIGN KEY (`study`) REFERENCES `study` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -239,7 +236,6 @@ CREATE TABLE `SAMPLECOLLECTION_DISEASE` (
   `disease_id` int(16) NOT NULL DEFAULT '0',
   PRIMARY KEY (`collection_id`,`disease_id`),
   KEY `FK_SAMPLECOLLECTION_DISEASE_disease_id` (`disease_id`),
-  CONSTRAINT `FK_SAMPLECOLLECTION_DISEASE_collection_id` FOREIGN KEY (`collection_id`) REFERENCES `SAMPLECOLLECTIONS` (`id`),
   CONSTRAINT `FK_SAMPLECOLLECTION_DISEASE_disease_id` FOREIGN KEY (`disease_id`) REFERENCES `DISEASES` (`id`),
   CONSTRAINT `SAMPLECOLLECTION_DISEASE_ibfk_1` FOREIGN KEY (`collection_id`) REFERENCES `SAMPLECOLLECTIONS` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -256,7 +252,6 @@ CREATE TABLE `SAMPLECOLLECTION_TYPE` (
   `collection_id` varchar(255) NOT NULL,
   `type` varchar(128) NOT NULL,
   PRIMARY KEY (`collection_id`,`type`),
-  CONSTRAINT `FK_SAMPLECOLLECTION_TYPE_collection_id` FOREIGN KEY (`collection_id`) REFERENCES `SAMPLECOLLECTIONS` (`id`),
   CONSTRAINT `SAMPLECOLLECTION_TYPE_ibfk_1` FOREIGN KEY (`collection_id`) REFERENCES `SAMPLECOLLECTIONS` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -278,9 +273,6 @@ CREATE TABLE `SAMPLES` (
   KEY `FK_SAMPLES_parent_id` (`parent_id`),
   KEY `FK_SAMPLES_anatomical_site` (`anatomical_site`),
   KEY `FK_SAMPLES_samplecollection_id` (`samplecollection_id`),
-  CONSTRAINT `FK_SAMPLES_anatomical_site` FOREIGN KEY (`anatomical_site`) REFERENCES `ANATOMICAL_PARTS` (`id`),
-  CONSTRAINT `FK_SAMPLES_parent_id` FOREIGN KEY (`parent_id`) REFERENCES `SAMPLES` (`id`),
-  CONSTRAINT `FK_SAMPLES_samplecollection_id` FOREIGN KEY (`samplecollection_id`) REFERENCES `SAMPLECOLLECTIONS` (`id`),
   CONSTRAINT `SAMPLES_ibfk_2` FOREIGN KEY (`parent_id`) REFERENCES `SAMPLES` (`id`),
   CONSTRAINT `SAMPLES_ibfk_3` FOREIGN KEY (`anatomical_site`) REFERENCES `ANATOMICAL_PARTS` (`id`),
   CONSTRAINT `SAMPLES_ibfk_4` FOREIGN KEY (`samplecollection_id`) REFERENCES `SAMPLECOLLECTIONS` (`id`) ON DELETE CASCADE
@@ -298,7 +290,6 @@ CREATE TABLE `SAMPLE_MATERIAL` (
   `sample_id` varchar(255) NOT NULL,
   `type` varchar(128) NOT NULL,
   PRIMARY KEY (`sample_id`,`type`),
-  CONSTRAINT `FK_SAMPLE_MATERIAL_sample_id` FOREIGN KEY (`sample_id`) REFERENCES `SAMPLES` (`id`),
   CONSTRAINT `SAMPLE_MATERIAL_ibfk_1` FOREIGN KEY (`sample_id`) REFERENCES `SAMPLES` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -314,7 +305,6 @@ CREATE TABLE `STUDY_DESIGN` (
   `study_id` varchar(128) DEFAULT NULL,
   `design` varchar(128) DEFAULT NULL,
   KEY `FK_STUDY_DESIGN_study_id` (`study_id`),
-  CONSTRAINT `FK_STUDY_DESIGN_study_id` FOREIGN KEY (`study_id`) REFERENCES `STUDY_META` (`id`),
   CONSTRAINT `STUDY_DESIGN_ibfk_1` FOREIGN KEY (`study_id`) REFERENCES `STUDY_META` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -329,7 +319,8 @@ DROP TABLE IF EXISTS `STUDY_GROUPS`;
 CREATE TABLE `STUDY_GROUPS` (
   `email` varchar(255) NOT NULL,
   `groupname` varchar(64) NOT NULL,
-  PRIMARY KEY (`email`,`groupname`)
+  PRIMARY KEY (`email`,`groupname`),
+  CONSTRAINT `STUDY_GROUPS_ibfk_1` FOREIGN KEY (`email`) REFERENCES `USERS` (`EMAIL`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -344,7 +335,6 @@ CREATE TABLE `STUDY_INCLUSION_CRITERIA` (
   `study_id` varchar(128) NOT NULL DEFAULT '',
   `criterium` varchar(128) NOT NULL,
   PRIMARY KEY (`study_id`,`criterium`),
-  CONSTRAINT `FK_STUDY_INCLUSION_CRITERIA_study_id` FOREIGN KEY (`study_id`) REFERENCES `STUDY_META` (`id`),
   CONSTRAINT `STUDY_INCLUSION_CRITERIA_ibfk_1` FOREIGN KEY (`study_id`) REFERENCES `STUDY_META` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -362,7 +352,6 @@ CREATE TABLE `STUDY_META` (
   `description` varchar(2000) DEFAULT NULL,
   PRIMARY KEY (`studyname`),
   UNIQUE KEY `id` (`id`),
-  CONSTRAINT `FK_STUDY_META_studyname` FOREIGN KEY (`studyname`) REFERENCES `study` (`name`),
   CONSTRAINT `STUDY_META_ibfk_1` FOREIGN KEY (`studyname`) REFERENCES `study` (`name`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -472,7 +461,6 @@ CREATE TABLE `USERS_GROUPS` (
   `groupname` varchar(64) NOT NULL,
   PRIMARY KEY (`email`,`groupname`),
   UNIQUE KEY `UNQ_USERS_GROUPS_0` (`email`,`groupname`),
-  CONSTRAINT `FK_USERS_GROUPS_email` FOREIGN KEY (`email`) REFERENCES `USERS` (`EMAIL`),
   CONSTRAINT `USERS_GROUPS_ibfk_1` FOREIGN KEY (`email`) REFERENCES `USERS` (`EMAIL`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -566,7 +554,6 @@ CREATE TABLE `job_execution_files` (
   `name` varchar(255) NOT NULL,
   `path` varchar(255) NOT NULL,
   PRIMARY KEY (`job_id`,`name`),
-  CONSTRAINT `FK_job_execution_files_job_id` FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`),
   CONSTRAINT `job_execution_files_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -583,7 +570,6 @@ CREATE TABLE `job_input_files` (
   `path` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
   PRIMARY KEY (`job_id`,`name`),
-  CONSTRAINT `FK_job_input_files_job_id` FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`),
   CONSTRAINT `job_input_files_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -600,7 +586,6 @@ CREATE TABLE `job_output_files` (
   `name` varchar(255) NOT NULL,
   `path` varchar(255) NOT NULL,
   PRIMARY KEY (`job_id`,`name`),
-  CONSTRAINT `FK_job_output_files_job_id` FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`),
   CONSTRAINT `job_output_files_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobhistory` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -628,10 +613,9 @@ CREATE TABLE `jobhistory` (
   UNIQUE KEY `id` (`id`),
   KEY `FK_jobhistory_user` (`user`),
   KEY `FK_jobhistory_study` (`study`),
-  CONSTRAINT `FK_jobhistory_study` FOREIGN KEY (`study`) REFERENCES `study` (`name`),
   CONSTRAINT `FK_jobhistory_user` FOREIGN KEY (`user`) REFERENCES `USERS` (`EMAIL`),
   CONSTRAINT `jobhistory_ibfk_3` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -666,8 +650,7 @@ CREATE TABLE `study_group_members` (
   `added_by` varchar(255) NOT NULL,
   `team_role` enum('Master','Researcher','Guest') NOT NULL,
   PRIMARY KEY (`studyname`,`username`),
-  CONSTRAINT `FK_study_group_members_studyname` FOREIGN KEY (`studyname`) REFERENCES `study` (`name`),
-  CONSTRAINT `fk_study_members` FOREIGN KEY (`studyname`) REFERENCES `study` (`name`)
+  CONSTRAINT `FK_study_group_members_studyname` FOREIGN KEY (`studyname`) REFERENCES `study` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -765,4 +748,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-01-12 19:14:39
+-- Dump completed on 2015-01-13 14:58:39
