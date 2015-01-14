@@ -3,6 +3,7 @@ package se.kth.bbc.study.samples;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,7 +54,7 @@ public class SamplesController {
   private Samplecollection selectedCollection;
   private Sample selectedSample;
 
-  private String newSampleId;
+  private Sample newSample = new Sample();
   private Samplecollection newCollection = new Samplecollection();
 
   public List<Samplecollection> getSamplecollection() {
@@ -100,12 +101,12 @@ public class SamplesController {
     this.selectedSample = selectedSample;
   }
 
-  public String getNewSampleId() {
-    return newSampleId;
+  public Sample getNewSample() {
+    return newSample;
   }
 
-  public void setNewSampleId(String newSampleId) {
-    this.newSampleId = newSampleId;
+  public void setNewSample(Sample newSample) {
+    this.newSample = newSample;
   }
 
   public Samplecollection getNewCollection() {
@@ -167,7 +168,6 @@ public class SamplesController {
 
   public void setCollectionTypeDualList(
           DualListModel<CollectionTypeStudyDesignEnum> duallist) {
-    System.out.println("called set collection type: " + duallist.getTarget());
     this.selectedCollection.setCollectionTypeList(duallist.getTarget());
   }
 
@@ -187,12 +187,24 @@ public class SamplesController {
   }
 
   public void setMaterialTypeDualList(DualListModel<MaterialTypeEnum> duallist) {
-    System.out.println("called set material type: " + duallist.getTarget());
     this.selectedSample.setMaterialTypeList(duallist.getTarget());
+  }
+  
+  public DualListModel<MaterialTypeEnum> getNewSampleMaterialTypeDualList(){
+    if(newSample == null){
+      //should never happen, but better safe than sorry
+      newSample = new Sample();
+    }
+    List<MaterialTypeEnum> target = new ArrayList<>();
+    List<MaterialTypeEnum> source = Arrays.asList(MaterialTypeEnum.values());
+    return new DualListModel<>(source, target);
+  }
+  
+  public void setNewSampleMaterialTypeDualList(DualListModel<MaterialTypeEnum> duallist){
+    this.newSample.setMaterialTypeList(duallist.getTarget());
   }
 
   public void updateSampleCollection() {
-    System.out.println("called update collection");
     try {
       samplecollectionFacade.update(selectedCollection);
       MessagesController.addInfoMessage(MessagesController.SUCCESS,
@@ -205,7 +217,6 @@ public class SamplesController {
   }
 
   public void updateSample() {
-    System.out.println("Called update sample");
     try {
       sampleFacade.update(selectedSample);
       MessagesController.addInfoMessage(MessagesController.SUCCESS,
@@ -227,17 +238,16 @@ public class SamplesController {
   }
 
   public void createNewSample() {
-    if (newSampleId == null) {
+    if (newSample == null) {
       //should never happen
       MessagesController.addErrorMessage("Error",
               "An error occurred while trying to create a new sample. Please try again.",
               "message");
       return;
     }
-    Sample s = new Sample(newSampleId);
-    s.setSamplecollectionId(selectedCollection);
+    newSample.setSamplecollectionId(selectedCollection);
     try {
-      sampleFacade.persist(s);
+      sampleFacade.persist(newSample);
       //To refresh the selectedCollection
       selectedCollection = samplecollectionFacade.findById(selectedCollection.
               getId());
@@ -248,7 +258,7 @@ public class SamplesController {
       return;
     }
     try {
-      createSampleDir(newSampleId);
+      createSampleDir(newSample.getId());
     } catch (IOException e) {
       MessagesController.addErrorMessage("Failed to create directory structure",
               "An error occurred while creating the directory structure for this sample. A database record has been added however.",
@@ -258,7 +268,8 @@ public class SamplesController {
     }
     MessagesController.addInfoMessage("Success", "Sample has been added",
             "message");
-    selectSample(s.getId());
+    selectSample(newSample.getId());
+    newSample = new Sample();
   }
 
   private void createSampleDir(String sampleId) throws IOException {

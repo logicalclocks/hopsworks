@@ -131,10 +131,15 @@
                 <h:form>
                     <p:outputLabel for="sampleName" value="Sample ID"/>
                     <!--  TODO: add check on existing samples -->
-                    <p:inputText id="sampleName" required="true" value="#{samplesController.newSampleId}" placeholder="id"> 
+                    <p:inputText id="sampleName" required="true" value="#{samplesController.newSample.id}" placeholder="id"> 
                         <f:validator binding="#{uniqueSampleValidator}"/> 
                     </p:inputText>
                     <p:message for="sampleName"/>
+                    <p:pickList id="materialTypesPick" value="#{samplesController.newSampleMaterialTypeDualList}" 
+                                var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="materialTypeEnumConverter">
+                        <f:facet name="sourceCaption">Available</f:facet>
+                        <f:facet name="targetCaption">Selected</f:facet>
+                    </p:pickList>
 
                     <p:commandButton value="Create" action="#{samplesController.createNewSample()}" oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addSampleDlg').hide()" update="@form :#{p:component('samplesForm')}"/>
                     <p:commandButton type="button" value="Cancel" onclick="PF('addSampleDlg').hide()"/>
