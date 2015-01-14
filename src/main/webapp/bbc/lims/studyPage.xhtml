@@ -135,6 +135,8 @@
                         <f:validator binding="#{uniqueSampleValidator}"/> 
                     </p:inputText>
                     <p:message for="sampleName"/>
+                    <br/>
+                    <h:outputText value="Select material types:"/>
                     <p:pickList id="materialTypesPick" value="#{samplesController.newSampleMaterialTypeDualList}" 
                                 var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="materialTypeEnumConverter">
                         <f:facet name="sourceCaption">Available</f:facet>
