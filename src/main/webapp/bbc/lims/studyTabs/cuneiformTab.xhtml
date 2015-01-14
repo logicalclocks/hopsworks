@@ -14,7 +14,7 @@
             </div>
             <div>
                 <h:panelGrid columns="3" styleClass="jobPanel" columnClasses="historyColumn,runColumn,resultsColumn">
-                    <p:scrollPanel styleClass="historyPanel">
+                    <p:panel styleClass="historyPanel">
                         <h3>
                             History
                         </h3>
@@ -23,7 +23,7 @@
                                 <ui:param name="type" value="CUNEIFORM" />
                             </ui:include>
                         </ui:insert>
-                    </p:scrollPanel>
+                    </p:panel>
                     <h:form id="cuneiForm"> <!-- Pun intended -->
                         <h3>
                             Run configuration

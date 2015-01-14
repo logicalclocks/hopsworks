@@ -16,7 +16,7 @@ and open the template in the editor.
         <ui:composition>
             <h:form styleClass="historyForm">
                 <!-- takes a parameter "type": the type of jobs for which the history is to be loaded -->
-                <ui:repeat value="#{jobHistoryController.getHistoryForType(type)}" var="job" varStatus="cnt">
+               <ui:repeat value="#{jobHistoryController.getHistoryForType(type)}" var="job" varStatus="cnt">
                     <p:panel id="job_#{cnt}" closable="false" header="#{job.name==null? job.id :job.name}">
                         <h:panelGrid columns="2">
                             <h:outputLabel value="Run on:"/>

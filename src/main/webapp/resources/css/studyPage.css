@@ -376,6 +376,7 @@ h1 {
 .historyPanel {
   float: left;
   max-height: 850px;
+  overflow-y: auto !important;
 }
 
 .jobPanel td{
