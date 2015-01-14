@@ -14,7 +14,7 @@ and open the template in the editor.
       xmlns:c="http://java.sun.com/jsp/jstl/core">
     <body>
         <ui:composition>
-            <h:form styleClass="historyForm">
+            <h:form id="historyForm_#{type}" styleClass="historyForm">
                 <!-- takes a parameter "type": the type of jobs for which the history is to be loaded -->
                <ui:repeat value="#{jobHistoryController.getHistoryForType(type)}" var="job" varStatus="cnt">
                     <p:panel id="job_#{cnt}" closable="false" header="#{job.name==null? job.id :job.name}">
@@ -32,7 +32,7 @@ and open the template in the editor.
                             <h:outputLabel value="#{job.executionDuration} ms" rendered="#{job.finished and job.executionDuration>0}"/>
 
                             <h:outputLabel value="Logs:" rendered="#{job.finished  and (job.stderrPath!=null or job.stdoutPath!=null)}"/>
-                            <h:panelGrid columns="1">
+                            <h:panelGrid columns="1" rendered="#{job.finished and (job.stderrPath!=null or job.stdoutPath!=null)}">
                                 <p:commandLink ajax="false" rendered="#{job.stdoutPath!=null}">
                                     <strong>stdout.log</strong>
                                     <p:fileDownload value="#{jobHistoryController.downloadFile(job.stdoutPath)}"/>

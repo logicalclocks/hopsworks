@@ -51,12 +51,12 @@
                                     <h3> Input parameters </h3>
                                     <ui:repeat value="#{cuneiformController.freeVars}" var="variable">
                                         <h:panelGrid columns="2">
-                                            <h:outputLabel value="#{variable.name}" for="upload_#{variable.name}"/>
+                                            <h:outputLabel value="#{variable.name}"/>
                                             <p:fileUpload required="true" auto="true" multiple="false" 
                                                           label="Select" mode="advanced" 
                                                           fileUploadListener="#{cuneiformController.inputFileUpload}" 
-                                                          update="@form" process="@form" id="uploader_#{variable.name}">
-                                                <f:attribute name="name" value="#{variable.name}" id="upload_#{variable.name}"/>
+                                                          update="@form" process="@form">
+                                                <f:attribute name="name" value="#{variable.name}"/>
                                             </p:fileUpload>
                                             <h:outputLabel value="Uploaded file" rendered="#{cuneiformController.isFileUploadedForVar(variable.name)}"/>
                                             <h:outputLabel value="#{variable.value}" rendered="#{cuneiformController.isFileUploadedForVar(variable.name)}"/>
@@ -86,7 +86,7 @@
                             Results
                         </h3>
                         <p:poll widgetVar="progressPoller" interval="5" listener="#{cuneiformController.checkProgress()}" 
-                                update="@form" stop="#{cuneiformController.jobFinished}"
+                                update="@form :#{p:component('historyForm_CUNEIFORM')}" stop="#{cuneiformController.jobFinished}"
                                 />
                         <h:panelGroup id="image">
                             <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformController.jobStarted and not cuneiformController.jobFinished}"/>
