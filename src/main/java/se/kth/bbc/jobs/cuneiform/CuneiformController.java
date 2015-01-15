@@ -1,6 +1,5 @@
 package se.kth.bbc.jobs.cuneiform;
 
-import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
 import java.io.BufferedWriter;
@@ -29,11 +28,11 @@ import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.jobs.JobController;
-import se.kth.bbc.jobs.RunningJobTracker;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
@@ -74,16 +73,13 @@ public class CuneiformController implements Serializable {
   private StudyMB study;
 
   @EJB
-  private AsynchronousCuneiformJob submitter;
+  private AsynchronousJobExecutor submitter;
 
   @EJB
   private JobHistoryFacade history;
 
   @EJB
   private JobOutputFileFacade jobOutputFacade;
-
-  @EJB
-  private RunningJobTracker runningJobs;
 
   @EJB
   private FileOperations fops;
@@ -305,10 +301,11 @@ public class CuneiformController implements Serializable {
     //Get the YarnRunner instance
     YarnRunner r = b.build();
 
+    CuneiformJob job = new CuneiformJob(history, fops, r);
+
     //TODO: include input and execution files
-    jobhistoryid = history.create(jobName, study.getUsername(), study.
-            getStudyName(), "CUNEIFORM", args.toString(), null,
-            "/tmp/stderr.log", "/tmp/stdout.log", null, null);
+    jobhistoryid = job.requestJobId(jobName, study.getUsername(), study.
+            getStudyName(), "CUNEIFORM");
     if (jobhistoryid != null) {
       String stdOutFinalDestination = study.getHdfsRootPath()
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
@@ -316,9 +313,10 @@ public class CuneiformController implements Serializable {
       String stdErrFinalDestination = study.getHdfsRootPath()
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
               + File.separator + "stderr.log";
-      submitter.registerJob(jobhistoryid, r);
-      submitter.handleExecution(jobhistoryid, r, stdOutFinalDestination,
-              stdErrFinalDestination, resultName);
+      job.setStdOutFinalDestination(stdOutFinalDestination);
+      job.setStdErrFinalDestination(stdErrFinalDestination);
+      job.setSummaryPath(resultName);
+      submitter.startExecution(job);
       MessagesController.addInfoMessage("App master started!");
     } else {
       logger.log(Level.SEVERE,
@@ -342,7 +340,7 @@ public class CuneiformController implements Serializable {
    */
   public void checkProgress() {
     if (started) {
-      boolean done = !runningJobs.isJobRunning(jobhistoryid);
+      boolean done = jobHasFinishedState();
       if (done) {
         stdoutPath = history.findById(jobhistoryid).getStdoutPath();
         stderrPath = history.findById(jobhistoryid).getStderrPath();
@@ -384,6 +382,17 @@ public class CuneiformController implements Serializable {
         finished = true;
       }
     }
+  }
+
+  private boolean jobHasFinishedState() {
+    String state = history.getState(jobhistoryid);
+    if(state == null){
+      //should never happen
+      return true;
+    }
+    return JobHistory.STATE_FAILED.equals(state) || JobHistory.STATE_FINISHED.
+            equals(state) || JobHistory.STATE_FRAMEWORK_FAILURE.equals(state)
+            || JobHistory.STATE_KILLED.equals(state);
   }
 
   public boolean isJobFinished() {

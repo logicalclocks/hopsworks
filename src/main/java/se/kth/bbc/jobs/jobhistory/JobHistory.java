@@ -68,9 +68,13 @@ import se.kth.kthfsdashboard.user.Username;
           = "SELECT j FROM JobHistory j WHERE j.type = :type"),
   @NamedQuery(name = "JobHistory.findByStudyAndType",
           query
-          = "SELECT j FROM JobHistory j WHERE j.type = :type AND j.study.name = :studyname ORDER BY j.submissionTime DESC")})
+          = "SELECT j FROM JobHistory j WHERE j.type = :type AND j.study.name = :studyname ORDER BY j.submissionTime DESC"),
+  @NamedQuery(name = "JobHistory.findStateForId",
+          query
+          = "SELECT j.state FROM JobHistory j WHERE j.id = :id")})
 public class JobHistory implements Serializable {
 
+  public static final String STATE_INITIALIZING = "Initializing";
   public static final String STATE_FINISHED = YarnApplicationState.FINISHED.toString();
   public static final String STATE_RUNNING = YarnApplicationState.RUNNING.toString();
   public static final String STATE_ACCEPTED = YarnApplicationState.ACCEPTED.toString();

@@ -7,6 +7,8 @@ package se.kth.bbc.lims;
  * @author stig
  */
 public class Constants {
+  
+  //TODO: check entire project for correct closing of resources!
 
     //Local path to the hiway jar
     public static final String HIWAY_JAR_PATH = "/srv/hiway/hiway-core-0.2.0-SNAPSHOT.jar";
