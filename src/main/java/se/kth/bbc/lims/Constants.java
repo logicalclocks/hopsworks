@@ -22,4 +22,14 @@ public class Constants {
     //Default configuration locations
     public static final String DEFAULT_HADOOP_CONF_DIR = "/srv/hadoop/etc/hadoop/";
     public static final String DEFAULT_YARN_CONF_DIR = "/srv/hadoop/etc/hadoop/";
+    
+    //Default configuration file names
+    public static final String DEFAULT_YARN_CONFFILE_NAME = "yarn-site.xml";
+    public static final String DEFAULT_HADOOP_CONFFILE_NAME = "core-site.xml";
+    public static final String DEFAULT_HDFS_CONFFILE_NAME = "hdfs-site.xml";
+            
+    //Environment variable keys
+    public static final String ENV_KEY_YARN_CONF_DIR = "YARN_CONF_DIR";
+    public static final String ENV_KEY_HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
+   
 }

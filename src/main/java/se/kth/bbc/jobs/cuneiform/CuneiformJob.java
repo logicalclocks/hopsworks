@@ -15,6 +15,7 @@ import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.yarn.YarnRunner;
+import se.kth.bbc.lims.Utils;
 
 /**
  *
@@ -83,7 +84,7 @@ public final class CuneiformJob extends HopsJob {
       long endTime = System.currentTimeMillis();
       long duration = endTime - startTime;
       getJobHistoryFacade().update(getJobId(),
-              runner.getApplicationReport().getYarnApplicationState().toString(),
+              runner.getApplicationState().toString(),
               duration);
     } catch (YarnException | IOException ex) {
       logger.log(Level.SEVERE, "Error while getting final state for job "
@@ -91,7 +92,6 @@ public final class CuneiformJob extends HopsJob {
       getJobHistoryFacade().update(getJobId(),
               JobHistory.STATE_FRAMEWORK_FAILURE);
     }
-    removeTempFiles();
   }
 
   private boolean startJob() {
@@ -199,7 +199,7 @@ public final class CuneiformJob extends HopsJob {
       JSONArray outputpaths = jobj.getJSONArray("output");
       for (int i = 0; i < outputpaths.length(); i++) {
         String outfile = outputpaths.getString(i);
-        JobOutputFile file = new JobOutputFile(getJobId(), getFileName(outfile));
+        JobOutputFile file = new JobOutputFile(getJobId(), Utils.getFileName(outfile));
         file.setPath(outfile);
         getJobHistoryFacade().persist(file);
       }
@@ -207,31 +207,4 @@ public final class CuneiformJob extends HopsJob {
       logger.log(Level.SEVERE,"Failed to copy output files after running Cuneiform job "+getJobId(),e);
     }
   }
-
-  private void removeTempFiles() {
-    String outpath = runner.getStdOutPath();
-    int lastslash = outpath.lastIndexOf("/");
-    String folderpath = outpath.substring(0, lastslash);
-    File tmpFolder = new File(folderpath);
-    deleteFolder(tmpFolder);
-  }
-
-  private void deleteFolder(File folder) {
-    for (File f : folder.listFiles()) {
-      if (f.isDirectory()) {
-        deleteFolder(f);
-      } else {
-        f.delete();
-      }
-    }
-    folder.delete();
-  }
-
-  //TODO: move this method to a Utils class (similar method is used elsewhere)
-  private static String getFileName(String path) {
-    int lastSlash = path.lastIndexOf("/");
-    int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
-    return path.substring(startName);
-  }
-
 }

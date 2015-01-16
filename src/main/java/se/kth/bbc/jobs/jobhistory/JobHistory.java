@@ -84,6 +84,7 @@ public class JobHistory implements Serializable {
   public static final String STATE_NEW_SAVING = YarnApplicationState.NEW_SAVING.toString();
   public static final String STATE_SUBMITTED = YarnApplicationState.SUBMITTED.toString();
   public static final String STATE_FRAMEWORK_FAILURE = "Framework Failure";
+  public static final String STATE_SUBMISSION_FAILED = "Submission Failure";
   
 
   private static final long serialVersionUID = 1L;

@@ -1,11 +1,12 @@
 package se.kth.bbc.jobs.yarn;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,35 +17,20 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DataOutputBuffer;
-import org.apache.hadoop.security.Credentials;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
-import org.apache.hadoop.yarn.api.records.ApplicationReport;
 import org.apache.hadoop.yarn.api.records.ApplicationSubmissionContext;
 import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
-import org.apache.hadoop.yarn.api.records.FinalApplicationStatus;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
-import org.apache.hadoop.yarn.api.records.NodeReport;
-import org.apache.hadoop.yarn.api.records.NodeState;
-import org.apache.hadoop.yarn.api.records.QueueACL;
-import org.apache.hadoop.yarn.api.records.QueueInfo;
-import org.apache.hadoop.yarn.api.records.QueueUserACLInfo;
 import org.apache.hadoop.yarn.api.records.Resource;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
-import org.apache.hadoop.yarn.api.records.YarnClusterMetrics;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
@@ -52,252 +38,169 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 import se.kth.bbc.jobs.CancellableJob;
 import se.kth.bbc.lims.Constants;
+import se.kth.bbc.lims.Utils;
 
 /**
  *
  * @author stig
  */
-public class YarnRunner implements CancellableJob {
-
-  public static final String APPID_PLACEHOLDER = "$APPID";
-  private static final String APPID_REGEX = "\\$APPID";
+public class YarnRunner implements Closeable, CancellableJob {
 
   private static final Logger logger = Logger.getLogger(YarnRunner.class.
           getName());
+  public static final String APPID_PLACEHOLDER = "$APPID";
+  private static final String APPID_REGEX = "\\$APPID";
   private static final String KEY_CLASSPATH = "CLASSPATH";
+
+  private final YarnClient yarnClient;
+  private final Configuration conf;
   private ApplicationId appId = null;
 
-  //Signify whether the application has finished, started.
-  private boolean finished = false;
-  private boolean started = false;
-
-  /*
-   *
-   * CONSTRUCTION
-   *
-   */
-  private final String appMasterLocalName;
-  private final String appMasterJarPath;
+  private final String amJarLocalName;
+  private final String amJarPath;
   private final String amQueue;
   private int amMemory;
   private int amVCores;
-  private final String appName;
+  private String appName;
   private final String amMainClass;
   private String amArgs;
-  private final Map<String, SourceDestinationPair> amLocalResources;
+  private final Map<String, String> amLocalResources;
   private final Map<String, String> amEnvironment;
   private String localResourcesBasePath;
   private String stdOutPath;
   private String stdErrPath;
 
-  //Non-constructor-passed attributes
-  private final Configuration conf;
-  private final YarnClient yarnClient;
-
-  private YarnRunner(Builder builder) {
-    this.appMasterJarPath = builder.appMasterJarPath;
-    this.amQueue = builder.amQueue;
-    this.amMemory = builder.amMemory;
-    this.amVCores = builder.amVCores;
-    this.appName = builder.appName;
-    this.amMainClass = builder.appMasterMainClass;
-    this.amArgs = builder.extraArgs == null ? "" : builder.extraArgs;
-    this.conf = builder.conf;
-    this.yarnClient = builder.yarnClient;
-    if (builder.amLocalResources != null) {
-      this.amLocalResources = builder.amLocalResources;
-    } else {
-      this.amLocalResources = new HashMap<>();
-    }
-    if (builder.amEnvironment != null) {
-      this.amEnvironment = builder.amEnvironment;
-    } else {
-      this.amEnvironment = new HashMap<>();
-    }
-    this.localResourcesBasePath = builder.localResourcesBasePath;
-    this.appMasterLocalName = builder.appMasterLocalName;
-    this.stdErrPath = builder.stdErrPath;
-    this.stdOutPath = builder.stdOutPath;
-  }
-
-  /*
-   *
-   * STARTING APPLICATION MASTER & RUNNING APP
-   *
+  //---------------------------------------------------------------------------
+  //-------------- CORE METHOD: START APPLICATION MASTER ----------------------
+  //---------------------------------------------------------------------------
+  /**
+   * Start the Yarn Application Master.
+   * <p>
+   * @return The received ApplicationId identifying the application.
+   * @throws YarnException
+   * @throws IOException Can occur upon opening and moving execution and input
+   * files.
    */
   public ApplicationId startAppMaster() throws YarnException, IOException {
-    logger.info("Running Client");
+    logger.info("Starting application master.");
+
+    //Get application id
     yarnClient.start();
-    YarnClusterMetrics clusterMetrics = yarnClient.getYarnClusterMetrics();
-    logger.info("Got Cluster metric info from ASM"
-            + ", numNodeManagers=" + clusterMetrics.getNumNodeManagers());
-    List<NodeReport> clusterNodeReports = yarnClient.getNodeReports(
-            NodeState.RUNNING);
-    logger.info("Got Cluster node info from ASM");
-    for (NodeReport node : clusterNodeReports) {
-      logger.info("Got node report from ASM for"
-              + ", nodeId=" + node.getNodeId()
-              + ", nodeAddress" + node.getHttpAddress()
-              + ", nodeRackName" + node.getRackName()
-              + ", nodeNumContainers" + node.getNumContainers());
-    }
-    QueueInfo queueInfo = yarnClient.getQueueInfo(this.amQueue);
-    logger.info("Queue info"
-            + ", queueName=" + queueInfo.getQueueName()
-            + ", queueCurrentCapacity=" + queueInfo.getCurrentCapacity()
-            + ", queueMaxCapacity=" + queueInfo.getMaximumCapacity()
-            + ", queueApplicationCount=" + queueInfo.getApplications().size()
-            + ", queueChildQueueCount=" + queueInfo.getChildQueues().size());
-    List<QueueUserACLInfo> listAclInfo = yarnClient.getQueueAclsInfo();
-    for (QueueUserACLInfo aclInfo : listAclInfo) {
-      for (QueueACL userAcl : aclInfo.getUserAcls()) {
-        logger.info("User ACL Info for Queue"
-                + ", queueName=" + aclInfo.getQueueName()
-                + ", userAcl=" + userAcl.name());
-      }
-    }
-    // Get a new application id
     YarnClientApplication app = yarnClient.createApplication();
     GetNewApplicationResponse appResponse = app.getNewApplicationResponse();
+    appId = appResponse.getApplicationId();
+    //And replace all occurences of $APPID with the real id.
+    fillInAppid(appId.toString());
 
-    //Now that we've got the appId, replace all occurences of $APPID in strings
-    fillInAppid(appResponse.getApplicationId().toString());
+    //Check resource requests and availabilities
+    checkAmResourceRequest(appResponse);
 
-    // TODO get min/max resource capabilities from RM and change memory ask if needed
-    // If we do not have min/max, we may not be able to correctly request
-    // the required resources from the RM for the app master
-    // Memory ask has to be a multiple of min and less than max.
-    // Dump out information about cluster capability as seen by the resource manager
-    int maxMem = appResponse.getMaximumResourceCapability().getMemory();
-    logger.info("Max mem capabililty of resources in this cluster " + maxMem);
-    // A resource ask cannot exceed the max.
-    if (amMemory > maxMem) {
-      logger.info(
-              "AM memory specified above max threshold of cluster. Using max value."
-              + ", specified=" + amMemory
-              + ", max=" + maxMem);
-      amMemory = maxMem;
-    }
-    int maxVCores = appResponse.getMaximumResourceCapability().getVirtualCores();
-    logger.info("Max virtual cores capabililty of resources in this cluster "
-            + maxVCores);
-    if (amVCores > maxVCores) {
-      logger.info("AM virtual cores specified above max threshold of cluster. "
-              + "Using max value." + ", specified=" + amVCores
-              + ", max=" + maxVCores);
-      amVCores = maxVCores;
-    }
-    // set the application name
+    //Set application name and type
     ApplicationSubmissionContext appContext = app.
             getApplicationSubmissionContext();
-    appId = appContext.getApplicationId();
-    //TODO
-    //appContext.setKeepContainersAcrossApplicationAttempts(keepContainers);
     appContext.setApplicationName(appName);
+    appContext.setApplicationType("Hops Yarn");
 
-    //TODO: fix this: actually add as local resources to amcontainer, fix permission issues for Hiway, check if this is what's going wrong with flink
-    // set local resources for the application master    
-    addAllToLocalResources();
-    Map<String, LocalResource> localResources = new HashMap<>();
+    //Add local resources to AM container
+    Map<String, LocalResource> localResources = addAllToLocalResources();
 
-    // Set the env variables to be setup in the env where the application master will be run
-    logger.info("Set the environment for the application master");
+    //Set up environment
     Map<String, String> env = new HashMap<>();
-
-    // Add AM environment vars.
     env.putAll(amEnvironment);
-
-    //Set classpath
     setUpClassPath(env);
+
+    //Set up commands
     List<String> commands = setUpCommands();
 
-    // Set up the container launch context for the application master
+    //TODO: set up security tokens
+    //Set up container launch context
     ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
-            localResources, env, commands, null, null, null);
-    // Set up security tokens
-    setUpSecurityTokens(amContainer, FileSystem.get(conf));
-    // Set up resource type requirements
-    // For now, both memory and vcores are supported, so we set memory and
-    // vcores requirements
-    Resource capability = Resource.newInstance(amMemory, amVCores);
-    appContext.setResource(capability);
-    // Service data is a binary blob that can be passed to the application
-    // Not needed in this scenario
-    // amContainer.setServiceData(serviceData);
-    // Setup security tokens
-    appContext.setAMContainerSpec(amContainer);
-    // Set the priority for the application master
-    // TODO - what is the range for priority? how to decide?
-    //TODO
-    //Priority pri = Priority.newInstance(amPriority);
-    //appContext.setPriority(pri);
-    // Set the queue to which this application is to be submitted in the RM
-    appContext.setQueue(amQueue);
-    // Submit the application to the applications manager
-    // SubmitApplicationResponse submitResp = applicationsManager.submitApplication(appRequest);
-    // Ignore the response as either a valid response object is returned on success
-    // or an exception thrown to denote some form of a failure
-    logger.info("Submitting application to ASM");
+            localResources, amEnvironment, commands, null, null, null);
+
+    //Finally set up context
+    appContext.setAMContainerSpec(amContainer); //container spec
+    appContext.setResource(Resource.newInstance(amMemory, amVCores)); //resources
+    appContext.setQueue(amQueue); //Queue
+
+    //And submit
+    logger.
+            log(Level.INFO,
+                    "Submitting application {0} to applications manager.", appId);
     yarnClient.submitApplication(appContext);
-    started = true;
+
     return appId;
   }
 
-  /**
-   * Add all the resources that should be copied to the ApplicationMaster's
-   * container to the LocalResources.
-   */
-  private Map<String, LocalResource> addAllToLocalResources() throws IOException {
-    // local files or archives as needed
-    // Consider the jar file for the application master as part of the local resources
-    Map<String, LocalResource> localResources = new HashMap<>();
-    logger.info(
-            "Copy App Master jar from local filesystem and add to local environment");
-    // Copy the application master jar to the filesystem
-    // Create a local resource to point to the destination jar path        
-    FileSystem fs = FileSystem.get(conf);
-    amLocalResources.put(appMasterLocalName, new SourceDestinationPair(
-            appMasterJarPath, new Path(appMasterJarPath).getName()));
+  //---------------------------------------------------------------------------
+  //------------------------- UTILITY METHODS ---------------------------------
+  //---------------------------------------------------------------------------
+  private void fillInAppid(String id) {
+    localResourcesBasePath = localResourcesBasePath.replaceAll(APPID_REGEX, id);
+    appName = appName.replaceAll(APPID_REGEX, id);
+    amArgs = amArgs.replaceAll(APPID_REGEX, id);
+    stdOutPath = stdOutPath.replaceAll(APPID_REGEX, id);
+    stdErrPath = stdErrPath.replaceAll(APPID_REGEX, id);
+    for (Entry<String, String> entry : amLocalResources.entrySet()) {
+      entry.setValue(entry.getValue().replaceAll(APPID_REGEX, id));
+    }
+    //TODO: thread-safety?
+    for (Entry<String, String> entry : amEnvironment.entrySet()) {
+      entry.setValue(entry.getValue().replaceAll(APPID_REGEX, id));
+    }
+  }
 
-    for (String key : amLocalResources.keySet()) {
-      addFileToLocalResources(fs, key, amLocalResources.get(key).source,
-              amLocalResources.get(key).destination, appId.toString(),
-              localResources);
+  private void checkAmResourceRequest(GetNewApplicationResponse appResponse) {
+    int maxMem = appResponse.getMaximumResourceCapability().getMemory();
+    if (amMemory > maxMem) {
+      logger.log(Level.WARNING,
+              "AM memory specified above max threshold of cluster. Using max value. Specified: {0}, max: {1}",
+              new Object[]{amMemory,
+                maxMem});
+      amMemory = maxMem;
+    }
+    int maxVcores = appResponse.getMaximumResourceCapability().getVirtualCores();
+    if (amVCores > maxVcores) {
+      logger.log(Level.WARNING,
+              "AM vcores specified above max threshold of cluster. Using max value. Specified: {0}, max: {1}",
+              new Object[]{amVCores,
+                maxVcores});
+      amVCores = maxVcores;
+    }
+  }
+
+  private Map<String, LocalResource> addAllToLocalResources() throws IOException {
+    Map<String, LocalResource> localResources = new HashMap<>();
+    //If an AM jar has been specified: include that one
+    if (amJarLocalName != null && !amJarLocalName.isEmpty() && amJarPath != null
+            && !amJarPath.isEmpty()) {
+      amLocalResources.put(amJarLocalName, amJarPath);
+    }
+    FileSystem fs = FileSystem.get(conf);
+    String hdfsPrefix = conf.get("fs.defaultFS");
+    String basePath = hdfsPrefix + localResourcesBasePath;
+    logger.log(Level.INFO, "Base path: {0}", basePath);
+    for (Entry<String, String> entry : amLocalResources.entrySet()) {
+      String key = entry.getKey();
+      String source = entry.getValue();
+      String filename = Utils.getFileName(source);
+      Path dst = new Path(basePath + File.separator + filename);
+      fs.copyFromLocalFile(new Path(source), dst);
+      logger.log(Level.INFO, "Copying from: {0} to: {1}",
+              new Object[]{source,
+                dst});
+      FileStatus scFileStat = fs.getFileStatus(dst);
+      LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
+              getYarnUrlFromPath(dst),
+              LocalResourceType.FILE, LocalResourceVisibility.PUBLIC,
+              scFileStat.getLen(),
+              scFileStat.getModificationTime());
+      localResources.put(key, scRsrc);
     }
     return localResources;
   }
 
-  private void addFileToLocalResources(FileSystem fs, String name,
-          String fileSrcPath, String fileDstPath, String appId,
-          Map<String, LocalResource> localResources) throws IOException {
-    //basePath never ends in "/"
-    String hdfsPrefix = conf.get("fs.defaultFS");
-    String basePath = hdfsPrefix + localResourcesBasePath;
-    while (fileDstPath.startsWith(File.separator)) {
-      fileDstPath = fileDstPath.substring(1);
-    }
-    String suffix = fileDstPath;
-    Path dst = new Path(basePath + File.separator + suffix);
-    fs.copyFromLocalFile(new Path(fileSrcPath), dst);
-    logger.log(Level.INFO, "Copying from: {0} to: {1}",
-            new Object[]{fileSrcPath,
-              dst});
-    FileStatus scFileStatus = fs.getFileStatus(dst);
-    LocalResource scRsrc
-            = LocalResource.newInstance(
-                    ConverterUtils.getYarnUrlFromURI(dst.toUri()),
-                    LocalResourceType.FILE, LocalResourceVisibility.PUBLIC,
-                    scFileStatus.getLen(), scFileStatus.getModificationTime());
-    localResources.put(name, scRsrc);
-  }
-
   private void setUpClassPath(Map<String, String> env) {
     // Add AppMaster.jar location to classpath
-    // At some point we should not be required to add
-    // the hadoop specific classpaths to the env.
-    // It should be provided out of the box.
-    // For now setting all required classpaths including
-    // the classpath to "." for the application jar
     StringBuilder classPathEnv = new StringBuilder(
             ApplicationConstants.Environment.CLASSPATH.$())
             .append(":").append("./*");
@@ -322,37 +225,9 @@ public class YarnRunner implements CancellableJob {
     }
   }
 
-  private void setUpSecurityTokens(ContainerLaunchContext amContainer,
-          FileSystem fs) throws IOException {
-    // Setup security tokens
-    if (UserGroupInformation.isSecurityEnabled()) {
-      Credentials credentials = new Credentials();
-      String tokenRenewer = conf.get(YarnConfiguration.RM_PRINCIPAL);
-      if (tokenRenewer == null || tokenRenewer.length() == 0) {
-        throw new IOException(
-                "Can't get Master Kerberos principal for the RM to use as renewer");
-      }
-
-      // For now, only getting tokens for the default file-system.
-      final Token<?> tokens[] = fs.
-              addDelegationTokens(tokenRenewer, credentials);
-      if (tokens != null) {
-        for (Token<?> token : tokens) {
-          logger.log(Level.INFO, "Got dt for {0}; {1}",
-                  new Object[]{fs.getUri(),
-                    token});
-        }
-      }
-      DataOutputBuffer dob = new DataOutputBuffer();
-      credentials.writeTokenStorageToStream(dob);
-      ByteBuffer fsTokens = ByteBuffer.wrap(dob.getData(), 0, dob.getLength());
-      amContainer.setTokens(fsTokens);
-    }
-  }
-
   private List<String> setUpCommands() {
     // Set the necessary command to execute the application master
-    Vector<CharSequence> vargs = new Vector<CharSequence>(30);
+    List<CharSequence> vargs = new ArrayList<>();
     // Set java executable command
     logger.info("Setting up app master command");
     vargs.add(ApplicationConstants.Environment.JAVA_HOME.$() + "/bin/java");
@@ -363,9 +238,10 @@ public class YarnRunner implements CancellableJob {
     // Set params for Application Master
     vargs.add(amArgs);
 
-    vargs.add("1>&1 | tee AppMaster.stdout >");
+    //TODO: add several log paths
+    vargs.add("1>&1 >");
     vargs.add(stdOutPath);
-    vargs.add("2>&2 | tee AppMaster.stderr >");
+    vargs.add("2>&2 >");
     vargs.add(stdErrPath);
 
     // Get final commmand
@@ -380,194 +256,112 @@ public class YarnRunner implements CancellableJob {
     return commands;
   }
 
-  /**
-   * Kill a submitted application by sending a call to the ASM
-   *
-   * @param appId Application Id to be killed.
-   * @throws YarnException
-   * @throws IOException
-   */
-  @Override
-  public void cancelJob() throws YarnException, IOException {
-    // TODO clarify whether multiple jobs with the same app id can be submitted and be running at
-    // the same time.
-    // If yes, can we kill a particular attempt only?
-    // Response can be ignored as it is non-null on success or
-    // throws an exception in case of failures
-    yarnClient.killApplication(appId);
-  }
-
-  /*
-   *
-   *
-   * MONITORING UTILITY METHODS
-   *
-   *
-   */
-  public boolean isFinished() throws IOException, YarnException {
-    if (!finished) {
-      finished = (YarnApplicationState.FINISHED == getApplicationReport().
-              getYarnApplicationState());;
-    }
-    return finished;
-  }
-
-  public boolean isStarted() {
-    return started;
-  }
-
-  public ApplicationReport getApplicationReport() throws YarnException,
-          IOException {
-    return yarnClient.getApplicationReport(appId);
-  }
-
+  //---------------------------------------------------------------------------        
+  //--------------------------- STATUS QUERIES --------------------------------
+  //---------------------------------------------------------------------------
   public YarnApplicationState getApplicationState() throws YarnException,
           IOException {
     return yarnClient.getApplicationReport(appId).getYarnApplicationState();
   }
 
-  public FinalApplicationStatus getFinalYarnApplicationState() throws
-          IOException, YarnException {
-    if (isFinished()) {
-      return getApplicationReport().getFinalApplicationStatus();
+  //---------------------------------------------------------------------------        
+  //------------------------- YARNCLIENT UTILS --------------------------------
+  //---------------------------------------------------------------------------
+  @Override
+  public void close() throws IOException {
+    if (yarnClient != null) {
+      yarnClient.close();
+    }
+  }
+
+  @Override
+  public void cancelJob() throws YarnException, IOException {
+    if (yarnClient != null) {
+      yarnClient.close();
     } else {
-      return null;
-    }
-  }
-
-  public String getFormattedReport() throws YarnException, IOException {
-    // Get application report for the appId we are interested in
-    ApplicationReport report = getApplicationReport();
-    StringBuilder sb = new StringBuilder();
-    sb.append("Got application report from ASM for"
-            + ", appId=" + appId.getId()
-            + ", clientToAMToken=" + report.getClientToAMToken()
-            + ", appDiagnostics=" + report.getDiagnostics()
-            + ", appMasterHost=" + report.getHost()
-            + ", appQueue=" + report.getQueue()
-            + ", appMasterRpcPort=" + report.getRpcPort()
-            + ", appStartTime=" + report.getStartTime()
-            + ", yarnAppState=" + report.getYarnApplicationState().toString()
-            + ", distributedFinalState=" + report.getFinalApplicationStatus().
-            toString()
-            + ", appTrackingUrl=" + report.getTrackingUrl()
-            + ", appUser=" + report.getUser());
-    YarnApplicationState state = report.getYarnApplicationState();
-    FinalApplicationStatus dsStatus = report.getFinalApplicationStatus();
-    if (YarnApplicationState.FINISHED == state) {
-      if (FinalApplicationStatus.SUCCEEDED == dsStatus) {
-        sb.append('\n').append("Application has completed successfully.");
-        return sb.toString();
-      } else {
-        sb.append('\n').append("Application finished unsuccessfully."
-                + " YarnState=" + state.toString() + ", DSFinalStatus="
-                + dsStatus.toString()
-                + ".");
-        return sb.toString();
+      try (YarnClient tmpclient = YarnClient.createYarnClient()) {
+        tmpclient.killApplication(appId);
       }
-    } else if (YarnApplicationState.KILLED == state
-            || YarnApplicationState.FAILED == state) {
-      sb.append('\n').append("Application did not finish."
-              + " YarnState=" + state.toString() + ", DSFinalStatus="
-              + dsStatus.toString()
-              + ".");
-      return sb.toString();
     }
-    return sb.toString();
   }
 
-  private void fillInAppid(String id) {
-    localResourcesBasePath = localResourcesBasePath.replaceAll(APPID_REGEX, id);
-    amArgs = amArgs.replaceAll(APPID_REGEX, id);
-    for (SourceDestinationPair p : amLocalResources.values()) {
-      p.setSource(p.getSource().replaceAll(APPID_REGEX, id));
-      p.setDestination(p.getDestination().replaceAll(APPID_REGEX, id));
-    }
-    //TODO: thread-safety?
-    for (Entry<String, String> e : amEnvironment.entrySet()) {
-      e.setValue(e.getValue().replaceAll(APPID_REGEX, id));
-    }
-    stdOutPath = stdOutPath.replaceAll(APPID_REGEX, id);
-    stdErrPath = stdErrPath.replaceAll(APPID_REGEX, id);
+  //---------------------------------------------------------------------------        
+  //------------------------- CONSTRUCTOR -------------------------------------
+  //---------------------------------------------------------------------------
+  public YarnRunner(Builder builder) {
+    this.amJarLocalName = builder.amJarLocalName;
+    this.amJarPath = builder.amJarPath;
+    this.amQueue = builder.amQueue;
+    this.amMemory = builder.amMemory;
+    this.amVCores = builder.amVCores;
+    this.appName = builder.appName;
+    this.amMainClass = builder.amMainClass;
+    this.amArgs = builder.amArgs;
+    this.amLocalResources = builder.amLocalResources;
+    this.amEnvironment = builder.amEnvironment;
+    this.localResourcesBasePath = builder.localResourcesBasePath;
+    this.stdOutPath = builder.stdOutPath;
+    this.stdErrPath = builder.stdErrPath;
+    this.yarnClient = builder.yarnClient;
+    this.conf = builder.conf;
   }
 
-  private static class SourceDestinationPair {
-
-    private String source;
-    private String destination;
-
-    public SourceDestinationPair(String source, String destination) {
-      this.source = source;
-      this.destination = destination;
-    }
-
-    public String getSource() {
-      return source;
-    }
-
-    public void setSource(String source) {
-      this.source = source;
-    }
-
-    public String getDestination() {
-      return destination;
-    }
-
-    public void setDestination(String destination) {
-      this.destination = destination;
-    }
-
-  }
-
-  /*
-   * Getters
-   */
-  public final String getStdOutPath() {
-    return stdOutPath;
-  }
-
-  public final String getStdErrPath() {
-    return stdErrPath;
-  }
-
-  public final String getLocalResourcesBasePath() {
-    return localResourcesBasePath;
+  //---------------------------------------------------------------------------
+  //-------------------------- GETTERS ----------------------------------------
+  //---------------------------------------------------------------------------
+  public ApplicationId getAppId() {
+    return appId;
   }
 
   public String getAmArgs() {
     return amArgs;
   }
 
+  public String getLocalResourcesBasePath() {
+    return localResourcesBasePath;
+  }
+
+  public String getStdOutPath() {
+    return stdOutPath;
+  }
+
+  public String getStdErrPath() {
+    return stdErrPath;
+  }
+  //---------------------------------------------------------------------------
+  //-------------------------- BUILDER ----------------------------------------
+  //---------------------------------------------------------------------------
+
   public static class Builder {
 
-    //Required attributes
+    //Possibly equired attributes
+    //The name of the application app master class
+    private String amMainClass;
     //Path to the application master jar
-    private final String appMasterJarPath;
+    private String amJarPath;
     //The name of the application master jar in the local resources
-    private final String appMasterLocalName;
+    private String amJarLocalName;
 
     //Optional attributes
     // Queue for App master
     private String amQueue = "default"; //TODO: enable changing this, or infer from user data
-    // Memory for App master
+    // Memory for App master (in MB)
     private int amMemory = 819;
     //Number of cores for appMaster
     private int amVCores = 1;
     // Application name
-    private String appName = "BbcYarnApp";
-    //The name of the application app master class
-    private String appMasterMainClass;
+    private String appName = "Hops Yarn";
     //Arguments to pass on in invocation of Application master
-    private String extraArgs;
+    private String amArgs;
     //List of paths to resources that should be copied to application master
-    private Map<String, SourceDestinationPair> amLocalResources = null;
+    private Map<String, String> amLocalResources = null;
     //Application master environment
     private Map<String, String> amEnvironment = null;
     //Path where the application master expects its local resources to be (added to fs.getHomeDirectory)
     private String localResourcesBasePath;
-    //Path to file where stdout should be written
+    //Path to file where stdout should be written, default in tmp folder
     private String stdOutPath;
-    //Path to file where stderr should be written
+    //Path to file where stderr should be written, default in tmp folder
     private String stdErrPath;
 
     //Hadoop Configuration
@@ -575,23 +369,34 @@ public class YarnRunner implements CancellableJob {
     //YarnClient
     private YarnClient yarnClient;
 
-    //Constructor
-    public Builder(String appMasterJarPath, String appMasterLocalName) {
-      this.appMasterJarPath = appMasterJarPath;
-      this.appMasterLocalName = appMasterLocalName;
+    //Constructors
+    public Builder(String amMainClass) {
+      this.amMainClass = amMainClass;
     }
 
-    public Builder appMasterArgs(String amArgs) {
-      this.extraArgs = amArgs;
+    public Builder(String amJarPath, String amJarLocalName) {
+      this.amJarPath = amJarPath;
+      this.amJarLocalName = amJarLocalName;
+    }
+
+    //Setters
+    /**
+     * Sets the arguments to be passed to the Application Master.
+     * <p>
+     * @param amArgs
+     * @return
+     */
+    public Builder amArgs(String amArgs) {
+      this.amArgs = amArgs;
       return this;
     }
 
-    public Builder appMasterMemory(int amMem) {
+    public Builder amMemory(int amMem) {
       this.amMemory = amMem;
       return this;
     }
 
-    public Builder appMasterVCores(int amVCores) {
+    public Builder amVCores(int amVCores) {
       this.amVCores = amVCores;
       return this;
     }
@@ -601,38 +406,79 @@ public class YarnRunner implements CancellableJob {
       return this;
     }
 
-    public Builder appMasterMainClass(String amMainClass) {
-      this.appMasterMainClass = amMainClass;
+    public Builder amMainClass(String amMainClass) {
+      this.amMainClass = amMainClass;
       return this;
     }
 
+    public Builder amJar(String amJarPath, String amJarLocalName) {
+      this.amJarLocalName = amJarLocalName;
+      this.amJarPath = amJarPath;
+      return this;
+    }
+
+    /**
+     * Sets the path to which to write the Application Master's stdout.
+     * <p>
+     * @param path
+     * @return
+     */
     public Builder stdOutPath(String path) {
       this.stdOutPath = path;
       return this;
     }
 
+    /**
+     * Sets the path to which to write the Application Master's stderr.
+     * <p>
+     * @param path
+     * @return
+     */
     public Builder stdErrPath(String path) {
       this.stdErrPath = path;
       return this;
     }
 
     /**
-     * Add a local resource that should be added to the AM container. The
-     * name is the name as used in the LocalResources map passed to the
-     * container. The source is the local path to the file, the destination
-     * is the intended location in HDFS relative to
-     * <i>localResourcesBasePath</i>.
+     * Set the base path for local resources for the application master.
+     * This is the path where the AM expects its local resources to be. Use
+     * "$APPID" as a replacement for the appId, which will be replaced once
+     * it is available.
+     * <p>
+     * If this method is not invoked, a default path will be used.
      *
-     * @param name
-     * @param path
+     * @param basePath
      * @return
      */
-    public Builder addLocalResource(String name, String source,
-            String destination) {
+    public Builder localResourcesBasePath(String basePath) {
+      while (basePath.endsWith(File.separator)) {
+        basePath = basePath.substring(0, basePath.length() - 1);
+      }
+      //TODO: handle paths like "hdfs://"
+      if (!basePath.startsWith("/")) {
+        basePath = "/" + basePath;
+      }
+      this.localResourcesBasePath = basePath;
+      return this;
+    }
+
+    /**
+     * Add a local resource that should be added to the AM container. The
+     * name is the key as used in the LocalResources map passed to the
+     * container. The source is the local path to the file. The file will be
+     * copied
+     * into HDFS under the path <i>localResourcesBasePath</i>/<i>filename</i>.
+     *
+     * @param name The name of the local resource, key in the local resource
+     * map.
+     * @param source The local path to the file.
+     * @return
+     */
+    public Builder addLocalResource(String name, String source) {
       if (amLocalResources == null) {
         amLocalResources = new HashMap<>();
       }
-      amLocalResources.put(name, new SourceDestinationPair(source, destination));
+      amLocalResources.put(name, source);
       return this;
     }
 
@@ -653,32 +499,15 @@ public class YarnRunner implements CancellableJob {
     }
 
     /**
-     * Set the base path for local resources for the application master.
-     * This is the path where the AM expects its local resources to be. Use
-     * "$APPID" as a replacement for the appId, which will be replaced once
-     * that is available.
-     *
-     * @param basePath
+     * Build the YarnRunner instance
+     * <p>
      * @return
+     * @throws IllegalStateException Thrown if (a) configuration is not found,
+     * (b) invalid main class name
+     * @throws IOException Thrown if stdOut and/or stdErr path have not been set
+     * and temp files could not be created
      */
-    public Builder localResourcesBasePath(String basePath) {
-      while (basePath.endsWith(File.separator)) {
-        basePath = basePath.substring(0, basePath.length() - 1);
-      }
-      //TODO: handle paths like "hdfs://"
-      if (!basePath.startsWith("/")) {
-        basePath = "/" + basePath;
-      }
-      this.localResourcesBasePath = basePath;
-      return this;
-    }
-
-    /**
-     * Build the YarnRunner instance.
-     *
-     * @return
-     */
-    public YarnRunner build() throws IllegalStateException {
+    public YarnRunner build() throws IllegalStateException, IOException {
       //Set configuration
       try {
         setConfiguration();
@@ -690,50 +519,103 @@ public class YarnRunner implements CancellableJob {
       yarnClient = YarnClient.createYarnClient();
       yarnClient.init(conf);
 
-      if (appMasterMainClass == null) {
-        appMasterMainClass = getMainClassNameFromJar();
-        if (appMasterMainClass == null) {
-          throw new IllegalStateException("Could not infer main class name.");
+      //Set main class
+      if (amMainClass == null) {
+        amMainClass = getMainClassNameFromJar();
+        if (amMainClass == null) {
+          throw new IllegalStateException(
+                  "Could not infer main class name from jar and was not specified.");
         }
       }
+      //Default localResourcesBasePath
       if (localResourcesBasePath == null) {
-        localResourcesBasePath = appName + File.separator + "$APPID";
+        localResourcesBasePath = appName + File.separator + APPID_PLACEHOLDER;
       }
+      //Default log locations: tmp files
+      if (stdOutPath == null || stdOutPath.isEmpty()) {
+        try {
+          stdOutPath = Files.createTempFile("stdOut", "").toString();
+        } catch (IOException e) {
+          throw new IOException("Failed to create tmp log file.", e);
+        }
+      }
+      if (stdErrPath == null || stdErrPath.isEmpty()) {
+        try {
+          stdErrPath = Files.createTempFile("stdErr", "").toString();
+        } catch (IOException e) {
+          throw new IOException("Failed to create tmp log file.", e);
+        }
+      }
+
+      if (amLocalResources == null) {
+        amLocalResources = new HashMap<>();
+      }
+
+      if (amEnvironment == null) {
+        amEnvironment = new HashMap<>();
+      }
+
       return new YarnRunner(this);
     }
 
     private void setConfiguration() throws IllegalStateException {
       //Get the path to the Yarn configuration file from environment variables
-      String yarnConfDir = System.getenv("YARN_CONF_DIR");
+      String yarnConfDir = System.getenv(Constants.ENV_KEY_YARN_CONF_DIR);
       //If not found in environment variables: warn and use default
       if (yarnConfDir == null) {
         logger.log(Level.WARNING,
-                "Environment variable YARN_CONF_DIR not found, using default "
+                "Environment variable " + Constants.ENV_KEY_YARN_CONF_DIR
+                + " not found, using default "
                 + Constants.DEFAULT_YARN_CONF_DIR);
         yarnConfDir = Constants.DEFAULT_YARN_CONF_DIR;
       }
 
       //Get the configuration file at found path
       Path confPath = new Path(yarnConfDir);
-      File confFile = new File(confPath + File.separator + "yarn-site.xml");
+      File confFile = new File(confPath + File.separator
+              + Constants.DEFAULT_YARN_CONFFILE_NAME);
       if (!confFile.exists()) {
-        logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
+        logger.log(Level.SEVERE,
+                "Unable to locate Yarn configuration file in {0}. Aborting exectution.",
                 confFile);
-        throw new IllegalStateException("No conf file");
+        throw new IllegalStateException("No Yarn conf file");
       }
 
-      //TODO make this more robust
-      //Also add the hadoop config!
-      File hadoopConf = new File(confPath + File.separator + "core-site.xml");
+      //Also add the hadoop config
+      String hadoopConfDir = System.getenv(Constants.ENV_KEY_HADOOP_CONF_DIR);
+      //If not found in environment variables: warn and use default
+      if (hadoopConfDir == null) {
+        logger.log(Level.WARNING,
+                "Environment variable " + Constants.ENV_KEY_HADOOP_CONF_DIR
+                + " not found, using default "
+                + Constants.DEFAULT_HADOOP_CONF_DIR);
+        hadoopConfDir = Constants.DEFAULT_HADOOP_CONF_DIR;
+      }
+      confPath = new Path(hadoopConfDir);
+      File hadoopConf = new File(confPath + File.separator
+              + Constants.DEFAULT_HADOOP_CONFFILE_NAME);
       if (!hadoopConf.exists()) {
-        logger.log(Level.INFO, "Unable to load Hadoop configuration.");
+        logger.log(Level.SEVERE,
+                "Unable to locate Hadoop configuration file in {0}. Aborting exectution.",
+                hadoopConf);
+        throw new IllegalStateException("No Hadoop conf file");
+      }
+
+      //And the hdfs config
+      File hdfsConf = new File(confPath + File.separator
+              + Constants.DEFAULT_HDFS_CONFFILE_NAME);
+      if (!hdfsConf.exists()) {
+        logger.log(Level.SEVERE,
+                "Unable to locate HDFS configuration file in {0}. Aborting exectution.",
+                hdfsConf);
+        throw new IllegalStateException("No HDFS conf file");
       }
 
       //Set the Configuration object for the returned YarnClient
-      Path yarnPath = new Path(confFile.getAbsolutePath());
       conf = new Configuration();
-      conf.addResource(yarnPath);
+      conf.addResource(new Path(confFile.getAbsolutePath()));
       conf.addResource(new Path(hadoopConf.getAbsolutePath()));
+      conf.addResource(new Path(hdfsConf.getAbsolutePath()));
 
       addPathToConfig(conf, confFile);
       addPathToConfig(conf, hadoopConf);
@@ -763,20 +645,21 @@ public class YarnRunner implements CancellableJob {
     }
 
     private String getMainClassNameFromJar() {
-      String fileName = appMasterJarPath;
-      File file = new File(fileName);
+      if (amJarPath == null) {
+        throw new IllegalStateException(
+                "Main class name and amJar path cannot both be null.");
+      }
+      String fileName = amJarPath;
       String mainClassName = null;
 
-      JarFile jarFile;
-      try {
-        jarFile = new JarFile(fileName);
+      try (JarFile jarFile = new JarFile(fileName)) {
         Manifest manifest = jarFile.getManifest();
         if (manifest != null) {
           mainClassName = manifest.getMainAttributes().getValue("Main-Class");
         }
-        jarFile.close();
       } catch (IOException io) {
-        logger.log(Level.SEVERE, "Could not open jar file.", io);
+        logger.log(Level.SEVERE, "Could not open jar file " + amJarPath
+                + " to load main class.", io);
         return null;
       }
 
@@ -788,4 +671,5 @@ public class YarnRunner implements CancellableJob {
     }
 
   }
+
 }

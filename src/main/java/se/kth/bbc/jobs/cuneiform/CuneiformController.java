@@ -241,7 +241,7 @@ public class CuneiformController implements Serializable {
   }
 
   public void startWorkflow() {
-
+//TODO: fix state if starting fails
     if (jobName == null || jobName.isEmpty()) {
       jobName = "Untitled job";
     }
@@ -253,13 +253,14 @@ public class CuneiformController implements Serializable {
               + workflowname + ".", e);
       MessagesController.addErrorMessage(
               "An error occured while binding parameters in the workflow file. Aborting execution.");
+      return;
     }
 
     String resultName = "results";
 
     YarnRunner.Builder b = new YarnRunner.Builder(Constants.HIWAY_JAR_PATH,
             "Hiway.jar");
-    b.appMasterMainClass(
+    b.amMainClass(
             "de.huberlin.wbi.hiway.app.am.CuneiformApplicationMaster");
     b.appName("Cuneiform " + jobName);
 
@@ -281,25 +282,24 @@ public class CuneiformController implements Serializable {
     args.append(" --summary ");
     args.append(resultName);
 
-    b.appMasterArgs(args.toString());
+    b.amArgs(args.toString());
 
     //Pass on workflow file
     String wfPath = jc.getFilePath(KEY_WORKFLOW_FILE);
-    b.addLocalResource(getFileName(wfPath), wfPath, getFileName(wfPath));
+    b.addLocalResource(getFileName(wfPath), wfPath);
 
+    YarnRunner r;
+    
     try {
-      //Create temp folder for stdout and -err
-      Path p = Files.createTempDirectory("BBCTMP");
-      b.stdErrPath(Paths.get(p.toString(), "stderr.log").toString());
-      b.stdOutPath(Paths.get(p.toString(), "stdout.log").toString());
+      //Get the YarnRunner instance
+      r = b.build();
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
-              "Unable to create temp directory. Stdout and stderr will be unavailable.",
+              "Unable to create temp directory for logs. Aborting execution.",
               ex);
-      //TODO: make this clear in DB
+      MessagesController.addErrorMessage("Failed to start Yarn client.");
+      return;
     }
-    //Get the YarnRunner instance
-    YarnRunner r = b.build();
 
     CuneiformJob job = new CuneiformJob(history, fops, r);
 
@@ -386,7 +386,7 @@ public class CuneiformController implements Serializable {
 
   private boolean jobHasFinishedState() {
     String state = history.getState(jobhistoryid);
-    if(state == null){
+    if (state == null) {
       //should never happen
       return true;
     }
