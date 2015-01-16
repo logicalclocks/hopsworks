@@ -263,6 +263,7 @@ public class CuneiformController implements Serializable {
     b.amMainClass(
             "de.huberlin.wbi.hiway.app.am.CuneiformApplicationMaster");
     b.appName("Cuneiform " + jobName);
+    b.addAmJarToLocalResources(false); // Weird way of hiway working
 
     String machineUser = System.getProperty("user.name");
     if (machineUser == null) {
@@ -286,7 +287,7 @@ public class CuneiformController implements Serializable {
 
     //Pass on workflow file
     String wfPath = jc.getFilePath(KEY_WORKFLOW_FILE);
-    b.addLocalResource(getFileName(wfPath), wfPath);
+    b.addFilePathToBeCopied(wfPath);
 
     YarnRunner r;
     

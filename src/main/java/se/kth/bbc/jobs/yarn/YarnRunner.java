@@ -69,6 +69,8 @@ public class YarnRunner implements Closeable, CancellableJob {
   private String localResourcesBasePath;
   private String stdOutPath;
   private String stdErrPath;
+  private final boolean shouldCopyAmJarToLocalResources;
+  private final List<String> filesToBeCopied;
 
   //---------------------------------------------------------------------------
   //-------------- CORE METHOD: START APPLICATION MASTER ----------------------
@@ -103,6 +105,9 @@ public class YarnRunner implements Closeable, CancellableJob {
 
     //Add local resources to AM container
     Map<String, LocalResource> localResources = addAllToLocalResources();
+    
+    //Copy files to HDFS that are expected to be there
+    copyAllToHDFS();
 
     //Set up environment
     Map<String, String> env = new HashMap<>();
@@ -115,7 +120,7 @@ public class YarnRunner implements Closeable, CancellableJob {
     //TODO: set up security tokens
     //Set up container launch context
     ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
-            localResources, amEnvironment, commands, null, null, null);
+            localResources, env, commands, null, null, null);
 
     //Finally set up context
     appContext.setAMContainerSpec(amContainer); //container spec
@@ -171,7 +176,8 @@ public class YarnRunner implements Closeable, CancellableJob {
   private Map<String, LocalResource> addAllToLocalResources() throws IOException {
     Map<String, LocalResource> localResources = new HashMap<>();
     //If an AM jar has been specified: include that one
-    if (amJarLocalName != null && !amJarLocalName.isEmpty() && amJarPath != null
+    if (shouldCopyAmJarToLocalResources && amJarLocalName != null
+            && !amJarLocalName.isEmpty() && amJarPath != null
             && !amJarPath.isEmpty()) {
       amLocalResources.put(amJarLocalName, amJarPath);
     }
@@ -197,6 +203,17 @@ public class YarnRunner implements Closeable, CancellableJob {
       localResources.put(key, scRsrc);
     }
     return localResources;
+  }
+  
+  private void copyAllToHDFS() throws IOException{
+    FileSystem fs = FileSystem.get(conf);
+    String hdfsPrefix = conf.get("fs.defaultFS");
+    String basePath = hdfsPrefix + localResourcesBasePath;
+    for(String path: filesToBeCopied){
+      String destination = basePath + File.separator + Utils.getFileName(path);
+      Path dst = new Path(destination);
+      fs.copyFromLocalFile(new Path(path), dst);
+    }
   }
 
   private void setUpClassPath(Map<String, String> env) {
@@ -239,10 +256,12 @@ public class YarnRunner implements Closeable, CancellableJob {
     vargs.add(amArgs);
 
     //TODO: add several log paths
-    vargs.add("1>&1 >");
-    vargs.add(stdOutPath);
-    vargs.add("2>&2 >");
-    vargs.add(stdErrPath);
+//    vargs.add("1>&1 >");
+//    vargs.add(stdOutPath);
+//    vargs.add("2>&2 >");
+//    vargs.add(stdErrPath);
+    vargs.add(
+            "1>&1 | tee AppMaster.stdout > <LOG_DIR>/AppMaster.stdout 2>&2 | tee AppMaster.stderr > <LOG_DIR>/AppMaster.stderr");
 
     // Get final commmand
     StringBuilder amcommand = new StringBuilder();
@@ -304,6 +323,9 @@ public class YarnRunner implements Closeable, CancellableJob {
     this.stdErrPath = builder.stdErrPath;
     this.yarnClient = builder.yarnClient;
     this.conf = builder.conf;
+    this.shouldCopyAmJarToLocalResources
+            = builder.shouldAddAmJarToLocalResources;
+    this.filesToBeCopied = builder.filesToBeCopied;
   }
 
   //---------------------------------------------------------------------------
@@ -346,7 +368,7 @@ public class YarnRunner implements Closeable, CancellableJob {
     // Queue for App master
     private String amQueue = "default"; //TODO: enable changing this, or infer from user data
     // Memory for App master (in MB)
-    private int amMemory = 819;
+    private int amMemory = 1024;
     //Number of cores for appMaster
     private int amVCores = 1;
     // Application name
@@ -363,6 +385,10 @@ public class YarnRunner implements Closeable, CancellableJob {
     private String stdOutPath;
     //Path to file where stderr should be written, default in tmp folder
     private String stdErrPath;
+    //Signify whether the application master jar should be added to local resources
+    private boolean shouldAddAmJarToLocalResources = true;
+    //List of files to be copied to localResourcesBasePath
+    private List<String> filesToBeCopied = new ArrayList<>();
 
     //Hadoop Configuration
     private Configuration conf;
@@ -414,6 +440,16 @@ public class YarnRunner implements Closeable, CancellableJob {
     public Builder amJar(String amJarPath, String amJarLocalName) {
       this.amJarLocalName = amJarLocalName;
       this.amJarPath = amJarPath;
+      return this;
+    }
+
+    public Builder addAmJarToLocalResources(boolean value) {
+      this.shouldAddAmJarToLocalResources = value;
+      return this;
+    }
+    
+    public Builder addFilePathToBeCopied(String path){
+      filesToBeCopied.add(path);
       return this;
     }
 
@@ -615,7 +651,8 @@ public class YarnRunner implements Closeable, CancellableJob {
       conf = new Configuration();
       conf.addResource(new Path(confFile.getAbsolutePath()));
       conf.addResource(new Path(hadoopConf.getAbsolutePath()));
-      conf.addResource(new Path(hdfsConf.getAbsolutePath()));
+      //TODO:
+      //conf.addResource(new Path(hdfsConf.getAbsolutePath()));
 
       addPathToConfig(conf, confFile);
       addPathToConfig(conf, hadoopConf);
