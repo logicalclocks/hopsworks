@@ -29,7 +29,7 @@ public class BBCGroups implements Serializable {
         groups.put("BBC_RESEARCHER", 1002);
         groups.put("BBC_GUEST", 1003);
         groups.put("AUDITOR", 1004);
-        groups.put("ETHICS_BOARD", 1005);
+     //   groups.put("ETHICS_BOARD", 1005);
         groups.put("SYS_ADMIN", 1006);
         groups.put("BBC_USER", 1007);
     }
@@ -43,7 +43,7 @@ public class BBCGroups implements Serializable {
         groups.put("BBC_RESEARCHER", 1002);
         groups.put("BBC_GUEST", 1003);
         groups.put("AUDITOR", 1004);
-        groups.put("ETHICS_BOARD", 1005);
+    //    groups.put("ETHICS_BOARD", 1005);
         groups.put("SYS_ADMIN", 1006);
         groups.put("BBC_USER", 1007);
     }

@@ -34,7 +34,7 @@
 
         <navigation-case>
             <from-outcome>activate_yubikey</from-outcome>
-            <to-view-id>/security/protected/activate_yubikey.xhtml</to-view-id>
+            <to-view-id>/security/protected/admin/activate_yubikey.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
 
@@ -130,14 +130,14 @@
 
         <navigation-case>
             <from-outcome>print_address</from-outcome>
-            <to-view-id>/security/protected/print_address.xhtml</to-view-id>
+            <to-view-id>/security/protected/admin/print_address.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
 
 
         <navigation-case>
             <from-outcome>profile_password</from-outcome>
-            <to-view-id>/security/protected/profile_password.xhtml</to-view-id>
+            <to-view-id>/security/protected/researcher/profile_password.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         
@@ -149,27 +149,40 @@
  
         <navigation-case>
             <from-outcome>change_sec_question</from-outcome>
-            <to-view-id>/security/protected/change_sec_question.xhtml</to-view-id>
+            <to-view-id>/security/protected/researcher/change_sec_question.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         <navigation-case>
             <from-outcome>profile</from-outcome>
-            <to-view-id>/security/protected/profile.xhtml</to-view-id>
+            <to-view-id>/security/protected/researcher/profile.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         
          <navigation-case>
             <from-outcome>admin_profile</from-outcome>
-            <to-view-id>/security/protected/admin_profile.xhtml</to-view-id>
+            <to-view-id>/security/protected/admin/admin_profile.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
   
+        
+        <navigation-case>
+            <from-outcome>consentMgmt</from-outcome>
+            <to-view-id>/security/protected/admin/consentManagement.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+        
+         <navigation-case>
+            <from-outcome>auditMgmt</from-outcome>
+            <to-view-id>/security/protected/audit/auditManagement.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>       
     
         <navigation-case>
             <from-outcome>userMgmt</from-outcome>
-            <to-view-id>/security/protected/userManagement.xhtml</to-view-id>
+            <to-view-id>/security/protected/admin/userManagement.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+        
         <navigation-case>
             <from-outcome>studyMgmt</from-outcome>
             <to-view-id>/bbc/lims/studyMgmt.xhtml</to-view-id>

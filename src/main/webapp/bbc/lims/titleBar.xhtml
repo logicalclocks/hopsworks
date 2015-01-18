@@ -24,7 +24,10 @@ and open the template in the editor.
 
                     
                     <p:toolbarGroup align="right" rendered="#{peopleStatusBean.loggedIn}">
-                        <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{peopleStatusBean.anyAuthorizedRole}"/>
+                       
+                        <p:commandButton value="Audit" action="auditMgmt" type="submit" icon="ui-icon-plus" rendered="#{peopleStatusBean.auditorRole}"/>
+                        <p:commandButton  value="Consents" action="consentMgmt" type="submit" icon="ui-icon-plus" rendered="#{peopleStatusBean.SYSAdmin}"/>
+                        <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{peopleStatusBean.SYSAdmin}"/>
                         <p:commandButton id="userBtn" value=" #{peopleAministration.loginName}" type="button" icon="ui-icon-person"/>  
                         <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
                             <p:menuitem value="View profile" action="profile" update=":formToolbar:messages" ajax="false" /> 

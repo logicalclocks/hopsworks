@@ -26,15 +26,14 @@ public class PeopleStatusBean implements Serializable{
 
     private static final Logger logger = Logger.getLogger(UserManager.class.getName());
 
-    private boolean open_reauests = false;
-    
-    private int tabIndex;
-
     @EJB
     private UserManager userManager;
 
+    private boolean open_reauests = false;
+    private boolean open_consents = false;
+    private int tabIndex;
     private User user;
-
+  
     public boolean isOpen_reauests() {
         return checkForRequests();
     }
@@ -98,19 +97,21 @@ public class PeopleStatusBean implements Serializable{
         return userManager.findGroups(p.getUid()).contains("BBC_ADMIN");    
     }
 
-    
-    /**
-     * Return study members role
-     * @return 
-     */
-    
+ 
     public boolean isAnyAuthorizedRole() {
 
         User p = userManager.findByEmail(getRequest().getRemoteUser());
         List<String> roles = userManager.findGroups(p.getUid());
-        return  (roles.contains("SYS_ADMIN") || roles.contains("BBC_ADMIN") || roles.contains("BBC_USER")|| roles.contains("BBC_RESEARCHER") );
+        return  (roles.contains("SYS_ADMIN") || roles.contains("BBC_ADMIN") || roles.contains("BBC_RESEARCHER") || roles.contains("AUDITOR"));
      }  
     
+      
+    public boolean isAuditorRole() {
+
+        User p = userManager.findByEmail(getRequest().getRemoteUser());
+        List<String> roles = userManager.findGroups(p.getUid());
+        return  (roles.contains("SYS_ADMIN") || roles.contains("AUDITOR"));
+     }  
     
     /**
      * 
@@ -139,4 +140,12 @@ public class PeopleStatusBean implements Serializable{
         return "userMgmt";
     }
 
+    
+    public boolean isOpen_consents() {
+        return open_consents;
+    }
+
+    public void setOpen_consents(boolean open_consents) {
+        this.open_consents = open_consents;
+    }
 }

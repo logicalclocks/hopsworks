@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"   
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+    <f:view contentType="text/html">
+
+        <h:head>
+            <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+            <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+        </h:head>
+
+        <h:body>
+            <ui:insert name="titleBar" >
+                <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
+            </ui:insert>
+
+            <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.SYSAdmin}">  
+
+                <p:layoutUnit id="centerLayout" position="center">
+
+                    <div class="container">
+                        <div align="left">
+                            <h2>Consent Management</h2>
+                        </div>
+
+                        <div class="content">
+                                </div> 
+                         </div> 
+                </p:layoutUnit>
+            </p:layout>
+        </h:body>
+    </f:view>
+</html>

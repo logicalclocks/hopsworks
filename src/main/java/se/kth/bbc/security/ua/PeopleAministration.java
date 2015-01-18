@@ -368,7 +368,7 @@ public class PeopleAministration implements Serializable {
     public void activateUser(User user1) throws MessagingException {
         userManager.updateGroup(user1.getUid(), Integer.parseInt(selected_group));
         userManager.updateStatus(user1.getUid(), AccountStatus.ACCOUNT_ACTIVE);
-        emailBean.sendEmail(user1.getEmail(), "BBC account", accountActivatedMessage(user1.getEmail()));
+        emailBean.sendEmail(user1.getEmail(), "BBC Account", accountActivatedMessage(user1.getEmail()));
         requests.remove(user1);
     }
 
