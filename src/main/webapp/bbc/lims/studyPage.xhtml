@@ -60,6 +60,13 @@
                                     </ui:insert>
                                 </p:tab>
 
+                                <p:tab  title="Privacy" rendered="#{studyManagedBean.renderComponentList() != null}">
+                                    <ui:insert name="privacyTab">
+                                        <ui:include src="/bbc/lims/studyTabs/privacyTab.xhtml"/>
+                                    </ui:insert>
+                                </p:tab>
+
+
                             </p:tabView>
                         </div>
                     </div>

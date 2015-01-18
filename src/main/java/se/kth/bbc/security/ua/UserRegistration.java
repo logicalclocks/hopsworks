@@ -50,6 +50,16 @@ public class UserRegistration implements Serializable {
     private String country;
     private String postalcode;
 
+    private boolean tos;
+
+    public boolean isTos() {
+        return tos;
+    }
+
+    public void setTos(boolean tos) {
+        this.tos = tos;
+    }
+    
     public String getAddress1() {
         return address1;
     }

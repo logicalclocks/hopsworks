@@ -5,10 +5,9 @@
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui"
-
-      xmlns:c="http://java.sun.com/jsp/jstl/core">
+      xmlns:p="http://primefaces.org/ui">
     <f:view contentType="text/html">
+        
         <h:head>
             <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
             <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
@@ -43,7 +42,10 @@
                                 <br></br>
                                 <br></br>
                                 <p style="width: 500px;">
-                                    In order to use mobile verification you need to install Google Authenticator app on your smart device
+                                    In order to use mobile verification you need to install 
+                                    <a  style="color: #075fa9;font-style: italic" target="_blank" href="https://support.google.com/accounts/answer/1066447?hl=en"> 
+                                    Google Authenticator
+                                    </a> on your smart mobile device
                                     such as Apple iPhone, iPad, Google Nexus etc. 
                                     After submitting in this form, a code will be generated and you need to scan it with your smart device.
                                     <br></br>
@@ -59,7 +61,7 @@
                                         You will be required to provide this one-time password as PIN in addition to your password.
                                     </p>
                                     <br></br>
-                                  <div align="center" >   
+                                    <div align="center" >   
                                         <p:graphicImage library="images" name="icons/gauth.png" style="float: inside; width: 200px; height: 300px; "></p:graphicImage>
                                     </div>
                                     <br></br>
@@ -67,7 +69,7 @@
                                         Please note that the generated one-time password will not be sent to your mobile number. 
                                         The one-time password will be generated within your smart device using Google Authenticator app. 
                                     </p>
-                                  
+
                                 </div>  
                             </p>
                         </div>
@@ -106,7 +108,7 @@
                                     <p:inputText id="tel" value="#{userRegistration.tel}" size="40"
                                                  autocomplete="off"
                                                  validatorMessage="Invalid phone number">
-                                            <f:validateRegex pattern="^([+]?[\d]+)?$" />
+                                        <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                     </p:inputText>
 
                                     <p:outputLabel for="sec_question" value="Security Question" style="font-weight:bold"/>
@@ -148,9 +150,23 @@
                                     <p:captcha id ="captcha" label="Captcha" required="true" 
                                                requiredMessage="Enter Captcha"/>
 
+                                    
+                                    <p:spacer></p:spacer>
+                                    <h:panelGroup> 
+                                        <p:selectBooleanCheckbox  value="#{userRegistration.tos}"> 
+                                       <f:validator binding="#{tosCheckboxValidator}" />
+                                            
+                                    </p:selectBooleanCheckbox>                          
+                                     	&nbsp;
+                                    <p:commandLink action="tos.xhtml" ajax="false" style="margin-right:20px; color: #0971B2" 
+                                                   value=" I agree to the BBC Terms of Service (ToS)"
+                                                   immediate="true"  target="_blank">
+                                    </p:commandLink>
+                                   </h:panelGroup>
+                           
                                     <p:spacer></p:spacer>
                                     <p:messages id="messages" showDetail="false" autoUpdate="true" closable="true"/>
-
+                                    
                                 </h:panelGrid>
                                 <div class="register_banner">
                                     <p:commandButton styleClass="team_button button-save" type="submit" value="Register" oncomplete="Recaptcha.reload();" action="#{userRegistration.registerMobileUser()}"/>

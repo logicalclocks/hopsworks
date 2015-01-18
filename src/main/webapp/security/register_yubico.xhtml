@@ -175,9 +175,21 @@
                                                requiredMessage="Enter Captcha"/>
 
                                     <p:spacer></p:spacer>
+                                    <h:panelGroup> 
+                                        <p:selectBooleanCheckbox value="#{userRegistration.tos}">
+                                             <f:validator binding="#{tosCheckboxValidator}" />
+                                        </p:selectBooleanCheckbox>
+                                        &nbsp;
+                                        <p:commandLink action="tos" style="margin-right:20px; color: #0971B2"
+                                                       ajax="false" value=" I agree to the BBC Terms of Service (ToS)"
+                                                       immediate="true" target="_blank" >
+                                            
+                                        </p:commandLink>
+                                   </h:panelGroup>
+
+                                    <p:spacer></p:spacer>
                                     <p:messages id="messages" autoUpdate="true" closable="true"  showDetail="false" />
-
-
+                                    
                                 </h:panelGrid>
 
                                 <div class="register_banner">
