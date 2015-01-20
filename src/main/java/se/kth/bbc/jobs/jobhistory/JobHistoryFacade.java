@@ -24,7 +24,9 @@ import se.kth.kthfsdashboard.user.Username;
  */
 @Stateless
 public class JobHistoryFacade extends AbstractFacade<JobHistory> {
-  private static final Logger logger = Logger.getLogger(JobHistoryFacade.class.getName());
+
+  private static final Logger logger = Logger.getLogger(JobHistoryFacade.class.
+          getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -53,21 +55,24 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   }
 
   //TODO: check validity of new state
-  public void update(Long id, String newState) {
+  public void update(Long id, JobState newState) {
     //TODO: check if state is a final one, if so: update execution time
     JobHistory jh = findById(id);
-    jh.setState(newState);
-    em.merge(jh);
+    if (jh.getState() != newState) {
+      jh.setState(newState);
+      em.merge(jh);
+      em.flush();
+    }
   }
 
-  public void update(Long id, String newState, long executionTime) {
+  public void update(Long id, JobState newState, long executionTime) {
     JobHistory jh = findById(id);
     jh.setState(newState);
     jh.setExecutionDuration(BigInteger.valueOf(executionTime));
     em.merge(jh);
   }
 
-  public void update(Long id, String newState,
+  public void update(Long id, JobState newState,
           Collection<JobOutputFile> outputFiles) {
     //TODO: check if state is a final one, if so: update execution time
     JobHistory jh = findById(id);
@@ -85,38 +90,39 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     jh.setJobOutputFileCollection(output);
     em.merge(jh);
   }
-  
-  public void updateArgs(Long id, String args){
+
+  public void updateArgs(Long id, String args) {
     JobHistory jh = findById(id);
     jh.setArgs(args);
     em.merge(jh);
   }
 
   public JobHistory findById(Long id) {
-    if(id == null){
+    if (id == null) {
       throw new NullPointerException();
     }
     TypedQuery<JobHistory> q = em.createNamedQuery("JobHistory.findById",
             JobHistory.class);
     q.setParameter("id", id);
-    try{
-    return q.getSingleResult();
-    }catch(NoResultException e){
-      logger.log(Level.SEVERE,"Tried to look up jobHistory for id "+id+", but no such id could be found.",e);
+    try {
+      return q.getSingleResult();
+    } catch (NoResultException e) {
+      logger.log(Level.SEVERE, "Tried to look up jobHistory for id " + id
+              + ", but no such id could be found.", e);
       throw e;
     }
   }
 
   public Long create(String jobname, String userEmail, String studyname,
           String type,
-          String args, String state, String stdOutPath, String stdErrPath,
+          String args, JobState state, String stdOutPath, String stdErrPath,
           Collection<JobExecutionFile> execFiles,
           Collection<JobInputFile> inputFiles) {
     Username user = users.findByEmail(userEmail);
     TrackStudy study = studies.findByName(studyname);
     Date submission = new Date(); //now
-    if (state == null || state.isEmpty()) {
-      state = JobHistory.STATE_NEW;
+    if (state == null) {
+      state = JobState.INITIALIZING;
     }
 
     JobHistory jh = new JobHistory(submission, state);
@@ -147,9 +153,9 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     em.merge(jh);
   }
 
-  public String getState(Long jobId) {
-    TypedQuery<String> q = em.createNamedQuery("JobHistory.findStateForId",
-            String.class);
+  public JobState getState(Long jobId) {
+    TypedQuery<JobState> q = em.createNamedQuery("JobHistory.findStateForId",
+            JobState.class);
     q.setParameter("id", jobId);
     try {
       return q.getSingleResult();
@@ -157,8 +163,8 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
       return null;
     }
   }
-  
-  public void persist(JobOutputFile jof){
+
+  public void persist(JobOutputFile jof) {
     em.persist(jof);
   }
 

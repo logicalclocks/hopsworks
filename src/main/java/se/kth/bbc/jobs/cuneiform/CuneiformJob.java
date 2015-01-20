@@ -14,6 +14,7 @@ import se.kth.bbc.jobs.HopsJob;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
+import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.Utils;
 
@@ -84,24 +85,24 @@ public final class CuneiformJob extends HopsJob {
       long endTime = System.currentTimeMillis();
       long duration = endTime - startTime;
       getJobHistoryFacade().update(getJobId(),
-              runner.getApplicationState().toString(),
+              JobState.getJobState(runner.getApplicationState()),
               duration);
     } catch (YarnException | IOException ex) {
       logger.log(Level.SEVERE, "Error while getting final state for job "
               + getJobId() + ". Assuming failed", ex);
       getJobHistoryFacade().update(getJobId(),
-              JobHistory.STATE_FRAMEWORK_FAILURE);
+              JobState.FRAMEWORK_FAILURE);
     }
   }
 
   private boolean startJob() {
     try {
+      updateState(JobState.STARTING_APP_MASTER);
       runner.startAppMaster();
       return true;
     } catch (YarnException | IOException e) {
-      logger.log(Level.SEVERE, "Failed to start application master for job "
-              + getJobId() + ". Aborting execution");
-      updateState(JobHistory.STATE_FRAMEWORK_FAILURE);
+      logger.log(Level.SEVERE, "Failed to start application master for job {0}. Aborting execution", getJobId());
+      updateState(JobState.APP_MASTER_START_FAILED);
       return false;
     }
   }
@@ -111,6 +112,7 @@ public final class CuneiformJob extends HopsJob {
     int failures;
     try {
       appState = runner.getApplicationState();
+      updateState(JobState.getJobState(appState));
       //count how many consecutive times the state could not be polled. Cancel if too much.
       failures = 0;
     } catch (YarnException | IOException ex) {
@@ -138,8 +140,8 @@ public final class CuneiformJob extends HopsJob {
 
       try {
         appState = runner.getApplicationState();
+        updateState(JobState.getJobState(appState));
         failures = 0;
-        //TODO: update state in DB
       } catch (YarnException | IOException ex) {
         failures++;
         logger.log(Level.WARNING, "Failed to get application state for job id "
@@ -153,19 +155,20 @@ public final class CuneiformJob extends HopsJob {
                 "Killing application, jobId {0}, because unable to poll for status.",
                 getJobId());
         runner.cancelJob();
-        updateState(JobHistory.STATE_KILLED);
+        updateState(JobState.KILLED);
       } catch (YarnException | IOException ex) {
         logger.log(Level.SEVERE,
                 "Failed to cancel job, jobId " + getJobId()
                 + " after failing to poll for status.", ex);
-        updateState(JobHistory.STATE_FRAMEWORK_FAILURE);
+        updateState(JobState.FRAMEWORK_FAILURE);
       }
       return false;
     }
     return true;
   }
 
-  private void updateState(String newState) {
+  private void updateState(JobState newState) {
+    System.out.println("Updating state: "+newState);
     getJobHistoryFacade().update(getJobId(), newState);
   }
 

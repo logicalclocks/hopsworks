@@ -8,6 +8,8 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -23,7 +25,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.study.TrackStudy;
 import se.kth.kthfsdashboard.user.Username;
@@ -72,20 +73,7 @@ import se.kth.kthfsdashboard.user.Username;
   @NamedQuery(name = "JobHistory.findStateForId",
           query
           = "SELECT j.state FROM JobHistory j WHERE j.id = :id")})
-public class JobHistory implements Serializable {
-
-  public static final String STATE_INITIALIZING = "Initializing";
-  public static final String STATE_FINISHED = YarnApplicationState.FINISHED.toString();
-  public static final String STATE_RUNNING = YarnApplicationState.RUNNING.toString();
-  public static final String STATE_ACCEPTED = YarnApplicationState.ACCEPTED.toString();
-  public static final String STATE_FAILED = YarnApplicationState.FAILED.toString();
-  public static final String STATE_KILLED = YarnApplicationState.KILLED.toString();
-  public static final String STATE_NEW = YarnApplicationState.NEW.toString();
-  public static final String STATE_NEW_SAVING = YarnApplicationState.NEW_SAVING.toString();
-  public static final String STATE_SUBMITTED = YarnApplicationState.SUBMITTED.toString();
-  public static final String STATE_FRAMEWORK_FAILURE = "Framework Failure";
-  public static final String STATE_SUBMISSION_FAILED = "Submission Failure";
-  
+public class JobHistory implements Serializable {  
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -106,7 +94,8 @@ public class JobHistory implements Serializable {
   @Size(min = 1,
           max = 128)
   @Column(name = "state")
-  private String state;
+  @Enumerated(EnumType.STRING)
+  private JobState state;
   @Column(name = "execution_duration")
   private BigInteger executionDuration;
   @Size(max = 255)
@@ -142,7 +131,7 @@ public class JobHistory implements Serializable {
   public JobHistory() {
   }
 
-  public JobHistory(Date submissionTime, String state) {
+  public JobHistory(Date submissionTime, JobState state) {
     this.submissionTime = submissionTime;
     this.state = state;
   }
@@ -171,11 +160,11 @@ public class JobHistory implements Serializable {
     this.submissionTime = submissionTime;
   }
 
-  public String getState() {
+  public JobState getState() {
     return state;
   }
 
-  public void setState(String state) {
+  public void setState(JobState state) {
     this.state = state;
   }
 
@@ -295,7 +284,7 @@ public class JobHistory implements Serializable {
   }
 
   public boolean isFinished() {
-    return STATE_FINISHED.equals(this.state);
+    return this.state == JobState.FINISHED;
   }
 
 }

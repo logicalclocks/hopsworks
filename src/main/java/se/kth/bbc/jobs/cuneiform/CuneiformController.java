@@ -34,6 +34,7 @@ import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
+import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
@@ -62,7 +63,7 @@ public class CuneiformController implements Serializable {
   private boolean finished = false;
   private String jobName;
 
-  private String finalState;
+  private JobState finalState;
 
   private String stdoutPath;
   private String stderrPath;
@@ -381,14 +382,13 @@ public class CuneiformController implements Serializable {
   }
 
   private boolean jobHasFinishedState() {
-    String state = history.getState(jobhistoryid);
+    JobState state = history.getState(jobhistoryid);
     if (state == null) {
       //should never happen
       return true;
     }
-    return JobHistory.STATE_FAILED.equals(state) || JobHistory.STATE_FINISHED.
-            equals(state) || JobHistory.STATE_FRAMEWORK_FAILURE.equals(state)
-            || JobHistory.STATE_KILLED.equals(state);
+    return state == JobState.FAILED || state == JobState.FRAMEWORK_FAILURE
+            || state == JobState.FINISHED || state == JobState.KILLED;
   }
 
   public boolean isJobFinished() {
@@ -446,9 +446,9 @@ public class CuneiformController implements Serializable {
     return sc;
   }
 
-  public String getFinalState() {
+  public JobState getFinalState() {
     if (!finished) {
-      return JobHistory.STATE_RUNNING;
+      return JobState.RUNNING;
     } else {
       return finalState;
     }
@@ -457,7 +457,7 @@ public class CuneiformController implements Serializable {
   public boolean shouldShowDownload() {
     if (!finished) {
       return false;
-    } else if (JobHistory.STATE_FINISHED.equals(finalState)) {
+    } else if (finalState == JobState.FINISHED) {
       return true;
     }
     return false;

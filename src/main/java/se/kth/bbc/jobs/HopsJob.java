@@ -2,6 +2,7 @@ package se.kth.bbc.jobs;
 
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.JobState;
 
 /**
  * Class for containing the execution logic of a Hops job. Its internals
@@ -74,7 +75,7 @@ public abstract class HopsJob {
   public final Long requestJobId(String jobname, String userEmail, String studyname,
           String jobType){
     jobId = jobHistoryFacade.create(jobname, userEmail, studyname, jobType,
-            null, JobHistory.STATE_INITIALIZING, null, null, null, null);
+            null, JobState.INITIALIZING, null, null, null, null);
     initialized = true;
     return jobId;
   }
