@@ -16,6 +16,7 @@ import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.lims.Utils;
 import se.kth.bbc.study.StudyMB;
 
 /**
@@ -47,10 +48,10 @@ public class JobHistoryController implements Serializable {
   }
   
   public StreamedContent downloadFile(String path) {
-    String filename = getFileName(path);
+    String filename = Utils.getFileName(path);
     try {
       InputStream is = fops.getInputStream(path);
-      StreamedContent sc = new DefaultStreamedContent(is, getMimeType(filename),
+      StreamedContent sc = new DefaultStreamedContent(is, Utils.getMimeType(filename),
               filename);
       logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
               path);
@@ -60,34 +61,5 @@ public class JobHistoryController implements Serializable {
       MessagesController.addErrorMessage("Download failed.");
     }
     return null;
-  }
-
-  //TODO: put in utilities class
-  private static String getExtension(String filename) {
-    int lastDot = filename.lastIndexOf(".");
-    if (lastDot < 0) {
-      return "";
-    } else {
-      return filename.substring(lastDot);
-    }
-  }
-
-  //TODO: put in utilities class
-  private static String getFileName(String path) {
-    int lastSlash = path.lastIndexOf("/");
-    int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
-    return path.substring(startName);
-  }
-
-  //TODO: put in utilities class
-  private String getMimeType(String filename) {
-    HttpServletRequest hsr = (HttpServletRequest) FacesContext.
-            getCurrentInstance().getExternalContext().getRequest();
-    String type = hsr.getSession().getServletContext().getMimeType(filename);
-    if (type == null) {
-      return "text/plain";
-    } else {
-      return type;
-    }
   }
 }

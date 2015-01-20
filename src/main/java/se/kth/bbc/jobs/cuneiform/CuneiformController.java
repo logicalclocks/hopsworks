@@ -21,8 +21,6 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpServletRequest;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -441,7 +439,7 @@ public class CuneiformController implements Serializable {
   private StreamedContent downloadFile(String path,
           String filename) throws IOException {
     InputStream is = fops.getInputStream(path);
-    StreamedContent sc = new DefaultStreamedContent(is, getMimeType(filename),
+    StreamedContent sc = new DefaultStreamedContent(is, Utils.getMimeType(filename),
             filename);
     logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
             path);
@@ -493,7 +491,7 @@ public class CuneiformController implements Serializable {
       return null;
     }
     String path = file.getPath();
-    String extension = getExtension(name);
+    String extension = Utils.getExtension(name);
     try {
       return downloadFile(path, name);
     } catch (IOException ex) {
@@ -502,28 +500,6 @@ public class CuneiformController implements Serializable {
       MessagesController.addErrorMessage("Download failed.");
     }
     return null;
-  }
-
-  //TODO: put in utilities class
-  private static String getExtension(String filename) {
-    int lastDot = filename.lastIndexOf(".");
-    if (lastDot < 0) {
-      return "";
-    } else {
-      return filename.substring(lastDot);
-    }
-  }
-
-  //TODO: put in utilities class
-  private String getMimeType(String filename) {
-    HttpServletRequest hsr = (HttpServletRequest) FacesContext.
-            getCurrentInstance().getExternalContext().getRequest();
-    String type = hsr.getSession().getServletContext().getMimeType(filename);
-    if (type == null) {
-      return "text/plain";
-    } else {
-      return type;
-    }
   }
 
   private void prepWorkflowFile() throws IOException {

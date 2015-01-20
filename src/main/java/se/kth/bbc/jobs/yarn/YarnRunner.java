@@ -670,8 +670,7 @@ public class YarnRunner implements Closeable, CancellableJob {
       conf = new Configuration();
       conf.addResource(new Path(confFile.getAbsolutePath()));
       conf.addResource(new Path(hadoopConf.getAbsolutePath()));
-      //TODO:
-      //conf.addResource(new Path(hdfsConf.getAbsolutePath()));
+      conf.addResource(new Path(hdfsConf.getAbsolutePath()));
 
       addPathToConfig(conf, confFile);
       addPathToConfig(conf, hadoopConf);
