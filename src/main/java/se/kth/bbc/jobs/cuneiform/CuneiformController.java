@@ -39,6 +39,7 @@ import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.StagingManager;
+import se.kth.bbc.lims.Utils;
 
 /**
  * Controller for the Cuneiform tab in StudyPage.
@@ -277,7 +278,7 @@ public class CuneiformController implements Serializable {
 
     //construct AM arguments
     StringBuilder args = new StringBuilder("--workflow ");
-    args.append(getFileName(jc.getFilePath(KEY_WORKFLOW_FILE)));
+    args.append(Utils.getFileName(jc.getFilePath(KEY_WORKFLOW_FILE)));
     args.append(" --appid ");
     args.append(YarnRunner.APPID_PLACEHOLDER);
     args.append(" --summary ");
@@ -288,6 +289,10 @@ public class CuneiformController implements Serializable {
     //Pass on workflow file
     String wfPath = jc.getFilePath(KEY_WORKFLOW_FILE);
     b.addFilePathToBeCopied(wfPath);
+    
+    b.stdOutPath("AppMaster.stdout");
+    b.stdErrPath("AppMaster.stderr");
+    b.logPathsRelativeToResourcesPath(true);
 
     YarnRunner r;
     
@@ -326,13 +331,6 @@ public class CuneiformController implements Serializable {
               "Failed to write job history. Aborting execution.");
     }
     started = true;
-  }
-
-  //TODO: move to a utilities class (similar method is used elsewhere)
-  private static String getFileName(String path) {
-    int lastSlash = path.lastIndexOf("/");
-    int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
-    return path.substring(startName);
   }
 
   /**

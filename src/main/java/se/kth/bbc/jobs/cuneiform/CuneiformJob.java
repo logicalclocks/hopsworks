@@ -59,8 +59,8 @@ public final class CuneiformJob extends HopsJob {
   @Override
   protected void runJobInternal() {
     //Update job history object first
-    getJobHistoryFacade().updateArgs(getJobId(), runner.getAmArgs());    
-    
+    getJobHistoryFacade().updateArgs(getJobId(), runner.getAmArgs());
+
     //Can only be called if this job has a valid id.
     long startTime = System.currentTimeMillis();
     //Try to start the application master.
@@ -170,18 +170,32 @@ public final class CuneiformJob extends HopsJob {
   }
 
   private void copyLogs() {
+    //TODO: does not make too much sense...
     try {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
-        fops.copyToHDFSFromPath(runner.getStdOutPath(), stdOutFinalDestination,
-                null);
-        getJobHistoryFacade().updateStdOutPath(getJobId(),
-                stdOutFinalDestination);
+        if (!runner.areLogPathsHdfs()) {
+          fops.copyToHDFSFromPath(runner.getStdOutPath(),
+                  stdOutFinalDestination,
+                  null);
+          getJobHistoryFacade().updateStdOutPath(getJobId(),
+                  stdOutFinalDestination);
+        } else {
+          getJobHistoryFacade().updateStdOutPath(getJobId(),
+                  runner.getStdOutPath());
+        }
+
       }
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
-        fops.copyToHDFSFromPath(runner.getStdErrPath(), stdErrFinalDestination,
-                null);
-        getJobHistoryFacade().updateStdErrPath(getJobId(),
-                stdErrFinalDestination);
+        if (!runner.areLogPathsHdfs()) {
+          fops.copyToHDFSFromPath(runner.getStdErrPath(),
+                  stdErrFinalDestination,
+                  null);
+          getJobHistoryFacade().updateStdErrPath(getJobId(),
+                  stdErrFinalDestination);
+        } else {
+          getJobHistoryFacade().updateStdErrPath(getJobId(),
+                  runner.getStdErrPath());
+        }
       }
     } catch (IOException e) {
       //TODO: figure out how to handle this
@@ -199,12 +213,15 @@ public final class CuneiformJob extends HopsJob {
       JSONArray outputpaths = jobj.getJSONArray("output");
       for (int i = 0; i < outputpaths.length(); i++) {
         String outfile = outputpaths.getString(i);
-        JobOutputFile file = new JobOutputFile(getJobId(), Utils.getFileName(outfile));
+        JobOutputFile file = new JobOutputFile(getJobId(), Utils.getFileName(
+                outfile));
         file.setPath(outfile);
         getJobHistoryFacade().persist(file);
       }
     } catch (IOException | JSONException e) {
-      logger.log(Level.SEVERE,"Failed to copy output files after running Cuneiform job "+getJobId(),e);
+      logger.log(Level.SEVERE,
+              "Failed to copy output files after running Cuneiform job "
+              + getJobId(), e);
     }
   }
 }

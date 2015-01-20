@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Vector;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -71,6 +70,7 @@ public class YarnRunner implements Closeable, CancellableJob {
   private String stdErrPath;
   private final boolean shouldCopyAmJarToLocalResources;
   private final List<String> filesToBeCopied;
+  private final boolean logPathsAreHdfs;
 
   //---------------------------------------------------------------------------
   //-------------- CORE METHOD: START APPLICATION MASTER ----------------------
@@ -105,7 +105,7 @@ public class YarnRunner implements Closeable, CancellableJob {
 
     //Add local resources to AM container
     Map<String, LocalResource> localResources = addAllToLocalResources();
-    
+
     //Copy files to HDFS that are expected to be there
     copyAllToHDFS();
 
@@ -204,12 +204,12 @@ public class YarnRunner implements Closeable, CancellableJob {
     }
     return localResources;
   }
-  
-  private void copyAllToHDFS() throws IOException{
+
+  private void copyAllToHDFS() throws IOException {
     FileSystem fs = FileSystem.get(conf);
     String hdfsPrefix = conf.get("fs.defaultFS");
     String basePath = hdfsPrefix + localResourcesBasePath;
-    for(String path: filesToBeCopied){
+    for (String path : filesToBeCopied) {
       String destination = basePath + File.separator + Utils.getFileName(path);
       Path dst = new Path(destination);
       fs.copyFromLocalFile(new Path(path), dst);
@@ -255,13 +255,15 @@ public class YarnRunner implements Closeable, CancellableJob {
     // Set params for Application Master
     vargs.add(amArgs);
 
-    //TODO: add several log paths
-//    vargs.add("1>&1 >");
-//    vargs.add(stdOutPath);
-//    vargs.add("2>&2 >");
-//    vargs.add(stdErrPath);
-    vargs.add(
-            "1>&1 | tee AppMaster.stdout > <LOG_DIR>/AppMaster.stdout 2>&2 | tee AppMaster.stderr > <LOG_DIR>/AppMaster.stderr");
+    vargs.add("1> ");
+    vargs.add(stdOutPath);
+    //vargs.add(" | tee ");
+    //vargs.add("AppMaster.stdout");
+
+    vargs.add("2> ");
+    vargs.add(stdErrPath);
+    //vargs.add(" | tee ");
+    //vargs.add("AppMaster.stderr");
 
     // Get final commmand
     StringBuilder amcommand = new StringBuilder();
@@ -319,13 +321,14 @@ public class YarnRunner implements Closeable, CancellableJob {
     this.amLocalResources = builder.amLocalResources;
     this.amEnvironment = builder.amEnvironment;
     this.localResourcesBasePath = builder.localResourcesBasePath;
-    this.stdOutPath = builder.stdOutPath;
-    this.stdErrPath = builder.stdErrPath;
     this.yarnClient = builder.yarnClient;
     this.conf = builder.conf;
     this.shouldCopyAmJarToLocalResources
             = builder.shouldAddAmJarToLocalResources;
     this.filesToBeCopied = builder.filesToBeCopied;
+    this.logPathsAreHdfs = builder.logPathsAreRelativeToResources;
+    this.stdOutPath = builder.stdOutPath;
+    this.stdErrPath = builder.stdErrPath;
   }
 
   //---------------------------------------------------------------------------
@@ -344,11 +347,24 @@ public class YarnRunner implements Closeable, CancellableJob {
   }
 
   public String getStdOutPath() {
-    return stdOutPath;
+    if (logPathsAreHdfs) {
+      return localResourcesBasePath + File.separator + stdOutPath;
+    } else {
+      return stdOutPath;
+    }
   }
 
   public String getStdErrPath() {
-    return stdErrPath;
+    if (logPathsAreHdfs) {
+
+      return localResourcesBasePath + File.separator + stdErrPath;
+    } else {
+      return stdErrPath;
+    }
+  }
+
+  public boolean areLogPathsHdfs() {
+    return logPathsAreHdfs;
   }
   //---------------------------------------------------------------------------
   //-------------------------- BUILDER ----------------------------------------
@@ -385,6 +401,8 @@ public class YarnRunner implements Closeable, CancellableJob {
     private String stdOutPath;
     //Path to file where stderr should be written, default in tmp folder
     private String stdErrPath;
+    //Signify whether the log paths are relative to the localResourcesBasePath
+    private boolean logPathsAreRelativeToResources = false;
     //Signify whether the application master jar should be added to local resources
     private boolean shouldAddAmJarToLocalResources = true;
     //List of files to be copied to localResourcesBasePath
@@ -447,8 +465,8 @@ public class YarnRunner implements Closeable, CancellableJob {
       this.shouldAddAmJarToLocalResources = value;
       return this;
     }
-    
-    public Builder addFilePathToBeCopied(String path){
+
+    public Builder addFilePathToBeCopied(String path) {
       filesToBeCopied.add(path);
       return this;
     }
@@ -472,6 +490,11 @@ public class YarnRunner implements Closeable, CancellableJob {
      */
     public Builder stdErrPath(String path) {
       this.stdErrPath = path;
+      return this;
+    }
+
+    public Builder logPathsRelativeToResourcesPath(boolean value) {
+      this.logPathsAreRelativeToResources = value;
       return this;
     }
 
