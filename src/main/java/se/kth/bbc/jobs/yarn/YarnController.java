@@ -130,22 +130,25 @@ public class YarnController implements Serializable {
     if (!files.isEmpty()) {
       //builder.addAllLocalResourcesPaths(files);
     }
-    builder.appMasterArgs(jc.getVariable(KEY_ARGS)).appMasterMainClass(jc.
+    builder.amArgs(jc.getVariable(KEY_ARGS)).amMainClass(jc.
             getVariable(KEY_MAIN));
     YarnRunner runner;
     try {
       runner = builder.build();
     } catch (IllegalStateException e) {
       logger.log(Level.SEVERE, "Could not initialize YarnRunner.", e);
-      MessagesController.addErrorMessage("Failed to initialize Yarn Client");
+      MessagesController.addErrorMessage("Failed to initialize Yarn client");
+      return;
+    } catch (IOException e) {
+      logger.log(Level.SEVERE,"Could not initialize YarnRunner.", e);
+      MessagesController.addErrorMessage("Failed to initialize Yarn client.");
       return;
     }
     try {
       runner.startAppMaster();
     } catch (IOException | YarnException e) {
-      logger.log(Level.SEVERE, "Error while initializing AppMaster.", e);
-      MessagesController.addErrorMessage("Failed to initialize AppMaster.");
-      return;
+      logger.log(Level.SEVERE, "Error while initializing Application Master.", e);
+      MessagesController.addErrorMessage("Failed to initialize Application Master.");
     }
   }
 

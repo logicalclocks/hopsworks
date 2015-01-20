@@ -145,7 +145,6 @@ public class UserController implements Serializable {
 
     }
 
-    //TODO: should in principle be static...
     public void deleteUser(Username user) {
         try {
             userFacade.removeByEmail(user.getEmail()); //userFacade.remove(user) doesn't seem to work

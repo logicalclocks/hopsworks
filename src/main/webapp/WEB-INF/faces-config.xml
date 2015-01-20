@@ -15,33 +15,8 @@
             <redirect/>
         </navigation-case>
         <navigation-case>
-            <from-outcome>studyMgmt</from-outcome>
-            <to-view-id>/bbc/lims/studyMgmt.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
             <from-outcome>newStudy</from-outcome>
             <to-view-id>/bbc/lims/newStudy.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>dataMgmt</from-outcome>
-            <to-view-id>/bbc/lims/create-Datasets.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>dataUpload</from-outcome>
-            <to-view-id>/bbc/lims/uploadData.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>studyInfo</from-outcome>
-            <to-view-id>/bbc/lims/studyInfo.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>studyMember</from-outcome>
-            <to-view-id>/bbc/lims/studyMember.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         <navigation-case>
@@ -64,22 +39,7 @@
             <to-view-id>/bbc/lims/addSamples.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
-       
-        <navigation-case>
-            <from-outcome>wfhome</from-outcome>
-            <to-view-id>/bbc-views.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>  
-        <navigation-case>
-            <from-outcome>manageWorkflows</from-outcome>
-            <to-view-id>wf/manageWorkflows.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>manageJobs</from-outcome>
-            <to-view-id>wf/manageJobs.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
+         
         <navigation-case>
             <from-outcome>bbchome</from-outcome>
             <to-view-id>/bbc-views.xhtml</to-view-id>
@@ -96,48 +56,8 @@
             <redirect/>
         </navigation-case>
         <navigation-case>
-            <from-outcome>app-main</from-outcome>
-            <to-view-id>/sauron/hosts.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
             <from-outcome>welcome</from-outcome>
             <to-view-id>/index.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>hosts</from-outcome>
-            <to-view-id>/sauron/hosts.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>host</from-outcome>
-            <to-view-id>/sauron/host.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>alerts</from-outcome>
-            <to-view-id>/sauron/alerts.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>        
-        <navigation-case>
-            <from-outcome>terminal</from-outcome>
-            <to-view-id>/sauron/terminal.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>        
-        <navigation-case>
-            <from-outcome>backuprestore</from-outcome>
-            <to-view-id>/sauron/backup-restore.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case> 
-        <navigation-case>
-            <from-outcome>edit-graphs</from-outcome>
-            <to-view-id>/sauron/edit-graphs.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>         
-        <navigation-case>
-            <from-outcome>services</from-outcome>
-            <to-view-id>/sauron/services.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         <navigation-case>
@@ -146,69 +66,8 @@
             <redirect/>
         </navigation-case>
         <navigation-case>
-            <from-outcome>hadoop</from-outcome>
-            <to-view-id>/sauron/clusters.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>setupCredentials</from-outcome>
-            <to-view-id>/sauron/setup.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        
-        <navigation-case>
-            <from-outcome>addcluster</from-outcome>
-            <to-view-id>/sauron/manageCluster.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>editcluster</from-outcome>
-            <to-view-id>/sauron/editClusters.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>editClusterWizard</from-outcome>
-            <to-view-id>/sauron/editClusterWizard.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>progress</from-outcome>
-            <to-view-id>/sauron/clusterProgress.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>proceedLaunchCluster</from-outcome>
-            <to-view-id>/sauron/clusterLauncher.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>createClusterWizard</from-outcome>
-            <to-view-id>/sauron/createClusterWizard.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>editClusterEditor</from-outcome>
-            <to-view-id>/sauron/YAMLEditor.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>      
-        <navigation-case>
-            <from-outcome>mainPage</from-outcome>
-            <to-view-id>/portal/start.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
             <from-outcome>lims</from-outcome>
             <to-view-id>/bbc/index.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>clusters</from-outcome>
-            <to-view-id>/sauron/index.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>workflows</from-outcome>
-            <to-view-id>/wf/index.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         <navigation-case>

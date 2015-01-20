@@ -290,4 +290,10 @@ public class FileOperations {
     fsOps.copyFromLocal(source, destination);
   }
   
+  public void renameInHdfs(String source, String destination) throws IOException{
+    Path src = new Path(source);
+    Path dst = new Path(destination);
+    fsOps.moveWithinHdsf(src, dst);
+  }
+  
 }

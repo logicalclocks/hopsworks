@@ -282,7 +282,6 @@ public class SamplesController {
 
     //create dirs in fs
     boolean success;
-    //TODO: make validator for existing sample ids
     //add all (sub)directories
     String[] folders = {path,
       path + File.separator + FileSystemOperations.DIR_BAM,
@@ -308,7 +307,6 @@ public class SamplesController {
 
     //create dir in fs
     boolean success;
-    //TODO: make validator for existing sample ids
 
     success = fileOps.mkDir(path);
     if (!success) {

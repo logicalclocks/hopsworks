@@ -2,8 +2,7 @@
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee           http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
     <context-param>
         <param-name>javax.faces.PROJECT_STAGE</param-name>
-        <!--        <param-value>Development</param-value>-->
-        <param-value>Production</param-value>
+                <param-value>Development</param-value>
     </context-param>
     <context-param>
         <param-name>com.sun.faces.verifyObjects</param-name>
@@ -75,20 +74,6 @@
     </security-role>
     <security-constraint>
         <web-resource-collection>
-            <web-resource-name>Secured Content</web-resource-name>
-            <url-pattern>/sauron/*</url-pattern>
-        </web-resource-collection>
-        <auth-constraint>
-            <role-name>ADMIN</role-name>
-        </auth-constraint>
-        <!-- we always want https! -->
-        <!--        <user-data-constraint>
-            <description>highest supported transport security level</description>
-            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint>-->
-    </security-constraint>
-    <security-constraint>
-        <web-resource-collection>
             <web-resource-name>Secured Content for agents sending alerts data</web-resource-name>
             <url-pattern>/rest/collectd/*</url-pattern>
         </web-resource-collection>
@@ -122,27 +107,6 @@
     </security-constraint>
     <security-constraint>
         <web-resource-collection>
-            <web-resource-name>BiobankCloud Admin Researcher Private pages</web-resource-name>
-            <url-pattern>/bbc/admin/*</url-pattern>
-        </web-resource-collection>
-        <auth-constraint>
-            <role-name>BBC_ADMIN</role-name>
-            <role-name>ADMIN</role-name>
-        </auth-constraint>
-    </security-constraint>
-    <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>BiobankCloud Researcher Private pages</web-resource-name>
-            <url-pattern>/wf/*</url-pattern>
-        </web-resource-collection>
-        <auth-constraint>
-            <role-name>BBC_RESEARCHER</role-name>
-            <role-name>BBC_ADMIN</role-name>
-            <role-name>ADMIN</role-name>
-        </auth-constraint>
-    </security-constraint>
-    <security-constraint>
-        <web-resource-collection>
             <web-resource-name>Secured Content for agents sending status data</web-resource-name>
             <url-pattern>/rest/agent/*</url-pattern>
         </web-resource-collection>
@@ -170,14 +134,6 @@
             <form-error-page>/loginError.xhtml</form-error-page>
         </form-login-config>
     </login-config>
-    <!--   <error-page>
-       <error-code>404</error-code>
-       <location>/error</location>
-    </error-page>   
-    <error-page>
-       <error-code>500</error-code>
-       <location>/error</location>
-    </error-page> -->
     <session-config>
         <!-- on production systems you might have another value for the timeout -->
         <session-timeout>20</session-timeout>

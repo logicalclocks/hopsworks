@@ -75,6 +75,7 @@
                             </h:panelGroup>
 
                             <div>
+                                <!-- TODO: add validator that checks if the CF file is parseable -->
                                 <p:commandButton id="cuneiformExecuteButton" value="Execute" action="#{cuneiformController.startWorkflow()}" 
                                                  update="@form" disabled="#{not cuneiformController.jobFinished and cuneiformController.jobStarted}"
                                                  />

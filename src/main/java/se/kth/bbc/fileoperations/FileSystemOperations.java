@@ -160,5 +160,10 @@ public class FileSystemOperations {
     FileSystem fs = getFs();
     fs.copyFromLocalFile(false, source, destination);
   }
+  
+  public void moveWithinHdsf(Path source, Path destination) throws IOException{
+    FileSystem fs = getFs();
+    fs.rename(source, destination);
+  }
 
 }

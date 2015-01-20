@@ -1,6 +1,5 @@
 package se.kth.bbc.jobs.cuneiform;
 
-import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
 import java.io.BufferedWriter;
@@ -12,7 +11,6 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,23 +21,22 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpServletRequest;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.jobs.JobController;
-import se.kth.bbc.jobs.RunningJobTracker;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.StagingManager;
+import se.kth.bbc.lims.Utils;
 
 /**
  * Controller for the Cuneiform tab in StudyPage.
@@ -74,16 +71,13 @@ public class CuneiformController implements Serializable {
   private StudyMB study;
 
   @EJB
-  private AsynchronousCuneiformJob submitter;
+  private AsynchronousJobExecutor submitter;
 
   @EJB
   private JobHistoryFacade history;
 
   @EJB
   private JobOutputFileFacade jobOutputFacade;
-
-  @EJB
-  private RunningJobTracker runningJobs;
 
   @EJB
   private FileOperations fops;
@@ -245,7 +239,7 @@ public class CuneiformController implements Serializable {
   }
 
   public void startWorkflow() {
-
+//TODO: fix state if starting fails
     if (jobName == null || jobName.isEmpty()) {
       jobName = "Untitled job";
     }
@@ -257,15 +251,17 @@ public class CuneiformController implements Serializable {
               + workflowname + ".", e);
       MessagesController.addErrorMessage(
               "An error occured while binding parameters in the workflow file. Aborting execution.");
+      return;
     }
 
     String resultName = "results";
 
     YarnRunner.Builder b = new YarnRunner.Builder(Constants.HIWAY_JAR_PATH,
             "Hiway.jar");
-    b.appMasterMainClass(
+    b.amMainClass(
             "de.huberlin.wbi.hiway.app.am.CuneiformApplicationMaster");
     b.appName("Cuneiform " + jobName);
+    b.addAmJarToLocalResources(false); // Weird way of hiway working
 
     String machineUser = System.getProperty("user.name");
     if (machineUser == null) {
@@ -279,36 +275,40 @@ public class CuneiformController implements Serializable {
 
     //construct AM arguments
     StringBuilder args = new StringBuilder("--workflow ");
-    args.append(getFileName(jc.getFilePath(KEY_WORKFLOW_FILE)));
+    args.append(Utils.getFileName(jc.getFilePath(KEY_WORKFLOW_FILE)));
     args.append(" --appid ");
     args.append(YarnRunner.APPID_PLACEHOLDER);
     args.append(" --summary ");
     args.append(resultName);
 
-    b.appMasterArgs(args.toString());
+    b.amArgs(args.toString());
 
     //Pass on workflow file
     String wfPath = jc.getFilePath(KEY_WORKFLOW_FILE);
-    b.addLocalResource(getFileName(wfPath), wfPath, getFileName(wfPath));
+    b.addFilePathToBeCopied(wfPath);
+    
+    b.stdOutPath("AppMaster.stdout");
+    b.stdErrPath("AppMaster.stderr");
+    b.logPathsRelativeToResourcesPath(true);
 
+    YarnRunner r;
+    
     try {
-      //Create temp folder for stdout and -err
-      Path p = Files.createTempDirectory("BBCTMP");
-      b.stdErrPath(Paths.get(p.toString(), "stderr.log").toString());
-      b.stdOutPath(Paths.get(p.toString(), "stdout.log").toString());
+      //Get the YarnRunner instance
+      r = b.build();
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
-              "Unable to create temp directory. Stdout and stderr will be unavailable.",
+              "Unable to create temp directory for logs. Aborting execution.",
               ex);
-      //TODO: make this clear in DB
+      MessagesController.addErrorMessage("Failed to start Yarn client.");
+      return;
     }
-    //Get the YarnRunner instance
-    YarnRunner r = b.build();
+
+    CuneiformJob job = new CuneiformJob(history, fops, r);
 
     //TODO: include input and execution files
-    jobhistoryid = history.create(jobName, study.getUsername(), study.
-            getStudyName(), "CUNEIFORM", args.toString(), null,
-            "/tmp/stderr.log", "/tmp/stdout.log", null, null);
+    jobhistoryid = job.requestJobId(jobName, study.getUsername(), study.
+            getStudyName(), "CUNEIFORM");
     if (jobhistoryid != null) {
       String stdOutFinalDestination = study.getHdfsRootPath()
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
@@ -316,9 +316,10 @@ public class CuneiformController implements Serializable {
       String stdErrFinalDestination = study.getHdfsRootPath()
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
               + File.separator + "stderr.log";
-      submitter.registerJob(jobhistoryid, r);
-      submitter.handleExecution(jobhistoryid, r, stdOutFinalDestination,
-              stdErrFinalDestination, resultName);
+      job.setStdOutFinalDestination(stdOutFinalDestination);
+      job.setStdErrFinalDestination(stdErrFinalDestination);
+      job.setSummaryPath(resultName);
+      submitter.startExecution(job);
       MessagesController.addInfoMessage("App master started!");
     } else {
       logger.log(Level.SEVERE,
@@ -329,20 +330,13 @@ public class CuneiformController implements Serializable {
     started = true;
   }
 
-  //TODO: move to a utilities class (similar method is used elsewhere)
-  private static String getFileName(String path) {
-    int lastSlash = path.lastIndexOf("/");
-    int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
-    return path.substring(startName);
-  }
-
   /**
    * Check the progress of the running job. If it is finished, loads the
    * stdout and stderr logs.
    */
   public void checkProgress() {
     if (started) {
-      boolean done = !runningJobs.isJobRunning(jobhistoryid);
+      boolean done = jobHasFinishedState();
       if (done) {
         stdoutPath = history.findById(jobhistoryid).getStdoutPath();
         stderrPath = history.findById(jobhistoryid).getStderrPath();
@@ -384,6 +378,17 @@ public class CuneiformController implements Serializable {
         finished = true;
       }
     }
+  }
+
+  private boolean jobHasFinishedState() {
+    String state = history.getState(jobhistoryid);
+    if (state == null) {
+      //should never happen
+      return true;
+    }
+    return JobHistory.STATE_FAILED.equals(state) || JobHistory.STATE_FINISHED.
+            equals(state) || JobHistory.STATE_FRAMEWORK_FAILURE.equals(state)
+            || JobHistory.STATE_KILLED.equals(state);
   }
 
   public boolean isJobFinished() {
@@ -434,7 +439,7 @@ public class CuneiformController implements Serializable {
   private StreamedContent downloadFile(String path,
           String filename) throws IOException {
     InputStream is = fops.getInputStream(path);
-    StreamedContent sc = new DefaultStreamedContent(is, getMimeType(filename),
+    StreamedContent sc = new DefaultStreamedContent(is, Utils.getMimeType(filename),
             filename);
     logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
             path);
@@ -486,7 +491,7 @@ public class CuneiformController implements Serializable {
       return null;
     }
     String path = file.getPath();
-    String extension = getExtension(name);
+    String extension = Utils.getExtension(name);
     try {
       return downloadFile(path, name);
     } catch (IOException ex) {
@@ -495,28 +500,6 @@ public class CuneiformController implements Serializable {
       MessagesController.addErrorMessage("Download failed.");
     }
     return null;
-  }
-
-  //TODO: put in utilities class
-  private static String getExtension(String filename) {
-    int lastDot = filename.lastIndexOf(".");
-    if (lastDot < 0) {
-      return "";
-    } else {
-      return filename.substring(lastDot);
-    }
-  }
-
-  //TODO: put in utilities class
-  private String getMimeType(String filename) {
-    HttpServletRequest hsr = (HttpServletRequest) FacesContext.
-            getCurrentInstance().getExternalContext().getRequest();
-    String type = hsr.getSession().getServletContext().getMimeType(filename);
-    if (type == null) {
-      return "text/plain";
-    } else {
-      return type;
-    }
   }
 
   private void prepWorkflowFile() throws IOException {
