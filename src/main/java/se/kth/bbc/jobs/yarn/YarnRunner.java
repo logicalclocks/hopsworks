@@ -257,14 +257,10 @@ public class YarnRunner implements Closeable, CancellableJob {
 
     vargs.add("1> ");
     vargs.add(stdOutPath);
-    //vargs.add(" | tee ");
-    //vargs.add("AppMaster.stdout");
 
     vargs.add("2> ");
     vargs.add(stdErrPath);
-    //vargs.add(" | tee ");
-    //vargs.add("AppMaster.stderr");
-
+    
     // Get final commmand
     StringBuilder amcommand = new StringBuilder();
     for (CharSequence str : vargs) {
