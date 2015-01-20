@@ -422,3 +422,8 @@ h1 {
 .workflow-head td {
   min-width: 180px;
 }
+
+.ui-fileupload .ui-widget-header {
+  background: none;
+  border:none;
+}

@@ -37,7 +37,7 @@
 
                                     <h:outputLabel value="Upload workflow file" for="wfUploader"/>
                                     <p:fileUpload required="true" auto="true" multiple="false" 
-                                                  label="Select" mode="advanced" allowTypes="/(\.|\/)(cf)$/" 
+                                                  label="Upload" mode="advanced" allowTypes="/(\.|\/)(cf)$/" 
                                                   fileUploadListener="#{cuneiformController.workflowUpload}" 
                                                   update="@form" id="wfUploader" process="@form"/>
 
@@ -53,7 +53,7 @@
                                         <h:panelGrid columns="2">
                                             <h:outputLabel value="#{variable.name}"/>
                                             <p:fileUpload required="true" auto="true" multiple="false" 
-                                                          label="Select" mode="advanced" 
+                                                          label="Upload" mode="advanced" 
                                                           fileUploadListener="#{cuneiformController.inputFileUpload}" 
                                                           update="@form" process="@form">
                                                 <f:attribute name="name" value="#{variable.name}"/>
