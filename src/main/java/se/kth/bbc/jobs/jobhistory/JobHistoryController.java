@@ -42,7 +42,7 @@ public class JobHistoryController implements Serializable {
     this.sessionState = sessionState;
   }
 
-  public List<JobHistory> getHistoryForType(String type) {
+  public List<JobHistory> getHistoryForType(JobType type) {
     return history.findForStudyByType(sessionState.getActiveStudyname(), type);
   }
   

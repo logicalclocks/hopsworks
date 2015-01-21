@@ -1,6 +1,6 @@
 package se.kth.bbc.study.services;
 
-//TODO: change into a separate entity associated with a table in db?
+//TODO: change db def, no enum there, just string and map via @Enumerated
 
 /**
  *
@@ -37,7 +37,7 @@ public enum StudyServiceEnum {
       case YARN:
         return "Yarn";
       default:
-        return "";
+        throw new IllegalStateException("Illegal enum value.");
     }
   }  
   

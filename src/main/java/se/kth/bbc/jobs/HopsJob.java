@@ -3,6 +3,7 @@ package se.kth.bbc.jobs;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobState;
+import se.kth.bbc.jobs.jobhistory.JobType;
 
 /**
  * Class for containing the execution logic of a Hops job. Its internals
@@ -73,7 +74,7 @@ public abstract class HopsJob {
    * @throws JobInitializationFailedException Thrown when initialization failed.
    */
   public final Long requestJobId(String jobname, String userEmail, String studyname,
-          String jobType){
+          JobType jobType){
     jobId = jobHistoryFacade.create(jobname, userEmail, studyname, jobType,
             null, JobState.INITIALIZING, null, null, null, null);
     initialized = true;

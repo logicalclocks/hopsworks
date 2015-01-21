@@ -22,7 +22,7 @@ public enum MaterialTypeEnum {
   PATHOGEN("A biological agent causing disease; a disease producer e.g. virus, bacterium, prion, other microorganism etc."),
   OTHER("Any other type of material taken from a biological entity, e.g. amniotic fluid, cerebrospinal fluid (CSV), mitochondrial RNA.");
 
-  private String definition;
+  private final String definition;
 
   public String definition() {
     return definition;
@@ -66,7 +66,7 @@ public enum MaterialTypeEnum {
       case OTHER:
         return "Other";
       default:
-        return "";
+        throw new IllegalStateException("Illegal enum value.");
     }
   }
 }

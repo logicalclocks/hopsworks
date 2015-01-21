@@ -109,7 +109,8 @@ public class JobHistory implements Serializable {
   private String stderrPath;
   @Size(max = 128)
   @Column(name = "type")
-  private String type;
+  @Enumerated(EnumType.STRING)
+  private JobType type;
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "jobHistory")
   private Collection<JobOutputFile> jobOutputFileCollection;
@@ -200,11 +201,11 @@ public class JobHistory implements Serializable {
     this.stderrPath = stderrPath;
   }
 
-  public String getType() {
+  public JobType getType() {
     return type;
   }
 
-  public void setType(String type) {
+  public void setType(JobType type) {
     this.type = type;
   }
 

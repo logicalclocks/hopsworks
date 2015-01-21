@@ -35,6 +35,7 @@ import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.jobhistory.JobState;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.StagingManager;
@@ -308,7 +309,7 @@ public class CuneiformController implements Serializable {
     CuneiformJob job = new CuneiformJob(history, fops, r);
 
     //TODO: include input and execution files
-    jobhistoryid = job.requestJobId(jobName, sessionState.getLoggedInUsername(), sessionState.getActiveStudyname(), "CUNEIFORM");
+    jobhistoryid = job.requestJobId(jobName, sessionState.getLoggedInUsername(), sessionState.getActiveStudyname(), JobType.CUNEIFORM);
     if (jobhistoryid != null) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.getActiveStudyname())
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid

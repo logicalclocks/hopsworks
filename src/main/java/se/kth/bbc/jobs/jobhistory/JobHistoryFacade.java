@@ -46,7 +46,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     return em;
   }
 
-  public List<JobHistory> findForStudyByType(String studyname, String type) {
+  public List<JobHistory> findForStudyByType(String studyname, JobType type) {
     TypedQuery<JobHistory> q = em.createNamedQuery(
             "JobHistory.findByStudyAndType", JobHistory.class);
     q.setParameter("type", type);
@@ -114,7 +114,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   }
 
   public Long create(String jobname, String userEmail, String studyname,
-          String type,
+          JobType type,
           String args, JobState state, String stdOutPath, String stdErrPath,
           Collection<JobExecutionFile> execFiles,
           Collection<JobInputFile> inputFiles) {

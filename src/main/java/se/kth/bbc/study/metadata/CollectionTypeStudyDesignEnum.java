@@ -50,7 +50,7 @@ public enum CollectionTypeStudyDesignEnum {
       case OTHER:
         return "Other";
       default:
-        return null;
+        throw new IllegalStateException("Illegal enum value.");
     }
   }
 

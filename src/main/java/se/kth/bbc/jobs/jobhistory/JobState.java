@@ -10,6 +10,7 @@ public enum JobState {
   
   INITIALIZING, FINISHED, RUNNING, ACCEPTED, FAILED, KILLED, NEW, NEW_SAVING, SUBMITTED,FRAMEWORK_FAILURE, STARTING_APP_MASTER,APP_MASTER_START_FAILED;
   
+  @Override
   public String toString(){
     switch(this){
       case INITIALIZING:
@@ -37,7 +38,7 @@ public enum JobState {
       case APP_MASTER_START_FAILED:
         return "AM start failed";
       default:
-        return "";
+        throw new IllegalStateException("Illegal enum value.");
     }
   }
   
