@@ -10,11 +10,10 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpServletRequest;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.study.StudyMB;
@@ -33,18 +32,18 @@ public class JobHistoryController implements Serializable {
   @EJB
   private JobHistoryFacade history;
 
-  @ManagedProperty(value = "#{studyManagedBean}")
-  private StudyMB studies;
-
   @EJB
   private FileOperations fops;
+  
+  @ManagedProperty( value = "#{clientSessionState}")
+  private ClientSessionState sessionState;
 
-  public void setStudies(StudyMB studies) {
-    this.studies = studies;
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
   }
 
   public List<JobHistory> getHistoryForType(String type) {
-    return history.findForStudyByType(studies.getStudyName(), type);
+    return history.findForStudyByType(sessionState.getActiveStudyname(), type);
   }
   
   public StreamedContent downloadFile(String path) {

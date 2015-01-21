@@ -15,9 +15,9 @@ import javax.faces.bean.ViewScoped;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
+import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.StagingManager;
-import se.kth.bbc.study.StudyMB;
 
 /**
  *
@@ -37,8 +37,8 @@ public class YarnController implements Serializable {
 
   private final JobController jc = new JobController();
 
-  @ManagedProperty(value = "#{studyManagedBean}")
-  private transient StudyMB study;
+  @ManagedProperty(value = "#{clientSessionState}")
+  private transient ClientSessionState sessionState;
 
   @EJB
   private StagingManager stagingManager;
@@ -46,8 +46,7 @@ public class YarnController implements Serializable {
   @PostConstruct
   public void init() {
     try {
-      String path = stagingManager.getStagingPath() + File.separator + "jobs" + File.separator + study.
-              getUsername() + File.separator + study.getStudyName();
+      String path = stagingManager.getStagingPath() + File.separator + "jobs" + File.separator + sessionState.getLoggedInUsername() + File.separator + sessionState.getActiveStudyname();
       jc.setBasePath(path);
     } catch (IOException c) {
       logger.log(Level.SEVERE, "Failed to create directory structure.", c);
@@ -89,8 +88,7 @@ public class YarnController implements Serializable {
       jc.handleFileUpload(KEY_AM_JARPATH, event);
     } catch (IllegalStateException e) {
       try {
-        String path = stagingManager.getStagingPath() + File.separator + "jobs" + File.separator + study.
-                getUsername() + File.separator + study.getStudyName();
+        String path = stagingManager.getStagingPath() + File.separator + "jobs" + File.separator + sessionState.getLoggedInUsername() + File.separator + sessionState.getActiveStudyname();
         jc.setBasePath(path);
         jc.handleFileUpload(KEY_AM_JARPATH, event);
       } catch (IOException c) {
@@ -109,8 +107,7 @@ public class YarnController implements Serializable {
       jc.handleFileUpload(key, event);
     } catch (IllegalStateException e) {
       try {
-        String path = stagingManager.getStagingPath() + File.separator + "jobs" + File.separator + study.
-                getUsername() + File.separator + study.getStudyName();
+        String path = stagingManager.getStagingPath() + File.separator + "jobs" + File.separator + sessionState.getLoggedInUsername() + File.separator + sessionState.getActiveStudyname();
         jc.setBasePath(path);
         jc.handleFileUpload(key, event);
       } catch (IOException c) {
@@ -152,8 +149,8 @@ public class YarnController implements Serializable {
     }
   }
 
-  public void setStudy(StudyMB study) {
-    this.study = study;
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
   }
 
 }

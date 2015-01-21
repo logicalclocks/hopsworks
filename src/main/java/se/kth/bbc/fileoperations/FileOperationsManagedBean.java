@@ -8,12 +8,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
-import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.study.fb.Inode;
 
 //TODO: report errors to user!!! seems to be going wrong!
@@ -32,9 +30,6 @@ public class FileOperationsManagedBean implements Serializable {
 
     @EJB
     private FileOperations fileOps;
-
-    @ManagedProperty(value = "#{studyManagedBean}")
-    private StudyMB study;
 
     private String newFolderName;
     private static final Logger logger = Logger.getLogger(FileOperationsManagedBean.class.getName());
@@ -109,51 +104,6 @@ public class FileOperationsManagedBean implements Serializable {
         } else {
             return filename.substring(filename.lastIndexOf('.') + 1);
         }
-    }
-
-    /**
-     * Create a sample folder for the current study. Creates a sample folder and
-     * subfolders for various common file types. Folder name should be set
-     * through the <i>newFolderName</i> property.
-     *
-     */
-    public void createSampleDir() {
-        //Construct path
-        String path = File.separator + FileSystemOperations.DIR_ROOT
-                + File.separator + study.getStudyName()
-                + File.separator + FileSystemOperations.DIR_SAMPLES
-                + File.separator + newFolderName;
-
-        //create dirs in fs
-        boolean success;
-        try {
-            //TODO: make validator for existing sample ids
-            //add all (sub)directories
-            String[] folders = {path,
-                path + File.separator + FileSystemOperations.DIR_BAM,
-                path + File.separator + FileSystemOperations.DIR_FASTQ,
-                path + File.separator + FileSystemOperations.DIR_VCF};
-
-            for (String s : folders) {
-                success = fileOps.mkDir(s);
-                if (!success) {
-                    MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to create folder " + s + ".");
-                    return;
-                }
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
-            MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to create folders.");
-        }
-        newFolderName = null;
-    }
-
-    public void setStudy(StudyMB study) {
-        this.study = study;
-    }
-
-    public StudyMB getStudy() {
-        return study;
     }
 
     public void deleteFile(Inode i) {

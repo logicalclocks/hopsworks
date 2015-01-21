@@ -33,8 +33,8 @@ import se.kth.bbc.activity.UsersGroups;
 import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.fileoperations.FileSystemOperations;
+import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
-import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
 
@@ -50,17 +50,6 @@ public class StudyMB implements Serializable {
     private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
     private static final long serialVersionUID = 1L;
 
-    /**
-     * ************************************
-     *
-     * TODO: isolate file system operations to FileOperations.java (or anywhere
-     * really). Remains: invert operation of FileOperationsManagedBean and
-     * StudyMB: StudyMB has reference to FileOPMB and calls methods on it with
-     * studyname as a parameter, or studyname is passed as parameter through the
-     * view. Then move all file operations away (create studyDir e.g.).
-     *
-     *
-     */
     @EJB
     private StudyFacade studyController;
 
@@ -84,6 +73,9 @@ public class StudyMB implements Serializable {
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
+    
+    @ManagedProperty(value = "#{clientSessionState}")
+    private ClientSessionState sessionState;
 
     private TrackStudy study;
     private List<Username> usernames;
@@ -114,6 +106,10 @@ public class StudyMB implements Serializable {
     public void setActivity(ActivityMB activity) {
         this.activity = activity;
     }
+
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
+  }
 
     public List<Username> getUsersNameList() {
         return userFacade.findAllUsers();
@@ -346,12 +342,17 @@ public class StudyMB implements Serializable {
      * @return
      */
     public String fetchStudy() {
-
         FacesContext fc = FacesContext.getCurrentInstance();
         Map<String, String> params = fc.getExternalContext().getRequestParameterMap();
-        setStudyName(params.get("studyname"));
+        String studyname = params.get("studyname");
         this.studyCreator = params.get("username");
-        return checkAccess();
+        return fetchStudy(studyname);
+    }
+    
+    public String fetchStudy(String studyname){
+      setStudyName(studyname);
+      sessionState.setActiveStudyByName(studyName);
+      return checkAccess();
     }
     
     
@@ -648,10 +649,6 @@ public class StudyMB implements Serializable {
   
   public void updateServices(){
     studyServices.persistServicesForStudy(studyName, selectedServices);
-  }
-  
-  public String getHdfsRootPath(){
-    return "/Projects/"+studyName+"/";
-  }  
+  } 
 
 }

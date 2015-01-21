@@ -168,7 +168,6 @@ public final class CuneiformJob extends HopsJob {
   }
 
   private void updateState(JobState newState) {
-    System.out.println("Updating state: "+newState);
     getJobHistoryFacade().update(getJobId(), newState);
   }
 

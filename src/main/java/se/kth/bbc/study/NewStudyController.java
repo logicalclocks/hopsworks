@@ -3,7 +3,6 @@ package se.kth.bbc.study;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -14,12 +13,11 @@ import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityMB;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.fileoperations.FileSystemOperations;
+import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.study.services.StudyServiceEnum;
 import se.kth.bbc.study.services.StudyServiceFacade;
@@ -62,12 +60,15 @@ public class NewStudyController implements Serializable {
   @EJB
   private FileOperations fileOps;
 
-  //TODO: restructure, only use EJBs here, move methods from controller to mb to controller and rename to facade
+  //TODO: restructure
   @ManagedProperty(value = "#{activityBean}")
   private transient ActivityMB activity;
 
   @ManagedProperty(value = "#{studyManagedBean}")
   private transient StudyMB studies;
+  
+  @ManagedProperty(value = "#{clientSessionState}")
+  private ClientSessionState sessionState;
 
   public StudyServiceEnum[] getAvailableServices() {
     return StudyServiceEnum.values();
@@ -79,6 +80,10 @@ public class NewStudyController implements Serializable {
 
   public void setStudies(StudyMB studies) {
     this.studies = studies;
+  }
+  
+  public void setSessionState(ClientSessionState sessionState){
+    this.sessionState = sessionState;
   }
 
   public List<String> getStudyTemplates() {
@@ -129,7 +134,7 @@ public class NewStudyController implements Serializable {
     try {
       if (!studyFacade.findStudy(newStudyName)) {
         //Create a new study object
-        String username = getUsername();
+        String username = sessionState.getLoggedInUsername();
         Date now = new Date();
         study = new TrackStudy(newStudyName, username, now);
         //create folder structure
@@ -173,19 +178,10 @@ public class NewStudyController implements Serializable {
 
   }
 
-  private HttpServletRequest getRequest() {
-    return (HttpServletRequest) FacesContext.getCurrentInstance().
-            getExternalContext().getRequest();
-  }
-
-  private String getUsername() {
-    return getRequest().getUserPrincipal().getName();
-  }
-
   //Set the study owner as study master in StudyTeam table
   private void addStudyMaster(String study_name) {
 
-    StudyTeamPK stp = new StudyTeamPK(study_name, getUsername());
+    StudyTeamPK stp = new StudyTeamPK(study_name, sessionState.getLoggedInUsername());
     StudyTeam st = new StudyTeam(stp);
     st.setTeamRole("Master");
     st.setTimestamp(new Date());
@@ -223,9 +219,7 @@ public class NewStudyController implements Serializable {
 
   //load the necessary information for displaying the study page
   private String loadNewStudy() {
-    studies.setStudyName(newStudyName);
-    studies.setCreator(getUsername());
-    return studies.checkAccess();
+    return studies.fetchStudy(newStudyName);
   }
 
   private void persistServices() {

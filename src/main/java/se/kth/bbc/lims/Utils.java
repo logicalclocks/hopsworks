@@ -14,7 +14,7 @@ public final class Utils {
     int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
     return path.substring(startName);
   }
-  
+
   public static String getExtension(String filename) {
     int lastDot = filename.lastIndexOf(".");
     if (lastDot < 0) {
@@ -33,5 +33,9 @@ public final class Utils {
     } else {
       return type;
     }
+  }
+
+  public static String getHdfsRootPath(String studyname) {
+    return "/Projects/" + studyname + "/";
   }
 }

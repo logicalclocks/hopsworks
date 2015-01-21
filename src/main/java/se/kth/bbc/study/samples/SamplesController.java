@@ -2,6 +2,7 @@ package se.kth.bbc.study.samples;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.primefaces.model.DualListModel;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.fileoperations.FileSystemOperations;
+import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.study.metadata.CollectionTypeStudyDesignEnum;
@@ -28,13 +30,13 @@ import se.kth.kthfsdashboard.user.UserFacade;
  */
 @ManagedBean
 @ViewScoped
-public class SamplesController {
+public class SamplesController implements Serializable{
 
   private static final Logger logger = Logger.getLogger(SamplesController.class.
           getName());
 
-  @ManagedProperty(value = "#{studyManagedBean}")
-  private StudyMB study;
+  @ManagedProperty(value = "#{clientSessionState}")
+  private ClientSessionState sessionState;
 
   @EJB
   private SamplecollectionFacade samplecollectionFacade;
@@ -58,15 +60,11 @@ public class SamplesController {
   private Samplecollection newCollection = new Samplecollection();
 
   public List<Samplecollection> getSamplecollection() {
-    return samplecollectionFacade.findByStudyname(study.getStudyName());
+    return samplecollectionFacade.findByStudyname(sessionState.getActiveStudyname());
   }
 
-  public StudyMB getStudy() {
-    return study;
-  }
-
-  public void setStudy(StudyMB study) {
-    this.study = study;
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
   }
 
   public boolean isCollectionSelected() {
@@ -272,10 +270,14 @@ public class SamplesController {
     newSample = new Sample();
   }
 
+  /**
+     * Create a sample folder for the current study. Creates a sample folder and
+     * subfolders for various common file types.
+     */
   private void createSampleDir(String sampleId) throws IOException {
     //Construct path
     String path = File.separator + FileSystemOperations.DIR_ROOT
-            + File.separator + study.getStudyName()
+            + File.separator + sessionState.getActiveStudyname()
             + File.separator + FileSystemOperations.DIR_SAMPLES
             + File.separator + selectedCollection.getAcronym()
             + File.separator + sampleId;
@@ -301,7 +303,7 @@ public class SamplesController {
   private void createSampleCollectionDir(String folderName) throws IOException {
     //Construct path
     String path = File.separator + FileSystemOperations.DIR_ROOT
-            + File.separator + study.getStudyName()
+            + File.separator + sessionState.getActiveStudyname()
             + File.separator + FileSystemOperations.DIR_SAMPLES
             + File.separator + folderName;
 
@@ -326,7 +328,7 @@ public class SamplesController {
     }
     try {
       newCollection.setContact(userfacade.findByEmail(getUsername()));
-      newCollection.setStudy(study.getStudy());
+      newCollection.setStudy(sessionState.getActiveStudy());
       samplecollectionFacade.persist(newCollection);
     } catch (EJBException e) {
       MessagesController.addErrorMessage("Adding collection failed",

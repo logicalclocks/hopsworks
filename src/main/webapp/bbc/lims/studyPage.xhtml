@@ -218,7 +218,7 @@
                     </h:panelGrid>
                     <p:commandButton value="Create" action="#{samplesController.createNewCollection()}" 
                                      oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addCollectionDlg').hide()" 
-                                     update="@form :#{p:component('samplesForm')}"/>
+                                     update="@form :#{p:component('samplesForm')} :#{p:component('editCollectionTypesDialog')}"/>
                     <p:commandButton type="button" value="Cancel" onclick="PF('addCollectionDlg').hide()"/>
                 </h:form>
             </p:dialog>

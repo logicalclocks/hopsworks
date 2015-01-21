@@ -36,6 +36,7 @@ import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.yarn.YarnRunner;
+import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
 
@@ -68,8 +69,8 @@ public class CuneiformController implements Serializable {
   private String stdoutPath;
   private String stderrPath;
 
-  @ManagedProperty(value = "#{studyManagedBean}")
-  private StudyMB study;
+  @ManagedProperty(value = "#{clientSessionState}")
+  private ClientSessionState sessionState;
 
   @EJB
   private AsynchronousJobExecutor submitter;
@@ -115,8 +116,7 @@ public class CuneiformController implements Serializable {
   @PostConstruct
   public void init() {
     try {
-      String path = stagingManager.getStagingPath() + File.separator + study.
-              getUsername() + File.separator + study.getStudyName();
+      String path = stagingManager.getStagingPath() + File.separator + sessionState.getLoggedInUsername() + File.separator + sessionState.getActiveStudyname();
       jc.setBasePath(path);
     } catch (IOException c) {
       logger.log(Level.SEVERE,
@@ -215,12 +215,12 @@ public class CuneiformController implements Serializable {
 
   }
 
-  public StudyMB getStudy() {
-    return study;
+  public ClientSessionState getSessionState() {
+    return sessionState;
   }
 
-  public void setStudy(StudyMB study) {
-    this.study = study;
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
   }
 
   public List<CuneiformParameter> getFreeVars() {
@@ -308,13 +308,12 @@ public class CuneiformController implements Serializable {
     CuneiformJob job = new CuneiformJob(history, fops, r);
 
     //TODO: include input and execution files
-    jobhistoryid = job.requestJobId(jobName, study.getUsername(), study.
-            getStudyName(), "CUNEIFORM");
+    jobhistoryid = job.requestJobId(jobName, sessionState.getLoggedInUsername(), sessionState.getActiveStudyname(), "CUNEIFORM");
     if (jobhistoryid != null) {
-      String stdOutFinalDestination = study.getHdfsRootPath()
+      String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.getActiveStudyname())
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
               + File.separator + "stdout.log";
-      String stdErrFinalDestination = study.getHdfsRootPath()
+      String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.getActiveStudyname())
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
               + File.separator + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
@@ -504,8 +503,7 @@ public class CuneiformController implements Serializable {
 
   private void prepWorkflowFile() throws IOException {
     StringBuilder extraLines = new StringBuilder(); //Contains the extra workflow lines
-    String foldername = study.getStudyName() + File.separator + study.
-            getUsername() + File.separator + workflowname + File.separator
+    String foldername = sessionState.getActiveStudyname() + File.separator + sessionState.getLoggedInUsername() + File.separator + workflowname + File.separator
             + "input"; //folder to which files will be uploaded
     String absoluteHDFSfoldername = "/user/" + System.getProperty("user.name")
             + "/" + foldername;

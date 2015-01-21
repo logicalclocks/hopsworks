@@ -11,8 +11,8 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.primefaces.model.DualListModel;
+import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
-import se.kth.bbc.study.StudyMB;
 
 /**
  *
@@ -25,20 +25,15 @@ public class StudyMetaController implements Serializable {
   @EJB
   private StudyMetaFacade studyMetaFacade;
 
-  //TODO: replace with session bean
-  @ManagedProperty(value = "#{studyManagedBean}")
-  private StudyMB study;
+  @ManagedProperty(value = "#{clientSessionState}")
+  private ClientSessionState sessionState;
 
   private StudyMeta metadata;
   private DualListModel<CollectionTypeStudyDesignEnum> studyDesignDual;
   private DualListModel<InclusionCriteriumEnum> inclusionCriteriaDual;
 
-  public StudyMB getStudy() {
-    return study;
-  }
-
-  public void setStudy(StudyMB study) {
-    this.study = study;
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
   }
 
   public StudyMetaController() {
@@ -67,10 +62,10 @@ public class StudyMetaController implements Serializable {
 
   @PostConstruct
   public void init() {
-    metadata = studyMetaFacade.findByStudyname(study.getStudyName());
+    metadata = studyMetaFacade.findByStudyname(sessionState.getActiveStudyname());
     if (metadata == null) {
       metadata = new StudyMeta();
-      metadata.setStudyname(study.getStudyName());
+      metadata.setStudyname(sessionState.getActiveStudyname());
     }
 
     //create study design model
