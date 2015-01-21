@@ -436,9 +436,9 @@ public class PeopleAministration implements Serializable {
         Yubikey yubi = userManager.findYubikey(selectedYubikyUser.getUid());
 
         yubi.setStatus(1);
-        yubi.setSerial(serial);
-        yubi.setPublicId(pubid);
-        yubi.setAesSecret(secret);
+        yubi.setSerial(serial.replaceAll("\\s", ""));
+        yubi.setPublicId(pubid.replaceAll("\\s", ""));
+        yubi.setAesSecret(secret.replaceAll("\\s", ""));
         yubi.setCreated(new Date());
         yubi.setAccessed(new Date());
         yubi.setCounter(0);

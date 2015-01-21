@@ -11,7 +11,7 @@
         <h:head>
             <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+
             <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
 
@@ -34,13 +34,13 @@
                             <h:form id="yubikey_registration" class="new_user"> 
 
                                 <h:panelGrid columns="2" style="font-size: 12px;">			
-                                    <h:outputLabel for="fname" value="First name: " style="font-weight:bold"/>
-                                    <h:inputText id="fname" value="#{peopleAministration.selectedYubikyUser.fname}" size="40"
+                                    <p:outputLabel for="fname" value="First name: " style="font-weight:bold"/>
+                                    <p:inputText id="fname" value="#{peopleAministration.selectedYubikyUser.fname}" size="40"
                                                  required="true"
                                                  requiredMessage="Enter Name" />
 
                                     <h:outputLabel for="lname" value="Lirst name: " style="font-weight:bold"/>
-                                    <h:inputText id="lname" value="#{peopleAministration.selectedYubikyUser.lname}" size="40"
+                                    <p:inputText id="lname" value="#{peopleAministration.selectedYubikyUser.lname}" size="40"
                                                  required="true"
                                                  requiredMessage="Last Name"/>
 
@@ -56,8 +56,6 @@
 
                                     <h:outputLabel for="tel" value="Mobile: " style="font-weight:bold"/>
                                     <h:inputText id="tel" value="#{peopleAministration.selectedYubikyUser.mobile}" size="40"
-                                                 required="true"
-                                                 requiredMessage="Enter Mobile"
                                                  validatorMessage="Invalid mobile number">
                                         <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                     </h:inputText>
@@ -89,25 +87,25 @@
                                     
                                     <h:outputLabel for="seri" value="Serial" style="font-weight:bold" />
                                     <h:inputText id="ser" value="#{peopleAministration.serial}"  required="true"
-                                                 requiredMessage="Enter your country" size="40">
+                                                 requiredMessage="Enter serial number" size="40">
                                     </h:inputText>
                         
                                     <h:outputLabel for="pid" value="Public Id" style="font-weight:bold" />
                                     <h:inputText id="pid" value="#{peopleAministration.pubid}"  required="true"
-                                                 requiredMessage="Enter your country" size="40">
+                                                 requiredMessage="Enter the public id" size="40">
                                     </h:inputText>
                                                             
                                     <h:outputLabel for="secret" value="Secret" style="font-weight:bold" />
                                     <h:inputText id="secret" value="#{peopleAministration.secret}"  required="true"
-                                                 requiredMessage="Enter your country" size="40">
+                                                 requiredMessage="Enter the secret code" size="40">
                                     </h:inputText>
                                     
                                     <p:spacer></p:spacer>
-
+                                     <p:messages id="messages" autoUpdate="true" showDetail="false" closable="true"/>
                                 </h:panelGrid>
 
                                 <div class="register_actions">
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{peopleAministration.activateYubikey()}" />
+                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{peopleAministration.activateYubikey()}"/>
                                     <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="userMgmt" process="@this" style="margin-left: 55px"/>
                                 </div>
 
