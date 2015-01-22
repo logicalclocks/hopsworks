@@ -123,7 +123,7 @@
                         </h:panelGroup>
                     </h:form>
                     <!-- primefaces push -->
-                    <p:socket channel="/channel">
+                    <p:socket channel="#{cuneiformController.pushChannel}">
                         <p:ajax event="message" update=":#{p:component('CFResultsForm')} :#{p:component('historyForm_CUNEIFORM')}" />
                     </p:socket>
 
