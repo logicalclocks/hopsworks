@@ -13,10 +13,10 @@ import javax.faces.bean.RequestScoped;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.cuneiform.CuneiformController;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.Utils;
-import se.kth.bbc.study.StudyMB;
 
 /**
  *
@@ -37,9 +37,17 @@ public class JobHistoryController implements Serializable {
   
   @ManagedProperty( value = "#{clientSessionState}")
   private ClientSessionState sessionState;
+  
+  // for loading specific history 
+  @ManagedProperty( value = "#{cuneiformController}")
+  private CuneiformController cfCont;
 
   public void setSessionState(ClientSessionState sessionState) {
     this.sessionState = sessionState;
+  }
+
+  public void setCfCont(CuneiformController cfCont) {
+    this.cfCont = cfCont;
   }
 
   public List<JobHistory> getHistoryForType(JobType type) {
@@ -60,5 +68,13 @@ public class JobHistoryController implements Serializable {
       MessagesController.addErrorMessage("Download failed.");
     }
     return null;
+  }
+  
+  public void selectJob(JobHistory job){
+    switch(job.getType()){
+      case CUNEIFORM:
+        cfCont.selectJob(job);
+        break;
+    }
   }
 }

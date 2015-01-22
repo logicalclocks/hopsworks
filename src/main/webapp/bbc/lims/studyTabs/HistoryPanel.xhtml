@@ -8,13 +8,18 @@ and open the template in the editor.
 <html xmlns="http://www.w3.org/1999/xhtml"  
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui">
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://java.sun.com/jsf/core">
     <body>
         <ui:composition>
             <h:form id="historyForm_#{type}" styleClass="historyForm">
                 <!-- takes a parameter "type": the type of jobs for which the history is to be loaded -->
                <ui:repeat value="#{jobHistoryController.getHistoryForType(type)}" var="job" varStatus="cnt">
-                    <p:panel id="job_#{cnt}" closable="false" header="#{job.name==null? job.id :job.name}">
+                    <p:panel id="job_#{cnt}" closable="false" >
+                        <f:facet name="header">
+                            <h:outputText value="#{job.name==null? job.id :job.name}"/>
+                            <h:commandLink style="fa-arrow-circle-right" action="#{jobHistoryController.selectJob(job)}"/>
+                        </f:facet>
                         <h:panelGrid columns="2">
                             <h:outputLabel value="Run on:"/>
                             <h:outputLabel value="#{job.submissionTime}"/>

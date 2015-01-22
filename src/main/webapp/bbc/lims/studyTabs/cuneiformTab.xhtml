@@ -77,24 +77,22 @@
                             <div>
                                 <!-- TODO: add validator that checks if the CF file is parseable -->
                                 <p:commandButton id="cuneiformExecuteButton" value="Execute" action="#{cuneiformController.startWorkflow()}" 
-                                                 update="@form" disabled="#{not cuneiformController.jobFinished and cuneiformController.jobStarted}"
-                                                 />
+                                                 update="@form"/>
                             </div>
                         </div>
                     </h:form>
-                    <h:form>
+                    <h:form id="CFResultsForm">
                         <h3>
                             Results
                         </h3>
-                        <p:poll widgetVar="progressPoller" interval="5" listener="#{cuneiformController.checkProgress()}" 
-                                update="@form :#{p:component('historyForm_CUNEIFORM')}" stop="#{cuneiformController.jobFinished}"
-                                />
-                        <h:panelGroup id="image">
-                            <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformController.jobStarted and not cuneiformController.jobFinished}"/>
-                            <h:outputText value="#{cuneiformController.finalState}" rendered="#{cuneiformController.jobFinished}"/>
-                        </h:panelGroup>
+                        <h:panelGrid columns="2">
+                            <h:outputLabel value="Current state:" for="curr_state"/>
+                            <h:outputText id="curr_state" value="#{cuneiformController.selectedJob.state}"/>
+                        </h:panelGrid>
+                        <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformController.selectedJobRunning}"/>
+
                         <div>
-                            <h:panelGroup id="outputFilesGroup" rendered="#{cuneiformController.jobFinished}" >
+                            <h:panelGroup id="outputFilesGroup" rendered="#{cuneiformController.selectedJobHasFinished}" >
                                 <h:outputText value="Results:"/>
                                 <ui:repeat value="#{cuneiformController.outputFileNames}" var="file">
                                     <div>
@@ -106,24 +104,29 @@
                                 </ui:repeat>
                             </h:panelGroup>
                         </div>
-                        <h:panelGroup rendered="#{cuneiformController.jobFinished}" >
+                        <h:panelGroup rendered="#{cuneiformController.selectedJobHasFinished}" >
                             <div>
                                 <h:outputText value="Logs:"/>
                             </div>
                             <div>
                                 <p:commandLink ajax="false">
                                     <strong>stdout.log</strong>
-                                    <p:fileDownload value="#{cuneiformController.downloadStdout()}"/>
+                                    <p:fileDownload value="#{cuneiformController.downloadStdout()}" rendered="#{cuneiformController.selectedJob.stdoutPath != null}"/>
                                 </p:commandLink>
                             </div>
                             <div>
                                 <p:commandLink ajax="false">
                                     <strong>stderr.log</strong>
-                                    <p:fileDownload value="#{cuneiformController.downloadStderr()}"/>
+                                    <p:fileDownload value="#{cuneiformController.downloadStderr()}" rendered="#{cuneiformController.selectedJob.stderrPath != null}"/>
                                 </p:commandLink>
                             </div>
                         </h:panelGroup>
                     </h:form>
+                    <!-- primefaces push -->
+                    <p:socket channel="#{cuneiformController.pushChannel}">
+                        <p:ajax event="message" update=":#{p:component('CFResultsForm')} :#{p:component('historyForm_CUNEIFORM')}" />
+                    </p:socket>
+
                 </h:panelGrid>
             </div>
         </ui:composition>

@@ -64,5 +64,18 @@ public enum JobState {
         throw new IllegalArgumentException("Invalid enum constant"); // can never happen        
     }
   }
+  
+  public boolean isFinalState(){
+    switch(this){
+      case FINISHED:
+      case FAILED:
+      case KILLED:
+      case FRAMEWORK_FAILURE:
+      case APP_MASTER_START_FAILED:
+        return true;
+      default:
+        return false;       
+    }
+  }
 
 }

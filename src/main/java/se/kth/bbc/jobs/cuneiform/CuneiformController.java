@@ -26,7 +26,6 @@ import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
-import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.jobs.JobController;
@@ -55,20 +54,16 @@ public class CuneiformController implements Serializable {
   private static final Logger logger = Logger.getLogger(
           CuneiformController.class.getName());
 
+  //Variables for new job
   private String workflowname;
   private boolean workflowUploaded = false;
   private List<CuneiformParameter> freevars;
   private List<String> targetVars;
   private List<String> queryVars; //The target variables that should be queried
-  private Long jobhistoryid;
-  private boolean started = false;
-  private boolean finished = false;
   private String jobName;
 
-  private JobState finalState;
-
-  private String stdoutPath;
-  private String stderrPath;
+  //Used to track job that was last executed (or selected)
+  private Long jobhistoryid;
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
@@ -117,7 +112,9 @@ public class CuneiformController implements Serializable {
   @PostConstruct
   public void init() {
     try {
-      String path = stagingManager.getStagingPath() + File.separator + sessionState.getLoggedInUsername() + File.separator + sessionState.getActiveStudyname();
+      String path = stagingManager.getStagingPath() + File.separator
+              + sessionState.getLoggedInUsername() + File.separator
+              + sessionState.getActiveStudyname();
       jc.setBasePath(path);
     } catch (IOException c) {
       logger.log(Level.SEVERE,
@@ -288,13 +285,13 @@ public class CuneiformController implements Serializable {
     //Pass on workflow file
     String wfPath = jc.getFilePath(KEY_WORKFLOW_FILE);
     b.addFilePathToBeCopied(wfPath);
-    
+
     b.stdOutPath("AppMaster.stdout");
     b.stdErrPath("AppMaster.stderr");
     b.logPathsRelativeToResourcesPath(true);
 
     YarnRunner r;
-    
+
     try {
       //Get the YarnRunner instance
       r = b.build();
@@ -309,12 +306,15 @@ public class CuneiformController implements Serializable {
     CuneiformJob job = new CuneiformJob(history, fops, r);
 
     //TODO: include input and execution files
-    jobhistoryid = job.requestJobId(jobName, sessionState.getLoggedInUsername(), sessionState.getActiveStudyname(), JobType.CUNEIFORM);
+    jobhistoryid = job.requestJobId(jobName, sessionState.getLoggedInUsername(),
+            sessionState.getActiveStudyname(), JobType.CUNEIFORM);
     if (jobhistoryid != null) {
-      String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.getActiveStudyname())
+      String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
+              getActiveStudyname())
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
               + File.separator + "stdout.log";
-      String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.getActiveStudyname())
+      String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
+              getActiveStudyname())
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
               + File.separator + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
@@ -328,56 +328,33 @@ public class CuneiformController implements Serializable {
       MessagesController.addErrorMessage(
               "Failed to write job history. Aborting execution.");
     }
-    started = true;
   }
 
-  /**
-   * Check the progress of the running job. If it is finished, loads the
-   * stdout and stderr logs.
-   */
-  public void checkProgress() {
-    if (started) {
-      boolean done = jobHasFinishedState();
-      if (done) {
-        stdoutPath = history.findById(jobhistoryid).getStdoutPath();
-        stderrPath = history.findById(jobhistoryid).getStderrPath();
-        finalState = history.findById(jobhistoryid).getState();
-        //Read stdout
-        /*
-         * StringBuilder stdOutBuilder = new StringBuilder();
-         * try (InputStream in = fops.getInputStream(stdOutPath)) {
-         * BufferedReader reader = new BufferedReader(new
-         * InputStreamReader(in));
-         * String line = null;
-         * while ((line = reader.readLine()) != null) {
-         * stdOutBuilder.append(line);
-         * //stdOutBuilder.append("\n");
-         * }
-         * } catch (IOException e) {
-         * logger.log(Level.SEVERE, "Failed loading stdout", e);
-         * stdOutBuilder.append("ERROR LOADING STDOUT");
-         * }
-         * stdout = stdOutBuilder.toString();
-         */
-        //Read stdErr
-       /*
-         * StringBuilder stdErrBuilder = new StringBuilder();
-         * try (InputStream in = fops.getInputStream(stdErrPath)) {
-         * BufferedReader reader = new BufferedReader(new
-         * InputStreamReader(in));
-         * String line = null;
-         * while ((line = reader.readLine()) != null) {
-         * stdErrBuilder.append(line);
-         * //stdErrBuilder.append("\n");
-         * }
-         * } catch (IOException e) {
-         * logger.log(Level.SEVERE, "Failed loading stderr", e);
-         * stdErrBuilder.append("ERROR LOADING STDERR");
-         * }
-         * stderr = stdErrBuilder.toString();
-         */
-        finished = true;
-      }
+  public JobHistory getSelectedJob() {
+    if (jobhistoryid == null) {
+      return null;
+    } else {
+      return history.findById(jobhistoryid);
+    }
+  }
+
+  public boolean isJobSelected() {
+    return jobhistoryid != null;
+  }
+
+  public boolean isSelectedJobRunning() {
+    if (jobhistoryid == null) {
+      return false;
+    } else {
+      return !jobHasFinishedState();
+    }
+  }
+  
+  public boolean isSelectedJobHasFinished() {
+    if(jobhistoryid == null){
+      return false;
+    } else{
+      return jobHasFinishedState();
     }
   }
 
@@ -387,31 +364,17 @@ public class CuneiformController implements Serializable {
       //should never happen
       return true;
     }
-    return state == JobState.FAILED || state == JobState.FRAMEWORK_FAILURE
-            || state == JobState.FINISHED || state == JobState.KILLED;
+    return state.isFinalState();
   }
 
-  public boolean isJobFinished() {
-    return finished;
-  }
-
-  public boolean isJobStarted() {
-    return started;
-  }
-
-  /*
-   * public String getStdOut(){
-   * return stdout;
-   * }
-   *
-   * public String getStdErr(){
-   * return stderr;
-   * }
-   */
   //TODO: move download methods to JobHistoryController
   public StreamedContent downloadStdout() {
+    JobHistory jh = getSelectedJob();
+    if(jh == null){
+      return null;
+    }
+    String stdoutPath = jh.getStdoutPath();
     try {
-      String extension = "log";
       String filename = "stdout.log";
       return downloadFile(stdoutPath, filename);
     } catch (IOException ex) {
@@ -424,7 +387,11 @@ public class CuneiformController implements Serializable {
   }
 
   public StreamedContent downloadStderr() {
-    String extension = "log";
+    JobHistory jh = getSelectedJob();
+    if(jh == null){
+      return null;
+    }
+    String stderrPath = jh.getStderrPath();
     String filename = "stderr.log";
     try {
       return downloadFile(stderrPath, filename);
@@ -439,28 +406,12 @@ public class CuneiformController implements Serializable {
   private StreamedContent downloadFile(String path,
           String filename) throws IOException {
     InputStream is = fops.getInputStream(path);
-    StreamedContent sc = new DefaultStreamedContent(is, Utils.getMimeType(filename),
+    StreamedContent sc = new DefaultStreamedContent(is, Utils.getMimeType(
+            filename),
             filename);
     logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
             path);
     return sc;
-  }
-
-  public JobState getFinalState() {
-    if (!finished) {
-      return JobState.RUNNING;
-    } else {
-      return finalState;
-    }
-  }
-
-  public boolean shouldShowDownload() {
-    if (!finished) {
-      return false;
-    } else if (finalState == JobState.FINISHED) {
-      return true;
-    }
-    return false;
   }
 
   public boolean hasOutputFiles() {
@@ -504,7 +455,9 @@ public class CuneiformController implements Serializable {
 
   private void prepWorkflowFile() throws IOException {
     StringBuilder extraLines = new StringBuilder(); //Contains the extra workflow lines
-    String foldername = sessionState.getActiveStudyname() + File.separator + sessionState.getLoggedInUsername() + File.separator + workflowname + File.separator
+    String foldername = sessionState.getActiveStudyname() + File.separator
+            + sessionState.getLoggedInUsername() + File.separator + workflowname
+            + File.separator
             + "input"; //folder to which files will be uploaded
     String absoluteHDFSfoldername = "/user/" + System.getProperty("user.name")
             + "/" + foldername;
@@ -532,6 +485,19 @@ public class CuneiformController implements Serializable {
       out.print(extraLines);
     }
     logger.log(Level.INFO, extraLines.toString());
+  }
+
+  public void selectJob(JobHistory job) {
+    //TODO
+    // overwrite history content and set jobhistoryid
+  }
+  
+  /**
+   * Returns the channel to subscribe to for jobhistory updates.
+   * @return 
+   */
+  public String getPushChannel(){
+    return "/"+sessionState.getActiveStudyname()+"/"+JobType.CUNEIFORM;
   }
 
 }

@@ -12,6 +12,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import org.primefaces.push.EventBus;
+import org.primefaces.push.EventBusFactory;
 import se.kth.bbc.study.StudyFacade;
 import se.kth.bbc.study.TrackStudy;
 import se.kth.kthfsdashboard.user.AbstractFacade;
@@ -62,25 +64,32 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
       jh.setState(newState);
       em.merge(jh);
       em.flush();
+      publishStateChange(jh);
     }
   }
 
   public void update(Long id, JobState newState, long executionTime) {
     JobHistory jh = findById(id);
+    JobState oldstate = jh.getState();
     jh.setState(newState);
     jh.setExecutionDuration(BigInteger.valueOf(executionTime));
     em.merge(jh);
+    if(oldstate != newState)
+    publishStateChange(jh);
   }
 
   public void update(Long id, JobState newState,
           Collection<JobOutputFile> outputFiles) {
     //TODO: check if state is a final one, if so: update execution time
     JobHistory jh = findById(id);
+    JobState oldstate = jh.getState();
     jh.setState(newState);
     Collection<JobOutputFile> output = jh.getJobOutputFileCollection();
     output.addAll(output);
     jh.setJobOutputFileCollection(output);
     em.merge(jh);
+    if(oldstate != newState)
+    publishStateChange(jh);
   }
 
   public void update(Long id, Collection<JobOutputFile> extraOutputFiles) {
@@ -138,6 +147,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
     em.persist(jh);
     em.flush();
+    publishStateChange(jh);
     return jh.getId();
   }
 
@@ -166,6 +176,17 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
   public void persist(JobOutputFile jof) {
     em.persist(jof);
+  }
+
+  /**
+   * Publish the state change to Primefaces Push.
+   * TODO: should this be somewhere else? Separation of concerns?
+   */
+  private void publishStateChange(JobHistory jh) {
+    EventBus eventBus = EventBusFactory.getDefault().eventBus();
+    eventBus.publish("/" + jh.getStudy().getName() + "/" + jh.getType(), jh.
+            getId());
+
   }
 
 }
