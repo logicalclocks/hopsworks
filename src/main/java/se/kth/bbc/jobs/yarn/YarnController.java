@@ -46,10 +46,10 @@ public class YarnController implements Serializable {
   @PostConstruct
   public void init() {
     try {
-      String path = stagingManager.getStagingPath() + File.separator + "jobs" + File.separator + sessionState.getLoggedInUsername() + File.separator + sessionState.getActiveStudyname();
+      String path = stagingManager.getStagingPath() + File.separator + sessionState.getLoggedInUsername() + File.separator + sessionState.getActiveStudyname();
       jc.setBasePath(path);
     } catch (IOException c) {
-      logger.log(Level.SEVERE, "Failed to create directory structure.", c);
+      logger.log(Level.SEVERE, "Failed to initialize staging folder for uploading.", c);
       MessagesController.addErrorMessage(
               "Failed to initialize Yarn controller. Running Yarn jobs will not work.");
     }
@@ -85,6 +85,8 @@ public class YarnController implements Serializable {
 
   public void handleAMUpload(FileUploadEvent event) {
     try {
+      jc.clearFiles();
+      jc.clearVariables();
       jc.handleFileUpload(KEY_AM_JARPATH, event);
     } catch (IllegalStateException e) {
       try {

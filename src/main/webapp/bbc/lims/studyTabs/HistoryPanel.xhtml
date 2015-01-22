@@ -18,7 +18,8 @@ and open the template in the editor.
                     <p:panel id="job_#{cnt}" closable="false" >
                         <f:facet name="header">
                             <h:outputText value="#{job.name==null? job.id :job.name}"/>
-                            <h:commandLink style="fa-arrow-circle-right" action="#{jobHistoryController.selectJob(job)}"/>
+                            <!--<h:commandLink styleClass="fa fa-arrow-circle-right loadArrow" action="#{jobHistoryController.selectJob(job)}"/>-->
+                            <h:commandLink styleClass="fa fa-arrow-circle-right loadArrow"/>
                         </f:facet>
                         <h:panelGrid columns="2">
                             <h:outputLabel value="Run on:"/>

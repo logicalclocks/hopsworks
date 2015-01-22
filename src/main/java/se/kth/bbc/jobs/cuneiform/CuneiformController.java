@@ -136,7 +136,6 @@ public class CuneiformController implements Serializable {
       logger.log(Level.SEVERE,
               "Illegal state in jobController while trying to upload workflow file.",
               e);
-      init(); //just try to fix it...
       return;
     }
     workflowname = event.getFile().getFileName();

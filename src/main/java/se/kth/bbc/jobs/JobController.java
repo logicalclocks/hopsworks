@@ -14,7 +14,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 
 /**
