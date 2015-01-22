@@ -281,7 +281,7 @@ public class JobHistory implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.job.JobHistory[ id=" + id + " ]";
+    return "JobHistory "+id+", "+name+": submitted on "+submissionTime+", state "+state+", type "+type;
   }
 
   public boolean isFinished() {

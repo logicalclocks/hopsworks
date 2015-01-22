@@ -183,10 +183,12 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
    * TODO: should this be somewhere else? Separation of concerns?
    */
   private void publishStateChange(JobHistory jh) {
+    System.out.println("Publishing state change in "+jh);
     EventBus eventBus = EventBusFactory.getDefault().eventBus();
-    eventBus.publish("/" + jh.getStudy().getName() + "/" + jh.getType(), jh.
+    eventBus.publish("/channel",jh.getId().toString());
+    /*eventBus.publish("/" + jh.getStudy().getName() + "/" + jh.getType(), jh.
             getId());
-
+*/
   }
 
 }
