@@ -24,7 +24,7 @@
                             </ui:include>
                         </ui:insert>
                     </p:panel>
-                    <h:form id="cuneiForm"> <!-- Pun intended -->
+                    <h:form id="yarnForm"> 
                         <h3>
                             Run configuration
                         </h3>
@@ -32,14 +32,14 @@
                         <div class="workflow-head">
                             <div>
                                 <h:panelGrid columns="2">
-                                    <h:outputLabel for="JobName" value="Job name"/>
-                                    <h:inputText id="JobName" value="#{cuneiformController.jobName}"/>
+                                    <h:outputLabel for="yarn_JobName" value="Job name"/>
+                                    <h:inputText id="yarn_JobName" value="#{cuneiformController.jobName}"/>
 
-                                    <h:outputLabel value="Upload workflow file" for="wfUploader"/>
+                                    <h:outputLabel value="Upload workflow file" for="amUploader"/>
                                     <p:fileUpload required="true" auto="true" multiple="false" 
                                                   label="Upload" mode="advanced" allowTypes="/(\.|\/)(cf)$/" 
                                                   fileUploadListener="#{cuneiformController.workflowUpload}" 
-                                                  update="@form" id="wfUploader" process="@form"/>
+                                                  update="@form" id="amUploader" process="@form"/>
 
                                     <h:outputLabel value="Uploaded file"/>
                                     <h:outputLabel value="#{cuneiformController.workflowName==null ? 'No file uploaded yet' : cuneiformController.workflowName}"/>
@@ -76,23 +76,23 @@
 
                             <div>
                                 <!-- TODO: add validator that checks if the CF file is parseable -->
-                                <p:commandButton id="cuneiformExecuteButton" value="Execute" action="#{cuneiformController.startWorkflow()}" 
+                                <p:commandButton id="yarnExecuteButton" value="Execute" action="#{cuneiformController.startWorkflow()}" 
                                                  update="@form"/>
                             </div>
                         </div>
                     </h:form>
-                    <h:form id="CFResultsForm">
+                    <h:form id="yarnResultsForm">
                         <h3>
                             Results
                         </h3>
                         <h:panelGrid columns="2">
                             <h:outputLabel value="Current state:" for="curr_state"/>
-                            <h:outputText id="curr_state" value="#{cuneiformController.selectedJob.state}"/>
+                            <h:outputText id="yarn_curr_state" value="#{cuneiformController.selectedJob.state}"/>
                         </h:panelGrid>
                         <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformController.selectedJobRunning}"/>
 
                         <div>
-                            <h:panelGroup id="outputFilesGroup" rendered="#{cuneiformController.selectedJobHasFinished}" >
+                            <h:panelGroup id="yarnOutputFilesGroup" rendered="#{cuneiformController.selectedJobHasFinished}" >
                                 <h:outputText value="Results:"/>
                                 <ui:repeat value="#{cuneiformController.outputFileNames}" var="file">
                                     <div>
