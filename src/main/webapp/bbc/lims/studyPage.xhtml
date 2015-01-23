@@ -49,27 +49,27 @@
                                     </ui:insert>
                                 </p:tab>
                                 <!-- TODO: figure out how to do this with a loop?-->
-                                <p:tab id="flink" title="Flink" rendered="#{studyManagedBean.shouldDrawTab('FLINK')}">
+                                <p:tab id="flink" title="Flink" rendered="#{studyManagedBean.shouldDrawTab('FLINK') and studyManagedBean.renderComponentList() != null}">
                                     <ui:insert name="flinkTab">
                                         <ui:include src="/bbc/lims/studyTabs/flinkTab.xhtml"/>
                                     </ui:insert>
                                 </p:tab>
-                                <p:tab id="cuneiform" title="Cuneiform" rendered="#{studyManagedBean.shouldDrawTab('CUNEIFORM')}">
+                                <p:tab id="cuneiform" title="Cuneiform" rendered="#{studyManagedBean.shouldDrawTab('CUNEIFORM') and studyManagedBean.renderComponentList() != null}">
                                     <ui:insert name="workflowsTab">
                                         <ui:include src="/bbc/lims/studyTabs/cuneiformTab.xhtml"/>
                                     </ui:insert>
                                 </p:tab>
-                                <p:tab id="yarn" title="Yarn" rendered="#{studyManagedBean.shouldDrawTab('YARN')}">
+                                <p:tab id="yarn" title="Yarn" rendered="#{studyManagedBean.shouldDrawTab('YARN') and studyManagedBean.renderComponentList() != null}">
                                     <ui:insert name="yarn">
                                         <ui:include src="/bbc/lims/studyTabs/yarnTab.xhtml"/>
                                     </ui:insert>
                                 </p:tab>
-                                <p:tab id="studyinfo" title="Study info" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO')}">
+                                <p:tab id="studyinfo" title="Study info" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO') and studyManagedBean.renderComponentList() != null}">
                                     <ui:insert name="studyinfo">
                                         <ui:include src="/bbc/lims/studyTabs/studyInfoTab.xhtml"/>
                                     </ui:insert>
                                 </p:tab>
-                                <p:tab id="samples" title="Samples" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+                                <p:tab id="samples" title="Samples" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES') and studyManagedBean.renderComponentList() != null}">
                                     <ui:insert name="samples">
                                         <ui:include src="/bbc/lims/studyTabs/samplesTab.xhtml"/>
                                     </ui:insert>
