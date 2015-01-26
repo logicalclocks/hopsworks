@@ -8,8 +8,7 @@ and open the template in the editor.
 <html xmlns="http://www.w3.org/1999/xhtml"  
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui"
-      xmlns:c="http://java.sun.com/jsp/jstl/core"  
+      xmlns:p="http://primefaces.org/ui" 
       xmlns:f="http://java.sun.com/jsf/core"
       >
     <body>
@@ -23,11 +22,6 @@ and open the template in the editor.
                             <strong>#{node.top}</strong>
                         </p:commandLink>/
                     </ui:repeat>
-
-                    <span class="right_button">
-                        <p:commandButton id="addData" styleClass="button-add-data" value="Add sample" 
-                                         type="button" onclick="PF('addSampleDlg').show()" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-                    </span>
 
                     <p:growl for="remove" autoUpdate="true" showDetail="true"/>
 
@@ -48,7 +42,7 @@ and open the template in the editor.
                                 <strong>#{inode.name}</strong>
                             </p:commandLink>
 
-                            <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false">
+                            <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false" disabled="#{inode.status != 'available'}">
                                 <strong>#{inode.name}</strong>
                                 <p:fileDownload value="#{fileOperationsMB.downloadFile(inode)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                             </p:commandLink>

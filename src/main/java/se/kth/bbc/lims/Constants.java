@@ -7,18 +7,29 @@ package se.kth.bbc.lims;
  * @author stig
  */
 public class Constants {
+  
+  //TODO: check entire project for correct closing of resources!
 
-    //public static final String server = "LOCAL";
-    public static final String server = "SNURRAN";
-
-    public static final String UPLOAD_DIR = server.equals("LOCAL") ? "/home/stig/tst" : "/tmp";
-    public static final String NAMENODE_URI = server.equals("LOCAL") ? "hdfs://localhost:8020":"hdfs://snurran.sics.se:9999";
+    //Local path to the hiway jar
+    public static final String HIWAY_JAR_PATH = "/srv/hiway/hiway-core-0.2.0-SNAPSHOT.jar";
     
-    public static final String LOCAL_APPMASTER_DIR = server.equals("LOCAL") ? "/home/stig/tst/appMaster" : "/tmp/appMaster";
-    public static final String LOCAL_EXTRA_DIR = server.equals("LOCAL") ? "/home/stig/tst/extraFiles" : "/tmp/extraFiles";
+    //User under which yarn is run
+    public static final String DEFAULT_YARN_USER = "glassfish";
     
-    public static final String JOB_UPLOAD_DIR = server.equals("LOCAL") ? "/home/stig/tst/jobs" : "/tmp/jobs";
-
-    public static final String FLINK_CONF_DIR = server.equals("LOCAL") ? "/home/stig/Downloads/flink-0.8-incubating-SNAPSHOT/conf/.yarn-properties" : "/home/glassfish/stig/flink-0.8-incubating-SNAPSHOT/conf/.yarn-properties";
-
+    //Relative output path (within hdfs study folder) which to write cuneiform output to
+    public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH = "Cuneiform/Output/";
+    
+    //Default configuration locations
+    public static final String DEFAULT_HADOOP_CONF_DIR = "/srv/hadoop/etc/hadoop/";
+    public static final String DEFAULT_YARN_CONF_DIR = "/srv/hadoop/etc/hadoop/";
+    
+    //Default configuration file names
+    public static final String DEFAULT_YARN_CONFFILE_NAME = "yarn-site.xml";
+    public static final String DEFAULT_HADOOP_CONFFILE_NAME = "core-site.xml";
+    public static final String DEFAULT_HDFS_CONFFILE_NAME = "hdfs-site.xml";
+            
+    //Environment variable keys
+    public static final String ENV_KEY_YARN_CONF_DIR = "YARN_CONF_DIR";
+    public static final String ENV_KEY_HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
+   
 }

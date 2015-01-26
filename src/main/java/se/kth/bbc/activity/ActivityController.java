@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package se.kth.bbc.activity;
 
 import java.util.List;
@@ -31,7 +25,7 @@ public class ActivityController {
     public static final String REMOVED_FILE = " removed a file ";
     public static final String REMOVED_STUDY = " removed study ";
     // Flag constants
-    public static final String CTE_FLAG_STUDY = "STUDY";
+    public static final String FLAG_STUDY = "STUDY";
 
     @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;

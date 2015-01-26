@@ -10,6 +10,7 @@ import javax.faces.bean.ViewScoped;
 import org.primefaces.context.RequestContext;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityMB;
+import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 
 /**
@@ -27,20 +28,20 @@ public class RemoveMemberDlgController implements Serializable{
     private String email;
     
     @EJB
-    private transient StudyTeamController studyTeamController;
+    private StudyTeamController studyTeamController;
     
     @ManagedProperty(value = "#{activityBean}")
-    private transient ActivityMB activity;    
+    private ActivityMB activity;    
     
-    @ManagedProperty(value = "#{studyManagedBean}")
-    private transient StudyMB studyMB;
+    @ManagedProperty(value = "#{clientSessionState}")
+    private ClientSessionState sessionState;
 
     public void setActivity(ActivityMB activity) {
         this.activity = activity;
     }
     
-    public void setStudyMB(StudyMB studyMB) {
-        this.studyMB = studyMB;
+    public void setSessionState(ClientSessionState sessionState) {
+        this.sessionState = sessionState;
     }
     
     public void showDialog(String name, String email){
@@ -76,15 +77,13 @@ public class RemoveMemberDlgController implements Serializable{
     
     public synchronized String deleteMemberFromTeam(String email) {
         try {
-
-            studyTeamController.removeStudyTeam(studyMB.getStudyName(), email);
-            activity.addActivity(ActivityController.REMOVED_MEMBER + email, studyMB.getStudyName(), "TEAM");
-
+            studyTeamController.removeStudyTeam(sessionState.getActiveStudyname(), email);
+            activity.addActivity(ActivityController.REMOVED_MEMBER + email, sessionState.getActiveStudyname(), "TEAM");
         } catch (EJBException ejb) {
             MessagesController.addErrorMessage("Deleting team member failed.");
             return null;
         }
-            MessagesController.addInfoMessage("Member removed","Team member " + email + " deleted from study " + studyMB.getStudyName());            
+            MessagesController.addInfoMessage("Member removed","Team member " + email + " deleted from study " + sessionState.getActiveStudyname());            
             return "studyPage";
 
     }

@@ -1,26 +1,17 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package se.kth.bbc.study;
 
 import java.io.Serializable;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.ejb.EJBException;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import javax.faces.context.FacesContext;
 import javax.faces.event.AbortProcessingException;
 import javax.faces.event.ValueChangeEvent;
 import javax.faces.event.ValueChangeListener;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityMB;
-import se.kth.bbc.study.StudyMB.RoledUser;
+import se.kth.bbc.lims.ClientSessionState;
 
 
 /**
@@ -41,8 +32,8 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
     private ActivityMB activity;
     
     
-    @ManagedProperty(value = "#{studyManagedBean}")
-    private StudyMB studyMB;
+    @ManagedProperty(value = "#{clientSessionState}")
+    private ClientSessionState sessionState;
     
     
     @PostConstruct
@@ -53,10 +44,10 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
     public void setActivity(ActivityMB activity) {
         this.activity = activity;
     }
-    
-    public void setStudyMB(StudyMB studyMB) {
-        this.studyMB = studyMB;
-    }
+
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
+  }
     
     public StudyRoleTypes getNewTeamRole() {
         return newTeamRole;
@@ -69,8 +60,8 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
     public synchronized String updateStudyTeamRole(String email, StudyRoleTypes role) {
         System.out.println("Update "+email+" to "+role);
         try {
-            studyTeamController.updateTeamRole(studyMB.getStudyName(), email, role.getTeam());
-            activity.addActivity(ActivityController.CHANGE_ROLE + email + " to " + role, studyMB.getStudyName(), "TEAM");
+            studyTeamController.updateTeamRole(sessionState.getActiveStudyname(), email, role.getTeam());
+            activity.addActivity(ActivityController.CHANGE_ROLE + email + " to " + role, sessionState.getActiveStudyname(), "TEAM");
         } catch (Exception ejb) {
             //addErrorMessageToUserAction("Error: Update failed.");
             return "Failed";

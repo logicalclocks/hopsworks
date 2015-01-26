@@ -1,9 +1,10 @@
 package se.kth.bbc.study;
 
+import se.kth.bbc.study.services.StudyServiceFacade;
+import se.kth.bbc.study.services.StudyServiceEnum;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -31,9 +32,8 @@ import se.kth.bbc.activity.UserGroupsController;
 import se.kth.bbc.activity.UsersGroups;
 import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.fileoperations.FileSystemOperations;
-import se.kth.bbc.flink.FlinkRunner;
+import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
@@ -50,19 +50,8 @@ public class StudyMB implements Serializable {
     private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
     private static final long serialVersionUID = 1L;
 
-    /**
-     * ************************************
-     *
-     * TODO: isolate file system operations to FileOperations.java (or anywhere
-     * really). Remains: invert operation of FileOperationsManagedBean and
-     * StudyMB: StudyMB has reference to FileOPMB and calls methods on it with
-     * studyname as a parameter, or studyname is passed as parameter through the
-     * view. Then move all file operations away (create studyDir e.g.).
-     *
-     *
-     */
     @EJB
-    private StudyController studyController;
+    private StudyFacade studyController;
 
     @EJB
     private StudyTeamController studyTeamController;
@@ -77,16 +66,16 @@ public class StudyMB implements Serializable {
     private ActivityController activityController;
 
     @EJB
-    private InodeFacade inodes;
-
-    @EJB
     private FileOperations fileOps;
 
     @EJB
-    private StudyFacade studies;
+    private StudyServiceFacade studyServices;
 
     @ManagedProperty(value = "#{activityBean}")
     private ActivityMB activity;
+    
+    @ManagedProperty(value = "#{clientSessionState}")
+    private ClientSessionState sessionState;
 
     private TrackStudy study;
     private List<User> usernames;
@@ -99,6 +88,8 @@ public class StudyMB implements Serializable {
     private String studyCreator;
     private int tabIndex;
     private String loginName;
+    
+    private StudyServiceEnum[] selectedServices;
 
     private boolean deleteFilesOnRemove = true;
 
@@ -119,6 +110,11 @@ public class StudyMB implements Serializable {
     public List<User> getUsersNameList() {
         return userMgr.findAllUsers();
     }
+    
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
+  }
+
 
     public List<User> getUsersname() {
         return usernames;
@@ -159,7 +155,7 @@ public class StudyMB implements Serializable {
 
     public TrackStudy getStudy() {
         if (study == null) {
-            study = new TrackStudy();
+            study = studyController.findByName(studyName);
         }
         return study;
     }
@@ -280,12 +276,7 @@ public class StudyMB implements Serializable {
     }
 
     public boolean checkOwnerForSamples() {
-
-        if (getUsername().equals(getCreator())) {
-            return true;
-        } else {
-            return false;
-        }
+      return getUsername().equals(getCreator());
     }
 
     public String checkCurrentUser(String email) {
@@ -346,100 +337,43 @@ public class StudyMB implements Serializable {
         }
     }
 
-    /**
-     * Get the current username from session and sets it as the creator of the
-     * study, and also adding a record to the StudyTeam table for setting the
-     * role as master for within study.
-     *
-     * @return
-     */
-    public String createStudy() {
-        //TODO: fix error messages
-        try {
-            if (!studyController.findStudy(study.getName())) {
-                study.setUsername(getUsername());
-                study.setTimestamp(new Date());
-                studyController.persistStudy(study);
-                activity.addActivity(ActivityController.NEW_STUDY, study.getName(), "STUDY");
-                addStudyMaster(study.getName());
-                mkStudyDIR(study.getName());
-                logger.log(Level.INFO, "{0} - study was created successfully.", study.getName());
-
-                setStudyName(study.getName());
-                this.studyCreator = study.getUsername();
-                return "studyPage";
-
-            } else {
-
-                MessagesController.addErrorMessage("Failed: Study already exists!");
-                logger.log(Level.SEVERE, "Study exists!");
-                return null;
-            }
-
-        } catch (IOException | EJBException | URISyntaxException exp) {
-            MessagesController.addErrorMessage("Failed: Study already exists!");
-            logger.log(Level.SEVERE, "Study was not created!");
-            return null;
-        }
-
-    }
-
-    //create study on HDFS
-    public void mkStudyDIR(String studyName) throws IOException, URISyntaxException {
-
-        String rootDir = FileSystemOperations.DIR_ROOT;
-        String studyPath = File.separator + rootDir + File.separator + studyName;
-        String resultsPath = studyPath + File.separator + FileSystemOperations.DIR_RESULTS;
-        String cuneiformPath = studyPath + File.separator + FileSystemOperations.DIR_CUNEIFORM;
-        String samplesPath = studyPath + File.separator + FileSystemOperations.DIR_SAMPLES;
-
-        fileOps.mkDir(studyPath);
-        fileOps.mkDir(resultsPath);
-        fileOps.mkDir(cuneiformPath);
-        fileOps.mkDir(samplesPath);
-    }
+    
 
     /**
      * @return
      */
     public String fetchStudy() {
-
         FacesContext fc = FacesContext.getCurrentInstance();
         Map<String, String> params = fc.getExternalContext().getRequestParameterMap();
-        setStudyName(params.get("studyname"));
+        String studyname = params.get("studyname");
         this.studyCreator = params.get("username");
-
-        boolean res = studyTeamController.findUserForActiveStudy(studyName, getUsername());
+        return fetchStudy(studyname);
+    }
+    
+    public String fetchStudy(String studyname){
+      setStudyName(studyname);
+      sessionState.setActiveStudyByName(studyName);
+      return checkAccess();
+    }
+    
+    
+    public String checkAccess() {
+        boolean res = studyTeamController.findUserForActiveStudy(studyName,
+        getUsername());
         boolean rec = userGroupsController.checkForCurrentSession(getUsername());
 
         if (!res) {
             if (!rec) {
-                userGroupsController.persistUserGroups(new UsersGroups(new UsersGroupsPK(getUsername(), "GUEST")));
+                userGroupsController.persistUserGroups(new UsersGroups(
+                    new UsersGroupsPK(getUsername(), "GUEST")));
                 logger.log(Level.INFO, "Guest role added for: {0}.", getUsername());
                 return "studyPage";
             }
         }
-
         return "studyPage";
     }
 
-    //Set the study owner as study master in StudyTeam table
-    public void addStudyMaster(String study_name) {
 
-        StudyTeamPK stp = new StudyTeamPK(study_name, getUsername());
-        StudyTeam st = new StudyTeam(stp);
-        st.setTeamRole("Master");
-        st.setTimestamp(new Date());
-
-        try {
-            studyTeamController.persistStudyTeam(st);
-            logger.log(Level.INFO, "{0} - added the study owner as a master.", study.getName());
-        } catch (EJBException ejb) {
-            System.out.println("Add study master failed" + ejb.getMessage());
-            logger.log(Level.SEVERE, "{0} - adding the study owner as a master failed.", ejb.getMessage());
-        }
-
-    }
 
     //add members to a team - bulk persist 
     public synchronized String addToTeam() {
@@ -453,7 +387,7 @@ public class StudyMB implements Serializable {
                 st.setTeamRole(studyTeamEntry.getTeamRole());
                 studyTeamController.persistStudyTeam(st);
                 logger.log(Level.INFO, "{0} - member added to study : {1}.", new Object[]{t.getName(), studyName});
-                activity.addActivity(ActivityController.NEW_MEMBER + t.getName() + " ", studyName, "STUDY");
+                activity.addActivity(ActivityController.NEW_MEMBER + t.getName() + " ", studyName, ActivityController.FLAG_STUDY);
             }
 
             if (!getSelectedUsernames().isEmpty()) {
@@ -485,15 +419,19 @@ public class StudyMB implements Serializable {
     }
 
     public void onTabChange(TabChangeEvent event) {
-        if (event.getTab().getTitle().equals("All")) {
-            setTabIndex(0);
-        } else if (event.getTab().getTitle().equals("Personal")) {
-            setTabIndex(1);
-        } else if (event.getTab().getTitle().equals("Joined")) {
-            setTabIndex(2);
-        } else {
-            //
-        }
+      switch (event.getTab().getTitle()) {
+        case "All":
+          setTabIndex(0);
+          break;
+        case "Personal":
+          setTabIndex(1);
+          break;
+        case "Joined":
+          setTabIndex(2);
+          break;
+        default:
+          break;
+      }
 
     }
 
@@ -506,7 +444,7 @@ public class StudyMB implements Serializable {
         boolean success = false;
         try {
             studyController.removeByName(studyName);
-            activity.addActivity(ActivityController.REMOVED_STUDY, studyName, ActivityController.CTE_FLAG_STUDY);
+            activity.addActivity(ActivityController.REMOVED_STUDY, studyName, ActivityController.FLAG_STUDY);
             if (deleteFilesOnRemove) {
                 String path = File.separator + FileSystemOperations.DIR_ROOT + File.separator + studyName;
                 success = fileOps.rmRecursive(path);
@@ -656,7 +594,7 @@ public class StudyMB implements Serializable {
      * @return true if the study is owned by the user with given email
      */
     public boolean studyOwnedBy(String email) {
-        TrackStudy t = studies.getStudyByName(studyName);
+        TrackStudy t = studyController.findByName(studyName);
         if (t == null) {
             return false;
         } else {
@@ -666,11 +604,52 @@ public class StudyMB implements Serializable {
     
     
     public void test() {
-        try{
-        FlinkRunner.maint();
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        
+//        try{
+//        FlinkRunner.maint();
+//        }catch(Exception e){
+//            e.printStackTrace();
+//        }        
     }
+    
+    
+  public StudyServiceEnum[] getSelectedServices() {
+    List<StudyServiceEnum> services = studyServices.findEnabledServicesForStudy(studyName);
+    StudyServiceEnum[] reArr = new StudyServiceEnum[services.size()];
+    return services.toArray(reArr);
+    /*
+     * Was:
+     * 
+     *     return services.toArray(reArr);
+     * 
+     * But that gave me:
+     * 
+        java.lang.ArrayStoreException
+          at java.lang.System.arraycopy(Native Method)
+          at java.util.Vector.toArray(Vector.java:718)
+          at se.kth.bbc.study.StudyMB.getSelectedServices(StudyMB.java:617)
+     * 
+     * and left me completely puzzled. So a manual array copy :(  
+     * 
+     */
+    /*
+    for(int i=0;i<services.size();i++){
+      reArr[i] = StudyServiceEnum.valueOf(services.get(i));
+    }
+    
+    return reArr;
+*/
+  }
+  
+  public boolean shouldDrawTab(String service){    
+    return studyServices.findEnabledServicesForStudy(studyName).contains(StudyServiceEnum.valueOf(service));
+  }
+  
+  public void setSelectedServices(StudyServiceEnum[] selectedServices){
+    this.selectedServices = selectedServices;
+  }
+  
+  public void updateServices(){
+    studyServices.persistServicesForStudy(studyName, selectedServices);
+  } 
+
 }

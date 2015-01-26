@@ -8,12 +8,11 @@ and open the template in the editor.
 <html xmlns="http://www.w3.org/1999/xhtml"  
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui"
-      >
+      xmlns:p="http://primefaces.org/ui">
     <body>
         <ui:composition>
             <h:form class="stylelayout" id="formToolbar">  
-                <p:toolbar styleClass="MainToolbar">  
+                <p:toolbar styleClass="MainToolbar">
                     <p:toolbarGroup align="left">  
                         <p:commandLink value="BiobankCloud" action="indexPage" rendered="#{peopleStatusBean.loggedIn}"/>
                         <p:commandLink value="BiobankCloud" action="welcome" rendered="#{!peopleStatusBean.loggedIn}"/>

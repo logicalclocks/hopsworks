@@ -14,8 +14,8 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
-import se.kth.bbc.study.StudyMB;
 import se.kth.bbc.fileoperations.FileSystemOperations;
+import se.kth.bbc.lims.ClientSessionState;
 
 /**
  *
@@ -28,18 +28,15 @@ public class InodesMB implements Serializable {
     Inode root;
     Inode cwd;
 
-    @ManagedProperty(value = "#{studyManagedBean}")
-    private StudyMB study;
+    @ManagedProperty(value = "#{clientSessionState}")
+    private ClientSessionState sessionState;
 
     @EJB
     private InodeFacade inodes;
 
-    @EJB
-    private FileSystemOperations fsOps;
-
-    public void setStudy(StudyMB study) {
-        this.study = study;
-    }
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
+  }
 
     private class BadPath extends Exception {
 
@@ -50,15 +47,14 @@ public class InodesMB implements Serializable {
 
     @PostConstruct
     public void init() {
-        //TODO: implement a better way to find inodes that represent root folders
-        root = inodes.findByName(study.getStudyName());
+        root = inodes.getStudyRoot(sessionState.getActiveStudyname());
         cwd = root;
     }
 
     public List<Inode> getChildren() {
         //Because InodesMB is session scoped, need to check for change of study!!!!
         //TODO: implement this more gracefully.
-        if (!cwd.getStudyRoot().equals(study.getStudyName())) {
+        if (!cwd.getStudyRoot().equals(sessionState.getActiveStudyname())) {
             init();
         }
         //get from DB and update Inode
@@ -155,7 +151,7 @@ public class InodesMB implements Serializable {
     public List<NavigationPath> getCurrentPath() {
         //Because InodesMB is session scoped, need to check for change of study!!!!
         //TODO: implement this more gracefully.
-        if (!cwd.getStudyRoot().equals(study.getStudyName())) {
+        if (!cwd.getStudyRoot().equals(sessionState.getActiveStudyname())) {
             init();
         }
         return cwd.getConstituentsPath();
