@@ -47,13 +47,13 @@
                     </p:password>
                     <p:watermark for="password" value="Password" />
 
-                    <p:outputLabel for="otp" value="PIN" style="font-size: 12px; font-weight: bold;"/>
+                    <p:outputLabel for="otp" value="PIN" style="font-size: 12px; font-weight: bold;" rendered="#{customAuthenticationSwitch.otpEnabled}"/>
                     <p:password id="otp" value="#{customAuthentication.otpCode}" required="true"  
                                  requiredMessage="Enter PIN"
-                                validatorMessage="PIN must be 6 digits" >
+                                validatorMessage="PIN must be 6 digits" rendered="#{customAuthenticationSwitch.otpEnabled}">
                         <f:validateLength minimum="6" maximum="6"/> 
                     </p:password>   
-                    <p:watermark for="otp" value="One time mobile password" />
+                    <p:watermark for="otp" value="One time mobile password" rendered="#{customAuthenticationSwitch.otpEnabled}"/>
 
                     <p:messages id="messages" autoUpdate="true" showDetail="false" closable="true"/>
 

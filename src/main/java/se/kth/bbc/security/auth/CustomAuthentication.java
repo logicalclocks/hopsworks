@@ -30,8 +30,12 @@ public class CustomAuthentication implements Serializable {
 
     private static final long serialVersionUID = 1L;
     public static final String ISSUER = "BiobankCloud";
+    // To distinguish Yubikey users
     private final String YUBIKEY_USER_MARKER = "YUBIKEY_USER_MARKER";
-
+    // For disabled OTP auth mode
+    private final String YUBIKEY_OTP_PADDING= "EaS5ksRVErn2jiOmSQy5LM2X7LgWAZWfWYKQoPavbrhN";
+    private final String MOBILE_OTP_PADDING="123456";
+    
     @EJB
     private UserManager mgr;
 
@@ -45,6 +49,7 @@ public class CustomAuthentication implements Serializable {
     private User user;
     private int userid;
 
+    
     public String getUsername() {
         return username;
     }
@@ -68,7 +73,9 @@ public class CustomAuthentication implements Serializable {
     public void setOtpCode(String otpCode) {
         this.otpCode = otpCode;
     }
-
+    
+    
+    
     /**
      * Authenticate the users using two factor mobile authentication.
      *
@@ -87,6 +94,12 @@ public class CustomAuthentication implements Serializable {
         }
         
         user = mgr.getUser(username);
+        
+        
+        // add padding if custom realm is disabled
+        if(this.otpCode== null || this.otpCode.isEmpty()){
+            this.otpCode = MOBILE_OTP_PADDING;
+        }
         
         // return if username is wrong
         if (user == null) {
@@ -171,6 +184,11 @@ public class CustomAuthentication implements Serializable {
         // go to welcome page
         return ("indexPage");
     }
+    
+    
+    public boolean isOTPEnabled () {
+        return true;
+    }
 
      public String yubikeyLogin()
             throws NoSuchAlgorithmException, InvalidKeyException {
@@ -230,7 +248,12 @@ public class CustomAuthentication implements Serializable {
 
         
         userid = user.getUid();
-
+       
+        // add padding if custim realm is disabled
+        if(this.otpCode==null || this.otpCode.isEmpty()){
+            this.otpCode = YUBIKEY_OTP_PADDING;
+        }
+        
         try {
             // concatenate the static password with the otp due to limitations of passing two passwords to glassfish
             req.login(this.username, this.password + this.otpCode + this.YUBIKEY_USER_MARKER);
