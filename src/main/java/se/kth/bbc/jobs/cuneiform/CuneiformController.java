@@ -261,12 +261,7 @@ public class CuneiformController implements Serializable {
     b.appName("Cuneiform " + jobName);
     b.addAmJarToLocalResources(false); // Weird way of hiway working
 
-    String machineUser = System.getProperty("user.name");
-    if (machineUser == null) {
-      machineUser = Constants.DEFAULT_YARN_USER;
-      logger.log(Level.WARNING,
-              "Username not found in system properties, using default \"glassfish\"");
-    }
+    String machineUser = Utils.getYarnUser();
 
     b.localResourcesBasePath("/user/" + machineUser + "/hiway/"
             + YarnRunner.APPID_PLACEHOLDER);

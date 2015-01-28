@@ -31,5 +31,8 @@ public class Constants {
     //Environment variable keys
     public static final String ENV_KEY_YARN_CONF_DIR = "YARN_CONF_DIR";
     public static final String ENV_KEY_HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
+    
+    //Spark constants
+    public static final String SPARK_STAGING_DIR = ".sparkStaging";
    
 }
