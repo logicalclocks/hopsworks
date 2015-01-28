@@ -305,7 +305,7 @@ public class YarnRunner implements Closeable, CancellableJob {
   //---------------------------------------------------------------------------        
   //------------------------- CONSTRUCTOR -------------------------------------
   //---------------------------------------------------------------------------
-  public YarnRunner(Builder builder) {
+  private YarnRunner(Builder builder) {
     this.amJarLocalName = builder.amJarLocalName;
     this.amJarPath = builder.amJarPath;
     this.amQueue = builder.amQueue;

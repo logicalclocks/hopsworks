@@ -56,7 +56,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     return q.getResultList();
   }
 
-  //TODO: check validity of new state
   public void update(Long id, JobState newState) {
     //TODO: check if state is a final one, if so: update execution time
     JobHistory jh = findById(id);

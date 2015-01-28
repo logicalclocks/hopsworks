@@ -87,7 +87,7 @@
                         </h3>
                         <h:panelGrid columns="2">
                             <h:outputLabel value="Current state:" for="curr_state"/>
-                            <h:outputText id="curr_state" value="#{cuneiformController.selectedJob.state}"/>
+                            <h:outputText id="curr_state" value="#{cuneiformController.selectedJob.state}" styleClass="stateSpan"/>
                         </h:panelGrid>
                         <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformController.selectedJobRunning}"/>
 

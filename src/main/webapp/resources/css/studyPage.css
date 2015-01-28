@@ -407,6 +407,13 @@ h1 {
   width: 25%;
 }
 
+.resultsColumn .stateSpan {
+  padding-top: 5px;
+  line-height: 18px;
+  display: inline-block;
+  font-size: 14px;
+}
+
 .workflow-head .targetVars td {
   vertical-align: middle;
 }
