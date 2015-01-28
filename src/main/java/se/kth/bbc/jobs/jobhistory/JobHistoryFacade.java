@@ -30,7 +30,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   private static final Logger logger = Logger.getLogger(JobHistoryFacade.class.
           getName());
 
-  @PersistenceContext(unitName = "kthfsPU")
+  @PersistenceContext(unitName = "hopsPU")
   private EntityManager em;
 
   @EJB

@@ -111,78 +111,7 @@ CREATE TABLE `Inodes` (
 ) ENGINE=InnoDB AUTO_INCREMENT=840 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `Login`
---
 
-DROP TABLE IF EXISTS `Login`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Login` (
-  `loginid` bigint(20) NOT NULL AUTO_INCREMENT,
-  `People_uid` int(10) DEFAULT NULL,
-  `last_login` timestamp NULL DEFAULT NULL,
-  `last_ip` varchar(45) DEFAULT NULL,
-  `os_platform` int(11) DEFAULT NULL,
-  `logout` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`loginid`),
-  KEY `fk_login_people` (`People_uid`),
-  CONSTRAINT `FK_Login_People_uid` FOREIGN KEY (`People_uid`) REFERENCES `People` (`uid`),
-  CONSTRAINT `fk_login_people` FOREIGN KEY (`People_uid`) REFERENCES `People` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `People`
---
-
-DROP TABLE IF EXISTS `People`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `People` (
-  `uid` int(10) NOT NULL DEFAULT '1000',
-  `username` varchar(10) NOT NULL,
-  `password` varchar(128) NOT NULL,
-  `email` varchar(45) DEFAULT NULL,
-  `fname` varchar(30) DEFAULT NULL,
-  `lname` varchar(30) DEFAULT NULL,
-  `activated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `home_org` varchar(100) DEFAULT NULL,
-  `title` varchar(10) DEFAULT NULL,
-  `mobile` varchar(20) DEFAULT NULL,
-  `orcid` varchar(20) DEFAULT NULL,
-  `false_login` int(11) NOT NULL DEFAULT '0',
-  `active` int(11) NOT NULL DEFAULT '-1',
-  `isonline` int(11) NOT NULL DEFAULT '-1',
-  `secret` varchar(20) DEFAULT NULL,
-  `security_question` varchar(20) DEFAULT NULL,
-  `security_answer` varchar(128) DEFAULT NULL,
-  PRIMARY KEY (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `People_Group`
---
-
-DROP TABLE IF EXISTS `People_Group`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `People_Group` (
-  `uid` int(10) NOT NULL,
-  `gid` int(10) NOT NULL,
-  PRIMARY KEY (`uid`,`gid`),
-  KEY `fk_people_has_group_group1` (`gid`),
-  KEY `fk_people_has_groups_people` (`uid`),
-  CONSTRAINT `FK_People_Group_uid` FOREIGN KEY (`uid`) REFERENCES `People` (`uid`),
-  CONSTRAINT `fk_group` FOREIGN KEY (`gid`) REFERENCES `Group` (`gid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `fk_people` FOREIGN KEY (`uid`) REFERENCES `People` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `Roles`
---
 
 DROP TABLE IF EXISTS `Roles`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -430,67 +359,6 @@ CREATE TABLE `StudyTeam` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `USERS`
---
-
-DROP TABLE IF EXISTS `USERS`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `USERS` (
-  `EMAIL` varchar(255) NOT NULL,
-  `MOBILENUM` varchar(255) NOT NULL,
-  `NAME` varchar(255) NOT NULL,
-  `PASSWORD` varchar(128) NOT NULL,
-  `REGISTEREDON` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `SALT` longblob NOT NULL,
-  `STATUS` int(11) NOT NULL,
-  PRIMARY KEY (`EMAIL`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `USERS_GROUPS`
---
-
-DROP TABLE IF EXISTS `USERS_GROUPS`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `USERS_GROUPS` (
-  `email` varchar(255) NOT NULL,
-  `groupname` varchar(64) NOT NULL,
-  PRIMARY KEY (`email`,`groupname`),
-  UNIQUE KEY `UNQ_USERS_GROUPS_0` (`email`,`groupname`),
-  CONSTRAINT `USERS_GROUPS_ibfk_1` FOREIGN KEY (`email`) REFERENCES `USERS` (`EMAIL`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `Yubikey`
---
-
-DROP TABLE IF EXISTS `Yubikey`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Yubikey` (
-  `yubidnum` varchar(45) NOT NULL,
-  `serial` varchar(10) DEFAULT NULL,
-  `version` varchar(15) DEFAULT NULL,
-  `active` tinyint(1) DEFAULT NULL,
-  `notes` varchar(100) DEFAULT NULL,
-  `counter` int(11) DEFAULT NULL,
-  `low` int(11) DEFAULT NULL,
-  `high` int(11) DEFAULT NULL,
-  `session_use` int(11) DEFAULT NULL,
-  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `aes_secret` varchar(100) DEFAULT NULL,
-  `public_id` varchar(40) DEFAULT NULL,
-  `People_uid` int(10) DEFAULT NULL,
-  PRIMARY KEY (`yubidnum`),
-  KEY `fk_Yubikey_People_idx` (`People_uid`),
-  CONSTRAINT `fk_Yubikey_People1` FOREIGN KEY (`People_uid`) REFERENCES `People` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `activity`
@@ -673,18 +541,6 @@ CREATE TABLE `study_services` (
 -- Temporary view structure for view `v_People_Group`
 --
 
-DROP TABLE IF EXISTS `v_People_Group`;
-/*!50001 DROP VIEW IF EXISTS `v_People_Group`*/;
-SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8;
-/*!50001 CREATE VIEW `v_People_Group` AS SELECT 
- 1 AS `username`,
- 1 AS `password`,
- 1 AS `secret`,
- 1 AS `email`,
- 1 AS `group_name`*/;
-SET character_set_client = @saved_cs_client;
-
 --
 -- Final view structure for view `StudyDetails`
 --
@@ -747,5 +603,16 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+
+DROP VIEW IF EXISTS `StudyDetails`
+DROP VIEW IF EXISTS `activitydetails`
+
+CREATE  VIEW `StudyDetails` AS select `study`.`name` AS `studyName`,`study`.`username` AS `email`,`USERS`.`NAME` AS `creator` from (`study` join `USERS` on((`study`.`u\
+sername` = `USERS`.`EMAIL`))) where `study`.`name` in (select `StudyTeam`.`name` from `StudyTeam`) 
+
+CREATE VIEW `activitydetails` AS select `activity`.`id` AS `id`,`activity`.`performed_By` AS `performed_by_email`,`USERS`.`NAME` AS `performed_by_name`,`activity`.`ac\
+tivity` AS `description`,`activity`.`activity_on` AS `studyname`,`activity`.`timestamp` AS `timestamp` from (`activity` join `USERS` on((`activity`.`performed_By` = `USERS`.`EMAIL`)))
+
 
 -- Dump completed on 2015-01-21 15:44:33

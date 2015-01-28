@@ -43,7 +43,7 @@
                 <div class="register_actions" align="center">
                     <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{resetPassword.changePassword()}">
                     </p:commandButton>
-                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this"/>
+                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="#{resetPassword.logout()}" process="@this"/>
                 </div>
             </div>
         </h:form>

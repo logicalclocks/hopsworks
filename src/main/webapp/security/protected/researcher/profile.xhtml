@@ -73,13 +73,12 @@
                                            />					
                             <p:selectOneMenu id="title" value="#{profileManager.user.title}" >
                                 <f:selectItem itemValue="" itemLabel="Select Title" />
+                                <f:selectItem itemValue="Miss" itemLabel="Miss" />
                                 <f:selectItem itemValue="Mrs" itemLabel="Mrs" />
                                 <f:selectItem itemValue="MS" itemLabel="MS" />
-                                <f:selectItem itemValue="Miss" itemLabel="Miss" />
                                 <f:selectItem itemValue="Mr" itemLabel="Mr" />
-                                <f:selectItem itemValue="Prof" itemLabel="Prof" />
                                 <f:selectItem itemValue="Dr" itemLabel="Dr" />
-
+                                <f:selectItem itemValue="Prof" itemLabel="Prof" />
                             </p:selectOneMenu>             
                             <p:spacer></p:spacer>
 
@@ -176,7 +175,7 @@
                         <div class="register_banner">
                         <p:commandButton  type="submit" id="mysub" value="Save" 
                                           actionListener="#{profileManager.updateUser()}"/> 
-                        <p:commandButton type="submit" value="Cancel" action="indexPage"  />
+                        <p:commandButton type="submit" value="Back" action="indexPage"  />
                         </div>
                     </h:form>                            
                 </p:layoutUnit>

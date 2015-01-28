@@ -165,16 +165,21 @@
           </auth-constraint>
     </security-constraint>
     
-          
+ 
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>Viewpoint Secure URLs</web-resource-name>
             <url-pattern>/*</url-pattern>
         </web-resource-collection>
-        <user-data-constraint>
+<!-- 
+ To be enabled in the production for https connections                
+      
+             <user-data-constraint>
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
         </user-data-constraint>
-    </security-constraint>
+-->    
+</security-constraint>
+    
     <login-config>
         <auth-method>BASIC</auth-method>
         <realm-name>CauthRealm</realm-name>

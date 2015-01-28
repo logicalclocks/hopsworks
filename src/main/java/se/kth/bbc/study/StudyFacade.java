@@ -20,7 +20,7 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
   
     private static final Logger logger = Logger.getLogger(StudyFacade.class.getName());
 
-    @PersistenceContext(unitName = "kthfsPU")
+    @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
 
     @Override

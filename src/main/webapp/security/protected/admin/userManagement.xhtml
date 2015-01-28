@@ -74,13 +74,10 @@
                                     </h:form>   
                                 </p:tab>                 
 
-
-
                                 <p:tab title="Mobile Request" id="requests">
                                     <h:form id="reqdataForm">
                                         <p:dataTable id="userReqTable" var="req" value="#{peopleAministration.allRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
                                                      rowKey="#{req.email}" selection="#{peopleAministration.selectedUsers}" editable="true" editMode="cell">
-
 
                                             <p:column selectionMode="multiple" style="width:10px;" disabledSelection="false"/>
 
@@ -121,7 +118,6 @@
                                             <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
                                             <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
                                         </p:confirmDialog>
-
 
                                     </h:form>
                                 </p:tab>
@@ -171,8 +167,6 @@
                                             <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
                                             <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
                                         </p:confirmDialog>
-
-
                                     </h:form>
                                 </p:tab>
 

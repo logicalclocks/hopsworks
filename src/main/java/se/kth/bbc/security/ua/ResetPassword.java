@@ -363,5 +363,14 @@ public class ResetPassword implements Serializable {
             return ("");
         }
     }
+    
+   public String logout() {
+        // logout user
+         FacesContext context = FacesContext.getCurrentInstance();
+         HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
+         session.invalidate();
+         return ("welcome");
+   }
+    
 
 }
