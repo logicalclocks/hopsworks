@@ -99,10 +99,8 @@ public class AuthBackingBean {
         userGroupsController.clearGroups(principal.getName());
                 
         
-        if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER") || request.isUserInRole("ADMIN")) {
+        if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER") || request.isUserInRole("ADMIN") || request.isUserInRole("USER")) {
             return "/bbc/lims/index.xml?faces-redirect=true";
-//        } else if (request.isUserInRole("ADMIN")) {
-//            return "/sauron/clusters.xml?faces-redirect=true";
         }
         return "/view.xml";
     }

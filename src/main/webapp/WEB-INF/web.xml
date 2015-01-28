@@ -87,6 +87,9 @@
     <security-role>
         <role-name>BBC_GUEST</role-name>
     </security-role>
+    <security-role>
+        <role-name>USER</role-name>
+    </security-role>
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>Secured Content for agents sending alerts data</web-resource-name>
@@ -107,6 +110,7 @@
             <role-name>BBC_RESEARCHER</role-name>
             <role-name>BBC_GUEST</role-name>
             <role-name>ADMIN</role-name>
+            <role-name>USER</role-name>
         </auth-constraint>
     </security-constraint>
     <security-constraint>
@@ -118,6 +122,7 @@
             <role-name>BBC_ADMIN</role-name>
             <role-name>BBC_RESEARCHER</role-name>
             <role-name>ADMIN</role-name>
+            <role-name>USER</role-name>
         </auth-constraint>
     </security-constraint>
     <security-constraint>
@@ -167,17 +172,4 @@
         <filter-name>PrimeFaces FileUpload Filter</filter-name>
         <servlet-name>Faces Servlet</servlet-name>
     </filter-mapping>
-    <!-- To upload from pages with pretty URL!-->
-    <!--    <filter-mapping>
-        <filter-name>PrimeFaces FileUpload Filter</filter-name>
-        <url-pattern>/*</url-pattern>     
-    </filter-mapping>  -->
-    <!--PrettyFaces: ONLY Development Mode: disable the default caching mechanism -->
-    <!--   <context-param>
-       <param-name>org.ocpsoft.rewrite.config.CONFIG_RELOADING</param-name>
-       <param-value>true</param-value>
-    </context-param>    -->
-    <!--        <welcome-file-list>
-		<welcome-file>upload.html</welcome-file>
-	</welcome-file-list>-->
 </web-app>
