@@ -1,27 +1,164 @@
 package se.kth.bbc.jobs.spark;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.ViewScoped;
+import org.primefaces.event.FileUploadEvent;
+import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.AsynchronousJobExecutor;
+import se.kth.bbc.jobs.JobController;
+import se.kth.bbc.jobs.jobhistory.JobHistory;
+import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.JobState;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnRunner;
+import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.Constants;
+import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
 
 /**
  *
  * @author stig
  */
-public class SparkController {
-  
-  
-  public void startJob(){
+@ManagedBean
+@ViewScoped
+public class SparkController implements Serializable {
+
+  private static final Logger logger = Logger.getLogger(
+          SparkController.class.getName());
+  private static final String KEY_APP_JAR = "APPJAR";
+
+  //Variables for new job
+  private String jobName, mainClass, args, appJarName;
+
+  //Used to track job that was last executed (or selected)
+  private Long jobhistoryid;
+  private final JobController jc = new JobController();
+
+  @ManagedProperty(value = "#{clientSessionState}")
+  private ClientSessionState sessionState;
+
+  @EJB
+  private AsynchronousJobExecutor submitter;
+
+  @EJB
+  private JobHistoryFacade history;
+
+  @EJB
+  private FileOperations fops;
+
+  @EJB
+  private StagingManager stagingManager;
+
+  public String getJobName() {
+    return jobName;
+  }
+
+  public void setJobName(String jobName) {
+    this.jobName = jobName;
+  }
+
+  public String getMainClass() {
+    return mainClass;
+  }
+
+  public void setMainClass(String mainClass) {
+    this.mainClass = mainClass;
+  }
+
+  public String getArgs() {
+    return args;
+  }
+
+  public void setArgs(String args) {
+    this.args = args;
+  }
+
+  public String getAppJarName() {
+    return appJarName;
+  }
+
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
+  }
+
+  @PostConstruct
+  public void init() {
+    try {
+      String path = stagingManager.getStagingPath() + File.separator
+              + sessionState.getLoggedInUsername() + File.separator
+              + sessionState.getActiveStudyname();
+      jc.setBasePath(path);
+    } catch (IOException c) {
+      logger.log(Level.SEVERE,
+              "Failed to initialize staging folder for uploading.", c);
+      MessagesController.addErrorMessage(
+              "Failed to initialize Yarn controller. Running Yarn jobs will not work.");
+    }
+  }
+
+  public void appJarUpload(FileUploadEvent event) {
+    try {
+      jc.clearFiles();
+      jc.clearVariables();
+      jc.handleFileUpload(KEY_APP_JAR, event);
+    } catch (IllegalStateException e) {
+      MessagesController.addErrorMessage("Failed to upload app jar "
+              + event.getFile().getFileName());
+      logger.log(Level.SEVERE,
+              "Illegal state in jobController while trying to upload app jar.",
+              e);
+      return;
+    }
+    appJarName = event.getFile().getFileName();
+  }
+
+  public boolean isSelectedJobRunning() {
+    if (jobhistoryid == null) {
+      return false;
+    } else {
+      return !jobHasFinishedState();
+    }
+  }
+
+  public JobHistory getSelectedJob() {
+    if (jobhistoryid == null) {
+      return null;
+    } else {
+      return history.findById(jobhistoryid);
+    }
+  }
+
+  public String getPushChannel() {
+    return "/" + sessionState.getActiveStudyname() + "/" + JobType.SPARK;
+  }
+
+  private boolean jobHasFinishedState() {
+    JobState state = history.getState(jobhistoryid);
+    if (state == null) {
+      return true;
+    }
+    return state.isFinalState();
+  }
+
+  public void startJob() {
+    if (jobName == null || jobName.isEmpty()) {
+      jobName = "Untitled Spark job";
+    }
+
     YarnRunner.Builder builder = new YarnRunner.Builder(Constants.SPARK_AM_MAIN);
-    String appJarPath = "";
-    String sparkJarPath = "";
-    String userClass="";
-    String userJar="";
-    String userArgs = "";
-    Map<String,String> extraFiles = new HashMap<>();
+    Map<String, String> extraFiles = new HashMap<>();
 
     //Spark staging directory
     String stagingPath = File.separator + "user" + File.separator + Utils.
@@ -29,35 +166,75 @@ public class SparkController {
             + File.separator + YarnRunner.APPID_PLACEHOLDER;
 
     builder.localResourcesBasePath(stagingPath);
-    
+
     //Add app and spark jar
     //TODO: check if you can remove these?
-    builder.addLocalResource(Constants.SPARK_LOCRSC_SPARK_JAR, sparkJarPath);
-    builder.addLocalResource(Constants.SPARK_LOCRSC_APP_JAR, appJarPath);
+    builder.addLocalResource(Constants.SPARK_LOCRSC_SPARK_JAR,
+            Constants.DEFAULT_SPARK_JAR_PATH);
+    builder.addLocalResource(Constants.SPARK_LOCRSC_APP_JAR, jc.getFilePath(
+            KEY_APP_JAR));
     //TODO: check if env variables need to be added (see ClientDistributedCacheManager.scala)
-    
+
     //Add extra files to local resources, as key: use filename
-    for(Map.Entry<String,String> k:extraFiles.entrySet()){
+    for (Map.Entry<String, String> k : extraFiles.entrySet()) {
       builder.addLocalResource(k.getKey(), k.getValue());
     }
-    
-    //TODO: add to classpath: spark jar, user specified jars, user specified jar, extra classes from conf file
+
+    //TODO: add to classpath: spark jar, user specified jars, extra classes from conf file
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
     builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
     //TODO: add local resources to env
     //TODO: add env vars from sparkconf to path
-    
+
     //TODO add java options from spark config (or not...)
-    
-    builder.amArgs("--class "+userClass+" --jar "+userJar+" --arg "+userArgs);
-    //TODO: add options: --executor-memory, --executor-cors, --num-executors
-    
-    //TODO: set app name
-    //TODO: set queue
-    //TODO: set application type (?)
+    StringBuilder amargs = new StringBuilder("--class ");
+    amargs.append(mainClass);
+    if (args != null && !args.isEmpty()) {
+      amargs.append(" --arg ");
+      amargs.append(args);
+    }
+    amargs.append(" --num-executors 1 ");
+    amargs.append(" --executor-cores 1 ");
+    amargs.append(" --executor-memory 512m");
+    builder.amArgs(amargs.toString());
+
+    builder.appName(jobName);
     //And that should be it!
-    //TODO: make SparkJob with this YarnRunner
-    //TODO: run SparkJob
+
+    YarnRunner r;
+    try {
+      r = builder.build();
+    } catch (IOException e) {
+      logger.log(Level.SEVERE,
+              "Unable to create temp directory for logs. Aborting execution.",
+              e);
+      MessagesController.addErrorMessage("Failed to start Yarn client.");
+      return;
+    }
+
+    SparkJob job = new SparkJob(history, r, fops);
+
+    jobhistoryid = job.requestJobId(jobName, sessionState.getLoggedInUsername(),
+            sessionState.getActiveStudyname(), JobType.SPARK);
+    if (jobhistoryid != null) {
+      String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
+              getActiveStudyname())
+              + Constants.SPARK_DEFAULT_OUTPUT_PATH + jobhistoryid
+              + File.separator + "stdout.log";
+      String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
+              getActiveStudyname())
+              + Constants.SPARK_DEFAULT_OUTPUT_PATH + jobhistoryid
+              + File.separator + "stderr.log";
+      job.setStdOutFinalDestination(stdOutFinalDestination);
+      job.setStdErrFinalDestination(stdErrFinalDestination);
+      submitter.startExecution(job);
+      MessagesController.addInfoMessage("Job submitted!");
+    } else {
+      logger.log(Level.SEVERE,
+              "Failed to persist JobHistory. Aborting execution.");
+      MessagesController.addErrorMessage(
+              "Failed to write job history. Aborting execution.");
+    }
   }
 }

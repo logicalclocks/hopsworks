@@ -239,7 +239,7 @@ public class CuneiformController implements Serializable {
   public void startWorkflow() {
 //TODO: fix state if starting fails
     if (jobName == null || jobName.isEmpty()) {
-      jobName = "Untitled job";
+      jobName = "Untitled Cuneiform job";
     }
     try {
       prepWorkflowFile();

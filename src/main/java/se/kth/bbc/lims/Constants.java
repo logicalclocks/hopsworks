@@ -37,5 +37,7 @@ public class Constants {
     public static final String SPARK_LOCRSC_SPARK_JAR = "__spark__.jar";
     public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
     public static final String SPARK_AM_MAIN = "org.apache.spark.deploy.yarn.ApplicationMaster";
+    public static final String DEFAULT_SPARK_JAR_PATH = "/srv/spark/spark.jar";
+    public static final String SPARK_DEFAULT_OUTPUT_PATH = "Spark/Output/";
    
 }
