@@ -31,10 +31,8 @@
                     <p:inputText id="uname" value="#{customAuthentication.username}" 
                                  required="true" 
                                  autocomplete="on"
-                                 validatorMessage="Email is not valid format"
                                  requiredMessage="Enter Email"
                                  >
-                        <f:validateRegex pattern="[\w\.-]*[a-zA-Z0-9_]@[\w\.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z\.]*[a-zA-Z]" />
                     </p:inputText>
                     <p:watermark for="uname" value="Email" />
 

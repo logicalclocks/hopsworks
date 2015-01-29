@@ -31,11 +31,7 @@
                 <h:panelGrid columns="1"> 
                     <p:outputLabel for="uname" value="Username" style="font-size: 12px; font-weight: bold;"/>
                     <p:inputText id="uname" value="#{customAuthentication.username}" required="true" 
-                                           requiredMessage="Enter Email"
-                        validatorMessage="Email is not valid format" >
-                      
-                        <f:validateRegex pattern="[\w\.-]*[a-zA-Z0-9_]@[\w\.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z\.]*[a-zA-Z]" />
-                    
+                                           requiredMessage="Enter Email">
                     </p:inputText>   
                     <p:watermark for="uname" value="Email" />
 
