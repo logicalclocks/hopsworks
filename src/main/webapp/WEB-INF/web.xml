@@ -10,7 +10,7 @@
     </context-param>
     <context-param>
         <param-name>javax.faces.PROJECT_STAGE</param-name>
-                <param-value>Development</param-value>
+                <param-value>PRODUCTION</param-value>
     </context-param>
     <context-param>
         <param-name>com.sun.faces.verifyObjects</param-name>
@@ -174,11 +174,11 @@
 <!-- 
  To be enabled in the production for https connections                
       
-             <user-data-constraint>
-            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint>
--->    
-</security-constraint>
+                     <user-data-constraint>
+                    <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+                </user-data-constraint>
+        -->    
+    </security-constraint>
     
     <login-config>
         <auth-method>BASIC</auth-method>
@@ -231,6 +231,6 @@
        <param-value>true</param-value>
     </context-param>    -->
     <!--        <welcome-file-list>
-		<welcome-file>upload.html</welcome-file>
-	</welcome-file-list>-->
+            <welcome-file>upload.html</welcome-file>
+    </welcome-file-list>-->
 </web-app>
