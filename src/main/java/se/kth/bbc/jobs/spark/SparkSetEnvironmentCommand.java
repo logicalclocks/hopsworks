@@ -16,7 +16,12 @@ import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.jobs.yarn.YarnSetupCommand;
 
 /**
- *
+ * Extra command to be executed before submitting a Spark job to Yarn. It sets
+ * environment variables pointing out the local resources so that Spark
+ * executors can access them. It may actually be possible to do this by setting
+ * just environment variables (in SparkController.java). However, moving it here
+ * keeps that code a bit cleaner.
+ * <p>
  * @author stig
  */
 public final class SparkSetEnvironmentCommand extends YarnSetupCommand {
@@ -93,7 +98,8 @@ public final class SparkSetEnvironmentCommand extends YarnSetupCommand {
                       archiveVisibilities.length() - 1));
     }
     ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
-            launchContext.getLocalResources(), env, launchContext.getCommands(), null, null, null);
+            launchContext.getLocalResources(), env, launchContext.getCommands(),
+            null, null, null);
     appContext.setAMContainerSpec(amContainer);
   }
 

@@ -2,6 +2,7 @@ package se.kth.bbc.jobs.spark;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +14,8 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.primefaces.event.FileUploadEvent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.JobController;
@@ -28,7 +31,10 @@ import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
 
 /**
- * Written for Spark 1.2
+ * Written for Spark 1.2. If the internals of running Spark on Yarn change,
+ * this class may break since it sets environment variables and writes
+ * LocalResources that have specific names.
+ * <p>
  * @author stig
  */
 @ManagedBean
@@ -132,6 +138,14 @@ public class SparkController implements Serializable {
     }
   }
 
+  public boolean isSelectedJobHasFinished() {
+    if (jobhistoryid == null) {
+      return false;
+    } else {
+      return jobHasFinishedState();
+    }
+  }
+
   public JobHistory getSelectedJob() {
     if (jobhistoryid == null) {
       return null;
@@ -151,6 +165,53 @@ public class SparkController implements Serializable {
     }
     return state.isFinalState();
   }
+  
+  //TODO: move download methods to JobHistoryController
+  public StreamedContent downloadStdout() {
+    JobHistory jh = getSelectedJob();
+    if(jh == null){
+      return null;
+    }
+    String stdoutPath = jh.getStdoutPath();
+    try {
+      String filename = "stdout.log";
+      return downloadFile(stdoutPath, filename);
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, "Failed to download stdout. JobId: "
+              + jobhistoryid + ", path: " + stdoutPath, ex);
+      MessagesController.addErrorMessage(MessagesController.ERROR,
+              "Download failed.");
+    }
+    return null;
+  }
+
+  public StreamedContent downloadStderr() {
+    JobHistory jh = getSelectedJob();
+    if(jh == null){
+      return null;
+    }
+    String stderrPath = jh.getStderrPath();
+    String filename = "stderr.log";
+    try {
+      return downloadFile(stderrPath, filename);
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, "Failed to download stderr. JobId: "
+              + jobhistoryid + ", path: " + stderrPath, ex);
+      MessagesController.addErrorMessage("Download failed.");
+    }
+    return null;
+  }
+  
+  private StreamedContent downloadFile(String path,
+          String filename) throws IOException {
+    InputStream is = fops.getInputStream(path);
+    StreamedContent sc = new DefaultStreamedContent(is, Utils.getMimeType(
+            filename),
+            filename);
+    logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
+            path);
+    return sc;
+  }
 
   public void startJob() {
     if (jobName == null || jobName.isEmpty()) {
@@ -168,12 +229,11 @@ public class SparkController implements Serializable {
     builder.localResourcesBasePath(stagingPath);
 
     //Add app and spark jar
-    //TODO: check if you can remove these?
     builder.addLocalResource(Constants.SPARK_LOCRSC_SPARK_JAR,
             Constants.DEFAULT_SPARK_JAR_PATH);
     builder.addLocalResource(Constants.SPARK_LOCRSC_APP_JAR, jc.getFilePath(
             KEY_APP_JAR));
-    
+
     //Add extra files to local resources, as key: use filename
     for (Map.Entry<String, String> k : extraFiles.entrySet()) {
       builder.addLocalResource(k.getKey(), k.getValue());
@@ -183,13 +243,13 @@ public class SparkController implements Serializable {
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
     builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
-    builder.addToAppMasterEnvironment("CLASSPATH", "/srv/spark/conf:/srv/spark/lib/spark-assembly-1.2.0-hadoop2.4.0.jar:/srv/spark/lib/datanucleus-core-3.2.10.jar:/srv/spark/lib/datanucleus-api-jdo-3.2.6.jar:/srv/spark/lib/datanucleus-rdbms-3.2.9.jar");
+    builder.addToAppMasterEnvironment("CLASSPATH",
+            "/srv/spark/conf:/srv/spark/lib/spark-assembly-1.2.0-hadoop2.4.0.jar:/srv/spark/lib/datanucleus-core-3.2.10.jar:/srv/spark/lib/datanucleus-api-jdo-3.2.6.jar:/srv/spark/lib/datanucleus-rdbms-3.2.9.jar");
 
     //Add local resources to spark environment too
     builder.addCommand(new SparkSetEnvironmentCommand());
-    
-    //TODO: add env vars from sparkconf to path
 
+    //TODO: add env vars from sparkconf to path
     //TODO add java options from spark config (or not...)
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);

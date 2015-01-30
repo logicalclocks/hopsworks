@@ -48,6 +48,7 @@ public final class SparkJob extends YarnJob {
     if (!proceed) {
       return;
     }
+    super.copyLogs();
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
     try {

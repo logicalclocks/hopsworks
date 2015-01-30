@@ -43,10 +43,10 @@
 
                                     <h:outputLabel value="Uploaded file"/>
                                     <h:outputLabel value="#{sparkController.appJarName==null ? 'No file uploaded yet' : sparkController.appJarName}"/>
-                                
+
                                     <h:outputLabel value="Main class name" for="sparkMC"/>
                                     <h:inputText id="sparkMC" value="#{sparkController.mainClass}"/>
-                                    
+
                                     <h:outputLabel value="Arguments" for="sparkArgs"/>
                                     <h:inputText id="sparkArgs" value="#{sparkController.args}"/>
                                 </h:panelGrid>
@@ -67,6 +67,23 @@
                             <h:outputText id="spark_curr_state" value="#{sparkController.selectedJob.state}" styleClass="stateSpan"/>
                         </h:panelGrid>
                         <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{sparkController.selectedJobRunning}"/>
+                        <h:panelGroup rendered="#{sparkController.selectedJobHasFinished}" >
+                            <div>
+                                <h:outputText value="Logs:"/>
+                            </div>
+                            <div>
+                                <p:commandLink ajax="false">
+                                    <strong>stdout.log</strong>
+                                    <p:fileDownload value="#{sparkController.downloadStdout()}" rendered="#{sparkController.selectedJob.stdoutPath != null}"/>
+                                </p:commandLink>
+                            </div>
+                            <div>
+                                <p:commandLink ajax="false">
+                                    <strong>stderr.log</strong>
+                                    <p:fileDownload value="#{sparkController.downloadStderr()}" rendered="#{sparkController.selectedJob.stderrPath != null}"/>
+                                </p:commandLink>
+                            </div>
+                        </h:panelGroup>
                     </h:form>
                     <!-- primefaces push -->
                     <p:socket channel="#{sparkController.pushChannel}">
