@@ -71,6 +71,10 @@ public class YarnRunner implements Closeable, CancellableJob {
   private final boolean shouldCopyAmJarToLocalResources;
   private final List<String> filesToBeCopied;
   private final boolean logPathsAreHdfs;
+  private final List<YarnSetupCommand> commands;
+  
+  private boolean readyToSubmit = false;
+  private ApplicationSubmissionContext appContext;
 
   //---------------------------------------------------------------------------
   //-------------- CORE METHOD: START APPLICATION MASTER ----------------------
@@ -98,8 +102,7 @@ public class YarnRunner implements Closeable, CancellableJob {
     checkAmResourceRequest(appResponse);
 
     //Set application name and type
-    ApplicationSubmissionContext appContext = app.
-            getApplicationSubmissionContext();
+    appContext = app.getApplicationSubmissionContext();
     appContext.setApplicationName(appName);
     appContext.setApplicationType("Hops Yarn");
 
@@ -115,17 +118,25 @@ public class YarnRunner implements Closeable, CancellableJob {
     setUpClassPath(env);
 
     //Set up commands
-    List<String> commands = setUpCommands();
+    List<String> amCommands = setUpCommands();
 
     //TODO: set up security tokens
     //Set up container launch context
     ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
-            localResources, env, commands, null, null, null);
+            localResources, env, amCommands, null, null, null);
 
     //Finally set up context
     appContext.setAMContainerSpec(amContainer); //container spec
     appContext.setResource(Resource.newInstance(amMemory, amVCores)); //resources
     appContext.setQueue(amQueue); //Queue
+    
+    // Signify that ready to submit
+    readyToSubmit = true;
+    
+    //Run any remaining commands
+    for(YarnSetupCommand c: commands){
+      c.execute(this);
+    }
 
     //And submit
     logger.
@@ -136,6 +147,23 @@ public class YarnRunner implements Closeable, CancellableJob {
     return appId;
   }
 
+  //---------------------------------------------------------------------------
+  //-------------------- APPLICATIONSUBMISSIONCONTEXT -------------------------
+  //---------------------------------------------------------------------------
+  
+  /**
+   * Get the ApplicationSubmissoinContext used to submit the app. This method
+   * should only be called from registered Commands. Invoking it before the 
+   * ApplicationSubmissionContext is properly set up will result in an IllegalStateException.
+   * @return 
+   */
+  public ApplicationSubmissionContext getAppContext(){
+    if(!readyToSubmit){
+      throw new IllegalStateException("ApplicationSubmissionContext cannot be requested before it is set up.");
+    }
+    return appContext;
+  }
+  
   //---------------------------------------------------------------------------
   //------------------------- UTILITY METHODS ---------------------------------
   //---------------------------------------------------------------------------
@@ -325,6 +353,7 @@ public class YarnRunner implements Closeable, CancellableJob {
     this.logPathsAreHdfs = builder.logPathsAreRelativeToResources;
     this.stdOutPath = builder.stdOutPath;
     this.stdErrPath = builder.stdErrPath;
+    this.commands = builder.commands;
   }
 
   //---------------------------------------------------------------------------
@@ -403,6 +432,8 @@ public class YarnRunner implements Closeable, CancellableJob {
     private boolean shouldAddAmJarToLocalResources = true;
     //List of files to be copied to localResourcesBasePath
     private List<String> filesToBeCopied = new ArrayList<>();
+    //List of commands to execute before submission
+    private List<YarnSetupCommand> commands = new ArrayList<>();
 
     //Hadoop Configuration
     private Configuration conf;
@@ -550,6 +581,18 @@ public class YarnRunner implements Closeable, CancellableJob {
         this.amEnvironment = new HashMap<>();
       }
       amEnvironment.putAll(env);
+      return this;
+    }
+    
+    /**
+     * Add a Command that should be executed before submission of the
+     * application to the ResourceManager. The commands will be executed in
+     * order of addition.
+     * @param c
+     * @return 
+     */
+    public Builder addCommand(YarnSetupCommand c){
+      commands.add(c);
       return this;
     }
 
@@ -726,5 +769,17 @@ public class YarnRunner implements Closeable, CancellableJob {
     }
 
   }
-
+  
+  //---------------------------------------------------------------------------        
+  //---------------------------- TOSTRING -------------------------------------
+  //---------------------------------------------------------------------------
+  
+  @Override
+  public String toString(){
+    if(!readyToSubmit){
+      return "YarnRunner: application context not requested yet.";
+    }else{
+      return "YarnRunner, ApplicationSubmissionContext: "+appContext;
+    }
+  }
 }
