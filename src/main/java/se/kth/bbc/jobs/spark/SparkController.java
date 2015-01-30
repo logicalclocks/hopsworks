@@ -184,19 +184,21 @@ public class SparkController implements Serializable {
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
     builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
-    //TODO: add local resources to env
+    builder.addToAppMasterEnvironment("CLASSPATH", "/srv/spark/conf:/srv/spark/lib/spark-assembly-1.2.0-hadoop2.4.0.jar:/srv/spark/lib/datanucleus-core-3.2.10.jar:/srv/spark/lib/datanucleus-api-jdo-3.2.6.jar:/srv/spark/lib/datanucleus-rdbms-3.2.9.jar");
+
+//TODO: add local resources to env
     //TODO: add env vars from sparkconf to path
 
     //TODO add java options from spark config (or not...)
     StringBuilder amargs = new StringBuilder("--class ");
     amargs.append(mainClass);
+    amargs.append(" --num-executors 1 ");
+    amargs.append(" --executor-cores 1 ");
+    amargs.append(" --executor-memory 512m");
     if (args != null && !args.isEmpty()) {
       amargs.append(" --arg ");
       amargs.append(args);
     }
-    amargs.append(" --num-executors 1 ");
-    amargs.append(" --executor-cores 1 ");
-    amargs.append(" --executor-memory 512m");
     builder.amArgs(amargs.toString());
 
     builder.appName(jobName);
