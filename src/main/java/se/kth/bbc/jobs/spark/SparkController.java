@@ -28,7 +28,7 @@ import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
 
 /**
- *
+ * Written for Spark 1.2
  * @author stig
  */
 @ManagedBean
@@ -173,20 +173,21 @@ public class SparkController implements Serializable {
             Constants.DEFAULT_SPARK_JAR_PATH);
     builder.addLocalResource(Constants.SPARK_LOCRSC_APP_JAR, jc.getFilePath(
             KEY_APP_JAR));
-    //TODO: check if env variables need to be added (see ClientDistributedCacheManager.scala)
-
+    
     //Add extra files to local resources, as key: use filename
     for (Map.Entry<String, String> k : extraFiles.entrySet()) {
       builder.addLocalResource(k.getKey(), k.getValue());
     }
 
-    //TODO: add to classpath: spark jar, user specified jars, extra classes from conf file
+    //TODO: add to classpath: user specified jars, extra classes from conf file
     builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
     builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
     builder.addToAppMasterEnvironment("CLASSPATH", "/srv/spark/conf:/srv/spark/lib/spark-assembly-1.2.0-hadoop2.4.0.jar:/srv/spark/lib/datanucleus-core-3.2.10.jar:/srv/spark/lib/datanucleus-api-jdo-3.2.6.jar:/srv/spark/lib/datanucleus-rdbms-3.2.9.jar");
 
-//TODO: add local resources to env
+    //Add local resources to spark environment too
+    builder.addCommand(new SparkSetEnvironmentCommand());
+    
     //TODO: add env vars from sparkconf to path
 
     //TODO add java options from spark config (or not...)

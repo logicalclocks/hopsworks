@@ -296,9 +296,9 @@ public class YarnRunner implements Closeable, CancellableJob {
     }
     logger.log(Level.INFO, "Completed setting up app master command: {0}",
             amcommand.toString());
-    List<String> commands = new ArrayList<>();
-    commands.add(amcommand.toString());
-    return commands;
+    List<String> amCommands = new ArrayList<>();
+    amCommands.add(amcommand.toString());
+    return amCommands;
   }
 
   //---------------------------------------------------------------------------        
