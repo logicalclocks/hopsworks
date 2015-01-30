@@ -38,7 +38,7 @@
                                     <h:outputLabel value="Upload job jar" for="sparkAppUploader"/>
                                     <p:fileUpload required="true" auto="true" multiple="false" 
                                                   label="Upload" mode="advanced" allowTypes="/(\.|\/)(jar)$/" 
-                                                  fileUploadListener="#{sparkController.appJarUpload}" 
+                                                  fileUploadListener="#{sparkController.uploadMainFile}" 
                                                   update="@form" id="sparkAppUploader" process="@form"/>
 
                                     <h:outputLabel value="Uploaded file"/>
