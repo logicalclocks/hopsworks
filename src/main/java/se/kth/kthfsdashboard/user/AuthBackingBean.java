@@ -70,7 +70,7 @@ public class AuthBackingBean {
         /////////////////////////
         // TODO: probably remove from here
         Username user = userFacade.findByEmail(username);
-        if (user.getStatus() == Username.STATUS_REQUEST) {
+       if (user != null && user.getStatus() == Username.STATUS_REQUEST) {
             FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fail", "Your request has not yet been acknowlegded.");
             context.addMessage("loginFail", msg);
             context.getExternalContext().getFlash().setKeepMessages(true);
