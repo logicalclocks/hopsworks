@@ -122,6 +122,9 @@ public final class SparkController extends JobController {
   }
 
   public void startJob() {
+    if (jobName == null || jobName.isEmpty()) {
+      jobName = "Untitled Spark Job";
+    }
     SparkYarnRunnerBuilder runnerbuilder = new SparkYarnRunnerBuilder(getMainFilePath(), mainClass);
     runnerbuilder.setJobName(jobName);
     runnerbuilder.setJobArgs(args);

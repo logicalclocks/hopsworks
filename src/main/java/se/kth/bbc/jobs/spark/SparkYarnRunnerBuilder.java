@@ -28,7 +28,7 @@ public class SparkYarnRunnerBuilder {
   private int executorCores = 1;
   private String executorMemory = "512m";
   private String driverMemory = "1024m";
-  private Map<String,String> envVars = new HashMap<>();
+  private Map<String, String> envVars = new HashMap<>();
 
   public SparkYarnRunnerBuilder(String appJarPath, String mainClass) {
     if (appJarPath == null || appJarPath.isEmpty()) {
@@ -44,6 +44,8 @@ public class SparkYarnRunnerBuilder {
   }
 
   public YarnRunner getYarnRunner() throws IOException {
+    
+    //TODO: inlclude driver memory as am memory
 
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Constants.SPARK_AM_MAIN);
@@ -71,10 +73,10 @@ public class SparkYarnRunnerBuilder {
     builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
     builder.addToAppMasterEnvironment("CLASSPATH",
             "/srv/spark/conf:/srv/spark/lib/spark-assembly-1.2.0-hadoop2.4.0.jar:/srv/spark/lib/datanucleus-core-3.2.10.jar:/srv/spark/lib/datanucleus-api-jdo-3.2.6.jar:/srv/spark/lib/datanucleus-rdbms-3.2.9.jar");
-    for(String key: envVars.keySet()){
+    for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }
-    
+
     //Add local resources to spark environment too
     builder.addCommand(new SparkSetEnvironmentCommand());
 
@@ -84,7 +86,6 @@ public class SparkYarnRunnerBuilder {
     amargs.append(" --num-executors ").append(numberOfExecutors);
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);
-    amargs.append(" --driver-memory ").append(driverMemory);
     if (jobArgs != null && !jobArgs.isEmpty()) {
       amargs.append(" --arg ");
       amargs.append(jobArgs);
@@ -98,9 +99,7 @@ public class SparkYarnRunnerBuilder {
   }
 
   public SparkYarnRunnerBuilder setJobName(String jobName) {
-    if (jobName != null && !jobName.isEmpty()) {
-      this.jobName = jobName;
-    }
+    this.jobName = jobName;
     return this;
   }
 
@@ -172,8 +171,8 @@ public class SparkYarnRunnerBuilder {
     this.driverMemory = "" + mem + "m";
     return this;
   }
-  
-  public SparkYarnRunnerBuilder addSystemVariable(String name, String value){
+
+  public SparkYarnRunnerBuilder addSystemVariable(String name, String value) {
     envVars.put(name, value);
     return this;
   }
