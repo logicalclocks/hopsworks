@@ -39,5 +39,8 @@ public class Constants {
     public static final String SPARK_AM_MAIN = "org.apache.spark.deploy.yarn.ApplicationMaster";
     public static final String DEFAULT_SPARK_JAR_PATH = "/srv/spark/spark.jar";
     public static final String SPARK_DEFAULT_OUTPUT_PATH = "Spark/Output/";
-   
+    
+    //ADAM constants
+    public static final String ADAM_MAINCLASS = "org.bdgenomics.adam.cli.ADAMMain";
+    public static final String ADAM_DEFAULT_JAR_PATH = "/srv/adam/adam-cli-0.15.1-SNAPSHOT.jar";
 }

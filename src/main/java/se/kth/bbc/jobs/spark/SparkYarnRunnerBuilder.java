@@ -27,6 +27,8 @@ public class SparkYarnRunnerBuilder {
   private int numberOfExecutors = 1;
   private int executorCores = 1;
   private String executorMemory = "512m";
+  private String driverMemory = "1024m";
+  private Map<String,String> envVars = new HashMap<>();
 
   public SparkYarnRunnerBuilder(String appJarPath, String mainClass) {
     if (appJarPath == null || appJarPath.isEmpty()) {
@@ -69,7 +71,10 @@ public class SparkYarnRunnerBuilder {
     builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
     builder.addToAppMasterEnvironment("CLASSPATH",
             "/srv/spark/conf:/srv/spark/lib/spark-assembly-1.2.0-hadoop2.4.0.jar:/srv/spark/lib/datanucleus-core-3.2.10.jar:/srv/spark/lib/datanucleus-api-jdo-3.2.6.jar:/srv/spark/lib/datanucleus-rdbms-3.2.9.jar");
-
+    for(String key: envVars.keySet()){
+      builder.addToAppMasterEnvironment(key, envVars.get(key));
+    }
+    
     //Add local resources to spark environment too
     builder.addCommand(new SparkSetEnvironmentCommand());
 
@@ -79,6 +84,7 @@ public class SparkYarnRunnerBuilder {
     amargs.append(" --num-executors ").append(numberOfExecutors);
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);
+    amargs.append(" --driver-memory ").append(driverMemory);
     if (jobArgs != null && !jobArgs.isEmpty()) {
       amargs.append(" --arg ");
       amargs.append(jobArgs);
@@ -91,52 +97,85 @@ public class SparkYarnRunnerBuilder {
     return builder.build();
   }
 
-  public void setJobName(String jobName) {
+  public SparkYarnRunnerBuilder setJobName(String jobName) {
     if (jobName != null && !jobName.isEmpty()) {
       this.jobName = jobName;
     }
+    return this;
   }
 
-  public void setJobArgs(String jobArgs) {
+  public SparkYarnRunnerBuilder setJobArgs(String jobArgs) {
     this.jobArgs = jobArgs;
+    return this;
   }
 
-  public void setExtraFiles(Map<String, String> extraFiles) {
+  public SparkYarnRunnerBuilder setExtraFiles(Map<String, String> extraFiles) {
     if (extraFiles == null) {
       throw new IllegalArgumentException("Map of extra files cannot be null.");
     }
     this.extraFiles = extraFiles;
+    return this;
   }
 
-  public void setNumberOfExecutors(int numberOfExecutors) {
+  public SparkYarnRunnerBuilder setNumberOfExecutors(int numberOfExecutors) {
     if (numberOfExecutors < 1) {
       throw new IllegalArgumentException(
               "Number of executors cannot be less than 1.");
     }
     this.numberOfExecutors = numberOfExecutors;
+    return this;
   }
 
-  public void setExecutorCores(int executorCores) {
+  public SparkYarnRunnerBuilder setExecutorCores(int executorCores) {
     if (executorCores < 1) {
       throw new IllegalArgumentException(
               "Number of executor cores cannot be less than 1.");
     }
     this.executorCores = executorCores;
+    return this;
   }
 
-  public void setExecutorMemoryMB(int executorMemoryMB) {
+  public SparkYarnRunnerBuilder setExecutorMemoryMB(int executorMemoryMB) {
     if (executorMemoryMB < 1) {
-      throw new IllegalArgumentException("Amount of memory cannot be zero.");
+      throw new IllegalArgumentException(
+              "Executor memory bust be greater than zero.");
     }
     this.executorMemory = "" + executorMemoryMB + "m";
+    return this;
   }
 
-  public void setExecutorMemoryGB(float executorMemoryGB) {
+  public SparkYarnRunnerBuilder setExecutorMemoryGB(float executorMemoryGB) {
     if (executorMemoryGB <= 0) {
-      throw new IllegalArgumentException("Memory must be greater than zero.");
+      throw new IllegalArgumentException(
+              "Executor memory must be greater than zero.");
     }
     int mem = (int) (executorMemoryGB * 1024);
     this.executorMemory = "" + mem + "m";
+    return this;
+  }
+
+  public SparkYarnRunnerBuilder setDriverMemoryMB(int driverMemoryMB) {
+    if (driverMemoryMB < 1) {
+      throw new IllegalArgumentException(
+              "Driver memory must be greater than zero.");
+    }
+    this.driverMemory = "" + driverMemory + "m";
+    return this;
+  }
+
+  public SparkYarnRunnerBuilder setDriverMemoryGB(float driverMemoryGB) {
+    if (driverMemoryGB <= 0) {
+      throw new IllegalArgumentException(
+              "Driver memory must be greater than zero.");
+    }
+    int mem = (int) (driverMemoryGB * 1024);
+    this.driverMemory = "" + mem + "m";
+    return this;
+  }
+  
+  public SparkYarnRunnerBuilder addSystemVariable(String name, String value){
+    envVars.put(name, value);
+    return this;
   }
 
 }
