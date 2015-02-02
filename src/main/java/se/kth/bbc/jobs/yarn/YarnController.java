@@ -107,8 +107,8 @@ public class YarnController extends JobController {
 
   public void runJar() {
     //TODO: fix this
-    Map<String, String> files = getFiles();
-    String appMasterJar = files.remove(KEY_MAIN_FILE);
+    Map<String, String> files = getExtraFiles();
+    String appMasterJar = getMainFilePath();
     YarnRunner.Builder builder = new YarnRunner.Builder(appMasterJar,
             "appMaster.jar");
     if (!files.isEmpty()) {

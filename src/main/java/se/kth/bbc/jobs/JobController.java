@@ -30,7 +30,7 @@ public abstract class JobController implements Serializable {
   private static final Logger logger = Logger.getLogger(JobController.class.
           getName());
 
-  protected static final String KEY_MAIN_FILE = "MAIN_FILE";
+  private static final String KEY_MAIN_FILE = "MAIN_FILE";
 
   private final Map<String, String> files = new HashMap<>();
   private final Map<String, String> variables = new HashMap<>();
@@ -314,5 +314,17 @@ public abstract class JobController implements Serializable {
     logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
             path);
     return sc;
+  }
+  
+  /**
+   * Get a map containing all the extra files uploaded so far. The returned
+   * map is NOT backed by the original map, so changes in either will not reflect
+   * in the other.
+   * @return 
+   */
+  protected final Map<String,String> getExtraFiles(){
+    Map<String,String> allFiles = new HashMap(files);
+    allFiles.remove(KEY_MAIN_FILE);
+    return allFiles;
   }
 }

@@ -127,7 +127,7 @@ public final class SparkController extends JobController {
     }
 
     YarnRunner.Builder builder = new YarnRunner.Builder(Constants.SPARK_AM_MAIN);
-    Map<String, String> extraFiles = new HashMap<>();
+    Map<String, String> extraFiles = getExtraFiles();
 
     //Spark staging directory
     String stagingPath = File.separator + "user" + File.separator + Utils.
