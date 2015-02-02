@@ -122,59 +122,15 @@ public final class SparkController extends JobController {
   }
 
   public void startJob() {
-    if (jobName == null || jobName.isEmpty()) {
-      jobName = "Untitled Spark job";
-    }
-
-    YarnRunner.Builder builder = new YarnRunner.Builder(Constants.SPARK_AM_MAIN);
-    Map<String, String> extraFiles = getExtraFiles();
-
-    //Spark staging directory
-    String stagingPath = File.separator + "user" + File.separator + Utils.
-            getYarnUser() + File.separator + Constants.SPARK_STAGING_DIR
-            + File.separator + YarnRunner.APPID_PLACEHOLDER;
-
-    builder.localResourcesBasePath(stagingPath);
-
-    //Add app and spark jar
-    builder.addLocalResource(Constants.SPARK_LOCRSC_SPARK_JAR,
-            Constants.DEFAULT_SPARK_JAR_PATH);
-    builder.addLocalResource(Constants.SPARK_LOCRSC_APP_JAR, getMainFilePath());
-
-    //Add extra files to local resources, as key: use filename
-    for (Map.Entry<String, String> k : extraFiles.entrySet()) {
-      builder.addLocalResource(k.getKey(), k.getValue());
-    }
-
-    //TODO: add to classpath: user specified jars, extra classes from conf file
-    builder.addToAppMasterEnvironment("SPARK_YARN_MODE", "true");
-    builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
-    builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
-    builder.addToAppMasterEnvironment("CLASSPATH",
-            "/srv/spark/conf:/srv/spark/lib/spark-assembly-1.2.0-hadoop2.4.0.jar:/srv/spark/lib/datanucleus-core-3.2.10.jar:/srv/spark/lib/datanucleus-api-jdo-3.2.6.jar:/srv/spark/lib/datanucleus-rdbms-3.2.9.jar");
-
-    //Add local resources to spark environment too
-    builder.addCommand(new SparkSetEnvironmentCommand());
-
-    //TODO: add env vars from sparkconf to path
-    //TODO add java options from spark config (or not...)
-    StringBuilder amargs = new StringBuilder("--class ");
-    amargs.append(mainClass);
-    amargs.append(" --num-executors 1 ");
-    amargs.append(" --executor-cores 1 ");
-    amargs.append(" --executor-memory 512m");
-    if (args != null && !args.isEmpty()) {
-      amargs.append(" --arg ");
-      amargs.append(args);
-    }
-    builder.amArgs(amargs.toString());
-
-    builder.appName(jobName);
+    SparkYarnRunnerBuilder runnerbuilder = new SparkYarnRunnerBuilder(getMainFilePath(), mainClass);
+    runnerbuilder.setJobName(jobName);
+    runnerbuilder.setJobArgs(args);
+    runnerbuilder.setExtraFiles(getExtraFiles());
     //And that should be it!
 
     YarnRunner r;
     try {
-      r = builder.build();
+      r = runnerbuilder.getYarnRunner();
     } catch (IOException e) {
       logger.log(Level.SEVERE,
               "Unable to create temp directory for logs. Aborting execution.",
