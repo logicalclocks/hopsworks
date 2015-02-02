@@ -11,10 +11,11 @@ import se.kth.bbc.lims.Utils;
 /**
  * Builder class for a Spark YarnRunner. Implements the common logic needed
  * for any Spark job to be started and builds a YarnRunner instance.
+ * <p>
  * @author stig
  */
 public class SparkYarnRunnerBuilder {
-  
+
   //Necessary parameters
   private final String appJarPath, mainClass;
 
@@ -22,25 +23,26 @@ public class SparkYarnRunnerBuilder {
   private String jobArgs;
   private String jobName = "Untitled Spark Job";
   private Map<String, String> extraFiles = new HashMap<>();
-  
+
   private int numberOfExecutors = 1;
   private int executorCores = 1;
   private String executorMemory = "512m";
-  
 
   public SparkYarnRunnerBuilder(String appJarPath, String mainClass) {
-    if(appJarPath == null || appJarPath.isEmpty()){
-      throw new IllegalArgumentException("Path to application jar cannot be empty!");
+    if (appJarPath == null || appJarPath.isEmpty()) {
+      throw new IllegalArgumentException(
+              "Path to application jar cannot be empty!");
     }
-    if(mainClass == null || mainClass.isEmpty()){
-      throw new IllegalArgumentException("Name of the main class cannot be empty!");
+    if (mainClass == null || mainClass.isEmpty()) {
+      throw new IllegalArgumentException(
+              "Name of the main class cannot be empty!");
     }
     this.appJarPath = appJarPath;
     this.mainClass = mainClass;
   }
 
   public YarnRunner getYarnRunner() throws IOException {
-    
+
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Constants.SPARK_AM_MAIN);
 
@@ -90,7 +92,9 @@ public class SparkYarnRunnerBuilder {
   }
 
   public void setJobName(String jobName) {
-    this.jobName = jobName;
+    if (jobName != null && !jobName.isEmpty()) {
+      this.jobName = jobName;
+    }
   }
 
   public void setJobArgs(String jobArgs) {
@@ -98,40 +102,41 @@ public class SparkYarnRunnerBuilder {
   }
 
   public void setExtraFiles(Map<String, String> extraFiles) {
-    if(extraFiles == null){
+    if (extraFiles == null) {
       throw new IllegalArgumentException("Map of extra files cannot be null.");
     }
     this.extraFiles = extraFiles;
   }
 
   public void setNumberOfExecutors(int numberOfExecutors) {
-    if(numberOfExecutors < 1){
-      throw new IllegalArgumentException("Number of executors cannot be less than 1.");
+    if (numberOfExecutors < 1) {
+      throw new IllegalArgumentException(
+              "Number of executors cannot be less than 1.");
     }
     this.numberOfExecutors = numberOfExecutors;
   }
 
   public void setExecutorCores(int executorCores) {
-    if(executorCores < 1){
-      throw new IllegalArgumentException("Number of executor cores cannot be less than 1.");
+    if (executorCores < 1) {
+      throw new IllegalArgumentException(
+              "Number of executor cores cannot be less than 1.");
     }
     this.executorCores = executorCores;
   }
 
   public void setExecutorMemoryMB(int executorMemoryMB) {
-    if(executorMemoryMB < 1){
+    if (executorMemoryMB < 1) {
       throw new IllegalArgumentException("Amount of memory cannot be zero.");
     }
-    this.executorMemory = ""+executorMemoryMB+"m";
-  }
-  
-  public void setExecutorMemoryGB(float executorMemoryGB){
-    if(executorMemoryGB <= 0){
-      throw new IllegalArgumentException("Memory must be greater than zero.");
-    }
-    int mem = (int)(executorMemoryGB*1024);
-    this.executorMemory = ""+mem+"m";
+    this.executorMemory = "" + executorMemoryMB + "m";
   }
 
-  
+  public void setExecutorMemoryGB(float executorMemoryGB) {
+    if (executorMemoryGB <= 0) {
+      throw new IllegalArgumentException("Memory must be greater than zero.");
+    }
+    int mem = (int) (executorMemoryGB * 1024);
+    this.executorMemory = "" + mem + "m";
+  }
+
 }
