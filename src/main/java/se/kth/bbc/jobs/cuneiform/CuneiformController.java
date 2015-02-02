@@ -377,6 +377,7 @@ public final class CuneiformController extends JobController {
    * <p>
    * @return
    */
+  @Override
   public String getPushChannel() {
     return "/" + sessionState.getActiveStudyname() + "/" + JobType.CUNEIFORM;
   }

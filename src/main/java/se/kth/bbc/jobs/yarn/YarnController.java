@@ -18,6 +18,7 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.JobControllerEvent;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.StagingManager;
@@ -162,6 +163,11 @@ public class YarnController extends JobController {
       default:
         return super.getLogMessage(event, extraInfo);
     }
+  }
+  
+  @Override
+  public String getPushChannel(){
+    return "/" + sessionState.getActiveStudyname() + "/" + JobType.YARN;
   }
 
 }
