@@ -237,6 +237,10 @@ public class CuneiformController implements Serializable {
   }
 
   public void startWorkflow() {
+    if(!workflowUploaded){
+      MessagesController.addInfoMessage("Upload a workflow first.");
+      return;
+    }
 //TODO: fix state if starting fails
     if (jobName == null || jobName.isEmpty()) {
       jobName = "Untitled job";
