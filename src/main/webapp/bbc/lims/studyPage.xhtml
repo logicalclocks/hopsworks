@@ -79,6 +79,11 @@
                                         <ui:include src="/bbc/lims/studyTabs/sparkTab.xhtml"/>
                                     </ui:insert>
                                 </p:tab>
+                                <p:tab id="adam" title="ADAM" rendered="#{studyManagedBean.shouldDrawTab('ADAM') and studyManagedBean.renderComponentList() != null}">
+                                    <ui:insert name="adam">
+                                        <ui:include src="/bbc/lims/studyTabs/adamTab.xhtml"/>
+                                    </ui:insert>
+                                </p:tab>
                             </p:tabView>
                         </div>
                     </div>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  
+      xmlns:f="http://java.sun.com/jsf/core" 
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+    <body>
+        <ui:composition>
+            <div>
+                <h1 style="float:none;">
+                    ADAM
+                </h1>
+            </div>
+            <div>
+                <h:form id="adamForm">
+                    <p:selectOneMenu id="adamCommandChoice" value="#{adamController.selectedCommand}">
+                        <f:converter converterId="adamCommandConverter"/>
+                        <f:selectItems value="#{adamController.adamCommands}"/>
+                        <p:ajax event="change" update="@form"/>
+                    </p:selectOneMenu>
+                    <h:panelGroup id="adamArguments" rendered="#{adamController.selectedCommand != null}">
+                        <h:outputText value="Arguments"/>
+                        <h:panelGrid columns="3">
+                            <ui:repeat value="#{adamController.selectedCommand.arguments}" var="arg">
+                                <h:outputText value="#{arg.name}"/>
+                                <p:fileUpload required="#{arg.required}" auto="true" multiple="false" 
+                                                  label="Upload" mode="advanced" rendered="#{arg.path and not arg.outputPath}"
+                                                  fileUploadListener="#{adamController.uploadExtraFile}" 
+                                                  update="@form" id="adamUploader" process="@form"/>
+                                <p:inputText rendered="#{not arg.path}"/>
+                                <p:inputText rendered="#{arg.path and arg.outputPath}"/>
+                                <h:commandLink id="adamHelp_${arg.name}" class="fa fa-info-circle"/>
+                                <p:tooltip for="adamHelp_${arg.name}" value="#{arg.description}"/>
+                            </ui:repeat>
+                        </h:panelGrid>
+                        
+                        <h:outputText value="Options"/>
+                        <h:panelGrid columns="3">
+                            <ui:repeat value="#{adamController.selectedCommand.options}" var="opt">
+                                <h:outputText value="#{opt.name}"/>
+                                <p:fileUpload auto="true" multiple="false" label="Upload" 
+                                              mode="advanced" 
+                                              rendered="#{opt.path and not opt.outputPath}"
+                                              fileUploadListener="#{adamController.uploadExtraFile}" 
+                                              update="@form" id="adamUploader" process="@form"/>
+                                <p:inputText rendered="#{not opt.path and not opt.flag}"/>
+                                <p:inputText rendered="#{opt.path and opt.outputPath}"/>
+                                <p:selectBooleanCheckbox rendered="#{opt.flag}"/>
+                                <h:commandLink id="adamHelp_${opt.name}" class="fa fa-info-circle"/>
+                                <p:tooltip for="adamHelp_${opt.name}" value="#{opt.description}"/>
+                            </ui:repeat>
+                        </h:panelGrid>
+                    </h:panelGroup>
+                </h:form>
+            </div>
+        </ui:composition>
+    </body>
+</html>
