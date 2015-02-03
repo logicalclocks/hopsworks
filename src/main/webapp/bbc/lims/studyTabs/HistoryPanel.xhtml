@@ -15,26 +15,26 @@ and open the template in the editor.
             <h:form id="historyForm_#{type}" styleClass="historyForm">
                 <!-- takes a parameter "type": the type of jobs for which the history is to be loaded -->
                <ui:repeat value="#{jobHistoryController.getHistoryForType(type)}" var="job" varStatus="cnt">
-                    <p:panel id="job_#{cnt}" closable="false" >
+                   <p:panel id="job_#{cnt}" closable="false" styleClass="historyItem">
                         <f:facet name="header">
                             <h:outputText value="#{job.name==null? job.id :job.name}"/>
                             <!--<h:commandLink styleClass="fa fa-arrow-circle-right loadArrow" action="#{jobHistoryController.selectJob(job)}"/>-->
                         </f:facet>
-                        <h:panelGrid columns="2">
-                            <h:outputLabel value="Run on:"/>
+                       <h:panelGrid columns="2" columnClasses="labelColumn,valueColumn">
+                            <h:outputLabel value="Run on"/>
                             <h:outputLabel value="#{job.submissionTime}"/>
 
-                            <h:outputLabel value="Run by:"/>
+                            <h:outputLabel value="Run by"/>
                             <h:outputLabel value="#{job.user.name}"/>
 
-                            <h:outputLabel value="State:"/>
+                            <h:outputLabel value="State"/>
                             <h:outputLabel value="#{job.state}"/>
 
-                            <h:outputLabel value="Execution time:" rendered="#{job.finished and job.executionDuration>0}"/>
+                            <h:outputLabel value="Execution time" rendered="#{job.finished and job.executionDuration>0}"/>
                             <h:outputLabel value="#{job.executionDuration} ms" rendered="#{job.finished and job.executionDuration>0}"/>
 
-                            <h:outputLabel value="Logs:" rendered="#{job.finished  and (job.stderrPath!=null or job.stdoutPath!=null)}"/>
-                            <h:panelGrid columns="1" rendered="#{job.finished and (job.stderrPath!=null or job.stdoutPath!=null)}">
+                            <h:outputLabel value="Logs" rendered="#{job.finished  and (job.stderrPath!=null or job.stdoutPath!=null)}"/>
+                            <h:panelGrid columns="1" rendered="#{job.finished and (job.stderrPath!=null or job.stdoutPath!=null)}" styleClass="no-border">
                                 <p:commandLink ajax="false" rendered="#{job.stdoutPath!=null}">
                                     <strong>stdout.log</strong>
                                     <p:fileDownload value="#{jobHistoryController.downloadFile(job.stdoutPath)}"/>
@@ -45,8 +45,8 @@ and open the template in the editor.
                                 </p:commandLink>
                             </h:panelGrid>
 
-                            <h:outputLabel value="Results:" rendered="#{job.jobOutputFileCollection.size()>0}"/>
-                            <h:panelGrid columns="1">
+                            <h:outputLabel value="Results" rendered="#{job.jobOutputFileCollection.size()>0}"/>
+                            <h:panelGrid columns="1" styleClass="no-border" rendered="#{job.jobOutputFileCollection.size()>0}">
                                 <ui:repeat value="#{job.jobOutputFileCollection}" var="file">
                                     <p:commandLink ajax="false">
                                         <strong>#{file.jobOutputFilePK.name}</strong>
