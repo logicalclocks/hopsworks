@@ -23,8 +23,8 @@
                     </p:selectOneMenu>
                     <h:panelGroup id="adamArguments" rendered="#{adamController.selectedCommand != null}">
                         <h:outputText value="Arguments"/>
-                        <h:panelGrid columns="3">
-                            <ui:repeat value="#{adamController.selectedCommand.arguments}" var="arg" varStatus="argStat">
+                        <ui:repeat value="#{adamController.selectedCommand.arguments}" var="arg" varStatus="argStat">
+                            <h:panelGrid columns="3">
                                 <h:outputText value="#{arg.name}"/>
                                 <p:fileUpload required="#{arg.required}" auto="true" multiple="false" 
                                               label="Upload" mode="advanced" rendered="#{arg.path and not arg.outputPath}"
@@ -32,9 +32,9 @@
                                               update="@form" id="adamUploader" process="@form"/>
                                 <p:inputText rendered="#{not arg.path}"/>
                                 <p:inputText rendered="#{arg.path and arg.outputPath}"/>
-                                <h:commandLink class="fa fa-info-circle" title="#{arg.description}"/>                           
-                            </ui:repeat>
-                        </h:panelGrid>
+                                <h:commandLink class="fa fa-info-circle" title="#{arg.description}"/> 
+                            </h:panelGrid>                          
+                        </ui:repeat>
 
                         <h:outputText value="Options"/>
                         <ui:repeat value="#{adamController.selectedCommand.options}" var="opt" varStatus="optStat">
