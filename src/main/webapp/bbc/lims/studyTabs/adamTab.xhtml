@@ -16,7 +16,7 @@
                 <h:form id="adamForm">
                     <p:selectOneMenu id="adamCommandChoice" value="#{adamController.selectedCommand}">
                         <f:converter converterId="adamCommandConverter"/>
-                        <f:selectItems value="#{adamController.adamCommands}"/>
+                        <f:selectItems value="#{adamController.adamCommands}" var="command" itemValue="#{command}" itemLabel="#{command.command}"/>
                         <p:ajax event="change" update="@form"/>
                     </p:selectOneMenu>
                     <h:panelGroup id="adamArguments" rendered="#{adamController.selectedCommand != null}">
@@ -25,16 +25,16 @@
                             <ui:repeat value="#{adamController.selectedCommand.arguments}" var="arg">
                                 <h:outputText value="#{arg.name}"/>
                                 <p:fileUpload required="#{arg.required}" auto="true" multiple="false" 
-                                                  label="Upload" mode="advanced" rendered="#{arg.path and not arg.outputPath}"
-                                                  fileUploadListener="#{adamController.uploadExtraFile}" 
-                                                  update="@form" id="adamUploader" process="@form"/>
+                                              label="Upload" mode="advanced" rendered="#{arg.path and not arg.outputPath}"
+                                              fileUploadListener="#{adamController.uploadExtraFile}" 
+                                              update="@form" id="adamUploader" process="@form"/>
                                 <p:inputText rendered="#{not arg.path}"/>
                                 <p:inputText rendered="#{arg.path and arg.outputPath}"/>
                                 <h:commandLink id="adamHelp_${arg.name}" class="fa fa-info-circle"/>
                                 <p:tooltip for="adamHelp_${arg.name}" value="#{arg.description}"/>
                             </ui:repeat>
                         </h:panelGrid>
-                        
+
                         <h:outputText value="Options"/>
                         <h:panelGrid columns="3">
                             <ui:repeat value="#{adamController.selectedCommand.options}" var="opt">
