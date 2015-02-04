@@ -2465,3 +2465,46 @@ box-shadow: none;
 .historyItem .labelColumn {
   padding-right: 20px;
 }
+
+/* Make sure The upload buttons do not have an obsolete field hanging under them. */
+.content .ui-tabs-panels .ui-fileupload-content {
+  height: 0px !important;
+}
+
+.adamForm .adamTable {
+  width: 50%;
+}
+
+.adamForm .adamTable table {  
+  border-collapse: collapse;
+}
+
+.adamForm .adamTable .ui-datatable-header {
+  text-align: left;
+  color: #4f4f4f;
+  font-size: 13px;
+  border: 0px;
+  margin-top: 10px;
+}
+
+.adamForm .optionsTable .ui-datatable-header {
+  margin-top: 20px;
+}
+
+.adamForm .adamTable .ui-datatable-tablewrapper {
+  border: none;
+}
+
+.adamForm .adamTable th {
+  height: 0px;
+  padding: 0px;
+  border: 0px;
+}
+
+.adamForm .adamTable .ui-datatable-odd {
+  background: none;
+}
+
+.adamForm .adamTable td {
+  border-bottom: 0.1px solid #EEE;
+}

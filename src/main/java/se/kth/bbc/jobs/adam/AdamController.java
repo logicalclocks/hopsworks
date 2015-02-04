@@ -1,5 +1,6 @@
 package se.kth.bbc.jobs.adam;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -8,7 +9,6 @@ import org.primefaces.event.FileUploadEvent;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
-import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.Constants;
 
@@ -22,6 +22,8 @@ public final class AdamController extends JobController {
   
   private String jobName, adamCommand;
   private List<String> optionValues;
+  private List<AdamInvocationArgument> args;
+  private List<AdamInvocationOption> opts;
   
   private AdamCommand selectedCommand = null;
 
@@ -42,7 +44,7 @@ public final class AdamController extends JobController {
   public String getPushChannel() {
     return "/" + sessionState.getActiveStudyname() + "/" + JobType.ADAM;
   }
-
+  
   public void startJob() {
     SparkYarnRunnerBuilder builder = new SparkYarnRunnerBuilder(
             getMainFilePath(), Constants.ADAM_MAINCLASS);
@@ -72,7 +74,39 @@ public final class AdamController extends JobController {
   
   public void setSelectedCommand(AdamCommand ac){
     this.selectedCommand = ac;
+    args = new ArrayList<>(ac.getArguments().length);
+    opts = new ArrayList<>(ac.getOptions().length);
+    for(AdamArgument aa: ac.getArguments()){
+      args.add(new AdamInvocationArgument(aa));
+    }
+    for(AdamOption ao: ac.getOptions()){
+      opts.add(new AdamInvocationOption(ao));
+    }
   }
+
+  public String getJobName() {
+    return jobName;
+  }
+
+  public void setJobName(String jobName) {
+    this.jobName = jobName;
+  }
+
+  public List<AdamInvocationArgument> getSelectedCommandArgs() {
+    return args;
+  }
+
+  public void setSelectedCommandArgs(List<AdamInvocationArgument> args) {
+    this.args = args;
+  }
+
+  public List<AdamInvocationOption> getSelectedCommandOpts() {
+    return opts;
+  }
+
+  public void setSelectedCommandOpts(List<AdamInvocationOption> opts) {
+    this.opts = opts;
+  }  
   
   public AdamCommand getSelectedCommand(){
     return selectedCommand;
