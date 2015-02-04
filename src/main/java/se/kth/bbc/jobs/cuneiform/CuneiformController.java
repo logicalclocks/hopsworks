@@ -208,6 +208,10 @@ public final class CuneiformController extends JobController {
   }
 
   public void startWorkflow() {
+    if(!workflowUploaded){
+      MessagesController.addInfoMessage("Upload a workflow first.");
+      return;
+    }
 //TODO: fix state if starting fails
     if (jobName == null || jobName.isEmpty()) {
       jobName = "Untitled Cuneiform job";

@@ -31,7 +31,7 @@
                         <p:growl autoUpdate="true" showDetail="true"/>
                         <div class="workflow-head">
                             <div>
-                                <h:panelGrid columns="2">
+                                <h:panelGrid columns="2" columnClasses="labelColumn,valueColumn">
                                     <h:outputLabel for="JobName" value="Job name"/>
                                     <h:inputText id="JobName" value="#{cuneiformController.jobName}"/>
 
@@ -77,7 +77,7 @@
                             <div>
                                 <!-- TODO: add validator that checks if the CF file is parseable -->
                                 <p:commandButton id="cuneiformExecuteButton" value="Execute" action="#{cuneiformController.startWorkflow()}" 
-                                                 update="@form"/>
+                                                 process="@form" update="@form"/>
                             </div>
                         </div>
                     </h:form>
@@ -86,7 +86,7 @@
                             Results
                         </h3>
                         <h:panelGrid columns="2">
-                            <h:outputLabel value="Current state:" for="curr_state"/>
+                            <h:outputLabel value="Current state:" for="curr_state" rendered="#{cuneiformController.selectedJobRunning or cuneiformController.selectedJobHasFinished}"/>
                             <h:outputText id="curr_state" value="#{cuneiformController.selectedJob.state}" styleClass="stateSpan"/>
                         </h:panelGrid>
                         <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformController.selectedJobRunning}"/>

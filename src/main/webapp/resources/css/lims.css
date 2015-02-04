@@ -2413,3 +2413,55 @@ ui-wizard {
 .historyForm .loadArrow {
   float: right;
 }
+
+.content .ui-widget-header {
+  background: none;
+}
+
+.ui-tabs.ui-tabs-top > .ui-tabs-nav li {
+  margin-bottom: 0px;
+  border: none;
+}
+
+.ui-tabs .ui-state-active {
+  border-left: 1px solid #A8A8A8 !important;
+  border-right: 1px solid #A8A8A8 !important;
+  border-top: 1px solid #A8A8A8 !important;  
+}
+
+.ui-tabs-nav .ui-state-default {
+  border: none;
+  background: none;
+}
+
+.ui-tabs-nav .ui-state-hover {
+  background: #F5F5F5;
+  box-shadow: none;
+}
+
+.container .ui-button {
+  background-color: #F0F0F0;
+background-image: linear-gradient(to bottom, #FFF, #E9E9E9);
+border: 1px solid rgba(0, 0, 0, 0.2);
+box-shadow: none;
+}
+
+.container .content .jobPanel .labelColumn {
+  width: auto!important;
+}
+
+.historyItem td {
+  border-bottom: 0.1px solid #EEE;
+}
+
+.historyItem .no-border td {
+  border-bottom: none;
+}
+
+.historyItem table {
+  border-collapse: collapse;
+}
+
+.historyItem .labelColumn {
+  padding-right: 20px;
+}
