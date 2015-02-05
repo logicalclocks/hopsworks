@@ -14,13 +14,11 @@ public class AdamInvocationArgument {
   }
 
   public String getValue() {
-    System.out.println("Getting value " + value + " from arg " + arg.getName());
     return value;
   }
 
   public void setValue(String value) {
     this.value = value;
-    System.out.println("Setting value " + value + " for arg " + arg.getName());
   }
 
   public AdamArgument getArg() {

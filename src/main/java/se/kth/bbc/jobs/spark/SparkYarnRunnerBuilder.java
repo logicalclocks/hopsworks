@@ -2,7 +2,10 @@ package se.kth.bbc.jobs.spark;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.Constants;
@@ -20,7 +23,7 @@ public class SparkYarnRunnerBuilder {
   private final String appJarPath, mainClass;
 
   //Optional parameters
-  private String jobArgs;
+  private List<String> jobArgs = new ArrayList<>();
   private String jobName = "Untitled Spark Job";
   private Map<String, String> extraFiles = new HashMap<>();
 
@@ -28,7 +31,9 @@ public class SparkYarnRunnerBuilder {
   private int executorCores = 1;
   private String executorMemory = "512m";
   private String driverMemory = "1024m";
-  private Map<String, String> envVars = new HashMap<>();
+  private final Map<String, String> envVars = new HashMap<>();
+  private final Map<String, String> sysProps = new HashMap<>();
+  private String classPath;
 
   public SparkYarnRunnerBuilder(String appJarPath, String mainClass) {
     if (appJarPath == null || appJarPath.isEmpty()) {
@@ -44,9 +49,8 @@ public class SparkYarnRunnerBuilder {
   }
 
   public YarnRunner getYarnRunner() throws IOException {
-    
-    //TODO: inlclude driver memory as am memory
 
+    //TODO: inlclude driver memory as am memory
     //Create a builder
     YarnRunner.Builder builder = new YarnRunner.Builder(Constants.SPARK_AM_MAIN);
 
@@ -72,9 +76,15 @@ public class SparkYarnRunnerBuilder {
     builder.addToAppMasterEnvironment("SPARK_YARN_STAGING_DIR", stagingPath);
     builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
     builder.addToAppMasterEnvironment("CLASSPATH",
-            "/srv/spark/conf:/srv/spark/lib/spark-assembly-1.2.0-hadoop2.4.0.jar:/srv/spark/lib/datanucleus-core-3.2.10.jar:/srv/spark/lib/datanucleus-api-jdo-3.2.6.jar:/srv/spark/lib/datanucleus-rdbms-3.2.9.jar");
+            classPath
+            + ":/srv/spark/conf:/srv/spark/lib/spark-assembly-1.2.0-hadoop2.4.0.jar:/srv/spark/lib/datanucleus-core-3.2.10.jar:/srv/spark/lib/datanucleus-api-jdo-3.2.6.jar:/srv/spark/lib/datanucleus-rdbms-3.2.9.jar");
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
+    }
+
+    for (String s : sysProps.keySet()) {
+      String option = escapeForShell("-D" + s + "=" + sysProps.get(s));
+      builder.addJavaOption(option);
     }
 
     //Add local resources to spark environment too
@@ -86,9 +96,8 @@ public class SparkYarnRunnerBuilder {
     amargs.append(" --num-executors ").append(numberOfExecutors);
     amargs.append(" --executor-cores ").append(executorCores);
     amargs.append(" --executor-memory ").append(executorMemory);
-    if (jobArgs != null && !jobArgs.isEmpty()) {
-      amargs.append(" --arg ");
-      amargs.append(jobArgs);
+    for (String s : jobArgs) {
+      amargs.append(" --arg ").append(s);
     }
     builder.amArgs(amargs.toString());
 
@@ -103,8 +112,18 @@ public class SparkYarnRunnerBuilder {
     return this;
   }
 
-  public SparkYarnRunnerBuilder setJobArgs(String jobArgs) {
-    this.jobArgs = jobArgs;
+  public SparkYarnRunnerBuilder addAllJobArgs(List<String> jobArgs) {
+    this.jobArgs.addAll(jobArgs);
+    return this;
+  }
+
+  public SparkYarnRunnerBuilder addAllJobArgs(String[] jobArgs) {
+    this.jobArgs.addAll(Arrays.asList(jobArgs));
+    return this;
+  }
+
+  public SparkYarnRunnerBuilder addJobArg(String jobArg) {
+    jobArgs.add(jobArg);
     return this;
   }
 
@@ -113,6 +132,19 @@ public class SparkYarnRunnerBuilder {
       throw new IllegalArgumentException("Map of extra files cannot be null.");
     }
     this.extraFiles = extraFiles;
+    return this;
+  }
+
+  public SparkYarnRunnerBuilder addExtraFile(String filename, String location) {
+    if (filename == null || filename.isEmpty()) {
+      throw new IllegalArgumentException(
+              "Filename in extra file mapping cannot be null or empty.");
+    }
+    if (location == null || location.isEmpty()) {
+      throw new IllegalArgumentException(
+              "Location in extra file mapping cannot be null or empty.");
+    }
+    this.extraFiles.put(filename, location);
     return this;
   }
 
@@ -172,9 +204,58 @@ public class SparkYarnRunnerBuilder {
     return this;
   }
 
-  public SparkYarnRunnerBuilder addSystemVariable(String name, String value) {
+  public SparkYarnRunnerBuilder addEnvironmentVariable(String name, String value) {
     envVars.put(name, value);
     return this;
+  }
+
+  public SparkYarnRunnerBuilder addSystemProperty(String name, String value) {
+    sysProps.put(name, value);
+    return this;
+  }
+
+  public SparkYarnRunnerBuilder addToClassPath(String s) {
+    if (classPath == null || classPath.isEmpty()) {
+      classPath = s;
+    } else {
+      classPath = classPath + ":" + s;
+    }
+    return this;
+  }
+
+  /**
+   * Taken from Apache Spark code: Escapes a string for inclusion in a command
+   * line executed by Yarn. Yarn executes commands
+   * using `bash -c "command arg1 arg2"` and that means plain quoting doesn't
+   * really work. The
+   * argument is enclosed in single quotes and some key characters are escaped.
+   * <p>
+   * @param s A single argument.
+   * @return Argument quoted for execution via Yarn's generated shell script.
+   */
+  private String escapeForShell(String s) {
+    if (s != null) {
+      StringBuilder escaped = new StringBuilder("'");
+      for (int i=0;i<s.length();i++) {
+        switch(s.charAt(i)){
+          case '$':
+            escaped.append("\\$");
+            break;
+          case '"':
+            escaped.append("\\\"");
+            break;
+          case '\'':
+            escaped.append("'\\''");
+            break;
+          default:
+            escaped.append(s.charAt(i));
+            break;
+        }
+      }
+      return escaped.append("'").toString();
+    }else{
+      return s;
+    }
   }
 
 }

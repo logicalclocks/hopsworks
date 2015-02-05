@@ -71,16 +71,6 @@
       <artifactId>cuneiform-core</artifactId>
       <version>2.0.0-SNAPSHOT</version>
     </dependency>
-<!--    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.11</artifactId>
-      <version>1.2.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-yarn_2.9.3</artifactId>
-      <version>0.8.1-incubating</version>
-    </dependency>-->
     <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-web-api</artifactId>

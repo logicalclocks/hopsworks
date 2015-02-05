@@ -125,7 +125,8 @@ public final class SparkController extends JobController {
     }
     SparkYarnRunnerBuilder runnerbuilder = new SparkYarnRunnerBuilder(getMainFilePath(), mainClass);
     runnerbuilder.setJobName(jobName);
-    runnerbuilder.setJobArgs(args);
+    String[] jobArgs = args.trim().split(" ");
+    runnerbuilder.addAllJobArgs(jobArgs);
     runnerbuilder.setExtraFiles(getExtraFiles());
     //And that should be it!
 

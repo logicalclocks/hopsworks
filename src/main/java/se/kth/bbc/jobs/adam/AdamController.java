@@ -54,7 +54,7 @@ public final class AdamController extends JobController {
 
   @EJB
   private StagingManager stagingManager;
-  
+
   @EJB
   private AsynchronousJobExecutor submitter;
 
@@ -72,7 +72,6 @@ public final class AdamController extends JobController {
               "name");
       for (AdamInvocationArgument aia : args) {
         if (aia.getArg().getName().equals(argname)) {
-        System.out.println("Found matching input, setting value");
           aia.setValue(event.getFile().getFileName());
         }
       }
@@ -87,8 +86,6 @@ public final class AdamController extends JobController {
     } else {
       throw new IllegalArgumentException("Illegal attribute value for type.");
     }
-    System.out.println("AU------ARGS------\n"+args);
-    System.out.println("AU------OPTS------\n"+opts);
   }
 
   @Override
@@ -114,8 +111,6 @@ public final class AdamController extends JobController {
   }
 
   public void startJob() {
-    System.out.println("SJ------ARGS------\n"+args);
-    System.out.println("SJ------OPTS------\n"+opts);
     //First: check if all required arguments have been filled in
     if (!checkIfRequiredPresent()) {
       return;
@@ -127,32 +122,33 @@ public final class AdamController extends JobController {
       jobName = "Untitled ADAM Job";
     }
     SparkYarnRunnerBuilder builder = new SparkYarnRunnerBuilder(
-            getMainFilePath(), Constants.ADAM_MAINCLASS);
-    //Set some ADAM-specific property values
-    builder.addSystemVariable("spark.serializer",
+            Constants.ADAM_DEFAULT_JAR_PATH, Constants.ADAM_MAINCLASS);
+    //Set some ADAM-specific property values   
+    builder.addSystemProperty("spark.serializer",
             "org.apache.spark.serializer.KryoSerializer");
-    builder.addSystemVariable("spark.kryo.registrator",
+    builder.addSystemProperty("spark.kryo.registrator",
             "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
-    builder.addSystemVariable("spark.kryoserializer.buffer.mb", "4");
-    builder.addSystemVariable("spark.kryo.referenceTracking", "true");
+    builder.addSystemProperty("spark.kryoserializer.buffer.mb", "4");
+    builder.addSystemProperty("spark.kryo.referenceTracking", "true");
     builder.setExecutorMemoryGB(4);
 
-    builder.setJobArgs(constructArgs());
+    builder.addAllJobArgs(constructArgs());
     //TODO: Figure out how to run ADAM on YARN :D
 
     //Set the job name
     builder.setJobName(jobName);
 
     YarnRunner r;
-    try{
+    try {
       r = builder.getYarnRunner();
-    }catch(IOException e){
-      logger.log(Level.SEVERE,"Unable to create temp directory for logs. Aborting execution.",e);
+    } catch (IOException e) {
+      logger.log(Level.SEVERE,
+              "Unable to create temp directory for logs. Aborting execution.", e);
       MessagesController.addErrorMessage("Failed to start Yarn client.");
       return;
     }
-    
-    SparkJob job = new SparkJob(history,r,fops);
+
+    SparkJob job = new SparkJob(history, r, fops);
     setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
             sessionState.getActiveStudyname(), JobType.ADAM));
     if (isJobSelected()) {
@@ -203,12 +199,12 @@ public final class AdamController extends JobController {
    */
   private void translateOutputPaths() {
     for (AdamInvocationArgument aia : args) {
-      if (aia.getArg().isOutputPath()) {
+      if (aia.getArg().isOutputPath() && aia.getValue()!= null && !aia.getValue().isEmpty()) {
         aia.setValue(getPathForString(aia.getValue()));
       }
     }
     for (AdamInvocationOption aio : opts) {
-      if (aio.getOpt().isValuePath()) {
+      if (aio.getOpt().isValuePath() && aio.getStringValue() != null && !aio.getStringValue().isEmpty()) {
         aio.setStringValue(getPathForString(aio.getStringValue()));
       }
     }
@@ -230,57 +226,69 @@ public final class AdamController extends JobController {
     return File.separator + Constants.DIR_ROOT + File.separator + strippedPath;
   }
 
-  private String constructArgs() {
-    StringBuilder argbuilder = new StringBuilder();
+  private List<String> constructArgs() {
+    List<String> adamargs = new ArrayList<>();
     //Loop over arguments
     for (AdamInvocationArgument aia : args) {
       if (aia.getArg().isPath() && !aia.getArg().isOutputPath()) {
         //Is an input path: for now: local file
         //TODO: change if file from system
-        argbuilder.append("file:").append(getFilePath(aia.getValue()));
-        argbuilder.append(" ");
+        adamargs.add("file:"+getFilePath(aia.getValue()));  
       } else {
-        argbuilder.append(aia.getValue());
-        argbuilder.append(" ");
+        adamargs.add(aia.getValue());  
       }
     }
     //Loop over options
     for (AdamInvocationOption aio : opts) {
       if (aio.getOpt().isFlag()) {
-        //flag: just append the name of the flag
+        //flag: just add the name of the flag
         if (aio.getBooleanValue()) {
-          argbuilder.append(aio.getOpt().getCliVal());
-          argbuilder.append(" ");
+          adamargs.add(aio.getOpt().getCliVal());    
         }
-      } else {
-        //Not a flag: append the name of the option
-        argbuilder.append(aio.getOpt().getCliVal()).append(" ");
+      } else if(aio.getStringValue() != null && !aio.getStringValue().isEmpty()){
+        //Not a flag: add the name of the option
+        adamargs.add(aio.getOpt().getCliVal());
         if (aio.getOpt().isValuePath() && aio.getOpt().isOutputPath()) {
-          //input path: append its full path
-          argbuilder.append("file:").append(getFilePath(aio.getStringValue()));
+          //input path: add its full path
+          adamargs.add("file:"+getFilePath(aio.getStringValue()));
         } else {
-          //output path or string or sthn: append option value
-          argbuilder.append(aio.getStringValue());
-        }
-        argbuilder.append(" ");
+          //output path or string or sthn: add option value
+          adamargs.add(aio.getStringValue());
+        }  
       }
     }
-    return argbuilder.toString();
+    return adamargs;
   }
-
+  
+  /**
+   * Add all the ADAM jar to the local resources and to the classpath.
+   * @param builder 
+   */
+  private void addAllAdamJarsToLocalResourcesAndClasspath(SparkYarnRunnerBuilder builder){
+    //Add all to local resources and to classpath
+    for(String s: Constants.ADAM_JARS){
+      String filename = Utils.getFileName(s);
+      String sourcePath = Constants.ADAM_HOME + s;
+      builder.addExtraFile(filename, sourcePath);
+      builder.addToClassPath(filename);
+    }
+  }
+  
   public AdamCommand[] getAdamCommands() {
     return AdamCommand.values();
   }
 
   public void setSelectedCommand(AdamCommand ac) {
-    this.selectedCommand = ac;
-    args = new ArrayList<>(ac.getArguments().length);
-    opts = new ArrayList<>(ac.getOptions().length);
-    for (AdamArgument aa : ac.getArguments()) {
-      args.add(new AdamInvocationArgument(aa));
-    }
-    for (AdamOption ao : ac.getOptions()) {
-      opts.add(new AdamInvocationOption(ao));
+    if (ac != selectedCommand) {
+      this.selectedCommand = ac;
+      args = new ArrayList<>(ac.getArguments().length);
+      opts = new ArrayList<>(ac.getOptions().length);
+      for (AdamArgument aa : ac.getArguments()) {
+        args.add(new AdamInvocationArgument(aa));
+      }
+      for (AdamOption ao : ac.getOptions()) {
+        opts.add(new AdamInvocationOption(ao));
+      }
     }
   }
 
@@ -298,7 +306,6 @@ public final class AdamController extends JobController {
 
   public void setSelectedCommandArgs(List<AdamInvocationArgument> args) {
     this.args = args;
-    System.out.println("Setting command list");
   }
 
   public List<AdamInvocationOption> getSelectedCommandOpts() {
