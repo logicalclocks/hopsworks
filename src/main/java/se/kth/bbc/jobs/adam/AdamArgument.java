@@ -21,6 +21,9 @@ public final class AdamArgument{
   }
   
   public AdamArgument(String name, String description, boolean isPath, boolean isOutputPath, boolean required){
+    if(isOutputPath && !isPath){
+      throw new IllegalArgumentException("Argument cannot be an output path if it is not a path.");
+    }
     this.name = name;
     this.description = description;
     this.isPath = isPath;

@@ -2471,10 +2471,6 @@ box-shadow: none;
   height: 0px !important;
 }
 
-.adamForm .adamTable {
-  width: 50%;
-}
-
 .adamForm .adamTable table {  
   border-collapse: collapse;
 }
@@ -2507,4 +2503,14 @@ box-shadow: none;
 
 .adamForm .adamTable td {
   border-bottom: 0.1px solid #EEE;
+}
+
+.ui-datatable .ui-inputtext {
+  width: 100%;
+}
+
+.adamForm .adamTable .jobNameTable {
+  margin-top: 20px;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size: 12px;
 }

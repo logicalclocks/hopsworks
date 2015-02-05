@@ -28,16 +28,6 @@ public class FileSystemOperations {
   private static final Logger logger = Logger.getLogger(
           FileSystemOperations.class.getName());
 
-  public static final String DIR_ROOT = "Projects";
-  public static final String DIR_SAMPLES = "Samples";
-  public static final String DIR_CUNEIFORM = "Cuneiform";
-  public static final String DIR_RESULTS = "Results";
-  public static final String DIR_BAM = "bam";
-  public static final String DIR_SAM = "sam";
-  public static final String DIR_FASTQ = "fastq";
-  public static final String DIR_FASTA = "fasta";
-  public static final String DIR_VCF = "vcf";
-
   /**
    * Copy a file to HDFS. The file will end up at <i>location</i>. The
    * InputStream represents the file.

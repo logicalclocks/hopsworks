@@ -8,7 +8,7 @@ public class AdamInvocationOption {
 
   private final AdamOption opt;
   private String stringValue;
-  private boolean booleanValue;
+  private boolean booleanValue = false;
   private final boolean usesBoolean;
 
   public AdamInvocationOption(AdamOption opt) {
@@ -50,6 +50,15 @@ public class AdamInvocationOption {
 
   public AdamOption getOpt() {
     return opt;
+  }
+  
+  @Override
+  public String toString(){
+    if(usesBoolean){
+      return "<"+opt+":"+booleanValue+">";
+    }else{
+      return "<"+opt+":"+stringValue+">";
+    }
   }
 
 }

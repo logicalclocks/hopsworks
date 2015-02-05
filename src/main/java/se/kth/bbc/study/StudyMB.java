@@ -32,8 +32,8 @@ import se.kth.bbc.activity.UserGroupsController;
 import se.kth.bbc.activity.UsersGroups;
 import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.lims.ClientSessionState;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
@@ -445,7 +445,7 @@ public class StudyMB implements Serializable {
             studyController.removeByName(studyName);
             activity.addActivity(ActivityController.REMOVED_STUDY, studyName, ActivityController.FLAG_STUDY);
             if (deleteFilesOnRemove) {
-                String path = File.separator + FileSystemOperations.DIR_ROOT + File.separator + studyName;
+                String path = File.separator + Constants.DIR_ROOT + File.separator + studyName;
                 success = fileOps.rmRecursive(path);
                 if (!success) {
                     MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to remove study files.");

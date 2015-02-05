@@ -14,8 +14,8 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
-import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.lims.ClientSessionState;
+import se.kth.bbc.lims.Constants;
 
 /**
  *
@@ -201,7 +201,7 @@ public class InodesMB implements Serializable {
     public static String getSampleId(String path) {
         String[] p = path.split(File.separator);
         for (int i = 0; i < p.length; i++) {
-            if (FileSystemOperations.DIR_SAMPLES.equals(p[i])) {
+            if (Constants.DIR_SAMPLES.equals(p[i])) {
                 if (i + 1 < p.length) {
                     return p[i + 1];
                 } else {
