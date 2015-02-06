@@ -133,7 +133,9 @@ public final class AdamController extends JobController {
     builder.setExecutorMemoryGB(4);
 
     builder.addAllJobArgs(constructArgs());
-    //TODO: Figure out how to run ADAM on YARN :D
+    
+    //Add all ADAM jars to local resources
+    addAllAdamJarsToLocalResourcesAndClasspath(builder);
 
     //Set the job name
     builder.setJobName(jobName);
