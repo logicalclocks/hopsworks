@@ -244,6 +244,9 @@ public class YarnRunner implements Closeable, CancellableJob {
       String destination = basePath + File.separator + Utils.getFileName(path);
       Path dst = new Path(destination);
       fs.copyFromLocalFile(new Path(path), dst);
+      logger.log(Level.INFO, "Copying from: {0} to: {1}",
+              new Object[]{path,
+                dst});
     }
   }
 

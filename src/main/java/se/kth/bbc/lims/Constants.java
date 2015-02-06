@@ -113,8 +113,7 @@ public class Constants {
     "adam-cli/target/appassembler/repo/eu/medsea/mimeutil/mime-util/2.1.3/mime-util-2.1.3.jar",
     "adam-cli/target/appassembler/repo/joda-time/joda-time/2.3/joda-time-2.3.jar",
     "adam-cli/target/appassembler/repo/org/joda/joda-convert/1.6/joda-convert-1.6.jar",
-    "adam-cli/target/appassembler/repo/org/scala-lang/scala-reflect/2.10.4/scala-reflect-2.10.4.jar",
-    "adam-cli/target/appassembler/repo/org/bdgenomics/adam/adam-cli/0.15.1-SNAPSHOT/adam-cli-0.15.1-SNAPSHOT.jar"};
+    "adam-cli/target/appassembler/repo/org/scala-lang/scala-reflect/2.10.4/scala-reflect-2.10.4.jar"};
 
   //Directory names in HDFS
   public static final String DIR_ROOT = "Projects";
