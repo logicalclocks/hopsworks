@@ -130,7 +130,7 @@ public final class AdamController extends JobController {
             "org.bdgenomics.adam.serialization.ADAMKryoRegistrator");
     builder.addSystemProperty("spark.kryoserializer.buffer.mb", "4");
     builder.addSystemProperty("spark.kryo.referenceTracking", "true");
-    builder.setExecutorMemoryGB(4);
+    builder.setExecutorMemoryGB(1);
 
     builder.addAllJobArgs(constructArgs());
     
@@ -230,6 +230,8 @@ public final class AdamController extends JobController {
 
   private List<String> constructArgs() {
     List<String> adamargs = new ArrayList<>();
+    //First: add command
+    adamargs.add(selectedCommand.getCommand());
     //Loop over arguments
     for (AdamInvocationArgument aia : args) {
       if (aia.getArg().isPath() && !aia.getArg().isOutputPath()) {
