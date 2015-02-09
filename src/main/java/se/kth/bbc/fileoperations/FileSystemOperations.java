@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -30,6 +31,16 @@ public class FileSystemOperations {
   //TODO: use fs.copyFromLocalFile
   private static final Logger logger = Logger.getLogger(
           FileSystemOperations.class.getName());
+  private FileSystem fs;
+  
+  @PostConstruct
+  public void init(){
+    try {
+      fs = getFs();
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
+    }
+  }
 
   /**
    * Copy a file to HDFS. The file will end up at <i>location</i>. The
@@ -43,10 +54,6 @@ public class FileSystemOperations {
    */
   public void copyToHDFS(Path location, InputStream is) throws IOException,
           URISyntaxException {
-
-    // Get the filesystem
-    FileSystem fs = getFs();
-
     // Write file
     if (!fs.exists(location)) {
       FSDataOutputStream os = fs.create(location, false);
@@ -61,7 +68,6 @@ public class FileSystemOperations {
    * @return An InputStream for the file.
    */
   public InputStream getInputStream(Path location) throws IOException {
-    FileSystem fs = getFs();
     return fs.open(location, 1048576); //TODO: undo hard coding of weird constant here...
   }
 
@@ -72,7 +78,6 @@ public class FileSystemOperations {
    * @return True if successful.
    */
   public boolean mkdir(Path location) throws IOException {
-    FileSystem fs = getFs();
     return fs.mkdirs(location, null);
   }
 
@@ -86,7 +91,6 @@ public class FileSystemOperations {
    * @throws IOException
    */
   public boolean rm(Path location, boolean recursive) throws IOException {
-    FileSystem fs = getFs();
     if (fs.exists(location)) {
       return fs.delete(location, recursive);
     } else {
@@ -138,39 +142,33 @@ public class FileSystemOperations {
 
   public String cat(Path file) throws IOException{
     StringBuilder out = new StringBuilder();
-    FileSystem fs = getFs();
     BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(file)));
     String line;
     line = br.readLine();
     while (line != null) {
-      out.append(line + "\n");
+      out.append(line).append("\n");
       line = br.readLine();
     }
     return out.toString();
   }
   
   public void copyFromLocal(Path source, Path destination) throws IOException{
-    FileSystem fs = getFs();
     fs.copyFromLocalFile(false, source, destination);
   }
   
   public void moveWithinHdsf(Path source, Path destination) throws IOException{
-    FileSystem fs = getFs();
     fs.rename(source, destination);
   }
   
   public boolean exists(Path path) throws IOException{
-    FileSystem fs = getFs();
     return fs.exists(path);
   }
   
   public boolean isDir(Path path) throws IOException{
-    FileSystem fs = getFs();
     return fs.isDirectory(path);
   }
   
   public List<Path> getChildren(Path path) throws IOException{
-    FileSystem fs = getFs();
     FileStatus[] stat = fs.listStatus(path);
     List<Path> children = new ArrayList<>();
     for(FileStatus s: stat){

@@ -54,7 +54,7 @@ public abstract class JobController implements Serializable {
    * server.
    */
   protected abstract void afterUploadExtraFile(FileUploadEvent event);
-  
+
   public void uploadMainFile(FileUploadEvent event) {
     files.clear();
     variables.clear();
@@ -125,6 +125,8 @@ public abstract class JobController implements Serializable {
         return "An error occurred while trying to download stdout.";
       case STDERR_DOWNLOAD_FAILURE:
         return "An error occurred while trying to download stderr.";
+      case FILE_DOWNLOAD_FAILURE:
+        return "An error occurred while trying to download file.";
       default:
         throw new IllegalStateException("Enum value unaccounted for!");
     }
@@ -152,6 +154,8 @@ public abstract class JobController implements Serializable {
         return "Failed to download stdout from path " + extraInfo + ".";
       case STDERR_DOWNLOAD_FAILURE:
         return "Failed to download stderr from path " + extraInfo + ".";
+      case FILE_DOWNLOAD_FAILURE:
+        return "Failed to download file from path " + extraInfo + ".";
       default:
         throw new IllegalStateException("Enum value unaccounted for!");
     }
@@ -177,9 +181,9 @@ public abstract class JobController implements Serializable {
       throw new IllegalStateException("JobHistoryFacade has not been set.");
     }
   }
-  
-  private void checkIfFopsSet(){
-    if(fops == null){
+
+  private void checkIfFopsSet() {
+    if (fops == null) {
       throw new IllegalStateException("FileOperations bean has not been set.");
     }
   }
@@ -187,8 +191,8 @@ public abstract class JobController implements Serializable {
   public void setJobHistoryFacade(JobHistoryFacade facade) {
     this.history = facade;
   }
-  
-  public void setFileOperations(FileOperations fops){
+
+  public void setFileOperations(FileOperations fops) {
     this.fops = fops;
   }
 
@@ -242,8 +246,8 @@ public abstract class JobController implements Serializable {
   protected void putVariable(String key, String value) {
     variables.put(key, value);
   }
-  
-  protected String getVariable(String key){
+
+  protected String getVariable(String key) {
     return variables.get(key);
   }
 
@@ -254,12 +258,12 @@ public abstract class JobController implements Serializable {
   protected String getFilePath(String key) {
     return files.get(key);
   }
-  
-  protected String getMainFilePath(){
+
+  protected String getMainFilePath() {
     return files.get(KEY_MAIN_FILE);
   }
-  
-  protected Map<String,String> getFiles(){
+
+  protected Map<String, String> getFiles() {
     return files;
   }
 
@@ -274,9 +278,11 @@ public abstract class JobController implements Serializable {
       String filename = "stdout.log";
       return downloadFile(stdoutPath, filename);
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, getLogMessage(JobControllerEvent.STDOUT_DOWNLOAD_FAILURE,stdoutPath), ex);
+      logger.log(Level.SEVERE, getLogMessage(
+              JobControllerEvent.STDOUT_DOWNLOAD_FAILURE, stdoutPath), ex);
       MessagesController.addErrorMessage(MessagesController.ERROR,
-              getUserMessage(JobControllerEvent.STDOUT_DOWNLOAD_FAILURE, stdoutPath));
+              getUserMessage(JobControllerEvent.STDOUT_DOWNLOAD_FAILURE,
+                      stdoutPath));
     }
     return null;
   }
@@ -291,9 +297,11 @@ public abstract class JobController implements Serializable {
     try {
       return downloadFile(stderrPath, filename);
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, getLogMessage(JobControllerEvent.STDERR_DOWNLOAD_FAILURE,stderrPath), ex);
+      logger.log(Level.SEVERE, getLogMessage(
+              JobControllerEvent.STDERR_DOWNLOAD_FAILURE, stderrPath), ex);
       MessagesController.addErrorMessage(MessagesController.ERROR,
-              getUserMessage(JobControllerEvent.STDERR_DOWNLOAD_FAILURE, stderrPath));
+              getUserMessage(JobControllerEvent.STDERR_DOWNLOAD_FAILURE,
+                      stderrPath));
     }
     return null;
   }
@@ -309,16 +317,34 @@ public abstract class JobController implements Serializable {
             path);
     return sc;
   }
-  
+
+  public StreamedContent downloadFile(String path) {
+    try {
+      return downloadFile(Utils.getDirectoryPart(path), Utils.getFileName(path));
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, getLogMessage(
+              JobControllerEvent.FILE_DOWNLOAD_FAILURE, path), ex);
+      MessagesController.addErrorMessage(MessagesController.ERROR,
+              getUserMessage(JobControllerEvent.FILE_DOWNLOAD_FAILURE, path));
+      return null;
+    }
+  }
+
   /**
    * Get a map containing all the extra files uploaded so far. The returned
-   * map is NOT backed by the original map, so changes in either will not reflect
+   * map is NOT backed by the original map, so changes in either will not
+   * reflect
    * in the other.
-   * @return 
+   * <p>
+   * @return
    */
-  protected final Map<String,String> getExtraFiles(){
-    Map<String,String> allFiles = new HashMap(files);
+  protected final Map<String, String> getExtraFiles() {
+    Map<String, String> allFiles = new HashMap(files);
     allFiles.remove(KEY_MAIN_FILE);
     return allFiles;
+  }
+
+  public final boolean isDir(String path) {
+    return fops.isDir(path);
   }
 }

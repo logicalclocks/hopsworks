@@ -54,7 +54,7 @@ and open the template in the editor.
                         </h:column>
 
                         <h:column>
-                            <p:commandLink styleClass="ui-button fa fa-minus remove_data_button"  
+                            <p:commandLink styleClass="ui-button fa fa-trash remove_data_button"  
                                            value="" rendered="#{studyManagedBean.renderComponentList() == 'Master' and not inode.dir}" 
                                            update="@form" action="#{fileOperationsMB.deleteFile(inode)}">
                                 <p:confirm header="Remove data" message="Are you sure you want to remove this file?" icon="ui-icon-alert"/>

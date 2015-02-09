@@ -96,6 +96,23 @@
                         </h:panelGrid>
                         <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{adamController.selectedJobRunning}"/>
 
+                        <div>
+                            <h:panelGroup id="outputFilesGroup" rendered="#{adamController.selectedJobHasFinished and adamController.selectedJob.jobOutputFileCollection.size()>0}" >
+                                <h:outputText value="Results:"/>
+                                <ui:repeat value="#{adamController.selectedJob.jobOutputFileCollection}" var="file">
+                                    <div>
+                                        <p:commandLink ajax="false" rendered="#{not adamController.isDir(file.path)}">
+                                            <strong>#{file.jobOutputFilePK.name}</strong>
+                                            <p:fileDownload value="#{adamController.downloadFile(file.path)}"/>
+                                        </p:commandLink>
+                                        <p:commandLink rendered="#{jobHistoryController.isDir(file.path)}" action="#{InodesMB.cdGlobal(file.path)}" oncomplete="PF('studyTabs').select(2)">
+                                            <strong>#{file.jobOutputFilePK.name}</strong>
+                                        </p:commandLink>
+                                    </div>
+                                </ui:repeat>
+                            </h:panelGroup>
+                        </div>
+
                         <h:panelGroup rendered="#{adamController.selectedJobHasFinished}" >
                             <div>
                                 <h:outputText value="Logs:"/>

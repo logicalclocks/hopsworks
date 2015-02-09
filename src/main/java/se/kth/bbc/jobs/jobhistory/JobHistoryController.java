@@ -34,12 +34,12 @@ public class JobHistoryController implements Serializable {
 
   @EJB
   private FileOperations fops;
-  
-  @ManagedProperty( value = "#{clientSessionState}")
+
+  @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
-  
+
   // for loading specific history 
-  @ManagedProperty( value = "#{cuneiformController}")
+  @ManagedProperty(value = "#{cuneiformController}")
   private CuneiformController cfCont;
 
   public void setSessionState(ClientSessionState sessionState) {
@@ -53,12 +53,13 @@ public class JobHistoryController implements Serializable {
   public List<JobHistory> getHistoryForType(JobType type) {
     return history.findForStudyByType(sessionState.getActiveStudyname(), type);
   }
-  
+
   public StreamedContent downloadFile(String path) {
     String filename = Utils.getFileName(path);
     try {
       InputStream is = fops.getInputStream(path);
-      StreamedContent sc = new DefaultStreamedContent(is, Utils.getMimeType(filename),
+      StreamedContent sc = new DefaultStreamedContent(is, Utils.getMimeType(
+              filename),
               filename);
       logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
               path);
@@ -69,12 +70,16 @@ public class JobHistoryController implements Serializable {
     }
     return null;
   }
-  
-  public void selectJob(JobHistory job){
-    switch(job.getType()){
+
+  public void selectJob(JobHistory job) {
+    switch (job.getType()) {
       case CUNEIFORM:
         cfCont.selectJob(job);
         break;
     }
+  }
+
+  public final boolean isDir(String path) {
+    return fops.isDir(path);
   }
 }

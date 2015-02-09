@@ -325,5 +325,13 @@ public class FileOperations {
     }
     return false;
   }
+  
+  public boolean isDir(String path){
+    Inode i = inodes.getInodeAtPath(path);
+    if(i!=null)
+      return i.isDir();
+    else
+      return false;
+  }
 
 }
