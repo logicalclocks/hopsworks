@@ -1,7 +1,6 @@
 package se.kth.bbc.jobs.adam;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -11,7 +10,6 @@ import se.kth.bbc.jobs.HopsJob;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
-import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFilePK;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.yarn.YarnJob;
