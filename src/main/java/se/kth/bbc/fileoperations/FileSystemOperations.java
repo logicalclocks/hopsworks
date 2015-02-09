@@ -6,11 +6,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -154,6 +157,26 @@ public class FileSystemOperations {
   public void moveWithinHdsf(Path source, Path destination) throws IOException{
     FileSystem fs = getFs();
     fs.rename(source, destination);
+  }
+  
+  public boolean exists(Path path) throws IOException{
+    FileSystem fs = getFs();
+    return fs.exists(path);
+  }
+  
+  public boolean isDir(Path path) throws IOException{
+    FileSystem fs = getFs();
+    return fs.isDirectory(path);
+  }
+  
+  public List<Path> getChildren(Path path) throws IOException{
+    FileSystem fs = getFs();
+    FileStatus[] stat = fs.listStatus(path);
+    List<Path> children = new ArrayList<>();
+    for(FileStatus s: stat){
+      children.add(s.getPath());
+    }
+    return children;
   }
 
 }

@@ -2,7 +2,6 @@ package se.kth.bbc.fileoperations;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -14,7 +13,6 @@ import org.apache.hadoop.fs.Path;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.study.fb.Inode;
 import se.kth.bbc.study.fb.InodeFacade;
-import se.kth.bbc.upload.UploadServlet;
 
 /**
  * Session bean for file operations. Translates high-level operations into
@@ -294,6 +292,33 @@ public class FileOperations {
     Path src = new Path(source);
     Path dst = new Path(destination);
     fsOps.moveWithinHdsf(src, dst);
+  }
+  
+  /**
+   * Checks if the path exists in HDFS and creates Inodes along it if they are
+   * not yet present in the DB.
+   * <p>
+   * @param path
+   * @return True if the path exists (and Inodes were created), false otherwise.
+   */
+  public boolean createInodesIfNeeded(String path) throws IOException{
+    Path p = new Path(path);
+    return createInodesIfNeeded(p);
+  }
+  
+  private boolean createInodesIfNeeded(Path p) throws IOException {
+    if(fsOps.exists(p)){
+      if(fsOps.isDir(p)){
+        inodes.createAndPersistDir(p.toUri().getPath(), Inode.AVAILABLE);
+        for(Path c:fsOps.getChildren(p)){
+          createInodesIfNeeded(c);
+        }
+      }else{
+        inodes.createAndPersistFile(p.toUri().getPath(), 0, Inode.AVAILABLE);
+      }
+      return true;
+    }
+    return false;
   }
   
 }

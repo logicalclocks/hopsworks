@@ -17,7 +17,6 @@ import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
-import se.kth.bbc.jobs.spark.SparkJob;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.ClientSessionState;
@@ -133,7 +132,7 @@ public final class AdamController extends JobController {
     builder.setExecutorMemoryGB(1);
 
     builder.addAllJobArgs(constructArgs());
-    
+
     //Add all ADAM jars to local resources
     addAllAdamJarsToLocalResourcesAndClasspath(builder);
 
@@ -150,7 +149,7 @@ public final class AdamController extends JobController {
       return;
     }
 
-    SparkJob job = new SparkJob(history, r, fops);
+    AdamJob job = new AdamJob(history, r, fops, args, opts);
     setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
             sessionState.getActiveStudyname(), JobType.ADAM));
     if (isJobSelected()) {
@@ -166,6 +165,7 @@ public final class AdamController extends JobController {
       job.setStdErrFinalDestination(stdErrFinalDestination);
       submitter.startExecution(job);
       MessagesController.addInfoMessage("Job submitted!");
+      resetArguments();
     } else {
       logger.log(Level.SEVERE,
               "Failed to persist JobHistory. Aborting execution.");
@@ -201,12 +201,14 @@ public final class AdamController extends JobController {
    */
   private void translateOutputPaths() {
     for (AdamInvocationArgument aia : args) {
-      if (aia.getArg().isOutputPath() && aia.getValue()!= null && !aia.getValue().isEmpty()) {
+      if (aia.getArg().isOutputPath() && aia.getValue() != null && !aia.
+              getValue().isEmpty()) {
         aia.setValue(getPathForString(aia.getValue()));
       }
     }
     for (AdamInvocationOption aio : opts) {
-      if (aio.getOpt().isValuePath() && aio.getStringValue() != null && !aio.getStringValue().isEmpty()) {
+      if (aio.getOpt().isValuePath() && aio.getStringValue() != null && !aio.
+              getStringValue().isEmpty()) {
         aio.setStringValue(getPathForString(aio.getStringValue()));
       }
     }
@@ -237,9 +239,9 @@ public final class AdamController extends JobController {
       if (aia.getArg().isPath() && !aia.getArg().isOutputPath()) {
         //Is an input path: for now: local file
         //TODO: change if file from system
-        adamargs.add("file:"+getFilePath(aia.getValue()));  
+        adamargs.add("file:" + getFilePath(aia.getValue()));
       } else {
-        adamargs.add(aia.getValue());  
+        adamargs.add(aia.getValue());
       }
     }
     //Loop over options
@@ -247,37 +249,39 @@ public final class AdamController extends JobController {
       if (aio.getOpt().isFlag()) {
         //flag: just add the name of the flag
         if (aio.getBooleanValue()) {
-          adamargs.add(aio.getOpt().getCliVal());    
+          adamargs.add(aio.getOpt().getCliVal());
         }
-      } else if(aio.getStringValue() != null && !aio.getStringValue().isEmpty()){
+      } else if (aio.getStringValue() != null && !aio.getStringValue().isEmpty()) {
         //Not a flag: add the name of the option
         adamargs.add(aio.getOpt().getCliVal());
         if (aio.getOpt().isValuePath() && aio.getOpt().isOutputPath()) {
           //input path: add its full path
-          adamargs.add("file:"+getFilePath(aio.getStringValue()));
+          adamargs.add("file:" + getFilePath(aio.getStringValue()));
         } else {
           //output path or string or sthn: add option value
           adamargs.add(aio.getStringValue());
-        }  
+        }
       }
     }
     return adamargs;
   }
-  
+
   /**
    * Add all the ADAM jar to the local resources and to the classpath.
-   * @param builder 
+   * <p>
+   * @param builder
    */
-  private void addAllAdamJarsToLocalResourcesAndClasspath(SparkYarnRunnerBuilder builder){
+  private void addAllAdamJarsToLocalResourcesAndClasspath(
+          SparkYarnRunnerBuilder builder) {
     //Add all to local resources and to classpath
-    for(String s: Constants.ADAM_JARS){
+    for (String s : Constants.ADAM_JARS) {
       String filename = Utils.getFileName(s);
       String sourcePath = Constants.ADAM_HOME + s;
       builder.addExtraFile(filename, sourcePath);
       builder.addToClassPath(filename);
     }
   }
-  
+
   public AdamCommand[] getAdamCommands() {
     return AdamCommand.values();
   }
@@ -285,14 +289,18 @@ public final class AdamController extends JobController {
   public void setSelectedCommand(AdamCommand ac) {
     if (ac != selectedCommand) {
       this.selectedCommand = ac;
-      args = new ArrayList<>(ac.getArguments().length);
-      opts = new ArrayList<>(ac.getOptions().length);
-      for (AdamArgument aa : ac.getArguments()) {
-        args.add(new AdamInvocationArgument(aa));
-      }
-      for (AdamOption ao : ac.getOptions()) {
-        opts.add(new AdamInvocationOption(ao));
-      }
+      resetArguments();
+    }
+  }
+
+  private void resetArguments() {
+    args = new ArrayList<>(selectedCommand.getArguments().length);
+    opts = new ArrayList<>(selectedCommand.getOptions().length);
+    for (AdamArgument aa : selectedCommand.getArguments()) {
+      args.add(new AdamInvocationArgument(aa));
+    }
+    for (AdamOption ao : selectedCommand.getOptions()) {
+      opts.add(new AdamInvocationOption(ao));
     }
   }
 

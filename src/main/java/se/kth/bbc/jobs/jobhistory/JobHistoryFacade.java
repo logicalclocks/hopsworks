@@ -73,13 +73,13 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     jh.setState(newState);
     jh.setExecutionDuration(BigInteger.valueOf(executionTime));
     em.merge(jh);
-    if(oldstate != newState)
-    publishStateChange(jh);
+    if (oldstate != newState) {
+      publishStateChange(jh);
+    }
   }
 
   public void update(Long id, JobState newState,
           Collection<JobOutputFile> outputFiles) {
-    //TODO: check if state is a final one, if so: update execution time
     JobHistory jh = findById(id);
     JobState oldstate = jh.getState();
     jh.setState(newState);
@@ -87,8 +87,9 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     output.addAll(output);
     jh.setJobOutputFileCollection(output);
     em.merge(jh);
-    if(oldstate != newState)
-    publishStateChange(jh);
+    if (oldstate != newState) {
+      publishStateChange(jh);
+    }
   }
 
   public void update(Long id, Collection<JobOutputFile> extraOutputFiles) {

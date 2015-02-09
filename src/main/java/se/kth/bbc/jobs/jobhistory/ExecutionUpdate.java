@@ -19,6 +19,7 @@ public class ExecutionUpdate {
   
   @OnMessage
   public String onMessage(String jobid){
+    System.out.println("Update state for "+jobid);
     return jobid;
   }
 }

@@ -26,6 +26,12 @@ public final class Utils {
       return filename.substring(lastDot);
     }
   }
+  
+  public static String getDirectoryPart(String path){
+    int lastSlash = path.lastIndexOf("/");
+    int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
+    return path.substring(0,startName);
+  }
 
   public static String getMimeType(String filename) {
     HttpServletRequest hsr = (HttpServletRequest) FacesContext.
