@@ -60,10 +60,17 @@
                             <p:column id="argValueColumn">
                                 <p:inputText value="#{arg.value}" style="width:100%" label="Value" rendered="#{not arg.arg.path}"/>
                                 <p:inputText value="#{arg.value}" style="width:100%" label="Path" rendered="#{arg.arg.path and arg.arg.outputPath}"/>
-                                <p:fileUpload auto="true" multiple="false" label="Upload" mode="advanced" fileUploadListener="#{adamController.uploadExtraFile}" update="@parent" process="@parent" rendered="#{arg.arg.path and not arg.arg.outputPath}">
+                                <p:fileUpload auto="true" multiple="false" label="Upload" mode="advanced" fileUploadListener="#{adamController.uploadExtraFile}" update="argumentsTable" process="@parent" rendered="#{arg.arg.path and not arg.arg.outputPath and not adamController.isFileUploadedForArg(arg.arg.name)}">
                                     <f:attribute name="type" value="argument"/>
                                     <f:attribute name="name" value="#{arg.arg.name}"/>
                                 </p:fileUpload>
+                                <h:panelGroup rendered="#{arg.arg.path and not arg.arg.outputPath and adamController.isFileUploadedForArg(arg.arg.name)}">
+                                    <p:outputLabel value="#{adamController.getFileNameForArg(arg.arg.name)}" />
+                                    <p:fileUpload auto="true" multiple="false" label="Change" mode="advanced" fileUploadListener="#{adamController.uploadExtraFile}" update="argumentsTable" process="@parent" styleClass="changeUpload">
+                                        <f:attribute name="type" value="argument"/>
+                                        <f:attribute name="name" value="#{arg.arg.name}"/>
+                                    </p:fileUpload>
+                                </h:panelGroup> 
                             </p:column>
                         </p:dataTable>
                         <!-- OPTIONS -->
@@ -77,10 +84,17 @@
                             <p:column id="optValueColumn">
                                 <p:inputText value="#{opt.stringValue}" style="width:100%" label="Value" rendered="#{not opt.opt.valuePath and not opt.opt.flag}"/>
                                 <p:inputText value="#{opt.stringValue}" style="width:100%" label="Path" rendered="#{opt.opt.valuePath and opt.opt.outputPath}"/>
-                                <p:fileUpload auto="true" multiple="false" label="Upload" mode="advanced" fileUploadListener="#{adamController.uploadExtraFile}" update="@parent" process="@parent" rendered="#{opt.opt.valuePath and not opt.opt.outputPath}">
+                                <p:fileUpload auto="true" multiple="false" label="Upload" mode="advanced" fileUploadListener="#{adamController.uploadExtraFile}" update="optionsTable" process="@parent" rendered="#{opt.opt.valuePath and not opt.opt.outputPath and not adamController.isFileUploadedForOpt(opt.opt.name)}">
                                     <f:attribute name="type" value="option"/>
                                     <f:attribute name="name" value="#{opt.opt.name}"/>
                                 </p:fileUpload>
+                                <h:panelGroup rendered="#{opt.opt.valuePath and not opt.opt.outputPath and adamController.isFileUploadedForOpt(opt.opt.name)}">
+                                    <p:outputLabel value="#{adamController.getFileNameForOpt(opt.opt.name)}" />
+                                    <p:fileUpload styleClass="changeUpload" auto="true" multiple="false" label="Change" mode="advanced" fileUploadListener="#{adamController.uploadExtraFile}" update="optionsTable" process="@parent">
+                                        <f:attribute name="type" value="option"/>
+                                        <f:attribute name="name" value="#{opt.opt.name}"/>
+                                    </p:fileUpload>
+                                </h:panelGroup> 
                                 <p:selectBooleanButton value="#{opt.booleanValue}" onLabel="True" offLabel="False" rendered="#{opt.opt.flag}"/>
                             </p:column>
                         </p:dataTable>

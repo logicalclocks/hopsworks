@@ -331,4 +331,40 @@ public final class AdamController extends JobController {
     this.sessionState = sessionState;
   }
 
+  public boolean isFileUploadedForArg(String name) {
+    for (AdamInvocationArgument aia : args) {
+      if (aia.getArg().getName().equals(name)) {
+        return aia.getValue() != null && !aia.getValue().isEmpty();
+      }
+    }
+    return false;
+  }
+
+  public boolean isFileUploadedForOpt(String name) {
+    for (AdamInvocationOption aio : opts) {
+      if (aio.getOpt().getName().equals(name)) {
+        return aio.getStringValue() != null && !aio.getStringValue().isEmpty();
+      }
+    }
+    return false;
+  }
+
+  public String getFileNameForArg(String name) {
+    for (AdamInvocationArgument aia : args) {
+      if (aia.getArg().getName().equals(name)) {
+        return Utils.getFileName(aia.getValue());
+      }
+    }
+    return null;
+  }
+
+  public String getFileNameForOpt(String name) {
+    for (AdamInvocationOption aio : opts) {
+      if (aio.getOpt().getName().equals(name)) {
+        return Utils.getFileName(aio.getStringValue());
+      }
+    }
+    return null;
+  }
+
 }
