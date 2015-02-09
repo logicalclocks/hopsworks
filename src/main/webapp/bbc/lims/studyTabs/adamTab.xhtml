@@ -114,11 +114,6 @@
                             </div>
                         </h:panelGroup>
                     </h:form>
-                    <!-- primefaces push -->
-                    <p:socket channel="#{adamController.pushChannel}">
-                        <p:ajax event="message" update=":#{p:component('AdamResultsForm')} :#{p:component('historyForm_ADAM')}" />
-                    </p:socket>
-
                 </h:panelGrid>
             </div>
         </ui:composition>

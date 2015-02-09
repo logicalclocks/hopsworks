@@ -85,11 +85,6 @@
                             </div>
                         </h:panelGroup>
                     </h:form>
-                    <!-- primefaces push -->
-                    <p:socket channel="#{sparkController.pushChannel}">
-                        <p:ajax event="message" update=":#{p:component('sparkResultsForm')} :#{p:component('historyForm_SPARK')}" />
-                    </p:socket>
-
                 </h:panelGrid>
             </div>
         </ui:composition>

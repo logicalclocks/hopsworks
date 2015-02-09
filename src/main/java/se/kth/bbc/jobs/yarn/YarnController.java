@@ -2,7 +2,6 @@ package se.kth.bbc.jobs.yarn;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,7 +12,6 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.UploadedFile;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.JobControllerEvent;
@@ -163,11 +161,6 @@ public class YarnController extends JobController {
       default:
         return super.getLogMessage(event, extraInfo);
     }
-  }
-  
-  @Override
-  public String getPushChannel(){
-    return "/" + sessionState.getActiveStudyname() + "/" + JobType.YARN;
   }
 
 }

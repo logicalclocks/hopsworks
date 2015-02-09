@@ -90,6 +90,18 @@
                 </p:layoutUnit>
             </p:layout>
 
+            <!-- Subscribe to the study push channel and add ajax event handlers for those necessary -->
+             <p:socket channel="#{studyManagedBean.pushChannel}">
+                <!-- ADAM -->
+                <p:ajax event="message" update=":#{p:component('AdamResultsForm')} :#{p:component('historyForm_ADAM')}" rendered="#{studyManagedBean.shouldDrawTab('ADAM') and studyManagedBean.renderComponentList() != null}"/>
+                <!-- CUNEIFORM -->
+                <p:ajax event="message" update=":#{p:component('CFResultsForm')} :#{p:component('historyForm_CUNEIFORM')}" rendered="#{studyManagedBean.shouldDrawTab('CUNEIFORM') and studyManagedBean.renderComponentList() != null}" />
+                <!-- SPARK -->
+                <p:ajax event="message" update=":#{p:component('sparkResultsForm')} :#{p:component('historyForm_SPARK')}" rendered="#{studyManagedBean.shouldDrawTab('SPARK') and studyManagedBean.renderComponentList() != null}" />
+                <!-- YARN -->
+                <p:ajax event="message" update=":#{p:component('yarnResultsForm')} :#{p:component('historyForm_YARN')}" rendered="#{studyManagedBean.shouldDrawTab('YARN') and studyManagedBean.renderComponentList() != null}" />
+            </p:socket>
+
 
             <!-- In case Study has not been set: user navigated to the page manually. -->
             <p:layout id="bbcMainLayoutAlt" styleClass="BbcMainLayoutStudy" rendered="#{studyManagedBean.studyName == null}">  

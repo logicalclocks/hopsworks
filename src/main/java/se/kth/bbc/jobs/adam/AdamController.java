@@ -87,11 +87,6 @@ public final class AdamController extends JobController {
     }
   }
 
-  @Override
-  public String getPushChannel() {
-    return "/" + sessionState.getActiveStudyname() + "/" + JobType.ADAM;
-  }
-
   @PostConstruct
   public void init() {
     try {

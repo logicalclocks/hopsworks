@@ -376,16 +376,6 @@ public final class CuneiformController extends JobController {
     // overwrite history content and set jobhistoryid
   }
 
-  /**
-   * Returns the channel to subscribe to for jobhistory updates.
-   * <p>
-   * @return
-   */
-  @Override
-  public String getPushChannel() {
-    return "/" + sessionState.getActiveStudyname() + "/" + JobType.CUNEIFORM;
-  }
-
   @Override
   protected String getUserMessage(JobControllerEvent event, String extraInfo) {
     switch (event) {

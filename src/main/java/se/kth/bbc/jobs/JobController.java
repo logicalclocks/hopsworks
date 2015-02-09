@@ -54,12 +54,6 @@ public abstract class JobController implements Serializable {
    * server.
    */
   protected abstract void afterUploadExtraFile(FileUploadEvent event);
-
-  /**
-   * Get the channel to subscribe to to receive Primefaces Push updates.
-   * @return 
-   */
-  public abstract String getPushChannel();
   
   public void uploadMainFile(FileUploadEvent event) {
     files.clear();

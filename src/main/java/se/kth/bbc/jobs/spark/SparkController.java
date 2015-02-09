@@ -114,11 +114,6 @@ public final class SparkController extends JobController {
     //TODO: allow for file input in Spark
   }
 
-  @Override
-  public String getPushChannel() {
-    return "/" + sessionState.getActiveStudyname() + "/" + JobType.SPARK;
-  }
-
   public void startJob() {
     if (jobName == null || jobName.isEmpty()) {
       jobName = "Untitled Spark Job";

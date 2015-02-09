@@ -184,7 +184,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
    */
   private void publishStateChange(JobHistory jh) {
     EventBus eventBus = EventBusFactory.getDefault().eventBus();
-    eventBus.publish("/" + jh.getStudy().getName() + "/" + jh.getType(), jh.
+    eventBus.publish("/" + jh.getStudy().getName(), jh.
             getId().toString());
 
   }
