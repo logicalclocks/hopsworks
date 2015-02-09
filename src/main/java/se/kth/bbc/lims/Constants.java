@@ -45,6 +45,7 @@ public class Constants {
   public static final String ADAM_MAINCLASS = "org.bdgenomics.adam.cli.ADAMMain";
   public static final String ADAM_DEFAULT_JAR_PATH
           = "/srv/adam/adam-cli-0.15.1-SNAPSHOT.jar";
+  //Or: "adam-cli/target/appassembler/repo/org/bdgenomics/adam/adam-cli/0.15.1-SNAPSHOT/adam-cli-0.15.1-SNAPSHOT.jar"
   public static final String ADAM_DEFAULT_OUTPUT_PATH = "Adam/Output/";
   public static final String ADAM_HOME = "/srv/adam/";
   public static final String[] ADAM_JARS = new String[]{

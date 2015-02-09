@@ -19,7 +19,7 @@ public class ExecutionUpdate {
   
   @OnMessage
   public String onMessage(String jobid){
-    System.out.println("Update state for "+jobid);
+    System.out.println("Publishing state change for "+jobid + " to channel /"+study+"/"+type);
     return jobid;
   }
 }

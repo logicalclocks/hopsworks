@@ -270,30 +270,33 @@ public class FileOperations {
     int lastSlash = path.lastIndexOf("/");
     return path.substring(0, lastSlash);
   }
-  
-  public String cat(String path) throws IOException{
+
+  public String cat(String path) throws IOException {
     Path p = new Path(path);
     return fsOps.cat(p);
   }
 
   /**
-   * Copy a file from local filesystem to HDFS. Do not create an Inode for the file.
+   * Copy a file from local filesystem to HDFS. Do not create an Inode for the
+   * file.
    * (Used internally for prepping running jobs.)
+   * <p>
    * @param localPath
-   * @param hdfsPath 
+   * @param hdfsPath
    */
-  public void copyFromLocalNoInode(String localPath, String hdfsPath) throws IOException{
+  public void copyFromLocalNoInode(String localPath, String hdfsPath) throws
+          IOException {
     Path source = new Path(localPath);
     Path destination = new Path(hdfsPath);
     fsOps.copyFromLocal(source, destination);
   }
-  
-  public void renameInHdfs(String source, String destination) throws IOException{
+
+  public void renameInHdfs(String source, String destination) throws IOException {
     Path src = new Path(source);
     Path dst = new Path(destination);
     fsOps.moveWithinHdsf(src, dst);
   }
-  
+
   /**
    * Checks if the path exists in HDFS and creates Inodes along it if they are
    * not yet present in the DB.
@@ -301,24 +304,26 @@ public class FileOperations {
    * @param path
    * @return True if the path exists (and Inodes were created), false otherwise.
    */
-  public boolean createInodesIfNeeded(String path) throws IOException{
+  public boolean createInodesIfNeeded(String path) throws IOException {
     Path p = new Path(path);
     return createInodesIfNeeded(p);
   }
-  
+
   private boolean createInodesIfNeeded(Path p) throws IOException {
-    if(fsOps.exists(p)){
-      if(fsOps.isDir(p)){
-        inodes.createAndPersistDir(p.toUri().getPath(), Inode.AVAILABLE);
-        for(Path c:fsOps.getChildren(p)){
+    if (fsOps.exists(p)) {
+      if (fsOps.isDir(p)) {
+        if (inodes.getInodeAtPath(p.toUri().getPath()) == null) {
+          inodes.createAndPersistDir(p.toUri().getPath(), Inode.AVAILABLE);
+        }
+        for (Path c : fsOps.getChildren(p)) {
           createInodesIfNeeded(c);
         }
-      }else{
+      } else if (inodes.getInodeAtPath(p.toUri().getPath()) == null) {
         inodes.createAndPersistFile(p.toUri().getPath(), 0, Inode.AVAILABLE);
       }
       return true;
     }
     return false;
   }
-  
+
 }
