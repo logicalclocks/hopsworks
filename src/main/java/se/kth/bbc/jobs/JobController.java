@@ -1,8 +1,10 @@
 package se.kth.bbc.jobs;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -97,7 +99,7 @@ public abstract class JobController implements Serializable {
     }
     UploadedFile file = event.getFile();
     String uploadPath = basePath + file.getFileName();
-    file.write(uploadPath);
+    writeUploadedFile(file, uploadPath);
     files.put(key, uploadPath);
   }
 
@@ -346,5 +348,30 @@ public abstract class JobController implements Serializable {
 
   public final boolean isDir(String path) {
     return fops.isDir(path);
+  }
+  
+    /**
+   * Write an uploaded file to a specific path. This method is functionally
+   * equivalent to UploadedFile.write(String path), except that that one does
+   * not work in Glassfish 4. Should file a report on that somewhere.
+   * <p>
+   * @param file The file to write.
+   * @param destination The destination, including filename, to which the file should be written.
+   * @throws IOException If writing fails.
+   */
+  private static void writeUploadedFile(UploadedFile file, String destination) throws IOException{
+    File dest = new File(destination);
+    try (
+            InputStream stream = file.getInputstream();
+            OutputStream out = new FileOutputStream(dest)) {
+
+      byte[] buffer = new byte[1024];
+      int bytesRead;
+      while ((bytesRead = stream.read(buffer)) != -1) {
+        out.write(buffer, 0, bytesRead);
+      }
+    }catch(IOException e){
+      throw new IOException("Failed to write uploaded file to path "+destination, e);
+    }
   }
 }
