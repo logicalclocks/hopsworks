@@ -8,8 +8,8 @@
         <!-- Don't allow jee7 to scann for classes from guice or jclouds -->
         <!--See bug here: https://blogs.oracle.com/theaquarium/entry/default_cdi_enablement_in_java-->
         <exclude name="com.sun.jersey.guice.**" />
-        <exclude pattern="org.jclouds.**"/>
-        <exclude pattern=".*guice.*"/>        
+        <exclude name="org.jclouds.**"/>
+        <exclude name=".*guice.**"/>        
     </scan>
     
 </beans>
