@@ -102,7 +102,7 @@ public class AuthBackingBean {
         if (request.isUserInRole("BBC_ADMIN") || request.isUserInRole("BBC_RESEARCHER") || request.isUserInRole("ADMIN") || request.isUserInRole("USER")) {
             return "/bbc/lims/index.xml?faces-redirect=true";
         }
-        return "/view.xml";
+        return "";
     }
     
     public String logout() {
