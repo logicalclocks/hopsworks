@@ -118,6 +118,8 @@ public class SamplesController implements Serializable{
     Samplecollection coll = getCollection(id);
     this.collectionSelected = (coll != null);
     this.selectedCollection = coll;
+    selectedSample = null;
+    sampleSelected = false;
   }
 
   public void selectSample(String sampleId) {
