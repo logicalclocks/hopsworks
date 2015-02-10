@@ -62,7 +62,7 @@ public class UploadServlet extends HttpServlet {
         boolean finished = false;
 
         //Mark as uploaded and check if finished
-        if (info.addChuckAndCheckIfFinished(new ResumableInfo.ResumableChunkNumber(resumableChunkNumber))) { //Check if all chunks uploaded, and change filename
+        if (info.addChuckAndCheckIfFinished(new ResumableInfo.ResumableChunkNumber(resumableChunkNumber),content_length)) { //Check if all chunks uploaded, and change filename
             ResumableInfoStorage.getInstance().remove(info);
             response.getWriter().print("All finished.");
             finished = true;
