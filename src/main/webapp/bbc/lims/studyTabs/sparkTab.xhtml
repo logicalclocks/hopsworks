@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  
+      xmlns:f="http://java.sun.com/jsf/core" 
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+    <body>
+        <ui:composition>
+            <div>
+                <h1 style="float:none;">
+                    Spark jobs
+                </h1>
+            </div>
+            <div>
+                <h:panelGrid columns="3" styleClass="jobPanel" columnClasses="historyColumn,runColumn,resultsColumn">
+                    <p:panel styleClass="historyPanel">
+                        <h3>
+                            History
+                        </h3>
+                        <ui:insert name="history">
+                            <ui:include src="/bbc/lims/studyTabs/HistoryPanel.xhtml">
+                                <ui:param name="type" value="SPARK" />
+                            </ui:include>
+                        </ui:insert>
+                    </p:panel>
+                    <h:form id="sparkForm"> <!-- Pun intended -->
+                        <h3>
+                            Run configuration
+                        </h3>
+                        <p:growl autoUpdate="true" showDetail="true"/>
+                        <div class="workflow-head">
+                            <div>
+                                <h:panelGrid columns="2">
+                                    <h:outputLabel for="JobName" value="Job name"/>
+                                    <h:inputText id="JobName" value="#{sparkController.jobName}"/>
+
+                                    <h:outputLabel value="Upload job jar" for="sparkAppUploader"/>
+                                    <p:fileUpload required="true" auto="true" multiple="false" 
+                                                  label="Upload" mode="advanced" allowTypes="/(\.|\/)(jar)$/" 
+                                                  fileUploadListener="#{sparkController.uploadMainFile}" 
+                                                  update="@form" id="sparkAppUploader" process="@form"/>
+
+                                    <h:outputLabel value="Uploaded file"/>
+                                    <h:outputLabel value="#{sparkController.appJarName==null ? 'No file uploaded yet' : sparkController.appJarName}"/>
+
+                                    <h:outputLabel value="Main class name" for="sparkMC"/>
+                                    <h:inputText id="sparkMC" value="#{sparkController.mainClass}"/>
+
+                                    <h:outputLabel value="Arguments" for="sparkArgs"/>
+                                    <h:inputText id="sparkArgs" value="#{sparkController.args}"/>
+                                </h:panelGrid>
+                            </div>
+
+                            <div>
+                                <p:commandButton id="sparkExecuteButton" value="Execute" action="#{sparkController.startJob()}" 
+                                                 update="@form"/>
+                            </div>
+                        </div>
+                    </h:form>
+                    <h:form id="sparkResultsForm">
+                        <h3>
+                            Results
+                        </h3>
+                        <h:panelGrid columns="2">
+                            <h:outputLabel value="Current state:" for="spark_curr_state"/>
+                            <h:outputText id="spark_curr_state" value="#{sparkController.selectedJob.state}" styleClass="stateSpan"/>
+                        </h:panelGrid>
+                        <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{sparkController.selectedJobRunning}"/>
+                        <h:panelGroup rendered="#{sparkController.selectedJobHasFinished}" >
+                            <div>
+                                <h:outputText value="Logs:"/>
+                            </div>
+                            <div>
+                                <p:commandLink ajax="false">
+                                    <strong>stdout.log</strong>
+                                    <p:fileDownload value="#{sparkController.downloadStdout()}" rendered="#{sparkController.selectedJob.stdoutPath != null}"/>
+                                </p:commandLink>
+                            </div>
+                            <div>
+                                <p:commandLink ajax="false">
+                                    <strong>stderr.log</strong>
+                                    <p:fileDownload value="#{sparkController.downloadStderr()}" rendered="#{sparkController.selectedJob.stderrPath != null}"/>
+                                </p:commandLink>
+                            </div>
+                        </h:panelGroup>
+                    </h:form>
+                </h:panelGrid>
+            </div>
+        </ui:composition>
+    </body>
+</html>

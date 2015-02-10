@@ -16,8 +16,8 @@ import javax.faces.bean.ViewScoped;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityMB;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.lims.ClientSessionState;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.study.services.StudyServiceEnum;
 import se.kth.bbc.study.services.StudyServiceFacade;
@@ -139,7 +139,7 @@ public class NewStudyController implements Serializable {
         study = new TrackStudy(newStudyName, username, now);
         //create folder structure
         mkStudyDIR(study.getName());
-        logger.log(Level.INFO, "{0} - study directory created successfully.",
+        logger.log(Level.FINE, "{0} - study directory created successfully.",
                 study.
                 getName());
 
@@ -152,7 +152,7 @@ public class NewStudyController implements Serializable {
                 ActivityController.FLAG_STUDY);
         //update role information in study
         addStudyMaster(study.getName());
-        logger.log(Level.INFO, "{0} - study created successfully.", study.
+        logger.log(Level.FINE, "{0} - study created successfully.", study.
                 getName());
 
         return loadNewStudy();
@@ -188,7 +188,7 @@ public class NewStudyController implements Serializable {
 
     try {
       studyTeamFacade.persistStudyTeam(st);
-      logger.log(Level.INFO, "{0} - added the study owner as a master.",
+      logger.log(Level.FINE, "{0} - added the study owner as a master.",
               newStudyName);
     } catch (EJBException ejb) {
       System.out.println("Add study master failed" + ejb.getMessage());
@@ -202,14 +202,14 @@ public class NewStudyController implements Serializable {
   //create study on HDFS
   private void mkStudyDIR(String studyName) throws IOException{
 
-    String rootDir = FileSystemOperations.DIR_ROOT;
+    String rootDir = Constants.DIR_ROOT;
     String studyPath = File.separator + rootDir + File.separator + studyName;
     String resultsPath = studyPath + File.separator
-            + FileSystemOperations.DIR_RESULTS;
+            + Constants.DIR_RESULTS;
     String cuneiformPath = studyPath + File.separator
-            + FileSystemOperations.DIR_CUNEIFORM;
+            + Constants.DIR_CUNEIFORM;
     String samplesPath = studyPath + File.separator
-            + FileSystemOperations.DIR_SAMPLES;
+            + Constants.DIR_SAMPLES;
 
     fileOps.mkDir(studyPath);
     fileOps.mkDir(resultsPath);

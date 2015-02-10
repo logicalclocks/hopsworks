@@ -40,6 +40,14 @@ public abstract class HopsJob {
   public final Long getJobId(){
     return jobId;
   }
+  
+  protected final void updateState(JobState newState){
+    jobHistoryFacade.update(jobId, newState);
+  }  
+    
+  protected final void updateArgs(String args){
+    jobHistoryFacade.updateArgs(jobId, args);
+  }
 
   /**
    * Takes care of the execution of the job. First checks if the job has

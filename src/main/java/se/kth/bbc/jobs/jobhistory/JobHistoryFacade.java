@@ -8,9 +8,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import static javax.ejb.TransactionAttributeType.REQUIRES_NEW;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import org.primefaces.push.EventBus;
 import org.primefaces.push.EventBusFactory;
@@ -60,9 +63,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     //TODO: check if state is a final one, if so: update execution time
     JobHistory jh = findById(id);
     if (jh.getState() != newState) {
-      jh.setState(newState);
-      em.merge(jh);
-      em.flush();
+      updateState(id, newState);
       publishStateChange(jh);
     }
   }
@@ -70,25 +71,26 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   public void update(Long id, JobState newState, long executionTime) {
     JobHistory jh = findById(id);
     JobState oldstate = jh.getState();
-    jh.setState(newState);
+    updateState(id,newState);
     jh.setExecutionDuration(BigInteger.valueOf(executionTime));
     em.merge(jh);
-    if(oldstate != newState)
-    publishStateChange(jh);
+    if (oldstate != newState) {
+      publishStateChange(jh);
+    }
   }
 
   public void update(Long id, JobState newState,
           Collection<JobOutputFile> outputFiles) {
-    //TODO: check if state is a final one, if so: update execution time
     JobHistory jh = findById(id);
     JobState oldstate = jh.getState();
-    jh.setState(newState);
+    updateState(id,newState);
     Collection<JobOutputFile> output = jh.getJobOutputFileCollection();
     output.addAll(output);
     jh.setJobOutputFileCollection(output);
     em.merge(jh);
-    if(oldstate != newState)
-    publishStateChange(jh);
+    if (oldstate != newState) {
+      publishStateChange(jh);
+    }
   }
 
   public void update(Long id, Collection<JobOutputFile> extraOutputFiles) {
@@ -97,6 +99,19 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     output.addAll(output);
     jh.setJobOutputFileCollection(output);
     em.merge(jh);
+  }
+  
+  /**
+   * Separate method to isolate the state updating transaction. Needed for remote updating.
+   * @param jh
+   * @param state 
+   */
+  @TransactionAttribute(REQUIRES_NEW)
+  private void updateState(Long id, JobState state){
+    Query q = em.createNativeQuery("UPDATE jobhistory SET state=? WHERE id=?");
+    q.setParameter(1, state.name());
+    q.setParameter(2, id);
+    q.executeUpdate();
   }
 
   public void updateArgs(Long id, String args) {
@@ -183,7 +198,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
    */
   private void publishStateChange(JobHistory jh) {
     EventBus eventBus = EventBusFactory.getDefault().eventBus();
-    eventBus.publish("/" + jh.getStudy().getName() + "/" + jh.getType(), jh.
+    eventBus.publish("/" + jh.getStudy().getName(), jh.
             getId().toString());
 
   }

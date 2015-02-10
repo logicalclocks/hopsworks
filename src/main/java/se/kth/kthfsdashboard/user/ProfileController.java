@@ -163,7 +163,6 @@ public class ProfileController implements Serializable {
         user = getUser();
         String oldPwd = user.getPassword();
         String currentEncrypted = DatatypeConverter.printHexBinary(currentPwd.getBytes());
-        logger.log(Level.INFO, currentPwd);
         
         if(oldPwd.compareTo(currentEncrypted)!= 0){
             //Wrong password            

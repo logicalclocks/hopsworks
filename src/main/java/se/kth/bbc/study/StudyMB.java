@@ -32,8 +32,8 @@ import se.kth.bbc.activity.UserGroupsController;
 import se.kth.bbc.activity.UsersGroups;
 import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.lims.ClientSessionState;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.kthfsdashboard.user.UserFacade;
 import se.kth.kthfsdashboard.user.Username;
@@ -335,6 +335,15 @@ public class StudyMB implements Serializable {
             return studyController.QueryForNonRegistered(getUsername()).size();
         }
     }
+    
+  /**
+   * Get the channel to subscribe to to receive Primefaces Push updates.
+   * <p>
+   * @return
+   */
+  public final String getPushChannel() {
+    return "/" + sessionState.getActiveStudyname();
+  }
 
     
 
@@ -365,7 +374,7 @@ public class StudyMB implements Serializable {
             if (!rec) {
                 userGroupsController.persistUserGroups(new UsersGroups(
                     new UsersGroupsPK(getUsername(), "GUEST")));
-                logger.log(Level.INFO, "Guest role added for: {0}.", getUsername());
+                logger.log(Level.FINE, "Guest role added for: {0}.", getUsername());
                 return "studyPage";
             }
         }
@@ -385,7 +394,7 @@ public class StudyMB implements Serializable {
                 st.setTimestamp(new Date());
                 st.setTeamRole(studyTeamEntry.getTeamRole());
                 studyTeamController.persistStudyTeam(st);
-                logger.log(Level.INFO, "{0} - member added to study : {1}.", new Object[]{t.getName(), studyName});
+                logger.log(Level.FINE, "{0} - member added to study : {1}.", new Object[]{t.getName(), studyName});
                 activity.addActivity(ActivityController.NEW_MEMBER + t.getName() + " ", studyName, ActivityController.FLAG_STUDY);
             }
 
@@ -445,13 +454,13 @@ public class StudyMB implements Serializable {
             studyController.removeByName(studyName);
             activity.addActivity(ActivityController.REMOVED_STUDY, studyName, ActivityController.FLAG_STUDY);
             if (deleteFilesOnRemove) {
-                String path = File.separator + FileSystemOperations.DIR_ROOT + File.separator + studyName;
+                String path = File.separator + Constants.DIR_ROOT + File.separator + studyName;
                 success = fileOps.rmRecursive(path);
                 if (!success) {
                     MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to remove study files.");
                 }
             }
-            logger.log(Level.INFO, "{0} - study removed.", studyName);
+            logger.log(Level.FINE, "{0} - study removed.", studyName);
         } catch (IOException e) {
             MessagesController.addErrorMessage("Error: Study wasn't removed.");
             return null;

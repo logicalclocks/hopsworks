@@ -74,12 +74,33 @@
                                         <ui:include src="/bbc/lims/studyTabs/samplesTab.xhtml"/>
                                     </ui:insert>
                                 </p:tab>
-
+                                <p:tab id="spark" title="Spark" rendered="#{studyManagedBean.shouldDrawTab('SPARK') and studyManagedBean.renderComponentList() != null}">
+                                    <ui:insert name="spark">
+                                        <ui:include src="/bbc/lims/studyTabs/sparkTab.xhtml"/>
+                                    </ui:insert>
+                                </p:tab>
+                                <p:tab id="adam" title="ADAM" rendered="#{studyManagedBean.shouldDrawTab('ADAM') and studyManagedBean.renderComponentList() != null}">
+                                    <ui:insert name="adam">
+                                        <ui:include src="/bbc/lims/studyTabs/adamTab.xhtml"/>
+                                    </ui:insert>
+                                </p:tab>
                             </p:tabView>
                         </div>
                     </div>
                 </p:layoutUnit>
             </p:layout>
+
+            <!-- Subscribe to the study push channel and add ajax event handlers for those necessary -->
+             <p:socket channel="#{studyManagedBean.pushChannel}">
+                <!-- ADAM -->
+                <p:ajax event="message" update=":#{p:component('AdamResultsForm')} :#{p:component('historyForm_ADAM')}" rendered="#{studyManagedBean.shouldDrawTab('ADAM') and studyManagedBean.renderComponentList() != null}"/>
+                <!-- CUNEIFORM -->
+                <p:ajax event="message" update=":#{p:component('CFResultsForm')} :#{p:component('historyForm_CUNEIFORM')}" rendered="#{studyManagedBean.shouldDrawTab('CUNEIFORM') and studyManagedBean.renderComponentList() != null}" />
+                <!-- SPARK -->
+                <p:ajax event="message" update=":#{p:component('sparkResultsForm')} :#{p:component('historyForm_SPARK')}" rendered="#{studyManagedBean.shouldDrawTab('SPARK') and studyManagedBean.renderComponentList() != null}" />
+                <!-- YARN -->
+                <p:ajax event="message" update=":#{p:component('yarnResultsForm')} :#{p:component('historyForm_YARN')}" rendered="#{studyManagedBean.shouldDrawTab('YARN') and studyManagedBean.renderComponentList() != null}" />
+            </p:socket>
 
 
             <!-- In case Study has not been set: user navigated to the page manually. -->
@@ -93,7 +114,9 @@
                 </p:layoutUnit>
             </p:layout>
 
-
+            
+            <!-- TODO: fix location of dialogs with appendTo attribute -->
+            <!-- Remove study dialog -->
             <h:form>
                 <p:dialog widgetVar="removeStudyDlg"  closable="true" draggable="false" resizable="false" header="Remove study?" modal="true" style="width: auto;">
                     <p:outputLabel value="Do you want to remove this study and its data?" style="width: auto;"/>
@@ -107,6 +130,7 @@
                     </f:facet>     
                 </p:dialog>
             </h:form>
+            <!-- Upload file dialog -->
             <p:dialog id="uploadDialog" header="Upload file" widgetVar="uploadDlg" draggable="false" resizable="false" modal="true">
                 <h:form id="uploadForm">
                     <p:fileUpload required="true" multiple="false" label="Select" mode="advanced" allowTypes="/(\.|\/)(cf)$/" fileUploadListener="#{cuneiformController.handleFileUpload}" oncomplete="PF('uploadDlg').hide()"/>
@@ -118,7 +142,7 @@
                     </div>
                 </h:form>
             </p:dialog>
-            <!-- TODO: fix location of dialogs with appendTo attribute -->
+            <!-- Create folder dialog -->
             <p:dialog id="createFolderDialog" widgetVar="createFolderDlg" closable="true" draggable="false" modal="true" resizable="false" header="Create folder">
                 <h:form>
                     <p:outputLabel for="folderName" value="New folder name"/>
@@ -127,6 +151,7 @@
                     <p:commandButton value="Cancel" type="button" onclick="PF('createFolderDlg').hide()"/>
                 </h:form>
             </p:dialog>
+            <!-- Add sample dialog -->
             <p:dialog id="addSampleDialog" widgetVar="addSampleDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
                 <h:form>
                     <p:outputLabel for="sampleName" value="Sample ID"/>
@@ -146,6 +171,7 @@
                     <p:commandButton type="button" value="Cancel" onclick="PF('addSampleDlg').hide()"/>
                 </h:form>
             </p:dialog>
+            <!-- Edit services dialog -->
             <p:dialog id="editServicesDialog" widgetVar="editServicesDlg" closable="true" draggable="false" modal="true" resizable="false" header="Edit services">
                 <h:form>
                     <p:selectManyCheckbox layout="grid" value="#{studyManagedBean.selectedServices}" columns="3">
@@ -156,6 +182,7 @@
                     <p:commandButton value="Cancel" type="button" onclick="PF('editServicesDlg').hide()"/>
                 </h:form>
             </p:dialog>
+            <!-- edit study design dialog -->
             <p:dialog id="editStudyDesignDialog" widgetVar="editStudyDesignDlg" closable="true" draggable="false" modal="true" header="Edit study design" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO')}">
                 <h:form>
                     <p:pickList id="studyDesignPick" value="#{studyMetaController.studyDesignDual}" 
@@ -166,6 +193,7 @@
                     <p:commandButton value="OK" oncomplete="PF('editStudyDesignDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('studyInfoForm')}"/>
                 </h:form>
             </p:dialog>
+            <!-- edit study inclusion criteria dialog -->
             <p:dialog id="editInclusionCriteriaDialog" widgetVar="editInclusionCriteriaDlg" closable="true" draggable="false" modal="true" header="Edit inclusion criteria" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO')}">
                 <h:form>
                     <p:pickList id="inclusionCriteriaPick" value="#{studyMetaController.inclusionCriteriaDual}" 
@@ -176,6 +204,7 @@
                     <p:commandButton value="OK" oncomplete="PF('editInclusionCriteriaDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('studyInfoForm')}"/>
                 </h:form>
             </p:dialog>
+            <!-- edit collection types dialog -->
             <p:dialog id="editCollectionTypesDialog" widgetVar="editCollectionTypesDlg" closable="true" draggable="false" modal="true" header="Edit collection types" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
                 <h:form>
                     <p:pickList id="collectionTypesPick" value="#{samplesController.collectionTypeDualList}" 
@@ -186,7 +215,7 @@
                     <p:commandButton value="OK" oncomplete="PF('editCollectionTypesDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('samplesForm')}"/>
                 </h:form>
             </p:dialog>
-
+            <!-- edit material type dialog -->
             <p:dialog id="editMaterialTypesDialog" widgetVar="editMaterialTypesDlg" closable="true" draggable="false" modal="true" header="Edit collection types" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
                 <h:form>
                     <p:pickList id="materialTypesPick" value="#{samplesController.materialTypeDualList}" 
@@ -197,7 +226,7 @@
                     <p:commandButton value="OK" oncomplete="PF('editMaterialTypesDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('samplesForm')}"/>
                 </h:form>
             </p:dialog>
-
+            <!-- add samplecollection dialog -->
             <p:dialog id="addCollectionDialog" widgetVar="addCollectionDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample collection" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
                 <h:form>
                     <h:panelGrid columns="3">

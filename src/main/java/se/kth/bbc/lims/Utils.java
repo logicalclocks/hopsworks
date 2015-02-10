@@ -1,13 +1,24 @@
 package se.kth.bbc.lims;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+import org.primefaces.model.UploadedFile;
 
 /**
  *
  * @author stig
  */
 public final class Utils {
+
+  private static final Logger logger = Logger.getLogger(Utils.class.getName());
 
   public static String getFileName(String path) {
     int lastSlash = path.lastIndexOf("/");
@@ -24,6 +35,12 @@ public final class Utils {
     }
   }
 
+  public static String getDirectoryPart(String path) {
+    int lastSlash = path.lastIndexOf("/");
+    int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
+    return path.substring(0, startName);
+  }
+
   public static String getMimeType(String filename) {
     HttpServletRequest hsr = (HttpServletRequest) FacesContext.
             getCurrentInstance().getExternalContext().getRequest();
@@ -37,5 +54,16 @@ public final class Utils {
 
   public static String getHdfsRootPath(String studyname) {
     return "/Projects/" + studyname + "/";
+  }
+
+  public static String getYarnUser() {
+    String machineUser = System.getProperty("user.name");
+    if (machineUser == null) {
+      machineUser = Constants.DEFAULT_YARN_USER;
+      logger.log(Level.WARNING,
+              "Username not found in system properties, using default \""
+              + Constants.DEFAULT_YARN_USER + "\"");
+    }
+    return machineUser;
   }
 }
