@@ -368,7 +368,7 @@ public final class CuneiformController extends JobController {
             wfPath, true)))) {
       out.print(extraLines);
     }
-    logger.log(Level.INFO, extraLines.toString());
+    logger.log(Level.FINEST, extraLines.toString());
   }
 
   public void selectJob(JobHistory job) {

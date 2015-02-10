@@ -139,7 +139,7 @@ public class NewStudyController implements Serializable {
         study = new TrackStudy(newStudyName, username, now);
         //create folder structure
         mkStudyDIR(study.getName());
-        logger.log(Level.INFO, "{0} - study directory created successfully.",
+        logger.log(Level.FINE, "{0} - study directory created successfully.",
                 study.
                 getName());
 
@@ -152,7 +152,7 @@ public class NewStudyController implements Serializable {
                 ActivityController.FLAG_STUDY);
         //update role information in study
         addStudyMaster(study.getName());
-        logger.log(Level.INFO, "{0} - study created successfully.", study.
+        logger.log(Level.FINE, "{0} - study created successfully.", study.
                 getName());
 
         return loadNewStudy();
@@ -188,7 +188,7 @@ public class NewStudyController implements Serializable {
 
     try {
       studyTeamFacade.persistStudyTeam(st);
-      logger.log(Level.INFO, "{0} - added the study owner as a master.",
+      logger.log(Level.FINE, "{0} - added the study owner as a master.",
               newStudyName);
     } catch (EJBException ejb) {
       System.out.println("Add study master failed" + ejb.getMessage());

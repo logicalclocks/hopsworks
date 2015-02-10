@@ -61,7 +61,7 @@ public class JobHistoryController implements Serializable {
       StreamedContent sc = new DefaultStreamedContent(is, Utils.getMimeType(
               filename),
               filename);
-      logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
+      logger.log(Level.FINE, "File was downloaded from HDFS path: {0}",
               path);
       return sc;
     } catch (IOException ex) {

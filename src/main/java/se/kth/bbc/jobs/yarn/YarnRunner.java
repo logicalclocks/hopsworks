@@ -215,14 +215,14 @@ public class YarnRunner implements Closeable, CancellableJob {
     FileSystem fs = FileSystem.get(conf);
     String hdfsPrefix = conf.get("fs.defaultFS");
     String basePath = hdfsPrefix + localResourcesBasePath;
-    logger.log(Level.INFO, "Base path: {0}", basePath);
+    logger.log(Level.FINER, "Base path: {0}", basePath);
     for (Entry<String, String> entry : amLocalResources.entrySet()) {
       String key = entry.getKey();
       String source = entry.getValue();
       String filename = Utils.getFileName(source);
       Path dst = new Path(basePath + File.separator + filename);
       fs.copyFromLocalFile(new Path(source), dst);
-      logger.log(Level.INFO, "Copying from: {0} to: {1}",
+      logger.log(Level.FINE, "Copying from: {0} to: {1}",
               new Object[]{source,
                 dst});
       FileStatus scFileStat = fs.getFileStatus(dst);
@@ -244,7 +244,7 @@ public class YarnRunner implements Closeable, CancellableJob {
       String destination = basePath + File.separator + Utils.getFileName(path);
       Path dst = new Path(destination);
       fs.copyFromLocalFile(new Path(path), dst);
-      logger.log(Level.INFO, "Copying from: {0} to: {1}",
+      logger.log(Level.FINE, "Copying from: {0} to: {1}",
               new Object[]{path,
                 dst});
     }

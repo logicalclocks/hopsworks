@@ -374,7 +374,7 @@ public class StudyMB implements Serializable {
             if (!rec) {
                 userGroupsController.persistUserGroups(new UsersGroups(
                     new UsersGroupsPK(getUsername(), "GUEST")));
-                logger.log(Level.INFO, "Guest role added for: {0}.", getUsername());
+                logger.log(Level.FINE, "Guest role added for: {0}.", getUsername());
                 return "studyPage";
             }
         }
@@ -394,7 +394,7 @@ public class StudyMB implements Serializable {
                 st.setTimestamp(new Date());
                 st.setTeamRole(studyTeamEntry.getTeamRole());
                 studyTeamController.persistStudyTeam(st);
-                logger.log(Level.INFO, "{0} - member added to study : {1}.", new Object[]{t.getName(), studyName});
+                logger.log(Level.FINE, "{0} - member added to study : {1}.", new Object[]{t.getName(), studyName});
                 activity.addActivity(ActivityController.NEW_MEMBER + t.getName() + " ", studyName, ActivityController.FLAG_STUDY);
             }
 
@@ -460,7 +460,7 @@ public class StudyMB implements Serializable {
                     MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to remove study files.");
                 }
             }
-            logger.log(Level.INFO, "{0} - study removed.", studyName);
+            logger.log(Level.FINE, "{0} - study removed.", studyName);
         } catch (IOException e) {
             MessagesController.addErrorMessage("Error: Study wasn't removed.");
             return null;
