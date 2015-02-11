@@ -656,8 +656,9 @@ public class StudyMB implements Serializable {
     this.selectedServices = selectedServices;
   }
   
-  public void updateServices(){
+  public String updateServices(){
     studyServices.persistServicesForStudy(studyName, selectedServices);
+    return "studyPage";
   } 
 
 }

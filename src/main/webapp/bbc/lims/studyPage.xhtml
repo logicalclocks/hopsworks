@@ -184,7 +184,7 @@
                         <f:selectItems id="servVals" value="#{newStudyController.availableServices}"/>
                     </p:selectManyCheckbox>
                     <h:panelGroup styleClass="dialogButtonGroup">
-                        <p:commandButton value="Update" actionListener="#{studyManagedBean.updateServices()}" oncomplete="PF('editServicesDlg').hide()" update="@all"/>
+                        <p:commandButton value="Update" action="#{studyManagedBean.updateServices()}" oncomplete="PF('editServicesDlg').hide()"/>
                         <p:commandButton value="Cancel" type="button" onclick="PF('editServicesDlg').hide()"/>
                     </h:panelGroup>
                 </h:form>
