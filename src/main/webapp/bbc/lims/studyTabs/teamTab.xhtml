@@ -66,8 +66,11 @@ and open the template in the editor.
                                                 <div class="right" align="right">
                                                     <h:commandButton class="btn" value="This is you!" disabled="true" rendered="#{studyManagedBean.username eq usr.email}"/>
                                                     <h:commandButton class="button-success" value="Owner" disabled="true" rendered="#{studyManagedBean.studyOwnedBy(usr.email)}"/>
-                                                    <p:commandLink styleClass="ui-button fa fa-minus"  value="" rendered="#{studyManagedBean.renderComponentList() == 'Master' and not studyManagedBean.studyOwnedBy(usr.email)}" action="#{removeMemberDlgController.showDialog(usr.name,usr.email)}">
-                                                        <p:ajax event="dialogReturn" update="@form"/>
+                                                    <p:commandLink styleClass="ui-button fa fa-minus"  
+                                                                   value="" 
+                                                                   rendered="#{studyManagedBean.renderComponentList() == 'Master' and not studyManagedBean.studyOwnedBy(usr.email)}" 
+                                                                   action="#{studyTeamController.setToRemove(usr.email, usr.name)}"
+                                                                   update=":#{p:component('remTeamMemForm')}" oncomplete="PF('remTeamMemDlg').show()">
                                                     </p:commandLink>
                                                 </div>
                                             </div>

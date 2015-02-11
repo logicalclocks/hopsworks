@@ -2518,3 +2518,16 @@ box-shadow: none;
 .changeUpload .ui-button{
   float: right;
 }
+
+.dialogButtonGroup {
+  display: block;
+  margin-top: 8px;
+}
+
+.dialogButtonGroup .ui-button {
+  margin-right: 5px;
+}
+
+.dialogForm {
+  margin-bottom: 5px;
+}

@@ -55,7 +55,7 @@ public class NewStudyController implements Serializable {
   private StudyFacade studyFacade;
 
   @EJB
-  private StudyTeamController studyTeamFacade;
+  private StudyTeamFacade studyTeamFacade;
 
   @EJB
   private FileOperations fileOps;

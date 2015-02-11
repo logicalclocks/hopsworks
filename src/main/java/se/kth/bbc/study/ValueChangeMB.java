@@ -24,7 +24,7 @@ import se.kth.bbc.lims.ClientSessionState;
 public class ValueChangeMB implements Serializable, ValueChangeListener { 
     
     @EJB
-    private StudyTeamController studyTeamController;
+    private StudyTeamFacade studyTeamController;
     
     private StudyRoleTypes newTeamRole;
     

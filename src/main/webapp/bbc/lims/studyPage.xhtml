@@ -91,7 +91,7 @@
             </p:layout>
 
             <!-- Subscribe to the study push channel and add ajax event handlers for those necessary -->
-             <p:socket channel="#{studyManagedBean.pushChannel}">
+            <p:socket channel="#{studyManagedBean.pushChannel}">
                 <!-- ADAM -->
                 <p:ajax event="message" update=":#{p:component('AdamResultsForm')} :#{p:component('historyForm_ADAM')}" rendered="#{studyManagedBean.shouldDrawTab('ADAM') and studyManagedBean.renderComponentList() != null}"/>
                 <!-- CUNEIFORM -->
@@ -114,7 +114,7 @@
                 </p:layoutUnit>
             </p:layout>
 
-            
+
             <!-- TODO: fix location of dialogs with appendTo attribute -->
             <!-- Remove study dialog -->
             <h:form>
@@ -140,6 +140,18 @@
                         </p:selectBooleanCheckbox>
                         <h:outputLabel value="Make file public"/>
                     </div>
+                </h:form>
+            </p:dialog>
+            <!-- Remove team member dialog -->
+            <p:dialog id="removeTeamMemberDialog" header="Remove team member" widgetVar="remTeamMemDlg" draggable="false" resizable="false" modal="true" closable="false">
+                <h:form id="remTeamMemForm" class="dialogForm">
+                    <h:outputText value="Are you sure you want to remove #{studyTeamController.toRemoveName} [#{studyTeamController.toRemoveEmail}] from this study?"/>
+                    <h:panelGroup styleClass="dialogButtonGroup">
+                        <p:commandButton value="Yes" action="#{studyTeamController.deleteMemberFromTeam()}" 
+                                         update=":#{p:component('teamForm')}" oncomplete="PF('remTeamMemDlg').hide()"/>
+                        <p:commandButton value="No" action="#{studyTeamController.clearToRemove()}"
+                                         oncomplete="PF('remTeamMemDlg').hide()"/>
+                    </h:panelGroup>
                 </h:form>
             </p:dialog>
             <!-- Create folder dialog -->
@@ -251,6 +263,10 @@
                     <p:commandButton type="button" value="Cancel" onclick="PF('addCollectionDlg').hide()"/>
                 </h:form>
             </p:dialog>
+
+            <script>
+
+            </script>
         </h:body>
     </f:view>
 </html>

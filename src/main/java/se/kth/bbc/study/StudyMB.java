@@ -54,7 +54,7 @@ public class StudyMB implements Serializable {
     private StudyFacade studyController;
 
     @EJB
-    private StudyTeamController studyTeamController;
+    private StudyTeamFacade studyTeamController;
 
     @EJB
     private UserFacade userFacade;
