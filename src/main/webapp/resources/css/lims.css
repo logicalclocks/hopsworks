@@ -2525,7 +2525,9 @@ box-shadow: none;
 }
 
 .dialogButtonGroup .ui-button {
-  margin-right: 5px;
+  margin-left: 10px;
+  float: right;
+  min-width: 50px;
 }
 
 .dialogForm {
