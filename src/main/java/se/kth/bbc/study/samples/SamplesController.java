@@ -309,14 +309,11 @@ public class SamplesController implements Serializable{
             + File.separator + folderName;
 
     //create dir in fs
-    boolean success;
-
-    success = fileOps.mkDir(path);
+    boolean success = fileOps.mkDir(path);
     if (!success) {
       MessagesController.addErrorMessage(MessagesController.ERROR,
               "Failed to create folder " + path + ".");
     }
-
   }
 
   public void createNewCollection() {

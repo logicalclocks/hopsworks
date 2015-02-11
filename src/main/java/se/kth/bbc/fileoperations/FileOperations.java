@@ -11,6 +11,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import org.apache.hadoop.fs.Path;
 import se.kth.bbc.lims.StagingManager;
+import se.kth.bbc.lims.Utils;
 import se.kth.bbc.study.fb.Inode;
 import se.kth.bbc.study.fb.InodeFacade;
 
@@ -83,7 +84,7 @@ public class FileOperations {
     //Get the local file
     File localfile = getLocalFile(localFilename);
 
-    String dirs = getDirPart(destination);
+    String dirs = Utils.getDirectoryPart(destination);
     mkDir(dirs);
 
     //Update the status of the Inode
@@ -99,8 +100,8 @@ public class FileOperations {
     //Actually copy to HDFS
     boolean success = false;
     Path destp = new Path(destination);
-    try {
-      fsOps.copyToHDFS(destp, new FileInputStream(localfile));
+    try(FileInputStream fis = new FileInputStream(localfile)) {
+      fsOps.copyToHDFS(destp, fis);
       success = true;
     } catch (IOException | URISyntaxException ex) {
       logger.log(Level.SEVERE, "Error while copying to HDFS", ex);
@@ -120,7 +121,7 @@ public class FileOperations {
     //Get the local file
     File localfile = new File(path);
 
-    String dirs = getDirPart(destination);
+    String dirs = Utils.getDirectoryPart(destination);
     mkDir(dirs);
 
     //Update the status of the Inode
@@ -136,8 +137,8 @@ public class FileOperations {
     //Actually copy to HDFS
     boolean success = false;
     Path destp = new Path(destination);
-    try {
-      fsOps.copyToHDFS(destp, new FileInputStream(localfile));
+    try(FileInputStream fis = new FileInputStream(localfile)) {
+      fsOps.copyToHDFS(destp, fis);
       success = true;
     } catch (IOException | URISyntaxException ex) {
       logger.log(Level.SEVERE, "Error while copying to HDFS", ex);
@@ -264,11 +265,6 @@ public class FileOperations {
           throws IOException {
     Inode node = inodes.getInodeAtPath(destination);
     copyToHDFS(localFilename, destination, node);
-  }
-
-  private static String getDirPart(String path) {
-    int lastSlash = path.lastIndexOf("/");
-    return path.substring(0, lastSlash);
   }
 
   public String cat(String path) throws IOException {

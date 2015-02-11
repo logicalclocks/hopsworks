@@ -79,6 +79,7 @@ public class JobHistoryController implements Serializable {
   public StreamedContent downloadFile(String path) {
     String filename = Utils.getFileName(path);
     try {
+      //TODO: should convert to try-with-resources?
       InputStream is = fops.getInputStream(path);
       StreamedContent sc = new DefaultStreamedContent(is, Utils.getMimeType(
               filename),
@@ -109,7 +110,8 @@ public class JobHistoryController implements Serializable {
         c = yarnCont;
         break;
       default:
-        throw new IllegalStateException("JobType is not recognized in JobHistoryController.");
+        throw new IllegalStateException(
+                "JobType is not recognized in JobHistoryController.");
     }
     c.setSelectedJob(job);
   }

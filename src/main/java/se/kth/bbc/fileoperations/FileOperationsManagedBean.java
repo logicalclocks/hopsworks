@@ -44,6 +44,7 @@ public class FileOperationsManagedBean implements Serializable {
 
         StreamedContent sc = null;
         try {
+          //TODO: should convert to try-with-resources? or does that break streamedcontent?
             InputStream is = fileOps.getInputStream(inode);
             String extension = getExtension(inode.getPath());
             String filename = inode.getPath().substring(inode.getPath().lastIndexOf(File.separator) + 1);

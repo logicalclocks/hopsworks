@@ -319,6 +319,7 @@ public abstract class JobController implements Serializable {
   protected final StreamedContent downloadFile(String path,
           String filename) throws IOException {
     checkIfFopsSet();
+    //TODO: check if need to convert to try-with-resources or if this breaks streamedcontent
     InputStream is = fops.getInputStream(path);
     StreamedContent sc = new DefaultStreamedContent(is, Utils.getMimeType(
             filename),

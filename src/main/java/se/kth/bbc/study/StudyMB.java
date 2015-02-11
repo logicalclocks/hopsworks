@@ -179,7 +179,6 @@ public class StudyMB implements Serializable {
     }
 
     public List<StudyDetail> getPersonalStudy() {
-        List<StudyDetail> tmp = studyController.findAllPersonalStudyDetails(getUsername());
         return studyController.findAllPersonalStudyDetails(getUsername());
     }
 
@@ -264,7 +263,6 @@ public class StudyMB implements Serializable {
     }
 
     public String checkStudyOwner(String email) {
-
         List<TrackStudy> lst = studyTeamController.findStudyMaster(studyName);
         for (TrackStudy tr : lst) {
             if (tr.getUsername().equals(email)) {
@@ -279,11 +277,9 @@ public class StudyMB implements Serializable {
     }
 
     public String checkCurrentUser(String email) {
-
         if (email.equals(getUsername())) {
             return email;
         }
-
         return null;
     }
 
@@ -305,12 +301,10 @@ public class StudyMB implements Serializable {
     }
 
     public List<StudyDetail> getAllStudiesPerUser() {
-        List<StudyDetail> tmp = studyController.findAllStudyDetails(getUsername());
         return studyController.findAllStudyDetails(getUsername());
     }
 
     public List<StudyDetail> getJoinedStudies() {
-        List<StudyDetail> tmp = studyController.findJoinedStudyDetails(getUsername());
         return studyController.findJoinedStudyDetails(getUsername());
     }
 
@@ -328,7 +322,6 @@ public class StudyMB implements Serializable {
 
     public int countJoinedStudy() {
         boolean check = studyController.checkForStudyOwnership(getUsername());
-
         if (check) {
             return studyController.findJoinedStudies(getUsername()).size();
         } else {
@@ -343,9 +336,7 @@ public class StudyMB implements Serializable {
    */
   public final String getPushChannel() {
     return "/" + sessionState.getActiveStudyname();
-  }
-
-    
+  }    
 
     /**
      * @return
@@ -369,7 +360,6 @@ public class StudyMB implements Serializable {
         boolean res = studyTeamController.findUserForActiveStudy(studyName,
         getUsername());
         boolean rec = userGroupsController.checkForCurrentSession(getUsername());
-
         if (!res) {
             if (!rec) {
                 userGroupsController.persistUserGroups(new UsersGroups(
@@ -380,8 +370,6 @@ public class StudyMB implements Serializable {
         }
         return "studyPage";
     }
-
-
 
     //add members to a team - bulk persist 
     public synchronized String addToTeam() {
@@ -397,17 +385,14 @@ public class StudyMB implements Serializable {
                 logger.log(Level.FINE, "{0} - member added to study : {1}.", new Object[]{t.getName(), studyName});
                 activity.addActivity(ActivityController.NEW_MEMBER + t.getName() + " ", studyName, ActivityController.FLAG_STUDY);
             }
-
             if (!getSelectedUsernames().isEmpty()) {
                 getSelectedUsernames().clear();
             }
-
         } catch (EJBException ejb) {
             MessagesController.addErrorMessage("Error: Adding team member failed.");
             logger.log(Level.SEVERE, "Adding members to study failed...{0}", ejb.getMessage());
             return null;
         }
-
         MessagesController.addInfoMessage("New Member Added!");
         return "studyPage";
     }
@@ -440,7 +425,6 @@ public class StudyMB implements Serializable {
         default:
           break;
       }
-
     }
 
     public boolean isCurrentOwner() {
@@ -505,7 +489,6 @@ public class StudyMB implements Serializable {
      * @return
      */
     public List<UserGroup> getGroupedMembers() {
-
         List<UserGroup> groupedUsers = new ArrayList<>();
         StudyRoleTypes[] roles = StudyRoleTypes.values();
         for (StudyRoleTypes role : roles) {
@@ -608,44 +591,12 @@ public class StudyMB implements Serializable {
         } else {
             return t.getUsername().equalsIgnoreCase(email);
         }
-    }
-    
-    
-    public void test() {
-//        try{
-//        FlinkRunner.maint();
-//        }catch(Exception e){
-//            e.printStackTrace();
-//        }        
-    }
-    
+    }    
     
   public StudyServiceEnum[] getSelectedServices() {
     List<StudyServiceEnum> services = studyServices.findEnabledServicesForStudy(studyName);
     StudyServiceEnum[] reArr = new StudyServiceEnum[services.size()];
     return services.toArray(reArr);
-    /*
-     * Was:
-     * 
-     *     return services.toArray(reArr);
-     * 
-     * But that gave me:
-     * 
-        java.lang.ArrayStoreException
-          at java.lang.System.arraycopy(Native Method)
-          at java.util.Vector.toArray(Vector.java:718)
-          at se.kth.bbc.study.StudyMB.getSelectedServices(StudyMB.java:617)
-     * 
-     * and left me completely puzzled. So a manual array copy :(  
-     * 
-     */
-    /*
-    for(int i=0;i<services.size();i++){
-      reArr[i] = StudyServiceEnum.valueOf(services.get(i));
-    }
-    
-    return reArr;
-*/
   }
   
   public boolean shouldDrawTab(String service){    

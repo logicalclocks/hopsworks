@@ -32,9 +32,9 @@ public class FileSystemOperations {
   private static final Logger logger = Logger.getLogger(
           FileSystemOperations.class.getName());
   private FileSystem fs;
-  
+
   @PostConstruct
-  public void init(){
+  public void init() {
     try {
       fs = getFs();
     } catch (IOException ex) {
@@ -56,8 +56,9 @@ public class FileSystemOperations {
           URISyntaxException {
     // Write file
     if (!fs.exists(location)) {
-      FSDataOutputStream os = fs.create(location, false);
-      IOUtils.copyBytes(is, os, 131072, true); //TODO: check what this 131072 means...
+      try (FSDataOutputStream os = fs.create(location, false)) {
+        IOUtils.copyBytes(is, os, 131072, true); //TODO: check what this 131072 means...
+      }
     }
   }
 
@@ -140,38 +141,40 @@ public class FileSystemOperations {
     return fs;
   }
 
-  public String cat(Path file) throws IOException{
+  public String cat(Path file) throws IOException {
     StringBuilder out = new StringBuilder();
-    BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(file)));
-    String line;
-    line = br.readLine();
-    while (line != null) {
-      out.append(line).append("\n");
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(fs.
+            open(file)));) {
+      String line;
       line = br.readLine();
+      while (line != null) {
+        out.append(line).append("\n");
+        line = br.readLine();
+      }
+      return out.toString();
     }
-    return out.toString();
   }
-  
-  public void copyFromLocal(Path source, Path destination) throws IOException{
+
+  public void copyFromLocal(Path source, Path destination) throws IOException {
     fs.copyFromLocalFile(false, source, destination);
   }
-  
-  public void moveWithinHdsf(Path source, Path destination) throws IOException{
+
+  public void moveWithinHdsf(Path source, Path destination) throws IOException {
     fs.rename(source, destination);
   }
-  
-  public boolean exists(Path path) throws IOException{
+
+  public boolean exists(Path path) throws IOException {
     return fs.exists(path);
   }
-  
-  public boolean isDir(Path path) throws IOException{
+
+  public boolean isDir(Path path) throws IOException {
     return fs.isDirectory(path);
   }
-  
-  public List<Path> getChildren(Path path) throws IOException{
+
+  public List<Path> getChildren(Path path) throws IOException {
     FileStatus[] stat = fs.listStatus(path);
     List<Path> children = new ArrayList<>();
-    for(FileStatus s: stat){
+    for (FileStatus s : stat) {
       children.add(s.getPath());
     }
     return children;

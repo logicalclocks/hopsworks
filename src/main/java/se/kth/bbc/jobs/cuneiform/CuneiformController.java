@@ -27,7 +27,6 @@ import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.JobControllerEvent;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
@@ -172,7 +171,6 @@ public final class CuneiformController extends JobController {
   private String getWorkflowText() throws IOException {
     //Read the cf-file
     String wfPath = getMainFilePath();
-    File f = new File(wfPath);
     List<String> lines = Files.readAllLines(Paths.get(wfPath), Charset.
             defaultCharset());
     StringBuilder workflowBuilder = new StringBuilder();

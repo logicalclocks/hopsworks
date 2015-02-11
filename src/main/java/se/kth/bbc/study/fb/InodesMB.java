@@ -88,10 +88,6 @@ public class InodesMB implements Serializable {
     }
   }
 
-  private boolean isStudyRoot() {
-    return cwd.equals(root);
-  }
-
   /**
    *
    * @param components string for path to parse. Has to be a List supporting
