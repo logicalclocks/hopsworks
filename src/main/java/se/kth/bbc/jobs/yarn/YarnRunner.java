@@ -230,7 +230,7 @@ public class YarnRunner implements Closeable, CancellableJob {
       String filename = Utils.getFileName(source);
       Path dst = new Path(basePath + File.separator + filename);
       fs.copyFromLocalFile(new Path(source), dst);
-      logger.log(Level.FINE, "Copying from: {0} to: {1}",
+      logger.log(Level.INFO, "Copying from: {0} to: {1}",
               new Object[]{source,
                 dst});
       FileStatus scFileStat = fs.getFileStatus(dst);
@@ -264,7 +264,7 @@ public class YarnRunner implements Closeable, CancellableJob {
       String destination = basePath + File.separator + Utils.getFileName(path);
       Path dst = new Path(destination);
       fs.copyFromLocalFile(new Path(path), dst);
-      logger.log(Level.FINE, "Copying from: {0} to: {1}",
+      logger.log(Level.INFO, "Copying from: {0} to: {1}",
               new Object[]{path,
                 dst});
     }

@@ -116,7 +116,7 @@ public final class AdamController extends JobController {
       jobName = "Untitled ADAM Job";
     }
     SparkYarnRunnerBuilder builder = new SparkYarnRunnerBuilder(
-            Constants.ADAM_DEFAULT_JAR_PATH, Constants.ADAM_MAINCLASS);
+            Constants.ADAM_DEFAULT_JAR_HDFS_PATH, Constants.ADAM_MAINCLASS);
     //Set some ADAM-specific property values   
     builder.addSystemProperty("spark.serializer",
             "org.apache.spark.serializer.KryoSerializer");
@@ -269,9 +269,8 @@ public final class AdamController extends JobController {
   private void addAllAdamJarsToLocalResourcesAndClasspath(
           SparkYarnRunnerBuilder builder) {
     //Add all to local resources and to classpath
-    for (String s : Constants.ADAM_JARS) {
-      String filename = Utils.getFileName(s);
-      String sourcePath = Constants.ADAM_HOME + s;
+    for (String sourcePath : Constants.ADAM_HDFS_JARS) {
+      String filename = Utils.getFileName(sourcePath);
       builder.addExtraFile(filename, sourcePath);
       builder.addToClassPath(filename);
     }

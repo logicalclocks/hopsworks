@@ -64,8 +64,8 @@ public abstract class YarnJob extends HopsJob {
       return true;
     } catch (YarnException | IOException e) {
       logger.log(Level.SEVERE,
-              "Failed to start application master for job {0}. Aborting execution",
-              getJobId());
+              "Failed to start application master for job "+getJobId()+". Aborting execution",
+              e);
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
     }
