@@ -13,7 +13,11 @@ import javax.faces.bean.RequestScoped;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.JobController;
+import se.kth.bbc.jobs.adam.AdamController;
 import se.kth.bbc.jobs.cuneiform.CuneiformController;
+import se.kth.bbc.jobs.spark.SparkController;
+import se.kth.bbc.jobs.yarn.YarnController;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.Utils;
@@ -41,6 +45,12 @@ public class JobHistoryController implements Serializable {
   // for loading specific history 
   @ManagedProperty(value = "#{cuneiformController}")
   private CuneiformController cfCont;
+  @ManagedProperty(value = "#{adamController}")
+  private AdamController adamCont;
+  @ManagedProperty(value = "#{sparkController}")
+  private SparkController sparkCont;
+  @ManagedProperty(value = "#{yarnController}")
+  private YarnController yarnCont;
 
   public void setSessionState(ClientSessionState sessionState) {
     this.sessionState = sessionState;
@@ -48,6 +58,18 @@ public class JobHistoryController implements Serializable {
 
   public void setCfCont(CuneiformController cfCont) {
     this.cfCont = cfCont;
+  }
+
+  public void setAdamCont(AdamController adamCont) {
+    this.adamCont = adamCont;
+  }
+
+  public void setSparkCont(SparkController sparkCont) {
+    this.sparkCont = sparkCont;
+  }
+
+  public void setYarnCont(YarnController yarnCont) {
+    this.yarnCont = yarnCont;
   }
 
   public List<JobHistory> getHistoryForType(JobType type) {
@@ -72,11 +94,24 @@ public class JobHistoryController implements Serializable {
   }
 
   public void selectJob(JobHistory job) {
+    JobController c;
     switch (job.getType()) {
       case CUNEIFORM:
-        cfCont.selectJob(job);
+        c = cfCont;
         break;
+      case ADAM:
+        c = adamCont;
+        break;
+      case SPARK:
+        c = sparkCont;
+        break;
+      case YARN:
+        c = yarnCont;
+        break;
+      default:
+        throw new IllegalStateException("JobType is not recognized in JobHistoryController.");
     }
+    c.setSelectedJob(job);
   }
 
   public final boolean isDir(String path) {

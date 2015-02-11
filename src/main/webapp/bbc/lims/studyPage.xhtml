@@ -93,13 +93,13 @@
             <!-- Subscribe to the study push channel and add ajax event handlers for those necessary -->
             <p:socket channel="#{studyManagedBean.pushChannel}">
                 <!-- ADAM -->
-                <p:ajax event="message" update=":#{p:component('AdamResultsForm')} :#{p:component('historyForm_ADAM')}" rendered="#{studyManagedBean.shouldDrawTab('ADAM') and studyManagedBean.renderComponentList() != null}"/>
+                <p:ajax event="message" update=":#{p:component('resultForm_ADAM')} :#{p:component('historyForm_ADAM')}" rendered="#{studyManagedBean.shouldDrawTab('ADAM') and studyManagedBean.renderComponentList() != null}"/>
                 <!-- CUNEIFORM -->
-                <p:ajax event="message" update=":#{p:component('CFResultsForm')} :#{p:component('historyForm_CUNEIFORM')}" rendered="#{studyManagedBean.shouldDrawTab('CUNEIFORM') and studyManagedBean.renderComponentList() != null}" />
+                <p:ajax event="message" update=":#{p:component('resultForm_CUNEIFORM')} :#{p:component('historyForm_CUNEIFORM')}" rendered="#{studyManagedBean.shouldDrawTab('CUNEIFORM') and studyManagedBean.renderComponentList() != null}" />
                 <!-- SPARK -->
-                <p:ajax event="message" update=":#{p:component('sparkResultsForm')} :#{p:component('historyForm_SPARK')}" rendered="#{studyManagedBean.shouldDrawTab('SPARK') and studyManagedBean.renderComponentList() != null}" />
+                <p:ajax event="message" update=":#{p:component('resultForm_SPARK')} :#{p:component('historyForm_SPARK')}" rendered="#{studyManagedBean.shouldDrawTab('SPARK') and studyManagedBean.renderComponentList() != null}" />
                 <!-- YARN -->
-                <p:ajax event="message" update=":#{p:component('yarnResultsForm')} :#{p:component('historyForm_YARN')}" rendered="#{studyManagedBean.shouldDrawTab('YARN') and studyManagedBean.renderComponentList() != null}" />
+                <p:ajax event="message" update=":#{p:component('resultForm_YARN')} :#{p:component('historyForm_YARN')}" rendered="#{studyManagedBean.shouldDrawTab('YARN') and studyManagedBean.renderComponentList() != null}" />
             </p:socket>
 
 

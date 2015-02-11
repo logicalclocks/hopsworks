@@ -1,5 +1,6 @@
 package se.kth.bbc.study;
 
+import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -18,7 +19,7 @@ import se.kth.bbc.lims.MessagesController;
  */
 @ManagedBean
 @ViewScoped
-public class StudyTeamController {
+public class StudyTeamController implements Serializable{
   private static final Logger logger = Logger.getLogger(StudyTeamController.class.getName());
 
   private String toRemoveEmail;

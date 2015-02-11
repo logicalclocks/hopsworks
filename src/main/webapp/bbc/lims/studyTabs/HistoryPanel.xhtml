@@ -18,7 +18,7 @@ and open the template in the editor.
                     <p:panel id="job_#{cnt}" closable="false" styleClass="historyItem">
                         <f:facet name="header">
                             <h:outputText value="#{job.name==null? job.id :job.name}"/>
-                            <!--<h:commandLink styleClass="fa fa-arrow-circle-right loadArrow" action="#{jobHistoryController.selectJob(job)}"/>-->
+                            <p:commandLink styleClass="fa fa-arrow-circle-right loadArrow" action="#{jobHistoryController.selectJob(job)}" update=":#{p:component('resultForm_'.concat(type))}"/>
                         </f:facet>
                         <h:panelGrid columns="2" columnClasses="labelColumn,valueColumn">
                             <h:outputLabel value="Run on"/>

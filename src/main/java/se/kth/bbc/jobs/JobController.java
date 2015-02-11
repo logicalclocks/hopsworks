@@ -214,6 +214,14 @@ public abstract class JobController implements Serializable {
       return history.findById(jobhistoryid);
     }
   }
+  
+  public void setSelectedJob(Long id){
+    this.jobhistoryid = id;
+  }
+  
+  public void setSelectedJob(JobHistory job){
+    this.jobhistoryid = job.getId();
+  }
 
   public boolean isJobSelected() {
     return jobhistoryid != null;

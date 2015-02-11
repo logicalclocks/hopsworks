@@ -371,11 +371,6 @@ public final class CuneiformController extends JobController {
     logger.log(Level.FINEST, extraLines.toString());
   }
 
-  public void selectJob(JobHistory job) {
-    //TODO
-    // overwrite history content and set jobhistoryid
-  }
-
   @Override
   protected String getUserMessage(JobControllerEvent event, String extraInfo) {
     switch (event) {
