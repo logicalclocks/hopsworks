@@ -40,6 +40,7 @@ public class Constants {
           = "org.apache.spark.deploy.yarn.ApplicationMaster";
   public static final String DEFAULT_SPARK_JAR_PATH = "/srv/spark/spark.jar";
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Spark/Output/";
+  public static final String DEFAULT_SPARK_JAR_HDFS_PATH = "hdfs:///user/spark/spark.jar";
 
   //ADAM constants
   public static final String ADAM_MAINCLASS = "org.bdgenomics.adam.cli.ADAMMain";

@@ -23,7 +23,7 @@ public class SparkYarnRunnerBuilder {
   private final String appJarPath, mainClass;
 
   //Optional parameters
-  private List<String> jobArgs = new ArrayList<>();
+  private final List<String> jobArgs = new ArrayList<>();
   private String jobName = "Untitled Spark Job";
   private Map<String, String> extraFiles = new HashMap<>();
 
@@ -61,8 +61,7 @@ public class SparkYarnRunnerBuilder {
     builder.localResourcesBasePath(stagingPath);
 
     //Add Spark jar
-    builder.addLocalResource(Constants.SPARK_LOCRSC_SPARK_JAR,
-            Constants.DEFAULT_SPARK_JAR_PATH);
+    builder.addLocalResource(Constants.SPARK_LOCRSC_SPARK_JAR,Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
     //Add app jar
     builder.addLocalResource(Constants.SPARK_LOCRSC_APP_JAR, appJarPath);
 

@@ -63,7 +63,8 @@ public class YarnRunner implements Closeable, CancellableJob {
   private String appName;
   private final String amMainClass;
   private String amArgs;
-  private final Map<String, String> amLocalResources;
+  private final Map<String, String> amLocalResourcesToCopy;
+  private final Map<String, String> amLocalResourcesOnHDFS;
   private final Map<String, String> amEnvironment;
   private String localResourcesBasePath;
   private String stdOutPath;
@@ -176,7 +177,7 @@ public class YarnRunner implements Closeable, CancellableJob {
     amArgs = amArgs.replaceAll(APPID_REGEX, id);
     stdOutPath = stdOutPath.replaceAll(APPID_REGEX, id);
     stdErrPath = stdErrPath.replaceAll(APPID_REGEX, id);
-    for (Entry<String, String> entry : amLocalResources.entrySet()) {
+    for (Entry<String, String> entry : amLocalResourcesToCopy.entrySet()) {
       entry.setValue(entry.getValue().replaceAll(APPID_REGEX, id));
     }
     //TODO: thread-safety?
@@ -210,13 +211,20 @@ public class YarnRunner implements Closeable, CancellableJob {
     if (shouldCopyAmJarToLocalResources && amJarLocalName != null
             && !amJarLocalName.isEmpty() && amJarPath != null
             && !amJarPath.isEmpty()) {
-      amLocalResources.put(amJarLocalName, amJarPath);
+      if (amJarPath.startsWith("hdfs")) {
+        amLocalResourcesOnHDFS.put(amJarLocalName, amJarPath);
+      } else {
+        amLocalResourcesToCopy.put(amJarLocalName, amJarPath);
+      }
     }
+    //Get filesystem
     FileSystem fs = FileSystem.get(conf);
+    //Construct basepath
     String hdfsPrefix = conf.get("fs.defaultFS");
     String basePath = hdfsPrefix + localResourcesBasePath;
     logger.log(Level.FINER, "Base path: {0}", basePath);
-    for (Entry<String, String> entry : amLocalResources.entrySet()) {
+    //For all local resources with local path: copy and add local resource
+    for (Entry<String, String> entry : amLocalResourcesToCopy.entrySet()) {
       String key = entry.getKey();
       String source = entry.getValue();
       String filename = Utils.getFileName(source);
@@ -228,6 +236,18 @@ public class YarnRunner implements Closeable, CancellableJob {
       FileStatus scFileStat = fs.getFileStatus(dst);
       LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
               getYarnUrlFromPath(dst),
+              LocalResourceType.FILE, LocalResourceVisibility.PUBLIC,
+              scFileStat.getLen(),
+              scFileStat.getModificationTime());
+      localResources.put(key, scRsrc);
+    }
+    //For all local resources with hdfs path: add local resource
+    for(Entry<String,String> entry: amLocalResourcesOnHDFS.entrySet()){
+      String key = entry.getKey();
+      Path src = new Path(entry.getValue());
+      FileStatus scFileStat = fs.getFileStatus(src);
+      LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
+              getYarnUrlFromPath(src),
               LocalResourceType.FILE, LocalResourceVisibility.PUBLIC,
               scFileStat.getLen(),
               scFileStat.getModificationTime());
@@ -352,7 +372,8 @@ public class YarnRunner implements Closeable, CancellableJob {
     this.appName = builder.appName;
     this.amMainClass = builder.amMainClass;
     this.amArgs = builder.amArgs;
-    this.amLocalResources = builder.amLocalResources;
+    this.amLocalResourcesToCopy = builder.amLocalResourcesToCopy;
+    this.amLocalResourcesOnHDFS = builder.amLocalResourcesOnHDFS;
     this.amEnvironment = builder.amEnvironment;
     this.localResourcesBasePath = builder.localResourcesBasePath;
     this.yarnClient = builder.yarnClient;
@@ -428,9 +449,11 @@ public class YarnRunner implements Closeable, CancellableJob {
     //Arguments to pass on in invocation of Application master
     private String amArgs;
     //List of paths to resources that should be copied to application master
-    private Map<String, String> amLocalResources = null;
+    private Map<String, String> amLocalResourcesToCopy = new HashMap<>();
+    //List of paths to resources that are already in HDFS, but AM should know about
+    private Map<String, String> amLocalResourcesOnHDFS = new HashMap<>();
     //Application master environment
-    private Map<String, String> amEnvironment = null;
+    private Map<String, String> amEnvironment = new HashMap<>();
     //Path where the application master expects its local resources to be (added to fs.getHomeDirectory)
     private String localResourcesBasePath;
     //Path to file where stdout should be written, default in tmp folder
@@ -574,25 +597,20 @@ public class YarnRunner implements Closeable, CancellableJob {
      * @return
      */
     public Builder addLocalResource(String name, String source) {
-      if (amLocalResources == null) {
-        amLocalResources = new HashMap<>();
+      if (source.startsWith("hdfs")) {
+        amLocalResourcesOnHDFS.put(name, source);
+      } else {
+        amLocalResourcesToCopy.put(name, source);
       }
-      amLocalResources.put(name, source);
       return this;
     }
 
     public Builder addToAppMasterEnvironment(String key, String value) {
-      if (amEnvironment == null) {
-        this.amEnvironment = new HashMap<>();
-      }
       amEnvironment.put(key, value);
       return this;
     }
 
     public Builder addAllToAppMasterEnvironment(Map<String, String> env) {
-      if (amEnvironment == null) {
-        this.amEnvironment = new HashMap<>();
-      }
       amEnvironment.putAll(env);
       return this;
     }
@@ -671,15 +689,6 @@ public class YarnRunner implements Closeable, CancellableJob {
           throw new IOException("Failed to create tmp log file.", e);
         }
       }
-
-      if (amLocalResources == null) {
-        amLocalResources = new HashMap<>();
-      }
-
-      if (amEnvironment == null) {
-        amEnvironment = new HashMap<>();
-      }
-
       return new YarnRunner(this);
     }
 
