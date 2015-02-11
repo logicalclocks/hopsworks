@@ -65,6 +65,7 @@ public abstract class HopsJob {
               + "been assigned yet.");
     }
     runJobInternal();
+    closeResources();
   }
 
   /**
@@ -120,4 +121,9 @@ public abstract class HopsJob {
    * crucial, for this object is used to check the status of (running) jobs.
    */
   protected abstract void runJobInternal();
+  
+  /**
+   * Close any resources that need closing. Is called after runJobInternal.
+   */
+  protected abstract void closeResources();
 }

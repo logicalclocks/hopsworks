@@ -15,16 +15,16 @@ import se.kth.bbc.jobs.jobhistory.JobState;
  * @author stig
  */
 public abstract class YarnJob extends HopsJob {
+
   private static final Logger logger = Logger.getLogger(YarnJob.class.getName());
 
   private static final int DEFAULT_MAX_STATE_POLL_RETRIES = 10;
   private static final int DEFAULT_POLL_TIMEOUT_INTERVAL = 1; //in seconds
-  
+
   private final YarnRunner runner;
   private final FileOperations fops;
 
-  private String stdOutFinalDestination, stdErrFinalDestination;  
-  
+  private String stdOutFinalDestination, stdErrFinalDestination;
 
   public YarnJob(JobHistoryFacade facade, YarnRunner runner, FileOperations fops) {
     super(facade);
@@ -39,35 +39,38 @@ public abstract class YarnJob extends HopsJob {
   public final void setStdErrFinalDestination(String stdErrFinalDestination) {
     this.stdErrFinalDestination = stdErrFinalDestination;
   }
-  
-  protected final void updateArgs(){
+
+  protected final void updateArgs() {
     super.updateArgs(runner.getAmArgs());
   }
-  
-  protected final boolean appFinishedSuccessfully() throws YarnException,IOException{
+
+  protected final boolean appFinishedSuccessfully() throws YarnException,
+          IOException {
     return runner.getApplicationState() == YarnApplicationState.FINISHED;
   }
-  
-  protected final YarnRunner getRunner(){
+
+  protected final YarnRunner getRunner() {
     return runner;
   }
-  
-  protected final FileOperations getFileOperations(){
+
+  protected final FileOperations getFileOperations() {
     return fops;
   }
-  
+
   protected final boolean startJob() {
     try {
       updateState(JobState.STARTING_APP_MASTER);
       runner.startAppMaster();
       return true;
     } catch (YarnException | IOException e) {
-      logger.log(Level.SEVERE, "Failed to start application master for job {0}. Aborting execution", getJobId());
+      logger.log(Level.SEVERE,
+              "Failed to start application master for job {0}. Aborting execution",
+              getJobId());
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
     }
   }
-  
+
   protected final boolean monitor() {
     YarnApplicationState appState;
     int failures;
@@ -127,7 +130,7 @@ public abstract class YarnJob extends HopsJob {
     }
     return true;
   }
-  
+
   protected final void copyLogs() {
     try {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
@@ -161,6 +164,15 @@ public abstract class YarnJob extends HopsJob {
       //TODO: figure out how to handle this
       logger.log(Level.SEVERE, "Exception while trying to write logs for job "
               + getJobId() + " to HDFS.", e);
+    }
+  }
+
+  @Override
+  protected void closeResources() {
+    try {
+      runner.close();
+    } catch (IOException e) {
+      //TODO: what to do here?
     }
   }
 
