@@ -44,20 +44,24 @@ public abstract class JobController implements Serializable {
 
   private JobHistoryFacade history = null;
   private FileOperations fops;
+  private FileSelectionController fileSelector;
 
   /**
    * Method called after the main execution file has been uploaded to the
    * server.
    */
-  protected abstract void afterUploadMainFile(FileUploadEvent event);
+  protected abstract void registerMainFile(String filename,
+          Map<String, String> attributes);
 
   /**
    * Method called after an extra file (e.g. input) has been uploaded to the
    * server.
    */
-  protected abstract void afterUploadExtraFile(FileUploadEvent event);
+  protected abstract void registerExtraFile(String filename,
+          Map<String, String> attributes);
 
-  public void uploadMainFile(FileUploadEvent event) {
+  public final void uploadMainFile(FileUploadEvent event,
+          Map<String, String> attributes) {
     files.clear();
     variables.clear();
     try {
@@ -65,7 +69,7 @@ public abstract class JobController implements Serializable {
       MessagesController.addInfoMessage("Success.", getUserMessage(
               JobControllerEvent.MAIN_UPLOAD_SUCCESS, event.getFile().
               getFileName()));
-      afterUploadMainFile(event);
+      registerMainFile(event.getFile().getFileName(), attributes);
     } catch (Exception ex) {
       logger.log(Level.SEVERE, getLogMessage(
               JobControllerEvent.MAIN_UPLOAD_FAILURE, event.getFile().
@@ -76,13 +80,29 @@ public abstract class JobController implements Serializable {
     }
   }
 
-  public void uploadExtraFile(FileUploadEvent event) {
+  public final void selectMainFile(String path, Map<String, String> attributes) {
+    if (!path.startsWith("hdfs:")) {
+      path = "hdfs://" + path;
+    }
+    
+    if(path.endsWith("/")){
+      path = path.substring(0,path.length()-1);
+    }
+    System.out.println("Called select main file: " + path);
+    files.clear();
+    variables.clear();
+    files.put(KEY_MAIN_FILE, path);
+    registerMainFile(Utils.getFileName(path), attributes);
+  }
+
+  public final void uploadExtraFile(FileUploadEvent event,
+          Map<String, String> attributes) {
     try {
       uploadFile(event.getFile().getFileName(), event);
       MessagesController.addInfoMessage("Success.", getUserMessage(
               JobControllerEvent.EXTRA_FILE_SUCCESS, event.getFile().
               getFileName()));
-      afterUploadExtraFile(event);
+      registerExtraFile(event.getFile().getFileName(), attributes);
     } catch (Exception e) {
       logger.log(Level.SEVERE, getLogMessage(
               JobControllerEvent.EXTRA_FILE_FAILURE, event.getFile().
@@ -91,6 +111,18 @@ public abstract class JobController implements Serializable {
               JobControllerEvent.EXTRA_FILE_FAILURE, event.getFile().
               getFileName()));
     }
+  }
+
+  public final void selectExtraFile(String path, Map<String, String> attributes) {
+    if (!path.startsWith("hdfs:")) {
+      path = "hdfs://" + path;
+    }
+    if(path.endsWith("/")){
+      path = path.substring(0,path.length()-1);
+    }
+    System.out.println("Called select extra file: " + path);
+    files.put(Utils.getFileName(path), path);
+    registerExtraFile(Utils.getFileName(path), attributes);
   }
 
   private void uploadFile(String key, FileUploadEvent event) throws Exception {
@@ -190,12 +222,23 @@ public abstract class JobController implements Serializable {
     }
   }
 
-  public void setJobHistoryFacade(JobHistoryFacade facade) {
+  private void checkIfFileSelectorSet() {
+    if (fileSelector == null) {
+      throw new IllegalStateException(
+              "FileSelectionController has not been set.");
+    }
+  }
+
+  protected final void setJobHistoryFacade(JobHistoryFacade facade) {
     this.history = facade;
   }
 
-  public void setFileOperations(FileOperations fops) {
+  protected final void setFileOperations(FileOperations fops) {
     this.fops = fops;
+  }
+
+  protected final void setFileSelector(FileSelectionController fileSelector) {
+    this.fileSelector = fileSelector;
   }
 
   public void setJobId(Long jobId) {
@@ -214,12 +257,12 @@ public abstract class JobController implements Serializable {
       return history.findById(jobhistoryid);
     }
   }
-  
-  public void setSelectedJob(Long id){
+
+  public void setSelectedJob(Long id) {
     this.jobhistoryid = id;
   }
-  
-  public void setSelectedJob(JobHistory job){
+
+  public void setSelectedJob(JobHistory job) {
     this.jobhistoryid = job.getId();
   }
 
@@ -358,17 +401,19 @@ public abstract class JobController implements Serializable {
   public final boolean isDir(String path) {
     return fops.isDir(path);
   }
-  
-    /**
+
+  /**
    * Write an uploaded file to a specific path. This method is functionally
    * equivalent to UploadedFile.write(String path), except that that one does
    * not work in Glassfish 4. Should file a report on that somewhere.
    * <p>
    * @param file The file to write.
-   * @param destination The destination, including filename, to which the file should be written.
+   * @param destination The destination, including filename, to which the file
+   * should be written.
    * @throws IOException If writing fails.
    */
-  private static void writeUploadedFile(UploadedFile file, String destination) throws IOException{
+  private static void writeUploadedFile(UploadedFile file, String destination)
+          throws IOException {
     File dest = new File(destination);
     try (
             InputStream stream = file.getInputstream();
@@ -379,8 +424,32 @@ public abstract class JobController implements Serializable {
       while ((bytesRead = stream.read(buffer)) != -1) {
         out.write(buffer, 0, bytesRead);
       }
-    }catch(IOException e){
-      throw new IOException("Failed to write uploaded file to path "+destination, e);
+    } catch (IOException e) {
+      throw new IOException("Failed to write uploaded file to path "
+              + destination, e);
     }
+  }
+
+  /**
+   *
+   * @param isMainUpload
+   * @param args A series of key-value arguments.
+   */
+  public final void prepareFileSelector(boolean isMainUpload, String attrs) {
+    checkIfFileSelectorSet();
+    Map<String, String> reqAttrs = new HashMap<>();
+    if (attrs != null && !attrs.isEmpty()) {
+      String[] args = attrs.trim().split(" ");
+      if (args.length % 2 != 0) {
+        throw new IllegalArgumentException(
+                "prepareFileSelector should be called with pairs of arguments.");
+      }
+      //Get parameters
+      for (int i = 0; i < args.length; i += 2) {
+        reqAttrs.put(args[i], args[i + 1]);
+      }
+    }
+    //Setup file selector
+    fileSelector.init(this, isMainUpload, reqAttrs);
   }
 }

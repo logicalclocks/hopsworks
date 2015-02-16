@@ -24,7 +24,7 @@
                             </ui:include>
                         </ui:insert>
                     </p:panel>
-                    <h:form id="yarnForm"> 
+                    <h:form id="yarnForm" styleClass="runConfForm"> 
                         <h3>
                             Run configuration
                         </h3>
@@ -36,10 +36,11 @@
                                     <h:inputText id="yarn_JobName" value="#{cuneiformController.jobName}"/>
 
                                     <h:outputLabel value="Upload workflow file" for="amUploader"/>
-                                    <p:fileUpload required="true" auto="true" multiple="false" 
-                                                  label="Upload" mode="advanced" allowTypes="/(\.|\/)(cf)$/" 
-                                                  fileUploadListener="#{cuneiformController.workflowUpload}" 
-                                                  update="@form" id="amUploader" process="@form"/>
+                                    <p:commandButton 
+                                      value="Select..." id="amUploader"
+                                      oncomplete="PF('chooseFileDlg').show()"
+                                      actionListener="#{yarnController.prepareFileSelector(true,'')}">
+                                    </p:commandButton>
 
                                     <h:outputLabel value="Uploaded file"/>
                                     <h:outputLabel value="#{cuneiformController.workflowName==null ? 'No file uploaded yet' : cuneiformController.workflowName}"/>
@@ -52,12 +53,11 @@
                                     <ui:repeat value="#{cuneiformController.freeVars}" var="variable">
                                         <h:panelGrid columns="2">
                                             <h:outputLabel value="#{variable.name}"/>
-                                            <p:fileUpload required="true" auto="true" multiple="false" 
-                                                          label="Upload" mode="advanced" 
-                                                          fileUploadListener="#{cuneiformController.inputFileUpload}" 
-                                                          update="@form" process="@form">
-                                                <f:attribute name="name" value="#{variable.name}"/>
-                                            </p:fileUpload>
+                                            <p:commandButton 
+                                              value="Change"
+                                              oncomplete="PF('chooseFileDlg').show()"
+                                              actionListener="#{yarnController.prepareFileSelector(true,'name '+=variable.name)}">
+                                            </p:commandButton>
                                             <h:outputLabel value="Uploaded file" rendered="#{cuneiformController.isFileUploadedForVar(variable.name)}"/>
                                             <h:outputLabel value="#{variable.value}" rendered="#{cuneiformController.isFileUploadedForVar(variable.name)}"/>
                                         </h:panelGrid>

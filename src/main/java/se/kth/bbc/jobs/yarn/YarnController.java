@@ -11,8 +11,8 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.primefaces.event.FileUploadEvent;
 import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.FileSelectionController;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.JobControllerEvent;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
@@ -38,6 +38,9 @@ public class YarnController extends JobController {
   @ManagedProperty(value = "#{clientSessionState}")
   private transient ClientSessionState sessionState;
 
+  @ManagedProperty(value = "#{fileSelectionController}")
+  private FileSelectionController fileSelectionController;
+
   @EJB
   private StagingManager stagingManager;
 
@@ -56,6 +59,7 @@ public class YarnController extends JobController {
       super.setBasePath(path);
       super.setJobHistoryFacade(history);
       super.setFileOperations(fops);
+      super.setFileSelector(fileSelectionController);
     } catch (IOException c) {
       logger.log(Level.SEVERE,
               "Failed to initialize Yarn staging folder for uploading.", c);
@@ -93,12 +97,14 @@ public class YarnController extends JobController {
   }
 
   @Override
-  protected void afterUploadMainFile(FileUploadEvent event) {
+  protected void registerMainFile(String filename,
+          Map<String, String> attributes) {
     //Nothing to do
   }
 
   @Override
-  protected void afterUploadExtraFile(FileUploadEvent event) {
+  protected void registerExtraFile(String filename,
+          Map<String, String> attributes) {
     //Nothing to do
   }
 
@@ -139,14 +145,14 @@ public class YarnController extends JobController {
   public void setSessionState(ClientSessionState sessionState) {
     this.sessionState = sessionState;
   }
-  
+
   @Override
   protected String getUserMessage(JobControllerEvent event, String extraInfo) {
     switch (event) {
       case MAIN_UPLOAD_FAILURE:
         return "Failed to upload AM jar " + extraInfo + ".";
       case MAIN_UPLOAD_SUCCESS:
-        return "AM jar "+extraInfo+" successfully uploaded.";
+        return "AM jar " + extraInfo + " successfully uploaded.";
       default:
         return super.getUserMessage(event, extraInfo);
     }
@@ -160,6 +166,10 @@ public class YarnController extends JobController {
       default:
         return super.getLogMessage(event, extraInfo);
     }
+  }
+
+  public void setFileSelectionController(FileSelectionController fs) {
+    this.fileSelectionController = fs;
   }
 
 }

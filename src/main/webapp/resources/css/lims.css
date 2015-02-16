@@ -815,14 +815,6 @@ h6{
   float: left;    
 }
 
-.browser_row{    
-  background: none repeat scroll 0% 0% #FAFAFA;
-}
-
-.browser_row:hover{
-  background:#d9edf7;border-bottom:1px solid #adf;
-}
-
 label{
 
   float: left;
@@ -2515,7 +2507,7 @@ box-shadow: none;
   font-size: 12px;
 }
 
-.changeUpload .ui-button{
+.changeUpload{
   float: right;
 }
 
@@ -2532,4 +2524,16 @@ box-shadow: none;
 
 .dialogForm {
   margin-bottom: 5px;
+}
+
+.studyDialog .ui-datatable-scrollable-header {
+  height: 0px;
+}
+
+.studyDialog .ui-datatable {
+  width: 300px;
+}
+
+.studyDialog .ui-datatable tr{  
+  background: none repeat scroll 0% 0% #FAFAFA;
 }

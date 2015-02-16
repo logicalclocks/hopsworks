@@ -24,7 +24,7 @@
                             </ui:include>
                         </ui:insert>
                     </p:panel>
-                    <h:form id="sparkForm"> <!-- Pun intended -->
+                    <h:form id="sparkForm" styleClass="runConfForm">
                         <h3>
                             Run configuration
                         </h3>
@@ -36,10 +36,11 @@
                                     <h:inputText id="JobName" value="#{sparkController.jobName}"/>
 
                                     <h:outputLabel value="Upload job jar" for="sparkAppUploader"/>
-                                    <p:fileUpload required="true" auto="true" multiple="false" 
-                                                  label="Upload" mode="advanced" allowTypes="/(\.|\/)(jar)$/" 
-                                                  fileUploadListener="#{sparkController.uploadMainFile}" 
-                                                  update="@form" id="sparkAppUploader" process="@form"/>
+                                    <p:commandButton 
+                                      value="Select..." id="sparkAppUploader"
+                                      oncomplete="PF('chooseFileDlg').show()"
+                                      actionListener="#{sparkController.prepareFileSelector(true,'')}">
+                                    </p:commandButton>
 
                                     <h:outputLabel value="Uploaded file"/>
                                     <h:outputLabel value="#{sparkController.appJarName==null ? 'No file uploaded yet' : sparkController.appJarName}"/>

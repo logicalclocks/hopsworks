@@ -268,6 +268,56 @@
                     </h:panelGroup>
                 </h:form>
             </p:dialog>
+            <!-- Choose file dialog-->
+            <p:dialog id="chooseFileDialog" styleClass="studyDialog" widgetVar="chooseFileDlg" closable="false" draggable="false" modal="true" resizable="false" header="Choose file" rendered="#{studyManagedBean.renderComponentList() != null}">
+                <h:form class="dialogForm">
+                    <ui:repeat var="node" value="#{InodesMB.currentPath}">
+                        <p:commandLink action="#{InodesMB.cdBrowse(node.path)}" update="@form">
+                            <strong>#{node.top}</strong>
+                        </p:commandLink>/
+                    </ui:repeat>
+                    <p:dataTable value="#{InodesMB.children}" var="inode"
+                                 styleClass="chooseFileTable"
+                                 scrollable="true" scrollHeight="200">
+
+                        <p:column>
+                            <h:graphicImage class="browser s16" library="images/icons" name="#{inode.isDir()?'folder.png':'file.png'}" />
+
+                            <p:commandLink styleClass="dark" 
+                                           action="#{InodesMB.cdUp()}" 
+                                           update="@form" 
+                                           rendered="#{inode.isParent()}">
+                                <strong>#{inode.name}</strong>
+                            </p:commandLink>
+
+                            <p:commandLink styleClass="dark" 
+                                           action="#{InodesMB.cdDown(inode.name)}" 
+                                           actionListener="#{fileSelectionController.setSelectedPath(inode.path)}" 
+                                           update="@form" 
+                                           rendered="#{not inode.isParent() and inode.dir}">
+                                <strong>#{inode.name}</strong>
+                            </p:commandLink>
+
+                            <p:commandLink styleClass="dark" 
+                                           rendered="#{not inode.dir}"
+                                           disabled="#{inode.status != 'available'}" 
+                                           action="#{fileSelectionController.setSelectedPath(inode.path)}"
+                                           update="@form">
+                                <strong>#{inode.name}</strong>
+                            </p:commandLink>
+                        </p:column> 
+                    </p:dataTable>
+                    <h:panelGrid columns="2">
+                        <h:outputLabel value="Selected file:" for="chooseFileSelected"/>
+                        <h:inputText value="#{fileSelectionController.selectedPath}" readonly="true" id="chooseFileSelected" />
+                    </h:panelGrid>
+                    <h:panelGroup styleClass="dialogButtonGroup">
+                        <p:commandButton value="OK" actionListener="#{fileSelectionController.submitSelectedPath()}" update="@(.runConfForm)"
+                                         oncomplete="PF('chooseFileDlg').hide()" ajax="true" process="@form"/>
+                        <p:commandButton type="button" value="Cancel" action="#{fileSelectionController.invalidate()}" onclick="PF('chooseFileDlg').hide()"/>
+                    </h:panelGroup>
+                </h:form>
+            </p:dialog>
         </h:body>
     </f:view>
 </html>
