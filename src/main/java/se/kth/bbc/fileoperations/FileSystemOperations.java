@@ -16,6 +16,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import se.kth.bbc.lims.Constants;
@@ -32,6 +33,7 @@ public class FileSystemOperations {
   private static final Logger logger = Logger.getLogger(
           FileSystemOperations.class.getName());
   private FileSystem fs;
+  private Configuration conf;
 
   @PostConstruct
   public void init() {
@@ -73,7 +75,7 @@ public class FileSystemOperations {
   }
 
   /**
-   * Create a new folder on the given path.
+   * Create a new folder on the given path. Equivalent to  mkdir -p.
    *
    * @param location The path to the new folder, its name included.
    * @return True if successful.
@@ -99,7 +101,7 @@ public class FileSystemOperations {
     }
   }
 
-  private static FileSystem getFs() throws IOException {
+  private FileSystem getFs() throws IOException {
 
     String coreConfDir = System.getenv("HADOOP_CONF_DIR");
     //If still not found: throw exception
@@ -133,7 +135,7 @@ public class FileSystemOperations {
     Path yarnPath = new Path(yarnConfFile.getAbsolutePath());
     Path hdfsPath = new Path(hdfsConfFile.getAbsolutePath());
     Path hadoopPath = new Path(hadoopConfFile.getAbsolutePath());
-    Configuration conf = new Configuration();
+    conf = new Configuration();
     conf.addResource(hadoopPath);
     conf.addResource(yarnPath);
     conf.addResource(hdfsPath);
@@ -178,6 +180,28 @@ public class FileSystemOperations {
       children.add(s.getPath());
     }
     return children;
+  }
+
+  /**
+   * Copy a file within HDFS. Largely taken from Hadoop code.
+   * <p>
+   * @param src
+   * @param dst
+   * @throws IOException
+   */
+  public void copyInHdfs(Path src, Path dst) throws IOException {
+    Path[] srcs = FileUtil.stat2Paths(fs.globStatus(src), src);
+    if (srcs.length > 1 && !fs.isDirectory(dst)) {
+      throw new IOException("When copying multiple files, "
+              + "destination should be a directory.");
+    }
+    for (Path src1 : srcs) {
+      FileUtil.copy(fs, src1, fs, dst, false, conf);
+    }
+  }
+  
+  public void copyToLocal(Path src, Path dst) throws IOException{
+    fs.copyToLocalFile(src, dst);
   }
 
 }

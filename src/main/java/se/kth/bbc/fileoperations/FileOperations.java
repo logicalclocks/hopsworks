@@ -58,6 +58,12 @@ public class FileOperations {
     return fsOps.getInputStream(location);
   }
 
+  /**
+   * Create the folders on the given path. Equivalent to mkdir -p.
+   * @param path
+   * @return
+   * @throws IOException 
+   */
   public boolean mkDir(String path) throws IOException {
     Path location = new Path(path);
     boolean success = fsOps.mkdir(location);
@@ -328,6 +334,28 @@ public class FileOperations {
       return i.isDir();
     else
       return false;
+  }
+  
+  public void copyWithinHdfs(String src, String dst) throws IOException{
+    //Convert into Paths
+    Path srcPath = new Path(src);
+    Path dstPath = new Path(dst);
+    //Make the necessary output directories
+    String dirPart = Utils.getDirectoryPart(dst);
+    mkDir(dirPart);
+    //Actually copy
+    fsOps.copyInHdfs(srcPath, dstPath);
+    createInodesIfNeeded(dst);
+  }
+  
+  public void copyToLocal(String hdfsPath, String localPath) throws IOException{
+    if(!hdfsPath.startsWith("hdfs:")){
+      hdfsPath = "hdfs://" + hdfsPath;
+    }
+    if(!localPath.startsWith("file:")){
+      localPath = "file://" + localPath;
+    }
+    fsOps.copyToLocal(new Path(hdfsPath), new Path(localPath));
   }
 
 }

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -360,8 +361,13 @@ public final class CuneiformController extends JobController {
     for (CuneiformParameter cp : freevars) {
       if (cp.getValue() != null) {
         //copy the input file to where cuneiform expects it
-        fops.copyFromLocalNoInode(getFilePath(cp.getValue()),
-                absoluteHDFSfoldername + File.separator + cp.getValue());
+        if (!getFilePath(cp.getValue()).startsWith("hdfs:")) {
+          fops.copyFromLocalNoInode(getFilePath(cp.getValue()),
+                  absoluteHDFSfoldername + File.separator + cp.getValue());
+        } else {
+          fops.copyWithinHdfs(getFilePath(cp.getValue()), absoluteHDFSfoldername
+                  + File.separator + cp.getValue());
+        }
         //add a line to the workflow file
         extraLines.append(cp.getName()).append(" = '").append(foldername).
                 append(File.separator).append(cp.getValue()).append("';\n");
@@ -375,6 +381,14 @@ public final class CuneiformController extends JobController {
     }
     //actually write to workflow file
     String wfPath = getMainFilePath();
+    if (wfPath.startsWith("hdfs:")) {
+      //copy file to local tmp file
+      Path tmpWf = Files.createTempFile(workflowname, "cf");
+      String newPath = tmpWf.toString();
+      fops.copyToLocal(wfPath, newPath);
+      updateMainFilePath(newPath);
+      wfPath = newPath;
+    }
     try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(
             wfPath, true)))) {
       out.print(extraLines);

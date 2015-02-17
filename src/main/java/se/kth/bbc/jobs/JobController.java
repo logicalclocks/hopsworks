@@ -241,15 +241,15 @@ public abstract class JobController implements Serializable {
     this.fileSelector = fileSelector;
   }
 
-  public void setJobId(Long jobId) {
+  public final void setJobId(Long jobId) {
     this.jobhistoryid = jobId;
   }
 
-  public Long getJobId() {
+  public final Long getJobId() {
     return jobhistoryid;
   }
 
-  public JobHistory getSelectedJob() {
+  public final JobHistory getSelectedJob() {
     checkIfHistorySet();
     if (jobhistoryid == null) {
       return null;
@@ -258,19 +258,19 @@ public abstract class JobController implements Serializable {
     }
   }
 
-  public void setSelectedJob(Long id) {
+  public final void setSelectedJob(Long id) {
     this.jobhistoryid = id;
   }
 
-  public void setSelectedJob(JobHistory job) {
+  public final void setSelectedJob(JobHistory job) {
     this.jobhistoryid = job.getId();
   }
 
-  public boolean isJobSelected() {
+  public final boolean isJobSelected() {
     return jobhistoryid != null;
   }
 
-  public boolean isSelectedJobRunning() {
+  public final boolean isSelectedJobRunning() {
     if (jobhistoryid == null) {
       return false;
     } else {
@@ -278,7 +278,7 @@ public abstract class JobController implements Serializable {
     }
   }
 
-  public boolean isSelectedJobHasFinished() {
+  public final boolean isSelectedJobHasFinished() {
     if (jobhistoryid == null) {
       return false;
     } else {
@@ -296,27 +296,31 @@ public abstract class JobController implements Serializable {
     return state.isFinalState();
   }
 
-  protected void putVariable(String key, String value) {
+  protected final void putVariable(String key, String value) {
     variables.put(key, value);
   }
 
-  protected String getVariable(String key) {
+  protected final String getVariable(String key) {
     return variables.get(key);
   }
 
-  protected boolean variablesContainKey(String key) {
+  protected final boolean variablesContainKey(String key) {
     return variables.containsKey(key);
   }
 
-  protected String getFilePath(String key) {
+  protected final String getFilePath(String key) {
     return files.get(key);
   }
 
-  protected String getMainFilePath() {
+  protected final String getMainFilePath() {
     return files.get(KEY_MAIN_FILE);
   }
+  
+  protected final void updateMainFilePath(String newPath) {
+    files.put(KEY_MAIN_FILE, newPath);
+  }
 
-  protected Map<String, String> getFiles() {
+  protected final Map<String, String> getFiles() {
     return files;
   }
 
