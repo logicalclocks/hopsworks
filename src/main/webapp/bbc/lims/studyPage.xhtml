@@ -308,8 +308,16 @@
                         </p:column> 
                     </p:dataTable>
                     <h:panelGrid columns="2">
-                        <h:outputLabel value="Selected file:" for="chooseFileSelected"/>
+                        <h:outputLabel value="Selected file" for="chooseFileSelected"/>
                         <h:inputText value="#{fileSelectionController.selectedPath}" readonly="true" id="chooseFileSelected" />
+                   
+                        <h:outputLabel value="Or upload a new file" for="chooseFileUpload"/>
+                        <p:fileUpload id="chooseFileUpload" auto="true" 
+                                      multiple="false" label="Upload" 
+                                      mode="advanced" 
+                                      fileUploadListener="#{fileSelectionController.uploadFile}" 
+                                      update="@(.runConfForm)" 
+                                      oncomplete="PF('chooseFileDlg').hide()"/>
                     </h:panelGrid>
                     <h:panelGroup styleClass="dialogButtonGroup">
                         <p:commandButton value="OK" actionListener="#{fileSelectionController.submitSelectedPath()}" update="@(.runConfForm)"

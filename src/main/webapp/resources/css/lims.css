@@ -2463,6 +2463,20 @@ box-shadow: none;
   height: 0px !important;
 }
 
+.dialogForm .ui-fileupload-content {
+  height: 0px;
+  padding: 0px;
+  border: 0px none;
+  float: right;
+}
+
+.dialogForm .ui-button {
+  background-color: #F0F0F0;
+  background-image: linear-gradient(to bottom, #FFF, #E9E9E9);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: none;
+}
+
 .adamForm .adamTable table {  
   border-collapse: collapse;
 }
@@ -2536,4 +2550,8 @@ box-shadow: none;
 
 .studyDialog .ui-datatable tr{  
   background: none repeat scroll 0% 0% #FAFAFA;
+}
+
+.studyDialog table td {
+  vertical-align: middle;
 }
