@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -11,9 +12,9 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import org.primefaces.event.FileUploadEvent;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
+import se.kth.bbc.jobs.FileSelectionController;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
@@ -45,6 +46,9 @@ public final class AdamController extends JobController {
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
 
+  @ManagedProperty(value = "#{fileSelectionController}")
+  private FileSelectionController fileSelectionController;
+
   @EJB
   private JobHistoryFacade history;
 
@@ -58,32 +62,42 @@ public final class AdamController extends JobController {
   private AsynchronousJobExecutor submitter;
 
   @Override
-  protected void afterUploadMainFile(FileUploadEvent event) {
+  protected void registerMainFile(String filename,
+          Map<String, String> attributes) {
     throw new UnsupportedOperationException(
             "The operation uploadMainFile is not supported in AdamController since it has no concept of main execution files.");
   }
 
   @Override
-  protected void afterUploadExtraFile(FileUploadEvent event) {
-    String type = (String) event.getComponent().getAttributes().get("type");
-    if ("argument".equals(type)) {
-      String argname = (String) event.getComponent().getAttributes().get(
-              "name");
-      for (AdamInvocationArgument aia : args) {
-        if (aia.getArg().getName().equals(argname)) {
-          aia.setValue(event.getFile().getFileName());
-        }
+  protected void registerExtraFile(String filename,
+          Map<String, String> attributes) {
+    if (attributes == null || !attributes.containsKey("type") || !attributes.
+            containsKey("name")) {
+      throw new IllegalArgumentException(
+              "AdamController expects attributes 'type' and 'name'.");
+    }
+    String type = attributes.get("type");
+    if (null != type) {
+      switch (type) {
+        case "argument":
+          String argname = attributes.get("name");
+          for (AdamInvocationArgument aia : args) {
+            if (aia.getArg().getName().equals(argname)) {
+              aia.setValue(filename);
+            }
+          }
+          break;
+        case "option":
+          String optname = attributes.get("name");
+          for (AdamInvocationOption aio : opts) {
+            if (aio.getOpt().getName().equals(optname)) {
+              aio.setStringValue(filename);
+            }
+          }
+          break;
+        default:
+          throw new IllegalArgumentException("Illegal attribute value for type.");
       }
-    } else if ("option".equals(type)) {
-      String optname = (String) event.getComponent().getAttributes().get(
-              "name");
-      for (AdamInvocationOption aio : opts) {
-        if (aio.getOpt().getName().equals(optname)) {
-          aio.setStringValue(event.getFile().getFileName());
-        }
-      }
-    } else {
-      throw new IllegalArgumentException("Illegal attribute value for type.");
     }
   }
 
@@ -96,6 +110,7 @@ public final class AdamController extends JobController {
       super.setBasePath(path);
       super.setJobHistoryFacade(history);
       super.setFileOperations(fops);
+      super.setFileSelector(fileSelectionController);
     } catch (IOException c) {
       logger.log(Level.SEVERE,
               "Failed to initialize ADAM staging folder for uploading.", c);
@@ -232,9 +247,12 @@ public final class AdamController extends JobController {
     //Loop over arguments
     for (AdamInvocationArgument aia : args) {
       if (aia.getArg().isPath() && !aia.getArg().isOutputPath()) {
-        //Is an input path: for now: local file
-        //TODO: change if file from system
-        adamargs.add("file:" + getFilePath(aia.getValue()));
+        String filepath = getFilePath(aia.getValue());
+        if (filepath.startsWith("hdfs:")) {
+          adamargs.add(filepath);
+        } else {
+          adamargs.add("file:" + filepath);
+        }
       } else {
         adamargs.add(aia.getValue());
       }
@@ -249,9 +267,13 @@ public final class AdamController extends JobController {
       } else if (aio.getStringValue() != null && !aio.getStringValue().isEmpty()) {
         //Not a flag: add the name of the option
         adamargs.add(aio.getOpt().getCliVal());
-        if (aio.getOpt().isValuePath() && aio.getOpt().isOutputPath()) {
-          //input path: add its full path
-          adamargs.add("file:" + getFilePath(aio.getStringValue()));
+        if (aio.getOpt().isValuePath() && !aio.getOpt().isOutputPath()) {
+          String filepath = getFilePath(aio.getStringValue());
+          if (filepath.startsWith("hdfs:")) {
+            adamargs.add(filepath);
+          } else {
+            adamargs.add("file:" + filepath);
+          }
         } else {
           //output path or string or sthn: add option value
           adamargs.add(aio.getStringValue());
@@ -288,6 +310,11 @@ public final class AdamController extends JobController {
   }
 
   private void resetArguments() {
+    if(selectedCommand == null){
+      args = new ArrayList<>();
+      opts = new ArrayList<>();
+      return;
+    }
     args = new ArrayList<>(selectedCommand.getArguments().length);
     opts = new ArrayList<>(selectedCommand.getOptions().length);
     for (AdamArgument aa : selectedCommand.getArguments()) {
@@ -328,6 +355,10 @@ public final class AdamController extends JobController {
 
   public void setSessionState(ClientSessionState sessionState) {
     this.sessionState = sessionState;
+  }
+
+  public void setFileSelectionController(FileSelectionController fs) {
+    this.fileSelectionController = fs;
   }
 
   public boolean isFileUploadedForArg(String name) {

@@ -16,8 +16,9 @@ public class Constants {
   //User under which yarn is run
   public static final String DEFAULT_YARN_USER = "glassfish";
 
-  //Relative output path (within hdfs study folder) which to write cuneiform output to
+  //Relative output path (within hdfs study folder) which to write cuneiform in-/output to
   public static final String CUNEIFORM_DEFAULT_OUTPUT_PATH = "Cuneiform/Output/";
+  public static final String CUNEIFORM_DEFAULT_INPUT_PATH = "Cuneiform/Input/";
 
   //Default configuration locations
   public static final String DEFAULT_HADOOP_CONF_DIR = "/srv/hadoop/etc/hadoop/";

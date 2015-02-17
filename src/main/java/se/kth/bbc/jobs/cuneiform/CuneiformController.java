@@ -9,9 +9,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -19,10 +21,10 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
+import se.kth.bbc.jobs.FileSelectionController;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.JobControllerEvent;
 import se.kth.bbc.lims.Constants;
@@ -59,6 +61,9 @@ public final class CuneiformController extends JobController {
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
+
+  @ManagedProperty(value = "#{fileSelectionController}")
+  private FileSelectionController fileSelectionController;
 
   @EJB
   private AsynchronousJobExecutor submitter;
@@ -108,6 +113,7 @@ public final class CuneiformController extends JobController {
       super.setBasePath(path);
       super.setJobHistoryFacade(history);
       super.setFileOperations(fops);
+      super.setFileSelector(fileSelectionController);
     } catch (IOException c) {
       logger.log(Level.SEVERE,
               "Failed to initialize Cuneiform staging folder for uploading.", c);
@@ -117,18 +123,23 @@ public final class CuneiformController extends JobController {
   }
 
   @Override
-  protected void afterUploadMainFile(FileUploadEvent event) {
+  protected void registerMainFile(String filename,
+          Map<String, String> attributes) {
     workflowUploaded = true;
-    workflowname = event.getFile().getFileName();
+    workflowname = filename;
     inspectWorkflow();
   }
 
   @Override
-  protected void afterUploadExtraFile(FileUploadEvent event) {
-    String inputVarName = (String) event.getComponent().getAttributes().get(
-            "name");
-    putVariable(KEY_PREFIX_TARGET + inputVarName, event.getFile().getFileName());
-    bindFreeVar(inputVarName, event.getFile().getFileName());
+  protected void registerExtraFile(String filename,
+          Map<String, String> attributes) {
+    if (attributes == null || !attributes.containsKey("name")) {
+      throw new IllegalArgumentException(
+              "CuneiformController expects attribute 'name'");
+    }
+    String inputVarName = attributes.get("name");
+    putVariable(KEY_PREFIX_TARGET + inputVarName, filename);
+    bindFreeVar(inputVarName, filename);
   }
 
   public boolean isFileUploadedForVar(String name) {
@@ -171,14 +182,17 @@ public final class CuneiformController extends JobController {
   private String getWorkflowText() throws IOException {
     //Read the cf-file
     String wfPath = getMainFilePath();
-    List<String> lines = Files.readAllLines(Paths.get(wfPath), Charset.
-            defaultCharset());
-    StringBuilder workflowBuilder = new StringBuilder();
-    for (String s : lines) {
-      workflowBuilder.append(s);
+    if (wfPath.startsWith("hdfs")) {
+      return fops.cat(wfPath);
+    } else {
+      List<String> lines = Files.readAllLines(Paths.get(wfPath), Charset.
+              defaultCharset());
+      StringBuilder workflowBuilder = new StringBuilder();
+      for (String s : lines) {
+        workflowBuilder.append(s);
+      }
+      return workflowBuilder.toString();
     }
-    return workflowBuilder.toString();
-
   }
 
   public ClientSessionState getSessionState() {
@@ -206,7 +220,7 @@ public final class CuneiformController extends JobController {
   }
 
   public void startWorkflow() {
-    if(!workflowUploaded){
+    if (!workflowUploaded) {
       MessagesController.addInfoMessage("Upload a workflow first.");
       return;
     }
@@ -341,8 +355,6 @@ public final class CuneiformController extends JobController {
             + sessionState.getLoggedInUsername() + File.separator + workflowname
             + File.separator
             + "input"; //folder to which files will be uploaded
-    String absoluteHDFSfoldername = "/user/" + System.getProperty("user.name")
-            + "/" + foldername;
     //find out which free variables were bound (the ones that have a non-null value)
     for (CuneiformParameter cp : freevars) {
       if (cp.getValue() != null) {
@@ -359,6 +371,13 @@ public final class CuneiformController extends JobController {
     }
     //actually write to workflow file
     String wfPath = getMainFilePath();
+    if (wfPath.startsWith("hdfs:")) {
+      //copy file to local tmp folder
+      String newPath = getBasePath() + File.separator + Utils.getFileName(wfPath);
+      fops.copyToLocal(wfPath, newPath);
+      updateMainFilePath(newPath);
+      wfPath = newPath;
+    }
     try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(
             wfPath, true)))) {
       out.print(extraLines);
@@ -372,11 +391,11 @@ public final class CuneiformController extends JobController {
       case MAIN_UPLOAD_FAILURE:
         return "Failed to upload workflow file " + extraInfo + ".";
       case MAIN_UPLOAD_SUCCESS:
-        return "Workflow file "+extraInfo+" successfully uploaded.";
+        return "Workflow file " + extraInfo + " successfully uploaded.";
       case EXTRA_FILE_FAILURE:
         return "Failed to upload input file " + extraInfo + ".";
       case EXTRA_FILE_SUCCESS:
-        return "Input file "+extraInfo+" successfully uploaded.";
+        return "Input file " + extraInfo + " successfully uploaded.";
       default:
         return super.getUserMessage(event, extraInfo);
     }
@@ -392,6 +411,10 @@ public final class CuneiformController extends JobController {
       default:
         return super.getLogMessage(event, extraInfo);
     }
+  }
+
+  public void setFileSelectionController(FileSelectionController fs) {
+    this.fileSelectionController = fs;
   }
 
 }

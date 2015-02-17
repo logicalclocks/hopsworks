@@ -815,14 +815,6 @@ h6{
   float: left;    
 }
 
-.browser_row{    
-  background: none repeat scroll 0% 0% #FAFAFA;
-}
-
-.browser_row:hover{
-  background:#d9edf7;border-bottom:1px solid #adf;
-}
-
 label{
 
   float: left;
@@ -2471,6 +2463,20 @@ box-shadow: none;
   height: 0px !important;
 }
 
+.dialogForm .ui-fileupload-content {
+  height: 0px;
+  padding: 0px;
+  border: 0px none;
+  float: right;
+}
+
+.dialogForm .ui-button {
+  background-color: #F0F0F0;
+  background-image: linear-gradient(to bottom, #FFF, #E9E9E9);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: none;
+}
+
 .adamForm .adamTable table {  
   border-collapse: collapse;
 }
@@ -2515,7 +2521,7 @@ box-shadow: none;
   font-size: 12px;
 }
 
-.changeUpload .ui-button{
+.changeUpload{
   float: right;
 }
 
@@ -2532,4 +2538,20 @@ box-shadow: none;
 
 .dialogForm {
   margin-bottom: 5px;
+}
+
+.studyDialog .ui-datatable-scrollable-header {
+  height: 0px;
+}
+
+.studyDialog .ui-datatable {
+  width: 300px;
+}
+
+.studyDialog .ui-datatable tr{  
+  background: none repeat scroll 0% 0% #FAFAFA;
+}
+
+.studyDialog table td {
+  vertical-align: middle;
 }

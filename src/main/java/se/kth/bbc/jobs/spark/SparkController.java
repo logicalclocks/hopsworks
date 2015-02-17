@@ -2,6 +2,7 @@ package se.kth.bbc.jobs.spark;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -9,9 +10,9 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import org.primefaces.event.FileUploadEvent;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
+import se.kth.bbc.jobs.FileSelectionController;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.JobControllerEvent;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
@@ -42,6 +43,9 @@ public final class SparkController extends JobController {
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
+
+  @ManagedProperty(value = "#{fileSelectionController}")
+  private FileSelectionController fileSelectionController;
 
   @EJB
   private AsynchronousJobExecutor submitter;
@@ -96,6 +100,7 @@ public final class SparkController extends JobController {
       super.setBasePath(path);
       super.setJobHistoryFacade(history);
       super.setFileOperations(fops);
+      super.setFileSelector(fileSelectionController);
     } catch (IOException c) {
       logger.log(Level.SEVERE,
               "Failed to initialize Spark staging folder for uploading.", c);
@@ -105,12 +110,12 @@ public final class SparkController extends JobController {
   }
 
   @Override
-  public void afterUploadMainFile(FileUploadEvent event) {
-    appJarName = event.getFile().getFileName();
+  public void registerMainFile(String filename, Map<String, String> attributes) {
+    appJarName = filename;
   }
-  
+
   @Override
-  public void afterUploadExtraFile(FileUploadEvent event){
+  public void registerExtraFile(String filename, Map<String, String> attributes) {
     //TODO: allow for file input in Spark
   }
 
@@ -118,7 +123,8 @@ public final class SparkController extends JobController {
     if (jobName == null || jobName.isEmpty()) {
       jobName = "Untitled Spark Job";
     }
-    SparkYarnRunnerBuilder runnerbuilder = new SparkYarnRunnerBuilder(getMainFilePath(), mainClass);
+    SparkYarnRunnerBuilder runnerbuilder = new SparkYarnRunnerBuilder(
+            getMainFilePath(), mainClass);
     runnerbuilder.setJobName(jobName);
     String[] jobArgs = args.trim().split(" ");
     runnerbuilder.addAllJobArgs(jobArgs);
@@ -160,18 +166,18 @@ public final class SparkController extends JobController {
               "Failed to write job history. Aborting execution.");
     }
   }
-    
-    @Override
+
+  @Override
   protected String getUserMessage(JobControllerEvent event, String extraInfo) {
     switch (event) {
       case MAIN_UPLOAD_FAILURE:
         return "Failed to upload application jar " + extraInfo + ".";
       case MAIN_UPLOAD_SUCCESS:
-        return "Workflow file "+extraInfo+" successfully uploaded.";
+        return "Workflow file " + extraInfo + " successfully uploaded.";
       case EXTRA_FILE_FAILURE:
         return "Failed to upload input file " + extraInfo + ".";
       case EXTRA_FILE_SUCCESS:
-        return "Input file "+extraInfo+" successfully uploaded.";
+        return "Input file " + extraInfo + " successfully uploaded.";
       default:
         return super.getUserMessage(event, extraInfo);
     }
@@ -187,5 +193,9 @@ public final class SparkController extends JobController {
       default:
         return super.getLogMessage(event, extraInfo);
     }
+  }
+
+  public void setFileSelectionController(FileSelectionController fs) {
+    this.fileSelectionController = fs;
   }
 }
