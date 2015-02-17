@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
@@ -242,7 +244,7 @@ public class YarnRunner implements Closeable, CancellableJob {
       localResources.put(key, scRsrc);
     }
     //For all local resources with hdfs path: add local resource
-    for(Entry<String,String> entry: amLocalResourcesOnHDFS.entrySet()){
+    for (Entry<String, String> entry : amLocalResourcesOnHDFS.entrySet()) {
       String key = entry.getKey();
       Path src = new Path(entry.getValue());
       FileStatus scFileStat = fs.getFileStatus(src);
@@ -263,7 +265,27 @@ public class YarnRunner implements Closeable, CancellableJob {
     for (String path : filesToBeCopied) {
       String destination = basePath + File.separator + Utils.getFileName(path);
       Path dst = new Path(destination);
-      fs.copyFromLocalFile(new Path(path), dst);
+      //copy the input file to where cuneiform expects it
+      if (!path.startsWith("hdfs:")) {
+        //First, remove any checksum files that are present
+        //Since the file may have been downloaded from HDFS, modified and now trying to upload,
+        //may run into bug HADOOP-7199 (https://issues.apache.org/jira/browse/HADOOP-7199)
+        String dirPart = Utils.getDirectoryPart(path);
+        String filename = Utils.getFileName(path);
+        String crcName = dirPart+"."+filename+".crc";
+        Files.deleteIfExists(Paths.get(crcName));
+        fs.copyFromLocalFile(new Path(path), dst);
+      } else {
+        Path srcPath = new Path(path);
+        Path[] srcs = FileUtil.stat2Paths(fs.globStatus(srcPath), srcPath);
+        if (srcs.length > 1 && !fs.isDirectory(dst)) {
+          throw new IOException("When copying multiple files, "
+                  + "destination should be a directory.");
+        }
+        for (Path src1 : srcs) {
+          FileUtil.copy(fs, src1, fs, dst, false, conf);
+        }
+      }
       logger.log(Level.INFO, "Copying from: {0} to: {1}",
               new Object[]{path,
                 dst});

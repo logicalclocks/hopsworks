@@ -355,19 +355,9 @@ public final class CuneiformController extends JobController {
             + sessionState.getLoggedInUsername() + File.separator + workflowname
             + File.separator
             + "input"; //folder to which files will be uploaded
-    String absoluteHDFSfoldername = "/user/" + System.getProperty("user.name")
-            + "/" + foldername;
     //find out which free variables were bound (the ones that have a non-null value)
     for (CuneiformParameter cp : freevars) {
       if (cp.getValue() != null) {
-        //copy the input file to where cuneiform expects it
-        if (!getFilePath(cp.getValue()).startsWith("hdfs:")) {
-          fops.copyFromLocalNoInode(getFilePath(cp.getValue()),
-                  absoluteHDFSfoldername + File.separator + cp.getValue());
-        } else {
-          fops.copyWithinHdfs(getFilePath(cp.getValue()), absoluteHDFSfoldername
-                  + File.separator + cp.getValue());
-        }
         //add a line to the workflow file
         extraLines.append(cp.getName()).append(" = '").append(foldername).
                 append(File.separator).append(cp.getValue()).append("';\n");
@@ -382,9 +372,8 @@ public final class CuneiformController extends JobController {
     //actually write to workflow file
     String wfPath = getMainFilePath();
     if (wfPath.startsWith("hdfs:")) {
-      //copy file to local tmp file
-      Path tmpWf = Files.createTempFile(workflowname, "cf");
-      String newPath = tmpWf.toString();
+      //copy file to local tmp folder
+      String newPath = getBasePath() + File.separator + Utils.getFileName(wfPath);
       fops.copyToLocal(wfPath, newPath);
       updateMainFilePath(newPath);
       wfPath = newPath;

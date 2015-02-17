@@ -84,9 +84,9 @@ public abstract class JobController implements Serializable {
     if (!path.startsWith("hdfs:")) {
       path = "hdfs://" + path;
     }
-    
-    if(path.endsWith("/")){
-      path = path.substring(0,path.length()-1);
+
+    if (path.endsWith("/")) {
+      path = path.substring(0, path.length() - 1);
     }
     System.out.println("Called select main file: " + path);
     files.clear();
@@ -117,8 +117,8 @@ public abstract class JobController implements Serializable {
     if (!path.startsWith("hdfs:")) {
       path = "hdfs://" + path;
     }
-    if(path.endsWith("/")){
-      path = path.substring(0,path.length()-1);
+    if (path.endsWith("/")) {
+      path = path.substring(0, path.length() - 1);
     }
     System.out.println("Called select extra file: " + path);
     files.put(Utils.getFileName(path), path);
@@ -195,7 +195,7 @@ public abstract class JobController implements Serializable {
     }
   }
 
-  public void setBasePath(String basepath) throws IOException {
+  public final void setBasePath(String basepath) throws IOException {
     if (basepath.endsWith(File.separator)) {
       basePath = basepath;
     } else {
@@ -208,6 +208,10 @@ public abstract class JobController implements Serializable {
       throw new IOException(
               "Failed to create staging folder for uploading files.");
     }
+  }
+
+  public final String getBasePath() {
+    return basePath;
   }
 
   private void checkIfHistorySet() {
@@ -315,7 +319,7 @@ public abstract class JobController implements Serializable {
   protected final String getMainFilePath() {
     return files.get(KEY_MAIN_FILE);
   }
-  
+
   protected final void updateMainFilePath(String newPath) {
     files.put(KEY_MAIN_FILE, newPath);
   }
