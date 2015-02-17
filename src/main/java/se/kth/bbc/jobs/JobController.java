@@ -88,7 +88,6 @@ public abstract class JobController implements Serializable {
     if (path.endsWith("/")) {
       path = path.substring(0, path.length() - 1);
     }
-    System.out.println("Called select main file: " + path);
     files.clear();
     variables.clear();
     files.put(KEY_MAIN_FILE, path);
@@ -120,7 +119,6 @@ public abstract class JobController implements Serializable {
     if (path.endsWith("/")) {
       path = path.substring(0, path.length() - 1);
     }
-    System.out.println("Called select extra file: " + path);
     files.put(Utils.getFileName(path), path);
     registerExtraFile(Utils.getFileName(path), attributes);
   }

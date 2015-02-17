@@ -54,9 +54,7 @@ public class FileSelectionController implements Serializable{
   }
 
   public void submitSelectedPath() {
-    System.out.println("Submit called. Path: "+selectedPath);
     if (initialized) {
-      System.out.println("Passing initialization check.");
       if (isMainFile) {
         controller.selectMainFile(selectedPath, attributes);
       } else {

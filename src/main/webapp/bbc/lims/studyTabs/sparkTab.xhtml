@@ -36,7 +36,7 @@
                                     <h:inputText id="JobName" value="#{sparkController.jobName}"/>
 
                                     <h:outputLabel value="Upload job jar" for="sparkAppUploader"/>
-                                    <p:commandButton 
+                                    <p:commandButton process="@this"
                                       value="Select..." id="sparkAppUploader"
                                       oncomplete="PF('chooseFileDlg').show()"
                                       actionListener="#{sparkController.prepareFileSelector(true,'')}">
@@ -46,7 +46,7 @@
                                     <h:outputLabel value="#{sparkController.appJarName==null ? 'No file uploaded yet' : sparkController.appJarName}"/>
 
                                     <h:outputLabel value="Main class name" for="sparkMC"/>
-                                    <h:inputText id="sparkMC" value="#{sparkController.mainClass}"/>
+                                    <h:inputText id="sparkMC" value="#{sparkController.mainClass}" required="true"/>
 
                                     <h:outputLabel value="Arguments" for="sparkArgs"/>
                                     <h:inputText id="sparkArgs" value="#{sparkController.args}"/>
@@ -59,7 +59,7 @@
                             </div>
                         </div>
                     </h:form>
-                    <h:form id="resultForm_SPARK">
+                    <h:form id="resultForm_SPARK" styleClass="resultsForm">
                         <h3>
                             Results
                         </h3>

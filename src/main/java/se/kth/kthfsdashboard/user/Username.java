@@ -255,7 +255,6 @@ public class Username implements Serializable {
     public void setExtraGroup(Group g){
         addGroup(g);
         this.extraGroup = g;
-        System.out.println("Set called."+g);
     }
     
     public Group getExtraGroup(){
