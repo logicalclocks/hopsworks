@@ -13,8 +13,7 @@ import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import se.kth.bbc.activity.ActivityController;
-import se.kth.bbc.activity.ActivityMB;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.Constants;
@@ -59,10 +58,9 @@ public class NewStudyController implements Serializable {
 
   @EJB
   private FileOperations fileOps;
-
-  //TODO: restructure
-  @ManagedProperty(value = "#{activityBean}")
-  private transient ActivityMB activity;
+  
+  @EJB
+  private ActivityFacade activityFacade;
 
   @ManagedProperty(value = "#{studyManagedBean}")
   private transient StudyMB studies;
@@ -72,10 +70,6 @@ public class NewStudyController implements Serializable {
 
   public StudyServiceEnum[] getAvailableServices() {
     return StudyServiceEnum.values();
-  }
-
-  public void setActivity(ActivityMB activity) {
-    this.activity = activity;
   }
 
   public void setStudies(StudyMB studies) {
@@ -148,8 +142,7 @@ public class NewStudyController implements Serializable {
         //Add the desired services
         persistServices();
         //Add the activity information
-        activity.addActivity(ActivityController.NEW_STUDY, study.getName(),
-                ActivityController.FLAG_STUDY);
+        activityFacade.persistActivity(ActivityFacade.NEW_STUDY, study.getName(), sessionState.getLoggedInUsername());
         //update role information in study
         addStudyMaster(study.getName());
         logger.log(Level.FINE, "{0} - study created successfully.", study.

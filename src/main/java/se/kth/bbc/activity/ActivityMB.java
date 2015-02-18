@@ -1,24 +1,14 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.activity;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
-import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpServletRequest;
 import org.primefaces.model.LazyDataModel;
 import se.kth.kthfsdashboard.user.Gravatar;
 
@@ -34,17 +24,16 @@ public class ActivityMB implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @EJB
-    private ActivityController activityController;
-
-    private UserActivity activity;
-        
-    private String flag;
+    private ActivityFacade activityController;
+    
+    @EJB
+    private ActivityDetailFacade activityDetailFacade;
     
     private LazyDataModel<ActivityDetail> allLazyModel;
     
     @PostConstruct
     public void init(){
-        this.allLazyModel = new LazyActivityModel(activityController);
+        this.allLazyModel = new LazyActivityModel(activityDetailFacade);
         int cnt = (int)activityController.getTotalCount();
         allLazyModel.setRowCount(cnt);
     }
@@ -53,38 +42,12 @@ public class ActivityMB implements Serializable {
         return allLazyModel;
     }
     
-    public String getFlag() {
-        return flag;
-    }
-
-    public void setFlag(String flag) {
-        this.flag = flag;
-    }
-
-    public void fetchFlag() {
-
-        FacesContext fc = FacesContext.getCurrentInstance();
-        Map<String, String> params = fc.getExternalContext().getRequestParameterMap();
-        this.flag = params.get("teamFlag");
-    }
-
-    public UserActivity getActivity() {
-        if (activity == null) {
-            activity = new UserActivity();
-        }
-        return activity;
-    }
-
-    public void setActivity(UserActivity activity) {
-        this.activity = activity;
-    }
-    
     public List<ActivityDetail> getActivityDetailList() {
-        return activityController.getAllActivityDetail();
+        return activityDetailFacade.getAllActivityDetail();
     }
     
     public List<ActivityDetail> getActivityDetailOnStudy(String studyName){
-        return activityController.activityDetailOnStudy(studyName);
+        return activityDetailFacade.activityDetailOnStudy(studyName);
     }
 
     public String findLastActivity(int id) {
@@ -147,55 +110,6 @@ public class ActivityMB implements Serializable {
             }
         }
         return "more than a year ago"; // dummy
-    }
-
-    public void addActivity(String message, String activityAbout, String flag) {
-
-        activity.setId(Integer.SIZE);
-        activity.setActivity(message);
-        activity.setPerformedBy(getUsername());
-        activity.setTimestamp(new Date());
-        activity.setFlag(flag);
-        activity.setActivityOn(activityAbout);
-
-        try {
-            activityController.persistActivity(activity);
-        } catch (EJBException ejb) {
-            logger.log(Level.SEVERE, " Add new activity for new study failed!");
-            return;
-        }
-            logger.log(Level.FINE, " Add new activity for new study successful: {0}", activity.getId());
-    }
-    
-    public void addSampleActivity(String message, String activityAbout, String flag, String username) {
-
-        activity.setId(Integer.SIZE);
-        activity.setActivity(message);
-        activity.setPerformedBy(username);
-        activity.setTimestamp(new Date());
-        activity.setFlag(flag);
-        activity.setActivityOn(activityAbout);
-
-        try {
-            activityController.persistActivity(activity);
-        } catch (EJBException ejb) {
-            logger.log(Level.SEVERE, " Add new activity for new study failed!");
-            return;
-        }
-            logger.log(Level.FINE, " Add new activity for new study successful: {0}", activity.getId());
-    }
-    
-
-    public List<UserActivity> getAllTeamActivity() {
-        return activityController.findAllTeamActivity(getFlag());
-    }
-
-    private HttpServletRequest getRequest() {
-        return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-    }
-
-    public String getUsername() {
-        return getRequest().getUserPrincipal().getName();
     }
 
     public String getGravatar(String email, int size) {

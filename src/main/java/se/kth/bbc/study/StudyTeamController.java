@@ -8,8 +8,7 @@ import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import se.kth.bbc.activity.ActivityController;
-import se.kth.bbc.activity.ActivityMB;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 
@@ -27,12 +26,12 @@ public class StudyTeamController implements Serializable{
 
   @EJB
   private StudyTeamFacade teamFacade;
+  
+  @EJB
+  private ActivityFacade activityFacade;
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
-
-  @ManagedProperty(value = "#{activityBean}")
-  private ActivityMB activity;
 
   public void setToRemove(String email, String name) {
     this.toRemoveEmail = email;
@@ -55,8 +54,7 @@ public class StudyTeamController implements Serializable{
   public synchronized void deleteMemberFromTeam() {
     try {
       teamFacade.removeStudyTeam(sessionState.getActiveStudyname(), toRemoveEmail);
-      activity.addActivity(ActivityController.REMOVED_MEMBER + toRemoveEmail,
-              sessionState.getActiveStudyname(), "TEAM");
+      activityFacade.persistActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail, sessionState.getActiveStudyname(), sessionState.getLoggedInUsername());
     } catch (EJBException ejb) {
       MessagesController.addErrorMessage("Deleting team member failed.");
       logger.log(Level.WARNING,"Failed to remove team member "+toRemoveEmail+"from study "+sessionState.getActiveStudyname(),ejb);
@@ -69,9 +67,5 @@ public class StudyTeamController implements Serializable{
 
   public void setSessionState(ClientSessionState sessionState) {
     this.sessionState = sessionState;
-  }
-
-  public void setActivity(ActivityMB activity) {
-    this.activity = activity;
   }
 }

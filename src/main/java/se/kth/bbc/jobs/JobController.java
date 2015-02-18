@@ -16,6 +16,7 @@ import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
@@ -45,6 +46,7 @@ public abstract class JobController implements Serializable {
   private JobHistoryFacade history = null;
   private FileOperations fops;
   private FileSelectionController fileSelector;
+  private ActivityFacade activityFacade;
 
   /**
    * Method called after the main execution file has been uploaded to the
@@ -193,7 +195,7 @@ public abstract class JobController implements Serializable {
     }
   }
 
-  public final void setBasePath(String basepath) throws IOException {
+  public void setBasePath(String basepath) throws IOException {
     if (basepath.endsWith(File.separator)) {
       basePath = basepath;
     } else {
@@ -208,7 +210,7 @@ public abstract class JobController implements Serializable {
     }
   }
 
-  public final String getBasePath() {
+  public String getBasePath() {
     return basePath;
   }
 
@@ -230,28 +232,38 @@ public abstract class JobController implements Serializable {
               "FileSelectionController has not been set.");
     }
   }
+  
+  private void checkIfActivityFacadeSet(){
+    if(activityFacade == null){
+      throw new IllegalStateException("ActivityFacade has not been set.");
+    }
+  }
 
-  protected final void setJobHistoryFacade(JobHistoryFacade facade) {
+  protected void setJobHistoryFacade(JobHistoryFacade facade) {
     this.history = facade;
   }
 
-  protected final void setFileOperations(FileOperations fops) {
+  protected void setFileOperations(FileOperations fops) {
     this.fops = fops;
   }
 
-  protected final void setFileSelector(FileSelectionController fileSelector) {
+  protected void setFileSelector(FileSelectionController fileSelector) {
     this.fileSelector = fileSelector;
   }
+  
+  protected void setActivityFacade(ActivityFacade facade){
+    this.activityFacade = facade;
+  }
 
-  public final void setJobId(Long jobId) {
+  public void setJobId(Long jobId) {
     this.jobhistoryid = jobId;
   }
 
-  public final Long getJobId() {
+  public Long getJobId() {
     return jobhistoryid;
   }
 
-  public final JobHistory getSelectedJob() {
+  public JobHistory getSelectedJob() {
     checkIfHistorySet();
     if (jobhistoryid == null) {
       return null;
@@ -260,19 +272,19 @@ public abstract class JobController implements Serializable {
     }
   }
 
-  public final void setSelectedJob(Long id) {
+  public void setSelectedJob(Long id) {
     this.jobhistoryid = id;
   }
 
-  public final void setSelectedJob(JobHistory job) {
+  public void setSelectedJob(JobHistory job) {
     this.jobhistoryid = job.getId();
   }
 
-  public final boolean isJobSelected() {
+  public boolean isJobSelected() {
     return jobhistoryid != null;
   }
 
-  public final boolean isSelectedJobRunning() {
+  public boolean isSelectedJobRunning() {
     if (jobhistoryid == null) {
       return false;
     } else {
@@ -280,7 +292,7 @@ public abstract class JobController implements Serializable {
     }
   }
 
-  public final boolean isSelectedJobHasFinished() {
+  public boolean isSelectedJobHasFinished() {
     if (jobhistoryid == null) {
       return false;
     } else {
@@ -298,31 +310,31 @@ public abstract class JobController implements Serializable {
     return state.isFinalState();
   }
 
-  protected final void putVariable(String key, String value) {
+  protected void putVariable(String key, String value) {
     variables.put(key, value);
   }
 
-  protected final String getVariable(String key) {
+  protected String getVariable(String key) {
     return variables.get(key);
   }
 
-  protected final boolean variablesContainKey(String key) {
+  protected boolean variablesContainKey(String key) {
     return variables.containsKey(key);
   }
 
-  protected final String getFilePath(String key) {
+  protected String getFilePath(String key) {
     return files.get(key);
   }
 
-  protected final String getMainFilePath() {
+  protected String getMainFilePath() {
     return files.get(KEY_MAIN_FILE);
   }
 
-  protected final void updateMainFilePath(String newPath) {
+  protected void updateMainFilePath(String newPath) {
     files.put(KEY_MAIN_FILE, newPath);
   }
 
-  protected final Map<String, String> getFiles() {
+  protected Map<String, String> getFiles() {
     return files;
   }
 
@@ -365,7 +377,7 @@ public abstract class JobController implements Serializable {
     return null;
   }
 
-  protected final StreamedContent downloadFile(String path,
+  protected StreamedContent downloadFile(String path,
           String filename) throws IOException {
     checkIfFopsSet();
     //TODO: check if need to convert to try-with-resources or if this breaks streamedcontent
@@ -398,13 +410,13 @@ public abstract class JobController implements Serializable {
    * <p>
    * @return
    */
-  protected final Map<String, String> getExtraFiles() {
+  protected Map<String, String> getExtraFiles() {
     Map<String, String> allFiles = new HashMap(files);
     allFiles.remove(KEY_MAIN_FILE);
     return allFiles;
   }
 
-  public final boolean isDir(String path) {
+  public boolean isDir(String path) {
     return fops.isDir(path);
   }
 
@@ -441,7 +453,7 @@ public abstract class JobController implements Serializable {
    * @param isMainUpload
    * @param args A series of key-value arguments.
    */
-  public final void prepareFileSelector(boolean isMainUpload, String attrs) {
+  public void prepareFileSelector(boolean isMainUpload, String attrs) {
     checkIfFileSelectorSet();
     Map<String, String> reqAttrs = new HashMap<>();
     if (attrs != null && !attrs.isEmpty()) {
@@ -457,5 +469,10 @@ public abstract class JobController implements Serializable {
     }
     //Setup file selector
     fileSelector.init(this, isMainUpload, reqAttrs);
+  }
+  
+  protected void writeJobStartedActivity(String study, String user){
+    checkIfActivityFacadeSet();
+    activityFacade.persistActivity(ActivityFacade.RAN_JOB, study, user);
   }
 }

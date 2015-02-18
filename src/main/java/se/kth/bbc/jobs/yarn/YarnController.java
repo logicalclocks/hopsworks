@@ -11,6 +11,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.apache.hadoop.yarn.exceptions.YarnException;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.FileSelectionController;
 import se.kth.bbc.jobs.JobController;
@@ -50,6 +51,9 @@ public class YarnController extends JobController {
   @EJB
   private FileOperations fops;
 
+  @EJB
+  private ActivityFacade activityFacade;
+
   @PostConstruct
   public void init() {
     try {
@@ -60,6 +64,7 @@ public class YarnController extends JobController {
       super.setJobHistoryFacade(history);
       super.setFileOperations(fops);
       super.setFileSelector(fileSelectionController);
+      super.setActivityFacade(activityFacade);
     } catch (IOException c) {
       logger.log(Level.SEVERE,
               "Failed to initialize Yarn staging folder for uploading.", c);
@@ -139,7 +144,10 @@ public class YarnController extends JobController {
                       e);
       MessagesController.addErrorMessage(
               "Failed to initialize Application Master.");
+      return;
     }
+    writeJobStartedActivity(sessionState.getActiveStudyname(), sessionState.
+            getLoggedInUsername());
   }
 
   public void setSessionState(ClientSessionState sessionState) {

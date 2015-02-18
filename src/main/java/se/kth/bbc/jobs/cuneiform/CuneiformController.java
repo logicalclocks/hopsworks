@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +21,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.primefaces.model.StreamedContent;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.FileSelectionController;
@@ -80,6 +80,9 @@ public final class CuneiformController extends JobController {
   @EJB
   private StagingManager stagingManager;
 
+  @EJB
+  private ActivityFacade activityFacade;
+
   public String getWorkflowName() {
     return workflowname;
   }
@@ -114,6 +117,7 @@ public final class CuneiformController extends JobController {
       super.setJobHistoryFacade(history);
       super.setFileOperations(fops);
       super.setFileSelector(fileSelectionController);
+      super.setActivityFacade(activityFacade);
     } catch (IOException c) {
       logger.log(Level.SEVERE,
               "Failed to initialize Cuneiform staging folder for uploading.", c);
@@ -308,7 +312,10 @@ public final class CuneiformController extends JobController {
               "Failed to persist JobHistory. Aborting execution.");
       MessagesController.addErrorMessage(
               "Failed to write job history. Aborting execution.");
+      return;
     }
+    writeJobStartedActivity(sessionState.getActiveStudyname(), sessionState.
+            getLoggedInUsername());
   }
 
   public boolean hasOutputFiles() {
@@ -378,7 +385,8 @@ public final class CuneiformController extends JobController {
     String wfPath = getMainFilePath();
     if (wfPath.startsWith("hdfs:")) {
       //copy file to local tmp folder
-      String newPath = getBasePath() + File.separator + Utils.getFileName(wfPath);
+      String newPath = getBasePath() + File.separator + Utils.
+              getFileName(wfPath);
       fops.copyToLocal(wfPath, newPath);
       updateMainFilePath(newPath);
       wfPath = newPath;

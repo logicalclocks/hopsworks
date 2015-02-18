@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
@@ -24,9 +23,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.LazyDataModel;
-import se.kth.bbc.activity.ActivityController;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.activity.ActivityDetail;
-import se.kth.bbc.activity.ActivityMB;
+import se.kth.bbc.activity.ActivityDetailFacade;
 import se.kth.bbc.activity.LazyActivityModel;
 import se.kth.bbc.activity.UserGroupsController;
 import se.kth.bbc.activity.UsersGroups;
@@ -63,16 +62,16 @@ public class StudyMB implements Serializable {
     private UserGroupsController userGroupsController;
 
     @EJB
-    private ActivityController activityController;
+    private ActivityFacade activityFacade;
+    
+    @EJB
+    private ActivityDetailFacade activityDetailFacade;
 
     @EJB
     private FileOperations fileOps;
 
     @EJB
     private StudyServiceFacade studyServices;
-
-    @ManagedProperty(value = "#{activityBean}")
-    private ActivityMB activity;
     
     @ManagedProperty(value = "#{clientSessionState}")
     private ClientSessionState sessionState;
@@ -96,15 +95,6 @@ public class StudyMB implements Serializable {
     private LazyActivityModel lazyModel = null;
 
     public StudyMB() {
-    }
-
-    @PostConstruct
-    public void init() {
-        activity.getActivity();
-    }
-
-    public void setActivity(ActivityMB activity) {
-        this.activity = activity;
     }
 
   public void setSessionState(ClientSessionState sessionState) {
@@ -383,7 +373,7 @@ public class StudyMB implements Serializable {
                 st.setTeamRole(studyTeamEntry.getTeamRole());
                 studyTeamController.persistStudyTeam(st);
                 logger.log(Level.FINE, "{0} - member added to study : {1}.", new Object[]{t.getName(), studyName});
-                activity.addActivity(ActivityController.NEW_MEMBER + t.getName() + " ", studyName, ActivityController.FLAG_STUDY);
+                activityFacade.persistActivity(ActivityFacade.NEW_MEMBER + t.getName() + " ", studyName, sessionState.getLoggedInUsername());
             }
             if (!getSelectedUsernames().isEmpty()) {
                 getSelectedUsernames().clear();
@@ -436,7 +426,7 @@ public class StudyMB implements Serializable {
         boolean success = false;
         try {
             studyController.removeByName(studyName);
-            activity.addActivity(ActivityController.REMOVED_STUDY, studyName, ActivityController.FLAG_STUDY);
+            activityFacade.persistActivity(ActivityFacade.REMOVED_STUDY, studyName, sessionState.getLoggedInUsername());
             if (deleteFilesOnRemove) {
                 String path = File.separator + Constants.DIR_ROOT + File.separator + studyName;
                 success = fileOps.rmRecursive(path);
@@ -465,8 +455,8 @@ public class StudyMB implements Serializable {
 
     public LazyDataModel<ActivityDetail> getSpecificLazyModel() {
         if (lazyModel == null) {
-            lazyModel = new LazyActivityModel(activityController, studyName);
-            lazyModel.setRowCount((int) activityController.getStudyCount(studyName));
+            lazyModel = new LazyActivityModel(activityDetailFacade, studyName);
+            lazyModel.setRowCount((int) activityFacade.getStudyCount(studyName));
         }
         return lazyModel;
     }

@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package se.kth.bbc.activity;
 
 import java.io.Serializable;
@@ -30,21 +24,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "activity")
 @XmlRootElement
-//@SqlResultSetMappings( { @SqlResultSetMapping(name = "activityList", entities = {
-//    @EntityResult(entityClass = UserActivity.class), @EntityResult(entityClass = Username.class) })
-//})
-//@NamedNativeQuery(name="nativeActivity", query="SELECT act.id, act.activity, act.performed_by, act.activity_on, u.EMAIL, u.NAME FROM activity act, USERS u WHERE act.performed_By = u.EMAIL", resultSetMapping = "allActivityList")
-//@SqlResultSetMapping(name="allActivityList", entities = {@EntityResult(entityClass = UserActivity.class, fields = {
-//                                                                                     @FieldResult(name="id", column = "id"),
-//                                                                                     @FieldResult(name="activity", column = "activity"),
-//                                                                                     @FieldResult(name="performed_by",column = "performed_by"),
-//                                                                                     @FieldResult(name="timestamp",column = "timestamp"),
-//                                                                                     @FieldResult(name="activity_on",column = "activity_on")}),
-//    
-//                                                         @EntityResult(entityClass = Username.class, fields = {
-//                                                                                     @FieldResult(name="name",column = "NAME"),
-//                                                                                     @FieldResult(name="email",column = "EMAIL")}) 
-//                                                                                     })
 @NamedQueries({
     @NamedQuery(name = "UserActivity.findAll", query = "SELECT u FROM UserActivity u ORDER BY u.timestamp DESC"),
     @NamedQuery(name = "UserActivity.findById", query = "SELECT u FROM UserActivity u WHERE u.id = :id"),

@@ -10,6 +10,7 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.FileSelectionController;
@@ -59,6 +60,9 @@ public final class SparkController extends JobController {
   @EJB
   private StagingManager stagingManager;
 
+  @EJB
+  private ActivityFacade activityFacade;
+
   public String getJobName() {
     return jobName;
   }
@@ -101,6 +105,7 @@ public final class SparkController extends JobController {
       super.setJobHistoryFacade(history);
       super.setFileOperations(fops);
       super.setFileSelector(fileSelectionController);
+      super.setActivityFacade(activityFacade);
     } catch (IOException c) {
       logger.log(Level.SEVERE,
               "Failed to initialize Spark staging folder for uploading.", c);
@@ -164,7 +169,10 @@ public final class SparkController extends JobController {
               "Failed to persist JobHistory. Aborting execution.");
       MessagesController.addErrorMessage(
               "Failed to write job history. Aborting execution.");
+      return;
     }
+    writeJobStartedActivity(sessionState.getActiveStudyname(), sessionState.
+            getLoggedInUsername());
   }
 
   @Override
