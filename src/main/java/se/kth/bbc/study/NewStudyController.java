@@ -33,11 +33,13 @@ public class NewStudyController implements Serializable {
   private static final StudyServiceEnum[] SERVICES_BBC = {
     StudyServiceEnum.CUNEIFORM, StudyServiceEnum.SAMPLES,
     StudyServiceEnum.STUDY_INFO};
-  private static final String TEMPLATE_FLINK = "Flink";
-  private static final StudyServiceEnum[] SERVICES_FLINK = {
-    StudyServiceEnum.FLINK
-  };
   private static final String TEMPLATE_CUSTOM = "Custom...";
+  private static final String TEMPLATE_ADAM = "Adam";
+  private static final StudyServiceEnum[] SERVICES_ADAM
+          = {StudyServiceEnum.ADAM};
+  private static final String TEMPLATE_SPARK = "Spark";
+  private static final StudyServiceEnum[] SERVICES_SPARK = {
+    StudyServiceEnum.SPARK};
 
   private StudyServiceEnum[] customServices; // Services selected by user
   private String chosenTemplate; // Chosen template: if custom, customServices is used
@@ -58,13 +60,13 @@ public class NewStudyController implements Serializable {
 
   @EJB
   private FileOperations fileOps;
-  
+
   @EJB
   private ActivityFacade activityFacade;
 
   @ManagedProperty(value = "#{studyManagedBean}")
   private transient StudyMB studies;
-  
+
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
 
@@ -75,15 +77,16 @@ public class NewStudyController implements Serializable {
   public void setStudies(StudyMB studies) {
     this.studies = studies;
   }
-  
-  public void setSessionState(ClientSessionState sessionState){
+
+  public void setSessionState(ClientSessionState sessionState) {
     this.sessionState = sessionState;
   }
 
   public List<String> getStudyTemplates() {
     List<String> values = new ArrayList<>(4);
+    values.add(TEMPLATE_ADAM);
     values.add(TEMPLATE_BBC);
-    values.add(TEMPLATE_FLINK);
+    values.add(TEMPLATE_SPARK);
     values.add(TEMPLATE_CUSTOM);
     return values;
   }
@@ -142,7 +145,9 @@ public class NewStudyController implements Serializable {
         //Add the desired services
         persistServices();
         //Add the activity information
-        activityFacade.persistActivity(ActivityFacade.NEW_STUDY, study.getName(), sessionState.getLoggedInUsername());
+        activityFacade.
+                persistActivity(ActivityFacade.NEW_STUDY, study.getName(),
+                        sessionState.getLoggedInUsername());
         //update role information in study
         addStudyMaster(study.getName());
         logger.log(Level.FINE, "{0} - study created successfully.", study.
@@ -174,7 +179,8 @@ public class NewStudyController implements Serializable {
   //Set the study owner as study master in StudyTeam table
   private void addStudyMaster(String study_name) {
 
-    StudyTeamPK stp = new StudyTeamPK(study_name, sessionState.getLoggedInUsername());
+    StudyTeamPK stp = new StudyTeamPK(study_name, sessionState.
+            getLoggedInUsername());
     StudyTeam st = new StudyTeam(stp);
     st.setTeamRole("Master");
     st.setTimestamp(new Date());
@@ -193,7 +199,7 @@ public class NewStudyController implements Serializable {
   }
 
   //create study on HDFS
-  private void mkStudyDIR(String studyName) throws IOException{
+  private void mkStudyDIR(String studyName) throws IOException {
 
     String rootDir = Constants.DIR_ROOT;
     String studyPath = File.separator + rootDir + File.separator + studyName;
@@ -220,8 +226,11 @@ public class NewStudyController implements Serializable {
       case TEMPLATE_BBC:
         studyServices.persistServicesForStudy(newStudyName, SERVICES_BBC);
         break;
-      case TEMPLATE_FLINK:
-        studyServices.persistServicesForStudy(newStudyName, SERVICES_FLINK);
+      case TEMPLATE_ADAM:
+        studyServices.persistServicesForStudy(newStudyName, SERVICES_ADAM);
+        break;
+      case TEMPLATE_SPARK:
+        studyServices.persistServicesForStudy(newStudyName, SERVICES_SPARK);
         break;
       case TEMPLATE_CUSTOM:
         studyServices.persistServicesForStudy(newStudyName, customServices);

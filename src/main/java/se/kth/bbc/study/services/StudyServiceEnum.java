@@ -8,7 +8,6 @@ package se.kth.bbc.study.services;
  */
 public enum StudyServiceEnum {
   CUNEIFORM,
-  FLINK,
   SAMPLES,
   STUDY_INFO,
   SPARK,
@@ -22,8 +21,6 @@ public enum StudyServiceEnum {
     switch(this){
       case CUNEIFORM:
         return "Cuneiform";
-      case FLINK:
-        return "Flink";
       case SAMPLES:
         return "Samples";
       case STUDY_INFO:
