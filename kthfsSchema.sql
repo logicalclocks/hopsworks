@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.6.22, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.6.23, for Linux (x86_64)
 --
 -- Host: localhost    Database: kthfs
 -- ------------------------------------------------------
--- Server version	5.6.22
+-- Server version	5.6.23
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -108,7 +108,7 @@ CREATE TABLE `Inodes` (
   KEY `pid_2` (`pid`,`isDir`),
   KEY `name` (`name`),
   CONSTRAINT `Inodes_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `Inodes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=840 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1355 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -357,32 +357,6 @@ CREATE TABLE `STUDY_META` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `Samples`
---
-
-DROP TABLE IF EXISTS `Samples`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Samples` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `DATAADMINSTRATOR` longblob,
-  `DESCRIPTION` varchar(1024) DEFAULT NULL,
-  `DIAGNOSIS` longblob,
-  `ENGLISHNAME` varchar(512) DEFAULT NULL,
-  `LASTUPDATED` datetime DEFAULT NULL,
-  `ORGANIZATION` varchar(512) DEFAULT NULL,
-  `OTHERINFORMATION` varchar(1024) DEFAULT NULL,
-  `RESPONSIBLE` varchar(512) DEFAULT NULL,
-  `SAMPLECOLLECTION` longblob,
-  `SAMPLEDONORS` longblob,
-  `SAMPLES` longblob,
-  `STUDY` longblob,
-  `SWEDISHNAME` varchar(512) DEFAULT NULL,
-  PRIMARY KEY (`ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Temporary view structure for view `StudyDetails`
 --
 
@@ -507,7 +481,7 @@ CREATE TABLE `activity` (
   `flag` enum('DATA','STUDY','TEAM','USERS') DEFAULT NULL,
   `activity_on` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=412 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=455 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -615,7 +589,7 @@ CREATE TABLE `jobhistory` (
   KEY `FK_jobhistory_study` (`study`),
   CONSTRAINT `FK_jobhistory_user` FOREIGN KEY (`user`) REFERENCES `USERS` (`EMAIL`),
   CONSTRAINT `jobhistory_ibfk_3` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=106 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=322 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -748,4 +722,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-01-21 15:44:33
+-- Dump completed on 2015-02-18 17:39:34
