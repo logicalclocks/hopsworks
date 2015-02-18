@@ -22,9 +22,13 @@ public abstract class YarnJob extends HopsJob {
   private static final int DEFAULT_POLL_TIMEOUT_INTERVAL = 1; //in seconds
 
   private final YarnRunner runner;
+  private YarnMonitor monitor = null;
   private final FileOperations fops;
 
   private String stdOutFinalDestination, stdErrFinalDestination;
+  private boolean started = false;
+
+  private JobState finalState = null;
 
   public YarnJob(JobHistoryFacade facade, YarnRunner runner, FileOperations fops) {
     super(facade);
@@ -44,9 +48,12 @@ public abstract class YarnJob extends HopsJob {
     super.updateArgs(runner.getAmArgs());
   }
 
-  protected final boolean appFinishedSuccessfully() throws YarnException,
-          IOException {
-    return runner.getApplicationState() == YarnApplicationState.FINISHED;
+  protected final boolean appFinishedSuccessfully() {
+    return finalState == JobState.FINISHED;
+  }
+
+  protected final JobState getFinalState() {
+    return finalState;
   }
 
   protected final YarnRunner getRunner() {
@@ -60,11 +67,13 @@ public abstract class YarnJob extends HopsJob {
   protected final boolean startJob() {
     try {
       updateState(JobState.STARTING_APP_MASTER);
-      runner.startAppMaster();
+      monitor = runner.startAppMaster();
+      started = true;
       return true;
     } catch (YarnException | IOException e) {
       logger.log(Level.SEVERE,
-              "Failed to start application master for job "+getJobId()+". Aborting execution",
+              "Failed to start application master for job " + getJobId()
+              + ". Aborting execution",
               e);
       updateState(JobState.APP_MASTER_START_FAILED);
       return false;
@@ -72,63 +81,74 @@ public abstract class YarnJob extends HopsJob {
   }
 
   protected final boolean monitor() {
-    YarnApplicationState appState;
-    int failures;
-    try {
-      appState = runner.getApplicationState();
-      updateState(JobState.getJobState(appState));
-      //count how many consecutive times the state could not be polled. Cancel if too much.
-      failures = 0;
-    } catch (YarnException | IOException ex) {
-      logger.log(Level.WARNING, "Failed to get application state for job id "
-              + getJobId(), ex);
-      appState = null;
-      failures = 1;
-    }
+    try (YarnMonitor r = monitor.start()) {
+      if (!started) {
+        throw new IllegalStateException(
+                "Trying to monitor a job that has not been started!");
+      }
+      YarnApplicationState appState;
+      int failures;
+      try {
+        appState = r.getApplicationState();
+        updateState(JobState.getJobState(appState));
+        //count how many consecutive times the state could not be polled. Cancel if too much.
+        failures = 0;
+      } catch (YarnException | IOException ex) {
+        logger.log(Level.WARNING,
+                "Failed to get application state for job id "
+                + getJobId(), ex);
+        appState = null;
+        failures = 1;
+      }
 
-    //Loop as long as the application is in a running/runnable state
-    while (appState != YarnApplicationState.FAILED && appState
-            != YarnApplicationState.FINISHED && appState
-            != YarnApplicationState.KILLED && failures
-            <= DEFAULT_MAX_STATE_POLL_RETRIES) {
-      //wait to poll another time
-      long startTime = System.currentTimeMillis();
-      while ((System.currentTimeMillis() - startTime)
-              < DEFAULT_POLL_TIMEOUT_INTERVAL * 1000) {
+      //Loop as long as the application is in a running/runnable state
+      while (appState != YarnApplicationState.FAILED && appState
+              != YarnApplicationState.FINISHED && appState
+              != YarnApplicationState.KILLED && failures
+              <= DEFAULT_MAX_STATE_POLL_RETRIES) {
+        //wait to poll another time
+        long startTime = System.currentTimeMillis();
+        while ((System.currentTimeMillis() - startTime)
+                < DEFAULT_POLL_TIMEOUT_INTERVAL * 1000) {
+          try {
+            Thread.sleep(200);
+          } catch (InterruptedException e) {
+            //not much...
+          }
+        }
+
         try {
-          Thread.sleep(200);
-        } catch (InterruptedException e) {
-          //not much...
+          appState = r.getApplicationState();
+          updateState(JobState.getJobState(appState));
+          failures = 0;
+        } catch (YarnException | IOException ex) {
+          failures++;
+          logger.log(Level.WARNING,
+                  "Failed to get application state for job id "
+                  + getJobId() + ". Tried " + failures + " time(s).", ex);
         }
       }
 
-      try {
-        appState = runner.getApplicationState();
-        updateState(JobState.getJobState(appState));
-        failures = 0;
-      } catch (YarnException | IOException ex) {
-        failures++;
-        logger.log(Level.WARNING, "Failed to get application state for job id "
-                + getJobId() + ". Tried " + failures + " time(s).", ex);
+      if (failures > DEFAULT_MAX_STATE_POLL_RETRIES) {
+        try {
+          logger.log(Level.SEVERE,
+                  "Killing application, jobId {0}, because unable to poll for status.",
+                  getJobId());
+          r.cancelJob();
+          updateState(JobState.KILLED);
+          finalState = JobState.KILLED;
+        } catch (YarnException | IOException ex) {
+          logger.log(Level.SEVERE,
+                  "Failed to cancel job, jobId " + getJobId()
+                  + " after failing to poll for status.", ex);
+          updateState(JobState.FRAMEWORK_FAILURE);
+          finalState = JobState.FRAMEWORK_FAILURE;
+        }
+        return false;
       }
+      finalState = JobState.getJobState(appState);
+      return true;
     }
-
-    if (failures > DEFAULT_MAX_STATE_POLL_RETRIES) {
-      try {
-        logger.log(Level.SEVERE,
-                "Killing application, jobId {0}, because unable to poll for status.",
-                getJobId());
-        runner.cancelJob();
-        updateState(JobState.KILLED);
-      } catch (YarnException | IOException ex) {
-        logger.log(Level.SEVERE,
-                "Failed to cancel job, jobId " + getJobId()
-                + " after failing to poll for status.", ex);
-        updateState(JobState.FRAMEWORK_FAILURE);
-      }
-      return false;
-    }
-    return true;
   }
 
   protected final void copyLogs() {
@@ -166,14 +186,4 @@ public abstract class YarnJob extends HopsJob {
               + getJobId() + " to HDFS.", e);
     }
   }
-
-  @Override
-  protected void closeResources() {
-    try {
-      runner.close();
-    } catch (IOException e) {
-      //TODO: what to do here?
-    }
-  }
-
 }

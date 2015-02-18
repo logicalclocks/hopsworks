@@ -4,14 +4,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.hadoop.yarn.exceptions.YarnException;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.HopsJob;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFilePK;
-import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.Utils;
@@ -62,15 +60,7 @@ public class AdamJob extends YarnJob {
     makeOutputAvailable();
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    try {
-      getJobHistoryFacade().update(getJobId(), JobState.getJobState(
-              getRunner().getApplicationState()), duration);
-    } catch (YarnException | IOException ex) {
-      logger.log(Level.SEVERE, "Error while getting final state for job "
-              + getJobId() + ". Assuming failed", ex);
-      getJobHistoryFacade().update(getJobId(),
-              JobState.FRAMEWORK_FAILURE);
-    }
+    getJobHistoryFacade().update(getJobId(), getFinalState(), duration);
   }
 
   /**
@@ -84,7 +74,8 @@ public class AdamJob extends YarnJob {
           boolean created = getFileOperations().createInodesIfNeeded(aia.
                   getValue());
           if (created) {
-            getJobHistoryFacade().persist(new JobOutputFile(new JobOutputFilePK(getJobId(), Utils.
+            getJobHistoryFacade().persist(new JobOutputFile(new JobOutputFilePK(
+                    getJobId(), Utils.
                     getFileName(aia.getValue())), aia.getValue()));
           }
         } catch (IOException e) {
@@ -93,14 +84,16 @@ public class AdamJob extends YarnJob {
         }
       }
     }
-    
+
     for (AdamInvocationOption aio : invocationOptions) {
-      if (aio.getOpt().isOutputPath() && aio.getStringValue()!= null && !aio.getStringValue().isEmpty()) {
+      if (aio.getOpt().isOutputPath() && aio.getStringValue() != null && !aio.
+              getStringValue().isEmpty()) {
         try {
           boolean created = getFileOperations().createInodesIfNeeded(aio.
                   getStringValue());
           if (created) {
-            getJobHistoryFacade().persist(new JobOutputFile(new JobOutputFilePK(getJobId(), Utils.
+            getJobHistoryFacade().persist(new JobOutputFile(new JobOutputFilePK(
+                    getJobId(), Utils.
                     getFileName(aio.getStringValue())), aio.getStringValue()));
           }
         } catch (IOException e) {

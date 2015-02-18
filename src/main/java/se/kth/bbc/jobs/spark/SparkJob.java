@@ -1,24 +1,23 @@
 package se.kth.bbc.jobs.spark;
 
-import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.hadoop.yarn.exceptions.YarnException;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.HopsJob;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
-import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.yarn.YarnJob;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 
 /**
  * Orchestrates the execution of a Spark job: run job, update history
  * object.
+ * <p>
  * @author stig
  */
 public final class SparkJob extends YarnJob {
-  private static final Logger logger = Logger.getLogger(SparkJob.class.getName());
+
+  private static final Logger logger = Logger.
+          getLogger(SparkJob.class.getName());
 
   public SparkJob(JobHistoryFacade facade, YarnRunner runner,
           FileOperations fops) {
@@ -51,15 +50,7 @@ public final class SparkJob extends YarnJob {
     super.copyLogs();
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    try {
-      getJobHistoryFacade().update(getJobId(), JobState.getJobState(
-              getRunner().getApplicationState()), duration);
-    } catch (YarnException | IOException ex) {
-      logger.log(Level.SEVERE, "Error while getting final state for job "
-              + getJobId() + ". Assuming failed", ex);
-      getJobHistoryFacade().update(getJobId(),
-              JobState.FRAMEWORK_FAILURE);
-    }
+    getJobHistoryFacade().update(getJobId(), getFinalState(), duration);
   }
 
 }

@@ -1,6 +1,5 @@
 package se.kth.bbc.jobs.yarn;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -31,13 +30,11 @@ import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.api.records.Resource;
-import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
-import se.kth.bbc.jobs.CancellableJob;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
 
@@ -45,7 +42,7 @@ import se.kth.bbc.lims.Utils;
  *
  * @author stig
  */
-public class YarnRunner implements Closeable, CancellableJob {
+public class YarnRunner{
 
   private static final Logger logger = Logger.getLogger(YarnRunner.class.
           getName());
@@ -53,8 +50,8 @@ public class YarnRunner implements Closeable, CancellableJob {
   private static final String APPID_REGEX = "\\$APPID";
   private static final String KEY_CLASSPATH = "CLASSPATH";
 
-  private final YarnClient yarnClient;
-  private final Configuration conf;
+  private YarnClient yarnClient;
+  private Configuration conf;
   private ApplicationId appId = null;
 
   private final String amJarLocalName;
@@ -91,7 +88,7 @@ public class YarnRunner implements Closeable, CancellableJob {
    * @throws IOException Can occur upon opening and moving execution and input
    * files.
    */
-  public ApplicationId startAppMaster() throws YarnException, IOException {
+  public YarnMonitor startAppMaster() throws YarnException, IOException {
     logger.info("Starting application master.");
 
     //Get application id
@@ -148,11 +145,24 @@ public class YarnRunner implements Closeable, CancellableJob {
                     "Submitting application {0} to applications manager.", appId);
     yarnClient.submitApplication(appContext);
 
-    return appId;
+    yarnClient.close();
+    
+    // Create a new client for monitoring
+    YarnClient newClient = YarnClient.createYarnClient();
+    newClient.init(conf);
+    YarnMonitor monitor = new YarnMonitor(appId,newClient);
+    
+    //Clean up some
+    yarnClient = null;
+    conf = null;
+    appId = null;
+    appContext = null;
+    
+    return monitor;
   }
 
   //---------------------------------------------------------------------------
-  //-------------------- APPLICATIONSUBMISSIONCONTEXT -------------------------
+  //--------------------------- CALLBACK METHODS ------------------------------
   //---------------------------------------------------------------------------
   /**
    * Get the ApplicationSubmissoinContext used to submit the app. This method
@@ -354,35 +364,6 @@ public class YarnRunner implements Closeable, CancellableJob {
   }
 
   //---------------------------------------------------------------------------        
-  //--------------------------- STATUS QUERIES --------------------------------
-  //---------------------------------------------------------------------------
-  public YarnApplicationState getApplicationState() throws YarnException,
-          IOException {
-    return yarnClient.getApplicationReport(appId).getYarnApplicationState();
-  }
-
-  //---------------------------------------------------------------------------        
-  //------------------------- YARNCLIENT UTILS --------------------------------
-  //---------------------------------------------------------------------------
-  @Override
-  public void close() throws IOException {
-    if (yarnClient != null) {
-      yarnClient.close();
-    }
-  }
-
-  @Override
-  public void cancelJob() throws YarnException, IOException {
-    if (yarnClient != null) {
-      yarnClient.close();
-    } else {
-      try (YarnClient tmpclient = YarnClient.createYarnClient()) {
-        tmpclient.killApplication(appId);
-      }
-    }
-  }
-
-  //---------------------------------------------------------------------------        
   //------------------------- CONSTRUCTOR -------------------------------------
   //---------------------------------------------------------------------------
   private YarnRunner(Builder builder) {
@@ -413,9 +394,6 @@ public class YarnRunner implements Closeable, CancellableJob {
   //---------------------------------------------------------------------------
   //-------------------------- GETTERS ----------------------------------------
   //---------------------------------------------------------------------------
-  public ApplicationId getAppId() {
-    return appId;
-  }
 
   public String getAmArgs() {
     return amArgs;
