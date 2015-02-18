@@ -269,7 +269,7 @@ public final class CuneiformController extends JobController {
 
     //Pass on workflow file
     String wfPath = getMainFilePath();
-    b.addFilePathToBeCopied(wfPath);
+    b.addFilePathToBeCopied(wfPath, !wfPath.startsWith("hdfs:"));
 
     b.stdOutPath("AppMaster.stdout");
     b.stdErrPath("AppMaster.stderr");
@@ -368,8 +368,13 @@ public final class CuneiformController extends JobController {
     for (CuneiformParameter cp : freevars) {
       if (cp.getValue() != null) {
         //copy the input file to where cuneiform expects it
-        fops.copyFromLocalNoInode(getFilePath(cp.getValue()),
-                absoluteHDFSfoldername + File.separator + cp.getValue());
+        if (getFilePath(cp.getValue()).startsWith("hdfs:")) {
+          fops.copyWithinHdfs(getFilePath(cp.getValue()), absoluteHDFSfoldername
+                  + File.separator + cp.getValue());
+        } else {
+          fops.copyFromLocalNoInode(getFilePath(cp.getValue()),
+                  absoluteHDFSfoldername + File.separator + cp.getValue());
+        }
         //add a line to the workflow file
         extraLines.append(cp.getName()).append(" = '").append(foldername).
                 append(File.separator).append(cp.getValue()).append("';\n");

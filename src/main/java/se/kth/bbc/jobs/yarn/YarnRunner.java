@@ -73,6 +73,7 @@ public class YarnRunner{
   private final boolean logPathsAreHdfs;
   private final List<YarnSetupCommand> commands;
   private final List<String> javaOptions;
+  private final List<String> filesToRemove;
 
   private boolean readyToSubmit = false;
   private ApplicationSubmissionContext appContext;
@@ -153,6 +154,7 @@ public class YarnRunner{
     YarnMonitor monitor = new YarnMonitor(appId,newClient);
     
     //Clean up some
+    removeAllNecessary();
     yarnClient = null;
     conf = null;
     appId = null;
@@ -282,7 +284,7 @@ public class YarnRunner{
         //may run into bug HADOOP-7199 (https://issues.apache.org/jira/browse/HADOOP-7199)
         String dirPart = Utils.getDirectoryPart(path);
         String filename = Utils.getFileName(path);
-        String crcName = dirPart+"."+filename+".crc";
+        String crcName = dirPart + "." + filename + ".crc";
         Files.deleteIfExists(Paths.get(crcName));
         fs.copyFromLocalFile(new Path(path), dst);
       } else {
@@ -362,6 +364,17 @@ public class YarnRunner{
     amCommands.add(amcommand.toString());
     return amCommands;
   }
+  
+  private void removeAllNecessary() throws IOException{    
+    FileSystem fs = FileSystem.get(conf);
+    for(String s:filesToRemove){
+      if(s.startsWith("hdfs:")){
+        fs.delete(new Path(s), true);
+      }else{
+        Files.deleteIfExists(Paths.get(s));
+      }
+    }
+  }
 
   //---------------------------------------------------------------------------        
   //------------------------- CONSTRUCTOR -------------------------------------
@@ -389,6 +402,7 @@ public class YarnRunner{
     this.stdErrPath = builder.stdErrPath;
     this.commands = builder.commands;
     this.javaOptions = builder.javaOptions;
+    this.filesToRemove = builder.filesToRemove;
   }
 
   //---------------------------------------------------------------------------
@@ -427,7 +441,7 @@ public class YarnRunner{
   //-------------------------- BUILDER ----------------------------------------
   //---------------------------------------------------------------------------
 
-  public static class Builder {
+  public static final class Builder {
 
     //Possibly equired attributes
     //The name of the application app master class
@@ -470,6 +484,8 @@ public class YarnRunner{
     private List<YarnSetupCommand> commands = new ArrayList<>();
     //List of options to add to the JVM invocation
     private List<String> javaOptions = new ArrayList<>();
+    //List of files to be removed after starting AM.
+    private List<String> filesToRemove = new ArrayList<>();
 
     //Hadoop Configuration
     private Configuration conf;
@@ -529,8 +545,32 @@ public class YarnRunner{
       return this;
     }
 
+    /**
+     * Set a file to be copied over to HDFS. It will be copied to
+     * localresourcesBasePath/filename and the original will be removed.
+     * Equivalent to addFileToBeCopied(path,true).
+     * <p>
+     * @param path
+     * @return
+     */
     public Builder addFilePathToBeCopied(String path) {
+      return addFilePathToBeCopied(path, true);
+    }
+
+    /**
+     * Set a file to be copied over to HDFS. It will be copied to
+     * localresourcesBasePath/filename. If removeAfterCopy is true, the file
+     * will also be removed after copying.
+     * <p>
+     * @param path
+     * @param removeAfterCopy
+     * @return
+     */
+    public Builder addFilePathToBeCopied(String path, boolean removeAfterCopy) {
       filesToBeCopied.add(path);
+      if (removeAfterCopy) {
+        filesToRemove.add(path);
+      }
       return this;
     }
 
@@ -588,8 +628,9 @@ public class YarnRunner{
      * Add a local resource that should be added to the AM container. The
      * name is the key as used in the LocalResources map passed to the
      * container. The source is the local path to the file. The file will be
-     * copied
-     * into HDFS under the path <i>localResourcesBasePath</i>/<i>filename</i>.
+     * copied into HDFS under the path
+     * <i>localResourcesBasePath</i>/<i>filename</i> and the source file will be
+     * removed.
      *
      * @param name The name of the local resource, key in the local resource
      * map.
@@ -597,10 +638,31 @@ public class YarnRunner{
      * @return
      */
     public Builder addLocalResource(String name, String source) {
+      return addLocalResource(name, source, true);
+    }
+
+    /**
+     * Add a local resource that should be added to the AM container. The
+     * name is the key as used in the LocalResources map passed to the
+     * container. The source is the local path to the file. The file will be
+     * copied into HDFS under the path
+     * <i>localResourcesBasePath</i>/<i>filename</i> and if removeAfterCopy is
+     * true, the original will be removed after starting the AM.
+     * <p>
+     * @param name
+     * @param source
+     * @param removeAfterCopy
+     * @return
+     */
+    public Builder addLocalResource(String name, String source,
+            boolean removeAfterCopy) {
       if (source.startsWith("hdfs")) {
         amLocalResourcesOnHDFS.put(name, source);
       } else {
         amLocalResourcesToCopy.put(name, source);
+      }
+      if (removeAfterCopy) {
+        filesToRemove.add(source);
       }
       return this;
     }

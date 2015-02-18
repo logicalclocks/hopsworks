@@ -61,13 +61,13 @@ public class SparkYarnRunnerBuilder {
     builder.localResourcesBasePath(stagingPath);
 
     //Add Spark jar
-    builder.addLocalResource(Constants.SPARK_LOCRSC_SPARK_JAR,Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
+    builder.addLocalResource(Constants.SPARK_LOCRSC_SPARK_JAR,Constants.DEFAULT_SPARK_JAR_HDFS_PATH,false);
     //Add app jar
-    builder.addLocalResource(Constants.SPARK_LOCRSC_APP_JAR, appJarPath);
+    builder.addLocalResource(Constants.SPARK_LOCRSC_APP_JAR, appJarPath,!appJarPath.startsWith("hdfs:"));
 
     //Add extra files to local resources, use filename as key
     for (Map.Entry<String, String> k : extraFiles.entrySet()) {
-      builder.addLocalResource(k.getKey(), k.getValue());
+      builder.addLocalResource(k.getKey(), k.getValue(),!k.getValue().startsWith("hdfs:"));
     }
 
     //Set Spark specific environment variables
