@@ -40,9 +40,9 @@
                                         <div class="input">
                                             <h:inputText required="true" styleClass="xxlarge createStudy" id="studyName" value="#{newStudyController.newStudyName}" validatorMessage="Study name cannot be empty!" onclick="(this.value = '')">
                                             </h:inputText>
-                                            <p:selectOneMenu id="templateChooser" widgetVar="chooser" value="#{newStudyController.chosenTemplate}">
+                                            <p:selectOneMenu id="templateChooser" widgetVar="chooser" value="#{newStudyController.chosenTemplate}" immediate="true">
                                                 <f:selectItems value="#{newStudyController.studyTemplates}"/>
-                                                <p:ajax update="@form" process="@this"/>
+                                                <p:ajax update="@form" process="@form"/>
                                             </p:selectOneMenu>
                                             <h:commandButton id="addStudy" class="styled-button" value="Create Study" type="submit" action="#{newStudyController.createStudy()}"/>
                                         </div>
