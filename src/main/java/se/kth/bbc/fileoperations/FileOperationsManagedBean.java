@@ -13,7 +13,6 @@ import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.Utils;
-import se.kth.bbc.study.fb.Inode;
 
 //TODO: report errors to user!!! seems to be going wrong!
 

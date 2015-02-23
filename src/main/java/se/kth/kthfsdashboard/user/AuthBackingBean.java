@@ -35,7 +35,6 @@ public class AuthBackingBean {
     @EJB
     private UserGroupsController userGroupsController;
 
-    ///TODO: probs remove
     @EJB
     private UserFacade userFacade;
     
@@ -59,8 +58,6 @@ public class AuthBackingBean {
             return null;
         }
 
-        /////////////////////////
-        // TODO: probably remove from here
         Username user = userFacade.findByEmail(username);
        if (user != null && user.getStatus() == Username.STATUS_REQUEST) {
             FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Fail", "Your request has not yet been acknowlegded.");
@@ -69,8 +66,6 @@ public class AuthBackingBean {
             return "welcome";
         }
 
-        // TODO: probably remove up till here
-        /////////////////////////////
         try {
             if (request.getRemoteUser() != null) {
                 request.logout();
