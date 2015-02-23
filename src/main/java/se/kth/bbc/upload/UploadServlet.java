@@ -44,10 +44,6 @@ public class UploadServlet extends HttpServlet {
             InputStream is = request.getInputStream()) {
       //Seek to position
       raf.seek((resumableChunkNumber - 1) * (long) info.resumableChunkSize);
-      //add an entry to the Inodes database: file is uploading.
-      if (resumableChunkNumber == 1) {
-        fileOps.startUpload(uploadPath + info.resumableFilename);
-      }
       //Save to file
       long readed = 0;
       content_length = request.getContentLength();

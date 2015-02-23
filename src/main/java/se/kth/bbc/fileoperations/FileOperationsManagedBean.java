@@ -12,6 +12,7 @@ import javax.faces.bean.RequestScoped;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.lims.Utils;
 import se.kth.bbc.study.fb.Inode;
 
 //TODO: report errors to user!!! seems to be going wrong!
@@ -40,17 +41,17 @@ public class FileOperationsManagedBean implements Serializable {
      * @param inode The file to download.
      * @return StreamedContent of the file to be downloaded.
      */
-    public StreamedContent downloadFile(Inode inode) {
+    public StreamedContent downloadFile(String path) {
 
         StreamedContent sc = null;
         try {
           //TODO: should convert to try-with-resources? or does that break streamedcontent?
-            InputStream is = fileOps.getInputStream(inode);
-            String extension = getExtension(inode.getPath());
-            String filename = inode.getPath().substring(inode.getPath().lastIndexOf(File.separator) + 1);
+            InputStream is = fileOps.getInputStream(path);
+            String extension = Utils.getExtension(path);
+            String filename = Utils.getFileName(path);
 
             sc = new DefaultStreamedContent(is, extension, filename);
-            logger.log(Level.FINE, "File was downloaded from HDFS path: {0}", inode.getStudyPath());
+            logger.log(Level.FINE, "File was downloaded from HDFS path: {0}", path);
         } catch (IOException ex) {
             Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
             MessagesController.addErrorMessage(MessagesController.ERROR, "Download failed.");
@@ -94,24 +95,11 @@ public class FileOperationsManagedBean implements Serializable {
         return newFolderName;
     }
 
-    private static String getExtension(String path) {
-        String filename = path.substring(path.lastIndexOf(File.separator));
-        if (filename.length() == 0) // path was a folder TODO: check
-        {
-            return null;
-        } else if (filename.lastIndexOf('.') < 0) //file does not have extension
-        {
-            return "";
-        } else {
-            return filename.substring(filename.lastIndexOf('.') + 1);
-        }
-    }
-
     public void deleteFile(Inode i) {
         try {
             fileOps.rm(i);
         } catch (IOException ex) {
-            Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, "Failed to remove file.", ex);
             MessagesController.addErrorMessage(MessagesController.ERROR, "Remove failed.");
         }
     }

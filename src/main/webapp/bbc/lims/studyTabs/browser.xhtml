@@ -32,7 +32,7 @@ and open the template in the editor.
 
                         <h:column>
                             <f:facet name="header">Name</f:facet>
-                            <h:graphicImage class="browser s16" library="images/icons" name="#{inode.isDir()?'folder.png':'file.png'}" />
+                            <h:graphicImage class="browser s16" library="images/icons" name="#{inode.getDir()?'folder.png':'file.png'}" />
 
                             <p:commandLink styleClass="dark" action="#{InodesMB.cdUp()}" update="@form" rendered="#{inode.isParent()}">
                                 <strong>#{inode.name}</strong>
@@ -42,7 +42,7 @@ and open the template in the editor.
                                 <strong>#{inode.name}</strong>
                             </p:commandLink>
 
-                            <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false" disabled="#{inode.status != 'available'}">
+                            <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false">
                                 <strong>#{inode.name}</strong>
                                 <p:fileDownload value="#{fileOperationsMB.downloadFile(inode)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                             </p:commandLink>

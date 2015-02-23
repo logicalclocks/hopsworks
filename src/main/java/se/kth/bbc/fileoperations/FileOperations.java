@@ -36,17 +36,6 @@ public class FileOperations {
   private StagingManager stagingManager;
 
   /**
-   * Get an InputStream for the file represented by Inode <i>inode</i>.
-   *
-   * @param inode The file to read.
-   * @return InputStream from the file in the file system.
-   */
-  public InputStream getInputStream(Inode inode) throws IOException {
-    Path location = new Path(inode.getPath());
-    return fsOps.getInputStream(location);
-  }
-
-  /**
    * Get an InputStream for the file on the given path.
    * <p>
    * @param path The file to read.
@@ -66,11 +55,7 @@ public class FileOperations {
    */
   public boolean mkDir(String path) throws IOException {
     Path location = new Path(path);
-    boolean success = fsOps.mkdir(location);
-    if (success) {
-      inodes.createAndPersistDir(path, Inode.AVAILABLE);
-    }
-    return success;
+    return fsOps.mkdir(location);
   }
 
   /**
@@ -82,10 +67,8 @@ public class FileOperations {
    * sought for in the temp folder.
    * @param destination The path on HDFS on which the file should be created.
    * Includes the file name.
-   * @param inode The Inode representing the file. Its status will be updated.
-   * If null, a new inode is created for the file.
    */
-  public void copyToHDFS(String localFilename, String destination, Inode inode)
+  public void copyToHDFS(String localFilename, String destination)
           throws IOException {
     //Get the local file
     File localfile = getLocalFile(localFilename);
@@ -93,36 +76,17 @@ public class FileOperations {
     String dirs = Utils.getDirectoryPart(destination);
     mkDir(dirs);
 
-    //Update the status of the Inode
-    if (inode != null) {
-      inode.setStatus(Inode.COPYING);
-      inode.setSize((int) localfile.length());
-      inodes.persist(inode);
-    } else {
-      inode = inodes.createAndPersistFile(destination, localfile.length(),
-              Inode.COPYING);
-    }
-
     //Actually copy to HDFS
-    boolean success = false;
     Path destp = new Path(destination);
     try(FileInputStream fis = new FileInputStream(localfile)) {
       fsOps.copyToHDFS(destp, fis);
-      success = true;
     } catch (IOException | URISyntaxException ex) {
       logger.log(Level.SEVERE, "Error while copying to HDFS", ex);
       throw new IOException(ex);
     }
-
-    //Update status
-    //TODO: if fails, shoud local file be removed and Inode as well? Or retry? How to handle this?
-    if (success) {
-      inode.setStatus(Inode.AVAILABLE);
-      inodes.update(inode);
-    }
   }
 
-  public void copyToHDFSFromPath(String path, String destination, Inode inode)
+  public void copyToHDFSFromPath(String path, String destination)
           throws IOException {
     //Get the local file
     File localfile = new File(path);
@@ -130,32 +94,13 @@ public class FileOperations {
     String dirs = Utils.getDirectoryPart(destination);
     mkDir(dirs);
 
-    //Update the status of the Inode
-    if (inode != null) {
-      inode.setStatus(Inode.COPYING);
-      inode.setSize((int) localfile.length());
-      inodes.persist(inode);
-    } else {
-      inode = inodes.createAndPersistFile(destination, localfile.length(),
-              Inode.COPYING);
-    }
-
     //Actually copy to HDFS
-    boolean success = false;
     Path destp = new Path(destination);
     try(FileInputStream fis = new FileInputStream(localfile)) {
       fsOps.copyToHDFS(destp, fis);
-      success = true;
     } catch (IOException | URISyntaxException ex) {
       logger.log(Level.SEVERE, "Error while copying to HDFS", ex);
       throw new IOException(ex);
-    }
-
-    //Update status
-    //TODO: if fails, shoud local file be removed and Inode as well? Or retry? How to handle this?
-    if (success) {
-      inode.setStatus(Inode.AVAILABLE);
-      inodes.update(inode);
     }
   }
 
@@ -169,23 +114,13 @@ public class FileOperations {
    */
   public void writeToHDFS(InputStream is, long size, String destination) throws
           IOException {
-    Inode inode = inodes.createAndPersistFile(destination, size, Inode.COPYING);
     //Actually copy to HDFS
-    boolean success = false;
     Path destp = new Path(destination);
     try {
       fsOps.copyToHDFS(destp, is);
-      success = true;
     } catch (IOException | URISyntaxException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new IOException(ex);
-    }
-
-    //Update status
-    //TODO: if fails, shoud local file be removed and Inode as well? Or retry? How to handle this?
-    if (success) {
-      inode.setStatus(Inode.AVAILABLE);
-      inodes.update(inode);
     }
   }
 
@@ -204,12 +139,9 @@ public class FileOperations {
    * @throws IOException
    */
   public boolean rm(Inode i) throws IOException {
-    Path location = new Path(i.getPath());
-    boolean success = fsOps.rm(location, false);
-    if (success) {
-      inodes.remove(i);
-    }
-    return success;
+    String path = inodes.getPath(i);
+    Path location = new Path(path);
+    return fsOps.rm(location, false);
   }
 
   /**
@@ -221,12 +153,9 @@ public class FileOperations {
    * @throws IOException
    */
   public boolean rmRecursive(Inode i) throws IOException {
-    Path location = new Path(i.getPath());
-    boolean success = fsOps.rm(location, true);
-    if (success) {
-      inodes.remove(i);
-    }
-    return success;
+    String path = inodes.getPath(i);
+    Path location = new Path(path);
+    return fsOps.rm(location, true);
   }
 
   /**
@@ -239,23 +168,7 @@ public class FileOperations {
    */
   public boolean rmRecursive(String path) throws IOException {
     Path location = new Path(path);
-    boolean success = fsOps.rm(location, true);
-    if (success) {
-      inodes.removeRecursivePath(path);
-    }
-    return success;
-  }
-
-  /**
-   * Signify the start of an upload of a file. Check if an Inode has been
-   * created for this file and if not, create one with status "Uploading".
-   *
-   * @param destination The path to which the file should be uploaded.
-   */
-  public void startUpload(String destination) {
-    if (!inodes.existsPath(destination)) {
-      inodes.createAndPersistFile(destination, 0, Inode.UPLOADING);
-    }
+    return fsOps.rm(location, true);
   }
 
   /**
@@ -269,8 +182,7 @@ public class FileOperations {
    */
   public void copyAfterUploading(String localFilename, String destination)
           throws IOException {
-    Inode node = inodes.getInodeAtPath(destination);
-    copyToHDFS(localFilename, destination, node);
+    copyToHDFS(localFilename, destination);
   }
 
   public String cat(String path) throws IOException {
@@ -296,42 +208,13 @@ public class FileOperations {
   public void renameInHdfs(String source, String destination) throws IOException {
     Path src = new Path(source);
     Path dst = new Path(destination);
-    fsOps.moveWithinHdsf(src, dst);
-  }
-
-  /**
-   * Checks if the path exists in HDFS and creates Inodes along it if they are
-   * not yet present in the DB.
-   * <p>
-   * @param path
-   * @return True if the path exists (and Inodes were created), false otherwise.
-   */
-  public boolean createInodesIfNeeded(String path) throws IOException {
-    Path p = new Path(path);
-    return createInodesIfNeeded(p);
-  }
-
-  private boolean createInodesIfNeeded(Path p) throws IOException {
-    if (fsOps.exists(p)) {
-      if (fsOps.isDir(p)) {
-        if (inodes.getInodeAtPath(p.toUri().getPath()) == null) {
-          inodes.createAndPersistDir(p.toUri().getPath(), Inode.AVAILABLE);
-        }
-        for (Path c : fsOps.getChildren(p)) {
-          createInodesIfNeeded(c);
-        }
-      } else if (inodes.getInodeAtPath(p.toUri().getPath()) == null) {
-        inodes.createAndPersistFile(p.toUri().getPath(), 0, Inode.AVAILABLE);
-      }
-      return true;
-    }
-    return false;
+    fsOps.moveWithinHdfs(src, dst);
   }
   
   public boolean isDir(String path){
     Inode i = inodes.getInodeAtPath(path);
     if(i!=null)
-      return i.isDir();
+      return i.getDir();
     else
       return false;
   }
@@ -345,7 +228,6 @@ public class FileOperations {
     mkDir(dirPart);
     //Actually copy
     fsOps.copyInHdfs(srcPath, dstPath);
-    createInodesIfNeeded(dst);
   }
   
   public void copyToLocal(String hdfsPath, String localPath) throws IOException{
@@ -356,6 +238,10 @@ public class FileOperations {
       localPath = "file://" + localPath;
     }
     fsOps.copyToLocal(new Path(hdfsPath), new Path(localPath));
+  }
+  
+  public boolean exists(String path) throws IOException{
+    return inodes.existsPath(path);
   }
 
 }
