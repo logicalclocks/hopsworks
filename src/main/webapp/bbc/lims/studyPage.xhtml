@@ -217,7 +217,7 @@
                 </h:form>
             </p:dialog>
             <!-- edit material type dialog -->
-            <p:dialog id="editMaterialTypesDialog" styleClass="studyDialog" widgetVar="editMaterialTypesDlg" closable="true" draggable="false" modal="true" header="Edit collection types" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+            <p:dialog id="editMaterialTypesDialog" styleClass="studyDialog" widgetVar="editMaterialTypesDlg" closable="true" draggable="false" modal="true" header="Edit material types" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
                 <h:form class="dialogForm">
                     <p:pickList id="materialTypesPick" value="#{samplesController.materialTypeDualList}" 
                                 var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="materialTypeEnumConverter">

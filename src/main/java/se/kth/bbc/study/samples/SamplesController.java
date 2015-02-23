@@ -267,7 +267,8 @@ public class SamplesController implements Serializable{
     }
     MessagesController.addInfoMessage("Success", "Sample has been added",
             "message");
-    selectSample(newSample.getId());
+    this.selectedSample = newSample;
+    this.sampleSelected = true;
     newSample = new Sample();
   }
 

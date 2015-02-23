@@ -152,7 +152,7 @@ public class InodesMB implements Serializable {
   public List<NavigationPath> getCurrentPath() {
         //Because InodesMB is session scoped, need to check for change of study!!!!
     //TODO: implement this more gracefully.
-    if (!cwd.getStudyRoot().equals(sessionState.getActiveStudyname())) {
+    if (cwd == null || !cwd.getStudyRoot().equals(sessionState.getActiveStudyname())) {
       init();
     }
     return cwd.getConstituentsPath();
