@@ -32,31 +32,31 @@ and open the template in the editor.
 
                         <h:column>
                             <f:facet name="header">Name</f:facet>
-                            <h:graphicImage class="browser s16" library="images/icons" name="#{inode.getDir()?'folder.png':'file.png'}" />
+                            <h:graphicImage class="browser s16" library="images/icons" name="#{inode.dir?'folder.png':'file.png'}" />
 
-                            <p:commandLink styleClass="dark" action="#{InodesMB.cdUp()}" update="@form" rendered="#{inode.isParent()}">
+                            <p:commandLink styleClass="dark" action="#{InodesMB.cdUp()}" update="@form" rendered="#{inode.parent}">
                                 <strong>#{inode.name}</strong>
                             </p:commandLink>
 
-                            <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}" update="@form" rendered="#{not inode.isParent() and inode.dir}">
+                            <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}" update="@form" rendered="#{not inode.parent and inode.dir}">
                                 <strong>#{inode.name}</strong>
                             </p:commandLink>
 
                             <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false">
                                 <strong>#{inode.name}</strong>
-                                <p:fileDownload value="#{fileOperationsMB.downloadFile(inode)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+                                <p:fileDownload value="#{fileOperationsMB.downloadFile(inode.path)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                             </p:commandLink>
                         </h:column>
 
                         <h:column >
                             <f:facet name="header">Last modified</f:facet>
-                                #{inode.isParent()?"":InodesMB.approximateTime(inode.modified)}
+                                #{inode.parent?"":InodesMB.approximateTime(inode.modification)}
                         </h:column>
 
                         <h:column>
                             <p:commandLink styleClass="ui-button fa fa-trash remove_data_button"  
                                            value="" rendered="#{studyManagedBean.renderComponentList() == 'Master' and not inode.dir}" 
-                                           update="@form" action="#{fileOperationsMB.deleteFile(inode)}">
+                                           update="@form" action="#{fileOperationsMB.deleteFile(inode.path)}">
                                 <p:confirm header="Remove data" message="Are you sure you want to remove this file?" icon="ui-icon-alert"/>
                             </p:commandLink>
                             <p:confirmDialog global="true" severity="alert" showEffect="fade"> 

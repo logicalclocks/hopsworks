@@ -138,24 +138,9 @@ public class FileOperations {
    * @param i The Inode to be removed.
    * @throws IOException
    */
-  public boolean rm(Inode i) throws IOException {
-    String path = inodes.getPath(i);
+  public boolean rm(String path) throws IOException {
     Path location = new Path(path);
     return fsOps.rm(location, false);
-  }
-
-  /**
-   * Delete the file or folder at the given Inode recursively: if a folder,
-   * all its children will be deleted.
-   *
-   * @param i Inode to be removed recursively.
-   * @return True if successful, false otherwise.
-   * @throws IOException
-   */
-  public boolean rmRecursive(Inode i) throws IOException {
-    String path = inodes.getPath(i);
-    Path location = new Path(path);
-    return fsOps.rm(location, true);
   }
 
   /**

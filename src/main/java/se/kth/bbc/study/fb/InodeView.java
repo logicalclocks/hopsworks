@@ -1,5 +1,6 @@
 package se.kth.bbc.study.fb;
 
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -11,12 +12,14 @@ public final class InodeView {
   private final boolean dir;
   private final boolean parent;
   private final String path;
+  private final Date modification;
   
   public InodeView(Inode i, String path){
     this.name = i.getInodePK().getName();
     this.dir = i.getDir();
     this.parent = false;
     this.path = path;
+    this.modification = new Date(i.getModificationTime().longValue());
   }
 
   private InodeView(String name, boolean dir, boolean parent, String path) {
@@ -24,6 +27,7 @@ public final class InodeView {
     this.dir = dir;
     this.parent = parent;
     this.path = path;
+    this.modification = null;
   }
   
   public static InodeView getParentInode(String path){
@@ -52,6 +56,10 @@ public final class InodeView {
 
   public String getPath() {
     return path;
+  }
+
+  public Date getModification() {
+    return modification;
   }
 
   @Override

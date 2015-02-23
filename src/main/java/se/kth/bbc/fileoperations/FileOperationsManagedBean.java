@@ -95,9 +95,9 @@ public class FileOperationsManagedBean implements Serializable {
         return newFolderName;
     }
 
-    public void deleteFile(Inode i) {
+    public void deleteFile(String path) {
         try {
-            fileOps.rm(i);
+            fileOps.rm(path);
         } catch (IOException ex) {
             Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, "Failed to remove file.", ex);
             MessagesController.addErrorMessage(MessagesController.ERROR, "Remove failed.");
