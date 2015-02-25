@@ -28,6 +28,7 @@ import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.study.StudyTeam;
 import se.kth.bbc.study.StudyTeamController;
+import se.kth.bbc.study.privacy.model.Consent;
 
 @ManagedBean
 @RequestScoped
@@ -108,7 +109,15 @@ public class StudyPrivacyManager {
         return consent.getStatus();
     }
     
-       
+    
+    public String getConsentName(String studyname) throws ParseException {
+
+        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
+        q.setParameter("studyName", studyname);
+        Consent consent = q.getSingleResult();
+        return consent.getName();
+    }   
+    
     public String getRoles(String study, String username) throws ParseException {
         List<StudyTeam> list = stc.findCurrentRole(study, username);
         return list.get(0).getTeamRole();

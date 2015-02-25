@@ -80,11 +80,11 @@ public class PeopleStatusBean implements Serializable{
      * Return both system wide and study wide roles
      * @return 
      */
-    public boolean isAdminUser(){
+    public boolean isResearcher(){
         User p = userManager.findByEmail(getRequest().getRemoteUser());
         List<String> roles = userManager.findGroups(p.getUid());
-            
-        return (roles.contains("SYS_ADMIN") || roles.contains("BBC_ADMIN"));
+            //TODO: Remove SYS_ADMIN in the final release
+        return (roles.contains("BBC_RESEARCHER") || roles.contains("BBC_ADMIN") || roles.contains("SYS_ADMIN"));
     }
 
    
@@ -118,7 +118,7 @@ public class PeopleStatusBean implements Serializable{
      * @return 
      */
      public boolean checkForRequests() {
-        if (isAdminUser()) {
+        if (isResearcher()) {
             //return false if no requests
             open_reauests = !(userManager.findAllByStatus(AccountStatus.MOBILE_ACCOUNT_INACTIVE).isEmpty()) || !(userManager.findAllByStatus(AccountStatus.YUBIKEY_ACCOUNT_INACTIVE).isEmpty());
         }

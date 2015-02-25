@@ -24,7 +24,7 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml" />
             </ui:insert>
 
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+            <p:layout id="bbcMainLayout" styleClass="BbcMainLayout" rendered="#{peopleStatusBean.researcher}">  
                 <p:growl for="studyRemoved" autoUpdate="true" showDetail="true"/>
 
                 <p:layoutUnit position="center" style="height: auto;">

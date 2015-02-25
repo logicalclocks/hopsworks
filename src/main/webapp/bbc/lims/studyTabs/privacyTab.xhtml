@@ -22,7 +22,7 @@ and open the template in the editor.
                     <f:facet name="header">Consent Status: #{studyPrivacyManager.getConsentStatus((studyManagedBean.studyName))}</f:facet>
                     <h:panelGrid columns="2">
                         <h:graphicImage  library="images/icons" name="consent.png" width="50" height="50"/>
-                        <h:outputText value="2014-10-30" style="float: right" />
+                        <h:outputText value="#{studyManagedBean.studyName}" style="float: right" />
                     </h:panelGrid>
                 </h:column>
 
@@ -35,11 +35,13 @@ and open the template in the editor.
                 </h:column>
 
                 <f:facet name="footer" >
-                    <p:commandButton value="View Consent" action="#{studyPrivacyManager.showConsent(studyManagedBean.studyName)}" id="imageBtn" type="button"
+                    <p:commandButton value="View Consent"
+                                     action="#{studyPrivacyManager.showConsent(studyManagedBean.studyName)}" 
+                                     id="imageBtn" type="button"
                                      rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                        <p:overlayPanel  id="imagePanel" for="imageBtn" hideEffect="fade">
+                        <p:lightBox styleClass="imagebox" id="lighbox1">  
                             <p:graphicImage library="images" name="consent.gif" width="300" />
-                        </p:overlayPanel>
+                     </p:lightBox>
                     </p:commandButton>
 
 
