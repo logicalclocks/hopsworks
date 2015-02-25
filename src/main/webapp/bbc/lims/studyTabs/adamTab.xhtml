@@ -37,6 +37,9 @@
                             <p:ajax event="change" update="@form" process="@form"/>
                         </p:selectOneMenu>
                         <p:commandButton value="Execute" styleClass="right_button" rendered="#{adamController.selectedCommand != null}" action="#{adamController.startJob()}"/> 
+                        <div>
+                        <h:outputText value="#{adamController.selectedCommand.description}" rendered="#{adamController.selectedCommand != null}"/>
+                        </div>
 
                         <!-- JOBNAME -->
                         <div class="ui-datatable ui-widget adamTable">
