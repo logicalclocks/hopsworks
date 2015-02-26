@@ -17,11 +17,11 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 public class ActivityFacade extends AbstractFacade<UserActivity> {
 
   // String constants
-  public static final String NEW_STUDY = " created new study ";
+  public static final String NEW_STUDY = " created a new study ";
   public static final String NEW_DATA = " added a new dataset ";
-  public static final String NEW_MEMBER = " added new member ";
+  public static final String NEW_MEMBER = " added a member ";
   public static final String NEW_SAMPLE = " added a new sample ";
-  public static final String CHANGE_ROLE = " changed role of ";
+  public static final String CHANGE_ROLE = " changed the role of ";
   public static final String REMOVED_MEMBER = " removed team member ";
   public static final String REMOVED_SAMPLE = " removed a sample ";
   public static final String REMOVED_FILE = " removed a file ";

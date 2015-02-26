@@ -14,13 +14,13 @@ and open the template in the editor.
             <h:form class="stylelayout" id="formToolbar">  
                 <p:toolbar styleClass="MainToolbar">
                     <p:toolbarGroup align="left">  
-                        <p:commandLink value="BiobankCloud" action="indexPage" rendered="#{userMB.loggedIn}"/>
-                        <p:commandLink value="BiobankCloud" action="welcome" rendered="#{!userMB.loggedIn}"/>
+                        <p:commandLink value="BiobankCloud" action="indexPage" rendered="#{userMB.loggedIn}" ajax="false"/>
+                        <p:commandLink value="BiobankCloud" action="welcome" rendered="#{!userMB.loggedIn}" ajax="false"/>
                     </p:toolbarGroup> 
                   
                     <p:toolbarGroup align="right" rendered="#{userMB.loggedIn}">
-                        <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{userMB.adminUser}"/>
-                        <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
+                        <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{userMB.adminUser}" ajax="false"/>
+                        <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person" ajax="false"/>  
                         <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
                             <p:menuitem value="View profile" action="profile.xhtml" update=":formToolbar:messages" ajax="false" /> 
                             <p:separator/>

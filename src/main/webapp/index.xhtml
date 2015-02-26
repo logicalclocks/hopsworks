@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -30,14 +30,13 @@
                     <p:outputLabel for="password" value="Password" />
                     <p:password id="password" value="#{authBackingBean.password}" required="true"/>
                     <p:messages showDetail="true" autoUpdate="true" showSummary="false" for="username password"/>
-                    <p:commandButton id="loginButton" value="Sign in" action="#{authBackingBean.login()}" validateClient="true" styleClass="MainButton"/>
+                    <p:commandButton id="loginButton" value="Sign in" action="#{authBackingBean.login()}" validateClient="true" styleClass="MainButton" ajax="false"/>
                 </h:panelGrid>
             </div>
+            <div align="center">
+                <p:commandLink id="signupLink" value="Don't have an account?" action="register" style="text-align: right" ajax="false"/>
+            </div>
         </h:form> 
-
-        <div align="center">
-            <p:commandLink id="signupLink" value="Don't have an account?" action="register" style="text-align: right"/>
-        </div>
 
         <br />
     </h:body>

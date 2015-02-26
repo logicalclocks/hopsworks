@@ -108,7 +108,7 @@ CREATE TABLE `Inodes` (
   KEY `pid_2` (`pid`,`isDir`),
   KEY `name` (`name`),
   CONSTRAINT `Inodes_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `Inodes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1355 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -481,7 +481,7 @@ CREATE TABLE `activity` (
   `flag` enum('DATA','STUDY','TEAM','USERS') DEFAULT NULL,
   `activity_on` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=455 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -589,7 +589,7 @@ CREATE TABLE `jobhistory` (
   KEY `FK_jobhistory_study` (`study`),
   CONSTRAINT `FK_jobhistory_user` FOREIGN KEY (`user`) REFERENCES `USERS` (`EMAIL`),
   CONSTRAINT `jobhistory_ibfk_3` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=322 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -603,6 +603,7 @@ CREATE TABLE `study` (
   `name` varchar(128) NOT NULL,
   `username` varchar(255) NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `archived` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`name`),
   UNIQUE KEY `name` (`name`),
   KEY `fk_study_users` (`username`),
@@ -722,4 +723,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-02-18 17:39:34
+-- Dump completed on 2015-02-26 10:20:11
