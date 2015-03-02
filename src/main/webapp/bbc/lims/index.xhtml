@@ -70,11 +70,7 @@
                                                 Studies<small>(#{studyManagedBean.countJoinedStudy()})</small>
                                             </c:if>
                                             <span class="right">
-<<<<<<< HEAD
-                                                <p:commandButton value="New Study" type="button" rendered="#{peopleStatusBean.anyAuthorizedRole}" icon="ui-icon-plus" onclick="window.location.href = 'newStudy.xhtml'"/>
-=======
-                                                <p:commandButton value="New Study" type="button" icon="ui-icon-plus" onclick="window.location.href = 'newStudy.xhtml'"/>
->>>>>>> 0bc17f37fcc01f19e084ef1891482826564eec20
+                                   <p:commandButton value="New Study" type="button" rendered="#{peopleStatusBean.anyAuthorizedRole}" icon="ui-icon-plus" onclick="window.location.href = 'newStudy.xhtml'"/>
                                             </span>
                                         </h:panelGroup>
                                         <p:tabView id="tabViewSummary" styleClass="ui-tabs" dynamic="true" cache="false" activeIndex="#{studyManagedBean.tabIndex}">

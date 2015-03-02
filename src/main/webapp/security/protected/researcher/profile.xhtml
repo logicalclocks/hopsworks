@@ -20,11 +20,10 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
 
-            <p:layout  style="margin:0px auto; border: 0px none; width: 50%; ">  
+            <p:layout  style="margin:10px auto; width: 50%;">  
                 <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
                
-                
-                <p:layoutUnit position="north" style="overflow: hidden;">
+                <p:layoutUnit position="north" style="margin:0px auto; width: 50%;">
                     <img src="#{profileManager.gravatar}" />
                     <h3>
                         #{profileManager.user.fname} #{profileManager.user.lname}
@@ -35,7 +34,7 @@
                     </h3>
                </p:layoutUnit>
                 
-                <p:layoutUnit position="center" style="height: 600px;">
+                <p:layoutUnit position="center" style="margin:0px auto; width: 50%;">
                     <h:form >
                         <h:panelGrid  columns="3">    
 
