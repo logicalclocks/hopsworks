@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
@@ -24,16 +23,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.LazyDataModel;
-import se.kth.bbc.activity.ActivityController;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.activity.ActivityDetail;
-import se.kth.bbc.activity.ActivityMB;
+import se.kth.bbc.activity.ActivityDetailFacade;
 import se.kth.bbc.activity.LazyActivityModel;
 import se.kth.bbc.activity.UserGroupsController;
 import se.kth.bbc.activity.UsersGroups;
 import se.kth.bbc.activity.UsersGroupsPK;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.lims.ClientSessionState;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
@@ -54,7 +53,7 @@ public class StudyMB implements Serializable {
     private StudyFacade studyController;
 
     @EJB
-    private StudyTeamController studyTeamController;
+    private StudyTeamFacade studyTeamController;
 
     @EJB
     private UserManager userMgr;
@@ -63,16 +62,16 @@ public class StudyMB implements Serializable {
     private UserGroupsController userGroupsController;
 
     @EJB
-    private ActivityController activityController;
+    private ActivityFacade activityFacade;
+    
+    @EJB
+    private ActivityDetailFacade activityDetailFacade;
 
     @EJB
     private FileOperations fileOps;
 
     @EJB
     private StudyServiceFacade studyServices;
-
-    @ManagedProperty(value = "#{activityBean}")
-    private ActivityMB activity;
     
     @ManagedProperty(value = "#{clientSessionState}")
     private ClientSessionState sessionState;
@@ -98,19 +97,6 @@ public class StudyMB implements Serializable {
     public StudyMB() {
     }
 
-    @PostConstruct
-    public void init() {
-        activity.getActivity();
-    }
-
-    public void setActivity(ActivityMB activity) {
-        this.activity = activity;
-    }
-
-    public List<User> getUsersNameList() {
-        return userMgr.findAllUsers();
-    }
-    
   public void setSessionState(ClientSessionState sessionState) {
     this.sessionState = sessionState;
   }
@@ -180,7 +166,6 @@ public class StudyMB implements Serializable {
     }
 
     public List<StudyDetail> getPersonalStudy() {
-        List<StudyDetail> tmp = studyController.findAllPersonalStudyDetails(getUsername());
         return studyController.findAllPersonalStudyDetails(getUsername());
     }
 
@@ -265,7 +250,6 @@ public class StudyMB implements Serializable {
     }
 
     public String checkStudyOwner(String email) {
-
         List<TrackStudy> lst = studyTeamController.findStudyMaster(studyName);
         for (TrackStudy tr : lst) {
             if (tr.getUsername().equals(email)) {
@@ -280,11 +264,9 @@ public class StudyMB implements Serializable {
     }
 
     public String checkCurrentUser(String email) {
-
         if (email.equals(getUsername())) {
             return email;
         }
-
         return null;
     }
 
@@ -306,12 +288,10 @@ public class StudyMB implements Serializable {
     }
 
     public List<StudyDetail> getAllStudiesPerUser() {
-        List<StudyDetail> tmp = studyController.findAllStudyDetails(getUsername());
         return studyController.findAllStudyDetails(getUsername());
     }
 
     public List<StudyDetail> getJoinedStudies() {
-        List<StudyDetail> tmp = studyController.findJoinedStudyDetails(getUsername());
         return studyController.findJoinedStudyDetails(getUsername());
     }
 
@@ -329,15 +309,21 @@ public class StudyMB implements Serializable {
 
     public int countJoinedStudy() {
         boolean check = studyController.checkForStudyOwnership(getUsername());
-
         if (check) {
             return studyController.findJoinedStudies(getUsername()).size();
         } else {
             return studyController.QueryForNonRegistered(getUsername()).size();
         }
     }
-
     
+  /**
+   * Get the channel to subscribe to to receive Primefaces Push updates.
+   * <p>
+   * @return
+   */
+  public final String getPushChannel() {
+    return "/" + sessionState.getActiveStudyname();
+  }    
 
     /**
      * @return
@@ -361,19 +347,16 @@ public class StudyMB implements Serializable {
         boolean res = studyTeamController.findUserForActiveStudy(studyName,
         getUsername());
         boolean rec = userGroupsController.checkForCurrentSession(getUsername());
-
         if (!res) {
             if (!rec) {
                 userGroupsController.persistUserGroups(new UsersGroups(
                     new UsersGroupsPK(getUsername(), "GUEST")));
-                logger.log(Level.INFO, "Guest role added for: {0}.", getUsername());
+                logger.log(Level.FINE, "Guest role added for: {0}.", getUsername());
                 return "studyPage";
             }
         }
         return "studyPage";
     }
-
-
 
     //add members to a team - bulk persist 
     public synchronized String addToTeam() {
@@ -386,20 +369,17 @@ public class StudyMB implements Serializable {
                 st.setTimestamp(new Date());
                 st.setTeamRole(studyTeamEntry.getTeamRole());
                 studyTeamController.persistStudyTeam(st);
-                logger.log(Level.INFO, "{0} - member added to study : {1}.", new Object[]{t.getName(), studyName});
-                activity.addActivity(ActivityController.NEW_MEMBER + t.getName() + " ", studyName, ActivityController.FLAG_STUDY);
+                logger.log(Level.FINE, "{0} - member added to study : {1}.", new Object[]{t.getName(), studyName});
+                activityFacade.persistActivity(ActivityFacade.NEW_MEMBER + t.getName() + " ", studyName, sessionState.getLoggedInUsername());
             }
-
             if (!getSelectedUsernames().isEmpty()) {
                 getSelectedUsernames().clear();
             }
-
         } catch (EJBException ejb) {
             MessagesController.addErrorMessage("Error: Adding team member failed.");
             logger.log(Level.SEVERE, "Adding members to study failed...{0}", ejb.getMessage());
             return null;
         }
-
         MessagesController.addInfoMessage("New Member Added!");
         return "studyPage";
     }
@@ -432,7 +412,6 @@ public class StudyMB implements Serializable {
         default:
           break;
       }
-
     }
 
     public boolean isCurrentOwner() {
@@ -444,15 +423,15 @@ public class StudyMB implements Serializable {
         boolean success = false;
         try {
             studyController.removeByName(studyName);
-            activity.addActivity(ActivityController.REMOVED_STUDY, studyName, ActivityController.FLAG_STUDY);
+            activityFacade.persistActivity(ActivityFacade.REMOVED_STUDY, studyName, sessionState.getLoggedInUsername());
             if (deleteFilesOnRemove) {
-                String path = File.separator + FileSystemOperations.DIR_ROOT + File.separator + studyName;
+                String path = File.separator + Constants.DIR_ROOT + File.separator + studyName;
                 success = fileOps.rmRecursive(path);
                 if (!success) {
                     MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to remove study files.");
                 }
             }
-            logger.log(Level.INFO, "{0} - study removed.", studyName);
+            logger.log(Level.FINE, "{0} - study removed.", studyName);
         } catch (IOException e) {
             MessagesController.addErrorMessage("Error: Study wasn't removed.");
             return null;
@@ -473,8 +452,8 @@ public class StudyMB implements Serializable {
 
     public LazyDataModel<ActivityDetail> getSpecificLazyModel() {
         if (lazyModel == null) {
-            lazyModel = new LazyActivityModel(activityController, studyName);
-            lazyModel.setRowCount((int) activityController.getStudyCount(studyName));
+            lazyModel = new LazyActivityModel(activityDetailFacade, studyName);
+            lazyModel.setRowCount((int) activityFacade.getStudyCount(studyName));
         }
         return lazyModel;
     }
@@ -497,7 +476,6 @@ public class StudyMB implements Serializable {
      * @return
      */
     public List<UserGroup> getGroupedMembers() {
-
         List<UserGroup> groupedUsers = new ArrayList<>();
         StudyRoleTypes[] roles = StudyRoleTypes.values();
         for (StudyRoleTypes role : roles) {
@@ -600,44 +578,12 @@ public class StudyMB implements Serializable {
         } else {
             return t.getUsername().equalsIgnoreCase(email);
         }
-    }
-    
-    
-    public void test() {
-//        try{
-//        FlinkRunner.maint();
-//        }catch(Exception e){
-//            e.printStackTrace();
-//        }        
-    }
-    
+    }    
     
   public StudyServiceEnum[] getSelectedServices() {
     List<StudyServiceEnum> services = studyServices.findEnabledServicesForStudy(studyName);
     StudyServiceEnum[] reArr = new StudyServiceEnum[services.size()];
     return services.toArray(reArr);
-    /*
-     * Was:
-     * 
-     *     return services.toArray(reArr);
-     * 
-     * But that gave me:
-     * 
-        java.lang.ArrayStoreException
-          at java.lang.System.arraycopy(Native Method)
-          at java.util.Vector.toArray(Vector.java:718)
-          at se.kth.bbc.study.StudyMB.getSelectedServices(StudyMB.java:617)
-     * 
-     * and left me completely puzzled. So a manual array copy :(  
-     * 
-     */
-    /*
-    for(int i=0;i<services.size();i++){
-      reArr[i] = StudyServiceEnum.valueOf(services.get(i));
-    }
-    
-    return reArr;
-*/
   }
   
   public boolean shouldDrawTab(String service){    
@@ -648,8 +594,9 @@ public class StudyMB implements Serializable {
     this.selectedServices = selectedServices;
   }
   
-  public void updateServices(){
+  public String updateServices(){
     studyServices.persistServicesForStudy(studyName, selectedServices);
+    return "studyPage";
   } 
 
 }

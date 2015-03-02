@@ -1,9 +1,7 @@
 package se.kth.bbc.jobs.yarn;
 
 import java.io.File;
-import se.kth.bbc.jobs.JobController;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,8 +11,12 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.UploadedFile;
+import se.kth.bbc.activity.ActivityFacade;
+import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.FileSelectionController;
+import se.kth.bbc.jobs.JobController;
+import se.kth.bbc.jobs.JobControllerEvent;
+import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.StagingManager;
@@ -25,111 +27,102 @@ import se.kth.bbc.lims.StagingManager;
  */
 @ManagedBean
 @ViewScoped
-public class YarnController implements Serializable {
+public class YarnController extends JobController {
 
   private static final Logger logger = Logger.getLogger(YarnController.class.
           getName());
 
-  private static final String KEY_AM_JARPATH = "appMasterJarPath";
   private static final String KEY_APP_NAME = "appname";
   private static final String KEY_ARGS = "args";
   private static final String KEY_MAIN = "mainClassName";
 
-  private final JobController jc = new JobController();
-
   @ManagedProperty(value = "#{clientSessionState}")
   private transient ClientSessionState sessionState;
+
+  @ManagedProperty(value = "#{fileSelectionController}")
+  private FileSelectionController fileSelectionController;
 
   @EJB
   private StagingManager stagingManager;
 
+  @EJB
+  private JobHistoryFacade history;
+
+  @EJB
+  private FileOperations fops;
+
+  @EJB
+  private ActivityFacade activityFacade;
+
   @PostConstruct
   public void init() {
     try {
-      String path = stagingManager.getStagingPath() + File.separator + sessionState.getLoggedInUsername() + File.separator + sessionState.getActiveStudyname();
-      jc.setBasePath(path);
+      String path = stagingManager.getStagingPath() + File.separator
+              + sessionState.getLoggedInUsername() + File.separator
+              + sessionState.getActiveStudyname();
+      super.setBasePath(path);
+      super.setJobHistoryFacade(history);
+      super.setFileOperations(fops);
+      super.setFileSelector(fileSelectionController);
+      super.setActivityFacade(activityFacade);
     } catch (IOException c) {
-      logger.log(Level.SEVERE, "Failed to initialize staging folder for uploading.", c);
+      logger.log(Level.SEVERE,
+              "Failed to initialize Yarn staging folder for uploading.", c);
       MessagesController.addErrorMessage(
               "Failed to initialize Yarn controller. Running Yarn jobs will not work.");
     }
   }
 
   public String getAppMasterJarPath() {
-    return jc.getFilePath(KEY_AM_JARPATH);
+    return getMainFilePath();
   }
 
   public void setAppName(String name) {
-    jc.putVariable(KEY_APP_NAME, name);
+    putVariable(KEY_APP_NAME, name);
   }
 
   public String getAppName() {
-    return jc.getVariable(KEY_APP_NAME);
+    return getVariable(KEY_APP_NAME);
   }
 
   public String getArgs() {
-    return jc.getVariable(KEY_ARGS);
+    return getVariable(KEY_ARGS);
   }
 
   public void setArgs(String args) {
-    jc.putVariable(KEY_ARGS, args);
+    putVariable(KEY_ARGS, args);
   }
 
   public void setMainClassName(String mainClass) {
-    jc.putVariable(KEY_MAIN, mainClass);
+    putVariable(KEY_MAIN, mainClass);
   }
 
   public String getMainClassName() {
-    return jc.getVariable(KEY_MAIN);
+    return getVariable(KEY_MAIN);
   }
 
-  public void handleAMUpload(FileUploadEvent event) {
-    try {
-      jc.clearFiles();
-      jc.clearVariables();
-      jc.handleFileUpload(KEY_AM_JARPATH, event);
-    } catch (IllegalStateException e) {
-      try {
-        String path = stagingManager.getStagingPath() + File.separator + "jobs" + File.separator + sessionState.getLoggedInUsername() + File.separator + sessionState.getActiveStudyname();
-        jc.setBasePath(path);
-        jc.handleFileUpload(KEY_AM_JARPATH, event);
-      } catch (IOException c) {
-        logger.log(Level.SEVERE, "Failed to create directory structure.", c);
-        MessagesController.addErrorMessage(
-                "Failed to initialize Yarn controller. Running Yarn jobs will not work.");
-      }
-    }
+  @Override
+  protected void registerMainFile(String filename,
+          Map<String, String> attributes) {
+    //Nothing to do
   }
 
-  public void extraFileUploads(FileUploadEvent event) {
-    //TODO: make a tmp folder per user, per study, per...
-    UploadedFile file = event.getFile();
-    String key = file.getFileName();
-    try {
-      jc.handleFileUpload(key, event);
-    } catch (IllegalStateException e) {
-      try {
-        String path = stagingManager.getStagingPath() + File.separator + "jobs" + File.separator + sessionState.getLoggedInUsername() + File.separator + sessionState.getActiveStudyname();
-        jc.setBasePath(path);
-        jc.handleFileUpload(key, event);
-      } catch (IOException c) {
-        logger.log(Level.SEVERE, "Failed to create directory structure.", c);
-        MessagesController.addErrorMessage(
-                "Failed to initialize Yarn controller. Running Yarn jobs will not work.");
-      }
-    }
+  @Override
+  protected void registerExtraFile(String filename,
+          Map<String, String> attributes) {
+    //Nothing to do
   }
 
   public void runJar() {
     //TODO: fix this
-    Map<String, String> files = jc.getFiles();
-    String appMasterJar = files.remove(KEY_AM_JARPATH);
+    Map<String, String> files = getExtraFiles();
+    String appMasterJar = getMainFilePath();
     YarnRunner.Builder builder = new YarnRunner.Builder(appMasterJar,
             "appMaster.jar");
     if (!files.isEmpty()) {
       //builder.addAllLocalResourcesPaths(files);
     }
-    builder.amArgs(jc.getVariable(KEY_ARGS)).amMainClass(jc.
+    builder.amArgs(getVariable(KEY_ARGS)).amMainClass(
             getVariable(KEY_MAIN));
     YarnRunner runner;
     try {
@@ -139,20 +132,52 @@ public class YarnController implements Serializable {
       MessagesController.addErrorMessage("Failed to initialize Yarn client");
       return;
     } catch (IOException e) {
-      logger.log(Level.SEVERE,"Could not initialize YarnRunner.", e);
+      logger.log(Level.SEVERE, "Could not initialize YarnRunner.", e);
       MessagesController.addErrorMessage("Failed to initialize Yarn client.");
       return;
     }
     try {
       runner.startAppMaster();
     } catch (IOException | YarnException e) {
-      logger.log(Level.SEVERE, "Error while initializing Application Master.", e);
-      MessagesController.addErrorMessage("Failed to initialize Application Master.");
+      logger.
+              log(Level.SEVERE, "Error while initializing Application Master.",
+                      e);
+      MessagesController.addErrorMessage(
+              "Failed to initialize Application Master.");
+      return;
     }
+    writeJobStartedActivity(sessionState.getActiveStudyname(), sessionState.
+            getLoggedInUsername());
   }
 
   public void setSessionState(ClientSessionState sessionState) {
     this.sessionState = sessionState;
+  }
+
+  @Override
+  protected String getUserMessage(JobControllerEvent event, String extraInfo) {
+    switch (event) {
+      case MAIN_UPLOAD_FAILURE:
+        return "Failed to upload AM jar " + extraInfo + ".";
+      case MAIN_UPLOAD_SUCCESS:
+        return "AM jar " + extraInfo + " successfully uploaded.";
+      default:
+        return super.getUserMessage(event, extraInfo);
+    }
+  }
+
+  @Override
+  protected String getLogMessage(JobControllerEvent event, String extraInfo) {
+    switch (event) {
+      case MAIN_UPLOAD_FAILURE:
+        return "Failed to upload AM jar " + extraInfo + ".";
+      default:
+        return super.getLogMessage(event, extraInfo);
+    }
+  }
+
+  public void setFileSelectionController(FileSelectionController fs) {
+    this.fileSelectionController = fs;
   }
 
 }

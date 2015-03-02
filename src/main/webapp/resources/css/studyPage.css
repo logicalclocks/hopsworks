@@ -340,16 +340,20 @@ h1 {
   border-top: 1px solid #DDD;
 }
 
+.browser_row{    
+  background: none repeat scroll 0% 0% #FAFAFA;
+}
+
+.browser_row:hover{
+  background:#d9edf7;border-bottom:1px solid #adf;
+}
+
 .remove_data_button {
   font-size: 11px;
   padding: 2px 6px;
   line-height: 16px !important;
   margin: 2px;
-  border-color: #BD362F;
-  color: #FFF !important;
   text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
-  background-color: #DB4F4A;
-  background-image: linear-gradient(to bottom, #EE5F5B, #BD362F);
   background-repeat: repeat-x;
   display: inline-block;
   text-align: center;
@@ -365,7 +369,7 @@ h1 {
 }
 
 .remove_data_button:hover {
-  background: #FF530D;
+  color: #313131;
 }
 
 .action_column {
@@ -426,11 +430,14 @@ h1 {
   font-size: 20px;
 }
 
-.workflow-head td {
-  min-width: 180px;
-}
-
 .ui-fileupload .ui-widget-header {
   background: none;
   border:none;
+}
+
+.workflow-head td {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 0px;
+  padding-right: 20px;
 }

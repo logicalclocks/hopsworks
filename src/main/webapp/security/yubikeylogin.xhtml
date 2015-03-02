@@ -67,14 +67,14 @@
                     </h:panelGrid>             
                 </h:panelGrid>
             </div>
-        </h:form> 
         <div align="center">
             
-            <p:commandLink value="Mobile user" action="welcome" style="text-align: right"/>
+            <p:commandLink value="Mobile user" action="welcome" style="text-align: right" immediate="true"/>
                  &nbsp;
-            <p:commandLink id="signupLink" value="Can't login?" action="login_issue" style="text-align: right"/>
+                 <p:commandLink id="signupLink" value="Can't login?" action="login_issue" style="text-align: right" immediate="true"/>
      
         </div>
+        </h:form> 
         <br/>
     </h:body>
 </html>

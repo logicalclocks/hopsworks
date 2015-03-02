@@ -24,22 +24,23 @@
                             </ui:include>
                         </ui:insert>
                     </p:panel>
-                    <h:form id="cuneiForm"> <!-- Pun intended -->
+                    <h:form id="cuneiForm" styleClass="runConfForm"> <!-- Pun intended -->
                         <h3>
                             Run configuration
                         </h3>
                         <p:growl autoUpdate="true" showDetail="true"/>
                         <div class="workflow-head">
                             <div>
-                                <h:panelGrid columns="2">
+                                <h:panelGrid columns="2" columnClasses="labelColumn,valueColumn">
                                     <h:outputLabel for="JobName" value="Job name"/>
                                     <h:inputText id="JobName" value="#{cuneiformController.jobName}"/>
 
                                     <h:outputLabel value="Upload workflow file" for="wfUploader"/>
-                                    <p:fileUpload required="true" auto="true" multiple="false" 
-                                                  label="Upload" mode="advanced" allowTypes="/(\.|\/)(cf)$/" 
-                                                  fileUploadListener="#{cuneiformController.workflowUpload}" 
-                                                  update="@form" id="wfUploader" process="@form"/>
+                                    <p:commandButton id="wfUploader"
+                                                     value="Select..."
+                                                     oncomplete="PF('chooseFileDlg').show()"
+                                                     actionListener="#{cuneiformController.prepareFileSelector(true,'')}">
+                                    </p:commandButton>
 
                                     <h:outputLabel value="Uploaded file"/>
                                     <h:outputLabel value="#{cuneiformController.workflowName==null ? 'No file uploaded yet' : cuneiformController.workflowName}"/>
@@ -52,12 +53,10 @@
                                     <ui:repeat value="#{cuneiformController.freeVars}" var="variable">
                                         <h:panelGrid columns="2">
                                             <h:outputLabel value="#{variable.name}"/>
-                                            <p:fileUpload required="true" auto="true" multiple="false" 
-                                                          label="Upload" mode="advanced" 
-                                                          fileUploadListener="#{cuneiformController.inputFileUpload}" 
-                                                          update="@form" process="@form">
-                                                <f:attribute name="name" value="#{variable.name}"/>
-                                            </p:fileUpload>
+                                            <p:commandButton value="Select..."
+                                                             oncomplete="PF('chooseFileDlg').show()"
+                                                             actionListener="#{cuneiformController.prepareFileSelector(false,'name ' += variable.name)}">
+                                            </p:commandButton>
                                             <h:outputLabel value="Uploaded file" rendered="#{cuneiformController.isFileUploadedForVar(variable.name)}"/>
                                             <h:outputLabel value="#{variable.value}" rendered="#{cuneiformController.isFileUploadedForVar(variable.name)}"/>
                                         </h:panelGrid>
@@ -77,16 +76,16 @@
                             <div>
                                 <!-- TODO: add validator that checks if the CF file is parseable -->
                                 <p:commandButton id="cuneiformExecuteButton" value="Execute" action="#{cuneiformController.startWorkflow()}" 
-                                                 update="@form"/>
+                                                 process="@form" update="@form"/>
                             </div>
                         </div>
                     </h:form>
-                    <h:form id="CFResultsForm">
+                    <h:form id="resultForm_CUNEIFORM" styleClass="resultsForm">
                         <h3>
                             Results
                         </h3>
                         <h:panelGrid columns="2">
-                            <h:outputLabel value="Current state:" for="curr_state"/>
+                            <h:outputLabel value="Current state:" for="curr_state" rendered="#{cuneiformController.selectedJobRunning or cuneiformController.selectedJobHasFinished}"/>
                             <h:outputText id="curr_state" value="#{cuneiformController.selectedJob.state}" styleClass="stateSpan"/>
                         </h:panelGrid>
                         <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformController.selectedJobRunning}"/>
@@ -122,11 +121,6 @@
                             </div>
                         </h:panelGroup>
                     </h:form>
-                    <!-- primefaces push -->
-                    <p:socket channel="#{cuneiformController.pushChannel}">
-                        <p:ajax event="message" update=":#{p:component('CFResultsForm')} :#{p:component('historyForm_CUNEIFORM')}" />
-                    </p:socket>
-
                 </h:panelGrid>
             </div>
         </ui:composition>

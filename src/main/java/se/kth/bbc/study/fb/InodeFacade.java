@@ -6,7 +6,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.fileoperations.FileSystemOperations;
+import se.kth.bbc.lims.Constants;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -231,7 +231,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
   }
 
   public Inode getStudyRoot(String name) {
-    return getInode("/" + FileSystemOperations.DIR_ROOT + "/" + name);
+    return getInode("/" + Constants.DIR_ROOT + "/" + name);
   }
 
 }

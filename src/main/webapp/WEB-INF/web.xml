@@ -8,67 +8,71 @@
         <param-name>primefaces.PRIVATE_CAPTCHA_KEY</param-name>
         <param-value>6LcIf_8SAAAAAApk-GuqRydfQEE31lurGKKa58RK</param-value>
     </context-param>
-    <context-param>
-        <param-name>javax.faces.PROJECT_STAGE</param-name>
-                <param-value>PRODUCTION</param-value>
-    </context-param>
-    <context-param>
-        <param-name>com.sun.faces.verifyObjects</param-name>
-        <param-value>false</param-value>
-    </context-param>
-    <context-param>
-        <param-name>com.sun.faces.validateXml</param-name>
-        <param-value>true</param-value>
-    </context-param>
-    <context-param>
-        <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
-        <param-value>server</param-value>
-    </context-param>
-    <context-param>
-        <param-name>Webhdfs-http</param-name>
-        <param-value>http://snurran.sics.se:50070/webhdfs/v1</param-value>
-    </context-param>
-    <context-param>
-        <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
-        <param-value>true</param-value>
-    </context-param>
-    <context-param>
-        <param-name>javax.faces.PARTIAL_STATE_SAVING</param-name>
-        <param-value>true</param-value>
-    </context-param>
-    <context-param>
-        <param-name>javax.faces.FACELETS_BUFFER_SIZE</param-name>
-        <param-value>65535</param-value>
-    </context-param>
-    <servlet>
-        <servlet-name>Faces Servlet</servlet-name>
-        <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>Faces Servlet</servlet-name>
-        <url-pattern>/faces/*</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>Faces Servlet</servlet-name>
-        <url-pattern>*.xhtml</url-pattern>
-    </servlet-mapping>
-    <welcome-file-list>
-        <welcome-file>index.xhtml</welcome-file>
-    </welcome-file-list>
-    <servlet>
-        <servlet-name>UploadServlet</servlet-name>
-        <servlet-class>se.kth.bbc.upload.UploadServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>UploadServlet</servlet-name>
-        <url-pattern>/bbc/uploader</url-pattern>
-    </servlet-mapping>
-    <servlet>
+  <context-param>
+    <param-name>javax.faces.PROJECT_STAGE</param-name>
+    <param-value>Development</param-value>
+  </context-param>
+  <context-param>
+    <param-name>com.sun.faces.verifyObjects</param-name>
+    <param-value>false</param-value>
+  </context-param>
+  <context-param>
+    <param-name>com.sun.faces.validateXml</param-name>
+    <param-value>true</param-value>
+  </context-param>
+  <context-param>
+    <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
+    <param-value>server</param-value>
+  </context-param>
+  <context-param>
+    <param-name>Webhdfs-http</param-name>
+    <param-value>http://snurran.sics.se:50070/webhdfs/v1</param-value>
+  </context-param>
+  <context-param>
+    <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
+    <param-value>true</param-value>
+  </context-param>
+  <context-param>
+    <param-name>javax.faces.PARTIAL_STATE_SAVING</param-name>
+    <param-value>true</param-value>
+  </context-param>
+  <context-param>
+    <param-name>javax.faces.FACELETS_BUFFER_SIZE</param-name>
+    <param-value>65535</param-value>
+  </context-param>
+  <servlet>
+    <servlet-name>Faces Servlet</servlet-name>
+    <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>Faces Servlet</servlet-name>
+    <url-pattern>/faces/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>Faces Servlet</servlet-name>
+    <url-pattern>*.xhtml</url-pattern>
+  </servlet-mapping>
+  <welcome-file-list>
+    <welcome-file>index.xhtml</welcome-file>
+  </welcome-file-list>
+  <servlet>
+    <servlet-name>UploadServlet</servlet-name>
+    <servlet-class>se.kth.bbc.upload.UploadServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>UploadServlet</servlet-name>
+    <url-pattern>/bbc/uploader</url-pattern>
+  </servlet-mapping>
+  <servlet>
     <servlet-name>Push Servlet</servlet-name>
     <servlet-class>org.primefaces.push.PushServlet</servlet-class>
     <async-supported>true</async-supported>
   </servlet>
+  <error-page>
+    <exception-type>javax.faces.application.ViewExpiredException</exception-type>
+    <location>/index.xhtml</location>
+  </error-page>
   <servlet-mapping>
     <servlet-name>Push Servlet</servlet-name>
     <url-pattern>/primepush/*</url-pattern>
@@ -220,17 +224,4 @@
         <url-pattern>/security/index.xhtml</url-pattern>
         <url-pattern>/security/protected/index.xhtml</url-pattern>
     </filter-mapping>
-    <!-- To upload from pages with pretty URL!-->
-    <!--    <filter-mapping>
-        <filter-name>PrimeFaces FileUpload Filter</filter-name>
-        <url-pattern>/*</url-pattern>     
-    </filter-mapping>  -->
-    <!--PrettyFaces: ONLY Development Mode: disable the default caching mechanism -->
-    <!--   <context-param>
-       <param-name>org.ocpsoft.rewrite.config.CONFIG_RELOADING</param-name>
-       <param-value>true</param-value>
-    </context-param>    -->
-    <!--        <welcome-file-list>
-            <welcome-file>upload.html</welcome-file>
-    </welcome-file-list>-->
 </web-app>

@@ -17,8 +17,8 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import org.primefaces.model.DualListModel;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.fileoperations.FileSystemOperations;
 import se.kth.bbc.lims.ClientSessionState;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.study.metadata.CollectionTypeStudyDesignEnum;
@@ -118,6 +118,8 @@ public class SamplesController implements Serializable{
     Samplecollection coll = getCollection(id);
     this.collectionSelected = (coll != null);
     this.selectedCollection = coll;
+    selectedSample = null;
+    sampleSelected = false;
   }
 
   public void selectSample(String sampleId) {
@@ -265,7 +267,8 @@ public class SamplesController implements Serializable{
     }
     MessagesController.addInfoMessage("Success", "Sample has been added",
             "message");
-    selectSample(newSample.getId());
+    this.selectedSample = newSample;
+    this.sampleSelected = true;
     newSample = new Sample();
   }
 
@@ -275,9 +278,9 @@ public class SamplesController implements Serializable{
      */
   private void createSampleDir(String sampleId) throws IOException {
     //Construct path
-    String path = File.separator + FileSystemOperations.DIR_ROOT
+    String path = File.separator + Constants.DIR_ROOT
             + File.separator + sessionState.getActiveStudyname()
-            + File.separator + FileSystemOperations.DIR_SAMPLES
+            + File.separator + Constants.DIR_SAMPLES
             + File.separator + selectedCollection.getAcronym()
             + File.separator + sampleId;
 
@@ -285,9 +288,9 @@ public class SamplesController implements Serializable{
     boolean success;
     //add all (sub)directories
     String[] folders = {path,
-      path + File.separator + FileSystemOperations.DIR_BAM,
-      path + File.separator + FileSystemOperations.DIR_FASTQ,
-      path + File.separator + FileSystemOperations.DIR_VCF};
+      path + File.separator + Constants.DIR_BAM,
+      path + File.separator + Constants.DIR_FASTQ,
+      path + File.separator + Constants.DIR_VCF};
 
     for (String s : folders) {
       success = fileOps.mkDir(s);
@@ -301,20 +304,17 @@ public class SamplesController implements Serializable{
 
   private void createSampleCollectionDir(String folderName) throws IOException {
     //Construct path
-    String path = File.separator + FileSystemOperations.DIR_ROOT
+    String path = File.separator + Constants.DIR_ROOT
             + File.separator + sessionState.getActiveStudyname()
-            + File.separator + FileSystemOperations.DIR_SAMPLES
+            + File.separator + Constants.DIR_SAMPLES
             + File.separator + folderName;
 
     //create dir in fs
-    boolean success;
-
-    success = fileOps.mkDir(path);
+    boolean success = fileOps.mkDir(path);
     if (!success) {
       MessagesController.addErrorMessage(MessagesController.ERROR,
               "Failed to create folder " + path + ".");
     }
-
   }
 
   public void createNewCollection() {

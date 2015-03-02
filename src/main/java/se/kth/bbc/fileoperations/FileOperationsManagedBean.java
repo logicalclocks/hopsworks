@@ -44,12 +44,13 @@ public class FileOperationsManagedBean implements Serializable {
 
         StreamedContent sc = null;
         try {
+          //TODO: should convert to try-with-resources? or does that break streamedcontent?
             InputStream is = fileOps.getInputStream(inode);
             String extension = getExtension(inode.getPath());
             String filename = inode.getPath().substring(inode.getPath().lastIndexOf(File.separator) + 1);
 
             sc = new DefaultStreamedContent(is, extension, filename);
-            logger.log(Level.INFO, "File was downloaded from HDFS path: {0}", inode.getStudyPath());
+            logger.log(Level.FINE, "File was downloaded from HDFS path: {0}", inode.getStudyPath());
         } catch (IOException ex) {
             Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
             MessagesController.addErrorMessage(MessagesController.ERROR, "Download failed.");

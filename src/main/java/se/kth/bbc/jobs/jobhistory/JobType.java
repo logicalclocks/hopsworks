@@ -5,7 +5,7 @@ package se.kth.bbc.jobs.jobhistory;
  * @author stig
  */
 public enum JobType {
-  CUNEIFORM, YARN, FLINK;
+  CUNEIFORM, YARN, FLINK, SPARK,ADAM;
   
   @Override
   public String toString(){
@@ -16,6 +16,10 @@ public enum JobType {
         return "Yarn";
       case FLINK:
         return "Flink";
+      case SPARK:
+        return "Spark";
+      case ADAM:
+        return "Adam";
       default:
         throw new IllegalStateException("Illegal enum value.");
     }

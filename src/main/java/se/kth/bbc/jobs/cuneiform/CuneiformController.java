@@ -6,14 +6,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -21,19 +20,18 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import org.primefaces.event.FileUploadEvent;
-import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
+import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
+import se.kth.bbc.jobs.FileSelectionController;
+import se.kth.bbc.jobs.JobController;
+import se.kth.bbc.jobs.JobControllerEvent;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
-import se.kth.bbc.jobs.JobController;
-import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
-import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.ClientSessionState;
@@ -47,9 +45,8 @@ import se.kth.bbc.lims.Utils;
  */
 @ManagedBean
 @ViewScoped
-public class CuneiformController implements Serializable {
+public final class CuneiformController extends JobController {
 
-  private static final String KEY_WORKFLOW_FILE = "WORKFLOW";
   private static final String KEY_PREFIX_TARGET = "TARGET_";
   private static final Logger logger = Logger.getLogger(
           CuneiformController.class.getName());
@@ -62,11 +59,11 @@ public class CuneiformController implements Serializable {
   private List<String> queryVars; //The target variables that should be queried
   private String jobName;
 
-  //Used to track job that was last executed (or selected)
-  private Long jobhistoryid;
-
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
+
+  @ManagedProperty(value = "#{fileSelectionController}")
+  private FileSelectionController fileSelectionController;
 
   @EJB
   private AsynchronousJobExecutor submitter;
@@ -83,7 +80,8 @@ public class CuneiformController implements Serializable {
   @EJB
   private StagingManager stagingManager;
 
-  private final JobController jc = new JobController();
+  @EJB
+  private ActivityFacade activityFacade;
 
   public String getWorkflowName() {
     return workflowname;
@@ -115,54 +113,41 @@ public class CuneiformController implements Serializable {
       String path = stagingManager.getStagingPath() + File.separator
               + sessionState.getLoggedInUsername() + File.separator
               + sessionState.getActiveStudyname();
-      jc.setBasePath(path);
+      super.setBasePath(path);
+      super.setJobHistoryFacade(history);
+      super.setFileOperations(fops);
+      super.setFileSelector(fileSelectionController);
+      super.setActivityFacade(activityFacade);
     } catch (IOException c) {
       logger.log(Level.SEVERE,
-              "Failed to initialize staging folder for uploading.", c);
+              "Failed to initialize Cuneiform staging folder for uploading.", c);
       MessagesController.addErrorMessage(
-              "Failed to initialize Yarn controller. Running Yarn jobs will not work.");
+              "Failed to initialize Cuneiform controller. Running Cuneiform jobs will not work.");
     }
   }
 
-  public void workflowUpload(FileUploadEvent event) {
-    try {
-      jc.clearFiles();
-      jc.clearVariables();
-      jc.handleFileUpload(KEY_WORKFLOW_FILE, event);
-      workflowUploaded = true;
-    } catch (IllegalStateException e) {
-      MessagesController.addErrorMessage("Failed to upload workflow file "
-              + event.getFile().getFileName());
-      logger.log(Level.SEVERE,
-              "Illegal state in jobController while trying to upload workflow file.",
-              e);
-      return;
-    }
-    workflowname = event.getFile().getFileName();
+  @Override
+  protected void registerMainFile(String filename,
+          Map<String, String> attributes) {
+    workflowUploaded = true;
+    workflowname = filename;
     inspectWorkflow();
   }
 
-  public void inputFileUpload(FileUploadEvent event) {
-    String inputVarName = (String) event.getComponent().getAttributes().get(
-            "name");
-    try {
-      String filename = event.getFile().getFileName();
-      jc.handleFileUpload(filename, event);
-      jc.putVariable(KEY_PREFIX_TARGET + inputVarName, filename);
-      bindFreeVar(inputVarName, filename);
-    } catch (IllegalStateException e) {
-      MessagesController.addErrorMessage("Failed to upload input file " + event.
-              getFile().getFileName() + " for input variable " + inputVarName);
-      logger.log(Level.SEVERE,
-              "Illegal state in jobController while trying to upload input file "
-              + event.getFile().getFileName() + " for input variable "
-              + inputVarName + ", workflow file: " + workflowname + ".",
-              e);
+  @Override
+  protected void registerExtraFile(String filename,
+          Map<String, String> attributes) {
+    if (attributes == null || !attributes.containsKey("name")) {
+      throw new IllegalArgumentException(
+              "CuneiformController expects attribute 'name'");
     }
+    String inputVarName = attributes.get("name");
+    putVariable(KEY_PREFIX_TARGET + inputVarName, filename);
+    bindFreeVar(inputVarName, filename);
   }
 
   public boolean isFileUploadedForVar(String name) {
-    return jc.containsVariableKey(KEY_PREFIX_TARGET + name);
+    return variablesContainKey(KEY_PREFIX_TARGET + name);
   }
 
   private void bindFreeVar(String name, String value) {
@@ -200,16 +185,18 @@ public class CuneiformController implements Serializable {
   //Read the text of the set workflow file
   private String getWorkflowText() throws IOException {
     //Read the cf-file
-    String wfPath = jc.getFilePath(KEY_WORKFLOW_FILE);
-    File f = new File(wfPath);
-    List<String> lines = Files.readAllLines(Paths.get(wfPath), Charset.
-            defaultCharset());
-    StringBuilder workflowBuilder = new StringBuilder();
-    for (String s : lines) {
-      workflowBuilder.append(s);
+    String wfPath = getMainFilePath();
+    if (wfPath.startsWith("hdfs")) {
+      return fops.cat(wfPath);
+    } else {
+      List<String> lines = Files.readAllLines(Paths.get(wfPath), Charset.
+              defaultCharset());
+      StringBuilder workflowBuilder = new StringBuilder();
+      for (String s : lines) {
+        workflowBuilder.append(s);
+      }
+      return workflowBuilder.toString();
     }
-    return workflowBuilder.toString();
-
   }
 
   public ClientSessionState getSessionState() {
@@ -237,9 +224,13 @@ public class CuneiformController implements Serializable {
   }
 
   public void startWorkflow() {
+    if (!workflowUploaded) {
+      MessagesController.addInfoMessage("Upload a workflow first.");
+      return;
+    }
 //TODO: fix state if starting fails
     if (jobName == null || jobName.isEmpty()) {
-      jobName = "Untitled job";
+      jobName = "Untitled Cuneiform job";
     }
     try {
       prepWorkflowFile();
@@ -261,19 +252,14 @@ public class CuneiformController implements Serializable {
     b.appName("Cuneiform " + jobName);
     b.addAmJarToLocalResources(false); // Weird way of hiway working
 
-    String machineUser = System.getProperty("user.name");
-    if (machineUser == null) {
-      machineUser = Constants.DEFAULT_YARN_USER;
-      logger.log(Level.WARNING,
-              "Username not found in system properties, using default \"glassfish\"");
-    }
+    String machineUser = Utils.getYarnUser();
 
     b.localResourcesBasePath("/user/" + machineUser + "/hiway/"
             + YarnRunner.APPID_PLACEHOLDER);
 
     //construct AM arguments
     StringBuilder args = new StringBuilder("--workflow ");
-    args.append(Utils.getFileName(jc.getFilePath(KEY_WORKFLOW_FILE)));
+    args.append(Utils.getFileName(getMainFilePath()));
     args.append(" --appid ");
     args.append(YarnRunner.APPID_PLACEHOLDER);
     args.append(" --summary ");
@@ -282,8 +268,8 @@ public class CuneiformController implements Serializable {
     b.amArgs(args.toString());
 
     //Pass on workflow file
-    String wfPath = jc.getFilePath(KEY_WORKFLOW_FILE);
-    b.addFilePathToBeCopied(wfPath);
+    String wfPath = getMainFilePath();
+    b.addFilePathToBeCopied(wfPath, !wfPath.startsWith("hdfs:"));
 
     b.stdOutPath("AppMaster.stdout");
     b.stdErrPath("AppMaster.stderr");
@@ -305,16 +291,16 @@ public class CuneiformController implements Serializable {
     CuneiformJob job = new CuneiformJob(history, fops, r);
 
     //TODO: include input and execution files
-    jobhistoryid = job.requestJobId(jobName, sessionState.getLoggedInUsername(),
-            sessionState.getActiveStudyname(), JobType.CUNEIFORM);
-    if (jobhistoryid != null) {
+    setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
+            sessionState.getActiveStudyname(), JobType.CUNEIFORM));
+    if (isJobSelected()) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveStudyname())
-              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
+              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getJobId()
               + File.separator + "stdout.log";
       String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveStudyname())
-              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobhistoryid
+              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getJobId()
               + File.separator + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
       job.setStdErrFinalDestination(stdErrFinalDestination);
@@ -326,100 +312,19 @@ public class CuneiformController implements Serializable {
               "Failed to persist JobHistory. Aborting execution.");
       MessagesController.addErrorMessage(
               "Failed to write job history. Aborting execution.");
+      return;
     }
-  }
-
-  public JobHistory getSelectedJob() {
-    if (jobhistoryid == null) {
-      return null;
-    } else {
-      return history.findById(jobhistoryid);
-    }
-  }
-
-  public boolean isJobSelected() {
-    return jobhistoryid != null;
-  }
-
-  public boolean isSelectedJobRunning() {
-    if (jobhistoryid == null) {
-      return false;
-    } else {
-      return !jobHasFinishedState();
-    }
-  }
-  
-  public boolean isSelectedJobHasFinished() {
-    if(jobhistoryid == null){
-      return false;
-    } else{
-      return jobHasFinishedState();
-    }
-  }
-
-  private boolean jobHasFinishedState() {
-    JobState state = history.getState(jobhistoryid);
-    if (state == null) {
-      //should never happen
-      return true;
-    }
-    return state.isFinalState();
-  }
-
-  //TODO: move download methods to JobHistoryController
-  public StreamedContent downloadStdout() {
-    JobHistory jh = getSelectedJob();
-    if(jh == null){
-      return null;
-    }
-    String stdoutPath = jh.getStdoutPath();
-    try {
-      String filename = "stdout.log";
-      return downloadFile(stdoutPath, filename);
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Failed to download stdout. JobId: "
-              + jobhistoryid + ", path: " + stdoutPath, ex);
-      MessagesController.addErrorMessage(MessagesController.ERROR,
-              "Download failed.");
-    }
-    return null;
-  }
-
-  public StreamedContent downloadStderr() {
-    JobHistory jh = getSelectedJob();
-    if(jh == null){
-      return null;
-    }
-    String stderrPath = jh.getStderrPath();
-    String filename = "stderr.log";
-    try {
-      return downloadFile(stderrPath, filename);
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, "Failed to download stderr. JobId: "
-              + jobhistoryid + ", path: " + stderrPath, ex);
-      MessagesController.addErrorMessage("Download failed.");
-    }
-    return null;
-  }
-
-  private StreamedContent downloadFile(String path,
-          String filename) throws IOException {
-    InputStream is = fops.getInputStream(path);
-    StreamedContent sc = new DefaultStreamedContent(is, Utils.getMimeType(
-            filename),
-            filename);
-    logger.log(Level.INFO, "File was downloaded from HDFS path: {0}",
-            path);
-    return sc;
+    writeJobStartedActivity(sessionState.getActiveStudyname(), sessionState.
+            getLoggedInUsername());
   }
 
   public boolean hasOutputFiles() {
-    return jobOutputFacade.findOutputFilesForJobid(jobhistoryid).size() > 0;
+    return jobOutputFacade.findOutputFilesForJobid(getJobId()).size() > 0;
   }
 
   public List<String> getOutputFileNames() {
     List<JobOutputFile> files = jobOutputFacade.findOutputFilesForJobid(
-            jobhistoryid);
+            getJobId());
     List<String> names = new ArrayList<>(files.size());
     for (JobOutputFile file : files) {
       names.add(file.getJobOutputFilePK().getName());
@@ -429,24 +334,23 @@ public class CuneiformController implements Serializable {
 
   public StreamedContent downloadOutput(String name) {
     //find file from facade, get input stream from path
-    JobOutputFile file = jobOutputFacade.findByNameAndJobId(name, jobhistoryid);
+    JobOutputFile file = jobOutputFacade.findByNameAndJobId(name, getJobId());
     if (file == null) {
       //should never happen
       MessagesController.addErrorMessage(
               "Something went wrong while downloading " + name + ".");
       logger.log(Level.SEVERE,
               "Trying to download an output file that does not exist. JobId:{0}, filename: {1}",
-              new Object[]{jobhistoryid,
+              new Object[]{getJobId(),
                 name});
       return null;
     }
     String path = file.getPath();
-    String extension = Utils.getExtension(name);
     try {
       return downloadFile(path, name);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Failed to download output file " + name
-              + ". Jobid: " + jobhistoryid + ", path: " + path, ex);
+              + ". Jobid: " + getJobId() + ", path: " + path, ex);
       MessagesController.addErrorMessage("Download failed.");
     }
     return null;
@@ -464,8 +368,13 @@ public class CuneiformController implements Serializable {
     for (CuneiformParameter cp : freevars) {
       if (cp.getValue() != null) {
         //copy the input file to where cuneiform expects it
-        fops.copyFromLocalNoInode(jc.getFilePath(cp.getValue()),
-                absoluteHDFSfoldername + File.separator + cp.getValue());
+        if (getFilePath(cp.getValue()).startsWith("hdfs:")) {
+          fops.copyWithinHdfs(getFilePath(cp.getValue()), absoluteHDFSfoldername
+                  + File.separator + cp.getValue());
+        } else {
+          fops.copyFromLocalNoInode(getFilePath(cp.getValue()),
+                  absoluteHDFSfoldername + File.separator + cp.getValue());
+        }
         //add a line to the workflow file
         extraLines.append(cp.getName()).append(" = '").append(foldername).
                 append(File.separator).append(cp.getValue()).append("';\n");
@@ -478,25 +387,52 @@ public class CuneiformController implements Serializable {
       }
     }
     //actually write to workflow file
-    String wfPath = jc.getFilePath(KEY_WORKFLOW_FILE);
+    String wfPath = getMainFilePath();
+    if (wfPath.startsWith("hdfs:")) {
+      //copy file to local tmp folder
+      String newPath = getBasePath() + File.separator + Utils.
+              getFileName(wfPath);
+      fops.copyToLocal(wfPath, newPath);
+      updateMainFilePath(newPath);
+      wfPath = newPath;
+    }
     try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(
             wfPath, true)))) {
       out.print(extraLines);
     }
-    logger.log(Level.INFO, extraLines.toString());
+    logger.log(Level.FINEST, extraLines.toString());
   }
 
-  public void selectJob(JobHistory job) {
-    //TODO
-    // overwrite history content and set jobhistoryid
+  @Override
+  protected String getUserMessage(JobControllerEvent event, String extraInfo) {
+    switch (event) {
+      case MAIN_UPLOAD_FAILURE:
+        return "Failed to upload workflow file " + extraInfo + ".";
+      case MAIN_UPLOAD_SUCCESS:
+        return "Workflow file " + extraInfo + " successfully uploaded.";
+      case EXTRA_FILE_FAILURE:
+        return "Failed to upload input file " + extraInfo + ".";
+      case EXTRA_FILE_SUCCESS:
+        return "Input file " + extraInfo + " successfully uploaded.";
+      default:
+        return super.getUserMessage(event, extraInfo);
+    }
   }
-  
-  /**
-   * Returns the channel to subscribe to for jobhistory updates.
-   * @return 
-   */
-  public String getPushChannel(){
-    return "/"+sessionState.getActiveStudyname()+"/"+JobType.CUNEIFORM;
+
+  @Override
+  protected String getLogMessage(JobControllerEvent event, String extraInfo) {
+    switch (event) {
+      case MAIN_UPLOAD_FAILURE:
+        return "Failed to upload workflow file " + extraInfo + ".";
+      case EXTRA_FILE_FAILURE:
+        return "Failed to upload input file " + extraInfo + ".";
+      default:
+        return super.getLogMessage(event, extraInfo);
+    }
+  }
+
+  public void setFileSelectionController(FileSelectionController fs) {
+    this.fileSelectionController = fs;
   }
 
 }

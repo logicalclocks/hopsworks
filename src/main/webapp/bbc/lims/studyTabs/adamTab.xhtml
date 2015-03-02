@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  
+      xmlns:f="http://java.sun.com/jsf/core" 
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+    <body>
+        <ui:composition>
+            <div>
+                <h1 style="float:none;">
+                    ADAM
+                </h1>
+            </div>
+            <div>
+                <h:panelGrid columns="3" styleClass="jobPanel" columnClasses="historyColumn,runColumn,resultsColumn">
+                    <p:panel styleClass="historyPanel">
+                        <h3>
+                            History
+                        </h3>
+                        <ui:insert name="history">
+                            <ui:include src="/bbc/lims/studyTabs/HistoryPanel.xhtml">
+                                <ui:param name="type" value="ADAM" />
+                            </ui:include>
+                        </ui:insert>
+                    </p:panel>
+                    <h:form id="adamForm" styleClass="adamForm runConfForm">
+                        <h3>
+                            Run configuration
+                        </h3>
+                        <p:growl autoUpdate="true" showDetail="true"/>
+                        <p:tooltip showDelay="1"/>
+                        <p:selectOneMenu id="adamCommandChoice" value="#{adamController.selectedCommand}">
+                            <f:converter converterId="adamCommandConverter"/>
+                            <f:selectItem itemLabel="Select command" itemValue=""/>
+                            <f:selectItems value="#{adamController.adamCommands}" var="command" itemValue="#{command}" itemLabel="#{command.command}"/>
+                            <p:ajax event="change" update="@form" process="@form"/>
+                        </p:selectOneMenu>
+                        <p:commandButton value="Execute" styleClass="right_button" rendered="#{adamController.selectedCommand != null}" action="#{adamController.startJob()}"/> 
+                        <div>
+                        <h:outputText value="#{adamController.selectedCommand.description}" rendered="#{adamController.selectedCommand != null}"/>
+                        </div>
+
+                        <!-- JOBNAME -->
+                        <div class="ui-datatable ui-widget adamTable">
+                            <div class="ui-datatable-tablewrapper">
+                                <div class="ui-datatable-data ui-widget-content">
+                                    <h:panelGrid columns="2" styleClass="jobNameTable" rendered="#{adamController.selectedCommand != null}">
+                                        <h:outputText value="Job name"/>
+                                        <p:inputText value="#{adamController.jobName}" label="Untitled ADAM job"/>
+                                    </h:panelGrid>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- ARGUMENTS -->
+                        <p:dataTable id="argumentsTable" var="arg" value="#{adamController.selectedCommandArgs}" rendered="#{adamController.selectedCommand != null}" styleClass="adamTable argumentsTable">
+                            <f:facet name="header">
+                                Arguments
+                            </f:facet>
+                            <p:column id="argNameColumn">
+                                #{arg.arg.name} <i title="#{arg.arg.description}" class="fa fa-question-circle"/>
+                            </p:column>
+                            <p:column id="argValueColumn">
+                                <p:inputText value="#{arg.value}" style="width:100%" label="Value" rendered="#{not arg.arg.path}"/>
+                                <p:inputText value="#{arg.value}" style="width:100%" label="Path" rendered="#{arg.arg.path and arg.arg.outputPath}"/>
+                                <p:commandButton value="Select..."
+                                                 oncomplete="PF('chooseFileDlg').show()"
+                                                 actionListener="#{adamController.prepareFileSelector(false,'type argument name ' += arg.arg.name)}" 
+                                                 rendered="#{arg.arg.path and not arg.arg.outputPath and not adamController.isFileUploadedForArg(arg.arg.name)}">
+                                </p:commandButton>
+                                <h:panelGroup rendered="#{arg.arg.path and not arg.arg.outputPath and adamController.isFileUploadedForArg(arg.arg.name)}">
+                                    <p:outputLabel value="#{adamController.getFileNameForArg(arg.arg.name)}" />
+                                    <p:commandButton value="Change" styleClass="changeUpload"
+                                                     oncomplete="PF('chooseFileDlg').show()"
+                                                     actionListener="#{adamController.prepareFileSelector(false,'type argument name ' += arg.arg.name)}" >
+                                    </p:commandButton>
+                                </h:panelGroup> 
+                            </p:column>
+                        </p:dataTable>
+                        <!-- OPTIONS -->
+                        <p:dataTable id="optionsTable" var="opt" value="#{adamController.selectedCommandOpts}" rendered="#{adamController.selectedCommand != null}" styleClass="adamTable optionsTable">
+                            <f:facet name="header">
+                                Options
+                            </f:facet>
+                            <p:column id="optNameColumn">
+                                #{opt.opt.name} <i title="#{opt.opt.description}" class="fa fa-question-circle"/>
+                            </p:column>
+                            <p:column id="optValueColumn">
+                                <p:inputText value="#{opt.stringValue}" style="width:100%" label="Value" rendered="#{not opt.opt.valuePath and not opt.opt.flag}"/>
+                                <p:inputText value="#{opt.stringValue}" style="width:100%" label="Path" rendered="#{opt.opt.valuePath and opt.opt.outputPath}"/>
+                                <p:commandButton value="Select..."
+                                                 oncomplete="PF('chooseFileDlg').show()"
+                                                 actionListener="#{adamController.prepareFileSelector(false,'type option name ' += opt.opt.name)}" 
+                                                 rendered="#{opt.opt.valuePath and not opt.opt.outputPath and not adamController.isFileUploadedForOpt(opt.opt.name)}">
+                                </p:commandButton>
+                                <h:panelGroup rendered="#{opt.opt.valuePath and not opt.opt.outputPath and adamController.isFileUploadedForOpt(opt.opt.name)}">
+                                    <p:outputLabel value="#{adamController.getFileNameForOpt(opt.opt.name)}" />
+                                    <p:commandButton value="Change" styleClass="changeUpload"
+                                                     oncomplete="PF('chooseFileDlg').show()"
+                                                     actionListener="#{adamController.prepareFileSelector(false,'type option name ' += opt.opt.name)}" >
+                                    </p:commandButton>
+                                </h:panelGroup>
+                                <p:selectBooleanButton value="#{opt.booleanValue}" onLabel="True" offLabel="False" rendered="#{opt.opt.flag}"/>
+                            </p:column>
+                        </p:dataTable>
+
+                    </h:form>
+                    <h:form id="resultForm_ADAM" styleClass="resultsForm">
+                        <h3>
+                            Results
+                        </h3>
+                        <h:panelGrid columns="2">
+                            <h:outputLabel value="Current state:" for="curr_state" rendered="#{adamController.selectedJobRunning or adamController.selectedJobHasFinished}"/>
+                            <h:outputText id="curr_state" value="#{adamController.selectedJob.state}" styleClass="stateSpan"/>
+                        </h:panelGrid>
+                        <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{adamController.selectedJobRunning}"/>
+
+                        <div>
+                            <h:panelGroup id="outputFilesGroup" rendered="#{adamController.selectedJobHasFinished and adamController.selectedJob.jobOutputFileCollection.size()>0}" >
+                                <h:outputText value="Results:"/>
+                                <ui:repeat value="#{adamController.selectedJob.jobOutputFileCollection}" var="file">
+                                    <div>
+                                        <p:commandLink ajax="false" rendered="#{not adamController.isDir(file.path)}">
+                                            <strong>#{file.jobOutputFilePK.name}</strong>
+                                            <p:fileDownload value="#{adamController.downloadFile(file.path)}"/>
+                                        </p:commandLink>
+                                        <p:commandLink rendered="#{jobHistoryController.isDir(file.path)}" action="#{InodesMB.cdGlobal(file.path)}" oncomplete="PF('studyTabs').select(2)">
+                                            <strong>#{file.jobOutputFilePK.name}</strong>
+                                        </p:commandLink>
+                                    </div>
+                                </ui:repeat>
+                            </h:panelGroup>
+                        </div>
+
+                        <h:panelGroup rendered="#{adamController.selectedJobHasFinished}" >
+                            <div>
+                                <h:outputText value="Logs:"/>
+                            </div>
+                            <div>
+                                <p:commandLink ajax="false">
+                                    <strong>stdout.log</strong>
+                                    <p:fileDownload value="#{adamController.downloadStdout()}" rendered="#{adamController.selectedJob.stdoutPath != null}"/>
+                                </p:commandLink>
+                            </div>
+                            <div>
+                                <p:commandLink ajax="false">
+                                    <strong>stderr.log</strong>
+                                    <p:fileDownload value="#{adamController.downloadStderr()}" rendered="#{adamController.selectedJob.stderrPath != null}"/>
+                                </p:commandLink>
+                            </div>
+                        </h:panelGroup>
+                    </h:form>
+                </h:panelGrid>
+            </div>
+        </ui:composition>
+    </body>
+</html>

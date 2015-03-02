@@ -1,12 +1,12 @@
 package se.kth.bbc.jobs.yarn;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.protocolrecords.GetNewApplicationResponse;
@@ -29,13 +30,11 @@ import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.api.records.Resource;
-import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
-import se.kth.bbc.jobs.CancellableJob;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
 
@@ -43,7 +42,7 @@ import se.kth.bbc.lims.Utils;
  *
  * @author stig
  */
-public class YarnRunner implements Closeable, CancellableJob {
+public class YarnRunner{
 
   private static final Logger logger = Logger.getLogger(YarnRunner.class.
           getName());
@@ -51,8 +50,8 @@ public class YarnRunner implements Closeable, CancellableJob {
   private static final String APPID_REGEX = "\\$APPID";
   private static final String KEY_CLASSPATH = "CLASSPATH";
 
-  private final YarnClient yarnClient;
-  private final Configuration conf;
+  private YarnClient yarnClient;
+  private Configuration conf;
   private ApplicationId appId = null;
 
   private final String amJarLocalName;
@@ -63,7 +62,8 @@ public class YarnRunner implements Closeable, CancellableJob {
   private String appName;
   private final String amMainClass;
   private String amArgs;
-  private final Map<String, String> amLocalResources;
+  private final Map<String, String> amLocalResourcesToCopy;
+  private final Map<String, String> amLocalResourcesOnHDFS;
   private final Map<String, String> amEnvironment;
   private String localResourcesBasePath;
   private String stdOutPath;
@@ -71,6 +71,12 @@ public class YarnRunner implements Closeable, CancellableJob {
   private final boolean shouldCopyAmJarToLocalResources;
   private final List<String> filesToBeCopied;
   private final boolean logPathsAreHdfs;
+  private final List<YarnSetupCommand> commands;
+  private final List<String> javaOptions;
+  private final List<String> filesToRemove;
+
+  private boolean readyToSubmit = false;
+  private ApplicationSubmissionContext appContext;
 
   //---------------------------------------------------------------------------
   //-------------- CORE METHOD: START APPLICATION MASTER ----------------------
@@ -83,7 +89,7 @@ public class YarnRunner implements Closeable, CancellableJob {
    * @throws IOException Can occur upon opening and moving execution and input
    * files.
    */
-  public ApplicationId startAppMaster() throws YarnException, IOException {
+  public YarnMonitor startAppMaster() throws YarnException, IOException {
     logger.info("Starting application master.");
 
     //Get application id
@@ -98,8 +104,7 @@ public class YarnRunner implements Closeable, CancellableJob {
     checkAmResourceRequest(appResponse);
 
     //Set application name and type
-    ApplicationSubmissionContext appContext = app.
-            getApplicationSubmissionContext();
+    appContext = app.getApplicationSubmissionContext();
     appContext.setApplicationName(appName);
     appContext.setApplicationType("Hops Yarn");
 
@@ -115,17 +120,25 @@ public class YarnRunner implements Closeable, CancellableJob {
     setUpClassPath(env);
 
     //Set up commands
-    List<String> commands = setUpCommands();
+    List<String> amCommands = setUpCommands();
 
     //TODO: set up security tokens
     //Set up container launch context
     ContainerLaunchContext amContainer = ContainerLaunchContext.newInstance(
-            localResources, env, commands, null, null, null);
+            localResources, env, amCommands, null, null, null);
 
     //Finally set up context
     appContext.setAMContainerSpec(amContainer); //container spec
     appContext.setResource(Resource.newInstance(amMemory, amVCores)); //resources
     appContext.setQueue(amQueue); //Queue
+
+    // Signify that ready to submit
+    readyToSubmit = true;
+
+    //Run any remaining commands
+    for (YarnSetupCommand c : commands) {
+      c.execute(this);
+    }
 
     //And submit
     logger.
@@ -133,7 +146,40 @@ public class YarnRunner implements Closeable, CancellableJob {
                     "Submitting application {0} to applications manager.", appId);
     yarnClient.submitApplication(appContext);
 
-    return appId;
+    yarnClient.close();
+    
+    // Create a new client for monitoring
+    YarnClient newClient = YarnClient.createYarnClient();
+    newClient.init(conf);
+    YarnMonitor monitor = new YarnMonitor(appId,newClient);
+    
+    //Clean up some
+    removeAllNecessary();
+    yarnClient = null;
+    conf = null;
+    appId = null;
+    appContext = null;
+    
+    return monitor;
+  }
+
+  //---------------------------------------------------------------------------
+  //--------------------------- CALLBACK METHODS ------------------------------
+  //---------------------------------------------------------------------------
+  /**
+   * Get the ApplicationSubmissoinContext used to submit the app. This method
+   * should only be called from registered Commands. Invoking it before the
+   * ApplicationSubmissionContext is properly set up will result in an
+   * IllegalStateException.
+   * <p>
+   * @return
+   */
+  public ApplicationSubmissionContext getAppContext() {
+    if (!readyToSubmit) {
+      throw new IllegalStateException(
+              "ApplicationSubmissionContext cannot be requested before it is set up.");
+    }
+    return appContext;
   }
 
   //---------------------------------------------------------------------------
@@ -145,7 +191,7 @@ public class YarnRunner implements Closeable, CancellableJob {
     amArgs = amArgs.replaceAll(APPID_REGEX, id);
     stdOutPath = stdOutPath.replaceAll(APPID_REGEX, id);
     stdErrPath = stdErrPath.replaceAll(APPID_REGEX, id);
-    for (Entry<String, String> entry : amLocalResources.entrySet()) {
+    for (Entry<String, String> entry : amLocalResourcesToCopy.entrySet()) {
       entry.setValue(entry.getValue().replaceAll(APPID_REGEX, id));
     }
     //TODO: thread-safety?
@@ -179,13 +225,20 @@ public class YarnRunner implements Closeable, CancellableJob {
     if (shouldCopyAmJarToLocalResources && amJarLocalName != null
             && !amJarLocalName.isEmpty() && amJarPath != null
             && !amJarPath.isEmpty()) {
-      amLocalResources.put(amJarLocalName, amJarPath);
+      if (amJarPath.startsWith("hdfs")) {
+        amLocalResourcesOnHDFS.put(amJarLocalName, amJarPath);
+      } else {
+        amLocalResourcesToCopy.put(amJarLocalName, amJarPath);
+      }
     }
+    //Get filesystem
     FileSystem fs = FileSystem.get(conf);
+    //Construct basepath
     String hdfsPrefix = conf.get("fs.defaultFS");
     String basePath = hdfsPrefix + localResourcesBasePath;
-    logger.log(Level.INFO, "Base path: {0}", basePath);
-    for (Entry<String, String> entry : amLocalResources.entrySet()) {
+    logger.log(Level.FINER, "Base path: {0}", basePath);
+    //For all local resources with local path: copy and add local resource
+    for (Entry<String, String> entry : amLocalResourcesToCopy.entrySet()) {
       String key = entry.getKey();
       String source = entry.getValue();
       String filename = Utils.getFileName(source);
@@ -202,6 +255,18 @@ public class YarnRunner implements Closeable, CancellableJob {
               scFileStat.getModificationTime());
       localResources.put(key, scRsrc);
     }
+    //For all local resources with hdfs path: add local resource
+    for (Entry<String, String> entry : amLocalResourcesOnHDFS.entrySet()) {
+      String key = entry.getKey();
+      Path src = new Path(entry.getValue());
+      FileStatus scFileStat = fs.getFileStatus(src);
+      LocalResource scRsrc = LocalResource.newInstance(ConverterUtils.
+              getYarnUrlFromPath(src),
+              LocalResourceType.FILE, LocalResourceVisibility.PUBLIC,
+              scFileStat.getLen(),
+              scFileStat.getModificationTime());
+      localResources.put(key, scRsrc);
+    }
     return localResources;
   }
 
@@ -212,7 +277,30 @@ public class YarnRunner implements Closeable, CancellableJob {
     for (String path : filesToBeCopied) {
       String destination = basePath + File.separator + Utils.getFileName(path);
       Path dst = new Path(destination);
-      fs.copyFromLocalFile(new Path(path), dst);
+      //copy the input file to where cuneiform expects it
+      if (!path.startsWith("hdfs:")) {
+        //First, remove any checksum files that are present
+        //Since the file may have been downloaded from HDFS, modified and now trying to upload,
+        //may run into bug HADOOP-7199 (https://issues.apache.org/jira/browse/HADOOP-7199)
+        String dirPart = Utils.getDirectoryPart(path);
+        String filename = Utils.getFileName(path);
+        String crcName = dirPart + "." + filename + ".crc";
+        Files.deleteIfExists(Paths.get(crcName));
+        fs.copyFromLocalFile(new Path(path), dst);
+      } else {
+        Path srcPath = new Path(path);
+        Path[] srcs = FileUtil.stat2Paths(fs.globStatus(srcPath), srcPath);
+        if (srcs.length > 1 && !fs.isDirectory(dst)) {
+          throw new IOException("When copying multiple files, "
+                  + "destination should be a directory.");
+        }
+        for (Path src1 : srcs) {
+          FileUtil.copy(fs, src1, fs, dst, false, conf);
+        }
+      }
+      logger.log(Level.INFO, "Copying from: {0} to: {1}",
+              new Object[]{path,
+                dst});
     }
   }
 
@@ -250,6 +338,10 @@ public class YarnRunner implements Closeable, CancellableJob {
     vargs.add(ApplicationConstants.Environment.JAVA_HOME.$() + "/bin/java");
     // Set Xmx based on am memory size
     vargs.add("-Xmx" + amMemory + "M");
+    //Add jvm options
+    for (String s : javaOptions) {
+      vargs.add(s);
+    }
     // Set class name
     vargs.add(amMainClass);
     // Set params for Application Master
@@ -260,7 +352,7 @@ public class YarnRunner implements Closeable, CancellableJob {
 
     vargs.add("2> ");
     vargs.add(stdErrPath);
-    
+
     // Get final commmand
     StringBuilder amcommand = new StringBuilder();
     for (CharSequence str : vargs) {
@@ -268,36 +360,18 @@ public class YarnRunner implements Closeable, CancellableJob {
     }
     logger.log(Level.INFO, "Completed setting up app master command: {0}",
             amcommand.toString());
-    List<String> commands = new ArrayList<>();
-    commands.add(amcommand.toString());
-    return commands;
+    List<String> amCommands = new ArrayList<>();
+    amCommands.add(amcommand.toString());
+    return amCommands;
   }
-
-  //---------------------------------------------------------------------------        
-  //--------------------------- STATUS QUERIES --------------------------------
-  //---------------------------------------------------------------------------
-  public YarnApplicationState getApplicationState() throws YarnException,
-          IOException {
-    return yarnClient.getApplicationReport(appId).getYarnApplicationState();
-  }
-
-  //---------------------------------------------------------------------------        
-  //------------------------- YARNCLIENT UTILS --------------------------------
-  //---------------------------------------------------------------------------
-  @Override
-  public void close() throws IOException {
-    if (yarnClient != null) {
-      yarnClient.close();
-    }
-  }
-
-  @Override
-  public void cancelJob() throws YarnException, IOException {
-    if (yarnClient != null) {
-      yarnClient.close();
-    } else {
-      try (YarnClient tmpclient = YarnClient.createYarnClient()) {
-        tmpclient.killApplication(appId);
+  
+  private void removeAllNecessary() throws IOException{    
+    FileSystem fs = FileSystem.get(conf);
+    for(String s:filesToRemove){
+      if(s.startsWith("hdfs:")){
+        fs.delete(new Path(s), true);
+      }else{
+        Files.deleteIfExists(Paths.get(s));
       }
     }
   }
@@ -314,7 +388,8 @@ public class YarnRunner implements Closeable, CancellableJob {
     this.appName = builder.appName;
     this.amMainClass = builder.amMainClass;
     this.amArgs = builder.amArgs;
-    this.amLocalResources = builder.amLocalResources;
+    this.amLocalResourcesToCopy = builder.amLocalResourcesToCopy;
+    this.amLocalResourcesOnHDFS = builder.amLocalResourcesOnHDFS;
     this.amEnvironment = builder.amEnvironment;
     this.localResourcesBasePath = builder.localResourcesBasePath;
     this.yarnClient = builder.yarnClient;
@@ -325,14 +400,14 @@ public class YarnRunner implements Closeable, CancellableJob {
     this.logPathsAreHdfs = builder.logPathsAreRelativeToResources;
     this.stdOutPath = builder.stdOutPath;
     this.stdErrPath = builder.stdErrPath;
+    this.commands = builder.commands;
+    this.javaOptions = builder.javaOptions;
+    this.filesToRemove = builder.filesToRemove;
   }
 
   //---------------------------------------------------------------------------
   //-------------------------- GETTERS ----------------------------------------
   //---------------------------------------------------------------------------
-  public ApplicationId getAppId() {
-    return appId;
-  }
 
   public String getAmArgs() {
     return amArgs;
@@ -366,7 +441,7 @@ public class YarnRunner implements Closeable, CancellableJob {
   //-------------------------- BUILDER ----------------------------------------
   //---------------------------------------------------------------------------
 
-  public static class Builder {
+  public static final class Builder {
 
     //Possibly equired attributes
     //The name of the application app master class
@@ -388,9 +463,11 @@ public class YarnRunner implements Closeable, CancellableJob {
     //Arguments to pass on in invocation of Application master
     private String amArgs;
     //List of paths to resources that should be copied to application master
-    private Map<String, String> amLocalResources = null;
+    private Map<String, String> amLocalResourcesToCopy = new HashMap<>();
+    //List of paths to resources that are already in HDFS, but AM should know about
+    private Map<String, String> amLocalResourcesOnHDFS = new HashMap<>();
     //Application master environment
-    private Map<String, String> amEnvironment = null;
+    private Map<String, String> amEnvironment = new HashMap<>();
     //Path where the application master expects its local resources to be (added to fs.getHomeDirectory)
     private String localResourcesBasePath;
     //Path to file where stdout should be written, default in tmp folder
@@ -403,6 +480,12 @@ public class YarnRunner implements Closeable, CancellableJob {
     private boolean shouldAddAmJarToLocalResources = true;
     //List of files to be copied to localResourcesBasePath
     private List<String> filesToBeCopied = new ArrayList<>();
+    //List of commands to execute before submission
+    private List<YarnSetupCommand> commands = new ArrayList<>();
+    //List of options to add to the JVM invocation
+    private List<String> javaOptions = new ArrayList<>();
+    //List of files to be removed after starting AM.
+    private List<String> filesToRemove = new ArrayList<>();
 
     //Hadoop Configuration
     private Configuration conf;
@@ -462,8 +545,32 @@ public class YarnRunner implements Closeable, CancellableJob {
       return this;
     }
 
+    /**
+     * Set a file to be copied over to HDFS. It will be copied to
+     * localresourcesBasePath/filename and the original will be removed.
+     * Equivalent to addFileToBeCopied(path,true).
+     * <p>
+     * @param path
+     * @return
+     */
     public Builder addFilePathToBeCopied(String path) {
+      return addFilePathToBeCopied(path, true);
+    }
+
+    /**
+     * Set a file to be copied over to HDFS. It will be copied to
+     * localresourcesBasePath/filename. If removeAfterCopy is true, the file
+     * will also be removed after copying.
+     * <p>
+     * @param path
+     * @param removeAfterCopy
+     * @return
+     */
+    public Builder addFilePathToBeCopied(String path, boolean removeAfterCopy) {
       filesToBeCopied.add(path);
+      if (removeAfterCopy) {
+        filesToRemove.add(path);
+      }
       return this;
     }
 
@@ -521,8 +628,9 @@ public class YarnRunner implements Closeable, CancellableJob {
      * Add a local resource that should be added to the AM container. The
      * name is the key as used in the LocalResources map passed to the
      * container. The source is the local path to the file. The file will be
-     * copied
-     * into HDFS under the path <i>localResourcesBasePath</i>/<i>filename</i>.
+     * copied into HDFS under the path
+     * <i>localResourcesBasePath</i>/<i>filename</i> and the source file will be
+     * removed.
      *
      * @param name The name of the local resource, key in the local resource
      * map.
@@ -530,26 +638,68 @@ public class YarnRunner implements Closeable, CancellableJob {
      * @return
      */
     public Builder addLocalResource(String name, String source) {
-      if (amLocalResources == null) {
-        amLocalResources = new HashMap<>();
+      return addLocalResource(name, source, true);
+    }
+
+    /**
+     * Add a local resource that should be added to the AM container. The
+     * name is the key as used in the LocalResources map passed to the
+     * container. The source is the local path to the file. The file will be
+     * copied into HDFS under the path
+     * <i>localResourcesBasePath</i>/<i>filename</i> and if removeAfterCopy is
+     * true, the original will be removed after starting the AM.
+     * <p>
+     * @param name
+     * @param source
+     * @param removeAfterCopy
+     * @return
+     */
+    public Builder addLocalResource(String name, String source,
+            boolean removeAfterCopy) {
+      if (source.startsWith("hdfs")) {
+        amLocalResourcesOnHDFS.put(name, source);
+      } else {
+        amLocalResourcesToCopy.put(name, source);
       }
-      amLocalResources.put(name, source);
+      if (removeAfterCopy) {
+        filesToRemove.add(source);
+      }
       return this;
     }
 
     public Builder addToAppMasterEnvironment(String key, String value) {
-      if (amEnvironment == null) {
-        this.amEnvironment = new HashMap<>();
-      }
       amEnvironment.put(key, value);
       return this;
     }
 
     public Builder addAllToAppMasterEnvironment(Map<String, String> env) {
-      if (amEnvironment == null) {
-        this.amEnvironment = new HashMap<>();
-      }
       amEnvironment.putAll(env);
+      return this;
+    }
+
+    /**
+     * Add a Command that should be executed before submission of the
+     * application to the ResourceManager. The commands will be executed in
+     * order of addition.
+     * <p>
+     * @param c
+     * @return
+     */
+    public Builder addCommand(YarnSetupCommand c) {
+      commands.add(c);
+      return this;
+    }
+
+    /**
+     * Add a java option that will be added in the invocation of the java
+     * command. Should be provided in a form that is accepted by the java
+     * command, i.e. including a dash in the beginning etc.
+     * <p>
+     * @param option
+     * @return
+     */
+    public Builder addJavaOption(String option) {
+      javaOptions.add(option);
       return this;
     }
 
@@ -601,15 +751,6 @@ public class YarnRunner implements Closeable, CancellableJob {
           throw new IOException("Failed to create tmp log file.", e);
         }
       }
-
-      if (amLocalResources == null) {
-        amLocalResources = new HashMap<>();
-      }
-
-      if (amEnvironment == null) {
-        amEnvironment = new HashMap<>();
-      }
-
       return new YarnRunner(this);
     }
 
@@ -727,4 +868,15 @@ public class YarnRunner implements Closeable, CancellableJob {
 
   }
 
+  //---------------------------------------------------------------------------        
+  //---------------------------- TOSTRING -------------------------------------
+  //---------------------------------------------------------------------------
+  @Override
+  public String toString() {
+    if (!readyToSubmit) {
+      return "YarnRunner: application context not requested yet.";
+    } else {
+      return "YarnRunner, ApplicationSubmissionContext: " + appContext;
+    }
+  }
 }

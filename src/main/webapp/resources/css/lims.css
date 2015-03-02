@@ -815,14 +815,6 @@ h6{
   float: left;    
 }
 
-.browser_row{    
-  background: none repeat scroll 0% 0% #FAFAFA;
-}
-
-.browser_row:hover{
-  background:#d9edf7;border-bottom:1px solid #adf;
-}
-
 label{
 
   float: left;
@@ -2411,4 +2403,154 @@ ui-wizard {
 
 .historyForm .loadArrow {
   float: right;
+}
+
+.content .ui-widget-header {
+  background: none;
+}
+
+.ui-tabs.ui-tabs-top > .ui-tabs-nav li {
+  margin-bottom: 0px;
+  border: none;
+}
+
+.ui-tabs .ui-state-active {
+  border-left: 1px solid #A8A8A8 !important;
+  border-right: 1px solid #A8A8A8 !important;
+  border-top: 1px solid #A8A8A8 !important;  
+}
+
+.ui-tabs-nav .ui-state-default {
+  border: none;
+  background: none;
+}
+
+.ui-tabs-nav .ui-state-hover {
+  background: #F5F5F5;
+  box-shadow: none;
+}
+
+.container .ui-button {
+  background-color: #F0F0F0;
+background-image: linear-gradient(to bottom, #FFF, #E9E9E9);
+border: 1px solid rgba(0, 0, 0, 0.2);
+box-shadow: none;
+}
+
+.container .content .jobPanel .labelColumn {
+  width: auto!important;
+}
+
+.historyItem td {
+  border-bottom: 0.1px solid #EEE;
+}
+
+.historyItem .no-border td {
+  border-bottom: none;
+}
+
+.historyItem table {
+  border-collapse: collapse;
+}
+
+.historyItem .labelColumn {
+  padding-right: 20px;
+}
+
+/* Make sure The upload buttons do not have an obsolete field hanging under them. */
+.content .ui-tabs-panels .ui-fileupload-content {
+  height: 0px !important;
+}
+
+.dialogForm .ui-fileupload-content {
+  height: 0px;
+  padding: 0px;
+  border: 0px none;
+  float: right;
+}
+
+.dialogForm .ui-button {
+  background-color: #F0F0F0;
+  background-image: linear-gradient(to bottom, #FFF, #E9E9E9);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: none;
+}
+
+.adamForm .adamTable table {  
+  border-collapse: collapse;
+}
+
+.adamForm .adamTable .ui-datatable-header {
+  text-align: left;
+  color: #4f4f4f;
+  font-size: 13px;
+  border: 0px;
+  margin-top: 10px;
+}
+
+.adamForm .optionsTable .ui-datatable-header {
+  margin-top: 20px;
+}
+
+.adamForm .adamTable .ui-datatable-tablewrapper {
+  border: none;
+}
+
+.adamForm .adamTable th {
+  height: 0px;
+  padding: 0px;
+  border: 0px;
+}
+
+.adamForm .adamTable .ui-datatable-odd {
+  background: none;
+}
+
+.adamForm .adamTable td {
+  border-bottom: 0.1px solid #EEE;
+}
+
+.ui-datatable .ui-inputtext {
+  width: 100%;
+}
+
+.adamForm .adamTable .jobNameTable {
+  margin-top: 20px;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size: 12px;
+}
+
+.changeUpload{
+  float: right;
+}
+
+.dialogButtonGroup {
+  display: block;
+  margin-top: 8px;
+}
+
+.dialogButtonGroup .ui-button {
+  margin-left: 10px;
+  float: right;
+  min-width: 50px;
+}
+
+.dialogForm {
+  margin-bottom: 5px;
+}
+
+.studyDialog .ui-datatable-scrollable-header {
+  height: 0px;
+}
+
+.studyDialog .ui-datatable {
+  width: 300px;
+}
+
+.studyDialog .ui-datatable tr{  
+  background: none repeat scroll 0% 0% #FAFAFA;
+}
+
+.studyDialog table td {
+  vertical-align: middle;
 }

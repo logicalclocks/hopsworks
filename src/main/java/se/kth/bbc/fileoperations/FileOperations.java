@@ -2,7 +2,6 @@ package se.kth.bbc.fileoperations;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -12,9 +11,9 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import org.apache.hadoop.fs.Path;
 import se.kth.bbc.lims.StagingManager;
+import se.kth.bbc.lims.Utils;
 import se.kth.bbc.study.fb.Inode;
 import se.kth.bbc.study.fb.InodeFacade;
-import se.kth.bbc.upload.UploadServlet;
 
 /**
  * Session bean for file operations. Translates high-level operations into
@@ -59,6 +58,12 @@ public class FileOperations {
     return fsOps.getInputStream(location);
   }
 
+  /**
+   * Create the folders on the given path. Equivalent to mkdir -p.
+   * @param path
+   * @return
+   * @throws IOException 
+   */
   public boolean mkDir(String path) throws IOException {
     Path location = new Path(path);
     boolean success = fsOps.mkdir(location);
@@ -85,7 +90,7 @@ public class FileOperations {
     //Get the local file
     File localfile = getLocalFile(localFilename);
 
-    String dirs = getDirPart(destination);
+    String dirs = Utils.getDirectoryPart(destination);
     mkDir(dirs);
 
     //Update the status of the Inode
@@ -101,8 +106,8 @@ public class FileOperations {
     //Actually copy to HDFS
     boolean success = false;
     Path destp = new Path(destination);
-    try {
-      fsOps.copyToHDFS(destp, new FileInputStream(localfile));
+    try(FileInputStream fis = new FileInputStream(localfile)) {
+      fsOps.copyToHDFS(destp, fis);
       success = true;
     } catch (IOException | URISyntaxException ex) {
       logger.log(Level.SEVERE, "Error while copying to HDFS", ex);
@@ -122,7 +127,7 @@ public class FileOperations {
     //Get the local file
     File localfile = new File(path);
 
-    String dirs = getDirPart(destination);
+    String dirs = Utils.getDirectoryPart(destination);
     mkDir(dirs);
 
     //Update the status of the Inode
@@ -138,8 +143,8 @@ public class FileOperations {
     //Actually copy to HDFS
     boolean success = false;
     Path destp = new Path(destination);
-    try {
-      fsOps.copyToHDFS(destp, new FileInputStream(localfile));
+    try(FileInputStream fis = new FileInputStream(localfile)) {
+      fsOps.copyToHDFS(destp, fis);
       success = true;
     } catch (IOException | URISyntaxException ex) {
       logger.log(Level.SEVERE, "Error while copying to HDFS", ex);
@@ -268,32 +273,89 @@ public class FileOperations {
     copyToHDFS(localFilename, destination, node);
   }
 
-  private static String getDirPart(String path) {
-    int lastSlash = path.lastIndexOf("/");
-    return path.substring(0, lastSlash);
-  }
-  
-  public String cat(String path) throws IOException{
+  public String cat(String path) throws IOException {
     Path p = new Path(path);
     return fsOps.cat(p);
   }
 
   /**
-   * Copy a file from local filesystem to HDFS. Do not create an Inode for the file.
+   * Copy a file from local filesystem to HDFS. Do not create an Inode for the
+   * file.
    * (Used internally for prepping running jobs.)
+   * <p>
    * @param localPath
-   * @param hdfsPath 
+   * @param hdfsPath
    */
-  public void copyFromLocalNoInode(String localPath, String hdfsPath) throws IOException{
+  public void copyFromLocalNoInode(String localPath, String hdfsPath) throws
+          IOException {
     Path source = new Path(localPath);
     Path destination = new Path(hdfsPath);
     fsOps.copyFromLocal(source, destination);
   }
-  
-  public void renameInHdfs(String source, String destination) throws IOException{
+
+  public void renameInHdfs(String source, String destination) throws IOException {
     Path src = new Path(source);
     Path dst = new Path(destination);
     fsOps.moveWithinHdsf(src, dst);
   }
+
+  /**
+   * Checks if the path exists in HDFS and creates Inodes along it if they are
+   * not yet present in the DB.
+   * <p>
+   * @param path
+   * @return True if the path exists (and Inodes were created), false otherwise.
+   */
+  public boolean createInodesIfNeeded(String path) throws IOException {
+    Path p = new Path(path);
+    return createInodesIfNeeded(p);
+  }
+
+  private boolean createInodesIfNeeded(Path p) throws IOException {
+    if (fsOps.exists(p)) {
+      if (fsOps.isDir(p)) {
+        if (inodes.getInodeAtPath(p.toUri().getPath()) == null) {
+          inodes.createAndPersistDir(p.toUri().getPath(), Inode.AVAILABLE);
+        }
+        for (Path c : fsOps.getChildren(p)) {
+          createInodesIfNeeded(c);
+        }
+      } else if (inodes.getInodeAtPath(p.toUri().getPath()) == null) {
+        inodes.createAndPersistFile(p.toUri().getPath(), 0, Inode.AVAILABLE);
+      }
+      return true;
+    }
+    return false;
+  }
   
+  public boolean isDir(String path){
+    Inode i = inodes.getInodeAtPath(path);
+    if(i!=null)
+      return i.isDir();
+    else
+      return false;
+  }
+  
+  public void copyWithinHdfs(String src, String dst) throws IOException{
+    //Convert into Paths
+    Path srcPath = new Path(src);
+    Path dstPath = new Path(dst);
+    //Make the necessary output directories
+    String dirPart = Utils.getDirectoryPart(dst);
+    mkDir(dirPart);
+    //Actually copy
+    fsOps.copyInHdfs(srcPath, dstPath);
+    createInodesIfNeeded(dst);
+  }
+  
+  public void copyToLocal(String hdfsPath, String localPath) throws IOException{
+    if(!hdfsPath.startsWith("hdfs:")){
+      hdfsPath = "hdfs://" + hdfsPath;
+    }
+    if(!localPath.startsWith("file:")){
+      localPath = "file://" + localPath;
+    }
+    fsOps.copyToLocal(new Path(hdfsPath), new Path(localPath));
+  }
+
 }

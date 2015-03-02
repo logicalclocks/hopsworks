@@ -15,6 +15,7 @@ public class ResumableInfo {
     public String   resumableIdentifier;
     public String   resumableFilename;
     public String   resumableRelativePath;
+    private long uploadedContentLength = 0;
 
     public static class ResumableChunkNumber {
         public ResumableChunkNumber(int number) {
@@ -51,17 +52,8 @@ public class ResumableInfo {
         }
     }
     private boolean checkIfUploadFinished() {
-        //check if upload finished
-        int count = (int) Math.ceil(((double) resumableTotalSize) / ((double) resumableChunkSize));
-        //If less chunks than necessary have been uploaded, not finished
-        if(uploadedChunks.size() < count){
-            return false;
-        }
-        //In case the right amount has been uploaded: sanity check
-        for(int i = 1; i < count; i ++) {
-            if (!uploadedChunks.contains(new ResumableChunkNumber(i))) {
-                return false;
-            }
+        if(uploadedContentLength != resumableTotalSize){
+          return false;
         }
 
         //Upload finished, change filename.
@@ -77,8 +69,11 @@ public class ResumableInfo {
      * atomic checking.
      * @return true if finished.
      */
-    public synchronized boolean addChuckAndCheckIfFinished(ResumableChunkNumber rcn){
-        uploadedChunks.add(rcn);
+    public synchronized boolean addChuckAndCheckIfFinished(ResumableChunkNumber rcn, long contentLength){
+        if(!uploadedChunks.contains(rcn)){
+          uploadedContentLength += contentLength;
+        }
+      uploadedChunks.add(rcn);
         return checkIfUploadFinished();
     }
     

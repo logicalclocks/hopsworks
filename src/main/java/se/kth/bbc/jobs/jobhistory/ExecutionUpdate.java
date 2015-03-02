@@ -8,14 +8,11 @@ import org.primefaces.push.annotation.PushEndpoint;
  *
  * @author stig
  */
-@PushEndpoint("/{study}/{type}")
+@PushEndpoint("/{study}")
 public class ExecutionUpdate {
   
   @PathParam("study")
   private String study;
-  
-  @PathParam("type")
-  private String type;
   
   @OnMessage
   public String onMessage(String jobid){

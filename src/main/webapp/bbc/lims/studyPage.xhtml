@@ -49,11 +49,6 @@
                                     </ui:insert>
                                 </p:tab>
                                 <!-- TODO: figure out how to do this with a loop?-->
-                                <p:tab id="flink" title="Flink" rendered="#{studyManagedBean.shouldDrawTab('FLINK') and studyManagedBean.renderComponentList() != null}">
-                                    <ui:insert name="flinkTab">
-                                        <ui:include src="/bbc/lims/studyTabs/flinkTab.xhtml"/>
-                                    </ui:insert>
-                                </p:tab>
                                 <p:tab id="cuneiform" title="Cuneiform" rendered="#{studyManagedBean.shouldDrawTab('CUNEIFORM') and studyManagedBean.renderComponentList() != null}">
                                     <ui:insert name="workflowsTab">
                                         <ui:include src="/bbc/lims/studyTabs/cuneiformTab.xhtml"/>
@@ -74,6 +69,7 @@
                                         <ui:include src="/bbc/lims/studyTabs/samplesTab.xhtml"/>
                                     </ui:insert>
                                 </p:tab>
+<<<<<<< HEAD
 
                                 <p:tab  title="Privacy" rendered="#{studyManagedBean.renderComponentList() != null}">
                                     <ui:insert name="privacyTab">
@@ -82,11 +78,28 @@
                                 </p:tab>
 
 
+=======
+                                <p:tab id="spark" title="Spark" rendered="#{studyManagedBean.shouldDrawTab('SPARK') and studyManagedBean.renderComponentList() != null}">
+                                    <ui:insert name="spark">
+                                        <ui:include src="/bbc/lims/studyTabs/sparkTab.xhtml"/>
+                                    </ui:insert>
+                                </p:tab>
+                                <p:tab id="adam" title="ADAM" rendered="#{studyManagedBean.shouldDrawTab('ADAM') and studyManagedBean.renderComponentList() != null}">
+                                    <ui:insert name="adam">
+                                        <ui:include src="/bbc/lims/studyTabs/adamTab.xhtml"/>
+                                    </ui:insert>
+                                </p:tab>
+>>>>>>> 0bc17f37fcc01f19e084ef1891482826564eec20
                             </p:tabView>
                         </div>
                     </div>
                 </p:layoutUnit>
             </p:layout>
+
+            <!-- Subscribe to the study push channel and add ajax event handlers for those necessary -->
+            <p:socket channel="#{studyManagedBean.pushChannel}">
+                <p:ajax event="message" update="@(.historyForm) @(.resultsForm)"/>
+            </p:socket>
 
 
             <!-- In case Study has not been set: user navigated to the page manually. -->
@@ -101,41 +114,49 @@
             </p:layout>
 
 
-            <h:form>
-                <p:dialog widgetVar="removeStudyDlg"  closable="true" draggable="false" resizable="false" header="Remove study?" modal="true" style="width: auto;">
-                    <p:outputLabel value="Do you want to remove this study and its data?" style="width: auto;"/>
+            <!-- TODO: fix location of dialogs with appendTo attribute -->
+            <!-- Remove study dialog -->
+            <p:dialog widgetVar="removeStudyDlg" styleClass="studyDialog" closable="true" draggable="false" resizable="false" header="Remove study?" modal="true" style="width: auto;">
+                <h:form class="dialogForm">
+                    <h:outputText value="Do you want to remove this study and its data?" style="width: auto;"/>
                     <p:selectOneRadio id="console" value="#{studyManagedBean.deleteFilesOnRemove}"  layout="grid" columns="1" style="width: auto;" >
                         <f:selectItem itemLabel="Remove study and its data." itemValue="true"/>
                         <f:selectItem itemLabel="Remove study, but keep data." itemValue="false" />
                     </p:selectOneRadio>
-                    <f:facet name="footer">
+                    <h:panelGroup styleClass="dialogButtonGroup">
                         <p:commandButton value="Remove" action="#{studyManagedBean.removeByName()}" onstart="PF('removeStudyDlg').hide()" type="submit"/>
                         <p:commandButton value="Cancel" oncomplete="PF('removeStudyDlg').hide()"/>
-                    </f:facet>     
-                </p:dialog>
-            </h:form>
-            <p:dialog id="uploadDialog" header="Upload file" widgetVar="uploadDlg" draggable="false" resizable="false" modal="true">
-                <h:form id="uploadForm">
-                    <p:fileUpload required="true" multiple="false" label="Select" mode="advanced" allowTypes="/(\.|\/)(cf)$/" fileUploadListener="#{cuneiformController.handleFileUpload}" oncomplete="PF('uploadDlg').hide()"/>
-                    <div class="publicCheckbox">
-                        <p:selectBooleanCheckbox id="publicCheckbox" value="#{ecuneiformControllerpublicFile}">
-                            <p:ajax listener="#{excuneiformControllerheckboxChanged}"/>
-                        </p:selectBooleanCheckbox>
-                        <h:outputLabel value="Make file public"/>
-                    </div>
+                    </h:panelGroup>  
                 </h:form>
             </p:dialog>
-            <!-- TODO: fix location of dialogs with appendTo attribute -->
-            <p:dialog id="createFolderDialog" widgetVar="createFolderDlg" closable="true" draggable="false" modal="true" resizable="false" header="Create folder">
-                <h:form>
-                    <p:outputLabel for="folderName" value="New folder name"/>
-                    <p:inputText id="folderName" value="#{fileOperationsMB.newFolderName}"/>
-                    <p:commandButton value="Create" action="#{fileOperationsMB.mkDir(InodesMB.cwdPath)}" oncomplete="PF('createFolderDlg').hide()" update=":#{p:component('browserForm')}"/>
-                    <p:commandButton value="Cancel" type="button" onclick="PF('createFolderDlg').hide()"/>
+            <!-- Remove team member dialog -->
+            <p:dialog id="removeTeamMemberDialog" styleClass="studyDialog" header="Remove team member" widgetVar="remTeamMemDlg" draggable="false" resizable="false" modal="true" closable="false">
+                <h:form id="remTeamMemForm" class="dialogForm">
+                    <h:outputText value="Are you sure you want to remove #{studyTeamController.toRemoveName} [#{studyTeamController.toRemoveEmail}] from this study?"/>
+                    <h:panelGroup styleClass="dialogButtonGroup">
+                        <p:commandButton value="Yes" action="#{studyTeamController.deleteMemberFromTeam()}" 
+                                         update=":#{p:component('teamForm')}" oncomplete="PF('remTeamMemDlg').hide()"/>
+                        <p:commandButton value="No" action="#{studyTeamController.clearToRemove()}"
+                                         oncomplete="PF('remTeamMemDlg').hide()"/>
+                    </h:panelGroup>
                 </h:form>
             </p:dialog>
-            <p:dialog id="addSampleDialog" widgetVar="addSampleDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
-                <h:form>
+            <!-- Create folder dialog -->
+            <p:dialog id="createFolderDialog" styleClass="studyDialog" widgetVar="createFolderDlg" closable="true" draggable="false" modal="true" resizable="false" header="Create folder">
+                <h:form styleClass="dialogForm" class="dialogForm">
+                    <h:panelGrid columns="2">
+                        <p:outputLabel for="folderName" value="New folder name"/>
+                        <p:inputText id="folderName" value="#{fileOperationsMB.newFolderName}"/>
+                    </h:panelGrid>
+                    <h:panelGroup styleClass="dialogButtonGroup">
+                        <p:commandButton value="Create" action="#{fileOperationsMB.mkDir(InodesMB.cwdPath)}" oncomplete="PF('createFolderDlg').hide()" update=":#{p:component('browserForm')}"/>
+                        <p:commandButton value="Cancel" type="button" onclick="PF('createFolderDlg').hide()"/>
+                    </h:panelGroup>
+                </h:form>
+            </p:dialog>
+            <!-- Add sample dialog -->
+            <p:dialog id="addSampleDialog" styleClass="studyDialog" widgetVar="addSampleDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+                <h:form class="dialogForm">
                     <p:outputLabel for="sampleName" value="Sample ID"/>
                     <p:inputText id="sampleName" required="true" value="#{samplesController.newSample.id}" placeholder="id"> 
                         <f:validator binding="#{uniqueSampleValidator}"/> 
@@ -148,65 +169,80 @@
                         <f:facet name="sourceCaption">Available</f:facet>
                         <f:facet name="targetCaption">Selected</f:facet>
                     </p:pickList>
-
-                    <p:commandButton value="Create" action="#{samplesController.createNewSample()}" oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addSampleDlg').hide()" update="@form :#{p:component('samplesForm')}"/>
-                    <p:commandButton type="button" value="Cancel" onclick="PF('addSampleDlg').hide()"/>
+                    <h:panelGroup styleClass="dialogButtonGroup">
+                        <p:commandButton value="Create" action="#{samplesController.createNewSample()}" oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addSampleDlg').hide()" update="@form :#{p:component('samplesForm')}"/>
+                        <p:commandButton type="button" value="Cancel" onclick="PF('addSampleDlg').hide()"/>
+                    </h:panelGroup>
                 </h:form>
             </p:dialog>
-            <p:dialog id="editServicesDialog" widgetVar="editServicesDlg" closable="true" draggable="false" modal="true" resizable="false" header="Edit services">
-                <h:form>
+            <!-- Edit services dialog -->
+            <p:dialog id="editServicesDialog" styleClass="studyDialog" widgetVar="editServicesDlg" closable="true" draggable="false" modal="true" resizable="false" header="Edit services">
+                <h:form class="dialogForm">
                     <p:selectManyCheckbox layout="grid" value="#{studyManagedBean.selectedServices}" columns="3">
                         <f:converter converterId="studyServiceConverter"/>
                         <f:selectItems id="servVals" value="#{newStudyController.availableServices}"/>
                     </p:selectManyCheckbox>
-                    <p:commandButton value="Update" actionListener="#{studyManagedBean.updateServices()}" oncomplete="PF('editServicesDlg').hide()" update="@all"/>
-                    <p:commandButton value="Cancel" type="button" onclick="PF('editServicesDlg').hide()"/>
+                    <h:panelGroup styleClass="dialogButtonGroup">
+                        <p:commandButton value="Update" action="#{studyManagedBean.updateServices()}" oncomplete="PF('editServicesDlg').hide()"/>
+                        <p:commandButton value="Cancel" type="button" onclick="PF('editServicesDlg').hide()"/>
+                    </h:panelGroup>
                 </h:form>
             </p:dialog>
-            <p:dialog id="editStudyDesignDialog" widgetVar="editStudyDesignDlg" closable="true" draggable="false" modal="true" header="Edit study design" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO')}">
-                <h:form>
+            <!-- edit study design dialog -->
+            <p:dialog id="editStudyDesignDialog" styleClass="studyDialog" widgetVar="editStudyDesignDlg" closable="true" draggable="false" modal="true" header="Edit study design" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO')}">
+                <h:form class="dialogForm">
                     <p:pickList id="studyDesignPick" value="#{studyMetaController.studyDesignDual}" 
                                 var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="collectionTypeEnumConverter">
                         <f:facet name="sourceCaption">Available</f:facet>
                         <f:facet name="targetCaption">Selected</f:facet>
                     </p:pickList>
-                    <p:commandButton value="OK" oncomplete="PF('editStudyDesignDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('studyInfoForm')}"/>
+                    <h:panelGroup styleClass="dialogButtonGroup">
+                        <p:commandButton value="OK" oncomplete="PF('editStudyDesignDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('studyInfoForm')}"/>
+                    </h:panelGroup>
                 </h:form>
             </p:dialog>
-            <p:dialog id="editInclusionCriteriaDialog" widgetVar="editInclusionCriteriaDlg" closable="true" draggable="false" modal="true" header="Edit inclusion criteria" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO')}">
-                <h:form>
+            <!-- edit study inclusion criteria dialog -->
+            <p:dialog id="editInclusionCriteriaDialog" styleClass="studyDialog" widgetVar="editInclusionCriteriaDlg" closable="true" draggable="false" modal="true" header="Edit inclusion criteria" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO')}">
+                <h:form class="dialogForm">
                     <p:pickList id="inclusionCriteriaPick" value="#{studyMetaController.inclusionCriteriaDual}" 
                                 var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="inclusionCriteriumEnumConverter">
                         <f:facet name="sourceCaption">Available</f:facet>
                         <f:facet name="targetCaption">Selected</f:facet>
                     </p:pickList>
-                    <p:commandButton value="OK" oncomplete="PF('editInclusionCriteriaDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('studyInfoForm')}"/>
+                    <h:panelGroup styleClass="dialogButtonGroup">
+                        <p:commandButton value="OK" oncomplete="PF('editInclusionCriteriaDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('studyInfoForm')}"/>
+                    </h:panelGroup>
                 </h:form>
             </p:dialog>
-            <p:dialog id="editCollectionTypesDialog" widgetVar="editCollectionTypesDlg" closable="true" draggable="false" modal="true" header="Edit collection types" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
-                <h:form>
+            <!-- edit collection types dialog -->
+            <p:dialog id="editCollectionTypesDialog" styleClass="studyDialog" widgetVar="editCollectionTypesDlg" closable="true" draggable="false" modal="true" header="Edit collection types" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+                <h:form class="dialogForm">
                     <p:pickList id="collectionTypesPick" value="#{samplesController.collectionTypeDualList}" 
                                 var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="collectionTypeEnumConverter">
                         <f:facet name="sourceCaption">Available</f:facet>
                         <f:facet name="targetCaption">Selected</f:facet>
                     </p:pickList>
-                    <p:commandButton value="OK" oncomplete="PF('editCollectionTypesDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('samplesForm')}"/>
+                    <h:panelGroup styleClass="dialogButtonGroup">
+                        <p:commandButton value="OK" oncomplete="PF('editCollectionTypesDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('samplesForm')}"/>
+                    </h:panelGroup>
                 </h:form>
             </p:dialog>
-
-            <p:dialog id="editMaterialTypesDialog" widgetVar="editMaterialTypesDlg" closable="true" draggable="false" modal="true" header="Edit collection types" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
-                <h:form>
+            <!-- edit material type dialog -->
+            <p:dialog id="editMaterialTypesDialog" styleClass="studyDialog" widgetVar="editMaterialTypesDlg" closable="true" draggable="false" modal="true" header="Edit material types" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+                <h:form class="dialogForm">
                     <p:pickList id="materialTypesPick" value="#{samplesController.materialTypeDualList}" 
                                 var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="materialTypeEnumConverter">
                         <f:facet name="sourceCaption">Available</f:facet>
                         <f:facet name="targetCaption">Selected</f:facet>
                     </p:pickList>
-                    <p:commandButton value="OK" oncomplete="PF('editMaterialTypesDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('samplesForm')}"/>
+                    <h:panelGroup styleClass="dialogButtonGroup">
+                        <p:commandButton value="OK" oncomplete="PF('editMaterialTypesDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('samplesForm')}"/>
+                    </h:panelGroup>
                 </h:form>
             </p:dialog>
-
-            <p:dialog id="addCollectionDialog" widgetVar="addCollectionDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample collection" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
-                <h:form>
+            <!-- add samplecollection dialog -->
+            <p:dialog id="addCollectionDialog" styleClass="studyDialog" widgetVar="addCollectionDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample collection" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+                <h:form class="dialogForm">
                     <h:panelGrid columns="3">
                         <p:outputLabel for="collId" value="Collection ID"/>
                         <p:inputText id="collId" required="true" value="#{samplesController.newCollection.id}"> 
@@ -223,10 +259,70 @@
                         <p:outputLabel for="collName" value="Name"/>
                         <p:inputText id="collName" required="true" value="#{samplesController.newCollection.name}"/>
                     </h:panelGrid>
-                    <p:commandButton value="Create" action="#{samplesController.createNewCollection()}" 
-                                     oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addCollectionDlg').hide()" 
-                                     update="@form :#{p:component('samplesForm')} :#{p:component('editCollectionTypesDialog')}"/>
-                    <p:commandButton type="button" value="Cancel" onclick="PF('addCollectionDlg').hide()"/>
+                    <h:panelGroup styleClass="dialogButtonGroup">
+                        <p:commandButton value="Create" action="#{samplesController.createNewCollection()}" 
+                                         oncomplete="if (args &amp;&amp; !args.validationFailed) PF('addCollectionDlg').hide()" 
+                                         update="@form :#{p:component('samplesForm')} :#{p:component('editCollectionTypesDialog')}"/>
+                        <p:commandButton type="button" value="Cancel" onclick="PF('addCollectionDlg').hide()"/>
+                    </h:panelGroup>
+                </h:form>
+            </p:dialog>
+            <!-- Choose file dialog-->
+            <p:dialog id="chooseFileDialog" styleClass="studyDialog" widgetVar="chooseFileDlg" closable="false" draggable="false" modal="true" resizable="false" header="Choose file" rendered="#{studyManagedBean.renderComponentList() != null}">
+                <h:form class="dialogForm">
+                    <ui:repeat var="node" value="#{InodesMB.currentPath}">
+                        <p:commandLink action="#{InodesMB.cdBrowse(node.path)}" update="@form">
+                            <strong>#{node.top}</strong>
+                        </p:commandLink>/
+                    </ui:repeat>
+                    <p:dataTable value="#{InodesMB.children}" var="inode"
+                                 styleClass="chooseFileTable"
+                                 scrollable="true" scrollHeight="200">
+
+                        <p:column>
+                            <h:graphicImage class="browser s16" library="images/icons" name="#{inode.isDir()?'folder.png':'file.png'}" />
+
+                            <p:commandLink styleClass="dark" 
+                                           action="#{InodesMB.cdUp()}" 
+                                           update="@form" 
+                                           rendered="#{inode.isParent()}">
+                                <strong>#{inode.name}</strong>
+                            </p:commandLink>
+
+                            <p:commandLink styleClass="dark" 
+                                           action="#{InodesMB.cdDown(inode.name)}" 
+                                           actionListener="#{fileSelectionController.setSelectedPath(inode.path)}" 
+                                           update="@form" 
+                                           rendered="#{not inode.isParent() and inode.dir}">
+                                <strong>#{inode.name}</strong>
+                            </p:commandLink>
+
+                            <p:commandLink styleClass="dark" 
+                                           rendered="#{not inode.dir}"
+                                           disabled="#{inode.status != 'available'}" 
+                                           action="#{fileSelectionController.setSelectedPath(inode.path)}"
+                                           update="@form">
+                                <strong>#{inode.name}</strong>
+                            </p:commandLink>
+                        </p:column> 
+                    </p:dataTable>
+                    <h:panelGrid columns="2">
+                        <h:outputLabel value="Selected file" for="chooseFileSelected"/>
+                        <h:inputText value="#{fileSelectionController.selectedPath}" readonly="true" id="chooseFileSelected" />
+                   
+                        <h:outputLabel value="Or upload a new file" for="chooseFileUpload"/>
+                        <p:fileUpload id="chooseFileUpload" auto="true" 
+                                      multiple="false" label="Upload" 
+                                      mode="advanced" 
+                                      fileUploadListener="#{fileSelectionController.uploadFile}" 
+                                      update="@(.runConfForm)" 
+                                      oncomplete="PF('chooseFileDlg').hide()"/>
+                    </h:panelGrid>
+                    <h:panelGroup styleClass="dialogButtonGroup">
+                        <p:commandButton value="OK" actionListener="#{fileSelectionController.submitSelectedPath()}" update="@(.runConfForm)"
+                                         oncomplete="PF('chooseFileDlg').hide()" ajax="true" process="@form"/>
+                        <p:commandButton type="button" value="Cancel" action="#{fileSelectionController.invalidate()}" onclick="PF('chooseFileDlg').hide()"/>
+                    </h:panelGroup>
                 </h:form>
             </p:dialog>
         </h:body>

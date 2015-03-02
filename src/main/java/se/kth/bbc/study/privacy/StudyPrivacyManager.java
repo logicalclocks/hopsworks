@@ -27,7 +27,7 @@ import org.primefaces.event.SelectEvent;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.study.StudyTeam;
-import se.kth.bbc.study.StudyTeamController;
+import se.kth.bbc.study.StudyTeamFacade;
 import se.kth.bbc.study.privacy.model.Consent;
 
 @ManagedBean
@@ -42,7 +42,7 @@ public class StudyPrivacyManager {
     private ActivityController activityController;
 
    @EJB
-    private StudyTeamController stc;
+    private StudyTeamFacade stc;
    
     private List <ActivityDetail> ad;
      

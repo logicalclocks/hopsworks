@@ -63,18 +63,18 @@
                     </h:panelGrid>
                 </h:panelGrid>
             </div>
-        </h:form> 
 
         <div align="center">
-            <p:commandLink id="signupLink" value="Yubikey user" action="yubikeylogin" style="text-align: right"/>
+            <p:commandLink id="signupLink" value="Yubikey user" action="yubikeylogin" style="text-align: right" immediate="true"/>
             &nbsp;
         <!--
             <p:commandLink id="certLogin" value="Certificate user" action="certlogin" style="text-align: right"/>
             &nbsp;
         -->  
-        <p:commandLink  value="Can't login?"  action="login_issue" style="text-align: right"/>
-    
+        <p:commandLink  value="Can't login?"  action="login_issue" style="text-align: right" immediate="true"/>
         </div>
-        <br/>
+    
+        </h:form> 
+            <br/>
     </h:body>
 </html>

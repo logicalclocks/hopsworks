@@ -25,18 +25,18 @@ import org.primefaces.model.SortOrder;
  */
 public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements Serializable {
 
-    private transient final ActivityController activityController;
+    private transient final ActivityDetailFacade activityDetailFacade;
     private List<ActivityDetail> data;
     private String filterStudy;
     private int rowIndex;
 
-    public LazyActivityModel(ActivityController ac) {
+    public LazyActivityModel(ActivityDetailFacade ac) {
         this(ac, null);
     }
 
-    public LazyActivityModel(ActivityController ac, String filterStudy) {
+    public LazyActivityModel(ActivityDetailFacade ac, String filterStudy) {
         super();
-        this.activityController = ac;
+        this.activityDetailFacade = ac;
         this.filterStudy = filterStudy;
         data = new ArrayList<>();
     }
@@ -49,10 +49,10 @@ public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements 
         // UNDO later: this gives an error while accessing indexPage from profile 
         
         if (filterStudy == null) {
-            retData = activityController.getPaginatedActivityDetail(first, pageSize);
+            retData = activityDetailFacade.getPaginatedActivityDetail(first, pageSize);
             //TODO: add support for sorting, filtering
         } else {
-            retData = activityController.getPaginatedActivityDetailForStudy(first, pageSize, filterStudy);
+            retData = activityDetailFacade.getPaginatedActivityDetailForStudy(first, pageSize, filterStudy);
         }
         if (first == 0) {
             data = new ArrayList<>(retData);
