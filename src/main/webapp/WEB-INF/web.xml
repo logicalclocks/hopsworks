@@ -56,21 +56,12 @@
     <servlet-name>UploadServlet</servlet-name>
     <url-pattern>/bbc/uploader</url-pattern>
   </servlet-mapping>
-  <servlet>
-    <servlet-name>Push Servlet</servlet-name>
-    <servlet-class>org.primefaces.push.PushServlet</servlet-class>
-    <async-supported>true</async-supported>
-  </servlet>
   
   <error-page>
     <exception-type>javax.faces.application.ViewExpiredException</exception-type>
     <location>/index.xhtml</location>
   </error-page>
 
-  <servlet-mapping>
-    <servlet-name>Push Servlet</servlet-name>
-    <url-pattern>/primepush/*</url-pattern>
-  </servlet-mapping>
   <!-- declare the roles relevant for our webapp -->
   <security-role>
     <role-name>ADMIN</role-name>
