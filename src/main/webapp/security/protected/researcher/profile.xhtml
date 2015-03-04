@@ -36,7 +36,7 @@
                 
                 <p:layoutUnit position="center" style="margin:0px auto; width: 50%;">
                     <h:form >
-                        <h:panelGrid  columns="3">    
+                        <h:panelGrid  columns="3" columnClasses="">    
 
                             <p:outputLabel for="fname" value="First Name"  
                                            />					
@@ -109,7 +109,7 @@
                             </p:inputText>
                             <p:message for="mobile"/>
 
-                            <p:outputLabel for="add1" value="co" 
+                            <p:outputLabel for="add1" value="C/O" 
                                            />					
                             <p:inputText id="add1" label="co" value="#{profileManager.address.address1}" 
                                          autocomplete="off" 
@@ -173,7 +173,7 @@
                         </h:panelGrid>
 
                         <div class="register_banner">
-                        <p:commandButton  type="submit" id="mysub" value="Save" 
+                        <p:commandButton  type="submit" id="mysub" value="Save"
                                           actionListener="#{profileManager.updateUser()}"/> 
                         <p:commandButton type="submit" value="Back" action="indexPage"  />
                         </div>

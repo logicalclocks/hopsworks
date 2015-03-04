@@ -68,6 +68,11 @@ body {
     height: 28px;
 }
 
+.register_banner .ui-button {
+  margin-left: 10px;
+  min-width: 50px;
+}
+
 /* 
     Document   : bbc
     Created on : Oct 22, 2013, 3:46:27 PM

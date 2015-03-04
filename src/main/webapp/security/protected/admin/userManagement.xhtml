@@ -51,7 +51,7 @@
                                                 <h:outputText value="#{user.email}" />
                                             </p:column>
 
-                                            <p:column id="mobileNumColumn" filterBy="mobile"  headerText="Mobile Number" style="width:32%;font-size: 12px;text-align: left;">
+                                            <p:column id="mobileNumColumn" filterBy="mobile"  headerText="Mobile Phone" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{user.mobile}" />
                                             </p:column>
 
@@ -59,7 +59,7 @@
                                                 <h:outputText value="#{peopleAministration.getChanged_status(user)}" />
                                             </p:column>
 
-                                            <p:column id="roleNameCol" style="width:32%;font-size: 12px;text-align: left;">
+                                            <p:column id="roleNameCol" headerText="Role" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{peopleAministration.getUserRole(user)}" />
                                             </p:column>
 
@@ -79,8 +79,6 @@
                                         <p:dataTable id="userReqTable" var="req" value="#{peopleAministration.allRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
                                                      rowKey="#{req.email}" selection="#{peopleAministration.selectedUsers}" editable="true" editMode="cell">
 
-                                            <p:column selectionMode="multiple" style="width:10px;" disabledSelection="false"/>
-
                                             <p:column id="nameColumn" headerText="First Name" style="font-size: 12px; text-align: left;">
                                                 <h:outputText value="#{req.fname}" />
                                             </p:column>
@@ -92,7 +90,7 @@
                                                 <h:outputText value="#{req.email}" />
                                             </p:column>
 
-                                            <p:column id="mobileNumColumn" headerText="Mobile Number" style="font-size: 12px;text-align: left;">
+                                            <p:column id="mobileNumColumn" headerText="Mobile Phone" style="font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{req.mobile}" />
                                             </p:column>
 
@@ -127,10 +125,7 @@
                                         <p:dataTable id="yubikeyUserReqTable" var="yreq" value="#{peopleAministration.allYubikeyRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
                                                      rowKey="#{yreq.email}" selection="#{peopleAministration.selectedUsers}" editable="true" editMode="cell">
 
-
-                                            <p:column selectionMode="multiple" style="width:10px;" disabledSelection="false"/>
-
-                                            <p:column id="ynameColumn" headerText="First Name" style="font-size: 12px; text-align: left;">
+                                               <p:column id="ynameColumn" headerText="First Name" style="font-size: 12px; text-align: left;">
                                                 <h:outputText value="#{yreq.fname}" />
                                             </p:column>
                                             <p:column id="ylnameCol" headerText="Last Name" style="font-size: 12px; text-align: left;">
@@ -141,7 +136,7 @@
                                                 <h:outputText value="#{yreq.email}" />
                                             </p:column>
 
-                                            <p:column id="ymobileNumColumn" headerText="Mobile Number" style="font-size: 12px;text-align: left;">
+                                            <p:column id="ymobileNumColumn" headerText="Mobile Phone" style="font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{yreq.mobile}" />
                                             </p:column>
 

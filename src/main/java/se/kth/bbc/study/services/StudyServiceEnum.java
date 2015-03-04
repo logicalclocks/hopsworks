@@ -13,7 +13,8 @@ public enum StudyServiceEnum {
   SPARK,
   ADAM,
   MAPREDUCE,
-  YARN;
+  YARN,
+  PRIVACY;
 
   
   @Override
@@ -33,6 +34,8 @@ public enum StudyServiceEnum {
         return "MapReduce";
       case YARN:
         return "Yarn";
+      case PRIVACY:
+          return "Privacy";
       default:
         throw new IllegalStateException("Illegal enum value.");
     }
