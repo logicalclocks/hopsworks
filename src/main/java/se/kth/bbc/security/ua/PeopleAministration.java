@@ -41,8 +41,6 @@ import se.kth.bbc.security.ua.model.Yubikey;
 @SessionScoped
 public class PeopleAministration implements Serializable {
 
-    private static final Logger logger = Logger.getLogger(PeopleAministration.class.getName());
-
     private static final long serialVersionUID = 1L;
 
     @EJB
@@ -53,23 +51,27 @@ public class PeopleAministration implements Serializable {
 
     private User user;
 
+    // for yubikey administration page
+    private User selectedYubikyUser;
+
+    private Address address;
+
     private String sec_answer;
 
+    
     Map<String, String> questions;
     private List<User> filteredUsers;
     private List<User> selectedUsers;
     private List<User> allUsers;
 
+    // for modifying user roles and status
+    private User editingUser;
+    
     // for mobile users activation
     private List<User> requests;
 
     // for user activation
     private List<User> yubikey_requests;
-
-    // for yubikey administration page
-    private User selectedYubikyUser;
-
-    private Address address;
 
     // to remove an existing group
     private String selected_group;
@@ -89,9 +91,14 @@ public class PeopleAministration implements Serializable {
     // all possible new groups user doesnt belong to
     Map<String, Integer> new_groups;
 
+    // Yubikey public id. 12 chars: vviehlefjvcb
+    private String pubid;
 
-    // when admin change status of user
-    private int changed_status;
+    // Yubikey serial no 
+    private String serial;
+
+    //f1bda8c978766d50c25d48d72ed516e0
+    private String secret;
     
     public String getNew_group() {
         return new_group;
@@ -101,10 +108,6 @@ public class PeopleAministration implements Serializable {
         this.new_group = new_group;
     }
 
-    // Yubikey public id. 12 chars: vviehlefjvcb
-    private String pubid;
-
-    private User editingUser;
 
     public User getEditingUser() {
         return editingUser;
@@ -121,12 +124,6 @@ public class PeopleAministration implements Serializable {
     public void setSecret(String secret) {
         this.secret = secret;
     }
-
-    // Yubikey serial no 
-    private String serial;
-
-    //f1bda8c978766d50c25d48d72ed516e0
-    private String secret;
 
     public String getPubid() {
         return pubid;
@@ -157,13 +154,10 @@ public class PeopleAministration implements Serializable {
     }
 
     
-    public int getChanged_status(User p) {
-        return userManager.findByEmail(p.getEmail()).getStatus();
+    public String getChanged_Status(User p) {
+        return PeoplAccountStatus.values()[userManager.findByEmail(p.getEmail()).getStatus()].toString();
     }
 
-    public void setChanged_status(int changed_status) {
-        this.changed_status = changed_status;
-    }
     /*
      public String getUserStatus(People p) {
      return Integer.toString(userManager.findByEmail(p.getEmail()).getStatus());
@@ -372,15 +366,6 @@ public class PeopleAministration implements Serializable {
         requests.remove(user1);
     }
 
-    public String activateYubikeyUser(User user1) {
-        userManager.updateGroup(user1.getUid(), Integer.parseInt(selected_group));
-        userManager.updateStatus(user1.getUid(), AccountStatus.ACCOUNT_ACTIVE);
-        selectedYubikyUser = user1;
-        address = userManager.findAddress(user1.getUid());
-
-        yubikey_requests.remove(user1);
-        return "activate_yubikey";
-    }
 
     /**
      * To reject user requests
@@ -424,16 +409,23 @@ public class PeopleAministration implements Serializable {
         this.questions = questions;
     }
 
+    
+    public String activateYubikeyUser(User user1) {
+        this.selectedYubikyUser = user1;
+        //this.address = userManager.findAddress(user1.getUid());
+        return "activate_yubikey";
+    }
+    
     public String activateYubikey() {
         // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
 
-        if (selectedYubikyUser.getYubikeyUser() != 1) {
+        if (this.selectedYubikyUser.getYubikeyUser() != 1) {
 
             MessagesController.addInfoMessage(user.getEmail() + " is not a Yubikey user");
             return "";
         }
 
-        Yubikey yubi = userManager.findYubikey(selectedYubikyUser.getUid());
+        Yubikey yubi = userManager.findYubikey(this.selectedYubikyUser.getUid());
 
         yubi.setStatus(1);
         yubi.setSerial(serial.replaceAll("\\s", ""));
@@ -445,7 +437,14 @@ public class PeopleAministration implements Serializable {
         yubi.setSessionUse(0);
         yubi.setHigh(0);
         yubi.setLow(0);
+        
+        
         userManager.updateYubikey(yubi);
+        userManager.updateGroup(this.selectedYubikyUser.getUid(), Integer.parseInt(selected_group));
+        userManager.updateStatus(this.selectedYubikyUser.getUid(), AccountStatus.ACCOUNT_ACTIVE);
+        
+        yubikey_requests.remove(this.selectedYubikyUser);
+       
         return "print_address";
     }
 

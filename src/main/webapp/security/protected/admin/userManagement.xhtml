@@ -55,10 +55,11 @@
                                                 <h:outputText value="#{user.mobile}" />
                                             </p:column>
 
-                                            <p:column id="statusCol"  filterBy="status"  headerText="Status" style="width:32%;font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{peopleAministration.getChanged_status(user)}" />
+                                            <p:column id="statusCol"  filterBy="status" 
+                                                      headerText="Status" style="width:32%;font-size: 12px;text-align: left;">
+                                                <h:outputText value="#{peopleAministration.getChanged_Status(user)}"/>
                                             </p:column>
-
+                            
                                             <p:column id="roleNameCol" headerText="Role" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{peopleAministration.getUserRole(user)}" />
                                             </p:column>
@@ -96,8 +97,10 @@
 
                                             <p:column id="roleColumn" headerText="Role">
                                                 <p:selectOneMenu id="roleChoose" value="#{peopleAministration.selected_group}" editable="false">
+                                                    <f:selectItem itemLabel="Select Role" itemValue=""
+                                                                  noSelectionOption="true" />
                                                     <f:selectItems value="#{peopleAministration.groups}"/>
-                                                </p:selectOneMenu>
+                                                    </p:selectOneMenu>
                                             </p:column>
 
                                             <p:column id="actionColumn" headerText="Action">
@@ -141,17 +144,26 @@
                                             </p:column>
 
                                             <p:column id="yroleColumn" headerText="Role">
-                                                <p:selectOneMenu id="yroleChoose" value="#{peopleAministration.selected_group}" editable="false">
-                                                    <f:selectItems value="#{peopleAministration.groups}"/>
+                                                <p:selectOneMenu id="yroleChoose" 
+                                                                 value="#{peopleAministration.selected_group}" 
+                                                                 editable="false"
+                                                                 >
+                                                    <f:selectItem itemLabel="Select Role" itemValue=""
+                                                                  noSelectionOption="true" />
+                                                  <f:selectItems value="#{peopleAministration.groups}"/>
                                                 </p:selectOneMenu>
                                             </p:column>
 
                                             <p:column id="yactionColumn" headerText="Action">
                                                 <h:panelGrid columns="2" style="width: auto">                                                    
-                                                    <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{peopleAministration.rejectUser(user)}" update="@form">
+                                                    <p:commandLink styleClass="ui-button-remove fa fa-ban" 
+                                                                   action="#{peopleAministration.rejectUser(yreq)}" 
+                                                                   update="@form">
                                                         <p:confirm header="Reject user" message="Are you sure you want to reject this user?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
-                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" action="#{peopleAministration.activateYubikeyUser(yreq)}" update="@form">
+                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" 
+                                                                   action="#{peopleAministration.activateYubikeyUser(yreq)}" 
+                                                                   update="@form">
                                                         <p:confirm header="Allow user" message="Activate selected user?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                 </h:panelGrid>
@@ -172,10 +184,12 @@
                                         <p:dataTable id="userdataTable" var="muser" 
                                                      value="#{peopleAministration.allUsers}" 
                                                      filteredValue="#{peopleAministration.filteredUsers}" 
-                                                     widgetVar="usersTable" emptyMessage="No users found with given criteria"
+                                                     widgetVar="usersTable"
+                                                     emptyMessage="No users found with given criteria"
                                                      selectionMode="single" rowKey="#{muser.email}" 
                                                      selection="#{peopleAministration.selectedUser}" 
-                                                     style="table-layout: fixed" scrollable="false">
+                                                     style="table-layout: fixed" 
+                                                     scrollable="false">
 
                                             <p:column id="unameCol"  filterBy="username"  headerText="Username" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{muser.username}" />

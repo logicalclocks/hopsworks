@@ -36,15 +36,20 @@
                 </p:layoutUnit>
 
                 <p:layoutUnit position="center" style="height: 250px;">
-                    <h:form >
+                  
+                     <br></br>
+                      <br></br>
+                     <h:form >
                         <h:panelGrid  columns="3" >    
 
                             <p:outputLabel for="statChoose" value="Status"/>					
 
                             <p:selectOneMenu id="statChoose" 
                                              value="#{peopleAministration.selected_status}" 
+                                              style="width: 296px"
                                              editable="false">
                                 <f:selectItem itemValue="#{peopleAministration.editingUser.status}"
+                                             
                                               itemLabel="Select Status"
                                               />
                                 <f:selectItem itemValue="-1" itemLabel="Inactive" />
@@ -56,12 +61,13 @@
                             </p:selectOneMenu>
                             <p:spacer></p:spacer>            
 
-                            <p:outputLabel for="addRole" value="Add Role" 
-                                           />					
+                            <p:outputLabel for="addRole" value="Add Role" />					
 
                             <p:selectOneMenu id="addRole"
                                              value="#{peopleAministration.new_group}" 
+                                              style="width: 296px"
                                              editable="false">
+                                
                                 <f:selectItem itemValue="" 
                                               itemLabel="Add Role" 
                                               noSelectionOption="true"
@@ -74,6 +80,7 @@
                             <p:outputLabel for="removeRole" value="Remove Role" />					
 
                             <p:selectOneMenu id="removeRole" 
+                                                  style="width: 296px"
                                              value="#{peopleAministration.selected_group}">
                                 <f:selectItem itemValue="" itemLabel="Remove Role" 
                                               noSelectionOption="true"/>
@@ -82,11 +89,13 @@
                             <p:spacer></p:spacer>            
 
                         </h:panelGrid>
-
-                        <div class="register_banner">
+                        <br></br>
+                        
+                        <div align="center">
 
                             <p:commandButton  type="submit" id="profsub" value="Update"
                                               action="#{peopleAministration.updateUserByAdmin()}"/> 
+                             <p:spacer width="10"/>
 
                             <p:commandButton type="submit" value="Back" action="userMgmt" immediate="true"/>
 

@@ -20,10 +20,10 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
 
-            <p:layout  style="margin:10px auto; width: 50%;">  
+            <p:layout  style="margin:10px auto; width: 40%;">  
                 <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
                
-                <p:layoutUnit position="north" style="margin:0px auto; width: 50%;">
+                <p:layoutUnit position="north" style="margin:0px auto; width: 40%;">
                     <img src="#{profileManager.gravatar}" />
                     <h3>
                         #{profileManager.user.fname} #{profileManager.user.lname}
@@ -34,16 +34,16 @@
                     </h3>
                </p:layoutUnit>
                 
-                <p:layoutUnit position="center" style="margin:0px auto; width: 50%;">
+                <p:layoutUnit position="center" style="margin: 5px auto; width: 40%;">
                     <h:form >
                         <h:panelGrid  columns="3" columnClasses="">    
 
-                            <p:outputLabel for="fname" value="First Name"  
-                                           />					
+                            <p:outputLabel for="fname" value="First Name"/>					
                             <p:inputText id="fname" label="fName" value="#{profileManager.user.fname}"
                                          autocomplete="off" 
                                          validatorMessage="First name is required" 
                                          required="true"
+                                         size="40"
                                          >
                             </p:inputText>
                             <p:message for="fname"/>
@@ -53,6 +53,7 @@
                             <p:inputText id="lname" label="lName" value="#{profileManager.user.lname}"  
                                          validatorMessage="Last name is requried" 
                                          required="true"
+                                         size="40"
                                          >
                             </p:inputText>
                             <p:message for="lname"/>
@@ -69,10 +70,9 @@
                             </p:inputText>
                             <p:message for="email"/>
 -->
-                            <p:outputLabel for="title" value="Title"
-                                           />					
-                            <p:selectOneMenu id="title" value="#{profileManager.user.title}" >
-                                <f:selectItem itemValue="" itemLabel="Select Title" />
+                            <p:outputLabel for="title" value="Title" />					
+                            <p:selectOneMenu id="title" style="width: 296px" value="#{profileManager.user.title}" >
+                                <f:selectItem itemValue=""  itemLabel="Select Title" />
                                 <f:selectItem itemValue="Miss" itemLabel="Miss" />
                                 <f:selectItem itemValue="Mrs" itemLabel="Mrs" />
                                 <f:selectItem itemValue="MS" itemLabel="MS" />
@@ -82,99 +82,112 @@
                             </p:selectOneMenu>             
                             <p:spacer></p:spacer>
 
-                            <p:outputLabel for="org" value="Organization" 
-                                           />					
-                            <p:inputText id="org" label="org" value="#{profileManager.user.homeOrg }" 
+                            <p:outputLabel for="org" value="Organization" />					
+                            <p:inputText id="org" label="org" 
+                                         size="40"
+                                         value="#{profileManager.user.homeOrg }" 
                                          autocomplete="off" 
                                          >
                             </p:inputText>
                             <p:spacer></p:spacer>
 
 
-                            <p:outputLabel for="orcid" value="Orcid" 
-                                           />					
-                            <p:inputText id="orcid" label="orcid" value="#{profileManager.user.orcid }" 
+                            <p:outputLabel for="orcid" value="Orcid" />					
+                            <p:inputText id="orcid" label="orcid"
+                                         size="40"
+                                         value="#{profileManager.user.orcid }" 
                                          autocomplete="off"
-                                         validatorMessage="16 digits Orcid ID wrong" 
+                                         validatorMessage="16 characters Orcid ID wrong" 
                                          >
                             </p:inputText>
-                            <p:message for="orcid"/>
-
-                            <p:outputLabel for="mobile" value="Mobile" 
-                                           />					
+                            <p:tooltip   for="orcid" 
+                                                 value="16 characters Orcid ID to be acquired from http://orcid.org/" 
+                                                 trackMouse="true" />
+                           
+                            <p:outputLabel for="mobile" value="Mobile" />					
                             <p:inputText id="mobile" label="Mobile Number" 
+                                         size="40"
                                          value="#{profileManager.user.mobile}"  
                                          autocomplete="off" 
                                          >
                             </p:inputText>
                             <p:message for="mobile"/>
 
-                            <p:outputLabel for="add1" value="C/O" 
-                                           />					
-                            <p:inputText id="add1" label="co" value="#{profileManager.address.address1}" 
+                            <p:outputLabel for="add1" value="C/O"  />					
+                            <p:inputText id="add1" label="co" 
+                                         size="40"
+                                         value="#{profileManager.address.address1}" 
                                          autocomplete="off" 
                                          >
                             </p:inputText>
                             <p:spacer></p:spacer>  
 
-                            <p:outputLabel for="add2" value="Street"
-                                           />
+                            <p:outputLabel for="add2" value="Street"/>
                             <p:inputText id="add2" label="address2" 
+                                        size="40"
                                          value="#{profileManager.address.address2}" 
                                          autocomplete="off" 
                                          >
                             </p:inputText>
                             <p:spacer></p:spacer>  
 
-                            <p:outputLabel for="pc" value="Postal code:" 
-                                           />
-                            <p:inputText id="pc" label="zip" value="#{profileManager.address.postalcode}" 
+                            <p:outputLabel for="pc" value="Postal Code"  />
+                            <p:inputText id="pc" label="zip" 
+                                         size="40"
+                                         value="#{profileManager.address.postalcode}" 
                                          >
                             </p:inputText>
                             <p:spacer></p:spacer>  
 
-                            <p:outputLabel for="cit" value="City" 
-                                           />
-                            <p:inputText id="cit" label="city" value="#{profileManager.address.city}"   
+                            <p:outputLabel for="cit" value="City"  />
+                            <p:inputText id="cit" label="city"
+                                         size="40"
+                                         value="#{profileManager.address.city}"   
                                          >
                             </p:inputText>
                             <p:spacer></p:spacer>  
 
-                            <p:outputLabel for="st" value="State"
-                                           />
-                            <p:inputText id="st" label="state"  value="#{profileManager.address.state}" 
+                            <p:outputLabel for="st" value="State"/>
+                            <p:inputText id="st" label="state" 
+                                         size="40"
+                                         value="#{profileManager.address.state}" 
                                          >
                             </p:inputText>
                             <p:spacer></p:spacer>  
 
-                            <p:outputLabel for="co" value="Country" 
-                                           />
-                            <p:inputText id="co" label="country" value="#{profileManager.address.country}"   
+                            <p:outputLabel for="co" value="Country" />
+                            <p:inputText id="co" label="country" 
+                                         size="40"
+                                         value="#{profileManager.address.country}"   
                                          >
                             </p:inputText>
                             <p:spacer></p:spacer>  
 
                             <p:outputLabel for="sec" value="Security Question" 
                                            />					
-                            <p:commandLink id="sec" value="Change"   action="change_sec_question"
+                            <p:commandLink id="sec" 
+                                           value="Change"  
+                                           action="change_sec_question"
                                            styleClass="command_link">
                             </p:commandLink>
                             <p:spacer></p:spacer>  
 
-                            <p:outputLabel for="password" value="Password"  
-                                           />					
-                            <p:commandLink id ="password" value="Change"
-                                           action="profile_password"
+                            <p:outputLabel for="password" value="Password" />					
+                            <p:commandLink id ="password" 
+                                          value="Change"
+                                          action="profile_password"
                                           styleClass="command_link"
                                            >
                             </p:commandLink>
                             <p:spacer></p:spacer>   
 
                         </h:panelGrid>
-
-                        <div class="register_banner">
+                        
+                        <br></br>
+                        <div align="center">
                         <p:commandButton  type="submit" id="mysub" value="Save"
                                           actionListener="#{profileManager.updateUser()}"/> 
+                        <p:spacer width="10"/>
                         <p:commandButton type="submit" value="Back" action="indexPage"  />
                         </div>
                     </h:form>                            

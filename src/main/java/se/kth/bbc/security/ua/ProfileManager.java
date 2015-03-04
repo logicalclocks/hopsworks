@@ -8,7 +8,6 @@ package se.kth.bbc.security.ua;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.Principal;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -31,22 +30,11 @@ import se.kth.kthfsdashboard.user.Gravatar;
 @SessionScoped
 public class ProfileManager implements Serializable {
 
-    private static final Logger logger = Logger.getLogger(ProfileManager.class.getName());
-
     public static final String DEFAULT_GRAVATAR = "resources/images/icons/default-icon.jpg";
 
     private static final long serialVersionUID = 1L;
     @EJB
     private UserManager userManager;
-
-    // for mobile users activation
-    private List<User> requests;
-
-    // for user activation
-    private List<User> yubikey_requests;
-
-    // for yubikey administration page
-    private User selectedYubikyUser;
 
     private User user;
     private Address address;
@@ -111,6 +99,4 @@ public class ProfileManager implements Serializable {
         MessagesController.addInfoMessage("Success", "Profile updated successfully.");
     }
 
-  
-    
 }

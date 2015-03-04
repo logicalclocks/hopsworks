@@ -10,12 +10,12 @@
 
         <h:head>
             <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
-            <linkre rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+           <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
 
         </h:head>
 
-        <h:body>
+        <h:body  style="background-color: white;">
             <ui:insert name="titleBar" >
                 <ui:include src="/bbc/lims/titleBar.xhtml" />       
            </ui:insert>
@@ -104,10 +104,11 @@
                                         <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                     </p:inputText>
 
-                                    <p:outputLabel for="address1" value="co" style="font-weight:bold" />
-                                    <p:inputText id="address1" value="#{userRegistration.address1}" required="true" size="40"
+                                    <p:outputLabel for="address1" value="C/O" style="font-weight:bold" />
+                                    <p:inputText id="address1" value="#{userRegistration.address1}" 
+                                                 size="40"
                                                  autocomplete="off"
-                                                 requiredMessage="Enter co">
+                                                 >
                                     </p:inputText>
 
                                     <p:outputLabel for="address2" value="Street" style="font-weight:bold" />
