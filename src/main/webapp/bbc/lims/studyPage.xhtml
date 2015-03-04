@@ -70,13 +70,6 @@
                                     </ui:insert>
                                 </p:tab>
 
-                                <p:tab  title="Privacy" rendered="#{studyManagedBean.shouldDrawTab('PRIVACY') and studyManagedBean.renderComponentList() != null}">
-                                    <ui:insert name="privacyTab">
-                                        <ui:include src="/bbc/lims/studyTabs/privacyTab.xhtml"/>
-                                    </ui:insert>
-                                </p:tab>
-
-
                                 <p:tab id="spark" title="Spark" rendered="#{studyManagedBean.shouldDrawTab('SPARK') and studyManagedBean.renderComponentList() != null}">
                                     <ui:insert name="spark">
                                         <ui:include src="/bbc/lims/studyTabs/sparkTab.xhtml"/>
