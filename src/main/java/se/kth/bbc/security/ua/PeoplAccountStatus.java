@@ -12,14 +12,15 @@ package se.kth.bbc.security.ua;
  */
 
 public enum PeoplAccountStatus{
-    YUBIKEY_ACCOUNT_INACTIVE(-2),
-    MOBILE_ACCOUNT_INACTIVE(-1),
-    ACCOUNT_PENDING(0),
-    ACCOUNT_ACTIVE(1),
-    ACCOUNT_BLOCKED(2),
-    MOBILE_LOST(3),
-    YUBIKEY_LOST(4),
-    ACCOUNT_DEACTIVATED(5);
+    DUMMY(0),
+    YUBIKEY_ACCOUNT_INACTIVE(1),
+    MOBILE_ACCOUNT_INACTIVE(2),
+    ACCOUNT_PENDING(3),
+    ACCOUNT_ACTIVE(4),
+    ACCOUNT_BLOCKED(5),
+    MOBILE_LOST(6),
+    YUBIKEY_LOST(7),
+    ACCOUNT_DEACTIVATED(8);
     
     private final int value;
 
