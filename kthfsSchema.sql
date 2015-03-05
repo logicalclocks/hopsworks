@@ -15,6 +15,66 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+
+--
+-- Table structure for table `BBCGroup`
+--
+
+DROP TABLE IF EXISTS `BBCGroup`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `BBCGroup` (
+  `gid` int(10) NOT NULL,
+  `group_name` varchar(20) NOT NULL,
+  `group_desc` varchar(200) DEFAULT NULL,
+  PRIMARY KEY (`gid`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `CONSENT`
+--
+
+DROP TABLE IF EXISTS `CONSENT`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `CONSENT` (
+  `id` int(11) NOT NULL,
+  `date` date DEFAULT NULL,
+  `study_name` varchar(128) DEFAULT NULL,
+  `retention_period` date DEFAULT NULL,
+  `consent_form` blob,
+  `status` varchar(30) DEFAULT NULL,
+  `name` varchar(80) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
+--
+-- Table structure for table `LOGIN`
+--
+DROP TABLE IF EXISTS `LOGIN`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `LOGIN` (
+  `login_id` bigint(20) NOT NULL,
+  `uid` varchar(8) DEFAULT NULL,
+  `username` varchar(80) DEFAULT NULL,
+  `role` varchar(20) DEFAULT NULL,
+  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `ip` varchar(16) DEFAULT NULL,
+  `os` varchar(30) DEFAULT NULL,
+  `browser` varchar(40) DEFAULT NULL,
+  `action` varchar(80) DEFAULT NULL,
+  `outcome` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`login_id`),
+  KEY `LOGIN_uid_idx` (`uid`),
+  KEY `LOGIN_username_idx` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+
 --
 -- Table structure for table `ANATOMICAL_PARTS`
 --
@@ -75,17 +135,7 @@ CREATE TABLE `DISEASES` (
 --
 -- Table structure for table `Group`
 --
-
 DROP TABLE IF EXISTS `Group`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Group` (
-  `gid` int(10) NOT NULL,
-  `group_name` varchar(20) NOT NULL,
-  `group_desc` varchar(200) DEFAULT NULL,
-  PRIMARY KEY (`gid`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `Inodes`
@@ -511,13 +561,96 @@ CREATE TABLE `study_services` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Temporary view structure for view `v_People_Group`
---
 
 --
--- Final view structure for view `StudyDetails`
+-- Table structure for table `People_Group`
 --
+
+DROP TABLE IF EXISTS `People_Group`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `People_Group` (
+  `uid` int(10) DEFAULT NULL,
+  `Pgid` int(11) NOT NULL AUTO_INCREMENT,
+  `gid` int(11) DEFAULT NULL,
+  PRIMARY KEY (`Pgid`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `USERS`
+--
+
+DROP TABLE IF EXISTS `USERS`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `USERS` (
+  `uid` int(10) NOT NULL DEFAULT '1000',
+  `username` varchar(10) NOT NULL,
+  `password` varchar(128) NOT NULL,
+  `email` varchar(45) DEFAULT NULL,
+  `fname` varchar(30) DEFAULT NULL,
+  `lname` varchar(30) DEFAULT NULL,
+  `activated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `home_org` varchar(100) DEFAULT NULL,
+  `title` varchar(10) DEFAULT NULL,
+  `mobile` varchar(20) DEFAULT NULL,
+  `orcid` varchar(20) DEFAULT NULL,
+  `false_login` int(11) NOT NULL DEFAULT '0',
+  `status` int(11) NOT NULL DEFAULT '-1',
+  `isonline` int(11) NOT NULL DEFAULT '-1',
+  `secret` varchar(20) DEFAULT NULL,
+  `security_question` varchar(20) DEFAULT NULL,
+  `security_answer` varchar(128) DEFAULT NULL,
+  `yubikey_user` tinyint(4) DEFAULT NULL,
+  PRIMARY KEY (`uid`),
+  UNIQUE KEY `email_idx` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Temporary table structure for view `USERS_GROUPS`
+--
+
+DROP TABLE IF EXISTS `USERS_GROUPS`;
+/*!50001 DROP VIEW IF EXISTS `USERS_GROUPS`*/;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+/*!50001 CREATE TABLE `USERS_GROUPS` (
+  `username` tinyint NOT NULL,
+  `password` tinyint NOT NULL,
+  `secret` tinyint NOT NULL,
+  `email` tinyint NOT NULL,
+  `group_name` tinyint NOT NULL
+) ENGINE=MyISAM */;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Table structure for table `Yubikey`
+--
+
+DROP TABLE IF EXISTS `Yubikey`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `Yubikey` (
+  `serial` varchar(10) DEFAULT NULL,
+  `version` varchar(15) DEFAULT NULL,
+  `notes` varchar(100) DEFAULT NULL,
+  `counter` int(11) DEFAULT NULL,
+  `low` int(11) DEFAULT NULL,
+  `high` int(11) DEFAULT NULL,
+  `session_use` int(11) DEFAULT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `aes_secret` varchar(100) DEFAULT NULL,
+  `public_id` varchar(40) DEFAULT NULL,
+  `accessed` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `status` int(11) DEFAULT '-1',
+  `yubidnum` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL,
+  PRIMARY KEY (`yubidnum`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 
 /*!50001 DROP VIEW IF EXISTS `StudyDetails`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
