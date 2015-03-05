@@ -39,7 +39,7 @@ public class TosCheckboxValidator implements Validator {
         
         if (!cb.equals("true")) {
             FacesMessage facesMsg = new FacesMessage(
-                    "TOS not agreed");
+                    "You have to agree to the ToS to be able to register as a user.");
             facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
             throw new ValidatorException(facesMsg);
         }

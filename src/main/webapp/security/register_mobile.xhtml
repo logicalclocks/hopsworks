@@ -90,19 +90,19 @@
                                     <p:inputText id="fname" value="#{userRegistration.fname}" size="40"
                                                  required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Enter Name" />
+                                                 requiredMessage="Enter first name" />
 
                                     <p:outputLabel for="lname" value="Last name" style="font-weight:bold"/>
                                     <p:inputText id="lname" value="#{userRegistration.lname}" size="40"
                                                  required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Last Name"/>
+                                                 requiredMessage="Enter last name"/>
 
                                     <p:outputLabel for="email" value="Email" style="font-weight:bold"/>
                                     <p:inputText id="email" value="#{userRegistration.mail}" size="40"
                                                  required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Enter Email">
+                                                 requiredMessage="Enter email">
                                         <f:validator binding="#{usernameValidator}" />
                                     </p:inputText>    
 
@@ -116,7 +116,7 @@
                                     <p:outputLabel for="sec_question" value="Security Question" style="font-weight:bold"/>
                                     <p:selectOneMenu id="sec_question" value="#{userRegistration.security_question}" 
                                                      required="true"
-                                                     requiredMessage="Select Security Question">
+                                                     requiredMessage="Select security question">
                                         <f:selectItem itemLabel="Select Security Question" itemValue="" />
                                         <f:selectItem itemLabel="Who is your favorite historical figure?" itemValue="history" />
                                         <f:selectItem itemLabel="What is name of your favorite teacher?" itemValue="teacher" />
@@ -128,7 +128,7 @@
                                     <p:inputText id="answer" value="#{userRegistration.security_answer}" size="40"
                                                  required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Answer Security Question" />
+                                                 requiredMessage="Answer security question" />
 
                                     <p:outputLabel for="password0" value="Password" style="font-weight:bold"/>
                                     <p:password id="password0" value="#{userRegistration.password}" 
@@ -142,7 +142,7 @@
                                     <p:outputLabel for="password" value="Password again" style="font-weight:bold"/>
                                     <p:password id="password" value="#{userRegistration.passwordAgain}" size="40"
                                                 requiredMessage="Re-enter password"
-                                                autocomplete="off"
+                                                autocomplete="off" 
                                                 binding="#{confirmPassword}"
                                                 required="true">
                                     </p:password>

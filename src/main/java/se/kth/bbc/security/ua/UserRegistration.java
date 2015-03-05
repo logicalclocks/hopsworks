@@ -9,7 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.faces.bean.ViewScoped;
 import javax.mail.MessagingException;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.security.auth.CustomAuthentication;
@@ -20,7 +20,7 @@ import se.kth.bbc.security.auth.QRCodeGenerator;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @ManagedBean
-@SessionScoped
+@ViewScoped
 public class UserRegistration implements Serializable {
 
     private static final Logger logger = Logger.getLogger(UserRegistration.class.getName());
