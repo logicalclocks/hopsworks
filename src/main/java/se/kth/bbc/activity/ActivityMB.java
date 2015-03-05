@@ -73,7 +73,7 @@ public class ActivityMB implements Serializable {
             } else if ((currentTime - fetchedTime) / 1000 > 1300000 && (currentTime - fetchedTime) / 1000 <= 2500000) {
                 return String.format("about %s month ago.", 1);
             } else if ((currentTime - fetchedTime) / 1000 > 2500000 && (currentTime - fetchedTime) / 1000 < 25000000) {
-                return String.format("%s months ago.", (currentTime - fetchedTime) / (1000 * 2600000));
+                return String.format("%s months ago.", (currentTime - fetchedTime) / 1000 / 2600000);
             } else {
                 return String.format("about %s year ago.", 1);
             }
@@ -104,7 +104,7 @@ public class ActivityMB implements Serializable {
             } else if ((currentTime - getLastUpdate) / 1000 > 1300000 && (currentTime - getLastUpdate) / 1000 <= 2500000) {
                 return String.format("about %s month ago.", 1);
             } else if ((currentTime - getLastUpdate) / 1000 > 2500000 && (currentTime - getLastUpdate) / 1000 < 25000000) {
-                return String.format("%s months ago.", (currentTime - getLastUpdate) / (1000 * 2600000));
+                return String.format("%s months ago.", (currentTime - getLastUpdate) / 1000 / 2600000);
             } else {
                 return String.format("about %s year ago.", 1);
             }
