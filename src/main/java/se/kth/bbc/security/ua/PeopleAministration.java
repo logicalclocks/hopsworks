@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
@@ -329,7 +328,7 @@ public class PeopleAministration implements Serializable {
      */
     public List<User> getAllRequests() {
         if (requests == null) {
-            requests = userManager.findAllByStatus(AccountStatus.MOBILE_ACCOUNT_INACTIVE);
+            requests = userManager.findAllByStatus(PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.ordinal());
         }
         return requests;
     }
@@ -341,7 +340,7 @@ public class PeopleAministration implements Serializable {
      */
     public List<User> getAllYubikeyRequests() {
         if (yubikey_requests == null) {
-            yubikey_requests = userManager.findAllByStatus(AccountStatus.YUBIKEY_ACCOUNT_INACTIVE);
+            yubikey_requests = userManager.findAllByStatus(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.ordinal());
         }
         return yubikey_requests;
     }
@@ -361,7 +360,7 @@ public class PeopleAministration implements Serializable {
      */
     public void activateUser(User user1) throws MessagingException {
         userManager.updateGroup(user1.getUid(), Integer.parseInt(selected_group));
-        userManager.updateStatus(user1.getUid(), AccountStatus.ACCOUNT_ACTIVE);
+        userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.ordinal());
         emailBean.sendEmail(user1.getEmail(), "BBC Account", accountActivatedMessage(user1.getEmail()));
         requests.remove(user1);
     }
@@ -374,7 +373,7 @@ public class PeopleAministration implements Serializable {
      * @throws javax.mail.MessagingException
      */
     public void blockUser(User user1) throws MessagingException {
-        userManager.updateStatus(user1.getUid(), AccountStatus.ACCOUNT_BLOCKED);
+        userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_BLOCKED.ordinal());
         emailBean.sendEmail(user1.getEmail(), "Account Blocked", accountBlockedMessage());
         requests.remove(user1);
     }
@@ -441,7 +440,7 @@ public class PeopleAministration implements Serializable {
         
         userManager.updateYubikey(yubi);
         userManager.updateGroup(this.selectedYubikyUser.getUid(), Integer.parseInt(selected_group));
-        userManager.updateStatus(this.selectedYubikyUser.getUid(), AccountStatus.ACCOUNT_ACTIVE);
+        userManager.updateStatus(this.selectedYubikyUser.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.ordinal());
         
         yubikey_requests.remove(this.selectedYubikyUser);
        

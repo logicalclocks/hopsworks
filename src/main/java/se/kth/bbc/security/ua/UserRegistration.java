@@ -266,7 +266,7 @@ public class UserRegistration implements Serializable {
             short yubikey = -1;
             username = mgr.register(fname, lname, mail, title, org, tel, orcid, uid,
                     SecurityUtils.converToSHA256(password), otpSecret, security_question,
-                    SecurityUtils.converToSHA256(security_answer), AccountStatus.MOBILE_ACCOUNT_INACTIVE, yubikey);
+                    SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.ordinal(), yubikey);
 
             // register group
             mgr.registerGroup(uid, GroupsNumber.BBC_GUEST);
@@ -311,7 +311,7 @@ public class UserRegistration implements Serializable {
             String otp ="-1";
             username = mgr.register(fname, lname, mail, title, org,
                     tel, orcid, uid, SecurityUtils.converToSHA256(password), otp, 
-                    security_question, SecurityUtils.converToSHA256(security_answer), AccountStatus.YUBIKEY_ACCOUNT_INACTIVE, yubikey);
+                    security_question, SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.ordinal(), yubikey);
 
             mgr.registerGroup(uid, GroupsNumber.BBC_GUEST);
 

@@ -120,7 +120,9 @@ public class PeopleStatusBean implements Serializable{
      public boolean checkForRequests() {
         if (isResearcher()) {
             //return false if no requests
-            open_reauests = !(userManager.findAllByStatus(AccountStatus.MOBILE_ACCOUNT_INACTIVE).isEmpty()) || !(userManager.findAllByStatus(AccountStatus.YUBIKEY_ACCOUNT_INACTIVE).isEmpty());
+            
+            open_reauests = !(userManager.findAllByStatus(PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.ordinal()).isEmpty())
+                    || !(userManager.findAllByStatus(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.ordinal()).isEmpty());
         }
       return open_reauests;
     }
