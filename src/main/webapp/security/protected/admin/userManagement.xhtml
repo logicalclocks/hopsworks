@@ -36,22 +36,29 @@
                                 <p:tab title="Registered Users" id="Registered">
                                     <h:form id="userdataForm">
                                         <p:growl id="growl" life="2000"/>
-                                        <p:dataTable id="userdataTable" var="user" value="#{peopleAministration.allUsers}" filteredValue="#{peopleAministration.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
-                                                     selectionMode="single" rowKey="#{user.email}" selection="#{peopleAministration.selectedUser}" style="table-layout: fixed" scrollable="false">
+                                        <p:dataTable id="userdataTable" 
+                                                     var="user" 
+                                                     value="#{peopleAministration.allUsers}" 
+                                                     filteredValue="#{peopleAministration.filteredUsers}"
+                                                     widgetVar="usersTable" 
+                                                     emptyMessage="No users found with given criteria"
+                                                     selectionMode="single" rowKey="#{user.email}" 
+                                                     selection="#{peopleAministration.selectedUser}" 
+                                                     style="table-layout: fixed" scrollable="false">
 
-                                            <p:column id="nameColumn" filterBy="fname" headerText="Fisrt Name" style="width:32%; font-size: 12px; text-align: left;">
+                                            <p:column id="nameColumn" filterBy="#{user.fname}" headerText="Fisrt Name" style="width:32%; font-size: 12px; text-align: left;">
                                                 <h:outputText value="#{user.fname}" />
                                             </p:column>
 
-                                            <p:column id="lnameColumn" filterBy="lname" headerText="Last Name" style="width:32%; font-size: 12px; text-align: left;">
+                                            <p:column id="lnameColumn" filterBy="#{user.lname}" headerText="Last Name" style="width:32%; font-size: 12px; text-align: left;">
                                                 <h:outputText value="#{user.lname}" />
                                             </p:column>
 
-                                            <p:column id="emailColumn" filterBy="email" headerText="Email" style="width:32%;font-size: 12px;text-align: left;">
+                                            <p:column id="emailColumn" filterBy="#{user.email}" headerText="Email" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{user.email}" />
                                             </p:column>
 
-                                            <p:column id="mobileNumColumn" filterBy="mobile"  headerText="Mobile Phone" style="width:32%;font-size: 12px;text-align: left;">
+                                            <p:column id="mobileNumColumn" filterBy="#{user.mobile}"  headerText="Mobile Phone" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{user.mobile}" />
                                             </p:column>
 
