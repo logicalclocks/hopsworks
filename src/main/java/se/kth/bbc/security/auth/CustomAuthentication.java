@@ -215,7 +215,7 @@ public class CustomAuthentication implements Serializable {
         if (user.getYubikeyUser()!=1) {
              RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Not valid Yubikey user", null));
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Not a valid Yubikey user", null));
             return ("");
         
         }
@@ -323,7 +323,7 @@ public class CustomAuthentication implements Serializable {
         if (user.getYubikeyUser()!=1) {
              RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Not valid Yubikey user", null));
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Not a valid Yubikey user", null));
             return ("");
         
         }
