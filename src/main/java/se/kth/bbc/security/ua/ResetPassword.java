@@ -137,7 +137,7 @@ public class ResetPassword implements Serializable {
             emailBean.sendEmail(people.getEmail(), "BBC Password Reset", mess);
 
             // make the account pending until it will be reset by user upon first login
-            mgr.updateStatus(people.getUid(), PeoplAccountStatus.ACCOUNT_PENDING.ordinal());
+            mgr.updateStatus(people.getUid(), PeoplAccountStatus.ACCOUNT_PENDING.getValue());
 
             // reset the old password with a new one
             mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(random_password));
@@ -220,7 +220,7 @@ public class ResetPassword implements Serializable {
             mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(passwd1));
 
             // make the account active until it will be reset by user upon first login
-            mgr.updateStatus(people.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.ordinal());
+            mgr.updateStatus(people.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
 
             // send email    
             String message = buildResetMessage();

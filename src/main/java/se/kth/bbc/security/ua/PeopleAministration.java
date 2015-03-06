@@ -12,7 +12,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -82,13 +81,13 @@ public class PeopleAministration implements Serializable {
     private String new_group;
 
     // all groups
-    Map<String, Integer> groups;
+    List<String> groups;
 
     // all existing groups belong tp
-    Map<String, Integer> current_groups;
+     List<String>current_groups;
 
     // all possible new groups user doesnt belong to
-    Map<String, Integer> new_groups;
+    List<String> new_groups;
 
     // Yubikey public id. 12 chars: vviehlefjvcb
     private String pubid;
@@ -96,8 +95,20 @@ public class PeopleAministration implements Serializable {
     // Yubikey serial no 
     private String serial;
 
-    //f1bda8c978766d50c25d48d72ed516e0
+    // e.g. f1bda8c978766d50c25d48d72ed516e0
     private String secret;
+
+    public String getEdit_status() {
+        
+        return PeoplAccountStatus.values()[editingUser.getStatus()-1].name();
+    }
+
+    public void setEdit_status(String edit_status) {
+        this.edit_status = edit_status;
+    }
+    
+    // current status of the editing user
+    private String edit_status;
     
     public String getNew_group() {
         return new_group;
@@ -154,7 +165,7 @@ public class PeopleAministration implements Serializable {
 
     
     public String getChanged_Status(User p) {
-        return PeoplAccountStatus.values()[userManager.findByEmail(p.getEmail()).getStatus()].toString();
+        return PeoplAccountStatus.values()[userManager.findByEmail(p.getEmail()).getStatus()-1].name();
     }
 
     /*
@@ -177,20 +188,31 @@ public class PeopleAministration implements Serializable {
      */
     public List<String> getCurrent_groups() {
 
-        List<String> list = userManager.findGroups(editingUser.getUid());
+        List<String> list=  userManager.findGroups(editingUser.getUid());
+        
         return list;
+    
     }
 
-    public void setCurrent_groups(Map<String, Integer> current_groups) {
+    public void setCurrent_groups( List<String> current_groups) {
         this.current_groups = current_groups;
     }
 
+    
     public List<String> getNew_groups() {
         List<String> list = userManager.findGroups(editingUser.getUid());
-        return list;
+        List<String> tmp = new ArrayList<>();
+        
+        for (BBCGroups b: BBCGroups.values()) {
+        
+            if (!list.contains(b.name()))
+                tmp.add(b.name());
+        }
+        
+        return tmp;
     }
 
-    public void setNew_groups(Map<String, Integer> new_groups) {
+    public void setNew_groups(List<String> new_groups) {
         this.new_groups = new_groups;
     }
 
@@ -211,12 +233,38 @@ public class PeopleAministration implements Serializable {
         this.selected_group = selected_group;
     }
 
+    List<String> status;
+    
     @PostConstruct
     public void initGroups() {
-       
+        
+        groups = new ArrayList<>();
+        status = new ArrayList<>();
+    
+        for (int i = 0; i< BBCGroups.values().length; i++) {
+             groups.add(BBCGroups.values()[i].name());
+        }
+        
+    
         questions = new SelectSecurityQuestionMenue().getQuestions();
-        // new_groups = getNew_groups();
-        // current_groups = getCurrent_groups();
+    }
+
+    public List<String> getStatus() {
+    
+        status = new ArrayList<>();
+   
+        int st = editingUser.getStatus();
+        
+        for (PeoplAccountStatus p: PeoplAccountStatus.values()) {
+             status.add(p.name());
+        }
+        
+        status.remove(PeoplAccountStatus.values()[st-1].name());
+        return status;
+    }
+
+    public void setStatus(List<String> status) {
+        this.status = status;
     }
 
     public void setFilteredUsers(List<User> filteredUsers) {
@@ -238,7 +286,7 @@ public class PeopleAministration implements Serializable {
         return userManager.findAllUsers();
     }
 
-    public Map<String, Integer> getGroups() {
+    public  List<String> getGroups() {
         return groups;
     }
 
@@ -311,7 +359,7 @@ public class PeopleAministration implements Serializable {
      */
     public List<User> getAllRequests() {
         if (requests == null) {
-            requests = userManager.findAllByStatus(PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.ordinal());
+            requests = userManager.findAllByStatus(PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
         }
         return requests;
     }
@@ -323,7 +371,7 @@ public class PeopleAministration implements Serializable {
      */
     public List<User> getAllYubikeyRequests() {
         if (yubikey_requests == null) {
-            yubikey_requests = userManager.findAllByStatus(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.ordinal());
+            yubikey_requests = userManager.findAllByStatus(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
         }
         return yubikey_requests;
     }
@@ -342,8 +390,8 @@ public class PeopleAministration implements Serializable {
      * @param user1
      */
     public void activateUser(User user1) throws MessagingException {
-        userManager.updateGroup(user1.getUid(), Integer.parseInt(selected_group));
-        userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.ordinal());
+        userManager.updateGroup(user1.getUid(), BBCGroups.valueOf(selected_group).getValue());
+        userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
         emailBean.sendEmail(user1.getEmail(), "BBC Account", accountActivatedMessage(user1.getEmail()));
         requests.remove(user1);
     }
@@ -356,7 +404,7 @@ public class PeopleAministration implements Serializable {
      * @throws javax.mail.MessagingException
      */
     public void blockUser(User user1) throws MessagingException {
-        userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_BLOCKED.ordinal());
+        userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_BLOCKED.getValue());
         emailBean.sendEmail(user1.getEmail(), "Account Blocked", accountBlockedMessage());
         requests.remove(user1);
     }
@@ -420,10 +468,9 @@ public class PeopleAministration implements Serializable {
         yubi.setHigh(0);
         yubi.setLow(0);
         
-        
         userManager.updateYubikey(yubi);
         userManager.updateGroup(this.selectedYubikyUser.getUid(), Integer.parseInt(selected_group));
-        userManager.updateStatus(this.selectedYubikyUser.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.ordinal());
+        userManager.updateStatus(this.selectedYubikyUser.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
         
         yubikey_requests.remove(this.selectedYubikyUser);
        
@@ -488,28 +535,29 @@ public class PeopleAministration implements Serializable {
     public void updateUserByAdmin() {
         try {
             // update status
-            if (!selected_status.isEmpty() || selected_status != null) {
-                userManager.updateStatus(editingUser.getUid(), Integer.parseInt(selected_status));
+            if ( !"#".equals(selected_status)) {
+                editingUser.setStatus(PeoplAccountStatus.valueOf(selected_status).getValue());
+                userManager.updateStatus(editingUser.getUid(), PeoplAccountStatus.valueOf(selected_status).getValue());
+                
             }
 
             // register a new group
-            if (new_group != null) {
-                userManager.registerGroup(editingUser.getUid(), Integer.parseInt(new_group));
+            if (!"#".equals(new_group)) {
+                userManager.registerGroup(editingUser.getUid(), BBCGroups.valueOf(new_group).getValue());
             }
 
             // remove a group
-            if (selected_group != null) {
-                userManager.removeGroup(editingUser.getUid(), Integer.parseInt(selected_group));
+            if (!"#".equals(selected_group)) {
+                userManager.removeGroup(editingUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
             }
             
-            if((selected_group ==null || selected_group.isEmpty()) && 
-                (new_group== null || new_group.isEmpty())   &&
-                (selected_status == null || selected_status!=null)) {
+            if("#".equals(selected_group)) {
             
-                MessagesController.addErrorMessage("Error", "No selection made!");
-
-            }   
-                    
+                if (("#".equals(selected_status) ) ||
+                        "#".equals(new_group)) {
+                    MessagesController.addErrorMessage("Error", "No selection made!");
+                }
+             }   
             
         } catch (EJBException ejb) {
             MessagesController.addErrorMessage("Error: Update failed.");

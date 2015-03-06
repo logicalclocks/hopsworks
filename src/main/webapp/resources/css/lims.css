@@ -2554,3 +2554,12 @@ box-shadow: none;
 .studyDialog table td {
   vertical-align: middle;
 }
+
+.register_actions .ui-button {
+  margin-left: 10px;
+}
+
+.ui-selectoneradio label {
+  text-align: left;
+  margin-left: 5px;
+}

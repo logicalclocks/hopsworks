@@ -44,12 +44,13 @@
                                  size="42"
                                  value="#{resetPassword.answer}" 
                                  required="true"
-                                 requiredMessage="Answer Security Question" />
+                                 requiredMessage="Answer Security Question"
+                                 autocomplete="false"/>
 
                     <p:outputLabel for="cur" value="Password" style="font-weight:bold" />
                     <p:password id="cur" value="#{resetPassword.current}" 
                                 size="42"
-                                required="true" 
+                                required="true" autocomplete="false"
                                 requiredMessage="Enter password"  />
 
                     <p:spacer></p:spacer>

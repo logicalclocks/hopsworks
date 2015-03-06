@@ -81,26 +81,26 @@
                                     <p:inputText id="fname" value="#{userRegistration.fname}" size="40"
                                                  required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Enter Name" />
+                                                 requiredMessage="Enter first name" />
 
                                     <p:outputLabel for="lname" value="Last name" style="font-weight:bold"/>
                                     <p:inputText id="lname" value="#{userRegistration.lname}" size="40"
                                                  required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Enter Last Name"/>
+                                                 requiredMessage="Enter last name"/>
 
                                     <p:outputLabel for="email" value="Email" style="font-weight:bold"/>
                                     <p:inputText id="email" value="#{userRegistration.mail}" size="40"
                                                  required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Enter Email">
+                                                 requiredMessage="Enter email">
                                         <f:validator binding="#{usernameValidator}" />
                                     </p:inputText>    
 
-                                    <p:outputLabel for="tel" value="Tel" style="font-weight:bold"/>
+                                    <p:outputLabel for="tel" value="Phone number" style="font-weight:bold"/>
                                     <p:inputText id="tel" value="#{userRegistration.tel}" size="40"
                                                  autocomplete="off"
-                                                 validatorMessage="Invalid tel number">
+                                                 validatorMessage="Invalid phone number">
                                         <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                     </p:inputText>
 
@@ -111,7 +111,7 @@
                                                  >
                                     </p:inputText>
 
-                                    <p:outputLabel for="address2" value="Street" style="font-weight:bold" />
+                                    <p:outputLabel for="address2" value="Street and number" style="font-weight:bold" />
                                     <p:inputText id="address2" value="#{userRegistration.address2}" required="true"
                                                  autocomplete="off"
                                                  requiredMessage="Enter street" size="40">
@@ -126,22 +126,22 @@
                                     <p:outputLabel for="zip1" value="Postal code" style="font-weight:bold" />
                                     <p:inputText id="zip1" value="#{userRegistration.postalcode}" required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Enter postalcode" size="40">
+                                                 requiredMessage="Enter postal code" size="40">
                                     </p:inputText>
 
                                     <p:outputLabel for="country1" value="Country" style="font-weight:bold" />
                                     <p:inputText id="country1" value="#{userRegistration.country}"  required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Enter your country" size="40">
+                                                 requiredMessage="Enter country" size="40">
                                     </p:inputText>
 
                                     <p:outputLabel for="sec_question1" value="Security Question" style="font-weight:bold"/>
                                     <p:selectOneMenu id="sec_question1" value="#{userRegistration.security_question}"
                                                      required="true"
                                                      requiredMessage="Select security question" >
-                                        <f:selectItem itemLabel="Select Security Question" itemValue="" />
+                                        <f:selectItem itemLabel="Select security question" itemValue="" />
                                         <f:selectItem itemLabel="Who is your favorite historical figure?" itemValue="history" />
-                                        <f:selectItem itemLabel="What is name of your favorite teacher?" itemValue="teacher" />
+                                        <f:selectItem itemLabel="What is the name of your favorite teacher?" itemValue="teacher" />
                                         <f:selectItem itemLabel="What is your first phone number?" itemValue="phone" />
                                         <f:selectItem itemLabel="What is the name of your favorite childhood friend?" itemValue="friend" />
 

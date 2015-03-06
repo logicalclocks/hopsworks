@@ -21,9 +21,9 @@
             </ui:insert>
 
             <div align="center">
-                <p:layout  style="margin:0px auto; border: 0px none; width: 80%; " >
+                <p:layout  style="margin:0px auto; border: 0px none; width: 80%; height: 800px;" >
 
-                    <p:layoutUnit position="east" style="border: 0px none; width:50%; height: 500px;">
+                    <p:layoutUnit position="east" style="border: 0px none; width:50%;" rendered="#{not customAuthenticationSwitch.otpEnabled}">
                         <ul class="register_banner">
                             <h3 align="left">Why mobile two-step verification?</h3>
                         </ul>
@@ -79,7 +79,7 @@
 
                     <div align="left">
                         <p:layoutUnit position="center" 
-                                      style="border: 0px none; width:50%; height: 500px">         
+                                      style="border: 0px none; width:50%;">         
                             <ul class="register_banner">
                                 <h3 align="left">Request Mobile Account</h3>
                             </ul>
@@ -106,7 +106,7 @@
                                         <f:validator binding="#{usernameValidator}" />
                                     </p:inputText>    
 
-                                    <p:outputLabel for="tel" value="Mobile" style="font-weight:bold"/>
+                                    <p:outputLabel for="tel" value="Phone number" style="font-weight:bold"/>
                                     <p:inputText id="tel" value="#{userRegistration.tel}" size="40"
                                                  autocomplete="off"
                                                  validatorMessage="Invalid phone number">

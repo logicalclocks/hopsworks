@@ -130,7 +130,7 @@ public class RecoverySelector implements Serializable {
         }
 
         
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.ordinal() ) {
+        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue() ) {
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is blocked!", "null"));
             return "";
@@ -215,7 +215,7 @@ public class RecoverySelector implements Serializable {
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.ordinal() ) {
+        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue() ) {
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is blocked!", "null"));
             return "";
@@ -232,7 +232,7 @@ public class RecoverySelector implements Serializable {
 
                 String message = buildYubResetMessage("");
                 email.sendEmail(people.getEmail(), "Yubikey request", message);
-                people.setStatus(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.ordinal());
+                people.setStatus(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
                 um.updatePeople(people);
                 return "yubico";
             } else {

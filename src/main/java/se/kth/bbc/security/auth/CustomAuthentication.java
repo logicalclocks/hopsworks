@@ -120,7 +120,7 @@ public class CustomAuthentication implements Serializable {
         }
     
         // return if user not activated
-        if (user.getStatus() == PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.ordinal()) {
+        if (user.getStatus() == PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()) {
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not activated", null));
@@ -128,7 +128,7 @@ public class CustomAuthentication implements Serializable {
         }
 
         // return if used is bloked
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_BLOCKED.ordinal()) {
+        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             // inform the use about the blocked account
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
@@ -137,7 +137,7 @@ public class CustomAuthentication implements Serializable {
         }
 
         // return if used is bloked
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_DEACTIVATED.ordinal()) {
+        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             // inform the use about the blocked account
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
@@ -177,7 +177,7 @@ public class CustomAuthentication implements Serializable {
         }
         
         // reset the password after first login
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_PENDING.ordinal()) {
+        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_PENDING.getValue()) {
             return ("reset");
         }
 
@@ -216,13 +216,13 @@ public class CustomAuthentication implements Serializable {
         if (user.getYubikeyUser()!=1) {
              RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Not valid Yubikey user", null));
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Not a valid Yubikey user", null));
             return ("");
         
         }
         
         // return if user not activated
-        if (user.getStatus() == PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.ordinal()) {
+        if (user.getStatus() == PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()) {
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not activated", null));
@@ -230,7 +230,7 @@ public class CustomAuthentication implements Serializable {
         }
 
         // return if used is bloked
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_BLOCKED.ordinal()) {
+        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             // inform the use about the blocked account
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
@@ -239,7 +239,7 @@ public class CustomAuthentication implements Serializable {
         }
         
         // return if used is bloked
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_DEACTIVATED.ordinal()) {
+        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             // inform the use about the blocked account
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
@@ -284,7 +284,7 @@ public class CustomAuthentication implements Serializable {
         }
         
         // reset the password after first login
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_PENDING.ordinal()) {
+        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_PENDING.getValue()) {
             return ("reset");
         }
        
@@ -324,13 +324,13 @@ public class CustomAuthentication implements Serializable {
         if (user.getYubikeyUser()!=1) {
              RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Not valid Yubikey user", null));
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Not a valid Yubikey user", null));
             return ("");
         
         }
         
         // return if user not activated
-        if (user.getStatus() == PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.ordinal()) {
+        if (user.getStatus() == PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()) {
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not activated", null));
@@ -338,7 +338,7 @@ public class CustomAuthentication implements Serializable {
         }
 
         // return if used is bloked
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_BLOCKED.ordinal()) {
+        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             // inform the use about the blocked account
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
@@ -377,7 +377,7 @@ public class CustomAuthentication implements Serializable {
         }
         
         // reset the password after first login
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_PENDING.ordinal()) {
+        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_PENDING.getValue()) {
             return ("reset");
         }
        

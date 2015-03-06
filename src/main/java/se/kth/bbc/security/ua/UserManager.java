@@ -132,7 +132,7 @@ public class UserManager {
     public boolean deactivateUser(int id) {
         User p = (User) em.find(User.class, id);
         if (p != null) {
-            p.setStatus(PeoplAccountStatus.ACCOUNT_BLOCKED.ordinal());
+            p.setStatus(PeoplAccountStatus.ACCOUNT_BLOCKED.getValue());
             em.merge(p);
         }
         return true;
@@ -177,7 +177,7 @@ public class UserManager {
     }
 
     public List<User> findInactivateUsers() {
-        Query query = em.createNativeQuery("SELECT * FROM USERS p WHERE p.active = " + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.ordinal());
+        Query query = em.createNativeQuery("SELECT * FROM USERS p WHERE p.active = " + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
         List<User> people = query.getResultList();
         return people;
     }
@@ -261,7 +261,7 @@ public class UserManager {
 
     public boolean findYubikeyUsersByStatus(int status) {
         List existing = em.createQuery(
-                "SELECT p FROM User p WHERE p.status ='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.ordinal() + "' AND p.yubikey_user = " + status)
+                "SELECT p FROM User p WHERE p.status ='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.yubikey_user = " + status)
                 .getResultList();
         return (existing.size() > 0);
     }
