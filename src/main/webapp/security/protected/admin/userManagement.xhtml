@@ -77,8 +77,6 @@
                                             <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
                                             <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
                                         </p:confirmDialog>
-
-
                                     </h:form>   
                                 </p:tab>                 
 
@@ -218,7 +216,6 @@
                                                 <h:panelGrid columns="2" style="width: auto;">                                                    
                                                     <p:commandLink  action="#{peopleAministration.modifyUser(muser)}" update="@form">
                                                         <h:graphicImage name="images/icons/edit.png"  width="20px" height="20px" />
-                                                        <p:confirm header="Modify user" message="Modify selected user?" icon="ui-icon-alert"/>
                                                     </p:commandLink>
                                                 </h:panelGrid>
                                             </p:column>

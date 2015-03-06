@@ -175,36 +175,19 @@ public class PeopleAministration implements Serializable {
      *
      * @return
      */
-    public Map<String, Integer> getCurrent_groups() {
+    public List<String> getCurrent_groups() {
 
         List<String> list = userManager.findGroups(editingUser.getUid());
-
-        Map<String, Integer> filter = new HashMap<>();
-
-        BBCGroups bbc = new BBCGroups();
-
-        for (String next : list) {
-            filter.put(next, bbc.getGroupNum(next));
-        }
-        current_groups = filter;
-
-        return filter;
+        return list;
     }
 
     public void setCurrent_groups(Map<String, Integer> current_groups) {
         this.current_groups = current_groups;
     }
 
-    public Map<String, Integer> getNew_groups() {
+    public List<String> getNew_groups() {
         List<String> list = userManager.findGroups(editingUser.getUid());
-
-        Map<String, Integer> filter = new BBCGroups().getGroups();
-
-        for (String next : list) {
-            filter.remove(next);
-        }
-        new_groups = filter;
-        return filter;
+        return list;
     }
 
     public void setNew_groups(Map<String, Integer> new_groups) {
@@ -230,9 +213,9 @@ public class PeopleAministration implements Serializable {
 
     @PostConstruct
     public void initGroups() {
-        groups = new BBCGroups().getGroups();
+       
         questions = new SelectSecurityQuestionMenue().getQuestions();
-       // new_groups = getNew_groups();
+        // new_groups = getNew_groups();
         // current_groups = getCurrent_groups();
     }
 

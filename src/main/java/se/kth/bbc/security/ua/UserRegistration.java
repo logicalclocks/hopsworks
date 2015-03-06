@@ -269,7 +269,7 @@ public class UserRegistration implements Serializable {
                     SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.ordinal(), yubikey);
 
             // register group
-            mgr.registerGroup(uid, GroupsNumber.BBC_GUEST);
+            mgr.registerGroup(uid, BBCGroups.BBC_GUEST.getValue());
            
             // create address entry
             mgr.registerAddress(uid);
@@ -313,7 +313,7 @@ public class UserRegistration implements Serializable {
                     tel, orcid, uid, SecurityUtils.converToSHA256(password), otp, 
                     security_question, SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.ordinal(), yubikey);
 
-            mgr.registerGroup(uid, GroupsNumber.BBC_GUEST);
+            mgr.registerGroup(uid, BBCGroups.BBC_GUEST.getValue());
 
             mgr.registerAddress(uid, address1, address2, address3, city, state, country, postalcode);
             mgr.registerYubikey(uid);
