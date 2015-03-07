@@ -18,7 +18,7 @@ values ('10000', 'meb10000', 'd82494f05d6917ba02f7aaa29689ccb444bb73f20380876cb0
  CURRENT_TIMESTAMP, 1, 'V3WBPS4G2WMQ53VA', 'history', 'd82494f05d6917ba02f7aaa29689ccb444bb73f20380876cb05d1f37537b7892', -1);
 
 /*
-    Maopping between uid/role of admin user
+    Mapping between uid/role of admin user
 */
 insert into People_Group (uid,gid) values (10000,1005);
 
