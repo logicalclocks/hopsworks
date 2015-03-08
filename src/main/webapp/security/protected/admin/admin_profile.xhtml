@@ -13,7 +13,6 @@
             <title><ui:insert name="title">BioBankCloud LIMS Profile</ui:insert></title>
             <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-
         </h:head>
 
         <h:body>
@@ -21,12 +20,12 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
 
-            <p:layout  style="margin:0px auto; border: 0px none; width: 40%; ">  
+            <p:layout  style="margin:0px auto; width: 40%;" >  
                 <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
 
-                <p:layoutUnit position="north">
+                <p:layoutUnit position="north" style="border: 0px none;">
 
-                    <p:panelGrid id="user_profile" columns="2" layout="grid" style="border: 0px none;">
+                    <p:panelGrid id="user_profile" columns="2" layout="grid" style="margin:0px auto; width: 100%;" >
                         <p:column>
                             <img src="#{profileManager.gravatar}" />
                             <h3>
@@ -46,8 +45,7 @@
 
                         <p:column>
                             <p:dataList  value="#{peopleAministration.current_groups}" 
-                                         style="border: 0px none;"
-                                         var="role"  
+                                          var="role"  
                                          type="ordered">
                                 #{role}
                             </p:dataList>

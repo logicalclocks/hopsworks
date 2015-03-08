@@ -21,9 +21,10 @@
             </ui:insert>
 
             <div align="center">
-                <p:layout  style="margin:0px auto; border: 0px none; width: 80%; height: 800px;" >
+                <p:layout  style="margin:0px auto; border: 0px none; width: 80%; height: 1200px;" >
 
-                    <p:layoutUnit position="east" style="border: 0px none; width:50%;" rendered="#{not customAuthenticationSwitch.otpEnabled}">
+                    <p:layoutUnit position="east" style="border: 0px none; width:50%;"
+                                  rendered="#{not customAuthenticationSwitch.otpEnabled}">
                         <ul class="register_banner">
                             <h3 align="left">Why mobile two-step verification?</h3>
                         </ul>
@@ -43,10 +44,15 @@
                                 <br></br>
                                 <p style="width: 500px;">
                                     In order to use mobile verification you need to install 
-                                    <a  style="color: #075fa9;font-style: italic" target="_blank" href="https://support.google.com/accounts/answer/1066447?hl=en"> 
-                                    Google Authenticator
-                                    </a> on your smart mobile device
-                                    such as Apple iPhone, iPad, Google Nexus etc. 
+                                    on your smart mobile device
+                                    such as Apple iPhone, iPad, Google Nexus etc. For instructions for using two-step verification follow: 
+                                    <a style="color: #075fa9;font-style: italic" target="_blank" 
+                                       href="https://support.google.com/accounts/answer/1066447?hl=en"> 
+                                    Installing Google Authenticator.
+                                    </a> 
+                         
+                                   <br></br>
+                                   <br></br>
                                     After submitting in this form, a code will be generated and you need to scan it with your smart device.
                                     <br></br>
                                     <br></br>
