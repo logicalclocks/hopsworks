@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui">
     <f:view contentType="text/html">
-        
+
         <h:head>
             <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
             <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
@@ -21,10 +21,105 @@
             </ui:insert>
 
             <div align="center">
-                <p:layout  style="margin:0px auto; border: 0px none; width: 80%; height: 1200px;" >
+                <h:panelGrid columns="#{customAuthenticationSwitch.otpEnabled?2:1}" styleClass="registerContainer">
+                    <h:panelGroup  styleClass="registerPanel">
+                        <ul class="register_banner">
+                            <h3 align="left">Request Mobile Account</h3>
+                        </ul>
 
-                    <p:layoutUnit position="east" style="border: 0px none; width:50%;"
-                                  rendered="#{not customAuthenticationSwitch.otpEnabled}">
+                        <h:form > 
+                            <h:panelGrid columns="2">			
+                                <p:outputLabel for="fname" value="First name" style="font-weight:bold"/>
+                                <p:inputText id="fname" value="#{userRegistration.fname}" size="40"
+                                             required="true"
+                                             autocomplete="off"
+                                             requiredMessage="Enter first name" />
+
+                                <p:outputLabel for="lname" value="Last name" style="font-weight:bold"/>
+                                <p:inputText id="lname" value="#{userRegistration.lname}" size="40"
+                                             required="true"
+                                             autocomplete="off"
+                                             requiredMessage="Enter last name"/>
+
+                                <p:outputLabel for="email" value="Email" style="font-weight:bold"/>
+                                <p:inputText id="email" value="#{userRegistration.mail}" size="40"
+                                             required="true"
+                                             autocomplete="off"
+                                             requiredMessage="Enter email">
+                                    <f:validator binding="#{usernameValidator}" />
+                                </p:inputText>    
+
+                                <p:outputLabel for="tel" value="Phone number" style="font-weight:bold"/>
+                                <p:inputText id="tel" value="#{userRegistration.tel}" size="40"
+                                             autocomplete="off"
+                                             validatorMessage="Invalid phone number">
+                                    <f:validateRegex pattern="^([+]?[\d]+)?$" />
+                                </p:inputText>
+
+                                <p:outputLabel for="sec_question" value="Security Question" style="font-weight:bold"/>
+                                <p:selectOneMenu id="sec_question" value="#{userRegistration.security_question}" 
+                                                 required="true"
+                                                 requiredMessage="Select security question">
+                                    <f:selectItem itemLabel="Select Security Question" itemValue="" />
+                                    <f:selectItem itemLabel="Who is your favorite historical figure?" itemValue="history" />
+                                    <f:selectItem itemLabel="What is the name of your favorite teacher?" itemValue="teacher" />
+                                    <f:selectItem itemLabel="What is your first phone number?" itemValue="phone" />
+                                    <f:selectItem itemLabel="What is the name of your favorite childhood friend?" itemValue="friend" />
+                                </p:selectOneMenu>  
+
+                                <p:outputLabel for="answer" value="Answer" style="font-weight:bold"/>
+                                <p:inputText id="answer" value="#{userRegistration.security_answer}" size="40"
+                                             required="true"
+                                             autocomplete="off"
+                                             requiredMessage="Answer security question" />
+
+                                <p:outputLabel for="password0" value="Password" style="font-weight:bold"/>
+                                <p:password id="password0" value="#{userRegistration.password}" 
+                                            required="true" size="40"
+                                            autocomplete="off"
+                                            requiredMessage="Enter password">
+                                    <f:validator validatorId="passwordValidator" />
+                                    <f:attribute name="confirmPassword" value="#{confirmPassword}" />
+                                </p:password>
+
+                                <p:outputLabel for="password" value="Password again" style="font-weight:bold"/>
+                                <p:password id="password" value="#{userRegistration.passwordAgain}" size="40"
+                                            requiredMessage="Re-enter password"
+                                            autocomplete="off" 
+                                            binding="#{confirmPassword}"
+                                            required="true">
+                                </p:password>
+
+
+                                <p:outputLabel for="captcha" value="Enter Captcha"  style="font-weight:bold"/>
+                                <p:captcha id ="captcha" label="Captcha" required="true" 
+                                           requiredMessage="Enter Captcha"/>
+
+
+                                <p:spacer></p:spacer>
+                                <h:panelGroup> 
+                                    <p:selectBooleanCheckbox  value="#{userRegistration.tos}"> 
+                                        <f:validator binding="#{tosCheckboxValidator}" />
+
+                                    </p:selectBooleanCheckbox>                          
+                                    &nbsp;
+                                    <p:commandLink action="tos.xhtml" ajax="false" style="margin-right:20px; color: #0971B2" 
+                                                   value=" I agree to the BBC Terms of Service (ToS)"
+                                                   immediate="true"  target="_blank">
+                                    </p:commandLink>
+                                </h:panelGroup>
+
+                                <p:spacer></p:spacer>
+                                <p:messages id="messages" showDetail="false" autoUpdate="true" closable="true"/>
+
+                            </h:panelGrid>
+                            <div class="register_banner">
+                                <p:commandButton styleClass="team_button button-save" type="submit" value="Register" oncomplete="Recaptcha.reload();" action="#{userRegistration.registerMobileUser()}"/>
+                                <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" immediate="true" style="margin-left: 55px"/>
+                            </div>
+                        </h:form> 
+                    </h:panelGroup>
+                    <h:panelGroup rendered="#{customAuthenticationSwitch.otpEnabled}" styleClass="registerPanel">
                         <ul class="register_banner">
                             <h3 align="left">Why mobile two-step verification?</h3>
                         </ul>
@@ -43,17 +138,17 @@
                                 <br></br>
                                 <br></br>
                                 <p style="width: 500px;">
-                                    In order to use mobile verification you need to install 
-                                    on your smart mobile device
-                                    such as Apple iPhone, iPad, Google Nexus etc. For instructions for using two-step verification follow: 
+                                    In order to use mobile verification you need to install Google Authenticator on your mobile
+                                    device (such as Apple iPhone, iPad, Google Nexus). 
+                                    For instructions on how to do this, refer to: 
                                     <a style="color: #075fa9;font-style: italic" target="_blank" 
                                        href="https://support.google.com/accounts/answer/1066447?hl=en"> 
-                                    Installing Google Authenticator.
+                                        Installing Google Authenticator.
                                     </a> 
-                         
-                                   <br></br>
-                                   <br></br>
-                                    After submitting in this form, a code will be generated and you need to scan it with your smart device.
+
+                                    <br></br>
+                                    <br></br>
+                                    After submitting the form on the left, a QR code as shown below will be generated and you need to scan it with your device.
                                     <br></br>
                                     <br></br>
                                     <div align="center">
@@ -73,117 +168,13 @@
                                     <br></br>
                                     <p style="width: 500px; height: auto;">
                                         Please note that the generated one-time password will not be sent to your mobile number. 
-                                        The one-time password will be generated within your smart device using Google Authenticator app. 
+                                        The one-time password will be generated on your device in the Google Authenticator app. 
                                     </p>
-
                                 </div>  
                             </p>
                         </div>
-
-                    </p:layoutUnit>    
-
-
-                    <div align="left">
-                        <p:layoutUnit position="center" 
-                                      style="border: 0px none; width:50%;">         
-                            <ul class="register_banner">
-                                <h3 align="left">Request Mobile Account</h3>
-                            </ul>
-
-                            <h:form > 
-                                <h:panelGrid columns="2">			
-                                    <p:outputLabel for="fname" value="First name" style="font-weight:bold"/>
-                                    <p:inputText id="fname" value="#{userRegistration.fname}" size="40"
-                                                 required="true"
-                                                 autocomplete="off"
-                                                 requiredMessage="Enter first name" />
-
-                                    <p:outputLabel for="lname" value="Last name" style="font-weight:bold"/>
-                                    <p:inputText id="lname" value="#{userRegistration.lname}" size="40"
-                                                 required="true"
-                                                 autocomplete="off"
-                                                 requiredMessage="Enter last name"/>
-
-                                    <p:outputLabel for="email" value="Email" style="font-weight:bold"/>
-                                    <p:inputText id="email" value="#{userRegistration.mail}" size="40"
-                                                 required="true"
-                                                 autocomplete="off"
-                                                 requiredMessage="Enter email">
-                                        <f:validator binding="#{usernameValidator}" />
-                                    </p:inputText>    
-
-                                    <p:outputLabel for="tel" value="Phone number" style="font-weight:bold"/>
-                                    <p:inputText id="tel" value="#{userRegistration.tel}" size="40"
-                                                 autocomplete="off"
-                                                 validatorMessage="Invalid phone number">
-                                        <f:validateRegex pattern="^([+]?[\d]+)?$" />
-                                    </p:inputText>
-
-                                    <p:outputLabel for="sec_question" value="Security Question" style="font-weight:bold"/>
-                                    <p:selectOneMenu id="sec_question" value="#{userRegistration.security_question}" 
-                                                     required="true"
-                                                     requiredMessage="Select security question">
-                                        <f:selectItem itemLabel="Select Security Question" itemValue="" />
-                                        <f:selectItem itemLabel="Who is your favorite historical figure?" itemValue="history" />
-                                        <f:selectItem itemLabel="What is name of your favorite teacher?" itemValue="teacher" />
-                                        <f:selectItem itemLabel="What is your first phone number?" itemValue="phone" />
-                                        <f:selectItem itemLabel="What is the name of your favorite childhood friend?" itemValue="friend" />
-                                    </p:selectOneMenu>  
-
-                                    <p:outputLabel for="answer" value="Answer" style="font-weight:bold"/>
-                                    <p:inputText id="answer" value="#{userRegistration.security_answer}" size="40"
-                                                 required="true"
-                                                 autocomplete="off"
-                                                 requiredMessage="Answer security question" />
-
-                                    <p:outputLabel for="password0" value="Password" style="font-weight:bold"/>
-                                    <p:password id="password0" value="#{userRegistration.password}" 
-                                                required="true" size="40"
-                                                autocomplete="off"
-                                                requiredMessage="Enter password">
-                                        <f:validator validatorId="passwordValidator" />
-                                        <f:attribute name="confirmPassword" value="#{confirmPassword}" />
-                                    </p:password>
-
-                                    <p:outputLabel for="password" value="Password again" style="font-weight:bold"/>
-                                    <p:password id="password" value="#{userRegistration.passwordAgain}" size="40"
-                                                requiredMessage="Re-enter password"
-                                                autocomplete="off" 
-                                                binding="#{confirmPassword}"
-                                                required="true">
-                                    </p:password>
-
-
-                                    <p:outputLabel for="captcha" value="Enter Captcha"  style="font-weight:bold"/>
-                                    <p:captcha id ="captcha" label="Captcha" required="true" 
-                                               requiredMessage="Enter Captcha"/>
-
-                                    
-                                    <p:spacer></p:spacer>
-                                    <h:panelGroup> 
-                                        <p:selectBooleanCheckbox  value="#{userRegistration.tos}"> 
-                                       <f:validator binding="#{tosCheckboxValidator}" />
-                                            
-                                    </p:selectBooleanCheckbox>                          
-                                     	&nbsp;
-                                    <p:commandLink action="tos.xhtml" ajax="false" style="margin-right:20px; color: #0971B2" 
-                                                   value=" I agree to the BBC Terms of Service (ToS)"
-                                                   immediate="true"  target="_blank">
-                                    </p:commandLink>
-                                   </h:panelGroup>
-                           
-                                    <p:spacer></p:spacer>
-                                    <p:messages id="messages" showDetail="false" autoUpdate="true" closable="true"/>
-                                    
-                                </h:panelGrid>
-                                <div class="register_banner">
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Register" oncomplete="Recaptcha.reload();" action="#{userRegistration.registerMobileUser()}"/>
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" immediate="true" style="margin-left: 55px"/>
-                                </div>
-                            </h:form>     
-                        </p:layoutUnit>
-                    </div>
-                </p:layout>
+                    </h:panelGroup>
+                </h:panelGrid>
             </div>   
         </h:body>
     </f:view>

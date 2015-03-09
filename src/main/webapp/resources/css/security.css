@@ -2288,3 +2288,11 @@ ui-wizard {
     color:#1385e5 !important;
     text-decoration: underline;
 }
+
+.registerPanel{
+  width: 50%;
+}
+
+.registerContainer td{
+  vertical-align: top;
+}
