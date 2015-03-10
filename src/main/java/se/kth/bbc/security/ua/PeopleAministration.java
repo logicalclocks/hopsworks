@@ -469,7 +469,7 @@ public class PeopleAministration implements Serializable {
         yubi.setLow(0);
         
         userManager.updateYubikey(yubi);
-        userManager.updateGroup(this.selectedYubikyUser.getUid(), Integer.parseInt(selected_group));
+        userManager.updateGroup(this.selectedYubikyUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
         userManager.updateStatus(this.selectedYubikyUser.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
         
         yubikey_requests.remove(this.selectedYubikyUser);
