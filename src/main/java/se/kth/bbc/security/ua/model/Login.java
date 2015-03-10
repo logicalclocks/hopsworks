@@ -10,16 +10,13 @@ import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -28,96 +25,153 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "Login")
+@Table(name = "LOGIN")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "Login.findAll", query = "SELECT l FROM Login l"),
-    @NamedQuery(name = "Login.findByLoginid", query = "SELECT l FROM Login l WHERE l.loginid = :loginid"),
-    @NamedQuery(name = "Login.findByLastLogin", query = "SELECT l FROM Login l WHERE l.lastLogin = :lastLogin"),
-    @NamedQuery(name = "Login.findByLastIp", query = "SELECT l FROM Login l WHERE l.lastIp = :lastIp"),
-    @NamedQuery(name = "Login.findByOsPlatform", query = "SELECT l FROM Login l WHERE l.osPlatform = :osPlatform"),
-    @NamedQuery(name = "Login.findByLogout", query = "SELECT l FROM Login l WHERE l.logout = :logout")})
+    @NamedQuery(name = "Login.findByLoginId", query = "SELECT l FROM Login l WHERE l.loginId = :loginId"),
+    @NamedQuery(name = "Login.findByUid", query = "SELECT l FROM Login l WHERE l.uid = :uid"),
+    @NamedQuery(name = "Login.findByUsername", query = "SELECT l FROM Login l WHERE l.username = :username"),
+    @NamedQuery(name = "Login.findByRole", query = "SELECT l FROM Login l WHERE l.role = :role"),
+    @NamedQuery(name = "Login.findByTime", query = "SELECT l FROM Login l WHERE l.time = :time"),
+    @NamedQuery(name = "Login.findByIp", query = "SELECT l FROM Login l WHERE l.ip = :ip"),
+    @NamedQuery(name = "Login.findByOs", query = "SELECT l FROM Login l WHERE l.os = :os"),
+    @NamedQuery(name = "Login.findByBrowser", query = "SELECT l FROM Login l WHERE l.browser = :browser"),
+    @NamedQuery(name = "Login.findByAction", query = "SELECT l FROM Login l WHERE l.action = :action"),
+    @NamedQuery(name = "Login.findByOutcome", query = "SELECT l FROM Login l WHERE l.outcome = :outcome")})
 public class Login implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
-    @Column(name = "loginid")
-    private Long loginid;
-    @Column(name = "last_login")
+    @NotNull
+    @Column(name = "login_id")
+    private Long loginId;
+    @Size(max = 8)
+    @Column(name = "uid")
+    private String uid;
+    @Size(max = 80)
+    @Column(name = "username")
+    private String username;
+    @Size(max = 20)
+    @Column(name = "role")
+    private String role;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "time")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date lastLogin;
-    @Size(max = 45)
-    @Column(name = "last_ip")
-    private String lastIp;
-    @Column(name = "os_platform")
-    private Integer osPlatform;
-    @Column(name = "logout")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date logout;
-    @JoinColumn(name = "People_uid", referencedColumnName = "uid")
-    @ManyToOne
-    private User peopleuid;
+    private Date time;
+    @Size(max = 16)
+    @Column(name = "ip")
+    private String ip;
+    @Size(max = 30)
+    @Column(name = "os")
+    private String os;
+    @Size(max = 40)
+    @Column(name = "browser")
+    private String browser;
+    @Size(max = 80)
+    @Column(name = "action")
+    private String action;
+    @Size(max = 20)
+    @Column(name = "outcome")
+    private String outcome;
 
     public Login() {
     }
 
-    public Login(Long loginid) {
-        this.loginid = loginid;
+    public Login(Long loginId) {
+        this.loginId = loginId;
     }
 
-    public Long getLoginid() {
-        return loginid;
+    public Login(Long loginId, Date time) {
+        this.loginId = loginId;
+        this.time = time;
     }
 
-    public void setLoginid(Long loginid) {
-        this.loginid = loginid;
+    public Long getLoginId() {
+        return loginId;
     }
 
-    public Date getLastLogin() {
-        return lastLogin;
+    public void setLoginId(Long loginId) {
+        this.loginId = loginId;
     }
 
-    public void setLastLogin(Date lastLogin) {
-        this.lastLogin = lastLogin;
+    public String getUid() {
+        return uid;
     }
 
-    public String getLastIp() {
-        return lastIp;
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 
-    public void setLastIp(String lastIp) {
-        this.lastIp = lastIp;
+    public String getUsername() {
+        return username;
     }
 
-    public Integer getOsPlatform() {
-        return osPlatform;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
-    public void setOsPlatform(Integer osPlatform) {
-        this.osPlatform = osPlatform;
+    public String getRole() {
+        return role;
     }
 
-    public Date getLogout() {
-        return logout;
+    public void setRole(String role) {
+        this.role = role;
     }
 
-    public void setLogout(Date logout) {
-        this.logout = logout;
+    public Date getTime() {
+        return time;
     }
 
-    public User getPeopleuid() {
-        return peopleuid;
+    public void setTime(Date time) {
+        this.time = time;
     }
 
-    public void setPeopleuid(User peopleuid) {
-        this.peopleuid = peopleuid;
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public String getOs() {
+        return os;
+    }
+
+    public void setOs(String os) {
+        this.os = os;
+    }
+
+    public String getBrowser() {
+        return browser;
+    }
+
+    public void setBrowser(String browser) {
+        this.browser = browser;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
+    }
+
+    public String getOutcome() {
+        return outcome;
+    }
+
+    public void setOutcome(String outcome) {
+        this.outcome = outcome;
     }
 
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (loginid != null ? loginid.hashCode() : 0);
+        hash += (loginId != null ? loginId.hashCode() : 0);
         return hash;
     }
 
@@ -128,7 +182,7 @@ public class Login implements Serializable {
             return false;
         }
         Login other = (Login) object;
-        if ((this.loginid == null && other.loginid != null) || (this.loginid != null && !this.loginid.equals(other.loginid))) {
+        if ((this.loginId == null && other.loginId != null) || (this.loginId != null && !this.loginId.equals(other.loginId))) {
             return false;
         }
         return true;
@@ -136,7 +190,7 @@ public class Login implements Serializable {
 
     @Override
     public String toString() {
-        return "se.kth.bbc.security.ua.model.Login[ loginid=" + loginid + " ]";
+        return "se.kth.bbc.security.ua.model.Login[ loginId=" + loginId + " ]";
     }
     
 }
