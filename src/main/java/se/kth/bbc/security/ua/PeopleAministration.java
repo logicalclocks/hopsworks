@@ -442,7 +442,7 @@ public class PeopleAministration implements Serializable {
     
     public String activateYubikeyUser(User user1) {
         this.selectedYubikyUser = user1;
-        //this.address = userManager.findAddress(user1.getUid());
+        this.address = userManager.findAddress(user1.getUid());
         return "activate_yubikey";
     }
     

@@ -39,8 +39,7 @@
                     <p:outputLabel for="password" value="Password" style="font-size: 12px; font-weight: bold;"/>
                     <p:password id="password" value="#{customAuthentication.password}" required="true" 
                                 requiredMessage="Enter Password"
-                                validatorMessage="Password must be at least 6 charachter alpanumeric">
-                        <f:validateLength minimum="6"/>   
+                               >
                     </p:password>
                     <p:watermark for="password" value="Password" />
 

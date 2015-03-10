@@ -111,7 +111,7 @@ CREATE TABLE `Address` (
   `address_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `uid` int(11) NOT NULL,
   PRIMARY KEY (`address_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -574,12 +574,8 @@ CREATE TABLE `People_Group` (
   `Pgid` int(11) NOT NULL AUTO_INCREMENT,
   `gid` int(11) DEFAULT NULL,
   PRIMARY KEY (`Pgid`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `USERS`
---
 
 DROP TABLE IF EXISTS `USERS`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -607,27 +603,21 @@ CREATE TABLE `USERS` (
   UNIQUE KEY `email_idx` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Temporary table structure for view `USERS_GROUPS`
---
-
+                                                                                                                                                                                                           
 DROP TABLE IF EXISTS `USERS_GROUPS`;
 /*!50001 DROP VIEW IF EXISTS `USERS_GROUPS`*/;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
-/*!50001 CREATE TABLE `USERS_GROUPS` (
-  `username` tinyint NOT NULL,
-  `password` tinyint NOT NULL,
-  `secret` tinyint NOT NULL,
-  `email` tinyint NOT NULL,
-  `group_name` tinyint NOT NULL
+/*!50001 CREATE TABLE `USERS_GROUPS` (                                                                                                                                                                      
+  `username` tinyint NOT NULL,                                                                                                                                                                              
+  `password` tinyint NOT NULL,                                                                                                                                                                              
+  `secret` tinyint NOT NULL,                                                                                                                                                                                
+  `email` tinyint NOT NULL,                                                                                                                                                                                 
+  `group_name` tinyint NOT NULL                                                                                                                                                                             
 ) ENGINE=MyISAM */;
 SET character_set_client = @saved_cs_client;
 
---
--- Table structure for table `Yubikey`
---
+
 
 DROP TABLE IF EXISTS `Yubikey`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -650,6 +640,7 @@ CREATE TABLE `Yubikey` (
   PRIMARY KEY (`yubidnum`)
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 
 /*!50001 DROP VIEW IF EXISTS `StudyDetails`*/;
@@ -682,11 +673,11 @@ CREATE TABLE `Yubikey` (
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
 
---
--- Final view structure for view `v_People_Group`
---
-
-/*!50001 DROP VIEW IF EXISTS `v_People_Group`*/;
+--                                                                                                                                                                                                           
+-- Final view structure for view `USERS_GROUPS`                                                                                                                                                              
+--                                                                                                                                                                                                           
+/*!50001 DROP TABLE IF EXISTS `USERS_GROUPS`*/;
+/*!50001 DROP VIEW IF EXISTS `USERS_GROUPS`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
@@ -694,11 +685,13 @@ CREATE TABLE `Yubikey` (
 /*!50001 SET character_set_results     = utf8 */;
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50001 VIEW `v_People_Group` AS select `u`.`username` AS `username`,`u`.`password` AS `password`,`u`.`secret` AS `secret`,`u`.`email` AS `email`,`g`.`group_name` AS `group_name` from ((`People_Group` `ug` join `People` `u` on((`u`.`uid` = `ug`.`uid`))) join `Group` `g` on((`g`.`gid` = `ug`.`gid`))) */;
+/*!50013 DEFINER=`kthfs`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `USERS_GROUPS` AS select `u`.`username` AS `username`,`u`.`password` AS `password`,`u`.`secret` AS `secret`,`u`.`email` AS `email`,`g`.`group_name` AS `group_name` from ((`People_Group` `ug`\
+ join `USERS` `u` on((`u`.`uid` = `ug`.`uid`))) join `BBCGroup` `g` on((`g`.`gid` = `ug`.`gid`))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
