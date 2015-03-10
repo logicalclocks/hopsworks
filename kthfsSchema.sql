@@ -17,65 +17,6 @@
 
 
 --
--- Table structure for table `BBCGroup`
---
-
-DROP TABLE IF EXISTS `BBCGroup`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `BBCGroup` (
-  `gid` int(10) NOT NULL,
-  `group_name` varchar(20) NOT NULL,
-  `group_desc` varchar(200) DEFAULT NULL,
-  PRIMARY KEY (`gid`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `CONSENT`
---
-
-DROP TABLE IF EXISTS `CONSENT`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `CONSENT` (
-  `id` int(11) NOT NULL,
-  `date` date DEFAULT NULL,
-  `study_name` varchar(128) DEFAULT NULL,
-  `retention_period` date DEFAULT NULL,
-  `consent_form` blob,
-  `status` varchar(30) DEFAULT NULL,
-  `name` varchar(80) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
-
---
--- Table structure for table `LOGIN`
---
-DROP TABLE IF EXISTS `LOGIN`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `LOGIN` (
-  `login_id` bigint(20) NOT NULL,
-  `uid` varchar(8) DEFAULT NULL,
-  `username` varchar(80) DEFAULT NULL,
-  `role` varchar(20) DEFAULT NULL,
-  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `ip` varchar(16) DEFAULT NULL,
-  `os` varchar(30) DEFAULT NULL,
-  `browser` varchar(40) DEFAULT NULL,
-  `action` varchar(80) DEFAULT NULL,
-  `outcome` varchar(20) DEFAULT NULL,
-  PRIMARY KEY (`login_id`),
-  KEY `LOGIN_uid_idx` (`uid`),
-  KEY `LOGIN_username_idx` (`username`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
-
---
 -- Table structure for table `ANATOMICAL_PARTS`
 --
 
@@ -93,30 +34,6 @@ CREATE TABLE `ANATOMICAL_PARTS` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `Address`
---
-
-DROP TABLE IF EXISTS `Address`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Address` (
-  `address1` varchar(120) DEFAULT NULL,
-  `address2` varchar(120) DEFAULT NULL,
-  `address3` varchar(120) DEFAULT NULL,
-  `city` varchar(100) DEFAULT NULL,
-  `state` varchar(100) DEFAULT NULL,
-  `country` varchar(100) DEFAULT NULL,
-  `postalcode` varchar(16) DEFAULT NULL,
-  `address_id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `uid` int(11) NOT NULL,
-  PRIMARY KEY (`address_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `DISEASES`
---
 
 DROP TABLE IF EXISTS `DISEASES`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -132,10 +49,6 @@ CREATE TABLE `DISEASES` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `Group`
---
-DROP TABLE IF EXISTS `Group`;
 
 --
 -- Table structure for table `Inodes`
@@ -562,6 +475,128 @@ CREATE TABLE `study_services` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 
+
+--
+-- Table structure for table `AUDIT`
+--
+
+DROP TABLE IF EXISTS `AUDIT`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `AUDIT` (
+  `uid` varchar(8) DEFAULT NULL,
+  `username` varchar(80) DEFAULT NULL,
+  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `role` varchar(20) DEFAULT NULL,
+  `action` varchar(20) DEFAULT NULL,
+  `resource` varchar(100) DEFAULT NULL,
+  `log_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`log_id`),
+  KEY `AUDIT_uid_idx` (`uid`),
+  KEY `AUDIT_username_idx` (`username`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Address`
+--
+
+DROP TABLE IF EXISTS `Address`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `Address` (
+  `address1` varchar(120) DEFAULT NULL,
+  `address2` varchar(120) DEFAULT NULL,
+  `address3` varchar(120) DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `state` varchar(100) DEFAULT NULL,
+  `country` varchar(100) DEFAULT NULL,
+  `postalcode` varchar(16) DEFAULT NULL,
+  `address_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL,
+  PRIMARY KEY (`address_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `BBCGroup`
+--
+
+DROP TABLE IF EXISTS `BBCGroup`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `BBCGroup` (
+  `gid` int(10) NOT NULL,
+  `group_name` varchar(20) NOT NULL,
+  `group_desc` varchar(200) DEFAULT NULL,
+  PRIMARY KEY (`gid`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `CONSENT`
+--
+
+DROP TABLE IF EXISTS `CONSENT`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `CONSENT` (
+  `id` int(11) NOT NULL,
+  `date` date DEFAULT NULL,
+  `study_name` varchar(128) DEFAULT NULL,
+  `retention_period` date DEFAULT NULL,
+  `consent_form` blob,
+  `status` varchar(30) DEFAULT NULL,
+  `name` varchar(80) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `LOGIN`
+--
+
+DROP TABLE IF EXISTS `LOGIN`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `LOGIN` (
+  `login_id` bigint(20) NOT NULL,
+  `uid` varchar(8) DEFAULT NULL,
+  `username` varchar(80) DEFAULT NULL,
+  `role` varchar(20) DEFAULT NULL,
+  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `ip` varchar(16) DEFAULT NULL,
+  `os` varchar(30) DEFAULT NULL,
+  `browser` varchar(40) DEFAULT NULL,
+  `action` varchar(80) DEFAULT NULL,
+  `outcome` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`login_id`),
+  KEY `LOGIN_uid_idx` (`uid`),
+  KEY `LOGIN_username_idx` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Login`
+--
+
+DROP TABLE IF EXISTS `Login`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `Login` (
+  `loginid` bigint(20) NOT NULL AUTO_INCREMENT,
+  `People_uid` int(10) DEFAULT NULL,
+  `last_login` timestamp NULL DEFAULT NULL,
+  `last_ip` varchar(45) DEFAULT NULL,
+  `os_platform` int(11) DEFAULT NULL,
+  `logout` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`loginid`),
+  KEY `fk_login_people` (`People_uid`),
+  CONSTRAINT `fk_login_people` FOREIGN KEY (`People_uid`) REFERENCES `USERS` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `FK_Login_People_uid` FOREIGN KEY (`People_uid`) REFERENCES `USERS` (`uid`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 --
 -- Table structure for table `People_Group`
 --
@@ -574,8 +609,9 @@ CREATE TABLE `People_Group` (
   `Pgid` int(11) NOT NULL AUTO_INCREMENT,
   `gid` int(11) DEFAULT NULL,
   PRIMARY KEY (`Pgid`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 --
 -- Table structure for table `USERS`
@@ -648,10 +684,14 @@ CREATE TABLE `Yubikey` (
   `yubidnum` int(11) NOT NULL AUTO_INCREMENT,
   `uid` int(11) NOT NULL,
   PRIMARY KEY (`yubidnum`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Final view structure for view `StudyDetails`
+--
 
+/*!50001 DROP TABLE IF EXISTS `StudyDetails`*/;
 /*!50001 DROP VIEW IF EXISTS `StudyDetails`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
@@ -660,7 +700,27 @@ CREATE TABLE `Yubikey` (
 /*!50001 SET character_set_results     = utf8 */;
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50001 VIEW `StudyDetails` AS select `study`.`name` AS `studyName`,`study`.`username` AS `email`,`USERS`.`NAME` AS `creator` from (`study` join `USERS` on((`study`.`username` = `USERS`.`EMAIL`))) where `study`.`name` in (select `StudyTeam`.`name` from `StudyTeam`) */;
+/*!50013 DEFINER=`kthfs`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `StudyDetails` AS select `study`.`name` AS `studyName`,`study`.`username` AS `email`,concat(`USERS`.`fname`,' ',`USERS`.`lname`) AS `creator` from (`study` join `USERS` on((`study`.`username` = `USERS`.`email`))) where `study`.`name` in (select `StudyTeam`.`name` from `StudyTeam`) */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `USERS_GROUPS`
+--
+
+/*!50001 DROP TABLE IF EXISTS `USERS_GROUPS`*/;
+/*!50001 DROP VIEW IF EXISTS `USERS_GROUPS`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8 */;
+/*!50001 SET character_set_results     = utf8 */;
+/*!50001 SET collation_connection      = utf8_general_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`kthfs`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `USERS_GROUPS` AS select `u`.`username` AS `username`,`u`.`password` AS `password`,`u`.`secret` AS `secret`,`u`.`email` AS `email`,`g`.`group_name` AS `group_name` from ((`People_Group` `ug` join `USERS` `u` on((`u`.`uid` = `ug`.`uid`))) join `BBCGroup` `g` on((`g`.`gid` = `ug`.`gid`))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -669,6 +729,7 @@ CREATE TABLE `Yubikey` (
 -- Final view structure for view `activitydetails`
 --
 
+/*!50001 DROP TABLE IF EXISTS `activitydetails`*/;
 /*!50001 DROP VIEW IF EXISTS `activitydetails`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
@@ -677,24 +738,8 @@ CREATE TABLE `Yubikey` (
 /*!50001 SET character_set_results     = utf8 */;
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50001 VIEW `activitydetails` AS select `activity`.`id` AS `id`,`activity`.`performed_By` AS `performed_by_email`,concat_ws(' ',`USERS`.`fname`,`USERS`.`lname`) AS `performed_by_name`,`activity`.`activity` AS `description`,`activity`.`activity_on` AS `studyname`,`activity`.`timestamp` AS `timestamp` from (`activity` join `USERS` on((`activity`.`performed_By` = `USERS`.`email`))) */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
-
---
--- Final view structure for view `v_People_Group`
---
-
-/*!50001 DROP VIEW IF EXISTS `v_People_Group`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8 */;
-/*!50001 SET character_set_results     = utf8 */;
-/*!50001 SET collation_connection      = utf8_general_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50001 VIEW `v_People_Group` AS select `u`.`username` AS `username`,`u`.`password` AS `password`,`u`.`secret` AS `secret`,`u`.`email` AS `email`,`g`.`group_name` AS `group_name` from ((`People_Group` `ug` join `People` `u` on((`u`.`uid` = `ug`.`uid`))) join `Group` `g` on((`g`.`gid` = `ug`.`gid`))) */;
+/*!50013 DEFINER=`kthfs`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `activitydetails` AS select `activity`.`id` AS `id`,`activity`.`performed_By` AS `performed_by_email`,concat(`USERS`.`fname`,' ',`USERS`.`lname`) AS `performed_by_name`,`activity`.`activity` AS `description`,`activity`.`activity_on` AS `studyname`,`activity`.`timestamp` AS `timestamp` from (`activity` join `USERS` on((`activity`.`performed_By` = `USERS`.`email`))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -708,4 +753,4 @@ CREATE TABLE `Yubikey` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-03-04 14:28:12
+-- Dump completed on 2015-03-10 17:23:48

@@ -40,10 +40,8 @@
                     <p:outputLabel for="password" value="Password" style="font-size: 12px; font-weight: bold;" />
                     <p:password id="password" value="#{customAuthentication.password}" 
                                  requiredMessage="Enter Password"
-                                 required="true" 
-                                 validatorMessage="Password must be at least 6 charachter alpanumeric">
-                        <f:validateLength minimum="6"/>   
-                    </p:password>    
+                                 required="true" >
+                    </p:password>
                     <p:watermark for="password" value="Password" />
 
                     <p:outputLabel for="otp" value="PIN" style="font-size: 12px; font-weight: bold;" rendered="#{customAuthenticationSwitch.otpEnabled}"/>

@@ -442,7 +442,7 @@ public class PeopleAministration implements Serializable {
     
     public String activateYubikeyUser(User user1) {
         this.selectedYubikyUser = user1;
-        //this.address = userManager.findAddress(user1.getUid());
+        this.address = userManager.findAddress(user1.getUid());
         return "activate_yubikey";
     }
     
@@ -469,7 +469,7 @@ public class PeopleAministration implements Serializable {
         yubi.setLow(0);
         
         userManager.updateYubikey(yubi);
-        userManager.updateGroup(this.selectedYubikyUser.getUid(), Integer.parseInt(selected_group));
+        userManager.updateGroup(this.selectedYubikyUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
         userManager.updateStatus(this.selectedYubikyUser.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
         
         yubikey_requests.remove(this.selectedYubikyUser);
