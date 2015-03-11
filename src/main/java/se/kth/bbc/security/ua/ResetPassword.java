@@ -144,7 +144,7 @@ public class ResetPassword implements Serializable {
 
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException | MessagingException ex) {
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset password!", "null"));
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error!", "null"));
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
             return ("");
         }
@@ -233,7 +233,7 @@ public class ResetPassword implements Serializable {
             return ("password_changed");
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset password!", "null"));
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error", "null"));
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
             return ("");
 
@@ -284,7 +284,7 @@ public class ResetPassword implements Serializable {
             }
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset!", "null"));
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error!", "null"));
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
             return ("");
         }
@@ -358,7 +358,7 @@ public class ResetPassword implements Serializable {
             }
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset!", "null"));
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error!", "null"));
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
             return ("");
         }

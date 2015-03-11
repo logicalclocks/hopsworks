@@ -109,17 +109,17 @@ public class PeopleAministration implements Serializable {
     // e.g. f1bda8c978766d50c25d48d72ed516e0
     private String secret;
 
-    public String getEdit_status() {
+    // current status of the editing user
+    private String edit_status;
 
-        return PeoplAccountStatus.values()[editingUser.getStatus() - 1].name();
+    public String getEdit_status() {
+        edit_status = PeoplAccountStatus.values()[editingUser.getStatus() - 1].name();
+        return edit_status;
     }
 
     public void setEdit_status(String edit_status) {
         this.edit_status = edit_status;
     }
-
-    // current status of the editing user
-    private String edit_status;
 
     public String getNew_group() {
         return new_group;
@@ -306,7 +306,7 @@ public class PeopleAministration implements Serializable {
         this.user = user;
     }
 
-    public void rejectUser(User user1) throws MessagingException {
+    public void rejectUser(User user1) {
 
         if (user1 == null) {
             MessagesController.addErrorMessage("Error", "Null user!");
@@ -325,13 +325,15 @@ public class PeopleAministration implements Serializable {
             } else {
                 MessagesController.addErrorMessage("Error", "Could not delete the user!");
             }
+            emailBean.sendEmail(user1.getEmail(), "BBC Account", accountRejectedMessage());
+            MessagesController.addInfoMessage(user1.getEmail() + " was rejected.");
 
         } catch (EJBException ejb) {
             MessagesController.addErrorMessage("Error", "Rejection failed");
+        } catch (MessagingException ex) {
+            Logger.getLogger(PeopleAministration.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        emailBean.sendEmail(user1.getEmail(), "BBC Account", accountRejectedMessage());
-        MessagesController.addInfoMessage(user1.getEmail() + " was rejected.");
     }
 
     public void confirmMessage(ActionEvent actionEvent) {
@@ -398,15 +400,20 @@ public class PeopleAministration implements Serializable {
      *
      * @param user1
      */
-    public void activateUser(User user1) throws MessagingException, SystemException, RollbackException, HeuristicMixedException, NotSupportedException, HeuristicRollbackException {
+    public void activateUser(User user1) {
+        try {
 
-        userTransaction.begin();
-        userManager.updateGroup(user1.getUid(), BBCGroups.valueOf(selected_group).getValue());
-        userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
-        emailBean.sendEmail(user1.getEmail(), "BBC Account", accountActivatedMessage(user1.getEmail()));
-        userTransaction.commit();
+            userTransaction.begin();
+            userManager.updateGroup(user1.getUid(), BBCGroups.valueOf(selected_group).getValue());
+            userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
+            emailBean.sendEmail(user1.getEmail(), "BBC Account", accountActivatedMessage(user1.getEmail()));
+            userTransaction.commit();
 
+        } catch (NotSupportedException | SystemException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException e) {
+        }
+        editingUser.setStatus(PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
         requests.remove(user1);
+
     }
 
     /**
@@ -415,9 +422,15 @@ public class PeopleAministration implements Serializable {
      * @param user1
      * @throws javax.mail.MessagingException
      */
-    public void blockUser(User user1) throws MessagingException {
-        userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_BLOCKED.getValue());
-        emailBean.sendEmail(user1.getEmail(), "Account Blocked", accountBlockedMessage());
+    public void blockUser(User user1) {
+        try {
+            userTransaction.begin();
+            userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_BLOCKED.getValue());
+            emailBean.sendEmail(user1.getEmail(), "Account Blocked", accountBlockedMessage());
+            userTransaction.commit();
+        } catch (NotSupportedException | SystemException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
+            Logger.getLogger(PeopleAministration.class.getName()).log(Level.SEVERE, null, ex);
+        }
         requests.remove(user1);
     }
 
@@ -483,11 +496,11 @@ public class PeopleAministration implements Serializable {
             userTransaction.begin();
 
             userManager.updateYubikey(yubi);
-            
+
             if (!"#".equals(selected_group)) {
                 userManager.updateGroup(this.selectedYubikyUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
-            }    
-            
+            }
+
             userManager.updateStatus(this.selectedYubikyUser.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
             yubikey_requests.remove(this.selectedYubikyUser);
 
