@@ -15,7 +15,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
@@ -26,6 +29,12 @@ import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.User;
@@ -47,6 +56,9 @@ public class PeopleAministration implements Serializable {
     @EJB
     private EmailBean emailBean;
 
+    @Resource
+    private UserTransaction userTransaction;
+
     private User user;
 
     // for yubikey administration page
@@ -56,7 +68,6 @@ public class PeopleAministration implements Serializable {
 
     private String sec_answer;
 
-    
     Map<String, String> questions;
     private List<User> filteredUsers;
     private List<User> selectedUsers;
@@ -64,7 +75,7 @@ public class PeopleAministration implements Serializable {
 
     // for modifying user roles and status
     private User editingUser;
-    
+
     // for mobile users activation
     private List<User> requests;
 
@@ -84,7 +95,7 @@ public class PeopleAministration implements Serializable {
     List<String> groups;
 
     // all existing groups belong tp
-     List<String>current_groups;
+    List<String> current_groups;
 
     // all possible new groups user doesnt belong to
     List<String> new_groups;
@@ -99,17 +110,17 @@ public class PeopleAministration implements Serializable {
     private String secret;
 
     public String getEdit_status() {
-        
-        return PeoplAccountStatus.values()[editingUser.getStatus()-1].name();
+
+        return PeoplAccountStatus.values()[editingUser.getStatus() - 1].name();
     }
 
     public void setEdit_status(String edit_status) {
         this.edit_status = edit_status;
     }
-    
+
     // current status of the editing user
     private String edit_status;
-    
+
     public String getNew_group() {
         return new_group;
     }
@@ -117,7 +128,6 @@ public class PeopleAministration implements Serializable {
     public void setNew_group(String new_group) {
         this.new_group = new_group;
     }
-
 
     public User getEditingUser() {
         return editingUser;
@@ -163,9 +173,8 @@ public class PeopleAministration implements Serializable {
         return userManager.findGroups(p.getUid());
     }
 
-    
     public String getChanged_Status(User p) {
-        return PeoplAccountStatus.values()[userManager.findByEmail(p.getEmail()).getStatus()-1].name();
+        return PeoplAccountStatus.values()[userManager.findByEmail(p.getEmail()).getStatus() - 1].name();
     }
 
     /*
@@ -188,27 +197,27 @@ public class PeopleAministration implements Serializable {
      */
     public List<String> getCurrent_groups() {
 
-        List<String> list=  userManager.findGroups(editingUser.getUid());
-        
+        List<String> list = userManager.findGroups(editingUser.getUid());
+
         return list;
-    
+
     }
 
-    public void setCurrent_groups( List<String> current_groups) {
+    public void setCurrent_groups(List<String> current_groups) {
         this.current_groups = current_groups;
     }
 
-    
     public List<String> getNew_groups() {
         List<String> list = userManager.findGroups(editingUser.getUid());
         List<String> tmp = new ArrayList<>();
-        
-        for (BBCGroups b: BBCGroups.values()) {
-        
-            if (!list.contains(b.name()))
+
+        for (BBCGroups b : BBCGroups.values()) {
+
+            if (!list.contains(b.name())) {
                 tmp.add(b.name());
+            }
         }
-        
+
         return tmp;
     }
 
@@ -234,32 +243,31 @@ public class PeopleAministration implements Serializable {
     }
 
     List<String> status;
-    
+
     @PostConstruct
     public void initGroups() {
-        
+
         groups = new ArrayList<>();
         status = new ArrayList<>();
-    
-        for (int i = 0; i< BBCGroups.values().length; i++) {
-             groups.add(BBCGroups.values()[i].name());
+
+        for (int i = 0; i < BBCGroups.values().length; i++) {
+            groups.add(BBCGroups.values()[i].name());
         }
-        
-    
+
         questions = new SelectSecurityQuestionMenue().getQuestions();
     }
 
     public List<String> getStatus() {
-    
+
         status = new ArrayList<>();
-   
+
         int st = editingUser.getStatus();
-        
-        for (PeoplAccountStatus p: PeoplAccountStatus.values()) {
-             status.add(p.name());
+
+        for (PeoplAccountStatus p : PeoplAccountStatus.values()) {
+            status.add(p.name());
         }
-        
-        status.remove(PeoplAccountStatus.values()[st-1].name());
+
+        status.remove(PeoplAccountStatus.values()[st - 1].name());
         return status;
     }
 
@@ -286,7 +294,7 @@ public class PeopleAministration implements Serializable {
         return userManager.findAllUsers();
     }
 
-    public  List<String> getGroups() {
+    public List<String> getGroups() {
         return groups;
     }
 
@@ -305,18 +313,19 @@ public class PeopleAministration implements Serializable {
         }
         try {
             boolean removeByEmail = userManager.removeByEmail(user1.getEmail());
-       
+
             // update the user request table
-            if(removeByEmail){
+            if (removeByEmail) {
                 allUsers.remove(user1);
-                if(user1.getYubikeyUser()==1)
+                if (user1.getYubikeyUser() == 1) {
                     yubikey_requests.remove(user1);
-                else
+                } else {
                     requests.remove(user1);
+                }
+            } else {
+                MessagesController.addErrorMessage("Error", "Could not delete the user!");
             }
-                else 
-                 MessagesController.addErrorMessage("Error", "Could not delete the user!");
-            
+
         } catch (EJBException ejb) {
             MessagesController.addErrorMessage("Error", "Rejection failed");
         }
@@ -389,13 +398,16 @@ public class PeopleAministration implements Serializable {
      *
      * @param user1
      */
-    public void activateUser(User user1) throws MessagingException {
+    public void activateUser(User user1) throws MessagingException, SystemException, RollbackException, HeuristicMixedException, NotSupportedException, HeuristicRollbackException {
+
+        userTransaction.begin();
         userManager.updateGroup(user1.getUid(), BBCGroups.valueOf(selected_group).getValue());
         userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
         emailBean.sendEmail(user1.getEmail(), "BBC Account", accountActivatedMessage(user1.getEmail()));
+        userTransaction.commit();
+
         requests.remove(user1);
     }
-
 
     /**
      * To reject user requests
@@ -439,41 +451,55 @@ public class PeopleAministration implements Serializable {
         this.questions = questions;
     }
 
-    
     public String activateYubikeyUser(User user1) {
         this.selectedYubikyUser = user1;
         this.address = userManager.findAddress(user1.getUid());
         return "activate_yubikey";
     }
-    
+
     public String activateYubikey() {
-        // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
+        try {
+            // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
 
-        if (this.selectedYubikyUser.getYubikeyUser() != 1) {
+            if (this.selectedYubikyUser.getYubikeyUser() != 1) {
 
-            MessagesController.addInfoMessage(user.getEmail() + " is not a Yubikey user");
-            return "";
+                MessagesController.addInfoMessage(user.getEmail() + " is not a Yubikey user");
+                return "";
+            }
+
+            Yubikey yubi = userManager.findYubikey(this.selectedYubikyUser.getUid());
+
+            yubi.setStatus(1);
+            yubi.setSerial(serial.replaceAll("\\s", ""));
+            yubi.setPublicId(pubid.replaceAll("\\s", ""));
+            yubi.setAesSecret(secret.replaceAll("\\s", ""));
+            yubi.setCreated(new Date());
+            yubi.setAccessed(new Date());
+            yubi.setCounter(0);
+            yubi.setSessionUse(0);
+            yubi.setHigh(0);
+            yubi.setLow(0);
+
+            userTransaction.begin();
+
+            userManager.updateYubikey(yubi);
+            
+            if (!"#".equals(selected_group)) {
+                userManager.updateGroup(this.selectedYubikyUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
+            }    
+            
+            userManager.updateStatus(this.selectedYubikyUser.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
+            yubikey_requests.remove(this.selectedYubikyUser);
+
+            userTransaction.commit();
+
+        } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error!", "null"));
+            Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
+            return ("");
         }
 
-        Yubikey yubi = userManager.findYubikey(this.selectedYubikyUser.getUid());
-
-        yubi.setStatus(1);
-        yubi.setSerial(serial.replaceAll("\\s", ""));
-        yubi.setPublicId(pubid.replaceAll("\\s", ""));
-        yubi.setAesSecret(secret.replaceAll("\\s", ""));
-        yubi.setCreated(new Date());
-        yubi.setAccessed(new Date());
-        yubi.setCounter(0);
-        yubi.setSessionUse(0);
-        yubi.setHigh(0);
-        yubi.setLow(0);
-        
-        userManager.updateYubikey(yubi);
-        userManager.updateGroup(this.selectedYubikyUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
-        userManager.updateStatus(this.selectedYubikyUser.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
-        
-        yubikey_requests.remove(this.selectedYubikyUser);
-       
         return "print_address";
     }
 
@@ -535,10 +561,10 @@ public class PeopleAministration implements Serializable {
     public void updateUserByAdmin() {
         try {
             // update status
-            if ( !"#".equals(selected_status)) {
+            if (!"#".equals(selected_status)) {
                 editingUser.setStatus(PeoplAccountStatus.valueOf(selected_status).getValue());
                 userManager.updateStatus(editingUser.getUid(), PeoplAccountStatus.valueOf(selected_status).getValue());
-                
+
             }
 
             // register a new group
@@ -550,15 +576,15 @@ public class PeopleAministration implements Serializable {
             if (!"#".equals(selected_group)) {
                 userManager.removeGroup(editingUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
             }
-            
-            if("#".equals(selected_group)) {
-            
-                if (("#".equals(selected_status) ) ||
-                        "#".equals(new_group)) {
+
+            if ("#".equals(selected_group)) {
+
+                if (("#".equals(selected_status))
+                        || "#".equals(new_group)) {
                     MessagesController.addErrorMessage("Error", "No selection made!");
                 }
-             }   
-            
+            }
+
         } catch (EJBException ejb) {
             MessagesController.addErrorMessage("Error: Update failed.");
             return;

@@ -10,13 +10,19 @@ import java.io.Serializable;
 import java.security.Principal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.User;
@@ -38,6 +44,9 @@ public class ProfileManager implements Serializable {
 
     private User user;
     private Address address;
+
+    @Resource
+    private UserTransaction userTransaction;
 
     public User getUser() {
         if (user == null) {
@@ -87,12 +96,17 @@ public class ProfileManager implements Serializable {
         return url;
     }
 
-    public void updateUser() {
+    public void updateUser(){
         try {
+
+            userTransaction.begin();
+
             userManager.updatePeople(user);
             userManager.updateAddress(address);
 
-        } catch (EJBException ejb) {
+            userTransaction.commit();
+
+        } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ejb) {
             MessagesController.addErrorMessage("Error: Update failed.");
             return;
         }
