@@ -64,7 +64,6 @@
                         <h:panelGrid  columns="3" >    
 
                             <p:outputLabel for="statChoose" value="Status"/>					
-
                             <p:selectOneMenu id="statChoose" 
                                              value="#{peopleAministration.selected_status}" 
                                              style="width: 296px"
@@ -74,12 +73,10 @@
                                               itemValue="#"
                                               />
                                 <f:selectItems value="#{peopleAministration.status}"/>                                       
-
                             </p:selectOneMenu>
-                            <p:spacer></p:spacer>            
-
+                            <p:spacer></p:spacer>
+      
                             <p:outputLabel for="addRole" value="Add Role" />					
-
                             <p:selectOneMenu id="addRole"
                                              value="#{peopleAministration.new_group}" 
                                              style="width: 296px"
@@ -91,20 +88,17 @@
                                               />
                                 <f:selectItems value="#{peopleAministration.new_groups}" />
                             </p:selectOneMenu>
-                            <p:spacer></p:spacer>            
-
+                            <p:spacer></p:spacer>
 
                             <p:outputLabel for="removeRole" value="Remove Role" />					
-
-                            <p:selectOneMenu id="removeRole" 
+                             <p:selectOneMenu id="removeRole" 
                                              style="width: 296px"
                                              value="#{peopleAministration.selected_group}">
                                 <f:selectItem itemValue="#" itemLabel="Remove Role" 
                                               noSelectionOption="true"/>
                                 <f:selectItems value="#{peopleAministration.current_groups}" />
                             </p:selectOneMenu>
-                            <p:spacer></p:spacer>            
-
+                            <p:spacer></p:spacer>
                         </h:panelGrid>
                         <br></br>
 

@@ -42,4 +42,9 @@ public class MessagesController {
     public static void addMessage(FacesMessage message) {
         FacesContext.getCurrentInstance().addMessage(null, message);
     }
+
+    public static void addWarnMessage(String summary, String mess) {
+        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN, summary, mess));
+    }
+
 }

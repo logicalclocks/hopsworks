@@ -291,11 +291,11 @@ public class UserRegistration implements Serializable {
 
             // generate qr code to be displayed to user
             qrCode = QRCodeGenerator.getQRCode(mail, CustomAuthentication.ISSUER, otpSecret);
+            
+            userTransaction.commit();
 
             // notify user about the request
             emailBean.sendEmail(mail, "Confirmation Email", buildMobileRequestMessage());
-
-            userTransaction.commit();
 
             // Reset the values
             fname = "";
@@ -340,9 +340,10 @@ public class UserRegistration implements Serializable {
 
             mgr.registerAddress(uid, address1, address2, address3, city, state, country, postalcode);
             mgr.registerYubikey(uid);
-            emailBean.sendEmail(mail, "Confirmation Email", buildYubikeyRequestMessage());
 
             userTransaction.commit();
+            
+            emailBean.sendEmail(mail, "Confirmation Email", buildYubikeyRequestMessage());
 
             // Reset the values
             fname = "";

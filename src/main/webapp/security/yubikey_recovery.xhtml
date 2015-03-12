@@ -23,11 +23,10 @@
 
         <h:form >
             <div class="content">
-                <h3 class="page_title" align="center">
-                    Yubikey recovery
-                </h3>
-
+       
                 <h:panelGrid columns="1" id="reset_yubikey_password" styleClass="Signin" cellpadding="5">                   
+       
+                    <h3 align="center">Yubikey Recovery </h3>
 
                     <p:outputLabel for="rname" value="Username"/>
                     <p:inputText id="rname" required="true" label="email" size="40"
@@ -53,8 +52,8 @@
 
                 <br></br> 
                 <div class="register_actions" align="center">
-                    <p:commandButton styleClass="team_button button-save" type="submit" value="Send Request" action="#{recoverySelector.sendYubiReq()}">
-                    </p:commandButton>
+                    <p:commandButton styleClass="team_button button-save" type="submit" value="Submit" action="#{recoverySelector.sendYubiReq()}"/>
+                    <p:spacer width="10"></p:spacer>
                     <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this"/>
                 </div>
             </div>
