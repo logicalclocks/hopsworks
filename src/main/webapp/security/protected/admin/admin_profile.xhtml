@@ -25,7 +25,7 @@
 
                 <p:layoutUnit position="north" style="border: 0px none;">
 
-                    <p:panelGrid id="user_profile" columns="2" layout="grid" style="margin:0px auto; width: 100%;" >
+                    <p:panelGrid id="user_profile" columns="2" layout="grid" style="margin:0px auto; width: 100%;" styleClass="user_profile" >
                         <p:column>
                             <img src="#{profileManager.gravatar}" />
                             <h3>
@@ -45,8 +45,8 @@
 
                         <p:column>
                             <p:dataList  value="#{peopleAministration.current_groups}" 
-                                          var="role"  
-                                         type="ordered">
+                                         var="role" emptyMessage="No roles associated with this user."
+                                          >
                                 #{role}
                             </p:dataList>
 

@@ -7,13 +7,16 @@ package se.kth.bbc.security.ua;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import se.kth.bbc.security.ua.model.User;
 
 /**
@@ -22,132 +25,146 @@ import se.kth.bbc.security.ua.model.User;
  */
 @ManagedBean
 @RequestScoped
-public class PeopleStatusBean implements Serializable{
+public class PeopleStatusBean implements Serializable {
 
-    private static final Logger logger = Logger.getLogger(UserManager.class.getName());
+  private static final Logger logger = Logger.getLogger(UserManager.class.
+          getName());
 
-    @EJB
-    private UserManager userManager;
+  @EJB
+  private UserManager userManager;
 
-    private boolean open_reauests = false;
-    private boolean open_consents = false;
-    private int tabIndex;
-    private User user;
-  
-    public boolean isOpen_reauests() {
-        return checkForRequests();
+  private boolean open_reauests = false;
+  private boolean open_consents = false;
+  private int tabIndex;
+  private User user;
+
+  public boolean isOpen_reauests() {
+    return checkForRequests();
+  }
+
+  public void setOpen_reauests(boolean open_reauests) {
+    this.open_reauests = open_reauests;
+  }
+
+  public User getUser() {
+    if (user == null) {
+      ExternalContext context = FacesContext.getCurrentInstance().
+              getExternalContext();
+      String userEmail = context.getUserPrincipal().getName();
+      user = userManager.findByEmail(userEmail);
     }
+    return user;
+  }
 
-    public void setOpen_reauests(boolean open_reauests) {
-        this.open_reauests = open_reauests;
-    }
+  public void setTabIndex(int index) {
+    this.tabIndex = index;
+  }
 
-    public User getUser() {
-        if (user == null) {
-            ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
-            String userEmail = context.getUserPrincipal().getName();
-            user = userManager.findByEmail(userEmail);
-        }
-        return user;
-    }
+  public int getTabIndex() {
+    int oldindex = tabIndex;
+    tabIndex = 0;
+    return oldindex;
+  }
 
-    public void setTabIndex(int index) {
-        this.tabIndex = index;
-    }
+  private HttpServletRequest getRequest() {
+    return (HttpServletRequest) FacesContext.getCurrentInstance().
+            getExternalContext().getRequest();
+  }
 
-    public int getTabIndex() {
-        int oldindex = tabIndex;
-        tabIndex = 0;
-        return oldindex;
-    }
+  /**
+   * Return systemwide admin for user administration
+   * <p>
+   * @return
+   */
+  public boolean isSYSAdmin() {
+    User p = userManager.findByEmail(getRequest().getRemoteUser());
+    return userManager.findGroups(p.getUid()).contains("SYS_ADMIN");
+  }
 
+  /**
+   * Return both system wide and study wide roles
+   * <p>
+   * @return
+   */
+  public boolean isResearcher() {
+    User p = userManager.findByEmail(getRequest().getRemoteUser());
+    List<String> roles = userManager.findGroups(p.getUid());
+    //TODO: Remove SYS_ADMIN in the final release
+    return (roles.contains("BBC_RESEARCHER") || roles.contains("BBC_ADMIN")
+            || roles.contains("SYS_ADMIN"));
+  }
 
-    private HttpServletRequest getRequest() {
-        return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-    }
+  /**
+   * Return study owner role
+   * <p>
+   * @return
+   */
+  public boolean isBBCAdmin() {
+    User p = userManager.findByEmail(getRequest().getRemoteUser());
+    return userManager.findGroups(p.getUid()).contains("BBC_ADMIN");
+  }
 
-    
-    /**
-     * Return systemwide admin for user administration 
-     * @return 
-     */
-    public boolean isSYSAdmin() {
-        User p = userManager.findByEmail(getRequest().getRemoteUser());
-        return userManager.findGroups(p.getUid()).contains("SYS_ADMIN");
-    }
-    
-    /**
-     * Return both system wide and study wide roles
-     * @return 
-     */
-    public boolean isResearcher(){
-        User p = userManager.findByEmail(getRequest().getRemoteUser());
-        List<String> roles = userManager.findGroups(p.getUid());
-            //TODO: Remove SYS_ADMIN in the final release
-        return (roles.contains("BBC_RESEARCHER") || roles.contains("BBC_ADMIN") || roles.contains("SYS_ADMIN"));
-    }
+  public boolean isAnyAuthorizedRole() {
 
-   
-    /**
-     * Return study owner role
-     * @return 
-     */
-    public boolean isBBCAdmin() {
-        User p = userManager.findByEmail(getRequest().getRemoteUser());
-        return userManager.findGroups(p.getUid()).contains("BBC_ADMIN");    
-    }
+    User p = userManager.findByEmail(getRequest().getRemoteUser());
+    List<String> roles = userManager.findGroups(p.getUid());
+    return (roles.contains("SYS_ADMIN") || roles.contains("BBC_ADMIN") || roles.
+            contains("BBC_RESEARCHER") || roles.contains("AUDITOR"));
+  }
 
- 
-    public boolean isAnyAuthorizedRole() {
+  public boolean isAuditorRole() {
 
-        User p = userManager.findByEmail(getRequest().getRemoteUser());
-        List<String> roles = userManager.findGroups(p.getUid());
-        return  (roles.contains("SYS_ADMIN") || roles.contains("BBC_ADMIN") || roles.contains("BBC_RESEARCHER") || roles.contains("AUDITOR"));
-     }  
-    
-      
-    public boolean isAuditorRole() {
+    User p = userManager.findByEmail(getRequest().getRemoteUser());
+    List<String> roles = userManager.findGroups(p.getUid());
+    return (roles.contains("SYS_ADMIN") || roles.contains("AUDITOR"));
+  }
 
-        User p = userManager.findByEmail(getRequest().getRemoteUser());
-        List<String> roles = userManager.findGroups(p.getUid());
-        return  (roles.contains("SYS_ADMIN") || roles.contains("AUDITOR"));
-     }  
-    
-    /**
-     * 
-     * @return 
-     */
-     public boolean checkForRequests() {
-        if (isResearcher()) {
+  /**
+   *
+   * @return
+   */
+  public boolean checkForRequests() {
+    if (isResearcher()) {
             //return false if no requests
-            
-            open_reauests = !(userManager.findAllByStatus(PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()).isEmpty())
-                    || !(userManager.findAllByStatus(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()).isEmpty());
-        }
-      return open_reauests;
-    }
 
+      open_reauests = !(userManager.findAllByStatus(
+              PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()).isEmpty())
+              || !(userManager.findAllByStatus(
+                      PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()).
+              isEmpty());
+    }
+    return open_reauests;
+  }
 
-    public String logOut() {
-        getRequest().getSession().invalidate();
-        return "welcome";
-    }
-    
-    public boolean isLoggedIn(){
-        return getRequest().getRemoteUser() != null;
-    }
+  public String logOut() {
+    //TODO: fix this...
+    //Now does not logout, just redirects to login page
+    HttpServletRequest r = getRequest();
+    HttpSession s = r.getSession();
+    s.invalidate();
+//    try {
+//      r.logout();
+//    } catch (ServletException ex) {
+//      // ignore the exception if it happens
+//    }
+//        getRequest().getSession().invalidate();
+    return "welcome";
+  }
 
-    public String openRequests() {
-        this.tabIndex = 1;
-        return "userMgmt";
-    }
+  public boolean isLoggedIn() {
+    return getRequest().getRemoteUser() != null;
+  }
 
-    
-    public boolean isOpen_consents() {
-        return open_consents;
-    }
+  public String openRequests() {
+    this.tabIndex = 1;
+    return "userMgmt";
+  }
 
-    public void setOpen_consents(boolean open_consents) {
-        this.open_consents = open_consents;
-    }
+  public boolean isOpen_consents() {
+    return open_consents;
+  }
+
+  public void setOpen_consents(boolean open_consents) {
+    this.open_consents = open_consents;
+  }
 }

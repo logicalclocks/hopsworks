@@ -377,8 +377,8 @@ public class UserRegistration implements Serializable {
 
     private String buildYubikeyRequestMessage() {
 
-        String l1 = "Greetings!\n\nWe receieved your yubikey account request for the BiobankCloud.\n\n";
-        String l2 = "You will receive a Yubikey device within 48 hours in your address.\n\n\n";
+        String l1 = "Hello,\n\nWe receieved your yubikey account request for the BiobankCloud.\n\n";
+        String l2 = "You will receive a Yubikey device within 48 hours at your address.\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
         return l1 + l2 + l3;
@@ -386,7 +386,7 @@ public class UserRegistration implements Serializable {
 
     private String buildMobileRequestMessage() {
 
-        String l1 = "Greetings!\n\nWe received your mobile account request for the BiobankCloud.\n\n";
+        String l1 = "Hello,\n\nWe received your mobile account request for the BiobankCloud.\n\n";
         String l2 = "Your account will be activated within 48 hours.\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 

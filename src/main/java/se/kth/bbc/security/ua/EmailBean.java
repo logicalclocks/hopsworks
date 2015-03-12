@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 import javax.mail.*;
 import javax.mail.internet.*;
 import javax.annotation.Resource;
+import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
 
 /**
@@ -21,6 +22,7 @@ public class EmailBean{
     @Resource(lookup = "mail/BBCMail")
     private Session mailSession;
 
+    @Asynchronous
     public void sendEmail(String to, String subject, String body) throws MessagingException {
         
         MimeMessage message = new MimeMessage(mailSession);

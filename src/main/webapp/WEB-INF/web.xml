@@ -122,6 +122,16 @@
             <role-name>BBC_USER</role-name>
         </auth-constraint>
     </security-constraint>
+        <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>BiobankCloud Lab Info Mgmt System (LIMS)</web-resource-name>
+            <url-pattern>/bbc/lims/index.xhtml</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>BBC_GUEST</role-name>
+        </auth-constraint>
+    </security-constraint>
+
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>BiobankCloud Researcher Private pages</web-resource-name>

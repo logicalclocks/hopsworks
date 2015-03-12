@@ -411,7 +411,7 @@ public class PeopleAministration implements Serializable {
 
         } catch (NotSupportedException | SystemException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException e) {
         }
-        editingUser.setStatus(PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
+        //editingUser.setStatus(PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
         requests.remove(user1);
 
     }
@@ -546,24 +546,24 @@ public class PeopleAministration implements Serializable {
     }
 
     private String accountActivatedMessage(String username) {
-        String l1 = "Greetings!\n\n"
-                + "Your account request to access the BiobankCloud is approved.\n\n";
-        String l2 = "You can login with the username: " + username + "\n\n\n";
+        String l1 = "Hello,\n\n"
+                + "Your account request to access the BiobankCloud has been approved.\n\n";
+        String l2 = "You can login with your username: " + username + "\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
         return l1 + l2 + l3;
     }
 
     private String accountBlockedMessage() {
-        String l1 = "Greetings!\n\n"
-                + "Your account in the Biobankcloud is blocked.\n\n";
+        String l1 = "Hello,\n\n"
+                + "Your account in the Biobankcloud has been blocked.\n\n";
         String l2 = "If you have any questions please contact support@biobankcloud.com";
         return l1 + l2;
     }
 
     private String accountRejectedMessage() {
-        String l1 = "Greetings!\n\n"
-                + "Your Biobankcloud account request is rejected.\n\n";
+        String l1 = "Hello,\n\n"
+                + "Your Biobankcloud account request has been rejected.\n\n";
         String l2 = "If you have any questions please contact support@biobankcloud.com";
         return l1 + l2;
     }
