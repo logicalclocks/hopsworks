@@ -34,7 +34,7 @@
                             <h:form id="yubikey_registration" class="new_user"> 
 
                                 <h:panelGrid columns="3" >			
-                                    <p:outputLabel for="fname" value="First Name" style="font-weight:bold"/>
+                                    <p:outputLabel for="fname" value="First Name"/>
                                     <p:inputText id="fname" 
                                                  value="#{peopleAministration.selectedYubikyUser.fname}" 
                                                    size="40"
@@ -43,7 +43,7 @@
                                        <p:spacer></p:spacer>
                                        
                                     <p:outputLabel for="lname" 
-                                                   value="Last Name" style="font-weight:bold"/>
+                                                   value="Last Name" />
                                     <p:inputText id="lname" value="#{peopleAministration.selectedYubikyUser.lname}" 
                                                  size="40"
                                                  readonly="true"
@@ -51,7 +51,7 @@
                                     <p:spacer></p:spacer>
 
                                     <p:outputLabel for="email" 
-                                                   value="Email" style="font-weight:bold"/>
+                                                   value="Email" />
                                     <p:inputText id="email" value="#{peopleAministration.selectedYubikyUser.email}"
                                                  size="40"
                                                  readonly="true"
@@ -59,7 +59,7 @@
                                     </p:inputText>    
                                     <p:spacer></p:spacer>
                                     
-                                    <p:outputLabel for="tel" value="Mobile: " style="font-weight:bold"/>
+                                    <p:outputLabel for="tel" value="Mobile:" />
                                     <p:inputText id="tel" 
                                                  value="#{peopleAministration.selectedYubikyUser.mobile}" 
                                                  size="40"
@@ -67,7 +67,7 @@
                                     </p:inputText>
                                     <p:spacer></p:spacer>
                                     
-                                    <p:outputLabel for="address1" value="C/O" style="font-weight:bold" />
+                                    <p:outputLabel for="address1" value="C/O" />
                                     <p:inputText id="address1"
                                                  value="#{peopleAministration.address.address1}" 
                                                  size="40"
@@ -75,7 +75,7 @@
                                     </p:inputText>
                                     <p:spacer></p:spacer>
                                     
-                                    <p:outputLabel for="address2" value="Street and number" style="font-weight:bold" />
+                                    <p:outputLabel for="address2" value="Street and number"/>
                                     <p:inputText id="address2"
                                                  value="#{peopleAministration.address.address2}"
                                                   readonly="true"
@@ -91,7 +91,7 @@
                                     </p:inputText>
                                     <p:spacer></p:spacer>
                                       
-                                    <p:outputLabel for="zip" value="Postal Code:" style="font-weight:bold" />
+                                    <p:outputLabel for="zip" value="Postal Code:" />
                                     <p:inputText id="zip" 
                                                  readonly="true"
                                                 value="#{peopleAministration.address.postalcode}" 
@@ -99,7 +99,7 @@
                                     </p:inputText>
                                     <p:spacer></p:spacer>
                                     
-                                    <p:outputLabel for="country" value="Country:" style="font-weight:bold" />
+                                    <p:outputLabel for="country" value="Country:"/>
                                     <p:inputText id="country" 
                                                  value="#{peopleAministration.address.country}" 
                                                  readonly="true"
@@ -107,7 +107,7 @@
                                     </p:inputText>
                                     <p:spacer></p:spacer>
                                       
-                                    <p:outputLabel for="seri" value="Yubikey Serial" style="font-weight:bold" />
+                                    <p:outputLabel for="seri" value="Yubikey Serial"/>
                                     <p:inputText id="seri" value="#{peopleAministration.serial}"  
                                                  required="true"
                                                  requiredMessage="Enter the Yubikey Serial Number" 
@@ -118,7 +118,7 @@
                                                  value="Yubikey Device Serial Number" 
                                                  trackMouse="true" />
                                     
-                                    <p:outputLabel for="pid" value="Yubikey PublicId" style="font-weight:bold" />
+                                    <p:outputLabel for="pid" value="Yubikey PublicId"/>
                                     <p:inputText id="pid" 
                                                  value="#{peopleAministration.pubid}" 
                                                  required="true"
@@ -129,7 +129,7 @@
                                                  value="Yubikey Public Identity ( 6 bytes Modhex)" 
                                                  trackMouse="true" />
                                     
-                                    <p:outputLabel for="secret" value="Yubikey Secret" style="font-weight:bold" />
+                                    <p:outputLabel for="secret" value="Yubikey Secret"/>
                                     <p:inputText id="secret"
                                                  value="#{peopleAministration.secret}" 
                                                  required="true"

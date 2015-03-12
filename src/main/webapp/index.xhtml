@@ -11,7 +11,6 @@
     <h:head>
         <title>BiobankCloud - Sign in</title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-
     </h:head>
 
     <h:body>
@@ -27,23 +26,21 @@
                 <h2 align="center">Mobile Login</h2>     
                 <br></br>
                 <h:panelGrid columns="1"> 
-                    <p:outputLabel for="uname" value="Username" style="font-size: 12px; font-weight: bold;"/>
+                    <p:outputLabel for="uname" value="Username" />
                     <p:inputText id="uname" value="#{customAuthentication.username}" 
                                  required="true" 
                                  autocomplete="on"
-                                 requiredMessage="Enter Email"
-                                 >
+                                 requiredMessage="Enter Email">
                     </p:inputText>
                     <p:watermark for="uname" value="Email" />
 
-                    <p:outputLabel for="password" value="Password" style="font-size: 12px; font-weight: bold;"/>
+                    <p:outputLabel for="password" value="Password"/>
                     <p:password id="password" value="#{customAuthentication.password}" required="true" 
-                                requiredMessage="Enter Password"
-                               >
+                                requiredMessage="Enter Password">
                     </p:password>
                     <p:watermark for="password" value="Password" />
 
-                    <p:outputLabel for="otp" value="PIN" style="font-size: 12px; font-weight: bold;" rendered="#{customAuthenticationSwitch.otpEnabled}"/>
+                    <p:outputLabel for="otp" value="PIN" rendered="#{customAuthenticationSwitch.otpEnabled}"/>
                     <p:password id="otp" value="#{customAuthentication.otpCode}" required="true"  
                                  requiredMessage="Enter PIN"
                                 validatorMessage="PIN must be 6 digits" rendered="#{customAuthenticationSwitch.otpEnabled}">

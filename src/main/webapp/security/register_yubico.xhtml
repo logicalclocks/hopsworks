@@ -76,66 +76,78 @@
 
                             <h:form > 
 
-                                <h:panelGrid columns="2" style="font-size: 12px;">			
-                                    <p:outputLabel for="fname" value="First name" style="font-weight:bold"/>
-                                    <p:inputText id="fname" value="#{userRegistration.fname}" size="40"
+                                <h:panelGrid columns="2" >			
+                                    <p:outputLabel for="fname" value="First name"/>
+                                    <p:inputText id="fname" value="#{userRegistration.fname}" 
+                                                 size="42"
                                                  required="true"
                                                  autocomplete="off"
                                                  requiredMessage="Enter first name" />
 
-                                    <p:outputLabel for="lname" value="Last name" style="font-weight:bold"/>
-                                    <p:inputText id="lname" value="#{userRegistration.lname}" size="40"
+                                    <p:outputLabel for="lname" value="Last name"/>
+                                    <p:inputText id="lname" value="#{userRegistration.lname}" 
+                                                 size="42"
                                                  required="true"
                                                  autocomplete="off"
                                                  requiredMessage="Enter last name"/>
 
-                                    <p:outputLabel for="email" value="Email" style="font-weight:bold"/>
-                                    <p:inputText id="email" value="#{userRegistration.mail}" size="40"
+                                    <p:outputLabel for="email" value="Email" />
+                                    <p:inputText id="email" value="#{userRegistration.mail}" 
+                                                 size="42"
                                                  required="true"
                                                  autocomplete="off"
                                                  requiredMessage="Enter email">
                                         <f:validator binding="#{usernameValidator}" />
                                     </p:inputText>    
 
-                                    <p:outputLabel for="tel" value="Phone number" style="font-weight:bold"/>
-                                    <p:inputText id="tel" value="#{userRegistration.tel}" size="40"
+                                    <p:outputLabel for="tel" value="Phone number" />
+                                    <p:inputText id="tel" value="#{userRegistration.tel}"
+                                                 size="42"
                                                  autocomplete="off"
                                                  validatorMessage="Invalid phone number">
                                         <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                     </p:inputText>
 
-                                    <p:outputLabel for="address1" value="C/O" style="font-weight:bold" />
+                                    <p:outputLabel for="address1" value="C/O"/>
                                     <p:inputText id="address1" value="#{userRegistration.address1}" 
-                                                 size="40"
+                                                 size="42"
                                                  autocomplete="off"
                                                  >
                                     </p:inputText>
 
-                                    <p:outputLabel for="address2" value="Street and number" style="font-weight:bold" />
-                                    <p:inputText id="address2" value="#{userRegistration.address2}" required="true"
+                                    <p:outputLabel for="address2" value="Street and number"/>
+                                    <p:inputText id="address2" value="#{userRegistration.address2}" 
+                                                 required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Enter street" size="40">
+                                                 size="42"
+                                                 requiredMessage="Enter street" >
                                     </p:inputText>
 
-                                    <p:outputLabel for="city1" value="City" style="font-weight:bold" />
-                                    <p:inputText id="city1" value="#{userRegistration.city}"  required="true"
+                                    <p:outputLabel for="city1" value="City"/>
+                                    <p:inputText id="city1" value="#{userRegistration.city}" 
+                                                 required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Enter city" size="40">
+                                                 requiredMessage="Enter city" 
+                                                 size="42">
                                     </p:inputText>
 
-                                    <p:outputLabel for="zip1" value="Postal code" style="font-weight:bold" />
-                                    <p:inputText id="zip1" value="#{userRegistration.postalcode}" required="true"
+                                    <p:outputLabel for="zip1" value="Postal code" />
+                                    <p:inputText id="zip1" value="#{userRegistration.postalcode}" 
+                                                 required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Enter postal code" size="40">
+                                                 size="42"
+                                                 requiredMessage="Enter postal code">
                                     </p:inputText>
 
-                                    <p:outputLabel for="country1" value="Country" style="font-weight:bold" />
-                                    <p:inputText id="country1" value="#{userRegistration.country}"  required="true"
+                                    <p:outputLabel for="country1" value="Country" />
+                                    <p:inputText id="country1" value="#{userRegistration.country}"  
+                                                 required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Enter country" size="40">
+                                                 size="42"
+                                                 requiredMessage="Enter country">
                                     </p:inputText>
 
-                                    <p:outputLabel for="sec_question1" value="Security Question" style="font-weight:bold"/>
+                                    <p:outputLabel for="sec_question1" value="Security Question"/>
                                     <p:selectOneMenu id="sec_question1" value="#{userRegistration.security_question}"
                                                      required="true"
                                                      requiredMessage="Select security question" >
@@ -147,31 +159,34 @@
 
                                     </p:selectOneMenu>  
 
-                                    <p:outputLabel for="answer1" value="Answer" style="font-weight:bold"/>
-                                    <p:inputText id="answer1" value="#{userRegistration.security_answer}" size="40"
+                                    <p:outputLabel for="answer1" value="Answer"/>
+                                    <p:inputText id="answer1" value="#{userRegistration.security_answer}" 
+                                                 size="42"
                                                  autocomplete="off"
                                                  required="true"
                                                  requiredMessage="Enter answer">
                                     </p:inputText>  
 
-                                    <p:outputLabel for="pass0" value="Password" style="font-weight:bold"/>
+                                    <p:outputLabel for="pass0" value="Password"/>
                                     <p:password id="pass0" value="#{userRegistration.password}" 
-                                                required="true" size="40"
+                                                required="true" 
+                                                size="42"
                                                 autocomplete="off"
                                                 requiredMessage="Enter password">
                                         <f:validator validatorId="passwordValidator" />
                                         <f:attribute name="confirmPassword" value="#{confirmPassword}" />
                                     </p:password>
 
-                                    <p:outputLabel for="pass" value="Password again" style="font-weight:bold"/>
-                                    <p:password id="pass" value="#{userRegistration.passwordAgain}" size="40"
+                                    <p:outputLabel for="pass" value="Password again"/>
+                                    <p:password id="pass" value="#{userRegistration.passwordAgain}" 
+                                                size="42"
                                                 requiredMessage="Re-enter password"
                                                 autocomplete="off"
                                                 binding="#{confirmPassword}"
                                                 required="true">
                                     </p:password>
 
-                                    <p:outputLabel for="captcha" value="Enter Captcha" style="font-weight:bold"/>
+                                    <p:outputLabel for="captcha" value="Enter Captcha"/>
                                     <p:captcha id ="captcha" label="Captcha" 
                                                required="true" 
                                                requiredMessage="Enter Captcha"/>

@@ -27,25 +27,23 @@
                     Yubikey recovery
                 </h3>
 
-                <h:panelGrid columns="1" id="reset_mobile_password" styleClass="Signin" cellpadding="5">                   
+                <h:panelGrid columns="1" id="reset_yubikey_password" styleClass="Signin" cellpadding="5">                   
 
-
-
-                    <h:outputLabel for="rname" value="Username"/>
+                    <p:outputLabel for="rname" value="Username"/>
                     <p:inputText id="rname" required="true" label="email" size="40"
                                  requiredMessage="Please enter your email address."
-                                 validatorMessage="Invalid email format"
+                                 validatorMessage="Invalid username"
                                  value="#{recoverySelector.uname}">
 
                         <f:validateRegex
                             pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
-
                     </p:inputText>
                     <p:watermark for="rname" value="Email" />
 
 
-                    <h:outputLabel for="cupwd" value="Password"/>
-                    <p:password id="cupwd" value="#{recoverySelector.passwd}"  label="current" required="true" 
+                    <p:outputLabel for="cupwd" value="Password"/>
+                    <p:password id="cupwd" value="#{recoverySelector.passwd}"  
+                                label="current" required="true" 
                                 requiredMessage="Enter password"/>
                     <p:watermark for="cupwd" value="******" />
 

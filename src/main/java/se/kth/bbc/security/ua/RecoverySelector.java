@@ -120,7 +120,7 @@ public class RecoverySelector implements Serializable {
 
     public String sendQrCode() {
 
-        people = um.findByEmail(uname);
+        people = um.getUser(this.uname);
 
         if (people == null) {
             FacesContext context = FacesContext.getCurrentInstance();
@@ -164,7 +164,7 @@ public class RecoverySelector implements Serializable {
 
     public String validateTmpCode() {
 
-        people = um.findByEmail(this.uname);
+        people = um.getUser(this.uname);
 
         if (people == null) {
             FacesContext context = FacesContext.getCurrentInstance();
@@ -206,7 +206,7 @@ public class RecoverySelector implements Serializable {
 
     public String sendYubiReq() {
 
-        people = um.findByEmail(uname);
+        people = um.getUser(this.uname);
 
         if (people == null) {
             FacesContext context = FacesContext.getCurrentInstance();

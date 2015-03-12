@@ -28,7 +28,7 @@
                 <br></br>
 
                 <h:panelGrid columns="1">
-                    <p:outputLabel for="username" value="Username" style="font-size: 12px; font-weight: bold;"/>
+                    <p:outputLabel for="username" value="Username" />
                     <p:inputText  id="username" 
                                   value="#{customAuthentication.username}" 
                                   requiredMessage="Enter Email"
@@ -37,14 +37,14 @@
                      </p:inputText>
                     <p:watermark for="username" value="Email" />
                   
-                    <p:outputLabel for="password" value="Password" style="font-size: 12px; font-weight: bold;" />
+                    <p:outputLabel for="password" value="Password"/>
                     <p:password id="password" value="#{customAuthentication.password}" 
                                  requiredMessage="Enter Password"
                                  required="true" >
                     </p:password>
                     <p:watermark for="password" value="Password" />
 
-                    <p:outputLabel for="otp" value="PIN" style="font-size: 12px; font-weight: bold;" rendered="#{customAuthenticationSwitch.otpEnabled}"/>
+                    <p:outputLabel for="otp" value="PIN" rendered="#{customAuthenticationSwitch.otpEnabled}"/>
                     <p:password id="otp" value="#{customAuthentication.otpCode}" 
                                 rendered="#{customAuthenticationSwitch.otpEnabled}" 
                                  required="true" 

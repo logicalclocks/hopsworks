@@ -579,6 +579,10 @@ body {
     background-image: url("/hop-dashboard/javax.faces.resource/images/views/lims.png.xhtml") !important;
 }
 
+.ui-outputlabel{
+    font-size: 12px;
+    font-weight: bold;
+}
 .BbcSelect {
     font-size: 20px;
     color: lightseagreen;
