@@ -577,27 +577,6 @@ CREATE TABLE `LOGIN` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `Login`
---
-
-DROP TABLE IF EXISTS `Login`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Login` (
-  `loginid` bigint(20) NOT NULL AUTO_INCREMENT,
-  `People_uid` int(10) DEFAULT NULL,
-  `last_login` timestamp NULL DEFAULT NULL,
-  `last_ip` varchar(45) DEFAULT NULL,
-  `os_platform` int(11) DEFAULT NULL,
-  `logout` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`loginid`),
-  KEY `fk_login_people` (`People_uid`),
-  CONSTRAINT `fk_login_people` FOREIGN KEY (`People_uid`) REFERENCES `USERS` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `FK_Login_People_uid` FOREIGN KEY (`People_uid`) REFERENCES `USERS` (`uid`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `People_Group`
 --
 

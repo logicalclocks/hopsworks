@@ -32,7 +32,7 @@ import se.kth.bbc.security.ua.model.User;
 public class RecoverySelector implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
+    
     @EJB
     private UserManager um;
 
@@ -117,11 +117,10 @@ public class RecoverySelector implements Serializable {
         return "";
     }
 
-    private static final Logger logger = Logger.getLogger(ResetPassword.class.getName());
 
     public String sendQrCode() {
 
-        people = um.findByEmail(uname);
+        people = um.getUser(this.uname);
 
         if (people == null) {
             FacesContext context = FacesContext.getCurrentInstance();
@@ -165,7 +164,7 @@ public class RecoverySelector implements Serializable {
 
     public String validateTmpCode() {
 
-        people = um.findByEmail(this.uname);
+        people = um.getUser(this.uname);
 
         if (people == null) {
             FacesContext context = FacesContext.getCurrentInstance();
@@ -207,7 +206,7 @@ public class RecoverySelector implements Serializable {
 
     public String sendYubiReq() {
 
-        people = um.findByEmail(uname);
+        people = um.getUser(this.uname);
 
         if (people == null) {
             FacesContext context = FacesContext.getCurrentInstance();
@@ -230,8 +229,8 @@ public class RecoverySelector implements Serializable {
         try {
             if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
 
-                String message = buildYubResetMessage("");
-                email.sendEmail(people.getEmail(), "Yubikey request", message);
+                String message = buildYubResetMessage();
+                email.sendEmail(people.getEmail(), "Yubikey Request", message);
                 people.setStatus(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
                 um.updatePeople(people);
                 return "yubico";
@@ -279,7 +278,7 @@ public class RecoverySelector implements Serializable {
         return content + tmp_pass + ending;
     }
 
-    private String buildYubResetMessage(String msg) {
+    private String buildYubResetMessage() {
 
         String content = "Greetings!\n\n"
                 + "There have been a Yubikey device reset request on your behalf.\n\n"
@@ -287,7 +286,7 @@ public class RecoverySelector implements Serializable {
 
         String ending = "If you have any questions please contact support@biobankcloud.com";
 
-        return content + msg + ending;
+        return content + ending;
     }
 
 }

@@ -29,23 +29,24 @@
                 <h2 align="center">Mobile Login</h2>     
                 <br></br>
                 <h:panelGrid columns="1"> 
-                    <p:outputLabel for="uname" value="Username" style="font-size: 12px; font-weight: bold;"/>
-                    <p:inputText id="uname" value="#{customAuthentication.username}" required="true" 
-                                           requiredMessage="Enter Email">
+                    <p:outputLabel for="uname" value="Username"/>
+                    <p:inputText id="uname" value="#{customAuthentication.username}" 
+                                 required="true" 
+                                 requiredMessage="Enter Email">
                     </p:inputText>   
                     <p:watermark for="uname" value="Email" />
 
-                    <p:outputLabel for="password" value="Password" style="font-size: 12px; font-weight: bold;"/>
+                    <p:outputLabel for="password" value="Password"/>
                     <p:password id="password" value="#{customAuthentication.password}"
                                 required="true" requiredMessage="Enter Password">
-                     </p:password>
+                    </p:password>
                     <p:watermark for="password" value="Password" />
 
-                    <p:outputLabel for="otp" value="PIN" style="font-size: 12px; font-weight: bold;" rendered="#{customAuthenticationSwitch.otpEnabled}"/>
+                    <p:outputLabel for="otp" value="PIN" rendered="#{customAuthenticationSwitch.otpEnabled}"/>
                     <p:password id="otp" value="#{customAuthentication.otpCode}" 
                                 required="true" 
                                 rendered="#{customAuthenticationSwitch.otpEnabled}"
-                                 requiredMessage="Enter PIN"
+                                requiredMessage="Enter PIN"
                                 validatorMessage="PIN must be 6 digits" >
                         <f:validateLength minimum="6" maximum="6"/> 
                     </p:password>   
@@ -56,18 +57,19 @@
                     <p:messages id="messages" autoUpdate="true" closable="true"/>
                     <div align="left ">
                         <h:panelGroup >
-                            <p:commandButton id="loginButton" value="Sign in" action="#{customAuthentication.login()}" styleClass="MainButton"/>
+                            <p:commandButton id="loginButton" value="Sign in" action="#{customAuthentication.login()}" 
+                                             styleClass="MainButton"/>
                         </h:panelGroup>
                     </div>
                 </h:panelGrid>
             </div>
 
-        <div align="center">
-            <p:commandLink id="signupLink" value="Yubikey auth" action="yubikeylogin" style="text-align: right"/>
-                      &nbsp;
-            <p:commandLink value="Cancel" action="welcome" style="text-align: right"/>
-        </div>
-            
+            <div align="center">
+                <p:commandLink id="signupLink" value="Yubikey auth" action="yubikeylogin" style="text-align: right"/>
+                &nbsp;
+                <p:commandLink value="Cancel" action="welcome" style="text-align: right"/>
+            </div>
+
         </h:form> 
         <br/>
     </h:body>

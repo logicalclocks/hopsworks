@@ -7,10 +7,19 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ViewScoped;
+import javax.faces.bean.SessionScoped;
+import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
@@ -20,7 +29,7 @@ import se.kth.bbc.security.auth.QRCodeGenerator;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @ManagedBean
-@ViewScoped
+@SessionScoped
 public class UserRegistration implements Serializable {
 
     private static final Logger logger = Logger.getLogger(UserRegistration.class.getName());
@@ -29,6 +38,9 @@ public class UserRegistration implements Serializable {
     private UserManager mgr;
     @EJB
     private EmailBean emailBean;
+
+    @Resource
+    private UserTransaction userTransaction;
 
     private String fname;
     private String lname;
@@ -59,7 +71,7 @@ public class UserRegistration implements Serializable {
     public void setTos(boolean tos) {
         this.tos = tos;
     }
-    
+
     public String getAddress1() {
         return address1;
     }
@@ -248,37 +260,43 @@ public class UserRegistration implements Serializable {
         this.passwordAgain = passwordAgain;
     }
 
-    
     /**
      * Registration of users with mobile devices.
+     *
      * @return
      * @throws UnsupportedEncodingException
      * @throws NoSuchAlgorithmException
-     * @throws IOException 
+     * @throws IOException
      */
-    public String registerMobileUser() throws UnsupportedEncodingException, NoSuchAlgorithmException, IOException {
+    public String registerMobileUser() {
 
         try {
-            
+
             /* generates a UNIX compliant account*/
             int uid = mgr.lastUserID() + 1;
             String otpSecret = SecurityUtils.calculateSecretKey();
             short yubikey = -1;
+
+            userTransaction.begin();
+
             username = mgr.register(fname, lname, mail, title, org, tel, orcid, uid,
                     SecurityUtils.converToSHA256(password), otpSecret, security_question,
                     SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue(), yubikey);
 
             // register group
             mgr.registerGroup(uid, BBCGroups.BBC_GUEST.getValue());
-           
+
             // create address entry
             mgr.registerAddress(uid);
-            
+
             // generate qr code to be displayed to user
             qrCode = QRCodeGenerator.getQRCode(mail, CustomAuthentication.ISSUER, otpSecret);
-            
+
             // notify user about the request
             emailBean.sendEmail(mail, "Confirmation Email", buildMobileRequestMessage());
+
+            userTransaction.commit();
+
             // Reset the values
             fname = "";
             lname = "";
@@ -291,26 +309,31 @@ public class UserRegistration implements Serializable {
             security_question = "";
             password = "";
             passwordAgain = "";
+            tos = false;
 
-        } catch (NoSuchAlgorithmException | IOException | WriterException e) {
-            logger.log(Level.INFO, "Error {0}", e.getMessage());
-            return null;
-        } catch (MessagingException ex) {
-            Logger.getLogger(UserRegistration.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NotSupportedException | SystemException | NoSuchAlgorithmException | IOException | WriterException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException e) {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error!", "null"));
+            Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, e);
+            return ("");
+
         }
         return ("qrcode");
     }
-   
-    public String registerYubikey() throws UnsupportedEncodingException, NoSuchAlgorithmException, IOException, MessagingException {
+
+    public String registerYubikey() {
 
         try {
             /* generates a UNIX compliant account*/
             int uid = mgr.lastUserID() + 1;
 
             short yubikey = 1;
-            String otp ="-1";
+            String otp = "-1";
+
+            userTransaction.begin();
+
             username = mgr.register(fname, lname, mail, title, org,
-                    tel, orcid, uid, SecurityUtils.converToSHA256(password), otp, 
+                    tel, orcid, uid, SecurityUtils.converToSHA256(password), otp,
                     security_question, SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue(), yubikey);
 
             mgr.registerGroup(uid, BBCGroups.BBC_GUEST.getValue());
@@ -318,6 +341,9 @@ public class UserRegistration implements Serializable {
             mgr.registerAddress(uid, address1, address2, address3, city, state, country, postalcode);
             mgr.registerYubikey(uid);
             emailBean.sendEmail(mail, "Confirmation Email", buildYubikeyRequestMessage());
+
+            userTransaction.commit();
+
             // Reset the values
             fname = "";
             lname = "";
@@ -332,19 +358,23 @@ public class UserRegistration implements Serializable {
             passwordAgain = "";
             address1 = "";
             address2 = "";
-            address3 = ""; 
-            city ="";
-            state ="";
-            country ="";
-            postalcode="";
+            address3 = "";
+            city = "";
+            state = "";
+            country = "";
+            postalcode = "";
+            tos = false;
+        } catch (NotSupportedException | SystemException | NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException e) {
 
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
-            logger.log(Level.INFO, "Error {0}", e.getMessage());
-            return null;
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error!", "null"));
+            Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, e);
+            return ("");
+
         }
         return ("yubico");
     }
-    
+
     private String buildYubikeyRequestMessage() {
 
         String l1 = "Greetings!\n\nWe receieved your yubikey account request for the BiobankCloud.\n\n";

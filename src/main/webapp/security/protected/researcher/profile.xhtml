@@ -23,15 +23,18 @@
             <p:layout  style="margin:10px auto; width: 40%;">  
                 <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
                
-                <p:layoutUnit position="north" style="margin:0px auto; width: 40%;">
+                    
+                <p:layoutUnit  position="north" style="margin:0px auto; width: 40%;">
+                    <h:panelGrid id="profile_head">
                     <img src="#{profileManager.gravatar}" />
-                    <h3>
-                        #{profileManager.user.fname} #{profileManager.user.lname}
+                    <h3 >
+                        #{profileManager.user.title} #{profileManager.user.fname} #{profileManager.user.lname}
                         <br></br>
                         <small>
                             #{profileManager.user.username}
                         </small>
                     </h3>
+                    </h:panelGrid>
                </p:layoutUnit>
                 
                 <p:layoutUnit position="center" style="margin: 5px auto; width: 40%;">
@@ -185,7 +188,7 @@
                         
                         <br></br>
                         <div align="center">
-                        <p:commandButton  type="submit" id="mysub" value="Save"
+                            <p:commandButton  type="submit" id="mysub" value="Save" update=":profile_head"
                                           actionListener="#{profileManager.updateUser()}"/> 
                         <p:spacer width="10"/>
                         <p:commandButton type="submit" value="Back" action="indexPage"  />

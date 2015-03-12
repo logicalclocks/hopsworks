@@ -116,7 +116,7 @@ public class ResetPassword implements Serializable {
             if (!SecurityUtils.converToSHA256(answer).equals(people.getSecurityAnswer())) {
 
                 FacesContext context = FacesContext.getCurrentInstance();
-                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong answer", null));
+                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong Answer", null));
 
                 // Lock the account if 5 tmies wrong answer  
                 int val = people.getFalseLogin();
@@ -144,7 +144,7 @@ public class ResetPassword implements Serializable {
 
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException | MessagingException ex) {
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset password!", "null"));
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error!", "null"));
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
             return ("");
         }
@@ -173,7 +173,7 @@ public class ResetPassword implements Serializable {
     private String buildSecResetMessage() {
 
         String l1 = "Greetings!\n\nThere have been a security question change reset request on your behalf.\n\n";
-        String l2 = "Your security question is changed successfully\n\n\n";
+        String l2 = "Your security question is changed successfully.\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
         return l1 + l2 + l3;
@@ -188,7 +188,7 @@ public class ResetPassword implements Serializable {
 
         String l1 = "Greetings!\n\n"
                 + "There have been a password change reset request on your behalf.\n\n";
-        String l2 = "Your password is changed successfully\n\n\n";
+        String l2 = "Your password is changed successfully.\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
         return l1 + l2 + l3;
@@ -233,7 +233,7 @@ public class ResetPassword implements Serializable {
             return ("password_changed");
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset password!", "null"));
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error", "null"));
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
             return ("");
 
@@ -256,7 +256,7 @@ public class ResetPassword implements Serializable {
 
         if (this.answer.isEmpty() || this.answer == null || this.current == null || this.current.isEmpty()) {
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "No entry", "null"));
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "No Entry", "null"));
             return ("");
         }
 
@@ -279,12 +279,12 @@ public class ResetPassword implements Serializable {
                 return ("sec_question_changed");
             } else {
                 FacesContext context = FacesContext.getCurrentInstance();
-                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
+                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong Password!", "null"));
                 return "";
             }
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset!", "null"));
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error!", "null"));
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
             return ("");
         }
@@ -301,7 +301,7 @@ public class ResetPassword implements Serializable {
         people = mgr.getUser(this.username);
         if (people == null) {
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found!", "null"));
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User Not Found!", "null"));
             return "";
         }
 
@@ -335,7 +335,7 @@ public class ResetPassword implements Serializable {
 
         if (passwd1 == null || passwd2 == null) {
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "No password entry", "null"));
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "No Password Entry", "null"));
             return ("");
         }
 
@@ -353,12 +353,12 @@ public class ResetPassword implements Serializable {
                 return ("profile_password_changed");
             } else {
                 FacesContext context = FacesContext.getCurrentInstance();
-                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
+                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong Password!", "null"));
                 return "";
             }
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
             FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error to reset!", "null"));
+            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Email Technical Error!", "null"));
             Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
             return ("");
         }

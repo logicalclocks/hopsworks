@@ -2289,6 +2289,54 @@ ui-wizard {
     text-decoration: underline;
 }
 
+/*QRcode*/
+
+.QRcode {
+    font-size: 14px;
+    width: 320px;
+    margin: 0 auto;
+    margin-top: 50px;
+    border-width: 1px; 
+    border-style: solid; 
+    border-color: lightgray; 
+    background-color: #F0F0F0; 
+    border-radius: 6px;  
+    padding: 20px;   
+}
+
+.QRcode td {
+    padding: 1px 5px;
+}
+
+.QRcode .ui-inputfield {
+    width: 290px;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.QRcode .ui-button {
+    float: right;
+}
+
+.QRcode .ui-messages-error-icon {
+    display: none!important;
+}
+
+/*QRcode*/
+
+.QRcode {
+    font-size: 14px;
+    width: 320px;
+    margin: 0 auto;
+    margin-top: 50px;
+    border-width: 1px; 
+    border-style: solid; 
+    border-color: lightgray; 
+    background-color: #F0F0F0; 
+    border-radius: 6px;  
+    padding: 20px;  
+}
+
 .registerPanel{
   width: 50%;
 }

@@ -29,34 +29,38 @@
 
                         <h:form > 
                             <h:panelGrid columns="2">			
-                                <p:outputLabel for="fname" value="First name" style="font-weight:bold"/>
-                                <p:inputText id="fname" value="#{userRegistration.fname}" size="40"
+                                <p:outputLabel for="fname" value="First name" />
+                                <p:inputText id="fname" value="#{userRegistration.fname}" 
                                              required="true"
                                              autocomplete="off"
+                                             size="42"
                                              requiredMessage="Enter first name" />
 
-                                <p:outputLabel for="lname" value="Last name" style="font-weight:bold"/>
-                                <p:inputText id="lname" value="#{userRegistration.lname}" size="40"
+                                <p:outputLabel for="lname" value="Last name" />
+                                <p:inputText id="lname" value="#{userRegistration.lname}" 
                                              required="true"
                                              autocomplete="off"
+                                             size="42"
                                              requiredMessage="Enter last name"/>
 
-                                <p:outputLabel for="email" value="Email" style="font-weight:bold"/>
-                                <p:inputText id="email" value="#{userRegistration.mail}" size="40"
+                                <p:outputLabel for="email" value="Email"/>
+                                <p:inputText id="email" value="#{userRegistration.mail}" 
                                              required="true"
                                              autocomplete="off"
+                                             size="42"
                                              requiredMessage="Enter email">
                                     <f:validator binding="#{usernameValidator}" />
                                 </p:inputText>    
 
-                                <p:outputLabel for="tel" value="Phone number" style="font-weight:bold"/>
-                                <p:inputText id="tel" value="#{userRegistration.tel}" size="40"
+                                <p:outputLabel for="tel" value="Phone number"/>
+                                <p:inputText id="tel" value="#{userRegistration.tel}" 
                                              autocomplete="off"
+                                             size="42"
                                              validatorMessage="Invalid phone number">
                                     <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                 </p:inputText>
 
-                                <p:outputLabel for="sec_question" value="Security Question" style="font-weight:bold"/>
+                                <p:outputLabel for="sec_question" value="Security question" />
                                 <p:selectOneMenu id="sec_question" value="#{userRegistration.security_question}" 
                                                  required="true"
                                                  requiredMessage="Select security question">
@@ -67,31 +71,34 @@
                                     <f:selectItem itemLabel="What is the name of your favorite childhood friend?" itemValue="friend" />
                                 </p:selectOneMenu>  
 
-                                <p:outputLabel for="answer" value="Answer" style="font-weight:bold"/>
-                                <p:inputText id="answer" value="#{userRegistration.security_answer}" size="40"
+                                <p:outputLabel for="answer" value="Answer"/>
+                                <p:inputText id="answer" value="#{userRegistration.security_answer}"
                                              required="true"
                                              autocomplete="off"
+                                             size="42"
                                              requiredMessage="Answer security question" />
 
-                                <p:outputLabel for="password0" value="Password" style="font-weight:bold"/>
+                                <p:outputLabel for="password0" value="Password"/>
                                 <p:password id="password0" value="#{userRegistration.password}" 
-                                            required="true" size="40"
+                                            required="true"
                                             autocomplete="off"
+                                            size="42"
                                             requiredMessage="Enter password">
                                     <f:validator validatorId="passwordValidator" />
                                     <f:attribute name="confirmPassword" value="#{confirmPassword}" />
                                 </p:password>
 
-                                <p:outputLabel for="password" value="Password again" style="font-weight:bold"/>
-                                <p:password id="password" value="#{userRegistration.passwordAgain}" size="40"
+                                <p:outputLabel for="password" value="Password again"/>
+                                <p:password id="password" value="#{userRegistration.passwordAgain}"
                                             requiredMessage="Re-enter password"
                                             autocomplete="off" 
+                                            size="42"
                                             binding="#{confirmPassword}"
                                             required="true">
                                 </p:password>
 
 
-                                <p:outputLabel for="captcha" value="Enter Captcha"  style="font-weight:bold"/>
+                                <p:outputLabel for="captcha" value="Enter Captcha" />
                                 <p:captcha id ="captcha" label="Captcha" required="true" 
                                            requiredMessage="Enter Captcha"/>
 
@@ -172,7 +179,7 @@
                                     </p>
                                 </div>  
                             </p>
-                        </div>
+                        </div>                    
                     </h:panelGroup>
                 </h:panelGrid>
             </div>   
