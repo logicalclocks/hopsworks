@@ -113,8 +113,8 @@ public class PeopleAministration implements Serializable {
     private String edit_status;
 
     public String getEdit_status() {
-        edit_status = PeoplAccountStatus.values()[editingUser.getStatus() - 1].name();
-        return edit_status;
+        this.edit_status = PeoplAccountStatus.values()[this.editingUser.getStatus() - 1].name();
+        return this.edit_status;
     }
 
     public void setEdit_status(String edit_status) {
@@ -403,6 +403,7 @@ public class PeopleAministration implements Serializable {
         try {
 
             userTransaction.begin();
+
             userManager.registerGroup(user1.getUid(), BBCGroups.valueOf(selected_group).getValue());
             userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
             userTransaction.commit();
@@ -436,8 +437,10 @@ public class PeopleAministration implements Serializable {
     }
 
     public String modifyUser(User user1) {
-        this.editingUser = user1;
-        this.address = userManager.findAddress(user1.getUid());
+
+        FacesContext.getCurrentInstance().getExternalContext()
+                .getSessionMap().put("editinguser", user1);
+
         return "admin_profile";
     }
 
@@ -507,7 +510,7 @@ public class PeopleAministration implements Serializable {
 
             yubikey_requests.remove(this.selectedYubikyUser);
             allUsers.add(this.selectedYubikyUser);
-      
+
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
             FacesContext context = FacesContext.getCurrentInstance();
             context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error!", "null"));
