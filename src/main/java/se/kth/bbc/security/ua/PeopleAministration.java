@@ -10,10 +10,10 @@ import java.io.Serializable;
 import java.security.Principal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -68,7 +68,7 @@ public class PeopleAministration implements Serializable {
 
     private String sec_answer;
 
-    Map<String, String> questions;
+    List <String> questions;
     private List<User> filteredUsers;
     private List<User> selectedUsers;
     private List<User> allUsers;
@@ -245,12 +245,15 @@ public class PeopleAministration implements Serializable {
 
         groups = new ArrayList<>();
         status = new ArrayList<>();
-
-        for (int i = 0; i < BBCGroups.values().length; i++) {
-            groups.add(BBCGroups.values()[i].name());
+        questions = new ArrayList<>();
+        for (BBCGroups value : BBCGroups.values()) {
+            groups.add(value.name());
         }
 
-        questions = new SelectSecurityQuestionMenue().getQuestions();
+        for(SecurityQuestions value: SecurityQuestions.values()){
+            questions.add(value.getValue());
+        }
+        
     }
 
     public List<String> getStatus() {
@@ -460,14 +463,15 @@ public class PeopleAministration implements Serializable {
         this.sec_answer = sec_answer;
     }
 
-    public Map<String, String> getQuestions() {
+    public List<String> getQuestions() {
         return questions;
     }
 
-    public void setQuestions(Map<String, String> questions) {
+    public void setQuestions(List<String> questions) {
         this.questions = questions;
     }
 
+   
     public String activateYubikeyUser(User user1) {
         this.selectedYubikyUser = user1;
         this.address = userManager.findAddress(user1.getUid());

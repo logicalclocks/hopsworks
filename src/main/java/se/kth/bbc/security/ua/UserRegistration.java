@@ -5,14 +5,13 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
-import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
@@ -21,18 +20,19 @@ import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 import org.primefaces.model.StreamedContent;
+import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 
 /**
- *
+ * This class provides user registration functions to get the input through the
+ * user registration GUIs and register the info in the database.
+ * 
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @ManagedBean
 @SessionScoped
 public class UserRegistration implements Serializable {
-
-    private static final Logger logger = Logger.getLogger(UserRegistration.class.getName());
 
     @EJB
     private UserManager mgr;
@@ -61,8 +61,19 @@ public class UserRegistration implements Serializable {
     private String state;
     private String country;
     private String postalcode;
-
     private boolean tos;
+
+    private List<String> questions;
+    
+    public List<String> getQuestions() {
+        return questions;
+    }
+
+    public void setQuestions(List<String> questions) {
+        this.questions = questions;
+    }
+    
+
 
     public boolean isTos() {
         return tos;
@@ -260,42 +271,52 @@ public class UserRegistration implements Serializable {
         this.passwordAgain = passwordAgain;
     }
 
+    @PostConstruct
+    private void init()
+    {
+        questions = new ArrayList<>();
+        for(SecurityQuestions value: SecurityQuestions.values()){
+           questions.add(value.getValue());
+       }
+        
+
+    }
     /**
-     * Registration of users with mobile devices.
+     * Register new mobile users.
      *
      * @return
-     * @throws UnsupportedEncodingException
-     * @throws NoSuchAlgorithmException
-     * @throws IOException
      */
     public String registerMobileUser() {
 
         try {
 
-            /* generates a UNIX compliant account*/
-            int uid = mgr.lastUserID() + 1;
             String otpSecret = SecurityUtils.calculateSecretKey();
             short yubikey = -1;
 
+            // Generates a UNIX compliant account
+            int uid = mgr.lastUserID() + 1;
+
+            // Register the new request in the platform
             userTransaction.begin();
 
+            
             username = mgr.register(fname, lname, mail, title, org, tel, orcid, uid,
-                    SecurityUtils.converToSHA256(password), otpSecret, security_question,
+                    SecurityUtils.converToSHA256(password), otpSecret, SecurityQuestions.getQuestion(security_question).name(),
                     SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue(), yubikey);
 
-            // register group
+            // Register group
             mgr.registerGroup(uid, BBCGroups.BBC_GUEST.getValue());
 
-            // create address entry
+            // Create address entry
             mgr.registerAddress(uid);
 
-            // generate qr code to be displayed to user
+            // Generate qr code to be displayed to user
             qrCode = QRCodeGenerator.getQRCode(mail, CustomAuthentication.ISSUER, otpSecret);
-            
+
             userTransaction.commit();
 
-            // notify user about the request
-            emailBean.sendEmail(mail, "Confirmation Email", buildMobileRequestMessage());
+            // Notify user about the request
+            emailBean.sendEmail(mail, UserAccountsEmailMessages.buildMobileRequestMessage(), UserAccountsEmailMessages.buildMobileRequestMessage());
 
             // Reset the values
             fname = "";
@@ -312,29 +333,35 @@ public class UserRegistration implements Serializable {
             tos = false;
 
         } catch (NotSupportedException | SystemException | NoSuchAlgorithmException | IOException | WriterException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException e) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error!", "null"));
-            Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, e);
+            MessagesController.addErrorMessage("messages", "Technical Error" );
             return ("");
 
         }
         return ("qrcode");
     }
 
+    /**
+     * Register new Yubikey users.
+     *
+     * @return
+     */
     public String registerYubikey() {
 
         try {
-            /* generates a UNIX compliant account*/
-            int uid = mgr.lastUserID() + 1;
 
             short yubikey = 1;
+
             String otp = "-1";
 
+            // Generates a UNIX compliant account
+            int uid = mgr.lastUserID() + 1;
+
+            // Register the request in the platform
             userTransaction.begin();
 
             username = mgr.register(fname, lname, mail, title, org,
                     tel, orcid, uid, SecurityUtils.converToSHA256(password), otp,
-                    security_question, SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue(), yubikey);
+                    SecurityQuestions.getQuestion(security_question).name(), SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue(), yubikey);
 
             mgr.registerGroup(uid, BBCGroups.BBC_GUEST.getValue());
 
@@ -342,8 +369,9 @@ public class UserRegistration implements Serializable {
             mgr.registerYubikey(uid);
 
             userTransaction.commit();
-            
-            emailBean.sendEmail(mail, "Confirmation Email", buildYubikeyRequestMessage());
+
+            // Send email to the user to get notified about the account request
+            emailBean.sendEmail(mail, UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT, UserAccountsEmailMessages.buildYubikeyRequestMessage());
 
             // Reset the values
             fname = "";
@@ -365,33 +393,11 @@ public class UserRegistration implements Serializable {
             country = "";
             postalcode = "";
             tos = false;
+
         } catch (NotSupportedException | SystemException | NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException e) {
-
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error!", "null"));
-            Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, e);
+            MessagesController.addErrorMessage("messages", "Technical Error" );
             return ("");
-
         }
         return ("yubico");
     }
-
-    private String buildYubikeyRequestMessage() {
-
-        String l1 = "Hello,\n\nWe receieved your yubikey account request for the BiobankCloud.\n\n";
-        String l2 = "You will receive a Yubikey device within 48 hours at your address.\n\n\n";
-        String l3 = "If you have any questions please contact support@biobankcloud.com";
-
-        return l1 + l2 + l3;
-    }
-
-    private String buildMobileRequestMessage() {
-
-        String l1 = "Hello,\n\nWe received your mobile account request for the BiobankCloud.\n\n";
-        String l2 = "Your account will be activated within 48 hours.\n\n\n";
-        String l3 = "If you have any questions please contact support@biobankcloud.com";
-
-        return l1 + l2 + l3;
-    }
-
 }

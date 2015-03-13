@@ -2,6 +2,7 @@ package se.kth.bbc.lims;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+import javax.faces.validator.ValidatorException;
 
 /**
  *
@@ -45,6 +46,17 @@ public class MessagesController {
 
     public static void addWarnMessage(String summary, String mess) {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_WARN, summary, mess));
+    }
+    
+    
+    public static void addSecurityErrorMessage(String summary, String message){
+        FacesContext.getCurrentInstance().addMessage(summary, new FacesMessage(FacesMessage.SEVERITY_ERROR, message,null));
+    }
+    
+    public static void addValidatorErrorMessage(String msg) {
+        FacesMessage facesMsg = new FacesMessage(msg);
+        facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+        throw new ValidatorException(facesMsg);
     }
 
 }

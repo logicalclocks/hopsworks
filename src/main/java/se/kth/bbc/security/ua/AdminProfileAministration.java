@@ -78,13 +78,9 @@ public class AdminProfileAministration implements Serializable {
     // current status of the editing user
     private String edit_status;
 
-    public String getEdit_status() {
+    List<String> status;
 
-        int status = userManager.getUser(this.editingUser.getEmail()).getStatus();
-        this.edit_status = PeoplAccountStatus.values()[status - 1].name();
-        return this.edit_status;
-    }
-
+    
     public void setEdit_status(String edit_status) {
         this.edit_status = edit_status;
     }
@@ -114,11 +110,7 @@ public class AdminProfileAministration implements Serializable {
         return PeoplAccountStatus.values()[userManager.findByEmail(p.getEmail()).getStatus() - 1].name();
     }
 
-    /*
-     public String getUserStatus(People p) {
-     return Integer.toString(userManager.findByEmail(p.getEmail()).getStatus());
-     }
-     */
+    
     public User getUser() {
         return user;
     }
@@ -127,8 +119,28 @@ public class AdminProfileAministration implements Serializable {
         this.user = user;
     }
 
+    public void setNew_groups(List<String> new_groups) {
+        this.new_groups = new_groups;
+    }
+
+    public String getSelected_status() {
+        return selected_status;
+    }
+
+    public void setSelected_status(String selected_status) {
+        this.selected_status = selected_status;
+    }
+
+    public String getSelected_group() {
+        return selected_group;
+    }
+
+    public void setSelected_group(String selected_group) {
+        this.selected_group = selected_group;
+    }
+
     /**
-     * Filter the current groups
+     * Filter the current groups of the user.
      *
      * @return
      */
@@ -154,36 +166,22 @@ public class AdminProfileAministration implements Serializable {
         return tmp;
     }
 
-    public void setNew_groups(List<String> new_groups) {
-        this.new_groups = new_groups;
+    public String getEdit_status() {
+
+        int status = userManager.getUser(this.editingUser.getEmail()).getStatus();
+        this.edit_status = PeoplAccountStatus.values()[status - 1].name();
+        return this.edit_status;
     }
 
-    public String getSelected_status() {
-        return selected_status;
-    }
-
-    public void setSelected_status(String selected_status) {
-        this.selected_status = selected_status;
-    }
-
-    public String getSelected_group() {
-        return selected_group;
-    }
-
-    public void setSelected_group(String selected_group) {
-        this.selected_group = selected_group;
-    }
-
-    List<String> status;
-
+    
     @PostConstruct
     public void init() {
 
         groups = new ArrayList<>();
         status = new ArrayList<>();
 
-        for (int i = 0; i < BBCGroups.values().length; i++) {
-            groups.add(BBCGroups.values()[i].name());
+        for (BBCGroups value : BBCGroups.values()) {
+            groups.add(value.name());
         }
 
         editingUser = (User) FacesContext.getCurrentInstance().getExternalContext()
@@ -194,13 +192,11 @@ public class AdminProfileAministration implements Serializable {
 
         status = new ArrayList<>();
 
-        int st = editingUser.getStatus();
-
         for (PeoplAccountStatus p : PeoplAccountStatus.values()) {
             status.add(p.name());
         }
 
-        // remove the inactive users
+        // Remove the inactive users
         status.remove(PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.name());
         status.remove(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.name());
         return status;
@@ -248,37 +244,31 @@ public class AdminProfileAministration implements Serializable {
     }
 
     /**
-     * To reject user requests
+     * Reject user requests.
      *
      * @param user1
-     * @throws javax.mail.MessagingException
      */
     public void blockUser(User user1) {
         try {
             userTransaction.begin();
+
             userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_BLOCKED.getValue());
             userTransaction.commit();
 
-            emailBean.sendEmail(user1.getEmail(), "Account Blocked", accountBlockedMessage());
+            emailBean.sendEmail(user1.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
+
         } catch (NotSupportedException | SystemException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
             Logger.getLogger(AdminProfileAministration.class.getName()).log(Level.SEVERE, null, ex);
         }
         requests.remove(user1);
     }
 
-    private String accountBlockedMessage() {
-        String l1 = "Hello,\n\n"
-                + "Your account in the Biobankcloud has been blocked.\n\n";
-        String l2 = "If you have any questions please contact support@biobankcloud.com";
-        return l1 + l2;
-    }
-
     /**
-     * Update user roles from profile by admin
+     * Update user roles from profile by admin.
      */
     public void updateUserByAdmin() {
         try {
-            // update status
+            // Update status
             if (!"#".equals(selected_status)) {
                 editingUser.setStatus(PeoplAccountStatus.valueOf(selected_status).getValue());
                 userManager.updateStatus(editingUser.getUid(), PeoplAccountStatus.valueOf(selected_status).getValue());
@@ -286,14 +276,14 @@ public class AdminProfileAministration implements Serializable {
 
             }
 
-            // register a new group
+            // Register a new group
             if (!"#".equals(new_group)) {
                 userManager.registerGroup(editingUser.getUid(), BBCGroups.valueOf(new_group).getValue());
                 MessagesController.addInfoMessage("Success", "Role updated successfully.");
 
             }
 
-            // remove a group
+            // Remove a group
             if (!"#".equals(selected_group)) {
                 if (selected_group.equals(BBCGroups.BBC_GUEST.name())) {
                     MessagesController.addWarnMessage("Warning", BBCGroups.BBC_GUEST.name() + " can not be removed.");

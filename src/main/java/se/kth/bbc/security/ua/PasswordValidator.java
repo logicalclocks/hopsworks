@@ -7,13 +7,13 @@ package se.kth.bbc.security.ua;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIInput;
 import javax.faces.context.FacesContext;
 import javax.faces.validator.FacesValidator;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
+import se.kth.bbc.lims.MessagesController;
 
 /**
  *
@@ -46,38 +46,22 @@ public class PasswordValidator implements Validator {
 
         if (password == null || password.isEmpty() || confirmPassword == null
                 || confirmPassword.isEmpty()) {
-            FacesMessage facesMsg = new FacesMessage(
-                    "Password is empty");
-            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-            throw new ValidatorException(facesMsg);
-
+            MessagesController.addValidatorErrorMessage("Password is empty");
         }
 
         if (password.length() < 6) {
             uiInputConfirmPassword.setValid(false);
-            FacesMessage facesMsg = new FacesMessage(
-                    "Password must contain at least 6 characters.");
-            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-            throw new ValidatorException(facesMsg);
-
+            MessagesController.addValidatorErrorMessage("Password must contain at least 6 characters.");
         }
 
         if (!isAlphaNumeric(password)) {
             uiInputConfirmPassword.setValid(false);
-            FacesMessage facesMsg = new FacesMessage(
-                    "There should be at least one numbder in the password");
-            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-            throw new ValidatorException(facesMsg);
-
+            MessagesController.addValidatorErrorMessage("There should be at least one numbder in the password.");
         }
 
         if (!password.equals(confirmPassword)) {
             uiInputConfirmPassword.setValid(false);
-            FacesMessage facesMsg = new FacesMessage(
-                    "Passwords don't match");
-            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-            throw new ValidatorException(facesMsg);
-
+            MessagesController.addValidatorErrorMessage("Passwords don't match.");
         }
     }
 

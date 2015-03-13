@@ -21,7 +21,7 @@ import javax.faces.validator.ValidatorException;
 @RequestScoped
 public class TosCheckboxValidator implements Validator {
 
-    public boolean check= false;
+    public boolean check = false;
 
     public boolean isCheck() {
         return check;
@@ -30,13 +30,13 @@ public class TosCheckboxValidator implements Validator {
     public void setCheck(boolean check) {
         this.check = check;
     }
-    
-       @Override
+
+    @Override
     public void validate(FacesContext context, UIComponent component,
             Object value) throws ValidatorException {
 
         String cb = value.toString();
-        
+
         if (!cb.equals("true")) {
             FacesMessage facesMsg = new FacesMessage(
                     "You have to agree to the ToS to be able to register as a user.");

@@ -24,60 +24,14 @@ public class UserManager {
     @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
 
+    // Strating user id from 1000 to create a POSIX compliant username: meb1000
+    private final int STARTING_USER = 1000;
+    
+    // BiobankCloud prefix username prefix
+    private final String USERNAME_PREFIX="meb";
+   
     /**
-     * Register a new user and assign default group.
-     *
-     * @param fname
-     * @param lname
-     * @param email
-     * @param title
-     * @param org
-     * @param tel
-     * @param orcid
-     * @param uid
-     * @param password
-     * @param otpSecret
-     * @param question
-     * @param answer
-     * @param status
-     * @param yubikey
-     * @return
-     */
-    public String register(String fname, String lname, String email, String title, String org,
-            String tel, String orcid, int uid, String password, String otpSecret,
-            String question, String answer, int status, short yubikey) {
-
-        /* assigne a username*/
-        String uname = "meb" + uid;
-
-        User user = new User();
-        user.setUsername(uname);
-        user.setPassword(password);
-        user.setSecret(otpSecret);
-        user.setEmail(email);
-        user.setFname(fname);
-        user.setLname(lname);
-        user.setHomeOrg(org);
-        user.setMobile(tel);
-        user.setUid(uid);
-        user.setOrcid(orcid);
-        user.setTitle(title);
-        user.setActivated(new Timestamp(new Date().getTime()));
-        user.setStatus(status);
-        /*
-         * offline: -1
-         * online:   1  
-         */
-        user.setIsonline(-1);
-        user.setSecurityQuestion(question);
-        user.setSecurityAnswer(answer);
-        user.setYubikeyUser(yubikey);
-        em.persist(user);
-        return uname;
-    }
-
-    /**
-     * Register a new group for user
+     * Register a new group for user.
      *
      * @param uid
      * @param gidNumber
@@ -187,51 +141,6 @@ public class UserManager {
         return true;
     }
 
-    /**
-     * Register Yubikey user's delivery address.
-     *
-     * @param uid
-     * @param address1
-     * @param address2
-     * @param address3
-     * @param city
-     * @param state
-     * @param country
-     * @param postalcode
-     * @return
-     */
-    public boolean registerAddress(int uid, String address1, String address2, String address3, String city, String state, String country, String postalcode) {
-
-        Address add = new Address();
-        add.setUid(uid);
-        add.setAddress1(address1);
-        add.setAddress2(address2);
-        add.setAddress3(address3);
-        add.setState(state);
-        add.setCity(city);
-        add.setCountry(country);
-        add.setPostalcode(postalcode);
-        em.persist(add);
-        return true;
-    }
-
-    /**
-     * Return the max uid in the table.
-     *
-     * @return
-     */
-    public int lastUserID() {
-        Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM USERS p");
-        Object obj = query.getSingleResult();
-
-        // For the first user in the table as uid
-        int uid = 10000;
-
-        if (obj == null) {
-            return uid;
-        }
-        return (Integer) obj;
-    }
 
     /**
      * Find a user through email.
@@ -279,6 +188,152 @@ public class UserManager {
         
         return query;
     }
+    
+
+    public List<User> findAllByStatus(int status) {
+        TypedQuery<User> query = em.createNamedQuery("User.findByStatus", User.class);
+        query.setParameter("status", status);
+        return query.getResultList();
+    }
+
+    public User findByEmail(String email) {
+        TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
+        query.setParameter("email", email);
+        return query.getSingleResult();
+    }
+
+    public Address findAddress(int uid) {
+        TypedQuery<Address> query = em.createNamedQuery("Address.findByUid", Address.class);
+        query.setParameter("uid", uid);
+        return query.getSingleResult();
+    }
+
+ 
+    public List<String> findGroups(int uid) {
+        String sql = "SELECT group_name FROM BBCGroup INNER JOIN People_Group ON (People_Group.gid = BBCGroup.gid AND People_Group.uid = " + uid + " )";
+        List existing = em.createNativeQuery(sql).getResultList();
+        return existing;
+    }
+
+    /**
+     * Remove user's group based on uid/gid.
+     *
+     * @param uid
+     * @param gid
+     */
+    public void removeGroup(int uid, int gid) {
+        String sql = "delete from PeopleGroup p where (p.uid = " + uid + " and " + " p.gid= " + gid + ")";
+        em.createQuery(sql).executeUpdate();
+
+    }
+
+    /**
+     * Study authorization methods
+     * @param name of the study
+     * @return List of User objects for the study, if found
+     */
+    public List<User> filterUsersBasedOnStudy(String name) {
+
+        Query query = em.createNativeQuery("SELECT * FROM USERS WHERE email NOT IN (SELECT team_member FROM StudyTeam WHERE name=?)", User.class).setParameter(1, name);
+        return query.getResultList();
+    }
+    
+    /**
+     * Register Yubikey user's delivery address.
+     *
+     * @param uid
+     * @param address1
+     * @param address2
+     * @param address3
+     * @param city
+     * @param state
+     * @param country
+     * @param postalcode
+     * @return
+     */
+    public boolean registerAddress(int uid, String address1, String address2, String address3, String city, String state, String country, String postalcode) {
+
+        Address add = new Address();
+        add.setUid(uid);
+        add.setAddress1(address1);
+        add.setAddress2(address2);
+        add.setAddress3(address3);
+        add.setState(state);
+        add.setCity(city);
+        add.setCountry(country);
+        add.setPostalcode(postalcode);
+        em.persist(add);
+        
+        return true;
+    }
+
+    
+    /**
+     * Register a new user and assign default group.
+     *
+     * @param fname
+     * @param lname
+     * @param email
+     * @param title
+     * @param org
+     * @param tel
+     * @param orcid
+     * @param uid
+     * @param password
+     * @param otpSecret
+     * @param question
+     * @param answer
+     * @param status
+     * @param yubikey
+     * @return
+     */
+    public String register(String fname, String lname, String email, String title, String org,
+            String tel, String orcid, int uid, String password, String otpSecret,
+            String question, String answer, int status, short yubikey) {
+
+        // assigne a username
+        String uname = USERNAME_PREFIX + uid;
+
+        User user = new User();
+        user.setUsername(uname);
+        user.setPassword(password);
+        user.setSecret(otpSecret);
+        user.setEmail(email);
+        user.setFname(fname);
+        user.setLname(lname);
+        user.setHomeOrg(org);
+        user.setMobile(tel);
+        user.setUid(uid);
+        user.setOrcid(orcid);
+        user.setTitle(title);
+        user.setActivated(new Timestamp(new Date().getTime()));
+        user.setStatus(status);
+        /*
+         * offline: -1
+         * online:   1  
+         */
+        user.setIsonline(-1);
+        user.setSecurityQuestion(question);
+        user.setSecurityAnswer(answer);
+        user.setYubikeyUser(yubikey);
+        em.persist(user);
+        return uname;
+    }
+
+    /**
+     * Return the max uid in the table.
+     *
+     * @return
+     */
+    public int lastUserID() {
+        Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM USERS p");
+        Object obj = query.getSingleResult();
+    
+        if (obj == null) {
+            return STARTING_USER;
+        }
+        return (Integer) obj;
+    }
 
     public void persist(User user) {
         em.persist(user);
@@ -296,6 +351,11 @@ public class UserManager {
         em.merge(add);
     }
 
+    /**
+     * Remove a user by email address.
+     * @param email
+     * @return 
+     */
     public boolean removeByEmail(String email) {
         boolean success = false;
         User u = findByEmail(email);
@@ -322,65 +382,6 @@ public class UserManager {
         }
 
         return success;
-    }
-
-    /**
-     * Get user by status
-     *
-     * @param status
-     * @return
-     */
-    public List<User> findAllByStatus(int status) {
-        TypedQuery<User> query = em.createNamedQuery("User.findByStatus", User.class);
-        query.setParameter("status", status);
-        return query.getResultList();
-    }
-
-    public User findByEmail(String email) {
-        TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
-        query.setParameter("email", email);
-        return query.getSingleResult();
-    }
-
-    public Address findAddress(int uid) {
-        TypedQuery<Address> query = em.createNamedQuery("Address.findByUid", Address.class);
-        query.setParameter("uid", uid);
-        return query.getSingleResult();
-    }
-
-    /**
-     * Get all groups based on user id
-     *
-     * @param uid
-     * @return
-     */
-    public List<String> findGroups(int uid) {
-        String sql = "SELECT group_name FROM BBCGroup INNER JOIN People_Group ON (People_Group.gid = BBCGroup.gid AND People_Group.uid = " + uid + " )";
-        List existing = em.createNativeQuery(sql).getResultList();
-        return existing;
-    }
-
-    /**
-     * Remove user's group based on uid/gid
-     *
-     * @param uid
-     * @param gid
-     */
-    public void removeGroup(int uid, int gid) {
-        String sql = "delete from PeopleGroup p where (p.uid = " + uid + " and " + " p.gid= " + gid + ")";
-        em.createQuery(sql).executeUpdate();
-
-    }
-
-    /**
-     * Study authorization methods
-     * @param name of the study
-     * @return List of User objects for the study, if found
-     */
-    public List<User> filterUsersBasedOnStudy(String name) {
-
-        Query query = em.createNativeQuery("SELECT * FROM USERS WHERE email NOT IN (SELECT team_member FROM StudyTeam WHERE name=?)", User.class).setParameter(1, name);
-        return query.getResultList();
     }
 
 }

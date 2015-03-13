@@ -64,11 +64,9 @@
                                 <p:selectOneMenu id="sec_question" value="#{userRegistration.security_question}" 
                                                  required="true"
                                                  requiredMessage="Select security question">
+                                    
                                     <f:selectItem itemLabel="Select Security Question" itemValue="" />
-                                    <f:selectItem itemLabel="Who is your favorite historical figure?" itemValue="history" />
-                                    <f:selectItem itemLabel="What is the name of your favorite teacher?" itemValue="teacher" />
-                                    <f:selectItem itemLabel="What is your first phone number?" itemValue="phone" />
-                                    <f:selectItem itemLabel="What is the name of your favorite childhood friend?" itemValue="friend" />
+                                    <f:selectItems value="#{userRegistration.questions}"/>
                                 </p:selectOneMenu>  
 
                                 <p:outputLabel for="answer" value="Answer"/>
