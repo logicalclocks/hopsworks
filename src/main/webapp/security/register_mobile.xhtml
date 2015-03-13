@@ -33,21 +33,21 @@
                                 <p:inputText id="fname" value="#{userRegistration.fname}" 
                                              required="true"
                                              autocomplete="off"
-                                             size="42"
+                                             size="41"
                                              requiredMessage="Enter first name" />
 
                                 <p:outputLabel for="lname" value="Last name" />
                                 <p:inputText id="lname" value="#{userRegistration.lname}" 
                                              required="true"
                                              autocomplete="off"
-                                             size="42"
+                                             size="41"
                                              requiredMessage="Enter last name"/>
 
                                 <p:outputLabel for="email" value="Email"/>
                                 <p:inputText id="email" value="#{userRegistration.mail}" 
                                              required="true"
                                              autocomplete="off"
-                                             size="42"
+                                             size="41"
                                              requiredMessage="Enter email">
                                     <f:validator binding="#{usernameValidator}" />
                                 </p:inputText>    
@@ -55,7 +55,7 @@
                                 <p:outputLabel for="tel" value="Phone number"/>
                                 <p:inputText id="tel" value="#{userRegistration.tel}" 
                                              autocomplete="off"
-                                             size="42"
+                                             size="41"
                                              validatorMessage="Invalid phone number">
                                     <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                 </p:inputText>
@@ -75,14 +75,14 @@
                                 <p:inputText id="answer" value="#{userRegistration.security_answer}"
                                              required="true"
                                              autocomplete="off"
-                                             size="42"
+                                             size="41"
                                              requiredMessage="Answer security question" />
 
                                 <p:outputLabel for="password0" value="Password"/>
                                 <p:password id="password0" value="#{userRegistration.password}" 
                                             required="true"
                                             autocomplete="off"
-                                            size="42"
+                                            size="41"
                                             requiredMessage="Enter password">
                                     <f:validator validatorId="passwordValidator" />
                                     <f:attribute name="confirmPassword" value="#{confirmPassword}" />
@@ -92,7 +92,7 @@
                                 <p:password id="password" value="#{userRegistration.passwordAgain}"
                                             requiredMessage="Re-enter password"
                                             autocomplete="off" 
-                                            size="42"
+                                            size="41"
                                             binding="#{confirmPassword}"
                                             required="true">
                                 </p:password>

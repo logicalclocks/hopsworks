@@ -154,9 +154,9 @@ public class ResetPassword implements Serializable {
 
     private String buildPasswordResetMessage(String random_password) {
 
-        String content = "Greetings!\n\n"
-                + "There have been a password reset request on your behalf.\n\nPlease use the temporary password"
-                + " sent to you as below. You will be required to change your passsword when you login first time.\n\n";
+        String content = "Hello,\n\n"
+                + "A password reset has been requested on your behalf.\n\nPlease use the temporary password"
+                + " below. You will be required to change your passsword when you login first time.\n\n";
 
         String tmp_pass = "Password:" + random_password + "\n\n\n";
         String ending = "If you have any questions please contact support@biobankcloud.com";
@@ -172,8 +172,8 @@ public class ResetPassword implements Serializable {
      */
     private String buildSecResetMessage() {
 
-        String l1 = "Greetings!\n\nThere have been a security question change reset request on your behalf.\n\n";
-        String l2 = "Your security question is changed successfully.\n\n\n";
+        String l1 = "Hello,\n\nA security question change has been requested on your behalf.\n\n";
+        String l2 = "Your security question has been changed successfully.\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
         return l1 + l2 + l3;
@@ -186,9 +186,9 @@ public class ResetPassword implements Serializable {
      */
     private String buildResetMessage() {
 
-        String l1 = "Greetings!\n\n"
-                + "There have been a password change reset request on your behalf.\n\n";
-        String l2 = "Your password is changed successfully.\n\n\n";
+        String l1 = "Hello,\n\n"
+                + "A password reset has been requested on your behalf.\n\n";
+        String l2 = "Your password has been changed successfully.\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
         return l1 + l2 + l3;

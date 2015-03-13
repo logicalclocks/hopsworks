@@ -272,8 +272,12 @@ public class UserManager {
     }
 
     public List<User> findAllUsers() {
-        TypedQuery<User> query = em.createNamedQuery("User.findAll", User.class);
-        return query.getResultList();
+        //TypedQuery<User> query = em.createNamedQuery("User.findAll", User.class);
+        List<User> query = em.createQuery(
+                "SELECT p FROM User p WHERE p.status !='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='"+ PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()+"'" )
+                .getResultList();
+        
+        return query;
     }
 
     public void persist(User user) {

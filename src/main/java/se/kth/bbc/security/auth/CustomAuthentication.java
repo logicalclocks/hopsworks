@@ -398,8 +398,8 @@ public class CustomAuthentication implements Serializable {
 
     
     private String  accountBlockedMessage() {
-        String l1 = "Greetings!\n\n"
-                + "Your account in the Biobankcloud is blocked due to frequent false login attempts.\n\n";
+        String l1 = "Hello,\n\n"
+                + "Your account in the Biobankcloud has been blocked due to frequent false login attempts.\n\n";
         String l2 = "If you have any questions please contact support@biobankcloud.com";
         return l1 + l2 ;
     }

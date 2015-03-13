@@ -259,18 +259,18 @@ public class RecoverySelector implements Serializable {
     }
 
     private String accountBlockedMessage() {
-        String l1 = "Greetings!\n\n"
-                + "Your account in the Biobankcloud is blocked due to frequent false attempts.\n\n";
+        String l1 = "Hello,\n\n"
+                + "Your account in the Biobankcloud has been blocked due to frequent false login attempts.\n\n";
         String l2 = "If you have any questions please contact support@biobankcloud.com";
         return l1 + l2;
     }
     
     private String buildTempResetMessage(String random_password) {
 
-        String content = "Greetings!\n\n"
-                + "There have been a mobile device reset request on your behalf.\n\n"
-                + "Please use the temporary password"
-                + "sent to you as below. You need to validate the code to get a new setup.\n\n";
+        String content = "Hello,\n\n"
+                + "A mobile device reset has been requested on your behalf.\n\n"
+                + "Please use the temporary password below."
+                + "You need to validate the code to get a new setup.\n\n";
 
         String tmp_pass = "Code:" + random_password + "\n\n\n";
         String ending = "If you have any questions please contact support@biobankcloud.com";
@@ -280,8 +280,8 @@ public class RecoverySelector implements Serializable {
 
     private String buildYubResetMessage() {
 
-        String content = "Greetings!\n\n"
-                + "There have been a Yubikey device reset request on your behalf.\n\n"
+        String content = "Hello,\n\n"
+                + "A Yubikey device reset request has been requested on your behalf.\n\n"
                 + "You will receive a device within 48 hours.\n\n";
 
         String ending = "If you have any questions please contact support@biobankcloud.com";

@@ -21,7 +21,7 @@
 
         <h:form>
             <p:growl id="messages" showDetail="false" autoUpdate="true" />
-            <div class="content" align="center">
+            <div class="content" align="center" >
                 <h3 class="page_title" align="center" style="color: gray">
                     Please select the issue:
                 </h3>
@@ -33,7 +33,7 @@
                     <f:selectItem itemLabel="Lost mobile device" itemValue="Mobile" />
                     <f:selectItem itemLabel="Lost Yubikey device" itemValue="Yubikey" />
                 </p:selectOneRadio>
-
+                <p:spacer height="10"></p:spacer>
                 <div class="register_actions">
                     <p:commandButton id="submitButton" value="Continue"
                                      action="#{recoverySelector.redirect()}" update="@form">

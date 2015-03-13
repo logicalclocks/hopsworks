@@ -113,8 +113,8 @@ public class PeopleAministration implements Serializable {
     private String edit_status;
 
     public String getEdit_status() {
-        edit_status = PeoplAccountStatus.values()[editingUser.getStatus() - 1].name();
-        return edit_status;
+        this.edit_status = PeoplAccountStatus.values()[this.editingUser.getStatus() - 1].name();
+        return this.edit_status;
     }
 
     public void setEdit_status(String edit_status) {
@@ -170,7 +170,8 @@ public class PeopleAministration implements Serializable {
     }
 
     public List<String> getUserRole(User p) {
-        return userManager.findGroups(p.getUid());
+        List<String> list = userManager.findGroups(p.getUid());
+        return list;
     }
 
     public String getChanged_Status(User p) {
@@ -196,11 +197,8 @@ public class PeopleAministration implements Serializable {
      * @return
      */
     public List<String> getCurrent_groups() {
-
         List<String> list = userManager.findGroups(editingUser.getUid());
-
         return list;
-
     }
 
     public void setCurrent_groups(List<String> current_groups) {
@@ -217,7 +215,6 @@ public class PeopleAministration implements Serializable {
                 tmp.add(b.name());
             }
         }
-
         return tmp;
     }
 
@@ -226,7 +223,6 @@ public class PeopleAministration implements Serializable {
     }
 
     public String getSelected_status() {
-
         return selected_status;
     }
 
@@ -267,7 +263,9 @@ public class PeopleAministration implements Serializable {
             status.add(p.name());
         }
 
-        status.remove(PeoplAccountStatus.values()[st - 1].name());
+        // remove the inactive users
+        status.remove(PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.name());
+        status.remove(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.name());
         return status;
     }
 
@@ -283,6 +281,7 @@ public class PeopleAministration implements Serializable {
         return filteredUsers;
     }
 
+    /* Find all registered users*/
     public List<User> getAllUsers() {
         if (allUsers == null) {
             allUsers = userManager.findAllUsers();
@@ -404,16 +403,18 @@ public class PeopleAministration implements Serializable {
         try {
 
             userTransaction.begin();
-            userManager.updateGroup(user1.getUid(), BBCGroups.valueOf(selected_group).getValue());
+
+            userManager.registerGroup(user1.getUid(), BBCGroups.valueOf(selected_group).getValue());
             userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
-            emailBean.sendEmail(user1.getEmail(), "BBC Account", accountActivatedMessage(user1.getEmail()));
             userTransaction.commit();
+
+            emailBean.sendEmail(user1.getEmail(), "BBC Account", accountActivatedMessage(user1.getEmail()));
 
         } catch (NotSupportedException | SystemException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException e) {
         }
-        editingUser.setStatus(PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
+        //editingUser.setStatus(PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
         requests.remove(user1);
-
+        allUsers.add(user1);
     }
 
     /**
@@ -426,8 +427,9 @@ public class PeopleAministration implements Serializable {
         try {
             userTransaction.begin();
             userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_BLOCKED.getValue());
-            emailBean.sendEmail(user1.getEmail(), "Account Blocked", accountBlockedMessage());
             userTransaction.commit();
+
+            emailBean.sendEmail(user1.getEmail(), "Account Blocked", accountBlockedMessage());
         } catch (NotSupportedException | SystemException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
             Logger.getLogger(PeopleAministration.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -435,8 +437,10 @@ public class PeopleAministration implements Serializable {
     }
 
     public String modifyUser(User user1) {
-        this.editingUser = user1;
-        this.address = userManager.findAddress(user1.getUid());
+
+        FacesContext.getCurrentInstance().getExternalContext()
+                .getSessionMap().put("editinguser", user1);
+
         return "admin_profile";
     }
 
@@ -498,13 +502,14 @@ public class PeopleAministration implements Serializable {
             userManager.updateYubikey(yubi);
 
             if (!"#".equals(selected_group)) {
-                userManager.updateGroup(this.selectedYubikyUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
+                userManager.registerGroup(this.selectedYubikyUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
             }
 
             userManager.updateStatus(this.selectedYubikyUser.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
-            yubikey_requests.remove(this.selectedYubikyUser);
-
             userTransaction.commit();
+
+            yubikey_requests.remove(this.selectedYubikyUser);
+            allUsers.add(this.selectedYubikyUser);
 
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
             FacesContext context = FacesContext.getCurrentInstance();
@@ -546,24 +551,24 @@ public class PeopleAministration implements Serializable {
     }
 
     private String accountActivatedMessage(String username) {
-        String l1 = "Greetings!\n\n"
-                + "Your account request to access the BiobankCloud is approved.\n\n";
-        String l2 = "You can login with the username: " + username + "\n\n\n";
+        String l1 = "Hello,\n\n"
+                + "Your account request to access the BiobankCloud has been approved.\n\n";
+        String l2 = "You can login with your username: " + username + "\n\n\n";
         String l3 = "If you have any questions please contact support@biobankcloud.com";
 
         return l1 + l2 + l3;
     }
 
     private String accountBlockedMessage() {
-        String l1 = "Greetings!\n\n"
-                + "Your account in the Biobankcloud is blocked.\n\n";
+        String l1 = "Hello,\n\n"
+                + "Your account in the Biobankcloud has been blocked.\n\n";
         String l2 = "If you have any questions please contact support@biobankcloud.com";
         return l1 + l2;
     }
 
     private String accountRejectedMessage() {
-        String l1 = "Greetings!\n\n"
-                + "Your Biobankcloud account request is rejected.\n\n";
+        String l1 = "Hello,\n\n"
+                + "Your Biobankcloud account request has been rejected.\n\n";
         String l2 = "If you have any questions please contact support@biobankcloud.com";
         return l1 + l2;
     }
@@ -577,17 +582,25 @@ public class PeopleAministration implements Serializable {
             if (!"#".equals(selected_status)) {
                 editingUser.setStatus(PeoplAccountStatus.valueOf(selected_status).getValue());
                 userManager.updateStatus(editingUser.getUid(), PeoplAccountStatus.valueOf(selected_status).getValue());
+                MessagesController.addInfoMessage("Success", "Status updated successfully.");
 
             }
 
             // register a new group
             if (!"#".equals(new_group)) {
                 userManager.registerGroup(editingUser.getUid(), BBCGroups.valueOf(new_group).getValue());
+                MessagesController.addInfoMessage("Success", "Role updated successfully.");
+
             }
 
             // remove a group
             if (!"#".equals(selected_group)) {
-                userManager.removeGroup(editingUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
+                if (selected_group.equals(BBCGroups.BBC_GUEST.name())) {
+                    MessagesController.addWarnMessage("Warning", BBCGroups.BBC_GUEST.name() + " can not be removed.");
+                } else {
+                    userManager.removeGroup(editingUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
+                    MessagesController.addInfoMessage("Success", "User updated successfully.");
+                }
             }
 
             if ("#".equals(selected_group)) {
@@ -600,9 +613,6 @@ public class PeopleAministration implements Serializable {
 
         } catch (EJBException ejb) {
             MessagesController.addErrorMessage("Error: Update failed.");
-            return;
         }
-        MessagesController.addInfoMessage("Success", "User updated successfully.");
     }
-
 }

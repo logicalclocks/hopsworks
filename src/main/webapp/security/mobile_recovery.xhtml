@@ -23,17 +23,19 @@
 
         <h:form >
             <div class="content">
-                <h3 class="page_title" align="center">
-                    Reset Mobile Device Account
-                </h3>
-
+       
                 <h:panelGrid columns="1" id="reset_mobile_password" styleClass="Signin" cellpadding="5">                   
+       
+                    <h3 class="page_title" align="center">
+                        Reset Mobile Device Account
+                    </h3>
 
-                    <h:outputLabel for="runame" value="Username"/>
+                    <p:outputLabel for="runame" value="Username"/>
                     <p:inputText id="runame" required="true" label="email" size="40"
                                  requiredMessage="Please enter your email address."
                                  validatorMessage="Invalid email format"
-                                 value="#{recoverySelector.uname}">
+                                 value="#{recoverySelector.uname}"
+                                 >
 
                         <f:validateRegex
                             pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
@@ -41,7 +43,7 @@
                     </p:inputText>
                     <p:watermark for="runame" value="Email" />
 
-                    <h:outputLabel for="curpwd" value="Password"/>
+                    <p:outputLabel for="curpwd" value="Password"/>
                     <p:password id="curpwd" value="#{recoverySelector.passwd}"  label="current" required="true" 
                                 requiredMessage="Enter password"/>
                     <p:watermark for="curpwd" value="******" />
@@ -53,8 +55,8 @@
 
                 <br></br> 
                 <div class="register_actions" align="center">
-                    <p:commandButton styleClass="team_button button-save" type="submit" value="Send Request" action="#{recoverySelector.sendQrCode()}">
-                    </p:commandButton>
+                    <p:commandButton styleClass="team_button button-save" type="submit" value="Submit" action="#{recoverySelector.sendQrCode()}"/>
+                        <p:spacer width="10"></p:spacer>
                     <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this"/>
                 </div>
             </div>
