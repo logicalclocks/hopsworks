@@ -51,7 +51,7 @@ CREATE TABLE `AUDIT` (
   PRIMARY KEY (`log_id`),
   KEY `AUDIT_uid_idx` (`uid`),
   KEY `AUDIT_username_idx` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -73,7 +73,7 @@ CREATE TABLE `Address` (
   `uid` int(11) NOT NULL,
   PRIMARY KEY (`address_id`),
   UNIQUE KEY `uid` (`uid`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -149,7 +149,7 @@ CREATE TABLE `Inodes` (
   KEY `pid_2` (`pid`,`isDir`),
   KEY `name` (`name`),
   CONSTRAINT `Inodes_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `Inodes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -188,7 +188,7 @@ CREATE TABLE `People_Group` (
   `Pgid` int(11) NOT NULL AUTO_INCREMENT,
   `gid` int(11) DEFAULT NULL,
   PRIMARY KEY (`Pgid`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -480,12 +480,12 @@ CREATE TABLE `Yubikey` (
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `aes_secret` varchar(100) DEFAULT NULL,
   `public_id` varchar(40) DEFAULT NULL,
-  `accessed` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `accessed` timestamp NULL DEFAULT NULL,
   `status` int(11) DEFAULT '-1',
   `yubidnum` int(11) NOT NULL AUTO_INCREMENT,
   `uid` int(11) NOT NULL,
   PRIMARY KEY (`yubidnum`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -503,7 +503,7 @@ CREATE TABLE `activity` (
   `flag` enum('DATA','STUDY','TEAM','USERS') DEFAULT NULL,
   `activity_on` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -609,7 +609,7 @@ CREATE TABLE `jobhistory` (
   UNIQUE KEY `id` (`id`),
   KEY `FK_jobhistory_user` (`user`),
   KEY `FK_jobhistory_study` (`study`),
-  CONSTRAINT `FK_jobhistory_user` FOREIGN KEY (`user`) REFERENCES `USERS` (`EMAIL`),
+  CONSTRAINT `FK_jobhistory_user` FOREIGN KEY (`user`) REFERENCES `USERS` (`email`),
   CONSTRAINT `jobhistory_ibfk_3` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -628,7 +628,7 @@ CREATE TABLE `study` (
   PRIMARY KEY (`name`),
   UNIQUE KEY `name` (`name`),
   KEY `fk_study_users` (`username`),
-  CONSTRAINT `fk_study_users` FOREIGN KEY (`username`) REFERENCES `USERS` (`EMAIL`) ON DELETE CASCADE
+  CONSTRAINT `fk_study_users` FOREIGN KEY (`username`) REFERENCES `USERS` (`email`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -677,6 +677,7 @@ CREATE TABLE `study_services` (
 /*!50001 SET character_set_results     = utf8 */;
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
+
 /*!50001 VIEW `StudyDetails` AS select `study`.`name` AS `studyName`,`study`.`username` AS `email`,concat(`USERS`.`fname`,' ',`USERS`.`lname`) AS `creator` from (`study` join `USERS` on((`study`.`username` = `USERS`.`email`))) where `study`.`name` in (select `StudyTeam`.`name` from `StudyTeam`) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -694,6 +695,7 @@ CREATE TABLE `study_services` (
 /*!50001 SET character_set_results     = utf8 */;
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
+
 /*!50001 VIEW `USERS_GROUPS` AS select `u`.`username` AS `username`,`u`.`password` AS `password`,`u`.`secret` AS `secret`,`u`.`email` AS `email`,`g`.`group_name` AS `group_name` from ((`People_Group` `ug` join `USERS` `u` on((`u`.`uid` = `ug`.`uid`))) join `BBCGroup` `g` on((`g`.`gid` = `ug`.`gid`))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -711,6 +713,7 @@ CREATE TABLE `study_services` (
 /*!50001 SET character_set_results     = utf8 */;
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
+
 /*!50001 VIEW `activitydetails` AS select `activity`.`id` AS `id`,`activity`.`performed_By` AS `performed_by_email`,concat(`USERS`.`fname`,' ',`USERS`.`lname`) AS `performed_by_name`,`activity`.`activity` AS `description`,`activity`.`activity_on` AS `studyname`,`activity`.`timestamp` AS `timestamp` from (`activity` join `USERS` on((`activity`.`performed_By` = `USERS`.`email`))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -725,4 +728,4 @@ CREATE TABLE `study_services` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-03-12 15:16:56
+-- Dump completed on 2015-03-13 16:50:37

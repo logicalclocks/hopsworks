@@ -403,8 +403,12 @@ public class PeopleAministration implements Serializable {
      * @param user1
      */
     public void activateUser(User user1) {
+      if(selected_group == null || selected_group.isEmpty()){
+        MessagesController.addErrorMessage("Select a role.");
+        return;
+      }
         try {
-
+          
             userTransaction.begin();
 
             userManager.registerGroup(user1.getUid(), BBCGroups.valueOf(selected_group).getValue());
