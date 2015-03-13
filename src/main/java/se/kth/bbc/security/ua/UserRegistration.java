@@ -156,6 +156,8 @@ public class UserRegistration implements Serializable {
     }
     // Quick response code URL
     private String qrUrl = "Pass";
+    
+    // To send the user the QR code image
     private StreamedContent qrCode;
 
     public StreamedContent getQrCode() {
@@ -316,7 +318,7 @@ public class UserRegistration implements Serializable {
             userTransaction.commit();
 
             // Notify user about the request
-            emailBean.sendEmail(mail, UserAccountsEmailMessages.buildMobileRequestMessage(), UserAccountsEmailMessages.buildMobileRequestMessage());
+            emailBean.sendEmail(mail, UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT, UserAccountsEmailMessages.buildMobileRequestMessage());
 
             // Reset the values
             fname = "";
@@ -333,7 +335,7 @@ public class UserRegistration implements Serializable {
             tos = false;
 
         } catch (NotSupportedException | SystemException | NoSuchAlgorithmException | IOException | WriterException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException e) {
-            MessagesController.addErrorMessage("messages", "Technical Error" );
+            MessagesController.addSecurityErrorMessage("Technical Error" );
             return ("");
 
         }
@@ -395,7 +397,7 @@ public class UserRegistration implements Serializable {
             tos = false;
 
         } catch (NotSupportedException | SystemException | NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException e) {
-            MessagesController.addErrorMessage("messages", "Technical Error" );
+            MessagesController.addSecurityErrorMessage("Technical Error" );
             return ("");
         }
         return ("yubico");

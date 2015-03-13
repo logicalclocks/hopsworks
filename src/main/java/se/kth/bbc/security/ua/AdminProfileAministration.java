@@ -199,6 +199,7 @@ public class AdminProfileAministration implements Serializable {
         // Remove the inactive users
         status.remove(PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.name());
         status.remove(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.name());
+
         return status;
     }
 
@@ -286,10 +287,10 @@ public class AdminProfileAministration implements Serializable {
             // Remove a group
             if (!"#".equals(selected_group)) {
                 if (selected_group.equals(BBCGroups.BBC_GUEST.name())) {
-                    MessagesController.addWarnMessage("Warning", BBCGroups.BBC_GUEST.name() + " can not be removed.");
+                    MessagesController.addMessageToGrowl(BBCGroups.BBC_GUEST.name() + " can not be removed.");
                 } else {
                     userManager.removeGroup(editingUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
-                    MessagesController.addInfoMessage("Success", "User updated successfully.");
+                    MessagesController.addMessageToGrowl("User updated successfully.");
                 }
             }
 

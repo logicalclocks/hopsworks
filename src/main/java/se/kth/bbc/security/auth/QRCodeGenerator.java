@@ -24,8 +24,9 @@ public class QRCodeGenerator {
 
     private final int width = 200;
     private final int height = 200;
-    private String qrURL;
-    private Writer qrw;
+
+    private final String qrURL;
+    private final Writer qrw;
 
     private QRCodeGenerator(String qrURL) {
         this.qrURL = qrURL;
@@ -83,8 +84,9 @@ public class QRCodeGenerator {
         // Build an image to be sent to user
         Graphics2D g2 = bufferedImg.createGraphics();
         ImageIO.write(bufferedImg, "png", stream);
+     
         return new DefaultStreamedContent(new ByteArrayInputStream(stream.toByteArray()), "image/png");
-
+    
     }
 
        

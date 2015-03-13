@@ -87,24 +87,27 @@
                                         <p:dataTable id="userReqTable" var="req" value="#{peopleAministration.allRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
                                                      rowKey="#{req.email}" selection="#{peopleAministration.selectedUsers}" editable="true" editMode="cell">
 
-                                            <p:column id="nameColumn" headerText="First Name" style="font-size: 12px; text-align: left;">
+                                            <p:column id="nameColumn" headerText="First Name" >
                                                 <h:outputText value="#{req.fname}" />
                                             </p:column>
-                                            <p:column id="lnameCol" headerText="Last Name" style="font-size: 12px; text-align: left;">
+                                            <p:column id="lnameCol" headerText="Last Name" >
                                                 <h:outputText value="#{req.lname}" />
                                             </p:column>
 
-                                            <p:column id="emailColumn" headerText="Email" style="font-size: 12px;text-align: left;">
+                                            <p:column id="emailColumn" headerText="Email">
                                                 <h:outputText value="#{req.email}" />
                                             </p:column>
 
-                                            <p:column id="mobileNumColumn" headerText="Mobile Phone" style="font-size: 12px;text-align: left;">
+                                            <p:column id="mobileNumColumn" headerText="Mobile Phone" >
                                                 <h:outputText value="#{req.mobile}" />
                                             </p:column>
 
                                             <p:column id="roleColumn" headerText="Role">
-                                                <p:selectOneMenu id="roleChoose" value="#{peopleAministration.selected_group}" editable="false">
-                                                    <f:selectItem itemLabel="Select Role" itemValue=""
+                                                <p:selectOneMenu id="roleChoose" 
+                                                                 value="#{peopleAministration.selected_group}" 
+                                                                 editable="false">
+                                                    <f:selectItem itemLabel="Select Role"
+                                                                  itemValue="#"
                                                                   noSelectionOption="true" />
                                                     <f:selectItems value="#{peopleAministration.groups}"/>
                                                 </p:selectOneMenu>
@@ -135,18 +138,18 @@
                                         <p:dataTable id="yubikeyUserReqTable" var="yreq" value="#{peopleAministration.allYubikeyRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
                                                      rowKey="#{yreq.email}" selection="#{peopleAministration.selectedUsers}" editable="true" editMode="cell">
 
-                                            <p:column id="ynameColumn" headerText="First Name" style="font-size: 12px; text-align: left;">
+                                            <p:column id="ynameColumn" headerText="First Name">
                                                 <h:outputText value="#{yreq.fname}" />
                                             </p:column>
-                                            <p:column id="ylnameCol" headerText="Last Name" style="font-size: 12px; text-align: left;">
+                                            <p:column id="ylnameCol" headerText="Last Name">
                                                 <h:outputText value="#{yreq.lname}" />
                                             </p:column>
 
-                                            <p:column id="yemailColumn" headerText="Email" style="font-size: 12px;text-align: left;">
+                                            <p:column id="yemailColumn" headerText="Email" >
                                                 <h:outputText value="#{yreq.email}" />
                                             </p:column>
 
-                                            <p:column id="ymobileNumColumn" headerText="Mobile Phone" style="font-size: 12px;text-align: left;">
+                                            <p:column id="ymobileNumColumn" headerText="Mobile Phone" >
                                                 <h:outputText value="#{yreq.mobile}" />
                                             </p:column>
 
@@ -155,8 +158,9 @@
                                                                  value="#{peopleAministration.selected_group}" 
                                                                  editable="false"
                                                                  >
-                                                    <f:selectItem itemLabel="Select Role" itemValue="#"
-                                                                  noSelectionOption="true" />
+                                                    <f:selectItem itemLabel="Select Role" 
+                                                                  itemValue="#"
+                                                                  />
                                                     <f:selectItems value="#{peopleAministration.groups}"/>
                                                 </p:selectOneMenu>
                                             </p:column>

@@ -13,12 +13,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
-import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import org.primefaces.model.StreamedContent;
+import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.bbc.security.ua.model.User;
@@ -123,20 +122,17 @@ public class RecoverySelector implements Serializable {
         people = um.getUser(this.uname);
 
         if (people == null) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found!", "null"));
+            MessagesController.addSecurityErrorMessage("User not found!");
             return "";
         }
 
         
         if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue() ) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is blocked!", "null"));
+            MessagesController.addSecurityErrorMessage("Account is blocked!");
             return "";
         }
         if (people.getYubikeyUser() == 1) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "No Mobile user found", "null"));
+            MessagesController.addSecurityErrorMessage("No Mobile user found!");
             return "";
         }
 
@@ -146,13 +142,13 @@ public class RecoverySelector implements Serializable {
 
                 String random = SecurityUtils.getRandomString();
                 um.updateSecret(people.getUid(), random);
-                String message = buildTempResetMessage(random);
-                email.sendEmail(people.getEmail(), "BBC Temporary Code", message);
+                String message = UserAccountsEmailMessages.buildTempResetMessage(random);
+                email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
                 return "validate_code";
             } else {
-                FacesContext context = FacesContext.getCurrentInstance();
-                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
+            MessagesController.addSecurityErrorMessage("Wrong password!");
+
                 return "";
             }
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
@@ -167,8 +163,7 @@ public class RecoverySelector implements Serializable {
         people = um.getUser(this.uname);
 
         if (people == null) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found!", "null"));
+            MessagesController.addSecurityErrorMessage("User not found!");
             return "";
         }
 
@@ -191,14 +186,14 @@ public class RecoverySelector implements Serializable {
             if (val > 5) {
                 um.deactivateUser(people.getUid());
                 try {
-                    email.sendEmail(people.getEmail(), "Account blocked", accountBlockedMessage());
+                    email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
                 } catch (MessagingException ex1) {
                     Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
                 }
             }
 
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
+            MessagesController.addSecurityErrorMessage("Wrong Password!");
+            
             return "";
         }
         return "";
@@ -209,28 +204,27 @@ public class RecoverySelector implements Serializable {
         people = um.getUser(this.uname);
 
         if (people == null) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not found!", "null"));
+                   MessagesController.addSecurityErrorMessage("User not found.");
+
             return "";
         }
 
         if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue() ) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is blocked!", "null"));
+            MessagesController.addSecurityErrorMessage("Account is blocked.");
+            
             return "";
         }
 
         if (people.getYubikeyUser() != 1) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "No Yubikey user found", "null"));
+            MessagesController.addSecurityErrorMessage("No Yubikey user found.");
             return "";
         }
 
         try {
             if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
 
-                String message = buildYubResetMessage();
-                email.sendEmail(people.getEmail(), "Yubikey Request", message);
+                String message = UserAccountsEmailMessages.buildYubikeyRequestMessage();
+                email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT, message);
                 people.setStatus(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
                 um.updatePeople(people);
                 return "yubico";
@@ -241,13 +235,13 @@ public class RecoverySelector implements Serializable {
                 if (val > 5) {
                     um.deactivateUser(people.getUid());
                     try {
-                        email.sendEmail(people.getEmail(), "BBC Account Blocked", accountBlockedMessage());
+                        email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
                     } catch (MessagingException ex1) {
                         Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
                     }
                 }
-                FacesContext context = FacesContext.getCurrentInstance();
-                context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Wrong password!", "null"));
+                
+                MessagesController.addSecurityErrorMessage("Wrong Password");
                 return "";
             }
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
@@ -258,35 +252,5 @@ public class RecoverySelector implements Serializable {
 
     }
 
-    private String accountBlockedMessage() {
-        String l1 = "Hello,\n\n"
-                + "Your account in the Biobankcloud has been blocked due to frequent false login attempts.\n\n";
-        String l2 = "If you have any questions please contact support@biobankcloud.com";
-        return l1 + l2;
-    }
-    
-    private String buildTempResetMessage(String random_password) {
-
-        String content = "Hello,\n\n"
-                + "A mobile device reset has been requested on your behalf.\n\n"
-                + "Please use the temporary password below."
-                + "You need to validate the code to get a new setup.\n\n";
-
-        String tmp_pass = "Code:" + random_password + "\n\n\n";
-        String ending = "If you have any questions please contact support@biobankcloud.com";
-
-        return content + tmp_pass + ending;
-    }
-
-    private String buildYubResetMessage() {
-
-        String content = "Hello,\n\n"
-                + "A Yubikey device reset request has been requested on your behalf.\n\n"
-                + "You will receive a device within 48 hours.\n\n";
-
-        String ending = "If you have any questions please contact support@biobankcloud.com";
-
-        return content + ending;
-    }
-
+   
 }

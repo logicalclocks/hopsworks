@@ -1,12 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.auth;
 
 /**
- *
+ * 
+ * This class redirect the logged in user from the login pages.
+ * 
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 import java.io.IOException;
@@ -26,7 +23,7 @@ public class LoginFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
 
-        // if user is logged in redirect to LIMS first page 
+        // If user is logged in redirect to LIMS first page 
         // otherwise continue 
         if (request.getRemoteUser() != null) {
             String contextPath = ((HttpServletRequest) request).getContextPath();

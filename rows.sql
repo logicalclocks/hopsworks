@@ -15,13 +15,14 @@ INSERT INTO `BBCGroup` VALUES
  */;
 insert into USERS (uid, username, password, email, fname, lname, activated, status, secret, security_question, security_answer, yubikey_user)
 values ('10000', 'meb10000', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918','admin','Admin','Admin',
- CURRENT_TIMESTAMP, 4, 'V3WBPS4G2WMQ53VA', 'friend', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', -1);
+ CURRENT_TIMESTAMP, 4, 'V3WBPS4G2WMQ53VA', 'FRIEND', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', -1);
 
 /*
-    Mapping between uid/role of admin user
+    Mapping between uid/role of guest,admin
 */
-insert into People_Group (uid,gid) values (10000,1005);
 
+insert into People_Group (uid,gid) values (10000,1003);
+insert into People_Group (uid,gid) values (10000,1005);
 /*
     adding a new address entry for admin user
 */

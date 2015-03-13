@@ -107,7 +107,7 @@ public class ProfileManager implements Serializable {
             userTransaction.commit();
 
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ejb) {
-            MessagesController.addErrorMessage("Error: Update failed.");
+            MessagesController.addSecurityErrorMessage("Update failed.");
             return;
         }
         MessagesController.addInfoMessage("Success", "Profile updated successfully.");

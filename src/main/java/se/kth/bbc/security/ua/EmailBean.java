@@ -2,7 +2,6 @@
 package se.kth.bbc.security.ua;
 
 import java.util.Date;
-import java.util.logging.Logger;
 import javax.mail.*;
 import javax.mail.internet.*;
 import javax.annotation.Resource;
@@ -17,8 +16,6 @@ import javax.ejb.Stateless;
 public class EmailBean{
 
     
-    private static final Logger logger = Logger.getLogger(UserRegistration.class.getName());
-
     @Resource(lookup = "mail/BBCMail")
     private Session mailSession;
 

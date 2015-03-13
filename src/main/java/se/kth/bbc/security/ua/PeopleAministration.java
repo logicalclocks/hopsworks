@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.security.Principal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -68,7 +67,7 @@ public class PeopleAministration implements Serializable {
 
     private String sec_answer;
 
-    List <String> questions;
+    List<String> questions;
     private List<User> filteredUsers;
     private List<User> selectedUsers;
     private List<User> allUsers;
@@ -250,10 +249,10 @@ public class PeopleAministration implements Serializable {
             groups.add(value.name());
         }
 
-        for(SecurityQuestions value: SecurityQuestions.values()){
+        for (SecurityQuestions value : SecurityQuestions.values()) {
             questions.add(value.getValue());
         }
-        
+
     }
 
     public List<String> getStatus() {
@@ -325,13 +324,13 @@ public class PeopleAministration implements Serializable {
                     requests.remove(user1);
                 }
             } else {
-                MessagesController.addErrorMessage("Error", "Could not delete the user!");
+                MessagesController.addSecurityErrorMessage("Could not delete the user!");
             }
-            emailBean.sendEmail(user1.getEmail(), "BBC Account", accountRejectedMessage());
+            emailBean.sendEmail(user1.getEmail(), UserAccountsEmailMessages.ACCOUNT_REJECT, UserAccountsEmailMessages.accountRejectedMessage());
             MessagesController.addInfoMessage(user1.getEmail() + " was rejected.");
 
         } catch (EJBException ejb) {
-            MessagesController.addErrorMessage("Error", "Rejection failed");
+            MessagesController.addSecurityErrorMessage("Rejection failed");
         } catch (MessagingException ex) {
             Logger.getLogger(PeopleAministration.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -397,46 +396,38 @@ public class PeopleAministration implements Serializable {
         this.selectedUsers = users;
     }
 
-    /**
-     * Activate users
-     *
-     * @param user1
-     */
     public void activateUser(User user1) {
-      if(selected_group == null || selected_group.isEmpty()){
-        MessagesController.addErrorMessage("Select a role.");
-        return;
-      }
+        if (selected_group == null || selected_group.isEmpty()) {
+            MessagesController.addSecurityErrorMessage("Select a role.");
+            return;
+        }
         try {
-          
+
             userTransaction.begin();
 
-            userManager.registerGroup(user1.getUid(), BBCGroups.valueOf(selected_group).getValue());
+            if (!"#".equals(selected_group) && (!selected_group.equals(BBCGroups.BBC_GUEST.name()))) {
+                userManager.registerGroup(user1.getUid(), BBCGroups.valueOf(selected_group).getValue());
+            }
+ 
             userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
             userTransaction.commit();
 
-            emailBean.sendEmail(user1.getEmail(), "BBC Account", accountActivatedMessage(user1.getEmail()));
+            emailBean.sendEmail(user1.getEmail(), UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT, UserAccountsEmailMessages.accountActivatedMessage(user1.getEmail()));
 
         } catch (NotSupportedException | SystemException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException e) {
+            return;
         }
-        //editingUser.setStatus(PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
         requests.remove(user1);
         allUsers.add(user1);
     }
 
-    /**
-     * To reject user requests
-     *
-     * @param user1
-     * @throws javax.mail.MessagingException
-     */
     public void blockUser(User user1) {
         try {
             userTransaction.begin();
             userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_BLOCKED.getValue());
             userTransaction.commit();
 
-            emailBean.sendEmail(user1.getEmail(), "Account Blocked", accountBlockedMessage());
+            emailBean.sendEmail(user1.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
         } catch (NotSupportedException | SystemException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
             Logger.getLogger(PeopleAministration.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -444,10 +435,8 @@ public class PeopleAministration implements Serializable {
     }
 
     public String modifyUser(User user1) {
-
         FacesContext.getCurrentInstance().getExternalContext()
                 .getSessionMap().put("editinguser", user1);
-
         return "admin_profile";
     }
 
@@ -475,7 +464,6 @@ public class PeopleAministration implements Serializable {
         this.questions = questions;
     }
 
-   
     public String activateYubikeyUser(User user1) {
         this.selectedYubikyUser = user1;
         this.address = userManager.findAddress(user1.getUid());
@@ -487,17 +475,20 @@ public class PeopleAministration implements Serializable {
             // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
 
             if (this.selectedYubikyUser.getYubikeyUser() != 1) {
-
-                MessagesController.addInfoMessage(user.getEmail() + " is not a Yubikey user");
+                MessagesController.addSecurityErrorMessage(user.getEmail() + " is not a Yubikey user");
                 return "";
             }
 
             Yubikey yubi = userManager.findYubikey(this.selectedYubikyUser.getUid());
 
             yubi.setStatus(1);
+
+            // Trim the input
             yubi.setSerial(serial.replaceAll("\\s", ""));
             yubi.setPublicId(pubid.replaceAll("\\s", ""));
             yubi.setAesSecret(secret.replaceAll("\\s", ""));
+
+            // Update the info
             yubi.setCreated(new Date());
             yubi.setAccessed(new Date());
             yubi.setCounter(0);
@@ -509,20 +500,19 @@ public class PeopleAministration implements Serializable {
 
             userManager.updateYubikey(yubi);
 
-            if (!"#".equals(selected_group)) {
+            if (!"#".equals(selected_group) && (!selected_group.equals(BBCGroups.BBC_GUEST.name()))) {
                 userManager.registerGroup(this.selectedYubikyUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
             }
 
             userManager.updateStatus(this.selectedYubikyUser.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
             userTransaction.commit();
 
+            // Update the user management GUI
             yubikey_requests.remove(this.selectedYubikyUser);
             allUsers.add(this.selectedYubikyUser);
 
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage("messages", new FacesMessage(FacesMessage.SEVERITY_ERROR, "Technical Error!", "null"));
-            Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
+            MessagesController.addSecurityErrorMessage("Technical Error!");
             return ("");
         }
 
@@ -558,31 +548,8 @@ public class PeopleAministration implements Serializable {
         return tmp;
     }
 
-    private String accountActivatedMessage(String username) {
-        String l1 = "Hello,\n\n"
-                + "Your account request to access the BiobankCloud has been approved.\n\n";
-        String l2 = "You can login with your username: " + username + "\n\n\n";
-        String l3 = "If you have any questions please contact support@biobankcloud.com";
-
-        return l1 + l2 + l3;
-    }
-
-    private String accountBlockedMessage() {
-        String l1 = "Hello,\n\n"
-                + "Your account in the Biobankcloud has been blocked.\n\n";
-        String l2 = "If you have any questions please contact support@biobankcloud.com";
-        return l1 + l2;
-    }
-
-    private String accountRejectedMessage() {
-        String l1 = "Hello,\n\n"
-                + "Your Biobankcloud account request has been rejected.\n\n";
-        String l2 = "If you have any questions please contact support@biobankcloud.com";
-        return l1 + l2;
-    }
-
     /**
-     * Update user roles from profile by admin
+     * Update user roles from profile by admin.
      */
     public void updateUserByAdmin() {
         try {
@@ -604,7 +571,7 @@ public class PeopleAministration implements Serializable {
             // remove a group
             if (!"#".equals(selected_group)) {
                 if (selected_group.equals(BBCGroups.BBC_GUEST.name())) {
-                    MessagesController.addWarnMessage("Warning", BBCGroups.BBC_GUEST.name() + " can not be removed.");
+                    MessagesController.addSecurityErrorMessage(BBCGroups.BBC_GUEST.name() + " can not be removed.");
                 } else {
                     userManager.removeGroup(editingUser.getUid(), BBCGroups.valueOf(selected_group).getValue());
                     MessagesController.addInfoMessage("Success", "User updated successfully.");
@@ -615,12 +582,12 @@ public class PeopleAministration implements Serializable {
 
                 if (("#".equals(selected_status))
                         || "#".equals(new_group)) {
-                    MessagesController.addErrorMessage("Error", "No selection made!");
+                    MessagesController.addSecurityErrorMessage("No selection made!");
                 }
             }
 
         } catch (EJBException ejb) {
-            MessagesController.addErrorMessage("Error: Update failed.");
+            MessagesController.addSecurityErrorMessage("Update failed.");
         }
     }
 }

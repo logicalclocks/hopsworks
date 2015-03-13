@@ -144,7 +144,7 @@ public class ResetPassword implements Serializable {
 
             if (!SecurityUtils.converToSHA256(answer).equals(people.getSecurityAnswer())) {
 
-                MessagesController.addSecurityErrorMessage("messages", "Wrong Answer");
+                MessagesController.addSecurityErrorMessage("Wrong Answer");
 
                 // Lock the account if 5 tmies wrong answer  
                 int val = people.getFalseLogin();
@@ -174,10 +174,10 @@ public class ResetPassword implements Serializable {
             emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
 
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException | MessagingException ex) {
-            MessagesController.addErrorMessage("messages", "Technical Error!");
+            MessagesController.addSecurityErrorMessage("Technical Error!");
             return ("");
         } catch (RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException | SystemException | NotSupportedException ex) {
-            MessagesController.addErrorMessage("messages", "Technical Error!");
+            MessagesController.addSecurityErrorMessage("Technical Error!");
             return ("");
         }
 
@@ -222,14 +222,14 @@ public class ResetPassword implements Serializable {
             session.invalidate();
             return ("password_changed");
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
-            MessagesController.addErrorMessage("messages", "Technical Error!");
+            MessagesController.addSecurityErrorMessage("Technical Error!");
             return ("");
 
         }
     }
 
     /**
-     * Change security question in through profile
+     * Change security question in through profile.
      * @return 
      */
     public String changeSecQuestion() {
@@ -243,7 +243,7 @@ public class ResetPassword implements Serializable {
         people = mgr.getUser(req.getRemoteUser());
 
         if (this.answer.isEmpty() || this.answer == null || this.current == null || this.current.isEmpty()) {
-                MessagesController.addErrorMessage("messages", "No Entry!");
+                MessagesController.addSecurityErrorMessage("No Entry!");
             return ("");
         }
 
@@ -265,18 +265,18 @@ public class ResetPassword implements Serializable {
                 emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_PROFILE_UPDATE, message);
                 return ("sec_question_changed");
             } else {
-                MessagesController.addErrorMessage("messages", "Wrong Password!");
+                MessagesController.addSecurityErrorMessage("Wrong Password!");
                return "";
             }
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
-            MessagesController.addErrorMessage("messages", "Technical Error!");
+            MessagesController.addSecurityErrorMessage("Technical Error!");
             return ("");
         }
 
     }
 
     /**
-     * Get the user security question
+     * Get the user security question.
      *
      * @return
      */
@@ -284,7 +284,7 @@ public class ResetPassword implements Serializable {
 
         people = mgr.getUser(this.username);
         if (people == null) {
-            MessagesController.addErrorMessage("messages", "User Not Found!");
+            MessagesController.addSecurityErrorMessage("User Not Found!");
             return "";
         }
 
@@ -316,7 +316,7 @@ public class ResetPassword implements Serializable {
         }
 
         if (passwd1 == null || passwd2 == null) {
-            MessagesController.addErrorMessage("messages", "No Password Entry!");
+            MessagesController.addSecurityErrorMessage("No Password Entry!");
             return ("");
         }
 
@@ -333,20 +333,21 @@ public class ResetPassword implements Serializable {
 
                 return ("profile_password_changed");
             } else {
-                MessagesController.addErrorMessage("messages", "Wrong password!");
+                MessagesController.addSecurityErrorMessage("Wrong password!");
                 return "";
             }
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
-            MessagesController.addErrorMessage("messages", "Email Technical Error!");
+            MessagesController.addSecurityErrorMessage("Email Technical Error!");
             return ("");
         }
     }
     
    public String logout() {
-        // logout user
+        // Logout user
          FacesContext context = FacesContext.getCurrentInstance();
          HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
          session.invalidate();
+         
          return ("welcome");
    }
     

@@ -36,6 +36,10 @@ public class UserAccountsEmailMessages {
 
     /* Subject of password rest*/
     public final static String ACCOUNT_PASSWORD_RESET = "Password Reset";
+
+    /* Subject of rejected accounts*/
+    public final static String ACCOUNT_REJECT = "Account Rejected";
+
     
     /* Default accpount acitvation period*/
     public final static int ACCOUNT_ACITVATION_PERIOD = 48;
@@ -140,4 +144,48 @@ public class UserAccountsEmailMessages {
     }
 
 
+    public static String accountActivatedMessage(String username) {
+        String message;
+
+        String l1 = GREETINGS_HEADER +",\n\n"
+                + "Your account request to access the BiobankCloud has been approved.\n\n";
+        String l2 = "You can login with your username: " + username + "\n\n\n";
+        String l3 = "If you have any questions please contact "+ BIOBANKCLOUD_SUPPORT_EMAIL;
+        message = l1 + l2 + l3;
+
+        return message;
+    }
+
+
+    public static String accountRejectedMessage() {
+        String message;
+
+        String l1 = GREETINGS_HEADER +",\n\n"
+                + "Your Biobankcloud account request has been rejected.\n\n";
+        String l2 = "If you have any questions please contact "+ BIOBANKCLOUD_SUPPORT_EMAIL;
+        message = l1 + l2;
+
+        return message;
+    }  
+
+    
+    public static String buildTempResetMessage(String random_password) {
+
+        String message;
+
+        String l1 = GREETINGS_HEADER +",\n\n"
+                + "A mobile device reset has been requested on your behalf.\n\n"
+                + "Please use the temporary password below."
+                + "You need to validate the code to get a new setup.\n\n";
+
+        String tmp_pass = "Code:" + random_password + "\n\n\n";
+        String l2 = "If you have any questions please contact "+ BIOBANKCLOUD_SUPPORT_EMAIL;
+    
+        message = l1 + tmp_pass + l2;
+
+        return message;
+
+    }
+
+  
 }

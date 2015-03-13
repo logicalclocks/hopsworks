@@ -1,8 +1,6 @@
 package se.kth.bbc.security.auth;
 
 import java.io.Serializable;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -15,9 +13,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.primefaces.context.RequestContext;
-
+import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.PeoplAccountStatus;
+import se.kth.bbc.security.ua.UserAccountsEmailMessages;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
 
@@ -30,17 +29,23 @@ import se.kth.bbc.security.ua.model.User;
 public class CustomAuthentication implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    
+    // Issuer of the QrCode
     public static final String ISSUER = "BiobankCloud";
+    
     // To distinguish Yubikey users
+    
     private final String YUBIKEY_USER_MARKER = "YUBIKEY_USER_MARKER";
+    
     // For disabled OTP auth mode
     private final String YUBIKEY_OTP_PADDING= "EaS5ksRVErn2jiOmSQy5LM2X7LgWAZWfWYKQoPavbrhN";
+
+    // For padding when password field is empty
     private final String MOBILE_OTP_PADDING="123456";
     
     @EJB
     private UserManager mgr;
 
-    
     @EJB
     private EmailBean emailBean;
 
@@ -75,17 +80,13 @@ public class CustomAuthentication implements Serializable {
         this.otpCode = otpCode;
     }
     
-    
-    
     /**
      * Authenticate the users using two factor mobile authentication.
      *
      * @return
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeyException
      */
-    public String login()
-            throws NoSuchAlgorithmException, InvalidKeyException {
+    public String login(){
+        
         FacesContext ctx = FacesContext.getCurrentInstance();
         HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
 
@@ -96,13 +97,12 @@ public class CustomAuthentication implements Serializable {
         
         user = mgr.getUser(username);
         
-        
-        // add padding if custom realm is disabled
+        // Add padding if custom realm is disabled
         if(this.otpCode== null || this.otpCode.isEmpty()){
             this.otpCode = MOBILE_OTP_PADDING;
         }
         
-        // return if username is wrong
+        // Return if username is wrong
         if (user == null) {
             RequestContext.getCurrentInstance().update("growl");
             FacesContext context = FacesContext.getCurrentInstance();
@@ -110,38 +110,30 @@ public class CustomAuthentication implements Serializable {
             return ("");
         }
 
-       // retrun if user is not Mobile user     
+       // Retrun if user is not Mobile user     
         if (user.getYubikeyUser()==1) {
-             RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Not valid Mobile user", null));
+            MessagesController.addMessageToGrowl("Not valid Mobile user");
             return ("");
         
         }
     
-        // return if user not activated
+        // Return if user not activated
         if (user.getStatus() == PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()) {
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not activated", null));
+            MessagesController.addMessageToGrowl("User not activated");
             return ("");
         }
 
-        // return if used is bloked
+        // Return if used is bloked
         if (user.getStatus()== PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             // inform the use about the blocked account
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is blocked", null));
+            MessagesController.addMessageToGrowl("Account is blocked");
             return ("");
         }
 
-        // return if used is bloked
+        // Return if used is bloked
         if (user.getStatus()== PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             // inform the use about the blocked account
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is deactivaed", null));
+            MessagesController.addMessageToGrowl("Account is deactivaed");
             return ("");
         }
 
@@ -162,37 +154,35 @@ public class CustomAuthentication implements Serializable {
             if (val > 5) {
                 mgr.deactivateUser(userid);
                 try {
-                    emailBean.sendEmail(user.getEmail(), "Account blocked", accountBlockedMessage());
+                    emailBean.sendEmail(user.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, 
+                            UserAccountsEmailMessages.accountBlockedMessage());
                 } catch (MessagingException ex1) {
                     Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
                 }
                 
             }
 
-            // inform the use about invalid credentials
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid password", null));
+            // Inform the use about invalid credentials
+            MessagesController.addMessageToGrowl("Invalid password");
             return ("");
         }
         
-        // reset the password after first login
+        // Reset the password after first login
         if (user.getStatus()== PeoplAccountStatus.ACCOUNT_PENDING.getValue()) {
             return ("reset");
         }
 
-        
-        // go to welcome page
+        // Go to welcome page
         return ("indexPage");
     }
     
     
-    public boolean isOTPEnabled () {
+    public boolean isOTPEnabled (){
         return true;
     }
 
-     public String yubikeyLogin()
-            throws NoSuchAlgorithmException, InvalidKeyException {
+     public String yubikeyLogin(){
+    
         FacesContext ctx = FacesContext.getCurrentInstance();
         HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
 
@@ -204,59 +194,48 @@ public class CustomAuthentication implements Serializable {
 
         user = mgr.getUser(username);
         
-        // return if username is wrong
+        // Return if username is wrong
         if (user == null) {
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid username", null));
+            MessagesController.addMessageToGrowl("Invalid Username");
             return ("");
         }
 
-        // retrun if user is not Yubikey user     
+        // Retrun if user is not Yubikey user     
         if (user.getYubikeyUser()!=1) {
-             RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Not a valid Yubikey user", null));
+            MessagesController.addMessageToGrowl("Not a valid Yubikey user");
             return ("");
-        
         }
         
-        // return if user not activated
+        // Return if user not activated
         if (user.getStatus() == PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()) {
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not activated", null));
+            MessagesController.addMessageToGrowl("User not activated");
             return ("");
         }
 
-        // return if used is bloked
+        // Return if used is bloked
         if (user.getStatus()== PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
-            // inform the use about the blocked account
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is blocked", null));
+            // Inform the use about the blocked account
+            MessagesController.addMessageToGrowl("Account is blocked");
             return ("");
         }
         
-        // return if used is bloked
+        // Return if used is bloked
         if (user.getStatus()== PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
-            // inform the use about the blocked account
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Account is deactivaed", null));
+            // Inform the use about the blocked account
+            MessagesController.addMessageToGrowl("Account is deactivated");
             return ("");
         }
 
         
         userid = user.getUid();
        
-        // add padding if custim realm is disabled
+        // Add padding if custim realm is disabled
         if(this.otpCode==null || this.otpCode.isEmpty()){
             this.otpCode = YUBIKEY_OTP_PADDING;
         }
         
         try {
-            // concatenate the static password with the otp due to limitations of passing two passwords to glassfish
+        // Concatenate the static password with the otp due to limitations of passing two passwords to glassfish
             req.login(this.username, this.password + this.otpCode + this.YUBIKEY_USER_MARKER);
             // Reset the lock for failed accounts
             mgr.resetLock(userid);
@@ -264,143 +243,45 @@ public class CustomAuthentication implements Serializable {
             mgr.setOnline(userid, 1);
 
         } catch (ServletException ex) {
-            // if more than five times block the account
+            // If more than five times block the account
             int val = user.getFalseLogin();
             mgr.increaseLockNum(userid, val + 1);
             if (val > 5) {
                 mgr.deactivateUser(userid);
                 try {
-                    emailBean.sendEmail(user.getEmail(), "Account blocked", accountBlockedMessage());
+                    emailBean.sendEmail(user.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, 
+                            UserAccountsEmailMessages.accountBlockedMessage());
                 } catch (MessagingException ex1) {
                     Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
+                    return ("");
                 }
             }
 
-            // inform the use about invalid credentials
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid password", null));
+            // Inform the use about invalid credentials
+            MessagesController.addMessageToGrowl("Invalid password");
             return ("");
         }
         
-        // reset the password after first login
+        // Reset the password after first login
         if (user.getStatus()== PeoplAccountStatus.ACCOUNT_PENDING.getValue()) {
             return ("reset");
         }
        
-        // go to welcome page
+        // Go to welcome page
         return ("indexPage");
     }
 
-     /**
-      * 
-      * @return
-      * @throws NoSuchAlgorithmException
-      * @throws InvalidKeyException 
-      */
-     
-     public String certificateLogin()
-            throws NoSuchAlgorithmException, InvalidKeyException {
-        FacesContext ctx = FacesContext.getCurrentInstance();
-        HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
-
-        /* Log  out from the existing logged in user*/
-        if (req.getRemoteUser() != null) {
-            return logout();
-
-        }
-
-        user = mgr.getUser(username);
-        
-        // return if username is wrong
-        if (user == null) {
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid username", null));
-            return ("");
-        }
-
-        // retrun if user is not Yubikey user     
-        if (user.getYubikeyUser()!=1) {
-             RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Not a valid Yubikey user", null));
-            return ("");
-        
-        }
-        
-        // return if user not activated
-        if (user.getStatus() == PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()) {
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "User not activated", null));
-            return ("");
-        }
-
-        // return if used is bloked
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
-            // inform the use about the blocked account
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Blocked account", null));
-            return ("");
-        }
-        
-        userid = user.getUid();
-
-        try {
-            // concatenate the static password with the otp due to limitations of passing two passwords to glassfish
-            req.login(this.username, this.password + this.otpCode + this.YUBIKEY_USER_MARKER);
-            // Reset the lock for failed accounts
-            mgr.resetLock(userid);
-            // Set the onlne flag
-            mgr.setOnline(userid, 1);
-
-        } catch (ServletException ex) {
-            // if more than five times block the account
-            int val = user.getFalseLogin();
-            mgr.increaseLockNum(userid, val + 1);
-            if (val > 5) {
-                mgr.deactivateUser(userid);
-                try {
-                    emailBean.sendEmail(user.getEmail(), "BBC Account", accountBlockedMessage());
-                } catch (MessagingException ex1) {
-                    Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
-                }
-            }
-
-            // inform the use about invalid credentials
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid password", null));
-            return ("");
-        }
-        
-        // reset the password after first login
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_PENDING.getValue()) {
-            return ("reset");
-        }
-       
-        // go to welcome page
-        return ("indexPage");
-    }
-    
     public String logout() {
+
         FacesContext ctx = FacesContext.getCurrentInstance();
         HttpSession sess = (HttpSession) ctx.getExternalContext().getSession(false);
 
         if (null != sess) {
             sess.invalidate();
         }
+        
         mgr.setOnline(userid, -1);
         return ("welcome");
     }
 
-    
-    private String  accountBlockedMessage() {
-        String l1 = "Hello,\n\n"
-                + "Your account in the Biobankcloud has been blocked due to frequent false login attempts.\n\n";
-        String l2 = "If you have any questions please contact support@biobankcloud.com";
-        return l1 + l2 ;
-    }
 }
