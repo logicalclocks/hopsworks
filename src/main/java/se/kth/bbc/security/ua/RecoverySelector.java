@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.ua;
 
 import com.google.zxing.WriterException;
@@ -31,7 +26,7 @@ import se.kth.bbc.security.ua.model.User;
 public class RecoverySelector implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    
+
     @EJB
     private UserManager um;
 
@@ -51,7 +46,7 @@ public class RecoverySelector implements Serializable {
     private String tmpCode;
     private String passwd;
 
-        public String getQrUrl() {
+    public String getQrUrl() {
         return qrUrl;
     }
 
@@ -116,7 +111,6 @@ public class RecoverySelector implements Serializable {
         return "";
     }
 
-
     public String sendQrCode() {
 
         people = um.getUser(this.uname);
@@ -126,11 +120,17 @@ public class RecoverySelector implements Serializable {
             return "";
         }
 
-        
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue() ) {
+        // Check the status to see if user is not blocked or deactivate
+        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             MessagesController.addSecurityErrorMessage("Account is blocked!");
             return "";
         }
+
+        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+            MessagesController.addSecurityErrorMessage("Account is not active!");
+            return "";
+        }
+
         if (people.getYubikeyUser() == 1) {
             MessagesController.addSecurityErrorMessage("No Mobile user found!");
             return "";
@@ -147,7 +147,7 @@ public class RecoverySelector implements Serializable {
 
                 return "validate_code";
             } else {
-            MessagesController.addSecurityErrorMessage("Wrong password!");
+                MessagesController.addSecurityErrorMessage("Wrong password!");
 
                 return "";
             }
@@ -164,6 +164,17 @@ public class RecoverySelector implements Serializable {
 
         if (people == null) {
             MessagesController.addSecurityErrorMessage("User not found!");
+            return "";
+        }
+
+        // Check the status to see if user is not blocked or deactivate
+        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+            MessagesController.addSecurityErrorMessage("Account is blocked!");
+            return "";
+        }
+
+        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+            MessagesController.addSecurityErrorMessage("Account is not active!");
             return "";
         }
 
@@ -193,7 +204,7 @@ public class RecoverySelector implements Serializable {
             }
 
             MessagesController.addSecurityErrorMessage("Wrong Password!");
-            
+
             return "";
         }
         return "";
@@ -204,14 +215,14 @@ public class RecoverySelector implements Serializable {
         people = um.getUser(this.uname);
 
         if (people == null) {
-                   MessagesController.addSecurityErrorMessage("User not found.");
+            MessagesController.addSecurityErrorMessage("User not found.");
 
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue() ) {
+        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             MessagesController.addSecurityErrorMessage("Account is blocked.");
-            
+
             return "";
         }
 
@@ -240,7 +251,7 @@ public class RecoverySelector implements Serializable {
                         Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
                     }
                 }
-                
+
                 MessagesController.addSecurityErrorMessage("Wrong Password");
                 return "";
             }
@@ -252,5 +263,4 @@ public class RecoverySelector implements Serializable {
 
     }
 
-   
 }

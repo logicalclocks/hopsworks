@@ -23,23 +23,25 @@
 
         <h:form>
             <div class="content">
-                <h3 class="page_title" align="center">
-                    Code validation
-                </h3>
                 
                 <h:panelGrid columns="1" class="Signin">
+                <h3>
+                   Mobile device setup
+                </h3>
+               
                     <h:outputLabel for="tcode" value="Enter the temp code sent to your email"/>
                     <p:password id="tcode" value="#{recoverySelector.tmpCode}" label="Password 1" required="true" 
                                 requiredMessage="Enter new password"/>
       
                 <p:messages id="messages"  autoUpdate="true" closable="true"/>
-                </h:panelGrid>
-                <br></br> 
-                <div class="register_actions" align="center">
-                    <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{recoverySelector.validateTmpCode()}">
-                    </p:commandButton>
+            
+                <h:panelGrid columns="2">
+                    <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{recoverySelector.validateTmpCode()}"/>
                     <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this"/>
-                </div>
+                </h:panelGrid>
+                </h:panelGrid>
+               
+              
             </div>
         </h:form>
 

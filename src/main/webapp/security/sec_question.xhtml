@@ -24,9 +24,9 @@
         <h:form>
 
             <div class="content" align="center">
-               
+
                 <h:panelGrid columns="1" styleClass="Signin" >
-                <h3>Please enter your username:</h3>
+                    <h3 style="color: gray">Please enter your username:</h3>
 
                     <p:inputText id="uname" required="true" label="email" size="40"
                                  requiredMessage="Please enter your email address."
@@ -39,17 +39,15 @@
                     </p:inputText>
                     <p:watermark for="uname" value="Email Address" />
                     <p:messages id="messages" autoUpdate="true" closable="true"/>
-                </h:panelGrid>
-                <p:spacer height="10"></p:spacer>   
-                <div class="register_actions">
-                    <p:commandButton value="Continue" 
-                                     action="#{resetPassword.findQuestion}" >
-                        <f:param name="username" value="#{resetPassword.username}" />
-                    </p:commandButton>
-                    <p:spacer width="10"></p:spacer>
-                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" />
 
-                </div>
+                    <h:panelGrid columns="2" >
+                        <p:commandButton value="Continue" 
+                                         action="#{resetPassword.findQuestion}" >
+                            <f:param name="username" value="#{resetPassword.username}" />
+                        </p:commandButton>
+                        <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" />
+                    </h:panelGrid>
+                </h:panelGrid>
             </div>          
         </h:form>
 

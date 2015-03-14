@@ -23,10 +23,10 @@
 
         <h:form >
             <div class="content">
-       
+
                 <h:panelGrid columns="1" id="reset_mobile_password" styleClass="Signin" cellpadding="5">                   
-       
-                    <h3 class="page_title" align="center">
+
+                    <h3 align="center" style="color: gray">
                         Reset Mobile Device Account
                     </h3>
 
@@ -48,17 +48,15 @@
                                 requiredMessage="Enter password"/>
                     <p:watermark for="curpwd" value="******" />
                     <p:spacer></p:spacer>
-     
+
                     <p:messages id="messages" autoUpdate="true" closable="true"/>
 
-                </h:panelGrid>
+                    <h:panelGrid columns="2"> 
+                        <p:commandButton styleClass="team_button button-save" type="submit" value="Submit" action="#{recoverySelector.sendQrCode()}"/>
+                        <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this"/>
+                    </h:panelGrid>   
 
-                <br></br> 
-                <div class="register_actions" align="center">
-                    <p:commandButton styleClass="team_button button-save" type="submit" value="Submit" action="#{recoverySelector.sendQrCode()}"/>
-                        <p:spacer width="10"></p:spacer>
-                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this"/>
-                </div>
+                </h:panelGrid>
             </div>
         </h:form>
 

@@ -56,7 +56,7 @@ public class ResetPassword implements Serializable {
     public void setQuestions(List<String> questions) {
         this.questions = questions;
     }
-     
+
     private String answer;
 
     public String getQuestion() {
@@ -69,13 +69,12 @@ public class ResetPassword implements Serializable {
 
     @EJB
     private UserManager mgr;
-    
+
     @EJB
     private EmailBean emailBean;
-    
+
     @Resource
     private UserTransaction userTransaction;
-
 
     public String getCurrent() {
         return current;
@@ -129,13 +128,12 @@ public class ResetPassword implements Serializable {
     public void initGroups() {
 
         questions = new ArrayList<>();
-        for(SecurityQuestions value: SecurityQuestions.values()){
+        for (SecurityQuestions value : SecurityQuestions.values()) {
             questions.add(value.getValue());
         }
-        
+
     }
 
-    
     public String sendTmpPassword() {
 
         people = mgr.getUser(this.username);
@@ -160,7 +158,7 @@ public class ResetPassword implements Serializable {
             String random_password = SecurityUtils.getRandomString();
 
             String mess = UserAccountsEmailMessages.buildPasswordResetMessage(random_password);
-            
+
             userTransaction.begin();
             // make the account pending until it will be reset by user upon first login
             mgr.updateStatus(people.getUid(), PeoplAccountStatus.ACCOUNT_PENDING.getValue());
@@ -169,8 +167,8 @@ public class ResetPassword implements Serializable {
             mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(random_password));
 
             userTransaction.commit();
-            
-             // sned the new password to the user email
+
+            // sned the new password to the user email
             emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
 
         } catch (UnsupportedEncodingException | NoSuchAlgorithmException | MessagingException ex) {
@@ -205,14 +203,19 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
+        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+            MessagesController.addSecurityErrorMessage("Inactive Account");
+            return "";
+        }
+
         try {
-            // reset the old password with a new one
+
+            // Reset the old password with a new one
             mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(passwd1));
 
-            // make the account active until it will be reset by user upon first login
             mgr.updateStatus(people.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
 
-            // send email    
+            // Send email    
             String message = UserAccountsEmailMessages.buildResetMessage();
             emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
@@ -230,7 +233,8 @@ public class ResetPassword implements Serializable {
 
     /**
      * Change security question in through profile.
-     * @return 
+     *
+     * @return
      */
     public String changeSecQuestion() {
         FacesContext ctx = FacesContext.getCurrentInstance();
@@ -243,7 +247,7 @@ public class ResetPassword implements Serializable {
         people = mgr.getUser(req.getRemoteUser());
 
         if (this.answer.isEmpty() || this.answer == null || this.current == null || this.current.isEmpty()) {
-                MessagesController.addSecurityErrorMessage("No Entry!");
+            MessagesController.addSecurityErrorMessage("No Entry!");
             return ("");
         }
 
@@ -252,6 +256,17 @@ public class ResetPassword implements Serializable {
             HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
             session.invalidate();
             return ("welcome");
+        }
+
+        // Check the status to see if user is not blocked or deactivate
+        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+            MessagesController.addSecurityErrorMessage("Blocked Account!");
+            return "";
+        }
+
+        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+            MessagesController.addSecurityErrorMessage("Inactive Account!");
+            return "";
         }
 
         try {
@@ -266,7 +281,7 @@ public class ResetPassword implements Serializable {
                 return ("sec_question_changed");
             } else {
                 MessagesController.addSecurityErrorMessage("Wrong Password!");
-               return "";
+                return "";
             }
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
             MessagesController.addSecurityErrorMessage("Technical Error!");
@@ -288,9 +303,14 @@ public class ResetPassword implements Serializable {
             return "";
         }
 
+        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+            MessagesController.addSecurityErrorMessage("Inactive Account!");
+            return "";
+        }
+
         String quest = people.getSecurityQuestion();
         this.question = SecurityQuestions.valueOf(quest).getValue();
-        
+
         return ("reset_password");
     }
 
@@ -313,6 +333,17 @@ public class ResetPassword implements Serializable {
             HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
             session.invalidate();
             return ("welcome");
+        }
+
+        // Check the status to see if user is not blocked or deactivate
+        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+            MessagesController.addSecurityErrorMessage("Blocked  Account!");
+            return "";
+        }
+
+        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+            MessagesController.addSecurityErrorMessage("Inactive Account");
+            return "";
         }
 
         if (passwd1 == null || passwd2 == null) {
@@ -341,15 +372,14 @@ public class ResetPassword implements Serializable {
             return ("");
         }
     }
-    
-   public String logout() {
+
+    public String logout() {
         // Logout user
-         FacesContext context = FacesContext.getCurrentInstance();
-         HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
-         session.invalidate();
-         
-         return ("welcome");
-   }
-    
+        FacesContext context = FacesContext.getCurrentInstance();
+        HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
+        session.invalidate();
+
+        return ("welcome");
+    }
 
 }
