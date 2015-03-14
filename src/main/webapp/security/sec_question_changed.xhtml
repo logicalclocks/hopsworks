@@ -11,6 +11,7 @@
     <h:head>
         <title>BiobankCloud - Security question reset</title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
     </h:head>
 
     <h:body >
@@ -18,12 +19,9 @@
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
 
-        <p:growl for="userRegistered" life="20000" showDetail="true"/>
-        <p:growl for="loginFail" life="20000" showDetail="true"/>
-
-        <div align="center" style="color: gray">
+        <div class="GenericMenue" align="center" style="color: gray">
             <h3> Security question changed successfully! </h3>
-            <p:commandLink id="signupLink" value="Back to login profile" action="profile" style="text-align: right"/>
+            <p:commandLink  value="Back to login profile" action="profile"/>
         </div>
 
     </h:body>

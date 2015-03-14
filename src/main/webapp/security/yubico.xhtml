@@ -8,8 +8,9 @@
     <META HTTP-EQUIV="Pragma" CONTENT="no-cache"/>
     <META HTTP-EQUIV="Expires" CONTENT="-1"/>
     <h:head>
-        <title>Yubico</title>
+        <title>Yubikey</title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
     </h:head>
     <h:body>
 
@@ -21,11 +22,14 @@
             </p:toolbar>
         </h:form>
         
-        <div class="Signin">
+        <div class="GenericMenue">
             Yubikey account request submitted successfully. You will receive a Yubikey device in 48 hours at your address.
-            <br/>
+            <br></br>
+            <p:spacer height="40"></p:spacer>
+            <div align="left">
             <p:commandLink value="Back to main page" action="welcome"/>
         </div>
+            </div>
 
     </h:body>  
 </html>

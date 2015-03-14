@@ -534,39 +534,6 @@ body {
     border-radius: 6px;    
 }
 
-/*Signin*/
-
-.Signin {
-    font-size: 14px;
-    width: 320px;
-    margin: 0 auto;
-    margin-top: 50px;
-    border-width: 1px; 
-    border-style: solid; 
-    border-color: lightgray; 
-    background-color: #F0F0F0; 
-    border-radius: 6px;  
-    padding: 20px;   
-}
-
-.Signin td {
-    padding: 1px 5px;
-}
-
-.Signin .ui-inputfield {
-    width: 290px;
-    font-size: 14px;
-    margin-bottom: 10px;
-}
-
-.Signin .ui-button {
-    float: right;
-}
-
-.Signin .ui-messages-error-icon {
-    display: none!important;
-}
-
 .ui-icon-hadoop {
     background-image: url("/hop-dashboard/javax.faces.resource/images/views/hop.png.xhtml") !important;
 }

@@ -55,12 +55,6 @@ public class MessagesController {
 
     }
 
-    public static void addValidatorErrorMessage(String msg) {
-        FacesMessage facesMsg = new FacesMessage(msg);
-        facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-        throw new ValidatorException(facesMsg);
-    }
-
     public static void addMessageToGrowl(String message) {
 
         RequestContext.getCurrentInstance().update("growl");

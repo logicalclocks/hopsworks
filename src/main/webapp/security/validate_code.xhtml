@@ -10,7 +10,8 @@
 
     <h:head>
         <title>BiobankCloud - Password reset</title>
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}"/>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}"/>   
     </h:head>
 
     <h:body >
@@ -22,22 +23,25 @@
         <p:growl for="loginFail" life="20000" showDetail="true"/>
 
         <h:form>
-            <div class="content">
+            <div class="GenericMenue" align="center">
                 
-                <h:panelGrid columns="1" class="Signin">
-                <h3>
+                <h:panelGrid columns="1">
+                    <h3 style="color: gray" align="center">
                    Mobile device setup
                 </h3>
-               
-                    <h:outputLabel for="tcode" value="Enter the temp code sent to your email"/>
-                    <p:password id="tcode" value="#{recoverySelector.tmpCode}" label="Password 1" required="true" 
+                    
+                    <p:spacer height="10"></p:spacer>
+                    <h:outputLabel for="tcode" value="Enter the code sent to your email"/>
+                    <p:password id="tcode" value="#{recoverySelector.tmpCode}" 
+                                label="Password 1" required="true" 
+                                size="40"
                                 requiredMessage="Enter new password"/>
       
                 <p:messages id="messages"  autoUpdate="true" closable="true"/>
             
                 <h:panelGrid columns="2">
-                    <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{recoverySelector.validateTmpCode()}"/>
-                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this"/>
+                    <p:commandButton type="submit" value="Save" action="#{recoverySelector.validateTmpCode()}"/>
+                    <p:commandButton type="submit" value="Cancel" action="welcome" process="@this"/>
                 </h:panelGrid>
                 </h:panelGrid>
                

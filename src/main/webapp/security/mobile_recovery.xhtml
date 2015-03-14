@@ -11,6 +11,7 @@
     <h:head>
         <title>BiobankCloud - Password reset</title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
     </h:head>
 
     <h:body >
@@ -18,18 +19,15 @@
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
 
-        <p:growl for="userRegistered" life="20000" showDetail="true"/>
-        <p:growl for="loginFail" life="20000" showDetail="true"/>
-
         <h:form >
-            <div class="content">
+            <div class="GenericMenue" align="center">
 
-                <h:panelGrid columns="1" id="reset_mobile_password" styleClass="Signin" cellpadding="5">                   
+                <h:panelGrid columns="1" id="reset_mobile_password">                   
 
                     <h3 align="center" style="color: gray">
                         Reset Mobile Device Account
                     </h3>
-
+                    <p:spacer height="20"></p:spacer>
                     <p:outputLabel for="runame" value="Username"/>
                     <p:inputText id="runame" required="true" label="email" size="40"
                                  requiredMessage="Please enter your email address."
@@ -45,15 +43,16 @@
 
                     <p:outputLabel for="curpwd" value="Password"/>
                     <p:password id="curpwd" value="#{recoverySelector.passwd}"  label="current" required="true" 
-                                requiredMessage="Enter password"/>
+                                  size="40"  
+                                  requiredMessage="Enter password"/>
                     <p:watermark for="curpwd" value="******" />
                     <p:spacer></p:spacer>
 
                     <p:messages id="messages" autoUpdate="true" closable="true"/>
 
-                    <h:panelGrid columns="2"> 
-                        <p:commandButton styleClass="team_button button-save" type="submit" value="Submit" action="#{recoverySelector.sendQrCode()}"/>
-                        <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this"/>
+                    <h:panelGrid columns="2" > 
+                        <p:commandButton type="submit" value="Submit" action="#{recoverySelector.sendQrCode()}"/>
+                        <p:commandButton type="submit" value="Cancel" action="welcome" process="@this"/>
                     </h:panelGrid>   
 
                 </h:panelGrid>

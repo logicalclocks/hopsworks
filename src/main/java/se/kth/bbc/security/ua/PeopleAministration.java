@@ -82,13 +82,24 @@ public class PeopleAministration implements Serializable {
     private List<User> yRequests;
 
     // to remove an existing group
-    private String sGroup;
+    private String sgroup;
+
+    public String getSgroup() {
+        return sgroup;
+    }
+
+    public void setSgroup(String sgroup) {
+        this.sgroup = sgroup;
+    }
 
     // to assign a new stauts
     private String selectedStatus;
 
     // to assign a new group
     private String nGroup;
+
+    List<String> status;
+
 
     // all groups
     List<String> groups;
@@ -228,16 +239,6 @@ public class PeopleAministration implements Serializable {
     public void setSelectedStatus(String selectedStatus) {
         this.selectedStatus = selectedStatus;
     }
-
-    public String getsGroup() {
-        return sGroup;
-    }
-
-    public void setsGroup(String sGroup) {
-        this.sGroup = sGroup;
-    }
-
-    List<String> status;
 
     @PostConstruct
     public void initGroups() {
@@ -401,7 +402,7 @@ public class PeopleAministration implements Serializable {
     }
 
     public void activateUser(User user1) {
-        if (sGroup == null || sGroup.isEmpty()) {
+        if (sgroup == null || sgroup.isEmpty()) {
             MessagesController.addSecurityErrorMessage("Select a role.");
             return;
         }
@@ -409,8 +410,8 @@ public class PeopleAministration implements Serializable {
 
             userTransaction.begin();
 
-            if (!"#".equals(sGroup) && (!sGroup.equals(BBCGroups.BBC_GUEST.name()))) {
-                userManager.registerGroup(user1.getUid(), BBCGroups.valueOf(sGroup).getValue());
+            if (!"#".equals(sgroup) && (!sgroup.equals(BBCGroups.BBC_GUEST.name()))) {
+                userManager.registerGroup(user1.getUid(), BBCGroups.valueOf(sgroup).getValue());
             }
  
             userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
@@ -504,8 +505,8 @@ public class PeopleAministration implements Serializable {
 
             userManager.updateYubikey(yubi);
 
-            if (!"#".equals(sGroup) && (!sGroup.equals(BBCGroups.BBC_GUEST.name()))) {
-                userManager.registerGroup(this.selectedYubikyUser.getUid(), BBCGroups.valueOf(sGroup).getValue());
+            if (!"#".equals(sgroup) && (!sgroup.equals(BBCGroups.BBC_GUEST.name()))) {
+                userManager.registerGroup(this.selectedYubikyUser.getUid(), BBCGroups.valueOf(sgroup).getValue());
             }
 
             userManager.updateStatus(this.selectedYubikyUser.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
@@ -573,16 +574,16 @@ public class PeopleAministration implements Serializable {
             }
 
             // remove a group
-            if (!"#".equals(sGroup)) {
-                if (sGroup.equals(BBCGroups.BBC_GUEST.name())) {
+            if (!"#".equals(sgroup)) {
+                if (sgroup.equals(BBCGroups.BBC_GUEST.name())) {
                     MessagesController.addSecurityErrorMessage(BBCGroups.BBC_GUEST.name() + " can not be removed.");
                 } else {
-                    userManager.removeGroup(editingUser.getUid(), BBCGroups.valueOf(sGroup).getValue());
+                    userManager.removeGroup(editingUser.getUid(), BBCGroups.valueOf(sgroup).getValue());
                     MessagesController.addInfoMessage("Success", "User updated successfully.");
                 }
             }
 
-            if ("#".equals(sGroup)) {
+            if ("#".equals(sgroup)) {
 
                 if (("#".equals(selectedStatus))
                         || "#".equals(nGroup)) {

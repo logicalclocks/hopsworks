@@ -209,7 +209,7 @@
     </login-config>
     <session-config>
         <!-- on production systems you might have another value for the timeout -->
-        <session-timeout>1</session-timeout>
+        <session-timeout>30</session-timeout>
         <!-- we don't want to use the default name JSESSIONID because this 
         tells everyone (especially hackers) that our application is based on java -->
         <cookie-config>

@@ -22,10 +22,9 @@
             </ui:insert>
 
             <p:layout  style="margin:10px auto; width: 40%;">  
-                <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
+             <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
                
-                    
-                <p:layoutUnit  position="north" style="margin:0px auto; width: 40%;">
+                <p:layoutUnit  position="north" style="margin:0px auto; width: 40%; height: 20%;">
                     <h:panelGrid id="profile_head">
                     <img src="#{profileManager.gravatar}" />
                     <h3 >
@@ -39,8 +38,9 @@
                </p:layoutUnit>
                 
                 <p:layoutUnit position="center" style="margin: 5px auto; width: 40%;">
+                    <div align="center">
                     <h:form >
-                        <h:panelGrid  columns="3" columnClasses="">    
+                        <h:panelGrid  columns="3" style="padding: 20px;">    
 
                             <p:outputLabel for="fname" value="First Name"/>					
                             <p:inputText id="fname" label="fName" value="#{profileManager.user.fname}"
@@ -194,7 +194,8 @@
                         <p:spacer width="10"/>
                         <p:commandButton type="submit" value="Back" action="indexPage"  />
                         </div>
-                    </h:form>                            
+                    </h:form>
+                 </div>
                 </p:layoutUnit>
             </p:layout>
         </h:body>

@@ -25,4 +25,15 @@ public class AccountStatusErrorMessages {
     
     public final static String PASSWORD_REQUIREMNTS="Password must contain at least 6 characters.";
     
+    public final static String TOS_ERROR="ToS not agreed";
+    
+    public final static String PASSWORD_ALPAHNUMERIC = "Passowrs is not alphanumeric.";
+
+    public final static String EMAIL_TAKEN = "Choose another username.";
+
+    public final static String INVALID_EMAIL_FORMAT = "Invalid email format.";
+
+    public final static String PASSWORD_MISMATCH = "Passowrs are not matched.";
+
+    public final static String PASSWORD_EMPTY = "Password not entetred.";
 }

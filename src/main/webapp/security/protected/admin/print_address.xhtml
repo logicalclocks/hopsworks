@@ -11,8 +11,6 @@
         <h:head>
             <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
 
         </h:head>
@@ -21,39 +19,34 @@
             <ui:insert name="titleBar" >
                 <ui:include src="/bbc/lims/titleBar.xhtml" />       
             </ui:insert>
-            <ul class="register_actions">
-                <h3 align="left">Postal Address</h3>
-            </ul>
 
-            <p:layout >
-                <p:layoutUnit position="center" >
-                    <div class="container" align="center">
+            <div class="GenericMenue" align="left">
 
-                        <h:form id="address_sent" > 
+                <h:form id="address_sent" > 
 
-                            <h:panelGrid columns="1" >			
+                    <h:panelGrid columns="1">			
 
-                                <h:outputLabel id="fname" style="font-size: 12px; font-weight: bold; text-align: left;" value="#{peopleAministration.selectedYubikyUser.fname} #{peopleAministration.selectedYubikyUser.lname}" />
+                        <h3 >Recipient</h3>    
 
-                                <h:outputLabel id="co" style="font-size: 12px; font-weight: bold; text-align: left;" value="#{peopleAministration.address.address1}"/>
+                        <h:outputLabel id="fname" value="#{peopleAministration.selectedYubikyUser.fname} #{peopleAministration.selectedYubikyUser.lname}" />
 
-                                <h:outputLabel id="add1" style="font-size: 12px; font-weight: bold; text-align: left;" value="#{peopleAministration.address.address2}"/>
+                        <h:outputLabel id="co" value="#{peopleAministration.address.address1}"/>
 
-                                <h:outputLabel id="city" style="font-size: 12px; font-weight: bold; text-align: left;" value="#{peopleAministration.address.city}, #{peopleAministration.address.postalcode}"/>
+                        <h:outputLabel id="add1" value="#{peopleAministration.address.address2}"/>
 
-                                <h:outputLabel id="country" style="font-size: 12px; font-weight: bold; text-align: left;" value="#{peopleAministration.address.country}"/>
-                                <p:spacer height="10"></p:spacer>
-                                <div  align="left">
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Finish" action="userMgmt" process="@this" />
-                                </div>
+                        <h:outputLabel id="city" 
+                                       value="#{peopleAministration.address.city},
+                                       #{peopleAministration.address.postalcode}"/>
 
-                            </h:panelGrid>
+                        <h:outputLabel id="country" value="#{peopleAministration.address.country}"/>
+                    </h:panelGrid>
 
-                        </h:form>     
-                    </div>
-
-                </p:layoutUnit>
-            </p:layout>
+                </h:form>     
+            </div>
+            <p:separator></p:separator>
+            <div align="center">
+            <p:commandButton  type="submit" value="Finish" action="userMgmt" process="@this" />
+            </div>
         </h:body>
     </f:view>
 </html>

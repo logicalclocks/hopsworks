@@ -1,5 +1,6 @@
 package se.kth.bbc.security.auth;
 
+import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.validator.FacesValidator;
@@ -16,7 +17,7 @@ public class OTPPasswordValidator implements Validator {
 
     // pattenr for password validation
     private final String pattern = "^[0-9]*$";
-     
+
     /**
      * Ensure the password presented by user during registration is qualified.
      *
@@ -33,11 +34,16 @@ public class OTPPasswordValidator implements Validator {
 
         // Fail if otp is not equal to 6 digits. 
         if (password == null || password.isEmpty() || password.length() < 6 || password.length() > 6) {
-            MessagesController.addValidatorErrorMessage(AccountStatusErrorMessages.INCORRECT_PIN);
+            FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.INCORRECT_PIN);
+            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+            throw new ValidatorException(facesMsg);
         }
 
         if (!isNumeric(password)) {
-            MessagesController.addValidatorErrorMessage(AccountStatusErrorMessages.PIN_REQUIERMENTS);
+            FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.PIN_REQUIERMENTS);
+            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+            throw new ValidatorException(facesMsg);
+
         }
 
     }

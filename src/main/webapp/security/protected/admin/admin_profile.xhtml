@@ -21,103 +21,107 @@
             <ui:insert name="titleBar" >
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
+            <div class="content">
 
-            <p:layout  style="margin:0px auto; width: 40%;" >  
-                <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
+                <p:layout  style="margin:0px auto; width: 40%;" >  
+                    <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
 
-                <p:layoutUnit position="north" style="border: 0px none; overflow: hidden;">
+                    <p:layoutUnit position="north" style="border: 0px none; overflow: hidden;">
 
-                    <p:panelGrid id="user_profile" columns="2" layout="grid" style="margin:0px auto; width: 100%;overflow: hidden;" styleClass="user_profile" >
-                        <p:column>
-                            <img src="#{profileManager.gravatar}" />
-                            <h3>
-                                #{adminProfileAministration.editingUser.title} #{adminProfileAministration.editingUser.fname} #{adminProfileAministration.editingUser.lname}
+                        <p:panelGrid id="user_profile" columns="2" layout="grid" style="margin:0px auto; width: 100%;overflow: hidden;" styleClass="user_profile" >
+                            <p:column>
+                                <img src="#{profileManager.gravatar}" />
+                                <h3>
+                                    #{adminProfileAministration.editingUser.title} #{adminProfileAministration.editingUser.fname} #{adminProfileAministration.editingUser.lname}
 
-                                <br></br>
-                                <small>
-                                    #{adminProfileAministration.editingUser.username}
-                                </small>
+                                    <br></br>
+                                    <small>
+                                        #{adminProfileAministration.editingUser.username}
+                                    </small>
 
-                                <br></br>
-                                <small>
-                                    #{adminProfileAministration.editStatus}
-                                </small>
-                            </h3>
-                        </p:column>
+                                    <br></br>
+                                    <small>
+                                        #{adminProfileAministration.editStatus}
+                                    </small>
+                                </h3>
+                            </p:column>
 
-                        <p:column>
-                            <p:dataList  value="#{adminProfileAministration.currentGroups}" 
-                                         var="role" emptyMessage="No roles associated with this user."
-                                         >
-                                #{role}
-                            </p:dataList>
+                            <p:column>
+                                <p:dataList  value="#{adminProfileAministration.currentGroups}" 
+                                             var="role" emptyMessage="No roles associated with this user."
+                                             >
+                                    #{role}
+                                </p:dataList>
 
-                        </p:column>
-                    </p:panelGrid>
+                            </p:column>
+                        </p:panelGrid>
 
-                </p:layoutUnit>
+                    </p:layoutUnit>
 
-                <p:layoutUnit position="center" style="height: 300px;">
+                    <p:layoutUnit position="center" style="height: 200px;">
 
-                    <br></br>
-                    <br></br>
-
-                    <h:form id="profile_content">
-                        <h:panelGrid  columns="3" >    
-
-                            <p:outputLabel for="statChoose" value="Status"/>					
-                            <p:selectOneMenu id="statChoose" 
-                                             value="#{adminProfileAministration.selectedStatus}" 
-                                             style="width: 296px"
-                                             editable="false">
-
-                                <f:selectItem itemLabel="Change Status"
-                                              itemValue="#"
-                                              />
-                                <f:selectItems value="#{adminProfileAministration.status}"/>                                       
-                            </p:selectOneMenu>
-                            <p:spacer></p:spacer>
-
-                            <p:outputLabel for="addRole" value="Add Role" />					
-                            <p:selectOneMenu id="addRole"
-                                             value="#{adminProfileAministration.new_group}" 
-                                             style="width: 296px"
-                                             editable="false">
-
-                                <f:selectItem itemValue="#"
-                                              itemLabel="Add Role" 
-
-                                              />
-                                <f:selectItems value="#{adminProfileAministration.newGroups}" />
-                            </p:selectOneMenu>
-                            <p:spacer></p:spacer>
-
-                            <p:outputLabel for="removeRole" value="Remove Role" />					
-                            <p:selectOneMenu id="removeRole" 
-                                             style="width: 296px"
-                                             value="#{adminProfileAministration.selectedGroup}">
-                                <f:selectItem itemValue="#" itemLabel="Remove Role" 
-                                              noSelectionOption="true"/>
-                                <f:selectItems value="#{adminProfileAministration.currentGroups}" />
-                            </p:selectOneMenu>
-                            <p:spacer></p:spacer>
-                        </h:panelGrid>
                         <br></br>
-
+                        <br></br>
                         <div align="center">
+                        <h:form id="profile_content">
+                           
+                            <h:panelGrid  columns="3" >    
 
-                            <p:commandButton  type="submit" 
-                                              value="Update"
-                                              update=":user_profile :profile_content"
-                                              action="#{adminProfileAministration.updateUserByAdmin()}"/> 
-                            <p:spacer width="10"/>
+                                <p:outputLabel for="statChoose" value="Status"/>					
+                                <p:selectOneMenu id="statChoose" 
+                                                 value="#{adminProfileAministration.selectedStatus}" 
+                                                 style="width: 296px"
+                                                 editable="false">
 
-                            <p:commandButton type="submit" value="Back" action="userMgmt" immediate="true"/>
+                                    <f:selectItem itemLabel="Change Status"
+                                                  itemValue="#"
+                                                  />
+                                    <f:selectItems value="#{adminProfileAministration.status}"/>                                       
+                                </p:selectOneMenu>
+                                <p:spacer></p:spacer>
 
-                        </div>         
-                    </h:form>                            
-                </p:layoutUnit>
-            </p:layout>
+                                <p:outputLabel for="addRole" value="Add Role" />					
+                                <p:selectOneMenu id="addRole"
+                                                 value="#{adminProfileAministration.new_group}" 
+                                                 style="width: 296px"
+                                                 editable="false">
+
+                                    <f:selectItem itemValue="#"
+                                                  itemLabel="Add Role" 
+
+                                                  />
+                                    <f:selectItems value="#{adminProfileAministration.newGroups}" />
+                                </p:selectOneMenu>
+                                <p:spacer></p:spacer>
+
+                                <p:outputLabel for="removeRole" value="Remove Role" />					
+                                <p:selectOneMenu id="removeRole" 
+                                                 style="width: 296px"
+                                                 value="#{adminProfileAministration.selectedGroup}">
+                                    <f:selectItem itemValue="#" itemLabel="Remove Role" 
+                                                  noSelectionOption="true"/>
+                                    <f:selectItems value="#{adminProfileAministration.currentGroups}" />
+                                </p:selectOneMenu>
+                                <p:spacer></p:spacer>
+                            </h:panelGrid>
+                            <br></br>
+
+                            <div align="center">
+
+                                <p:commandButton  type="submit" 
+                                                  value="Update"
+                                                  update=":user_profile :profile_content"
+                                                  action="#{adminProfileAministration.updateUserByAdmin()}"/> 
+                                <p:spacer width="10"/>
+
+                                <p:commandButton type="submit" value="Back" action="userMgmt" immediate="true"/>
+
+                            </div>         
+                        </h:form>
+                            </div>
+                    </p:layoutUnit>
+                </p:layout>
+            </div>
         </h:body>
     </f:view>
 </html>

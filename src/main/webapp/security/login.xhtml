@@ -11,6 +11,7 @@
     <h:head>
         <title>BiobankCloud - Sign in</title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
         <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta http-equiv="Pragma" content="no-cache" />
         <meta http-equiv="Expires" content="0" />
@@ -25,7 +26,7 @@
         <p:growl for="loginFail" life="20000" showDetail="true"/>
 
         <h:form>                  
-            <div class="Signin">            
+            <div class="Login">            
                 <h2 align="center">Mobile Login</h2>     
                 <br></br>
                 <h:panelGrid columns="1"> 
@@ -65,9 +66,9 @@
             </div>
 
             <div align="center">
-                <p:commandLink id="signupLink" value="Yubikey auth" action="yubikeylogin" style="text-align: right"/>
+                <p:commandLink id="signupLink" value="Yubikey auth" action="yubikeylogin" style="text-align: right" immediate="true"/>
                 &nbsp;
-                <p:commandLink value="Cancel" action="welcome" style="text-align: right"/>
+                <p:commandLink value="Cancel" action="welcome" style="text-align: right" immediate="true"/>
             </div>
 
         </h:form> 

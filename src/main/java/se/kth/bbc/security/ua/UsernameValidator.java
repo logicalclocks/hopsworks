@@ -8,6 +8,7 @@ package se.kth.bbc.security.ua;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ejb.EJB;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import javax.faces.component.UIComponent;
@@ -15,11 +16,12 @@ import javax.faces.context.FacesContext;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
 import javax.servlet.http.HttpServletRequest;
-import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.bbc.security.ua.model.User;
 
 /**
  * This class validates the user information upon registration.
+ *
  * @author Ali Gholmai <gholami@pdc.kth.se>
  */
 @ManagedBean
@@ -48,7 +50,11 @@ public class UsernameValidator implements Validator {
         String uname = value.toString();
 
         if (!isValidEmail(uname)) {
-            MessagesController.addValidatorErrorMessage("Invalid email format");
+
+            FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.INVALID_EMAIL_FORMAT);
+            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+            throw new ValidatorException(facesMsg);
+
         }
 
         if (mgr.isUsernameTaken(uname)) {
@@ -59,26 +65,32 @@ public class UsernameValidator implements Validator {
                 if (p.getEmail().equals(uname)) {
                     ;
                 } else {
-                    MessagesController.addValidatorErrorMessage("Email is already taken");
+
+                    FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.EMAIL_TAKEN);
+                    facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+                    throw new ValidatorException(facesMsg);
+
                 }
             } else {
-                    MessagesController.addValidatorErrorMessage("Email is already taken");
+
+                FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.EMAIL_TAKEN);
+                facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+                throw new ValidatorException(facesMsg);
             }
         }
     }
 
-    
     /**
      * Check if the email is a valid format.
+     *
      * @param u
-     * @return 
+     * @return
      */
     public boolean isValidEmail(String u) {
         Pattern pattern = Pattern.compile(EMAIL_PATTERN);
         Matcher matcher = pattern.matcher(u);
         return matcher.matches();
     }
-
 
     private HttpServletRequest getRequest() {
         return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();

@@ -11,6 +11,7 @@
     <h:head>
         <title>BiobankCloud - Security Question</title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
     </h:head>
 
     <h:body >
@@ -18,14 +19,10 @@
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
 
-        <p:growl for="userRegistered" life="20000" showDetail="true"/>
-        <p:growl for="loginFail" life="20000" showDetail="true"/>
-
         <h:form>
+            <div class="GenericMenue" align="center">
 
-            <div class="content" align="center">
-
-                <h:panelGrid columns="1" styleClass="Signin" >
+                <h:panelGrid columns="1" >
                     <h3 style="color: gray">Please enter your username:</h3>
 
                     <p:inputText id="uname" required="true" label="email" size="40"

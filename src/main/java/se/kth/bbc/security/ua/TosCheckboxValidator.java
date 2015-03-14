@@ -12,6 +12,7 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
+import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 
 /**
  *
@@ -39,7 +40,7 @@ public class TosCheckboxValidator implements Validator {
 
         if (!cb.equals("true")) {
             FacesMessage facesMsg = new FacesMessage(
-                    "You have to agree to the ToS to be able to register as a user.");
+                    AccountStatusErrorMessages.TOS_ERROR);
             facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
             throw new ValidatorException(facesMsg);
         }
