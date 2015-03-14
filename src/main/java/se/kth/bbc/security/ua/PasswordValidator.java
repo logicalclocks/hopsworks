@@ -14,6 +14,7 @@ import javax.faces.validator.FacesValidator;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 
 /**
  *
@@ -46,12 +47,12 @@ public class PasswordValidator implements Validator {
 
         if (password == null || password.isEmpty() || confirmPassword == null
                 || confirmPassword.isEmpty()) {
-            MessagesController.addValidatorErrorMessage("Password is empty");
+            MessagesController.addValidatorErrorMessage("Password shoud not be empty.");
         }
 
         if (password.length() < 6) {
             uiInputConfirmPassword.setValid(false);
-            MessagesController.addValidatorErrorMessage("Password must contain at least 6 characters.");
+            MessagesController.addValidatorErrorMessage(AccountStatusErrorMessages.PASSWORD_REQUIREMNTS);
         }
 
         if (!isAlphaNumeric(password)) {
@@ -61,7 +62,7 @@ public class PasswordValidator implements Validator {
 
         if (!password.equals(confirmPassword)) {
             uiInputConfirmPassword.setValid(false);
-            MessagesController.addValidatorErrorMessage("Passwords don't match.");
+            MessagesController.addValidatorErrorMessage("Passwords are not matched.");
         }
     }
 

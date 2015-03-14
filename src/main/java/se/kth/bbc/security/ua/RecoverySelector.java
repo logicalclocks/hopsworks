@@ -11,8 +11,10 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.mail.MessagingException;
+import javax.security.auth.login.AccountException;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
 import se.kth.bbc.security.ua.model.User;
@@ -116,23 +118,23 @@ public class RecoverySelector implements Serializable {
         people = um.getUser(this.uname);
 
         if (people == null) {
-            MessagesController.addSecurityErrorMessage("User not found!");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
             return "";
         }
 
         // Check the status to see if user is not blocked or deactivate
         if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
-            MessagesController.addSecurityErrorMessage("Account is blocked!");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return "";
         }
 
         if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
-            MessagesController.addSecurityErrorMessage("Account is not active!");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
 
         if (people.getYubikeyUser() == 1) {
-            MessagesController.addSecurityErrorMessage("No Mobile user found!");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
             return "";
         }
 
@@ -147,7 +149,7 @@ public class RecoverySelector implements Serializable {
 
                 return "validate_code";
             } else {
-                MessagesController.addSecurityErrorMessage("Wrong password!");
+                MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
 
                 return "";
             }
@@ -163,18 +165,18 @@ public class RecoverySelector implements Serializable {
         people = um.getUser(this.uname);
 
         if (people == null) {
-            MessagesController.addSecurityErrorMessage("User not found!");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
             return "";
         }
 
         // Check the status to see if user is not blocked or deactivate
         if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
-            MessagesController.addSecurityErrorMessage("Account is blocked!");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return "";
         }
 
         if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
-            MessagesController.addSecurityErrorMessage("Account is not active!");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
 
@@ -215,19 +217,19 @@ public class RecoverySelector implements Serializable {
         people = um.getUser(this.uname);
 
         if (people == null) {
-            MessagesController.addSecurityErrorMessage("User not found.");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
 
             return "";
         }
 
         if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
-            MessagesController.addSecurityErrorMessage("Account is blocked.");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
 
             return "";
         }
 
         if (people.getYubikeyUser() != 1) {
-            MessagesController.addSecurityErrorMessage("No Yubikey user found.");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
             return "";
         }
 
@@ -252,7 +254,7 @@ public class RecoverySelector implements Serializable {
                     }
                 }
 
-                MessagesController.addSecurityErrorMessage("Wrong Password");
+                MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
                 return "";
             }
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {

@@ -27,6 +27,7 @@ import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.bbc.security.ua.model.User;
 
 /**
@@ -142,7 +143,7 @@ public class ResetPassword implements Serializable {
 
             if (!SecurityUtils.converToSHA256(answer).equals(people.getSecurityAnswer())) {
 
-                MessagesController.addSecurityErrorMessage("Wrong Answer");
+                MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INVALID_SEQ_ANSWER);
 
                 // Lock the account if 5 tmies wrong answer  
                 int val = people.getFalseLogin();
@@ -247,7 +248,7 @@ public class ResetPassword implements Serializable {
         people = mgr.getUser(req.getRemoteUser());
 
         if (this.answer.isEmpty() || this.answer == null || this.current == null || this.current.isEmpty()) {
-            MessagesController.addSecurityErrorMessage("No Entry!");
+            MessagesController.addSecurityErrorMessage("No valid answer!");
             return ("");
         }
 
@@ -260,12 +261,12 @@ public class ResetPassword implements Serializable {
 
         // Check the status to see if user is not blocked or deactivate
         if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
-            MessagesController.addSecurityErrorMessage("Blocked Account!");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return "";
         }
 
         if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
-            MessagesController.addSecurityErrorMessage("Inactive Account!");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
 
@@ -280,7 +281,7 @@ public class ResetPassword implements Serializable {
                 emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_PROFILE_UPDATE, message);
                 return ("sec_question_changed");
             } else {
-                MessagesController.addSecurityErrorMessage("Wrong Password!");
+                MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
                 return "";
             }
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
@@ -299,12 +300,12 @@ public class ResetPassword implements Serializable {
 
         people = mgr.getUser(this.username);
         if (people == null) {
-            MessagesController.addSecurityErrorMessage("User Not Found!");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
             return "";
         }
 
         if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
-            MessagesController.addSecurityErrorMessage("Inactive Account!");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
 
@@ -337,12 +338,12 @@ public class ResetPassword implements Serializable {
 
         // Check the status to see if user is not blocked or deactivate
         if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
-            MessagesController.addSecurityErrorMessage("Blocked  Account!");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return "";
         }
 
         if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
-            MessagesController.addSecurityErrorMessage("Inactive Account");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
 
@@ -364,7 +365,7 @@ public class ResetPassword implements Serializable {
 
                 return ("profile_password_changed");
             } else {
-                MessagesController.addSecurityErrorMessage("Wrong password!");
+                MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
                 return "";
             }
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {

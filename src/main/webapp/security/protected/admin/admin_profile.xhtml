@@ -13,6 +13,8 @@
             <title><ui:insert name="title">BioBankCloud LIMS Profile</ui:insert></title>
             <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+            <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+
         </h:head>
 
         <h:body>
@@ -38,13 +40,13 @@
 
                                 <br></br>
                                 <small>
-                                    #{adminProfileAministration.edit_status}
+                                    #{adminProfileAministration.editStatus}
                                 </small>
                             </h3>
                         </p:column>
 
                         <p:column>
-                            <p:dataList  value="#{adminProfileAministration.current_groups}" 
+                            <p:dataList  value="#{adminProfileAministration.currentGroups}" 
                                          var="role" emptyMessage="No roles associated with this user."
                                          >
                                 #{role}
@@ -65,7 +67,7 @@
 
                             <p:outputLabel for="statChoose" value="Status"/>					
                             <p:selectOneMenu id="statChoose" 
-                                             value="#{adminProfileAministration.selected_status}" 
+                                             value="#{adminProfileAministration.selectedStatus}" 
                                              style="width: 296px"
                                              editable="false">
 
@@ -86,17 +88,17 @@
                                               itemLabel="Add Role" 
 
                                               />
-                                <f:selectItems value="#{adminProfileAministration.new_groups}" />
+                                <f:selectItems value="#{adminProfileAministration.newGroups}" />
                             </p:selectOneMenu>
                             <p:spacer></p:spacer>
 
                             <p:outputLabel for="removeRole" value="Remove Role" />					
                             <p:selectOneMenu id="removeRole" 
                                              style="width: 296px"
-                                             value="#{adminProfileAministration.selected_group}">
+                                             value="#{adminProfileAministration.selectedGroup}">
                                 <f:selectItem itemValue="#" itemLabel="Remove Role" 
                                               noSelectionOption="true"/>
-                                <f:selectItems value="#{adminProfileAministration.current_groups}" />
+                                <f:selectItems value="#{adminProfileAministration.currentGroups}" />
                             </p:selectOneMenu>
                             <p:spacer></p:spacer>
                         </h:panelGrid>

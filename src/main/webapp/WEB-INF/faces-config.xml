@@ -207,12 +207,6 @@
             <to-view-id>/bbc/lims/addSamples.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
-         
-        <navigation-case>
-            <from-outcome>bbchome</from-outcome>
-            <to-view-id>/bbc-views.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
         <navigation-case>
             <from-outcome>logout</from-outcome>
             <to-view-id>/index.xhtml</to-view-id>
@@ -229,18 +223,8 @@
             <redirect/>
         </navigation-case>
         <navigation-case>
-            <from-outcome>clusters</from-outcome>
-            <to-view-id>/bbc-views.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
             <from-outcome>lims</from-outcome>
-            <to-view-id>/bbc/index.xhtml</to-view-id>
-            <redirect/>
-        </navigation-case>
-        <navigation-case>
-            <from-outcome>register</from-outcome>
-            <to-view-id>/register.xhtml</to-view-id>
+            <to-view-id>/bbc/lims/index.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
     </navigation-rule>

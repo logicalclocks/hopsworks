@@ -3,6 +3,7 @@ package se.kth.bbc.security.ua;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -20,16 +21,15 @@ import se.kth.bbc.security.ua.model.Yubikey;
 @Stateless
 public class UserManager {
 
-
     @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
 
     // Strating user id from 1000 to create a POSIX compliant username: meb1000
     private final int STARTING_USER = 1000;
-    
+
     // BiobankCloud prefix username prefix
-    private final String USERNAME_PREFIX="meb";
-   
+    private final String USERNAME_PREFIX = "meb";
+
     /**
      * Register a new group for user.
      *
@@ -141,7 +141,6 @@ public class UserManager {
         return true;
     }
 
-
     /**
      * Find a user through email.
      *
@@ -183,12 +182,11 @@ public class UserManager {
     public List<User> findAllUsers() {
         //TypedQuery<User> query = em.createNamedQuery("User.findAll", User.class);
         List<User> query = em.createQuery(
-                "SELECT p FROM User p WHERE p.status !='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='"+ PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()+"'" )
+                "SELECT p FROM User p WHERE p.status !='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "'")
                 .getResultList();
-        
+
         return query;
     }
-    
 
     public List<User> findAllByStatus(int status) {
         TypedQuery<User> query = em.createNamedQuery("User.findByStatus", User.class);
@@ -208,7 +206,6 @@ public class UserManager {
         return query.getSingleResult();
     }
 
- 
     public List<String> findGroups(int uid) {
         String sql = "SELECT group_name FROM BBCGroup INNER JOIN People_Group ON (People_Group.gid = BBCGroup.gid AND People_Group.uid = " + uid + " )";
         List existing = em.createNativeQuery(sql).getResultList();
@@ -229,6 +226,7 @@ public class UserManager {
 
     /**
      * Study authorization methods
+     *
      * @param name of the study
      * @return List of User objects for the study, if found
      */
@@ -237,7 +235,7 @@ public class UserManager {
         Query query = em.createNativeQuery("SELECT * FROM USERS WHERE email NOT IN (SELECT team_member FROM StudyTeam WHERE name=?)", User.class).setParameter(1, name);
         return query.getResultList();
     }
-    
+
     /**
      * Register Yubikey user's delivery address.
      *
@@ -263,11 +261,10 @@ public class UserManager {
         add.setCountry(country);
         add.setPostalcode(postalcode);
         em.persist(add);
-        
+
         return true;
     }
 
-    
     /**
      * Register a new user and assign default group.
      *
@@ -328,7 +325,7 @@ public class UserManager {
     public int lastUserID() {
         Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM USERS p");
         Object obj = query.getSingleResult();
-    
+
         if (obj == null) {
             return STARTING_USER;
         }
@@ -353,8 +350,9 @@ public class UserManager {
 
     /**
      * Remove a user by email address.
+     *
      * @param email
-     * @return 
+     * @return
      */
     public boolean removeByEmail(String email) {
         boolean success = false;
@@ -373,8 +371,8 @@ public class UserManager {
                 yk.setParameter("uid", u.getUid());
                 Yubikey y = (Yubikey) yk.getSingleResult();
                 em.remove(y);
-            }
 
+            }
             em.remove(p);
             em.remove(u);
             em.remove(a);

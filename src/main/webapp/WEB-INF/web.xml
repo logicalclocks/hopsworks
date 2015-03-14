@@ -209,7 +209,7 @@
     </login-config>
     <session-config>
         <!-- on production systems you might have another value for the timeout -->
-        <session-timeout>30</session-timeout>
+        <session-timeout>1</session-timeout>
         <!-- we don't want to use the default name JSESSIONID because this 
         tells everyone (especially hackers) that our application is based on java -->
         <cookie-config>
@@ -225,12 +225,13 @@
         <filter-name>PrimeFaces FileUpload Filter</filter-name>
         <servlet-name>Faces Servlet</servlet-name>
     </filter-mapping>
+    
     <filter>
-        <filter-name>Login Filter</filter-name>
+        <filter-name>LoginFilter</filter-name>
         <filter-class>se.kth.bbc.security.auth.LoginFilter</filter-class>
     </filter>
     <filter-mapping>
-        <filter-name>Login Filter</filter-name>
+        <filter-name>LoginFilter</filter-name>
         <url-pattern>/index.xhtml</url-pattern>
         <url-pattern>/security/login.xhtml</url-pattern>
         <url-pattern>/security/yubikeylogin.xhtml</url-pattern>
@@ -239,4 +240,6 @@
         <url-pattern>/security/index.xhtml</url-pattern>
         <url-pattern>/security/protected/index.xhtml</url-pattern>
     </filter-mapping>
+
 </web-app>
+

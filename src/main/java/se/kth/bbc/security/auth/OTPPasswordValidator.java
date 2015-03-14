@@ -1,11 +1,11 @@
 package se.kth.bbc.security.auth;
 
-import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.validator.FacesValidator;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
+import se.kth.bbc.lims.MessagesController;
 
 /**
  *
@@ -14,6 +14,9 @@ import javax.faces.validator.ValidatorException;
 @FacesValidator("otpPasswordValidator")
 public class OTPPasswordValidator implements Validator {
 
+    // pattenr for password validation
+    private final String pattern = "^[0-9]*$";
+     
     /**
      * Ensure the password presented by user during registration is qualified.
      *
@@ -30,20 +33,11 @@ public class OTPPasswordValidator implements Validator {
 
         // Fail if otp is not equal to 6 digits. 
         if (password == null || password.isEmpty() || password.length() < 6 || password.length() > 6) {
-            FacesMessage facesMsg = new FacesMessage(
-                    "PIN must be 6 charachters!");
-            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-            throw new ValidatorException(facesMsg);
-
+            MessagesController.addValidatorErrorMessage(AccountStatusErrorMessages.INCORRECT_PIN);
         }
 
         if (!isNumeric(password)) {
-
-            FacesMessage facesMsg = new FacesMessage(
-                    "PIN must be numeric!");
-            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-            throw new ValidatorException(facesMsg);
-
+            MessagesController.addValidatorErrorMessage(AccountStatusErrorMessages.PIN_REQUIERMENTS);
         }
 
     }
@@ -55,7 +49,6 @@ public class OTPPasswordValidator implements Validator {
      * @return
      */
     public boolean isNumeric(String s) {
-        String pattern = "^[0-9]*$";
         return s.matches(pattern);
     }
 }

@@ -9,6 +9,7 @@ and open the template in the editor.
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui">
+
     <body>
         <ui:composition>
             <h:form class="stylelayout" id="formToolbar">  
@@ -21,7 +22,7 @@ and open the template in the editor.
                     <p:toolbarGroup align="left">              
                     </p:toolbarGroup>  
 
-                    
+
                     <p:toolbarGroup align="right" rendered="#{peopleStatusBean.loggedIn}">
 
                         <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{peopleStatusBean.SYSAdmin}"/>

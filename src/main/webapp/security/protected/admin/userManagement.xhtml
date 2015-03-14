@@ -15,6 +15,7 @@
             <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+            <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
             <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
         </h:head>
 
@@ -104,7 +105,7 @@
 
                                             <p:column id="roleColumn" headerText="Role">
                                                 <p:selectOneMenu id="roleChoose" 
-                                                                 value="#{peopleAministration.selected_group}" 
+                                                                 value="#{peopleAministration.getsGroup}" 
                                                                  editable="false">
                                                     <f:selectItem itemLabel="Select Role"
                                                                   itemValue="#"
@@ -155,7 +156,7 @@
 
                                             <p:column id="yroleColumn" headerText="Role">
                                                 <p:selectOneMenu id="yroleChoose" 
-                                                                 value="#{peopleAministration.selected_group}" 
+                                                                 value="#{peopleAministration.selecgetsGroup}"
                                                                  editable="false"
                                                                  >
                                                     <f:selectItem itemLabel="Select Role" 

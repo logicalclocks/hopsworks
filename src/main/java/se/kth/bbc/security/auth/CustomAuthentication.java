@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
@@ -12,7 +11,6 @@ import javax.mail.MessagingException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import org.primefaces.context.RequestContext;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.PeoplAccountStatus;
@@ -104,36 +102,34 @@ public class CustomAuthentication implements Serializable {
         
         // Return if username is wrong
         if (user == null) {
-            RequestContext.getCurrentInstance().update("growl");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Invalid username", null));
+            MessagesController.addMessageToGrowl(AccountStatusErrorMessages.USER_NOT_FOUND);
             return ("");
         }
 
        // Retrun if user is not Mobile user     
         if (user.getYubikeyUser()==1) {
-            MessagesController.addMessageToGrowl("Not valid Mobile user");
+            MessagesController.addMessageToGrowl(AccountStatusErrorMessages.USER_NOT_FOUND);
             return ("");
         
         }
     
         // Return if user not activated
         if (user.getStatus() == PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()) {
-            MessagesController.addMessageToGrowl("User not activated");
+            MessagesController.addMessageToGrowl(AccountStatusErrorMessages.INACTIVE_ACCOUNT);
             return ("");
         }
 
         // Return if used is bloked
         if (user.getStatus()== PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
-            // inform the use about the blocked account
-            MessagesController.addMessageToGrowl("Account is blocked");
+            // Inform the use about the blocked account
+            MessagesController.addMessageToGrowl(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return ("");
         }
 
         // Return if used is bloked
         if (user.getStatus()== PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
-            // inform the use about the blocked account
-            MessagesController.addMessageToGrowl("Account is deactivaed");
+            // Inform the use about the blocked account
+            MessagesController.addMessageToGrowl(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return ("");
         }
 
@@ -163,7 +159,7 @@ public class CustomAuthentication implements Serializable {
             }
 
             // Inform the use about invalid credentials
-            MessagesController.addMessageToGrowl("Invalid password");
+            MessagesController.addMessageToGrowl(AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
             return ("");
         }
         
@@ -196,33 +192,33 @@ public class CustomAuthentication implements Serializable {
         
         // Return if username is wrong
         if (user == null) {
-            MessagesController.addMessageToGrowl("Invalid Username");
+            MessagesController.addMessageToGrowl(AccountStatusErrorMessages.USER_NOT_FOUND);
             return ("");
         }
 
         // Retrun if user is not Yubikey user     
         if (user.getYubikeyUser()!=1) {
-            MessagesController.addMessageToGrowl("Not a valid Yubikey user");
+            MessagesController.addMessageToGrowl(AccountStatusErrorMessages.USER_NOT_FOUND);
             return ("");
         }
         
         // Return if user not activated
         if (user.getStatus() == PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()) {
-            MessagesController.addMessageToGrowl("User not activated");
+            MessagesController.addMessageToGrowl(AccountStatusErrorMessages.INACTIVE_ACCOUNT);
             return ("");
         }
 
         // Return if used is bloked
         if (user.getStatus()== PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             // Inform the use about the blocked account
-            MessagesController.addMessageToGrowl("Account is blocked");
+            MessagesController.addMessageToGrowl(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return ("");
         }
         
         // Return if used is bloked
         if (user.getStatus()== PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             // Inform the use about the blocked account
-            MessagesController.addMessageToGrowl("Account is deactivated");
+            MessagesController.addMessageToGrowl(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return ("");
         }
 
@@ -258,7 +254,7 @@ public class CustomAuthentication implements Serializable {
             }
 
             // Inform the use about invalid credentials
-            MessagesController.addMessageToGrowl("Invalid password");
+            MessagesController.addMessageToGrowl(AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
             return ("");
         }
         
