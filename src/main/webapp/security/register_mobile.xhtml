@@ -25,10 +25,11 @@
                     columns="#{customAuthenticationSwitch.otpEnabled?2:1}" 
                     styleClass="registerContainer">
 
+                        <h:form class="register_form"> 
                     <h:panelGroup styleClass="MobileRegistation" >
                         <h3>Create your BiobankCloud Account</h3>
 
-                        <h:form class="register_form"> 
+
                             <h:panelGrid columns="4" >			
 
                                 <p:inputText id="fname" 
@@ -147,8 +148,9 @@
                                               immediate="true" 
                                               />
                             </div>
-                        </h:form> 
                     </h:panelGroup>
+
+                        </h:form> 
 
                     <h:panelGroup rendered="#{customAuthenticationSwitch.otpEnabled}"
                                   styleClass="registerPanel">

@@ -190,7 +190,7 @@ public class UserManager {
     public List<User> findAllUsers() {
         //TypedQuery<User> query = em.createNamedQuery("User.findAll", User.class);
         List<User> query = em.createQuery(
-                "SELECT p FROM User p WHERE p.status !='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "'")
+                "SELECT p FROM User p WHERE p.status !='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()+ "' AND p.status!='" + PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue() + "'")
                 .getResultList();
 
         return query;

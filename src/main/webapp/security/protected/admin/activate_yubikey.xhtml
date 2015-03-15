@@ -11,9 +11,6 @@
         <h:head>
             <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
-
         </h:head>
 
         <h:body>
@@ -26,13 +23,14 @@
                     <div class="container">
        
                         <div class="content" align="center">
-                         
+                             <h3 class="register_banner" align="center">Activate Yubikey Account</h3>
+                            
                             <h:form id="yubikey_registration" class="new_user"> 
-                                <h3 class="register_banner" align="left">Activate Yubikey Account</h3>
                                 
                                 <h:panelGrid columns="3" >			
+                              
                            
-                                    <p:outputLabel for="fname" value="First Name"/>
+                                <p:outputLabel for="fname" value="First Name"/>
                                     <p:inputText id="fname" 
                                                  value="#{peopleAministration.selectedYubikyUser.fname}" 
                                                    size="40"
@@ -142,9 +140,9 @@
                                 
                                 </h:panelGrid>
 
-                                <div class="register_banner">
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Register" action="#{peopleAministration.activateYubikey()}"/>
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="userMgmt" immediate="true" />
+                                <div>
+                                    <p:commandButton  type="submit" value="Register" action="#{peopleAministration.activateYubikey()}"/>
+                                    <p:commandButton  type="submit" value="Cancel" action="userMgmt" immediate="true" />
                                 </div>
 
                             </h:form>     
