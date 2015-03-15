@@ -115,6 +115,14 @@ public class User implements Serializable {
     private String securityAnswer;
     @Column(name = "yubikey_user")
     private Short yubikeyUser;
+    @Column(name = "password_changed")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date passwordChanged;
+    @Basic(optional = false)
+    @Column(name = "last_login")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date lastLogin;
+   
 
     public User() {
     }
@@ -305,6 +313,22 @@ public class User implements Serializable {
     @Override
     public String toString() {
         return "se.kth.bbc.security.ua.model.User[ uid=" + uid + " ]";
+    }
+
+    public Date getPasswordChanged() {
+        return passwordChanged;
+    }
+
+    public void setPasswordChanged(Date passwordChanged) {
+        this.passwordChanged = passwordChanged;
+    }
+
+    public Date getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(Date lastLogin) {
+        this.lastLogin = lastLogin;
     }
     
 }

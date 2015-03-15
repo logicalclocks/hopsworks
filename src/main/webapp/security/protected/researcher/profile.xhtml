@@ -6,12 +6,13 @@
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
-      >
+          
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
     <f:view contentType="text/html">
 
         <h:head>
             <title><ui:insert name="title">BioBankCloud LIMS Profile</ui:insert></title>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/profile.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
             <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
         </h:head>
@@ -21,183 +22,296 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
 
-            <p:layout  style="margin:10px auto; width: 40%;">  
-             <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
-               
-                <p:layoutUnit  position="north" style="margin:0px auto; width: 40%; height: 20%;">
-                    <h:panelGrid id="profile_head">
-                    <img src="#{profileManager.gravatar}" />
-                    <h3 >
-                        #{profileManager.user.title} #{profileManager.user.fname} #{profileManager.user.lname}
-                        <br></br>
-                        <small>
-                            #{profileManager.user.username}
-                        </small>
-                    </h3>
-                    </h:panelGrid>
-               </p:layoutUnit>
-                
-                <p:layoutUnit position="center" style="margin: 5px auto; width: 40%;">
-                    <div align="center">
-                    <h:form >
-                        <h:panelGrid  columns="3" style="padding: 20px;">    
+            <div align="center" class="UserProfile">
 
-                            <p:outputLabel for="fname" value="First Name"/>					
-                            <p:inputText id="fname" label="fName" value="#{profileManager.user.fname}"
-                                         autocomplete="off" 
-                                         validatorMessage="First name is required" 
-                                         required="true"
-                                         size="40"
+                <div class="PersonalInfo">
+                    <h3 > Personal Info</h3>
+
+                    <p:panelGrid id="profile_head" columns="4" styleClass="PersonalIfo">
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Name</h3>
+                        </p:column>   
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+                                #{profileManager.user.title} #{profileManager.user.fname} #{profileManager.user.lname} 
+                            </h3>
+                        </p:column>
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Member Since</h3>
+                        </p:column>   
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+                                #{profileManager.user.activated}
+                            </h3>
+                        </p:column>
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Email</h3>
+                        </p:column>
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{profileManager.user.email}  </h3>
+                        </p:column>
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Phone</h3>
+                        </p:column>
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{profileManager.user.mobile}  </h3>
+                        </p:column>
+
+                    </p:panelGrid>
+
+                </div>
+
+                <div class="PersonalInfo">
+                    <h3 > Account Info</h3>
+
+                    <p:panelGrid columns="2" styleClass="PersonalIfo">
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Current BiobankCloud Roles</h3>
+                        </p:column>
+
+                        <p:column >
+
+                            <p:dataGrid  value="#{profileManager.currentGroups}" 
+                                         var="role" 
+
+                                         emptyMessage="No roles associated with this user."
                                          >
-                            </p:inputText>
-                            <p:message for="fname"/>
+                                <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
 
-                            <p:outputLabel for="lname" value="Last Name" 
-                                           />					
-                            <p:inputText id="lname" label="lName" value="#{profileManager.user.lname}"  
-                                         validatorMessage="Last name is requried" 
-                                         required="true"
-                                         size="40"
-                                         >
-                            </p:inputText>
-                            <p:message for="lname"/>
+                                    #{role}
+                                </h3>     
+                            </p:dataGrid>
 
-                            <!--
-                            <p:outputLabel for="email" value="Email"
-                                           />					
-                            <p:inputText id="email" label="email" value="#{profileManager.user.email }" 
-                                         autocomplete="off" 
-                                         validatorMessage="Email is required" 
-                                         required="true"
-                                         >
-                                <f:validator binding="#{usernameValidator}" />
-                            </p:inputText>
-                            <p:message for="email"/>
--->
-                            <p:outputLabel for="title" value="Title" />					
-                            <p:selectOneMenu id="title" style="width: 296px" value="#{profileManager.user.title}" >
-                                <f:selectItem itemValue=""  itemLabel="Select Title" />
-                                <f:selectItem itemValue="Miss" itemLabel="Miss" />
-                                <f:selectItem itemValue="Mrs" itemLabel="Mrs" />
-                                <f:selectItem itemValue="MS" itemLabel="MS" />
-                                <f:selectItem itemValue="Mr" itemLabel="Mr" />
-                                <f:selectItem itemValue="Dr" itemLabel="Dr" />
-                                <f:selectItem itemValue="Prof" itemLabel="Prof" />
-                            </p:selectOneMenu>             
-                            <p:spacer></p:spacer>
+                        </p:column>   
 
-                            <p:outputLabel for="org" value="Organization" />					
-                            <p:inputText id="org" label="org" 
-                                         size="40"
-                                         value="#{profileManager.user.homeOrg }" 
-                                         autocomplete="off" 
-                                         >
-                            </p:inputText>
-                            <p:spacer></p:spacer>
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Last Login</h3>
+                        </p:column>
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+                                #{profileManager.login.loginDate} from #{profileManager.login.ip} with #{profileManager.login.browser}
+                            </h3> 
+                        </p:column>
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Last Password Change</h3>
+                        </p:column>
+
+                        <p:column>
+                            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+                                #{profileManager.user.passwordChanged}
+                            </h3>      
+                        </p:column>
 
 
-                            <p:outputLabel for="orcid" value="Orcid" />					
-                            <p:inputText id="orcid" label="orcid"
-                                         size="40"
-                                         value="#{profileManager.user.orcid }" 
-                                         autocomplete="off"
-                                         validatorMessage="16 characters Orcid ID wrong" 
-                                         >
-                            </p:inputText>
-                            <p:tooltip   for="orcid" 
-                                                 value="16 characters Orcid ID to be acquired from http://orcid.org/" 
-                                                 trackMouse="true" />
-                           
-                            <p:outputLabel for="mobile" value="Mobile" />					
-                            <p:inputText id="mobile" label="Mobile Number" 
-                                         size="40"
-                                         value="#{profileManager.user.mobile}"  
-                                         autocomplete="off" 
-                                         >
-                            </p:inputText>
-                            <p:message for="mobile"/>
+                    </p:panelGrid>
 
-                            <p:outputLabel for="add1" value="C/O"  />					
-                            <p:inputText id="add1" label="co"
-                                         size="40"
-                                         value="#{profileManager.address.address1}" 
-                                         autocomplete="off" 
-                                         >
-                            </p:inputText>
-                            <p:spacer></p:spacer>  
+                </div>
 
-                            <p:outputLabel for="add2" value="Street and number"/>
-                            <p:inputText id="add2" label="address2" 
-                                        size="40"
-                                         value="#{profileManager.address.address2}" 
-                                         autocomplete="off" 
-                                         >
-                            </p:inputText>
-                            <p:spacer></p:spacer>  
+                <h:form >
 
-                            <p:outputLabel for="pc" value="Postal Code"  />
-                            <p:inputText id="pc" label="zip" 
-                                         size="40"
-                                         value="#{profileManager.address.postalcode}" 
-                                         >
-                            </p:inputText>
-                            <p:spacer></p:spacer>  
+                    <p:panelMenu >
+                        <p:submenu label="Edit Personal Info">
+                            <p:menuitem value=""
+                                        ajax="false" icon="ui-icon-close">
+                    
+                                <h:panelGroup  >    
+                            <h:panelGrid columns="6" style="padding-top: 10px; padding-left: 10px;">			
 
-                            <p:outputLabel for="cit" value="City"  />
-                            <p:inputText id="cit" label="city"
-                                         size="40"
-                                         value="#{profileManager.address.city}"   
-                                         >
-                            </p:inputText>
-                            <p:spacer></p:spacer>  
+                                        <p:outputLabel for="fname" value="First Name"/>					
+                                        <p:inputText id="fname" label="fName" value="#{profileManager.user.fname}"
+                                                     autocomplete="off" 
+                                                     validatorMessage="First name is required" 
+                                                     required="true"
+                                                     >
+                                        </p:inputText>
+                                        <p:message for="fname"/>
 
-                            <p:outputLabel for="st" value="State"/>
-                            <p:inputText id="st" label="state" 
-                                         size="40"
-                                         value="#{profileManager.address.state}" 
-                                         >
-                            </p:inputText>
-                            <p:spacer></p:spacer>  
+                                        <p:outputLabel for="lname" value="Last Name" />					
+                                        <p:inputText id="lname" label="lName"
+                                                     value="#{profileManager.user.lname}"  
+                                                     validatorMessage="Last name is requried" 
+                                                     required="true"
+                                                     >
+                                        </p:inputText>
+                                        <p:message for="lname"/>
+                                   
+                                        
+                                        <p:outputLabel for="title" value="Title" />					
+                                        <p:selectOneMenu id="title"
+                                                         value="#{profileManager.user.title}" >
+                                            <f:selectItem itemValue=""  itemLabel="Select Title" />
+                                            <f:selectItem itemValue="Miss" itemLabel="Miss" />
+                                            <f:selectItem itemValue="Mrs" itemLabel="Mrs" />
+                                            <f:selectItem itemValue="MS" itemLabel="MS" />
+                                            <f:selectItem itemValue="Mr" itemLabel="Mr" />
+                                            <f:selectItem itemValue="Dr" itemLabel="Dr" />
+                                            <f:selectItem itemValue="Prof" itemLabel="Prof" />
+                                        </p:selectOneMenu>             
+                                        <p:spacer></p:spacer>
+                                        
+                                        <p:outputLabel for="org" value="Organization" />					
+                                        <p:inputText id="org" label="org" 
+                                                     value="#{profileManager.user.homeOrg }" 
+                                                     autocomplete="off" 
+                                                     >
+                                        </p:inputText>
+                                        <p:spacer></p:spacer>
+                                        
+                                        <p:outputLabel for="orcid" value="Orcid" />					
+                                        <p:inputText id="orcid" label="orcid"
+                                                     value="#{profileManager.user.orcid }" 
+                                                     autocomplete="off"
+                                                     validatorMessage="16 characters Orcid ID wrong" 
+                                                     >
+                                        </p:inputText>
+                                        <p:tooltip   for="orcid" 
+                                                     value="16 characters Orcid ID to be acquired from http://orcid.org/" 
+                                                     trackMouse="true" />
 
-                            <p:outputLabel for="co" value="Country" />
-                            <p:inputText id="co" label="country" 
-                                         size="40"
-                                         value="#{profileManager.address.country}"   
-                                         >
-                            </p:inputText>
-                            <p:spacer></p:spacer>  
+                                        <p:outputLabel for="mobile" value="Phone" />					
+                                        <p:inputText id="mobile" label="Mobile Number" 
+                                                     value="#{profileManager.user.mobile}"  
+                                                     autocomplete="off" 
+                                                     >
+                                        </p:inputText>
+                                        <p:message for="mobile"/>
 
-                            <p:outputLabel for="sec" value="Security Question" 
-                                           />					
-                            <p:commandLink id="sec" 
-                                           value="Change"  
-                                           action="change_sec_question"
-                                           styleClass="command_link">
-                            </p:commandLink>
-                            <p:spacer></p:spacer>  
+                            </h:panelGrid>   
+                                </h:panelGroup>
+                                    
+                                 <div align="center" style="padding-top: 10px; padding-left: 10px;padding-bottom: 10px;">
+                                    
+                                     <p:commandButton  type="submit"
+                                                      value="Update Info" 
+                                                      update=":profile_head"
+                                                      actionListener="#{profileManager.updateUserInfo()}"/> 
+                                 </div>
 
-                            <p:outputLabel for="password" value="Password" />					
-                            <p:commandLink id ="password" 
-                                          value="Change"
-                                          action="profile_password"
-                                          styleClass="command_link"
-                                           >
-                            </p:commandLink>
-                            <p:spacer></p:spacer>   
+                            
+                               
+                            </p:menuitem>
+                        </p:submenu>
 
-                        </h:panelGrid>
+                        <p:submenu label="Edit Address">
+                            <p:menuitem value=""
+                                        ajax="false" icon="ui-icon-close">
+
+                                
+                                <h:panelGroup  >    
+                                    <h:panelGrid columns="4" style="padding-top: 10px; padding-left: 10px; padding-bottom: 10px;">			
+
+                                <p:outputLabel for="add1" value="C/O"  />					
+                                <p:inputText id="add1" label="co"
+                                             value="#{profileManager.address.address1}" 
+                                             autocomplete="off" 
+                                             >
+                                </p:inputText>
+
+                                <p:outputLabel for="add2" value="Street and number"/>
+                                <p:inputText id="add2" label="address2" 
+                                             value="#{profileManager.address.address2}" 
+                                             autocomplete="off" 
+                                             >
+                                </p:inputText>
+
+                                <p:outputLabel for="pc" value="Postal Code"  />
+                                <p:inputText id="pc" label="zip" 
+                                             value="#{profileManager.address.postalcode}" 
+                                             >
+                                </p:inputText>
+
+                                <p:outputLabel for="cit" value="City"  />
+                                <p:inputText id="cit" label="city"
+                                             value="#{profileManager.address.city}"   
+                                             >
+                                </p:inputText>
+
+                                <p:outputLabel for="st" value="State"/>
+                                <p:inputText id="st" label="state" 
+                                             value="#{profileManager.address.state}" 
+                                             >
+                                </p:inputText>
+
+                                <p:outputLabel for="co" value="Country" />
+                                <p:inputText id="co" label="country" 
+                                             value="#{profileManager.address.country}"   
+                                             >
+                                </p:inputText>
+
+
+
+                            </h:panelGrid>   
+                                </h:panelGroup>
+                                    
+                                <div align="center" style="padding-top: 10px; padding-left: 10px; padding-bottom: 10px;">
+                                    <p:commandButton  type="submit" value="Update Address" 
+                                                      actionListener="#{profileManager.updateAddress()}"/> 
+                                </div>
+
+                            </p:menuitem>
+                        </p:submenu>
+
+
+                        <p:submenu label="Security Settings">
+                            <p:menuitem value=""
+                                        update="messages" ajax="false" icon="ui-icon-close">
                         
-                        <br></br>
-                        <div align="center">
-                            <p:commandButton  type="submit" id="mysub" value="Save" update=":profile_head"
-                                          actionListener="#{profileManager.updateUser()}"/> 
-                        <p:spacer width="10"/>
-                        <p:commandButton type="submit" value="Back" action="indexPage"  />
-                        </div>
-                    </h:form>
-                 </div>
-                </p:layoutUnit>
-            </p:layout>
+                                <div align="left">
+                                <h:panelGroup>
+
+                                <p:outputLabel for="sec" value="Security Question" 
+                                               />					
+                                
+                                <p:commandLink id="sec" 
+                                               value="Change"  
+                                               action="change_sec_question"
+                                               styleClass="command_link">
+                                </p:commandLink>
+                                
+                                <br></br>
+                                <p:outputLabel for="password" value="Password" />					
+                                <p:commandLink id ="password" 
+                                               value="Change"
+                                               action="profile_password"
+                                               styleClass="command_link"
+                                               >
+                                </p:commandLink>
+
+                                
+                                <br></br>
+                               <!-- 
+                               <p:outputLabel for="deactivate" value="Close My Account" />					
+                                <p:commandLink id ="deactivate" 
+                                               value="Deactivate My Account"
+                                               action="deactivate_account"
+                                               styleClass="command_link"
+                                               >
+                                </p:commandLink>
+
+                                !-->    
+                            </h:panelGroup>
+                                    </div>
+                            </p:menuitem>
+                        </p:submenu>
+                    </p:panelMenu>
+                
+                </h:form>
+                
+                <div align="left" style="padding-top: 20px;">
+                    <p:commandLink type="submit" value="Back to Main Menue" action="indexPage"  />
+                    </div>
+            
+             </div>
         </h:body>
     </f:view>
 </html>

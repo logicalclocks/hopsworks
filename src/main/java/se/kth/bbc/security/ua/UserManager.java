@@ -3,7 +3,6 @@ package se.kth.bbc.security.ua;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -12,6 +11,7 @@ import javax.persistence.TypedQuery;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.ua.model.PeopleGroup;
+import se.kth.bbc.security.ua.model.Userlogins;
 import se.kth.bbc.security.ua.model.Yubikey;
 
 /**
@@ -74,6 +74,13 @@ public class UserManager {
         return true;
     }
 
+    public boolean setLastLogin(int id){
+        User p = (User) em.find(User.class, id);
+        p.setLastLogin(new Timestamp(new Date().getTime()));
+        em.merge(p);
+        return true;
+    }
+    
     public boolean resetLock(int id) {
         User p = (User) em.find(User.class, id);
         p.setFalseLogin(0);
@@ -93,6 +100,7 @@ public class UserManager {
     public boolean resetPassword(int id, String pass) {
         User p = (User) em.find(User.class, id);
         p.setPassword(pass);
+        p.setPasswordChanged(new Timestamp(new Date().getTime()));
         em.merge(p);
         return true;
     }
@@ -312,7 +320,9 @@ public class UserManager {
         user.setIsonline(-1);
         user.setSecurityQuestion(question);
         user.setSecurityAnswer(answer);
+        user.setPasswordChanged(new Timestamp(new Date().getTime()));
         user.setYubikeyUser(yubikey);
+
         em.persist(user);
         return uname;
     }
@@ -336,16 +346,18 @@ public class UserManager {
         em.persist(user);
     }
 
-    public void updatePeople(User user) {
+    public boolean updatePeople(User user) {
         em.merge(user);
+        return true;
     }
 
     public void updateYubikey(Yubikey yubi) {
         em.merge(yubi);
     }
 
-    public void updateAddress(Address add) {
+    public boolean updateAddress(Address add) {
         em.merge(add);
+        return true;
     }
 
     /**
@@ -380,6 +392,36 @@ public class UserManager {
         }
 
         return success;
+    }
+
+    public void registerLoginInfo(int uid, String uname, String ip, String browser, String action) {
+        Userlogins l = new Userlogins();
+        l.setUid(uid);
+        l.setBrowser(browser);
+        l.setIp(ip);
+        l.setUsername(uname);
+        l.setAction(action);
+        l.setLoginDate(new Timestamp(new Date().getTime()));
+        
+        em.persist(l);
+    
+    }
+
+    
+    public Userlogins getLastUserLoing(int uid) {
+        String sql= "SELECT l FROM Userlogins l WHERE l.uid="+uid+ " ORDER BY l.loginDate DESC";
+        Query query = em.createQuery(sql);
+        query.setMaxResults(2);
+        
+        List <Userlogins> ul = query.getResultList();
+        
+        if (ul.isEmpty())
+            return null;
+        
+        if(ul.size()==1)
+            return ul.get(0);
+        
+        return ul.get(1);
     }
 
 }

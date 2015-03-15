@@ -19,33 +19,22 @@
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
 
-        <p:growl for="userRegistered" life="20000" showDetail="true"/>
-        <p:growl for="loginFail" life="20000" showDetail="true"/>
-
         <h:form>
-            <div class="GenericMenue" align="center">
-                
-                <h:panelGrid columns="1">
-                    <h3 style="color: gray" align="center">
-                   Mobile device setup
-                </h3>
-                    
-                    <p:spacer height="10"></p:spacer>
-                    <h:outputLabel for="tcode" value="Enter the code sent to your email"/>
-                    <p:password id="tcode" value="#{recoverySelector.tmpCode}" 
-                                label="Password 1" required="true" 
-                                size="40"
-                                requiredMessage="Enter new password"/>
-      
+            <div class="ForgotPassword" >
+
+                <h:outputLabel for="tcode" value="Enter the code sent to your email" style="padding-left: 10px;"/>
+                <p:password id="tcode" value="#{recoverySelector.tmpCode}" 
+                            label="Password 1" required="true" 
+                            requiredMessage="Enter new password"/>
+                <p:watermark for="tcode" value="Enter the code, e.g. 138cf9" />
+
                 <p:messages id="messages"  autoUpdate="true" closable="true"/>
-            
+
                 <h:panelGrid columns="2">
                     <p:commandButton type="submit" value="Save" action="#{recoverySelector.validateTmpCode()}"/>
                     <p:commandButton type="submit" value="Cancel" action="welcome" process="@this"/>
                 </h:panelGrid>
-                </h:panelGrid>
-               
-              
+
             </div>
         </h:form>
 

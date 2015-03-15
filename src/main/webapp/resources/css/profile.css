@@ -3,19 +3,37 @@
     Author     : Stig
 */
 
-.ui-widget, .ui-widget .ui-widget .ui-widget-content {
-    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-    font-size: 12px;  
-    font-weight:bold;
 
-}
-
-.BbcMainLayoutProfile {
+.UserProfile {
     min-height: 900px;
     height: auto !important;
+    margin-top:50px;
+    margin-left: 300px;
+    margin-right: 300px;
+   // background-color: #F5F5F5;
 }
 
-.BbcMainLayoutProfile .ui-widget-content {
+.PersonalInfo{
+    background-color: #FFF;
+    text-align: left;
+    color: #4184F3;
+    font-weight: 500;
+    line-height: 1; 
+ }
+
+.PersonalInfo .h2 {
+    color: rgba(0, 0, 0, 0.87);
+    font-weight: 400;
+}
+
+.ui-panelgrid .ui-panelgrid-cell {
+    border-width: 0px;
+    padding: 1px;
+}
+
+
+
+.UserProfile .ui-widget-content {
     border-width: 0px;  
     overflow-y: hidden;
     overflow-x: hidden;
@@ -23,51 +41,9 @@
     //////////////////////
 }
 
-.BbcMainLayoutProfile::-webkit-scrollbar {
- display: none;
-}
 
-.profile_avatar_holder {
-    width: 60px;
-    height: 60px;
-    margin-right: 20px;
-    float: left;
-}
-
-.profile_avatar_holder img {
-    border: 1px solid #DDD;
-}
-
-h3.page_title, .save-project-loader h3 {
-    color: #456;
-    font-size: 20px;
-    font-weight: normal;
-    line-height: 28px;
-    float: none;
-}
-
-.right{
-    float: right !important;
-}
-
-h3 small, .link_logout {
-    font-size: 13px !important;
-    color: #999 !important;
-}
-
-.property_editor {
-    margin-left: 18px;
-   font-weight:bold;
-
- }
-
- .change_lable {
-   font-weight:bold;
-
- }
 .command_link {
     margin-left: 10px;
     color:#1385e5 !important;
     text-decoration: underline;
 }
-

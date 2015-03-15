@@ -7,11 +7,10 @@
       xmlns:p="http://primefaces.org/ui"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:f="http://java.sun.com/jsf/core">
-
     <h:head>
         <title>BiobankCloud - Password reset</title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-         <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
     </h:head>                                                    
 
     <h:body >
@@ -19,51 +18,48 @@
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
 
-        <h:form id="reset_password">
-            <div class="GenericMenue" align="center">
-                
-                <h3 style="color: gray">Please answer the security question:</h3>
 
-                <h:panelGrid columns="1" >
-                   
-                    <p:outputLabel for="sec_question" value="Security Question"/>
+        <h:form>
+            <div class="ForgotPassword" align="center">
 
-                    <p:selectOneMenu id="sec_question" value="#{resetPassword.question}" 
-                                     required="true"
-                                     requiredMessage="Select security question">
-                        <f:selectItem itemLabel="Select Security Question" itemValue="" />
-                        <f:selectItems value="#{resetPassword.questions}"/>
-                    </p:selectOneMenu>  
-
-                    <p:outputLabel for="ans" value="Answer" />
-                    <p:inputText id="ans" label="ans" 
-                                 size="42"
-                                 value="#{resetPassword.answer}" 
+                <p:selectOneMenu id="sec_question" 
+                                 value="#{resetPassword.question}" 
                                  required="true"
-                                 requiredMessage="Answer Security Question"
-                                 autocomplete="false"/>
+                                 requiredMessage="Select security question">
+                    <f:selectItem itemLabel="Select Security Question" itemValue="" />
+                    <f:selectItems value="#{resetPassword.questions}"/>
+                </p:selectOneMenu>  
 
-                    <p:outputLabel for="cur" value="Password"/>
-                    <p:password id="cur" value="#{resetPassword.current}" 
-                                size="42"
-                                required="true" autocomplete="false"
-                                requiredMessage="Enter password"  />
 
-                    <p:messages id="messages" autoUpdate="true" closable="true"/>
-                    
-                    
-                <h:panelGrid columns="2">
-                    <p:commandButton styleClass="team_button button-save"
-                                     type="submit"
-                                     value="Submit" 
-                                     action="#{resetPassword.changeSecQuestion()}"/>
-                  
-                    <p:commandButton styleClass="team_button button-save"
-                                     type="submit"
-                                     value="Cancel"
-                                     action="profile" process="@this" />
-               </h:panelGrid>
-                </h:panelGrid>   
+                <p:inputText id="ans" label="ans" 
+                             value="#{resetPassword.answer}" 
+                             required="true"
+                             requiredMessage="Answer Security Question"
+                             autocomplete="false"/>
+                <p:watermark for="ans" value="Answer your security question" />
+
+                <p:password id="cur" value="#{resetPassword.current}" 
+                            required="true" autocomplete="false"
+                            requiredMessage="Enter password"  />
+                <p:watermark for="cur" value="Enter your password" />
+
+
+                <p:messages id="messages" autoUpdate="true" closable="true"/>
+
+
+
+                <h:panelGrid columns="2" style="padding: 10px;">
+                    <p:commandButton 
+                        type="submit"
+                        value="Submit" 
+                        action="#{resetPassword.changeSecQuestion()}"/>
+
+                    <p:commandButton 
+                        type="submit"
+                        value="Cancel"
+                        action="profile" process="@this" />
+
+                </h:panelGrid>
             </div>
 
         </h:form>

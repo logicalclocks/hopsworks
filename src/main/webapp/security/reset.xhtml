@@ -19,35 +19,35 @@
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
 
-        <p:growl for="userRegistered" life="20000" showDetail="true"/>
-        <p:growl for="loginFail" life="20000" showDetail="true"/>
+        
+            <div class="ForgotPassword">
 
         <h:form>
-            <div class="content">
-
-                <h:panelGrid columns="1" id="matchGrid" styleClass="Signin" cellpadding="5"> 
-                    
-                <h3 class="page_title" align="center" style="font: gray">
-                    Reset password
-                </h3>
-                    <p:outputLabel for="pwd1" value="New Password"/>
-                    <p:password id="pwd1" value="#{resetPassword.passwd1}" match="pwd2" label="Password 1" required="true" 
-                                requiredMessage="Enter new password"/>
-
-                    <p:outputLabel for="pwd2" value="Re-enter"/>
-                    <p:password id="pwd2" value="#{resetPassword.passwd2}" label="Password 2" required="true"/>
+                   
+                    <p:password id="pwd1" value="#{resetPassword.passwd1}"
+                                match="pwd2" label="Password 1" 
+                                required="true" 
+                                requiredMessage="Enter new password"
+                                />
+                    <p:watermark for="pwd1" value="Enter new password" />
+          
+                    <p:password id="pwd2" value="#{resetPassword.passwd2}"
+                                label="Password 2" 
+                                required="true"
+                                requiredMessage="Repeat the password"
+                                />
+                    <p:watermark for="pwd2" value="Repeat the password" />
                 
                 
-                <p:messages id="messages"  autoUpdate="true" closable="true"/>
+                    <p:messages id="messages"  autoUpdate="true" showDetail="false" closable="true"/>
                 <h:panelGrid columns="2">
-                <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{resetPassword.changePassword()}">
+                <p:commandButton  type="submit" value="Save" action="#{resetPassword.changePassword()}">
                     </p:commandButton>
-                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="#{resetPassword.logout()}" process="@this"/>
+                    <p:commandButton type="submit" value="Cancel" action="#{resetPassword.logout()}" process="@this"/>
                </h:panelGrid>
-                </h:panelGrid>
 
-            </div>
         </h:form>
+            </div>
 
     </h:body>
 </html>

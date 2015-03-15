@@ -20,6 +20,7 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.security.ua.model.Userlogins;
 
 /**
  *
@@ -37,7 +38,6 @@ public class AdminProfileAministration implements Serializable {
     private User user;
     // for modifying user roles and status
     private User editingUser;
-
 
     // to remove an existing group
     private String selectedGroup;
@@ -62,7 +62,16 @@ public class AdminProfileAministration implements Serializable {
 
     List<String> status;
 
-    
+    private Userlogins login;
+
+    public Userlogins getLogin() {
+        return login;
+    }
+
+    public void setLogin(Userlogins login) {
+        this.login = login;
+    }
+
     public void setEditStatus(String editStatus) {
         this.editStatus = editStatus;
     }
@@ -92,7 +101,6 @@ public class AdminProfileAministration implements Serializable {
         return PeoplAccountStatus.values()[userManager.findByEmail(p.getEmail()).getStatus() - 1].name();
     }
 
-    
     public User getUser() {
         return user;
     }
@@ -155,7 +163,6 @@ public class AdminProfileAministration implements Serializable {
         return this.editStatus;
     }
 
-    
     @PostConstruct
     public void init() {
 
@@ -168,6 +175,9 @@ public class AdminProfileAministration implements Serializable {
 
         editingUser = (User) FacesContext.getCurrentInstance().getExternalContext()
                 .getSessionMap().get("editinguser");
+
+        login = userManager.getLastUserLoing(editingUser.getUid());
+
     }
 
     public List<String> getStatus() {
@@ -228,43 +238,53 @@ public class AdminProfileAministration implements Serializable {
     /**
      * Update user roles from profile by admin.
      */
-    public void updateUserByAdmin() {
-        try {
-            // Update status
-            if (!"#".equals(selectedStatus)) {
-                editingUser.setStatus(PeoplAccountStatus.valueOf(selectedStatus).getValue());
-                userManager.updateStatus(editingUser.getUid(), PeoplAccountStatus.valueOf(selectedStatus).getValue());
-                MessagesController.addInfoMessage("Success", "Status updated successfully.");
+    public void updateStatusByAdmin() {
+        // Update status
+        if (!"#".equals(selectedStatus)) {
+            editingUser.setStatus(PeoplAccountStatus.valueOf(selectedStatus).getValue());
+            userManager.updateStatus(editingUser.getUid(), PeoplAccountStatus.valueOf(selectedStatus).getValue());
+            MessagesController.addInfoMessage("Success", "Status updated successfully.");
 
-            }
+        } else {
+            MessagesController.addErrorMessage("Error", "Faied to update!");
 
-            // Register a new group
-            if (!"#".equals(newGroup)) {
-                userManager.registerGroup(editingUser.getUid(), BBCGroups.valueOf(newGroup).getValue());
-                MessagesController.addInfoMessage("Success", "Role updated successfully.");
-
-            }
-
-            // Remove a group
-            if (!"#".equals(selectedGroup)) {
-                if (selectedGroup.equals(BBCGroups.BBC_GUEST.name())) {
-                    MessagesController.addMessageToGrowl(BBCGroups.BBC_GUEST.name() + " can not be removed.");
-                } else {
-                    userManager.removeGroup(editingUser.getUid(), BBCGroups.valueOf(selectedGroup).getValue());
-                    MessagesController.addMessageToGrowl("User updated successfully.");
-                }
-            }
-
-            if ("#".equals(selectedGroup)) {
-
-                if (("#".equals(selectedStatus))
-                        || "#".equals(newGroup)) {
-                    MessagesController.addErrorMessage("Error", "No selection made!");
-                }
-            }
-
-        } catch (EJBException ejb) {
-            MessagesController.addErrorMessage("Error: Update failed.");
         }
+
+    }
+
+    public void addRoleByAdmin() {
+
+        // Register a new group
+        if (!"#".equals(newGroup)) {
+            userManager.registerGroup(editingUser.getUid(), BBCGroups.valueOf(newGroup).getValue());
+            MessagesController.addInfoMessage("Success", "Role updated successfully.");
+            
+        } else {
+            MessagesController.addErrorMessage("Error", "Faied to update!");
+
+        }
+
+    }
+
+    public void removeRoleByAdmin() {
+
+        // Remove a group
+        if (!"#".equals(selectedGroup)) {
+            if (selectedGroup.equals(BBCGroups.BBC_GUEST.name())) {
+                MessagesController.addMessageToGrowl(BBCGroups.BBC_GUEST.name() + " can not be removed.");
+            } else {
+                userManager.removeGroup(editingUser.getUid(), BBCGroups.valueOf(selectedGroup).getValue());
+                MessagesController.addMessageToGrowl("User updated successfully.");
+            }
+        }
+
+        if ("#".equals(selectedGroup)) {
+
+            if (("#".equals(selectedStatus))
+                    || "#".equals(newGroup)) {
+                MessagesController.addErrorMessage("Error", "No selection made!");
+            }
+        }
+
     }
 }

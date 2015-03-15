@@ -20,17 +20,10 @@
         </ui:insert>
 
         <h:form >
-            <div class="GenericMenue" align="center">
+            <div class="ForgotPassword" align="center">
 
-                <h:panelGrid columns="1" id="reset_mobile_password">                   
-
-                    <h3 align="center" style="color: gray">
-                        Reset Mobile Device Account
-                    </h3>
-                    <p:spacer height="20"></p:spacer>
-                    <p:outputLabel for="runame" value="Username"/>
                     <p:inputText id="runame" required="true" label="email" size="40"
-                                 requiredMessage="Please enter your email address."
+                                 requiredMessage="Enter your email address."
                                  validatorMessage="Invalid email format"
                                  value="#{recoverySelector.uname}"
                                  >
@@ -39,14 +32,16 @@
                             pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
 
                     </p:inputText>
-                    <p:watermark for="runame" value="Email" />
+                    <p:watermark for="runame" value="Enter your email" />
 
-                    <p:outputLabel for="curpwd" value="Password"/>
-                    <p:password id="curpwd" value="#{recoverySelector.passwd}"  label="current" required="true" 
+                    <p:password id="curpwd" value="#{recoverySelector.passwd}"  
+                                label="current" required="true" 
                                   size="40"  
                                   requiredMessage="Enter password"/>
                     <p:watermark for="curpwd" value="******" />
-                    <p:spacer></p:spacer>
+                    
+                    <p:watermark for="curpwd" value="Enter password " />
+
 
                     <p:messages id="messages" autoUpdate="true" closable="true"/>
 
@@ -55,7 +50,6 @@
                         <p:commandButton type="submit" value="Cancel" action="welcome" process="@this"/>
                     </h:panelGrid>   
 
-                </h:panelGrid>
             </div>
         </h:form>
 

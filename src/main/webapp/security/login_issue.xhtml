@@ -22,14 +22,11 @@
         <h:form>
             <p:growl id="messages" showDetail="false" autoUpdate="true" />
             <div class="content" align="center" >
-                <h3 style="color: gray">
-                    Please select the issue:
-                </h3>
                 <p:selectOneRadio id="loginIssueRadio"  
                                   value="#{recoverySelector.console}" 
                                   layout="grid" columns="1" required="true" 
                                   requiredMessage="Please select one option.">
-                    <f:selectItem itemLabel="Forgot password" itemValue="Password" />
+                    content<f:selectItem itemLabel="Forgot password" itemValue="Password" />
                     <f:selectItem itemLabel="Lost mobile device" itemValue="Mobile" />
                     <f:selectItem itemLabel="Lost Yubikey device" itemValue="Yubikey" />
                 </p:selectOneRadio>

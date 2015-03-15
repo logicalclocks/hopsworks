@@ -8,24 +8,19 @@ package se.kth.bbc.security.ua;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.Principal;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
-import javax.transaction.UserTransaction;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.security.ua.model.Userlogins;
 import se.kth.kthfsdashboard.user.Gravatar;
 
 /**
@@ -44,17 +39,17 @@ public class ProfileManager implements Serializable {
 
     private User user;
     private Address address;
-
-    @Resource
-    private UserTransaction userTransaction;
-
+    private Userlogins login;
+    
     public User getUser() {
         if (user == null) {
             try {
                 user = userManager.findByEmail(getLoginName());
                 address = userManager.findAddress(user.getUid());
+                login = userManager.getLastUserLoing(user.getUid());
             } catch (IOException ex) {
                 Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null, ex);
+
                 return null;
             }
         }
@@ -62,6 +57,15 @@ public class ProfileManager implements Serializable {
         return user;
     }
 
+    public Userlogins getLogin() {
+        return login;
+    }
+
+    public void setLogin(Userlogins login) {
+        this.login = login;
+    }
+
+ 
     public Address getAddress() {
         return this.address;
     }
@@ -96,21 +100,33 @@ public class ProfileManager implements Serializable {
         return url;
     }
 
-    public void updateUser(){
-        try {
+       public List<String> getCurrentGroups() {
+        List<String> list = userManager.findGroups(user.getUid());
+        return list;
+    }
 
-            userTransaction.begin();
+    
+    public void updateUserInfo(){
 
-            userManager.updatePeople(user);
-            userManager.updateAddress(address);
-
-            userTransaction.commit();
-
-        } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ejb) {
+        if (userManager.updatePeople(user)) {
+            MessagesController.addInfoMessage("Success", "Profile updated successfully.");
+        } else {
             MessagesController.addSecurityErrorMessage("Update failed.");
             return;
         }
-        MessagesController.addInfoMessage("Success", "Profile updated successfully.");
+    
+            userManager.updateAddress(address);
     }
 
+      public void updateAddress(){
+
+        if (userManager.updateAddress(address)) {
+            MessagesController.addInfoMessage("Success", "Address updated successfully.");
+        } else {
+            MessagesController.addSecurityErrorMessage("Update failed.");
+            return;
+        }
+    }
+
+      
 }

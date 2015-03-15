@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.ServletException;
@@ -113,6 +114,7 @@ public class CustomAuthentication implements Serializable {
         
         }
     
+        registerLoginInfo(user.getUid(), user.getUsername(), "AUTHENTICATION");
         // Return if user not activated
         if (user.getStatus() == PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()) {
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.INACTIVE_ACCOUNT);
@@ -142,7 +144,8 @@ public class CustomAuthentication implements Serializable {
             mgr.resetLock(userid);
             // Set the onlne flag
             mgr.setOnline(userid, 1);
-
+            
+ 
         } catch (ServletException ex) {
             // if more than five times block the account
             int val = user.getFalseLogin();
@@ -237,7 +240,7 @@ public class CustomAuthentication implements Serializable {
             mgr.resetLock(userid);
             // Set the onlne flag
             mgr.setOnline(userid, 1);
-
+   
         } catch (ServletException ex) {
             // If more than five times block the account
             int val = user.getFalseLogin();
@@ -280,4 +283,34 @@ public class CustomAuthentication implements Serializable {
         return ("welcome");
     }
 
+    public void registerLoginInfo(int uid, String uname, String action){
+    
+        HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();  
+        String ip = httpServletRequest.getRemoteAddr();  
+        
+        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+        String userAgent = externalContext.getRequestHeaderMap().get("User-Agent");
+ 
+        String browser = null;
+        if(userAgent.contains("MSIE")){ 
+         browser ="Internet Explorer";
+    }
+    if(userAgent.contains("Firefox")){ 
+        browser ="Firefox";
+    }
+    if(userAgent.contains("Chrome")){ 
+        browser ="Chrome";
+    }
+    if(userAgent.contains("Opera")){ 
+        browser = "Opera";
+    }
+    if(userAgent.contains("Safari")){ 
+        browser ="Safari";
+    }
+        
+        mgr.registerLoginInfo(uid, uname, ip, browser, action);
+        
+        // Set the last login
+        mgr.setLastLogin(uid);
+    }
 }

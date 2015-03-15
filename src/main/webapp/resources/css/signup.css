@@ -99,8 +99,6 @@ and open the template in the editor.
 
 
 
-/*QRcode*/
-
 .GenericMenue {
     font-size: 14px;
     width: 400px;
@@ -209,3 +207,4 @@ input[type="password"] {
     background-color:#F0F0F0;
     
 }
+

@@ -248,3 +248,54 @@ input[type="email"], input[type="number"], input[type="password"], input[type="o
     font-size: 14px;
     margin-bottom: 10px;
 }
+
+
+
+.ForgotPassword {
+    font-size: 14px;
+    width: 420px;
+    margin: 0 auto;
+    margin-top: 50px;
+    border-width: 1px; 
+    border-style: solid; 
+    border-color: lightgray; 
+    background-color: #F0F0F0; 
+    border-radius: 6px;  
+    padding-top:  40px;   
+}
+
+.ForgotPassword .ui-inputfield {
+    width: 300px;
+    font-size: 14px;
+    height: 30px;
+}
+
+.ForgotPassword .ui-button {
+    float: right;
+}
+
+.ForgotPassword .ui-messages-error-icon {
+    display: none!important;
+}
+
+.ForgotPassword .ui-messages-error, .ui-message-error {
+    color: #B94A48;
+    width: 70%;
+    margin: 10px;
+}
+
+.ForgotPassword .ui-selectonemenu {
+    display: inline-block;
+    position: relative;
+    width: auto;
+    cursor: pointer;
+  }
+.ForgotPassword .ui-corner-all {
+    border: 0px;
+}
+
+.ui-corner-all {
+    border-radius: 1px;
+}
+.ui-state-default {
+}

@@ -19,32 +19,25 @@
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
 
+        
+            <div class="ForgotPassword" align="center">
+                
         <h:form >
-            <div class="GenericMenue" align="center">
-
-                <h:panelGrid columns="1" id="reset_yubikey_password" >                   
-
-                    <h3 align="center" style="font: gray">Yubikey Recovery </h3>
-
-                    <p:outputLabel for="rname" value="Username"/>
                     <p:inputText id="rname" required="true" label="email" 
-                                 size="40"
-                                 requiredMessage="Please enter your email address."
+                                 requiredMessage="Enter your email."
                                  validatorMessage="Invalid username"
-                                 value="#{recoverySelector.uname}">
+                                 value="#{recoverySelector.uname}" >
 
                         <f:validateRegex
                             pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
                     </p:inputText>
-                    <p:watermark for="rname" value="Email" />
+                    <p:watermark for="rname" value="Enter your email" />
 
 
-                    <p:outputLabel for="cupwd" value="Password"/>
                     <p:password id="cupwd" value="#{recoverySelector.passwd}"  
                                 label="current" required="true" 
-                                size="40"
                                 requiredMessage="Enter password"/>
-                    <p:watermark for="cupwd" value="******" />
+                    <p:watermark for="cupwd" value="Enter your passwoed" />
 
                     <p:messages id="messages" autoUpdate="true"  closable="true"/>
 
@@ -54,10 +47,10 @@
                         <p:commandButton type="submit" value="Cancel" action="welcome" process="@this"/>
 
                     </h:panelGrid>
-                </h:panelGrid>
-               
-            </div>
+           
+                   
         </h:form>
 
+            </div>
     </h:body>
 </html>
