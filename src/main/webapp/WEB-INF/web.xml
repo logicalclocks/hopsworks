@@ -122,7 +122,24 @@
             <role-name>BBC_USER</role-name>
         </auth-constraint>
     </security-constraint>
-        <security-constraint>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>BiobankCloud Lab Info Mgmt System (LIMS)</web-resource-name>
+            <url-pattern>/usr/biobankcloud/kthfs-dashboard/src/main/webapp/security/protected/researcher</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>BBC_ADMIN</role-name>
+            <role-name>BBC_RESEARCHER</role-name>
+            <role-name>SYS_ADMIN</role-name>
+            <role-name>BBC_USER</role-name>
+            <role-name>AUDITOR</role-name>
+            <role-name>BBC_GUEST</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+
+    <security-constraint>
         <web-resource-collection>
             <web-resource-name>BiobankCloud Lab Info Mgmt System (LIMS)</web-resource-name>
             <url-pattern>/bbc/lims/index.xhtml</url-pattern>

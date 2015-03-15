@@ -440,8 +440,10 @@ public class PeopleAministration implements Serializable {
     }
 
     public String modifyUser(User user1) {
+        // Get the latest status
+        User newStatus = userManager.getUser(user1.getEmail());
         FacesContext.getCurrentInstance().getExternalContext()
-                .getSessionMap().put("editinguser", user1);
+                .getSessionMap().put("editinguser", newStatus);
         return "admin_profile";
     }
 

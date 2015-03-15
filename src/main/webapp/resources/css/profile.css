@@ -47,3 +47,30 @@
     color:#1385e5 !important;
     text-decoration: underline;
 }
+
+
+
+.AddressInfo{
+    
+    padding-top: 10px; 
+    padding-left: 10px; 
+    padding-right: 10px;
+    
+}
+
+.Info {
+    
+    padding-top: 10px; 
+    padding-left: 10px; 
+    padding-right: 10px;
+    
+}
+
+
+.PersonalInfo {
+    text-align: left;
+    color: #4184F3;
+    font-weight: 500;
+    line-height: 1;
+}
+

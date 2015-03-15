@@ -13,7 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
@@ -28,7 +28,7 @@ import se.kth.kthfsdashboard.user.Gravatar;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @ManagedBean
-@SessionScoped
+@ViewScoped
 public class ProfileManager implements Serializable {
 
     public static final String DEFAULT_GRAVATAR = "resources/images/icons/default-icon.jpg";
@@ -80,7 +80,6 @@ public class ProfileManager implements Serializable {
             return principal.getName();
         } catch (Exception ex) {
             ExternalContext extContext = FacesContext.getCurrentInstance().getExternalContext();
-            System.err.println(extContext.getRequestContextPath());
             extContext.redirect(extContext.getRequestContextPath());
             return null;
         }

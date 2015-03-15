@@ -12,13 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.ua.model.Userlogins;
 
@@ -64,6 +64,16 @@ public class AdminProfileAministration implements Serializable {
 
     private Userlogins login;
 
+    private Address address;
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+    
     public Userlogins getLogin() {
         return login;
     }
@@ -175,7 +185,7 @@ public class AdminProfileAministration implements Serializable {
 
         editingUser = (User) FacesContext.getCurrentInstance().getExternalContext()
                 .getSessionMap().get("editinguser");
-
+        address = userManager.findAddress(editingUser.getUid());
         login = userManager.getLastUserLoing(editingUser.getUid());
 
     }
@@ -223,6 +233,7 @@ public class AdminProfileAministration implements Serializable {
 
         try {
             User p = userManager.findByEmail(principal.getName());
+            
             if (p != null) {
                 return p.getName();
             } else {
@@ -270,11 +281,11 @@ public class AdminProfileAministration implements Serializable {
 
         // Remove a group
         if (!"#".equals(selectedGroup)) {
-            if (selectedGroup.equals(BBCGroups.BBC_GUEST.name())) {
-                MessagesController.addMessageToGrowl(BBCGroups.BBC_GUEST.name() + " can not be removed.");
+            if (selectedGroup.equals(BBCGroups.BBC_GUEST.toString())) {
+                MessagesController.addErrorMessage("Error", BBCGroups.BBC_GUEST.toString() + " can not be removed.");
             } else {
                 userManager.removeGroup(editingUser.getUid(), BBCGroups.valueOf(selectedGroup).getValue());
-                MessagesController.addMessageToGrowl("User updated successfully.");
+                MessagesController.addInfoMessage("Success", "User updated successfully.");
             }
         }
 
