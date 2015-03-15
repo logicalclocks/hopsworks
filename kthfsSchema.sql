@@ -152,29 +152,26 @@ CREATE TABLE `Inodes` (
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `LOGIN`
---
 
-DROP TABLE IF EXISTS `LOGIN`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `LOGIN` (
-  `login_id` bigint(20) NOT NULL,
-  `uid` varchar(8) DEFAULT NULL,
+DROP TABLE IF EXISTS `USERLOGINS`;
+
+--
+CREATE TABLE `USERLOGINS` (
+  `login_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `username` varchar(80) DEFAULT NULL,
   `role` varchar(20) DEFAULT NULL,
-  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `ip` varchar(16) DEFAULT NULL,
   `os` varchar(30) DEFAULT NULL,
   `browser` varchar(40) DEFAULT NULL,
   `action` varchar(80) DEFAULT NULL,
   `outcome` varchar(20) DEFAULT NULL,
+  `uid` int(11) DEFAULT NULL,
+  `login_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`login_id`),
+  KEY `LOGIN_username_idx` (`username`),
   KEY `LOGIN_uid_idx` (`uid`),
-  KEY `LOGIN_username_idx` (`username`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  KEY `LOGIN_login_date_idx` (`login_date`)
+) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `People_Group`
@@ -441,6 +438,8 @@ CREATE TABLE `USERS` (
   `security_question` varchar(20) DEFAULT NULL,
   `security_answer` varchar(128) DEFAULT NULL,
   `yubikey_user` tinyint(4) DEFAULT NULL,
+  `password_changed` timestamp,
+  `last_login` timestamp,
   PRIMARY KEY (`uid`),
   UNIQUE KEY `email_idx` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
