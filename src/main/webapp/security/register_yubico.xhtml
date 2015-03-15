@@ -10,171 +10,185 @@
 
         <h:head>
             <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
-           <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/signup.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
 
         </h:head>
 
-        <h:body  style="background-color: white;">
+        <h:body >
             <ui:insert name="titleBar" >
                 <ui:include src="/bbc/lims/titleBar.xhtml" />       
-           </ui:insert>
+            </ui:insert>
+
             <div align="center">
-                
-                <h:panelGrid columns="#{customAuthenticationSwitch.otpEnabled?2:1}" styleClass="registerContainer">
-                    <h:panelGroup  styleClass="registerPanel">
-                            <ul class="register_banner">
-                                <h3 align="left">Request Yubikey Account</h3>
-                            </ul>
+                <h:panelGrid 
+                    columns="#{customAuthenticationSwitch.otpEnabled?2:1}" 
+                    styleClass="registerContainer">
 
-                            <h:form > 
+                    <h:panelGroup styleClass="MobileRegistation" >
+                        <h3>Create your BiobankCloud Account</h3>
 
-                                <h:panelGrid columns="2" >			
-                                    <p:outputLabel for="fname" value="First name"/>
-                                    <p:inputText id="fname" value="#{userRegistration.fname}" 
-                                                 size="41"
-                                                 required="true"
-                                                 autocomplete="off"
-                                                 requiredMessage="Enter first name" />
+                        <h:form class="register_form"> 
+                            <h:panelGrid columns="4" >			
 
-                                    <p:outputLabel for="lname" value="Last name"/>
-                                    <p:inputText id="lname" value="#{userRegistration.lname}" 
-                                                 size="41"
-                                                 required="true"
-                                                 autocomplete="off"
-                                                 requiredMessage="Enter last name"/>
+                                <p:inputText id="fname" 
+                                             value="#{userRegistration.fname}" 
+                                             type="text"
+                                             required="true"
+                                             autocomplete="off"
+                                             requiredMessage="Enter first name" />
+                                <p:watermark for="fname" value="First name" />
 
-                                    <p:outputLabel for="email" value="Email" />
-                                    <p:inputText id="email" value="#{userRegistration.mail}" 
-                                                 size="41"
-                                                 required="true"
-                                                 autocomplete="off"
-                                                 requiredMessage="Enter email">
-                                        <f:validator binding="#{usernameValidator}" />
-                                    </p:inputText>    
 
-                                    <p:outputLabel for="tel" value="Phone number" />
-                                    <p:inputText id="tel" value="#{userRegistration.tel}"
-                                                 size="41"
-                                                 autocomplete="off"
-                                                 validatorMessage="Invalid phone number">
-                                        <f:validateRegex pattern="^([+]?[\d]+)?$" />
-                                    </p:inputText>
+                                <p:inputText id="lname"
+                                             value="#{userRegistration.lname}" 
+                                             required="true"
+                                             autocomplete="off"
+                                             requiredMessage="Enter last name"/>
+                                <p:watermark for="lname" value="Last name" />
 
-                                    <p:outputLabel for="address1" value="C/O"/>
-                                    <p:inputText id="address1" value="#{userRegistration.address1}" 
-                                                 size="41"
-                                                 autocomplete="off"
-                                                 >
-                                    </p:inputText>
+                                <p:inputText id="email"
+                                             value="#{userRegistration.mail}" 
+                                             required="true"
+                                             autocomplete="off"
+                                             requiredMessage="Enter email">
+                                    <f:validator binding="#{usernameValidator}" />
+                                </p:inputText>    
+                                <p:watermark for="email" value="Enter your email" />
 
-                                    <p:outputLabel for="address2" value="Street and number"/>
+                                <p:inputText id="tel" 
+                                             value="#{userRegistration.tel}" 
+                                             autocomplete="off"
+                                             validatorMessage="Invalid phone number">
+                                    <f:validateRegex pattern="^([+]?[\d]+)?$" />
+                                </p:inputText>
+                                <p:watermark for="tel" value="Enter your telephone number" />
+        
+
+
                                     <p:inputText id="address2" value="#{userRegistration.address2}" 
                                                  required="true"
                                                  autocomplete="off"
-                                                 size="41"
                                                  requiredMessage="Enter street" >
                                     </p:inputText>
+                                <p:watermark for="address2" value="Street and number" />
 
-                                    <p:outputLabel for="city1" value="City"/>
                                     <p:inputText id="city1" value="#{userRegistration.city}" 
                                                  required="true"
                                                  autocomplete="off"
-                                                 requiredMessage="Enter city" 
-                                                 size="41">
+                                                 requiredMessage="Enter city"> 
                                     </p:inputText>
+                                 <p:watermark for="city1" value="City" />
 
-                                    <p:outputLabel for="zip1" value="Postal code" />
+
                                     <p:inputText id="zip1" value="#{userRegistration.postalcode}" 
                                                  required="true"
                                                  autocomplete="off"
-                                                 size="41"
                                                  requiredMessage="Enter postal code">
                                     </p:inputText>
+                                 <p:watermark for="zip1" value="Postal Code" />
 
-                                    <p:outputLabel for="country1" value="Country" />
+
                                     <p:inputText id="country1" value="#{userRegistration.country}"  
                                                  required="true"
                                                  autocomplete="off"
-                                                 size="41"
                                                  requiredMessage="Enter country">
                                     </p:inputText>
+                                 <p:watermark for="country1" value="Country" />
+                                <p:password id="password0" 
+                                            value="#{userRegistration.password}" 
+                                            required="true"
+                                            autocomplete="off"
+                                            requiredMessage="Enter password">
+                                    <f:validator validatorId="passwordValidator" />
+                                    <f:attribute name="confirmPassword" value="#{confirmPassword}" />
+                                </p:password>
+                                <p:watermark for="password0" value="Choose a pasword" />
 
+                                <p:password id="password" 
+                                            value="#{userRegistration.passwordAgain}"
+                                            requiredMessage="Re-enter password"
+                                            autocomplete="off" 
+                                            binding="#{confirmPassword}"
+                                            required="true">
+                                </p:password>
+                                <p:watermark for="password" value="Repeat the pasword" />
 
-                                  <p:outputLabel for="sec_question1" value="Security question" />
-                                    <p:selectOneMenu id="sec_question1" value="#{userRegistration.security_question}" 
-                                                    required="true"
-                                                    requiredMessage="Select security question">
+                                 
+                            </h:panelGrid>
 
-                                       <f:selectItem itemLabel="Select Security Question" itemValue="" />
-                                       <f:selectItems value="#{userRegistration.questions}"/>
-                                  </p:selectOneMenu>  
-                                  
-                                  
-                                
-                                    <p:outputLabel for="answer1" value="Answer"/>
-                                    <p:inputText id="answer1" value="#{userRegistration.security_answer}" 
-                                                 size="41"
-                                                 autocomplete="off"
+                            <h:panelGrid columns="2" >			
+
+                                <p:selectOneMenu id="sec_question"
+                                                 value="#{userRegistration.security_question}" 
                                                  required="true"
-                                                 requiredMessage="Enter answer">
-                                    </p:inputText>  
+                                                 style="width: 508px; height: 30px; " 
+                                                 requiredMessage="Select security question">
 
-                                    <p:outputLabel for="pass0" value="Password"/>
-                                    <p:password id="pass0" value="#{userRegistration.password}" 
-                                                required="true" 
-                                                size="41"
-                                                autocomplete="off"
-                                                requiredMessage="Enter password">
-                                        <f:validator validatorId="passwordValidator" />
-                                        <f:attribute name="confirmPassword" value="#{confirmPassword}" />
-                                    </p:password>
+                                    <f:selectItem itemLabel="Select Security Question for Password Recovery" 
 
-                                    <p:outputLabel for="pass" value="Password again"/>
-                                    <p:password id="pass" value="#{userRegistration.passwordAgain}" 
-                                                size="41"
-                                                requiredMessage="Re-enter password"
-                                                autocomplete="off"
-                                                binding="#{confirmPassword}"
-                                                required="true">
-                                    </p:password>
+                                                  itemValue="" />
+                                    <f:selectItems value="#{userRegistration.questions}"/>
+                                </p:selectOneMenu>  
+                                <p:spacer></p:spacer>
 
-                                    <p:outputLabel for="captcha" value="Enter Captcha"/>
-                                    <p:captcha id ="captcha" label="Captcha" 
-                                               required="true" 
-                                               requiredMessage="Enter Captcha"/>
+                                <p:inputText id="answer"
+                                             value="#{userRegistration.security_answer}"
+                                             style="width: 508px"
+                                             required="true"
+                                             autocomplete="off"
+                                             requiredMessage="Answer security question" />
+                                <p:watermark for="answer" value="Enter your security answer" />
 
-                                    <p:spacer></p:spacer>
-                                    <h:panelGroup> 
-                                        <p:selectBooleanCheckbox value="#{userRegistration.tos}">
-                                             <f:validator binding="#{tosCheckboxValidator}" />
-                                        </p:selectBooleanCheckbox>
-                                        &nbsp;
-                                        <p:commandLink action="tos" style="margin-right:20px; color: #0971B2"
-                                                       ajax="false" value=" I agree to the BBC Terms of Service (ToS)"
-                                                       immediate="true" target="_blank" >
-                                            
-                                        </p:commandLink>
-                                   </h:panelGroup>
 
-                                    <p:spacer></p:spacer>
-                                    <p:messages id="messages" autoUpdate="true" closable="true"  showDetail="false" />
-                                    
-                                </h:panelGrid>
+                                <p:captcha id ="captcha" 
+                                           label="Captcha"
+                                           required="true" 
+                                           requiredMessage="Enter Captcha"/>
 
-                                <div class="register_banner">
-                                    <p:commandButton styleClass="team_button button-save" type="submit" oncomplete="Recaptcha.reload();" value="Register" action="#{userRegistration.registerYubikey()}" />
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" immediate="true" style="margin-left: 55px"/>
-                                </div>
+                                <p:spacer></p:spacer>
 
-                            </h:form> 
+                                <h:panelGroup style="padding: 10">
+                                    <p:selectBooleanCheckbox 
+                                        value="#{userRegistration.tos}"> 
+                                        <f:validator binding="#{tosCheckboxValidator}" />
+                                    </p:selectBooleanCheckbox> 
+                                    <p:spacer width="5"></p:spacer>
+                                    <p:commandLink 
+                                        action="tos.xhtml"
+                                        ajax="false" 
+                                        value=" I agree to the BiobankCloud Terms of Service (ToS)"
+                                        immediate="true" target="_blank">
+                                    </p:commandLink>
+                                </h:panelGroup>
+                            </h:panelGrid>
+                            <p:messages id="messages" showDetail="false" autoUpdate="true" closable="true"/>
+
+                            <div class="register_user">
+                            <p:commandButton  
+                                              type="submit"
+                                              value="Register" 
+                                              oncomplete="Recaptcha.reload();" 
+                                              action="#{userRegistration.registerYubikey()}"/>
+                        
+                           <p:spacer width="10"></p:spacer>
+                           
+                            <p:commandButton  
+                                              type="submit"
+                                              value="Cancel" 
+                                              action="welcome" 
+                                              immediate="true" 
+                                              />
+                            </div>
+                        </h:form> 
                     </h:panelGroup>
-                    <h:panelGroup rendered="#{customAuthenticationSwitch.otpEnabled}" styleClass="registerPanel">
-                        <ul class="register_banner">
-                            <h3 align="left">Why Yubikey 2-Step verification?</h3>
-                        </ul>
 
-                        <div  id="mobile_user_guide" align="left">     
+                    
+                                    <h:panelGroup rendered="#{customAuthenticationSwitch.otpEnabled}" styleClass="registerPanel">
+                       
+                        <div  id="mobile_user_guide" style="padding-left: 150px;" align="left">     
+                            <h3 align="left">Why Yubikey 2-Step verification?</h3>
+                    
                             <p>
                                 It's easier than you think for someone to steal your password.
                                 <br></br>

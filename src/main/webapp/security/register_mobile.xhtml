@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -10,126 +10,153 @@
 
         <h:head>
             <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+            <link rel="stylesheet" type="text/css" href="#{resource['/css/signup.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
 
         </h:head>
 
-        <h:body  style="background-color: white;">
+        <h:body >
             <ui:insert name="titleBar" >
                 <ui:include src="/bbc/lims/titleBar.xhtml" />       
             </ui:insert>
 
             <div align="center">
-                <h:panelGrid columns="#{customAuthenticationSwitch.otpEnabled?2:1}" styleClass="registerContainer">
-                    <h:panelGroup  styleClass="registerPanel">
-                        <ul class="register_banner">
-                            <h3 align="left">Request Mobile Account</h3>
-                        </ul>
+                <h:panelGrid 
+                    columns="#{customAuthenticationSwitch.otpEnabled?2:1}" 
+                    styleClass="registerContainer">
 
-                        <h:form > 
-                            <h:panelGrid columns="2">			
-                                <p:outputLabel for="fname" value="First name" />
-                                <p:inputText id="fname" value="#{userRegistration.fname}" 
+                    <h:panelGroup styleClass="MobileRegistation" >
+                        <h3>Create your BiobankCloud Account</h3>
+
+                        <h:form class="register_form"> 
+                            <h:panelGrid columns="4" >			
+
+                                <p:inputText id="fname" 
+                                             value="#{userRegistration.fname}" 
+                                             type="text"
                                              required="true"
                                              autocomplete="off"
-                                             size="41"
                                              requiredMessage="Enter first name" />
+                                <p:watermark for="fname" value="First name" />
 
-                                <p:outputLabel for="lname" value="Last name" />
-                                <p:inputText id="lname" value="#{userRegistration.lname}" 
+
+                                <p:inputText id="lname"
+                                             value="#{userRegistration.lname}" 
                                              required="true"
                                              autocomplete="off"
-                                             size="41"
                                              requiredMessage="Enter last name"/>
+                                <p:watermark for="lname" value="Last name" />
 
-                                <p:outputLabel for="email" value="Email"/>
-                                <p:inputText id="email" value="#{userRegistration.mail}" 
+                                <p:inputText id="email"
+                                             value="#{userRegistration.mail}" 
                                              required="true"
                                              autocomplete="off"
-                                             size="41"
                                              requiredMessage="Enter email">
                                     <f:validator binding="#{usernameValidator}" />
                                 </p:inputText>    
+                                <p:watermark for="email" value="Enter your email" />
 
-                                <p:outputLabel for="tel" value="Phone number"/>
-                                <p:inputText id="tel" value="#{userRegistration.tel}" 
+                                <p:inputText id="tel" 
+                                             value="#{userRegistration.tel}" 
                                              autocomplete="off"
-                                             size="41"
                                              validatorMessage="Invalid phone number">
                                     <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                 </p:inputText>
-
-                                <p:outputLabel for="sec_question" value="Security question" />
-                                <p:selectOneMenu id="sec_question" value="#{userRegistration.security_question}" 
-                                                 required="true"
-                                                 requiredMessage="Select security question">
-                                    
-                                    <f:selectItem itemLabel="Select Security Question" itemValue="" />
-                                    <f:selectItems value="#{userRegistration.questions}"/>
-                                </p:selectOneMenu>  
-
-                                <p:outputLabel for="answer" value="Answer"/>
-                                <p:inputText id="answer" value="#{userRegistration.security_answer}"
-                                             required="true"
-                                             autocomplete="off"
-                                             size="41"
-                                             requiredMessage="Answer security question" />
-
-                                <p:outputLabel for="password0" value="Password"/>
-                                <p:password id="password0" value="#{userRegistration.password}" 
+                                <p:watermark for="tel" value="Enter your telephone number" />
+                                <p:password id="password0" 
+                                            value="#{userRegistration.password}" 
                                             required="true"
                                             autocomplete="off"
-                                            size="41"
                                             requiredMessage="Enter password">
                                     <f:validator validatorId="passwordValidator" />
                                     <f:attribute name="confirmPassword" value="#{confirmPassword}" />
                                 </p:password>
+                                <p:watermark for="password0" value="Choose a pasword" />
 
-                                <p:outputLabel for="password" value="Password again"/>
-                                <p:password id="password" value="#{userRegistration.passwordAgain}"
+                                <p:password id="password" 
+                                            value="#{userRegistration.passwordAgain}"
                                             requiredMessage="Re-enter password"
                                             autocomplete="off" 
-                                            size="41"
                                             binding="#{confirmPassword}"
                                             required="true">
                                 </p:password>
-
-
-                                <p:outputLabel for="captcha" value="Enter Captcha" />
-                                <p:captcha id ="captcha" label="Captcha" required="true" 
-                                           requiredMessage="Enter Captcha"/>
-
-
-                                <p:spacer></p:spacer>
-                                <h:panelGroup> 
-                                    <p:selectBooleanCheckbox  value="#{userRegistration.tos}"> 
-                                        <f:validator binding="#{tosCheckboxValidator}" />
-
-                                    </p:selectBooleanCheckbox>                          
-                                    &nbsp;
-                                    <p:commandLink action="tos.xhtml" ajax="false" style="margin-right:20px; color: #0971B2" 
-                                                   value=" I agree to the BBC Terms of Service (ToS)"
-                                                   immediate="true"  target="_blank">
-                                    </p:commandLink>
-                                </h:panelGroup>
-
-                                <p:spacer></p:spacer>
-                                <p:messages id="messages" showDetail="false" autoUpdate="true" closable="true"/>
+                                <p:watermark for="password" value="Repeat the pasword" />
 
                             </h:panelGrid>
-                            <div class="register_banner">
-                                <p:commandButton styleClass="team_button button-save" type="submit" value="Register" oncomplete="Recaptcha.reload();" action="#{userRegistration.registerMobileUser()}"/>
-                                <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" immediate="true" style="margin-left: 55px"/>
+
+                            <h:panelGrid columns="2" >			
+
+                                <p:selectOneMenu id="sec_question"
+                                                 value="#{userRegistration.security_question}" 
+                                                 required="true"
+                                                 style="width: 508px; height: 30px; " 
+                                                 requiredMessage="Select security question">
+
+                                    <f:selectItem itemLabel="Select Security Question for Password Recovery" 
+
+                                                  itemValue="" />
+                                    <f:selectItems value="#{userRegistration.questions}"/>
+                                </p:selectOneMenu>  
+                                <p:spacer></p:spacer>
+
+                                <p:inputText id="answer"
+                                             value="#{userRegistration.security_answer}"
+                                             style="width: 508px"
+                                             required="true"
+                                             autocomplete="off"
+                                             requiredMessage="Answer security question" />
+                                <p:watermark for="answer" value="Enter your security answer" />
+
+
+                                <p:captcha id ="captcha" 
+                                           label="Captcha"
+                                           required="true" 
+                                           requiredMessage="Enter Captcha"/>
+
+                                <p:spacer></p:spacer>
+
+                                <h:panelGroup style="padding: 10">
+                                    <p:selectBooleanCheckbox 
+                                        value="#{userRegistration.tos}"> 
+                                        <f:validator binding="#{tosCheckboxValidator}" />
+                                    </p:selectBooleanCheckbox> 
+                                    <p:spacer width="5"></p:spacer>
+                                    <p:commandLink 
+                                        action="tos.xhtml"
+                                        ajax="false" 
+                                        value=" I agree to the BiobankCloud Terms of Service (ToS)"
+                                        immediate="true" target="_blank">
+                                    </p:commandLink>
+                                </h:panelGroup>
+                            </h:panelGrid>
+                            <p:messages id="messages" showDetail="false" autoUpdate="true" closable="true"/>
+
+                            <div class="register_user">
+                            <p:commandButton  
+                                              type="submit"
+                                              value="Register" 
+                                              oncomplete="Recaptcha.reload();" 
+                                              action="#{userRegistration.registerMobileUser()}"/>
+                        
+                           <p:spacer width="10"></p:spacer>
+                           
+                            <p:commandButton  
+                                              type="submit"
+                                              value="Cancel" 
+                                              action="welcome" 
+                                              immediate="true" 
+                                              />
                             </div>
                         </h:form> 
                     </h:panelGroup>
-                    <h:panelGroup rendered="#{customAuthenticationSwitch.otpEnabled}" styleClass="registerPanel">
-                        <ul class="register_banner">
-                            <h3 align="left">Why mobile two-step verification?</h3>
-                        </ul>
 
-                        <div id="mobile_user_guide" align="left">
+                    <h:panelGroup rendered="#{customAuthenticationSwitch.otpEnabled}"
+                                  styleClass="registerPanel">
+                        
+                        <div id="mobile_user_guide" style="padding-left: 150px;" align="left">
+                            
+                            <h3 align="left">Why mobile two-step verification?</h3>
+                       
                             <p>
                                 It's easier than you think for someone to steal your password.
                                 <br></br>

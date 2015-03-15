@@ -1,0 +1,211 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Mar 14, 2015, 11:08:27 PM
+    Author     : Ali Gholami <gholami@pdc.kth.se>
+*/
+
+
+/* Banner*/
+
+.new_user{
+    width: 50%;
+    min-height: 400px;
+    height: auto !important;
+    margin-bottom: 18px;
+    font-size: 12px;
+    font-weight:bold;
+}
+
+.register_user{
+    padding-top: 17px;
+    padding-right: 20px;
+    padding-bottom: 18px;
+    padding-left: 165px;
+    margin-top: 18px;
+    margin-bottom: 18px;
+    width: 200px;
+    
+}
+
+
+.register_banner{
+    padding-top: 17px;
+    padding-right: 20px;
+    padding-bottom: 18px;
+    padding-left: 165px;
+    margin-top: 18px;
+    margin-bottom: 18px;
+    background-color: #f5f5f5;
+    border-top: 1px solid #e5e5e5;
+    width: 400px;
+    height: 28px;
+}
+
+.register_banner .ui-button {
+  margin-left: 10px;
+  min-width: 50px;
+}
+
+.registerPanel{
+  width: 50%;
+}
+
+.registerContainer td{
+  vertical-align: top;
+}
+
+.user_profile .ui-datalist-content {
+  border: none;
+}
+
+
+
+/*QRcode*/
+
+.QRcode {
+    font-size: 14px;
+    width: 320px;
+    margin: 0 auto;
+    margin-top: 50px;
+    border-width: 1px; 
+    border-style: solid; 
+    border-color: lightgray; 
+    background-color: #F0F0F0; 
+    border-radius: 6px;  
+    padding: 20px;   
+}
+
+.QRcode td {
+    padding: 1px 5px;
+}
+
+.QRcode .ui-inputfield {
+    width: 290px;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.QRcode .ui-button {
+    float: right;
+}
+
+.QRcode .ui-messages-error-icon {
+    display: none!important;
+}
+
+
+
+/*QRcode*/
+
+.GenericMenue {
+    font-size: 14px;
+    width: 400px;
+    margin: 0 auto;
+    margin-top: 50px;
+    border-width: 1px; 
+    border-style: solid; 
+    border-color: lightgray; 
+    background-color: #F0F0F0; 
+    border-radius: 6px;  
+    padding: 20px;   
+}
+
+.GenericMenue td {
+    padding: 5px 15px;
+}
+
+.GenericMenue .ui-inputfield {
+    width: 300px;
+    height: 20px;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.GenericMenue .ui-button {
+    float: right;
+}
+
+.GenericMenue .ui-messages-error-icon {
+    display: none!important;
+}
+
+/* Account Registration*/
+
+.MobileRegistation {
+    text-align: left;
+    font-family: "Open Sans",arial;
+    color: #555;
+    font-size: 20px;
+    font-weight: 100;
+    margin-right: 20px;
+    padding-right: 20px;
+}
+
+
+.ui-inputfield{
+    
+display: inline-block;
+    height: 30px;
+    width: 250px;
+    background: none repeat scroll 0% 0% #FFF;
+    border-right: 1px solid #D9D9D9;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #C0C0C0 #D9D9D9 #D9D9D9;
+    -moz-border-top-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    border-image: none;
+    box-sizing: border-box;
+    border-radius: 1px;
+    
+}
+input[type="password"] {
+    display: inline-block;
+    height: 30px;
+    width: 250px;
+    background: none repeat scroll 0% 0% #FFF;
+    border-right: 1px solid #D9D9D9;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #C0C0C0 #D9D9D9 #D9D9D9;
+    -moz-border-top-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    border-image: none;
+    box-sizing: border-box;
+    border-radius: 1px;
+}
+
+.ui-selectonemenu-label {
+    display: block;
+    border: medium none;
+    white-space: nowrap;
+    overflow: hidden;
+    font-weight: normal;
+    width: 510px;
+    text-align: left;
+}
+
+.ui-selectonemenu{
+    width: 510px;    
+}
+
+
+.ui-messages-error, .ui-message-error {
+    color: #B94A48;
+    width: 88%;
+    margin: 10px;
+}
+
+.register_form{
+    padding: 30px;
+    background-color:#F0F0F0;
+    
+}

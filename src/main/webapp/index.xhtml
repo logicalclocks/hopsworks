@@ -5,74 +5,74 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:f="http://java.sun.com/jsf/core">
 
     <h:head>
         <title>BiobankCloud - Sign in</title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
         <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
-
     </h:head>
 
     <h:body>
-        <ui:insert name="titleBar" >
-            <ui:include src="bbc/lims/titleBar.xhtml" />       
-        </ui:insert>
 
-        <p:growl for="userRegistered" life="20000" showDetail="true"/>
-        <p:growl for="loginFail" life="20000" showDetail="true"/>
+        <div align="center" class="banner">
+            Login to explore all of the BiobankCloud
+        </div>    
 
-        <h:form id="login">                  
-            <div class="Login">            
-                <h2 align="center">Mobile Login</h2>     
-                <br></br>
-                <h:panelGrid columns="1"> 
-                    <p:outputLabel for="uname" value="Username" />
-                    <p:inputText id="uname" value="#{customAuthentication.username}" 
-                                 required="true" 
-                                 autocomplete="on"
-                                 requiredMessage="Enter Email">
-                    </p:inputText>
-                    <p:watermark for="uname" value="Email" />
+        <h:form id="login" class="Login">
+            <p:graphicImage 
+                value="/resources/images/users/avatar.png" 
+                styleClass="profile-img">
+            </p:graphicImage>
 
-                    <p:outputLabel for="password" value="Password"/>
-                    <p:password id="password" value="#{customAuthentication.password}" required="true" 
-                                requiredMessage="Enter Password">
-                    </p:password>
-                    <p:watermark for="password" value="Password" />
+            <p:inputText id="uname"
+                         value="#{customAuthentication.username}" 
+                         required="true" 
+                         autocomplete="on"
+                         requiredMessage="Enter Email"
+                         styleClass="Email"
+                         />
+            <p:watermark for="uname" value="Email" />
 
-                    <p:outputLabel for="otp" value="PIN" rendered="#{customAuthenticationSwitch.otpEnabled}"/>
-                    <p:password id="otp" value="#{customAuthentication.otpCode}" required="true"  
-                                 requiredMessage="Enter PIN"
-                                validatorMessage="PIN must be 6 digits" rendered="#{customAuthenticationSwitch.otpEnabled}">
-                        <f:validateLength minimum="6" maximum="6"/> 
-                    </p:password>   
-                    <p:watermark for="otp" value="One time mobile password" rendered="#{customAuthenticationSwitch.otpEnabled}"/>
+            <p:password id="password"
+                        value="#{customAuthentication.password}" 
+                        required="true" 
+                        requiredMessage="Enter Password">
+            </p:password>
+            <p:watermark for="password" value="Password" />
 
-                    <p:messages id="messages" autoUpdate="true" showDetail="false" closable="true"/>
+            <p:password id="otp" 
+                        value="#{customAuthentication.otpCode}" 
+                        required="true"  
+                        requiredMessage="Enter PIN"
+                        validatorMessage="PIN must be 6 digits"
+                        rendered="#{customAuthenticationSwitch.otpEnabled}">
+                <f:validateLength minimum="6" maximum="6"/> 
+            </p:password>   
 
-                    <h:panelGrid columns="2">
-                        <p:commandButton id="loginButton" value="Sign in" action="#{customAuthentication.login()}" styleClass="MainButton"/>
-                        <p:commandButton  value="New User" action="register_mobile" immediate="true" styleClass="MainButton">
-                            <f:param name="username" value="#{resetPassword.username}" />
-                        </p:commandButton>   
+            <p:watermark for="otp" value="Mobile PIN Code"
+                         rendered="#{customAuthenticationSwitch.otpEnabled}"/>
 
-                    </h:panelGrid>
-                </h:panelGrid>
-            </div>
+            <p:messages id="messages" 
+                        autoUpdate="true"
+                        showDetail="false" 
+                        closable="true"/>
 
-        <div align="center">
-            <p:commandLink id="signupLink" value="Yubikey user" action="yubikeylogin" style="text-align: right" immediate="true"/>
-            &nbsp;
-        <!--
-            <p:commandLink id="certLogin" value="Certificate user" action="certlogin" style="text-align: right"/>
-            &nbsp;
-        -->  
-        <p:commandLink  value="Can't login?"  action="login_issue" style="text-align: right" immediate="true"/>
-        </div>
-    
+            <p:commandButton value="Log In" 
+                             action="#{customAuthentication.login()}" 
+                             type="submit"
+                             />
         </h:form> 
-            <br/>
+
+        <div align="center">        
+            <h:form id="accounts">
+                <p:commandLink  value="New User" action="register_mobile" />
+                 <p:spacer width="10px"></p:spacer>
+                 <p:commandLink value="Yubikey Login" action="yubikeylogin" />
+                 <p:spacer width="10px"></p:spacer>
+                 <p:commandLink  value="Can't login?" action="login_issue"/>
+            </h:form>
+        </div>  
+
     </h:body>
 </html>

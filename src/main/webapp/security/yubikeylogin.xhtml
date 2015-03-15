@@ -15,65 +15,62 @@
     </h:head>
 
     <h:body >
+        <div align="center" class="banner">
+            Yubikey Login
+        </div>    
 
-        <ui:insert name="titleBar" >
-            <ui:include src="/bbc/lims/titleBar.xhtml" />       
-        </ui:insert>
+        <h:form id="ylogin" class="Login">
+            <p:graphicImage 
+                value="/resources/images/users/avatar.png" 
+                styleClass="profile-img">
+            </p:graphicImage>
 
-        <p:growl for="userRegistered" life="20000" showDetail="true"/>
-        <p:growl for="loginFail" life="20000" showDetail="true"/>
+            <p:inputText  id="username" 
+                          value="#{customAuthentication.username}" 
+                          requiredMessage="Enter Email"
+                          required="true" 
+                          >
+            </p:inputText>
+            <p:watermark for="username" value="Email" />
 
-        <h:form>                  
-            <div class="Login">            
-                <h2 align="center">Yubikey Login</h2>     
-                <br></br>
+            <p:password id="password" 
+                        value="#{customAuthentication.password}" 
+                        requiredMessage="Enter Password"
+                        required="true" >
+            </p:password>
+            <p:watermark for="password" value="Password" />
 
-                <h:panelGrid columns="1">
-                    <p:outputLabel for="username" value="Username" />
-                    <p:inputText  id="username" 
-                                  value="#{customAuthentication.username}" 
-                                  requiredMessage="Enter Email"
-                                  required="true" 
-                  >
-                     </p:inputText>
-                    <p:watermark for="username" value="Email" />
-                  
-                    <p:outputLabel for="password" value="Password"/>
-                    <p:password id="password" value="#{customAuthentication.password}" 
-                                 requiredMessage="Enter Password"
-                                 required="true" >
-                    </p:password>
-                    <p:watermark for="password" value="Password" />
+            <p:password id="otp" 
+                        value="#{customAuthentication.otpCode}" 
+                        rendered="#{customAuthenticationSwitch.otpEnabled}" 
+                        required="true" 
+                        requiredMessage="Enter PIN"
+                        validatorMessage="PIN must be 44 digits">
+                <f:validateLength minimum="44" maximum="44"/> 
+            </p:password>
+            <p:watermark for="otp"
+                         rendered="#{customAuthenticationSwitch.otpEnabled}"
+                         value="Press the Yubikey" />
 
-                    <p:outputLabel for="otp" value="PIN" rendered="#{customAuthenticationSwitch.otpEnabled}"/>
-                    <p:password id="otp" value="#{customAuthentication.otpCode}" 
-                                rendered="#{customAuthenticationSwitch.otpEnabled}" 
-                                 required="true" 
-                                 requiredMessage="Enter PIN"
-                                 validatorMessage="PIN must be 44 digits">
-                       <f:validateLength minimum="44" maximum="44"/> 
-                    </p:password>
-                    <p:watermark for="otp"
-                                 rendered="#{customAuthenticationSwitch.otpEnabled}"
-                                 value="Press the Yubikey button" />
+            <p:messages id="messages" 
+                        autoUpdate="true" 
+                        showDetail="false" closable="true"/>
 
-                    <p:spacer></p:spacer>
-                    <p:messages id="messages" autoUpdate="true" showDetail="false" closable="true"/>
-                    <h:panelGrid columns="2" >             
-                        <p:commandButton id="loginButton" value="Sign in" action="#{customAuthentication.yubikeyLogin()}"  styleClass="MainButton"/>
-          <p:commandButton  value="New User" action="register_yubico"  styleClass="MainButton" immediate="true"/>
-                     
-                    </h:panelGrid>             
-                </h:panelGrid>
+            <p:commandButton value="Sign in" 
+                             action="#{customAuthentication.yubikeyLogin()}"  
+                             />
+            <div align="center">
             </div>
-        <div align="center">
-            
-            <p:commandLink value="Mobile user" action="welcome" style="text-align: right" immediate="true"/>
-                 &nbsp;
-                 <p:commandLink id="signupLink" value="Can't login?" action="login_issue" style="text-align: right" immediate="true"/>
-     
-        </div>
         </h:form> 
-        <br/>
+
+        <div align="center">        
+            <h:form id="yform">
+                <p:commandLink  value="New User" action="register_yubico"/>
+                <p:spacer width="10px"></p:spacer>
+                <p:commandLink value="Mobile user" action="welcome" />
+                <p:spacer width="10px"></p:spacer>
+                <p:commandLink value="Can't login?" action="login_issue"/>
+            </h:form>
+        </div>
     </h:body>
 </html>
