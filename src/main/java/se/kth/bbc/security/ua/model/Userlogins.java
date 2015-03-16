@@ -13,8 +13,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -38,6 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Userlogins.findByBrowser", query = "SELECT u FROM Userlogins u WHERE u.browser = :browser"),
     @NamedQuery(name = "Userlogins.findByAction", query = "SELECT u FROM Userlogins u WHERE u.action = :action"),
     @NamedQuery(name = "Userlogins.findByOutcome", query = "SELECT u FROM Userlogins u WHERE u.outcome = :outcome"),
+    @NamedQuery(name = "Userlogins.findByUid", query = "SELECT u FROM Userlogins u WHERE u.uid = :uid"),
     @NamedQuery(name = "Userlogins.findByLoginDate", query = "SELECT u FROM Userlogins u WHERE u.loginDate = :loginDate")})
 public class Userlogins implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -61,12 +60,11 @@ public class Userlogins implements Serializable {
     @Size(max = 20)
     @Column(name = "outcome")
     private String outcome;
+    @Column(name = "uid")
+    private Integer uid;
     @Column(name = "login_date")
     @Temporal(TemporalType.TIMESTAMP)
     private Date loginDate;
-    @JoinColumn(name = "uid", referencedColumnName = "uid")
-    @ManyToOne
-    private User uid;
 
     public Userlogins() {
     }
@@ -123,20 +121,20 @@ public class Userlogins implements Serializable {
         this.outcome = outcome;
     }
 
+    public Integer getUid() {
+        return uid;
+    }
+
+    public void setUid(Integer uid) {
+        this.uid = uid;
+    }
+
     public Date getLoginDate() {
         return loginDate;
     }
 
     public void setLoginDate(Date loginDate) {
         this.loginDate = loginDate;
-    }
-
-    public User getUid() {
-        return uid;
-    }
-
-    public void setUid(User uid) {
-        this.uid = uid;
     }
 
     @Override

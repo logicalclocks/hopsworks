@@ -216,9 +216,9 @@ public class UserManager {
      * @param gid
      */
     public void removeGroup(User user, int gid) {
-       PeopleGroup p = em.find(PeopleGroup.class, new PeopleGroup(new PeopleGroupPK(user.getUid(), gid)).getPeopleGroupPK());
-       em.remove(p);
-     }
+        PeopleGroup p = em.find(PeopleGroup.class, new PeopleGroup(new PeopleGroupPK(user.getUid(), gid)).getPeopleGroupPK());
+        em.remove(p);
+    }
 
     /**
      * Study authorization methods
@@ -362,20 +362,16 @@ public class UserManager {
             query.setParameter("uid", u.getUid());
             PeopleGroup p = (PeopleGroup) query.getSingleResult();
 
-            TypedQuery<Address> ad = em.createNamedQuery("Address.findByUid", Address.class);
-            ad.setParameter("uid", u.getUid());
-            Address a = (Address) ad.getSingleResult();
-
-            if (u.getYubikeyUser() == 1) {
-                TypedQuery<Yubikey> yk = em.createNamedQuery("Yubikey.findByUid", Yubikey.class);
-                yk.setParameter("uid", u.getUid());
-                Yubikey y = (Yubikey) yk.getSingleResult();
-                em.remove(y);
-
-            }
-            em.remove(p);
-            em.remove(u);
-            em.remove(a);
+            Address a = u.getAddress();
+         
+                em.remove(a);
+                em.remove(p);
+                
+                if (u.getYubikeyUser() == 1) {
+                    em.remove(u.getYubikey());
+                }
+              
+                em.remove(u);
             success = true;
         }
 
@@ -385,7 +381,7 @@ public class UserManager {
     public void registerLoginInfo(User uid, String action, String ip, String browser) {
 
         Userlogins l = new Userlogins();
-        l.setUid(uid);
+        l.setUid(uid.getUid());
         l.setBrowser(browser);
         l.setIp(ip);
 

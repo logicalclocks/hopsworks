@@ -134,8 +134,6 @@ public class User implements Serializable {
     private Address address;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
     private Collection<PeopleGroup> peopleGroupCollection;
-    @OneToMany(mappedBy = "uid")
-    private Collection<Userlogins> userloginsCollection;
 
     public User() {
     }
@@ -338,16 +336,6 @@ public class User implements Serializable {
 
     public void setPeopleGroupCollection(Collection<PeopleGroup> peopleGroupCollection) {
         this.peopleGroupCollection = peopleGroupCollection;
-    }
-
-    @XmlTransient
-    @JsonIgnore
-    public Collection<Userlogins> getUserloginsCollection() {
-        return userloginsCollection;
-    }
-
-    public void setUserloginsCollection(Collection<Userlogins> userloginsCollection) {
-        this.userloginsCollection = userloginsCollection;
     }
 
     @Override
