@@ -22,8 +22,6 @@
 
             <div align="center" class="UserProfile">
 
-        <p:growl id="growl" life="2000" showDetail="true" severity="info" autoUpdate="true"/>
-
                 <div class="PersonalInfo">
                     <h3 > Personal Info</h3>
 
@@ -124,9 +122,9 @@
                             <p:menuitem value=""
                                         ajax="false" 
                                         icon="ui-icon-close">
+                    
                                 <h:panelGroup >    
-
-                                    <h:panelGrid columns="6" styleClass="Info">			
+                            <h:panelGrid columns="6" styleClass="Info">			
 
                                         <p:outputLabel for="fname" value="First Name"/>					
                                         <p:inputText id="fname" label="fName" value="#{profileManager.user.fname}"
@@ -145,10 +143,10 @@
                                                      >
                                         </p:inputText>
                                         <p:message for="lname"/>
-
-
+                                   
+                                        
                                         <p:outputLabel for="title" value="Title" />					
-                                        <p:selectOneMenu id="title" style="width: 160px;"
+                                        <p:selectOneMenu id="title" style="width: 157px;"
                                                          value="#{profileManager.user.title}" >
                                             <f:selectItem itemValue=""  itemLabel="Select Title" />
                                             <f:selectItem itemValue="Miss" itemLabel="Miss" />
@@ -159,7 +157,7 @@
                                             <f:selectItem itemValue="Prof" itemLabel="Prof" />
                                         </p:selectOneMenu>             
                                         <p:spacer></p:spacer>
-
+                                        
                                         <p:outputLabel for="org" value="Organization" />					
                                         <p:inputText id="org" label="org" 
                                                      value="#{profileManager.user.homeOrg }" 
@@ -167,7 +165,7 @@
                                                      >
                                         </p:inputText>
                                         <p:spacer></p:spacer>
-
+                                        
                                         <p:outputLabel for="orcid" value="Orcid" />					
                                         <p:inputText id="orcid" label="orcid"
                                                      value="#{profileManager.user.orcid }" 
@@ -187,19 +185,19 @@
                                         </p:inputText>
                                         <p:message for="mobile"/>
 
-                                    </h:panelGrid>   
+                            </h:panelGrid>   
                                 </h:panelGroup>
-
-                                <div align="center" style="padding-top: 10px; padding-left: 10px;padding-bottom: 10px;">
-
-                                    <p:commandButton  type="submit"
+                                    
+                                 <div align="center" style="padding-top: 10px; padding-left: 10px;padding-bottom: 10px;">
+                                    
+                                     <p:commandButton  type="submit"
                                                       value="Update Info" 
                                                       update=":profile_head"
                                                       actionListener="#{profileManager.updateUserInfo()}"/> 
-                                </div>
+                                 </div>
 
-
-
+                            
+                               
                             </p:menuitem>
                         </p:submenu>
 
@@ -207,53 +205,53 @@
                             <p:menuitem value=""
                                         ajax="false" icon="ui-icon-close">
 
-
-                                <h:panelGroup>    
+                                
+                                <h:panelGroup  >    
                                     <h:panelGrid columns="4" styleClass="AddressInfo">			
 
-                                        <p:outputLabel for="add1" value="C/O"  />					
-                                        <p:inputText id="add1" label="co"
-                                                     value="#{profileManager.address.address1}" 
-                                                     autocomplete="off" 
-                                                     >
-                                        </p:inputText>
+                                <p:outputLabel for="add1" value="C/O"  />					
+                                <p:inputText id="add1" label="co"
+                                             value="#{profileManager.address.address1}" 
+                                             autocomplete="off" 
+                                             >
+                                </p:inputText>
 
-                                        <p:outputLabel for="add2" value="Street and number"/>
-                                        <p:inputText id="add2" label="address2" 
-                                                     value="#{profileManager.address.address2}" 
-                                                     autocomplete="off" 
-                                                     >
-                                        </p:inputText>
+                                <p:outputLabel for="add2" value="Street and number"/>
+                                <p:inputText id="add2" label="address2" 
+                                             value="#{profileManager.address.address2}" 
+                                             autocomplete="off" 
+                                             >
+                                </p:inputText>
 
-                                        <p:outputLabel for="pc" value="Postal Code"  />
-                                        <p:inputText id="pc" label="zip" 
-                                                     value="#{profileManager.address.postalcode}" 
-                                                     >
-                                        </p:inputText>
+                                <p:outputLabel for="pc" value="Postal Code"  />
+                                <p:inputText id="pc" label="zip" 
+                                             value="#{profileManager.address.postalcode}" 
+                                             >
+                                </p:inputText>
 
-                                        <p:outputLabel for="cit" value="City"  />
-                                        <p:inputText id="cit" label="city"
-                                                     value="#{profileManager.address.city}"   
-                                                     >
-                                        </p:inputText>
+                                <p:outputLabel for="cit" value="City"  />
+                                <p:inputText id="cit" label="city"
+                                             value="#{profileManager.address.city}"   
+                                             >
+                                </p:inputText>
 
-                                        <p:outputLabel for="st" value="State"/>
-                                        <p:inputText id="st" label="state" 
-                                                     value="#{profileManager.address.state}" 
-                                                     >
-                                        </p:inputText>
+                                <p:outputLabel for="st" value="State"/>
+                                <p:inputText id="st" label="state" 
+                                             value="#{profileManager.address.state}" 
+                                             >
+                                </p:inputText>
 
-                                        <p:outputLabel for="co" value="Country" />
-                                        <p:inputText id="co" label="country" 
-                                                     value="#{profileManager.address.country}"   
-                                                     >
-                                        </p:inputText>
+                                <p:outputLabel for="co" value="Country" />
+                                <p:inputText id="co" label="country" 
+                                             value="#{profileManager.address.country}"   
+                                             >
+                                </p:inputText>
 
 
 
-                                    </h:panelGrid>   
+                            </h:panelGrid>   
                                 </h:panelGroup>
-
+                                    
                                 <div align="center" style="padding-top: 10px; padding-left: 10px; padding-bottom: 10px;">
                                     <p:commandButton  type="submit" value="Update Address" 
                                                       actionListener="#{profileManager.updateAddress()}"/> 
@@ -266,53 +264,53 @@
                         <p:submenu label="Security Settings">
                             <p:menuitem value=""
                                         update="messages" ajax="false" icon="ui-icon-close">
-
+                        
                                 <div align="left">
-                                    <h:panelGroup>
+                                <h:panelGroup>
 
-                                        <p:outputLabel for="sec" value="Security Question" 
-                                                       />					
+                                <p:outputLabel for="sec" value="Security Question" 
+                                               />					
+                                
+                                <p:commandLink id="sec" 
+                                               value="Change"  
+                                               action="change_sec_question"
+                                               styleClass="command_link">
+                                </p:commandLink>
+                                
+                                <br></br>
+                                <p:outputLabel for="password" value="Password" />					
+                                <p:commandLink id ="password" 
+                                               value="Change"
+                                               action="profile_password"
+                                               styleClass="command_link"
+                                               >
+                                </p:commandLink>
 
-                                        <p:commandLink id="sec" 
-                                                       value="Change"  
-                                                       action="change_sec_question"
-                                                       styleClass="command_link">
-                                        </p:commandLink>
+                                
+                                <br></br>
+                               <!-- 
+                               <p:outputLabel for="deactivate" value="Close My Account" />					
+                                <p:commandLink id ="deactivate" 
+                                               value="Deactivate My Account"
+                                               action="deactivate_account"
+                                               styleClass="command_link"
+                                               >
+                                </p:commandLink>
 
-                                        <br></br>
-                                        <p:outputLabel for="password" value="Password" />					
-                                        <p:commandLink id ="password" 
-                                                       value="Change"
-                                                       action="profile_password"
-                                                       styleClass="command_link"
-                                                       >
-                                        </p:commandLink>
-
-
-                                        <br></br>
-                                        <!-- 
-                                        <p:outputLabel for="deactivate" value="Close My Account" />					
-                                         <p:commandLink id ="deactivate" 
-                                                        value="Deactivate My Account"
-                                                        action="deactivate_account"
-                                                        styleClass="command_link"
-                                                        >
-                                         </p:commandLink>
-         
-                                         !-->    
-                                    </h:panelGroup>
-                                </div>
+                                !-->    
+                            </h:panelGroup>
+                                    </div>
                             </p:menuitem>
                         </p:submenu>
                     </p:panelMenu>
-
+                
                 </h:form>
-
+                
                 <div align="left" style="padding-top: 20px;">
                     <p:commandLink type="submit" value="Back to Main Menue" action="indexPage"  />
-                </div>
-
-            </div>
+                    </div>
+            
+             </div>
         </h:body>
     </f:view>
 </html>

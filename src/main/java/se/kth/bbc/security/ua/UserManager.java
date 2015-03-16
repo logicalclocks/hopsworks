@@ -37,7 +37,7 @@ public class UserManager {
      * @param gidNumber
      * @return
      */
-    public boolean registerGroup(int uid, int gidNumber) {
+    public boolean registerGroup(User uid, int gidNumber) {
         PeopleGroup p = new PeopleGroup();
         p.setUid(uid);
         p.setGid(gidNumber);
@@ -48,12 +48,11 @@ public class UserManager {
     /**
      * Register an address for new users
      *
-     * @param uid
      * @return
      */
-    public boolean registerAddress(int uid) {
+    public boolean registerAddress(User user) {
         Address p = new Address();
-        p.setUid(uid);
+        p.setUid(user);
         em.persist(p);
         return true;
     }
@@ -74,13 +73,6 @@ public class UserManager {
         return true;
     }
 
-    public boolean setLastLogin(int id){
-        User p = (User) em.find(User.class, id);
-        p.setLastLogin(new Timestamp(new Date().getTime()));
-        em.merge(p);
-        return true;
-    }
-    
     public boolean resetLock(int id) {
         User p = (User) em.find(User.class, id);
         p.setFalseLogin(0);
@@ -97,8 +89,7 @@ public class UserManager {
         return true;
     }
 
-    public boolean resetPassword(int id, String pass) {
-        User p = (User) em.find(User.class, id);
+    public boolean resetPassword(User p, String pass) {
         p.setPassword(pass);
         p.setPasswordChanged(new Timestamp(new Date().getTime()));
         em.merge(p);
@@ -113,10 +104,9 @@ public class UserManager {
         return true;
     }
 
-    public boolean updateStatus(int id, int stat) {
-        User p = (User) em.find(User.class, id);
-        p.setStatus(stat);
-        em.merge(p);
+    public boolean updateStatus(User id, int stat) {
+        id.setStatus(stat);
+        em.merge(id);
         return true;
     }
 
@@ -142,7 +132,7 @@ public class UserManager {
         return people;
     }
 
-    public boolean registerYubikey(int uid) {
+    public boolean registerYubikey(User uid) {
         Yubikey yk = new Yubikey();
         yk.setUid(uid);
         em.persist(yk);
@@ -156,21 +146,20 @@ public class UserManager {
      * @return
      */
     public User getUser(String username) {
-        List existing = em.createQuery(
-                "SELECT p FROM User p WHERE p.email ='" + username + "'")
-                .getResultList();
+        TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
+        query.setParameter("email", username);
+        List<User> list = query.getResultList();
 
-        if (existing.size() > 0) {
-            return (User) existing.get(0);
+        if (list == null || list.isEmpty()) {
+            return null;
         }
-        return null;
+
+        return list.get(0);
     }
 
     public boolean isUsernameTaken(String username) {
-        List existing = em.createQuery(
-                "SELECT p FROM User p WHERE p.email ='" + username + "'")
-                .getResultList();
-        return (existing.size() > 0);
+
+        return (getUser(username) != null);
     }
 
     public boolean findYubikeyUsersByStatus(int status) {
@@ -190,7 +179,7 @@ public class UserManager {
     public List<User> findAllUsers() {
         //TypedQuery<User> query = em.createNamedQuery("User.findAll", User.class);
         List<User> query = em.createQuery(
-                "SELECT p FROM User p WHERE p.status !='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()+ "' AND p.status!='" + PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue() + "'")
+                "SELECT p FROM User p WHERE p.status !='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='" + PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue() + "'")
                 .getResultList();
 
         return query;
@@ -257,7 +246,7 @@ public class UserManager {
      * @param postalcode
      * @return
      */
-    public boolean registerAddress(int uid, String address1, String address2, String address3, String city, String state, String country, String postalcode) {
+    public boolean registerAddress(User uid, String address1, String address2, String address3, String city, String state, String country, String postalcode) {
 
         Address add = new Address();
         add.setUid(uid);
@@ -292,7 +281,7 @@ public class UserManager {
      * @param yubikey
      * @return
      */
-    public String register(String fname, String lname, String email, String title, String org,
+    public User register(String fname, String lname, String email, String title, String org,
             String tel, String orcid, int uid, String password, String otpSecret,
             String question, String answer, int status, short yubikey) {
 
@@ -324,7 +313,7 @@ public class UserManager {
         user.setYubikeyUser(yubikey);
 
         em.persist(user);
-        return uname;
+        return user;
     }
 
     /**
@@ -394,34 +383,37 @@ public class UserManager {
         return success;
     }
 
-    public void registerLoginInfo(int uid, String uname, String ip, String browser, String action) {
+    public void registerLoginInfo(User uid, String action, String ip, String browser) {
+
         Userlogins l = new Userlogins();
         l.setUid(uid);
         l.setBrowser(browser);
         l.setIp(ip);
-        l.setUsername(uname);
+
         l.setAction(action);
         l.setLoginDate(new Timestamp(new Date().getTime()));
-        
+
         em.persist(l);
-    
+
     }
 
-    
     public Userlogins getLastUserLoing(int uid) {
-        String sql= "SELECT l FROM Userlogins l WHERE l.uid="+uid+ " ORDER BY l.loginDate DESC";
-        Query query = em.createQuery(sql);
+        String sql = "SELECT * FROM USERLOGINS  WHERE uid=" + uid + " ORDER BY login_date DESC LIMIT 1 OFFSET 2";
+        Query query = em.createNativeQuery(sql, Userlogins.class);
         query.setMaxResults(2);
-        
-        List <Userlogins> ul = query.getResultList();
-        
-        if (ul.isEmpty())
+
+        List<Userlogins> ul = query.getResultList();
+
+        if (ul.isEmpty()) {
             return null;
-        
-        if(ul.size()==1)
+        }
+
+        if (ul.size() == 1) {
             return ul.get(0);
-        
+        }
+
         return ul.get(1);
+
     }
 
 }

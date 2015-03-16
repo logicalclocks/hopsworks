@@ -12,6 +12,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -26,34 +28,26 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "PeopleGroup.findAll", query = "SELECT p FROM PeopleGroup p"),
-    @NamedQuery(name = "PeopleGroup.findByUid", query = "SELECT p FROM PeopleGroup p WHERE p.uid = :uid"),
     @NamedQuery(name = "PeopleGroup.findByPgid", query = "SELECT p FROM PeopleGroup p WHERE p.pgid = :pgid"),
     @NamedQuery(name = "PeopleGroup.findByGid", query = "SELECT p FROM PeopleGroup p WHERE p.gid = :gid")})
 public class PeopleGroup implements Serializable {
     private static final long serialVersionUID = 1L;
-    @Column(name = "uid")
-    private Integer uid;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
-    @Column(name = "Pgid")
+    @Column(name = "pgid")
     private Integer pgid;
     @Column(name = "gid")
     private Integer gid;
+    @JoinColumn(name = "uid", referencedColumnName = "uid")
+    @ManyToOne
+    private User uid;
 
     public PeopleGroup() {
     }
 
     public PeopleGroup(Integer pgid) {
         this.pgid = pgid;
-    }
-
-    public Integer getUid() {
-        return uid;
-    }
-
-    public void setUid(Integer uid) {
-        this.uid = uid;
     }
 
     public Integer getPgid() {
@@ -70,6 +64,14 @@ public class PeopleGroup implements Serializable {
 
     public void setGid(Integer gid) {
         this.gid = gid;
+    }
+
+    public User getUid() {
+        return uid;
+    }
+
+    public void setUid(User uid) {
+        this.uid = uid;
     }
 
     @Override

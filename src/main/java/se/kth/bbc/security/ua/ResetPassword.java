@@ -50,23 +50,7 @@ public class ResetPassword implements Serializable {
     private User people;
     private List<String> questions;
 
-    public List<String> getQuestions() {
-        return questions;
-    }
-
-    public void setQuestions(List<String> questions) {
-        this.questions = questions;
-    }
-
     private String answer;
-
-    public String getQuestion() {
-        return question;
-    }
-
-    public void setQuestion(String question) {
-        this.question = question;
-    }
 
     @EJB
     private UserManager mgr;
@@ -77,6 +61,24 @@ public class ResetPassword implements Serializable {
     @Resource
     private UserTransaction userTransaction;
 
+    
+    public List<String> getQuestions() {
+        return questions;
+    }
+
+    public void setQuestions(List<String> questions) {
+        this.questions = questions;
+    }
+    
+    public String getQuestion() {
+        return question;
+    }
+
+    public void setQuestion(String question) {
+        this.question = question;
+    }
+
+    
     public String getCurrent() {
         return current;
     }
@@ -162,10 +164,10 @@ public class ResetPassword implements Serializable {
 
             userTransaction.begin();
             // make the account pending until it will be reset by user upon first login
-            mgr.updateStatus(people.getUid(), PeoplAccountStatus.ACCOUNT_PENDING.getValue());
+            mgr.updateStatus(people, PeoplAccountStatus.ACCOUNT_PENDING.getValue());
 
             // reset the old password with a new one
-            mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(random_password));
+            mgr.resetPassword(people, SecurityUtils.converToSHA256(random_password));
 
             userTransaction.commit();
 
@@ -184,7 +186,7 @@ public class ResetPassword implements Serializable {
     }
 
     /**
-     *
+     * Change password through profile.
      * @return
      */
     public String changePassword() {
@@ -212,9 +214,9 @@ public class ResetPassword implements Serializable {
         try {
 
             // Reset the old password with a new one
-            mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(passwd1));
+            mgr.resetPassword(people, SecurityUtils.converToSHA256(passwd1));
 
-            mgr.updateStatus(people.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
+            mgr.updateStatus(people, PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
 
             // Send email    
             String message = UserAccountsEmailMessages.buildResetMessage();
@@ -357,7 +359,7 @@ public class ResetPassword implements Serializable {
             if (SecurityUtils.converToSHA256(current).equals(people.getPassword())) {
 
                 // reset the old password with a new one
-                mgr.resetPassword(people.getUid(), SecurityUtils.converToSHA256(passwd1));
+                mgr.resetPassword(people, SecurityUtils.converToSHA256(passwd1));
 
                 // send email    
                 String message = UserAccountsEmailMessages.buildResetMessage();

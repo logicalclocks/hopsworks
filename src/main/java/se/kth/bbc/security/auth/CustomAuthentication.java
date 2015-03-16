@@ -28,20 +28,19 @@ import se.kth.bbc.security.ua.model.User;
 public class CustomAuthentication implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    
+
     // Issuer of the QrCode
     public static final String ISSUER = "BiobankCloud";
-    
+
     // To distinguish Yubikey users
-    
     private final String YUBIKEY_USER_MARKER = "YUBIKEY_USER_MARKER";
-    
+
     // For disabled OTP auth mode
-    private final String YUBIKEY_OTP_PADDING= "EaS5ksRVErn2jiOmSQy5LM2X7LgWAZWfWYKQoPavbrhN";
+    private final String YUBIKEY_OTP_PADDING = "EaS5ksRVErn2jiOmSQy5LM2X7LgWAZWfWYKQoPavbrhN";
 
     // For padding when password field is empty
-    private final String MOBILE_OTP_PADDING="123456";
-    
+    private final String MOBILE_OTP_PADDING = "123456";
+
     @EJB
     private UserManager mgr;
 
@@ -54,7 +53,6 @@ public class CustomAuthentication implements Serializable {
     private User user;
     private int userid;
 
-    
     public String getUsername() {
         return username;
     }
@@ -78,14 +76,14 @@ public class CustomAuthentication implements Serializable {
     public void setOtpCode(String otpCode) {
         this.otpCode = otpCode;
     }
-    
+
     /**
      * Authenticate the users using two factor mobile authentication.
      *
      * @return
      */
-    public String login(){
-        
+    public String login() {
+
         FacesContext ctx = FacesContext.getCurrentInstance();
         HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
 
@@ -93,28 +91,26 @@ public class CustomAuthentication implements Serializable {
         if (req.getRemoteUser() != null) {
             return logout();
         }
-        
+
         user = mgr.getUser(username);
-        
+
         // Add padding if custom realm is disabled
-        if(this.otpCode== null || this.otpCode.isEmpty()){
+        if (this.otpCode == null || this.otpCode.isEmpty()) {
             this.otpCode = MOBILE_OTP_PADDING;
         }
-        
+
         // Return if username is wrong
         if (user == null) {
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.USER_NOT_FOUND);
             return ("");
         }
 
-       // Retrun if user is not Mobile user     
-        if (user.getYubikeyUser()==1) {
+        // Retrun if user is not Mobile user     
+        if (user.getYubikeyUser() == 1) {
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.USER_NOT_FOUND);
             return ("");
-        
+
         }
-    
-        registerLoginInfo(user.getUid(), user.getUsername(), "AUTHENTICATION");
         // Return if user not activated
         if (user.getStatus() == PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()) {
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.INACTIVE_ACCOUNT);
@@ -122,20 +118,22 @@ public class CustomAuthentication implements Serializable {
         }
 
         // Return if used is bloked
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (user.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             // Inform the use about the blocked account
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return ("");
         }
 
         // Return if used is bloked
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (user.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             // Inform the use about the blocked account
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return ("");
         }
 
         userid = user.getUid();
+            
+        registerLoginInfo(user,"AUTHENTICATION");
 
         try {
             // concatenate the static password with the otp due to limitations of passing two passwords to glassfish
@@ -144,8 +142,7 @@ public class CustomAuthentication implements Serializable {
             mgr.resetLock(userid);
             // Set the onlne flag
             mgr.setOnline(userid, 1);
-            
- 
+
         } catch (ServletException ex) {
             // if more than five times block the account
             int val = user.getFalseLogin();
@@ -153,35 +150,34 @@ public class CustomAuthentication implements Serializable {
             if (val > 5) {
                 mgr.deactivateUser(userid);
                 try {
-                    emailBean.sendEmail(user.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, 
+                    emailBean.sendEmail(user.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                             UserAccountsEmailMessages.accountBlockedMessage());
                 } catch (MessagingException ex1) {
                     Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
                 }
-                
+
             }
 
             // Inform the use about invalid credentials
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
             return ("");
         }
-        
+
         // Reset the password after first login
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_PENDING.getValue()) {
+        if (user.getStatus() == PeoplAccountStatus.ACCOUNT_PENDING.getValue()) {
             return ("reset");
         }
 
         // Go to welcome page
         return ("indexPage");
     }
-    
-    
-    public boolean isOTPEnabled (){
+
+    public boolean isOTPEnabled() {
         return true;
     }
 
-     public String yubikeyLogin(){
-    
+    public String yubikeyLogin() {
+
         FacesContext ctx = FacesContext.getCurrentInstance();
         HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
 
@@ -192,7 +188,7 @@ public class CustomAuthentication implements Serializable {
         }
 
         user = mgr.getUser(username);
-        
+
         // Return if username is wrong
         if (user == null) {
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.USER_NOT_FOUND);
@@ -200,11 +196,11 @@ public class CustomAuthentication implements Serializable {
         }
 
         // Retrun if user is not Yubikey user     
-        if (user.getYubikeyUser()!=1) {
+        if (user.getYubikeyUser() != 1) {
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.USER_NOT_FOUND);
             return ("");
         }
-        
+
         // Return if user not activated
         if (user.getStatus() == PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()) {
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.INACTIVE_ACCOUNT);
@@ -212,35 +208,36 @@ public class CustomAuthentication implements Serializable {
         }
 
         // Return if used is bloked
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (user.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             // Inform the use about the blocked account
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return ("");
         }
-        
+
         // Return if used is bloked
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (user.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             // Inform the use about the blocked account
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return ("");
         }
 
-        
         userid = user.getUid();
-       
+
         // Add padding if custim realm is disabled
-        if(this.otpCode==null || this.otpCode.isEmpty()){
+        if (this.otpCode == null || this.otpCode.isEmpty()) {
             this.otpCode = YUBIKEY_OTP_PADDING;
         }
-        
+
+        registerLoginInfo(user,"AUTHENTICATION");
+
         try {
-        // Concatenate the static password with the otp due to limitations of passing two passwords to glassfish
+            // Concatenate the static password with the otp due to limitations of passing two passwords to glassfish
             req.login(this.username, this.password + this.otpCode + this.YUBIKEY_USER_MARKER);
             // Reset the lock for failed accounts
             mgr.resetLock(userid);
             // Set the onlne flag
             mgr.setOnline(userid, 1);
-   
+
         } catch (ServletException ex) {
             // If more than five times block the account
             int val = user.getFalseLogin();
@@ -248,7 +245,7 @@ public class CustomAuthentication implements Serializable {
             if (val > 5) {
                 mgr.deactivateUser(userid);
                 try {
-                    emailBean.sendEmail(user.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, 
+                    emailBean.sendEmail(user.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                             UserAccountsEmailMessages.accountBlockedMessage());
                 } catch (MessagingException ex1) {
                     Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
@@ -260,12 +257,12 @@ public class CustomAuthentication implements Serializable {
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
             return ("");
         }
-        
+
         // Reset the password after first login
-        if (user.getStatus()== PeoplAccountStatus.ACCOUNT_PENDING.getValue()) {
+        if (user.getStatus() == PeoplAccountStatus.ACCOUNT_PENDING.getValue()) {
             return ("reset");
         }
-       
+
         // Go to welcome page
         return ("indexPage");
     }
@@ -278,39 +275,38 @@ public class CustomAuthentication implements Serializable {
         if (null != sess) {
             sess.invalidate();
         }
-        
+
         mgr.setOnline(userid, -1);
         return ("welcome");
     }
 
-    public void registerLoginInfo(int uid, String uname, String action){
     
-        HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();  
-        String ip = httpServletRequest.getRemoteAddr();  
-        
+    public void registerLoginInfo(User p, String action) {
+
+        HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+        String ip = httpServletRequest.getRemoteAddr();
+
         ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
         String userAgent = externalContext.getRequestHeaderMap().get("User-Agent");
- 
+
         String browser = null;
-        if(userAgent.contains("MSIE")){ 
-         browser ="Internet Explorer";
-    }
-    if(userAgent.contains("Firefox")){ 
-        browser ="Firefox";
-    }
-    if(userAgent.contains("Chrome")){ 
-        browser ="Chrome";
-    }
-    if(userAgent.contains("Opera")){ 
-        browser = "Opera";
-    }
-    if(userAgent.contains("Safari")){ 
-        browser ="Safari";
-    }
-        
-        mgr.registerLoginInfo(uid, uname, ip, browser, action);
-        
-        // Set the last login
-        mgr.setLastLogin(uid);
+        if (userAgent.contains("MSIE")) {
+            browser = "Internet Explorer";
+        }
+        if (userAgent.contains("Firefox")) {
+            browser = "Firefox";
+        }
+        if (userAgent.contains("Chrome")) {
+            browser = "Chrome";
+        }
+        if (userAgent.contains("Opera")) {
+            browser = "Opera";
+        }
+        if (userAgent.contains("Safari")) {
+            browser = "Safari";
+        }
+
+        mgr.registerLoginInfo(p, action, ip, browser);
+
     }
 }

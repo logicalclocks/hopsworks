@@ -185,8 +185,10 @@ public class AdminProfileAministration implements Serializable {
 
         editingUser = (User) FacesContext.getCurrentInstance().getExternalContext()
                 .getSessionMap().get("editinguser");
-        address = userManager.findAddress(editingUser.getUid());
-        login = userManager.getLastUserLoing(editingUser.getUid());
+        address = editingUser.getAddress();
+        
+        login = (Userlogins) FacesContext.getCurrentInstance().getExternalContext()
+                .getSessionMap().get("editinguser_logins");
 
     }
 
@@ -253,7 +255,7 @@ public class AdminProfileAministration implements Serializable {
         // Update status
         if (!"#".equals(selectedStatus)) {
             editingUser.setStatus(PeoplAccountStatus.valueOf(selectedStatus).getValue());
-            userManager.updateStatus(editingUser.getUid(), PeoplAccountStatus.valueOf(selectedStatus).getValue());
+            userManager.updateStatus(editingUser, PeoplAccountStatus.valueOf(selectedStatus).getValue());
             MessagesController.addInfoMessage("Success", "Status updated successfully.");
 
         } else {
@@ -267,7 +269,7 @@ public class AdminProfileAministration implements Serializable {
 
         // Register a new group
         if (!"#".equals(newGroup)) {
-            userManager.registerGroup(editingUser.getUid(), BBCGroups.valueOf(newGroup).getValue());
+            userManager.registerGroup(editingUser, BBCGroups.valueOf(newGroup).getValue());
             MessagesController.addInfoMessage("Success", "Role updated successfully.");
             
         } else {

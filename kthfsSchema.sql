@@ -33,26 +33,32 @@ CREATE TABLE `ANATOMICAL_PARTS` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
+
+
 --
--- Table structure for table `AUDIT`
+-- Table structure for table `USERLOGINS`
 --
 
-DROP TABLE IF EXISTS `AUDIT`;
+DROP TABLE IF EXISTS `USERLOGINS`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `AUDIT` (
-  `uid` varchar(8) DEFAULT NULL,
-  `username` varchar(80) DEFAULT NULL,
-  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `role` varchar(20) DEFAULT NULL,
-  `action` varchar(20) DEFAULT NULL,
-  `resource` varchar(100) DEFAULT NULL,
-  `log_id` bigint(20) NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`log_id`),
-  KEY `AUDIT_uid_idx` (`uid`),
-  KEY `AUDIT_username_idx` (`username`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+CREATE TABLE `USERLOGINS` (
+  `login_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `ip` varchar(16) DEFAULT NULL,
+  `os` varchar(30) DEFAULT NULL,
+  `browser` varchar(40) DEFAULT NULL,
+  `action` varchar(80) DEFAULT NULL,
+  `outcome` varchar(20) DEFAULT NULL,
+  `uid` int(11) DEFAULT NULL,
+  `login_date` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`login_id`),
+  KEY `LOGIN_uid_idx` (`uid`),
+  KEY `LOGIN_login_date_idx` (`login_date`),
+  CONSTRAINT `fk_USERLOGINS_USERS` FOREIGN KEY (`uid`) REFERENCES `USERS` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=85 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 --
 -- Table structure for table `Address`
@@ -62,19 +68,22 @@ DROP TABLE IF EXISTS `Address`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `Address` (
-  `address1` varchar(120) DEFAULT NULL,
-  `address2` varchar(120) DEFAULT NULL,
-  `address3` varchar(120) DEFAULT NULL,
-  `city` varchar(100) DEFAULT NULL,
+  `address1` varchar(50) DEFAULT NULL,
+  `address2` varchar(50) DEFAULT NULL,
+  `address3` varchar(50) DEFAULT NULL,
+  `city` varchar(30) DEFAULT NULL,
   `state` varchar(100) DEFAULT NULL,
-  `country` varchar(100) DEFAULT NULL,
-  `postalcode` varchar(16) DEFAULT NULL,
+  `country` varchar(40) DEFAULT NULL,
+  `postalcode` varchar(10) DEFAULT NULL,
   `address_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `uid` int(11) NOT NULL,
   PRIMARY KEY (`address_id`),
-  UNIQUE KEY `uid` (`uid`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1;
+  UNIQUE KEY `address_id_UNIQUE` (`address_id`),
+  UNIQUE KEY `uid_UNIQUE` (`uid`),
+  CONSTRAINT `fk_Address` FOREIGN KEY (`uid`) REFERENCES `USERS` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 --
 -- Table structure for table `BBCGroup`
@@ -84,12 +93,14 @@ DROP TABLE IF EXISTS `BBCGroup`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `BBCGroup` (
-  `gid` int(10) NOT NULL,
   `group_name` varchar(20) NOT NULL,
   `group_desc` varchar(200) DEFAULT NULL,
-  PRIMARY KEY (`gid`)
+  `gid` int(11) NOT NULL,
+  PRIMARY KEY (`gid`),
+  UNIQUE KEY `gid_UNIQUE` (`gid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 --
 -- Table structure for table `CONSENT`
@@ -153,26 +164,6 @@ CREATE TABLE `Inodes` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 
-DROP TABLE IF EXISTS `USERLOGINS`;
-
---
-CREATE TABLE `USERLOGINS` (
-  `login_id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `username` varchar(80) DEFAULT NULL,
-  `role` varchar(20) DEFAULT NULL,
-  `ip` varchar(16) DEFAULT NULL,
-  `os` varchar(30) DEFAULT NULL,
-  `browser` varchar(40) DEFAULT NULL,
-  `action` varchar(80) DEFAULT NULL,
-  `outcome` varchar(20) DEFAULT NULL,
-  `uid` int(11) DEFAULT NULL,
-  `login_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`login_id`),
-  KEY `LOGIN_username_idx` (`username`),
-  KEY `LOGIN_uid_idx` (`uid`),
-  KEY `LOGIN_login_date_idx` (`login_date`)
-) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=latin1;
-
 --
 -- Table structure for table `People_Group`
 --
@@ -182,11 +173,16 @@ DROP TABLE IF EXISTS `People_Group`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `People_Group` (
   `uid` int(10) DEFAULT NULL,
-  `Pgid` int(11) NOT NULL AUTO_INCREMENT,
+  `pgid` int(11) NOT NULL AUTO_INCREMENT,
   `gid` int(11) DEFAULT NULL,
-  PRIMARY KEY (`Pgid`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`pgid`),
+  UNIQUE KEY `pgid_UNIQUE` (`pgid`),
+  KEY `fk_People_Group_USERS_idx` (`uid`),
+  KEY `fk_BBCGroups` (`gid`),
+  CONSTRAINT `fk_People_Group_USERS` FOREIGN KEY (`uid`) REFERENCES `USERS` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 --
 -- Table structure for table `Roles`
@@ -438,12 +434,15 @@ CREATE TABLE `USERS` (
   `security_question` varchar(20) DEFAULT NULL,
   `security_answer` varchar(128) DEFAULT NULL,
   `yubikey_user` tinyint(4) DEFAULT NULL,
-  `password_changed` timestamp,
-  `last_login` timestamp,
+  `password_changed` timestamp NULL DEFAULT NULL,
+  `notes` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`uid`),
+  UNIQUE KEY `uid_UNIQUE` (`uid`),
+  UNIQUE KEY `username_UNIQUE` (`username`),
   UNIQUE KEY `email_idx` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 
 --
 -- Temporary view structure for view `USERS_GROUPS`
@@ -460,6 +459,7 @@ SET character_set_client = utf8;
  1 AS `email`,
  1 AS `group_name`*/;
 SET character_set_client = @saved_cs_client;
+
 
 --
 -- Table structure for table `Yubikey`
@@ -483,8 +483,13 @@ CREATE TABLE `Yubikey` (
   `status` int(11) DEFAULT '-1',
   `yubidnum` int(11) NOT NULL AUTO_INCREMENT,
   `uid` int(11) NOT NULL,
-  PRIMARY KEY (`yubidnum`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`yubidnum`),
+  UNIQUE KEY `yubidnum_UNIQUE` (`yubidnum`),
+  UNIQUE KEY `uid_UNIQUE` (`uid`),
+  UNIQUE KEY `serial_UNIQUE` (`serial`),
+  UNIQUE KEY `public_id_UNIQUE` (`public_id`),
+  CONSTRAINT `fk_Yubikey_USERS` FOREIGN KEY (`uid`) REFERENCES `USERS` (`uid`) ON DELETE NO ACTION ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

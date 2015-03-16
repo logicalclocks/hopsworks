@@ -13,12 +13,13 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -32,16 +33,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(name = "Userlogins.findAll", query = "SELECT u FROM Userlogins u"),
     @NamedQuery(name = "Userlogins.findByLoginId", query = "SELECT u FROM Userlogins u WHERE u.loginId = :loginId"),
-    @NamedQuery(name = "Userlogins.findByUsername", query = "SELECT u FROM Userlogins u WHERE u.username = :username"),
-    @NamedQuery(name = "Userlogins.findByRole", query = "SELECT u FROM Userlogins u WHERE u.role = :role"),
     @NamedQuery(name = "Userlogins.findByIp", query = "SELECT u FROM Userlogins u WHERE u.ip = :ip"),
     @NamedQuery(name = "Userlogins.findByOs", query = "SELECT u FROM Userlogins u WHERE u.os = :os"),
     @NamedQuery(name = "Userlogins.findByBrowser", query = "SELECT u FROM Userlogins u WHERE u.browser = :browser"),
     @NamedQuery(name = "Userlogins.findByAction", query = "SELECT u FROM Userlogins u WHERE u.action = :action"),
     @NamedQuery(name = "Userlogins.findByOutcome", query = "SELECT u FROM Userlogins u WHERE u.outcome = :outcome"),
-    @NamedQuery(name = "Userlogins.findByUid", query = "SELECT u FROM Userlogins u WHERE u.uid = :uid"),
     @NamedQuery(name = "Userlogins.findByLoginDate", query = "SELECT u FROM Userlogins u WHERE u.loginDate = :loginDate")})
-
 public class Userlogins implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -49,12 +46,6 @@ public class Userlogins implements Serializable {
     @Basic(optional = false)
     @Column(name = "login_id")
     private Long loginId;
-    @Size(max = 80)
-    @Column(name = "username")
-    private String username;
-    @Size(max = 20)
-    @Column(name = "role")
-    private String role;
     @Size(max = 16)
     @Column(name = "ip")
     private String ip;
@@ -70,13 +61,12 @@ public class Userlogins implements Serializable {
     @Size(max = 20)
     @Column(name = "outcome")
     private String outcome;
-    @Column(name = "uid")
-    private Integer uid;
-    @Basic(optional = false)
-    @NotNull
     @Column(name = "login_date")
     @Temporal(TemporalType.TIMESTAMP)
     private Date loginDate;
+    @JoinColumn(name = "uid", referencedColumnName = "uid")
+    @ManyToOne
+    private User uid;
 
     public Userlogins() {
     }
@@ -85,33 +75,12 @@ public class Userlogins implements Serializable {
         this.loginId = loginId;
     }
 
-    public Userlogins(Long loginId, Date loginDate) {
-        this.loginId = loginId;
-        this.loginDate = loginDate;
-    }
-
     public Long getLoginId() {
         return loginId;
     }
 
     public void setLoginId(Long loginId) {
         this.loginId = loginId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
     }
 
     public String getIp() {
@@ -154,20 +123,20 @@ public class Userlogins implements Serializable {
         this.outcome = outcome;
     }
 
-    public Integer getUid() {
-        return uid;
-    }
-
-    public void setUid(Integer uid) {
-        this.uid = uid;
-    }
-
     public Date getLoginDate() {
         return loginDate;
     }
 
     public void setLoginDate(Date loginDate) {
         this.loginDate = loginDate;
+    }
+
+    public User getUid() {
+        return uid;
+    }
+
+    public void setUid(User uid) {
+        this.uid = uid;
     }
 
     @Override

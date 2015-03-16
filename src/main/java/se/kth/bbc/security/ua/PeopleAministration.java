@@ -37,6 +37,7 @@ import javax.transaction.UserTransaction;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.security.ua.model.Userlogins;
 import se.kth.bbc.security.ua.model.Yubikey;
 
 /**
@@ -411,10 +412,10 @@ public class PeopleAministration implements Serializable {
             userTransaction.begin();
 
             if (!"#".equals(sgroup) && (!sgroup.equals(BBCGroups.BBC_GUEST.name()))) {
-                userManager.registerGroup(user1.getUid(), BBCGroups.valueOf(sgroup).getValue());
+                userManager.registerGroup(user1, BBCGroups.valueOf(sgroup).getValue());
             }
  
-            userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
+            userManager.updateStatus(user1, PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
             userTransaction.commit();
 
             emailBean.sendEmail(user1.getEmail(), UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT, UserAccountsEmailMessages.accountActivatedMessage(user1.getEmail()));
@@ -429,7 +430,7 @@ public class PeopleAministration implements Serializable {
     public void blockUser(User user1) {
         try {
             userTransaction.begin();
-            userManager.updateStatus(user1.getUid(), PeoplAccountStatus.ACCOUNT_BLOCKED.getValue());
+            userManager.updateStatus(user1, PeoplAccountStatus.ACCOUNT_BLOCKED.getValue());
             userTransaction.commit();
 
             emailBean.sendEmail(user1.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
@@ -444,6 +445,12 @@ public class PeopleAministration implements Serializable {
         User newStatus = userManager.getUser(user1.getEmail());
         FacesContext.getCurrentInstance().getExternalContext()
                 .getSessionMap().put("editinguser", newStatus);
+      
+        Userlogins login = userManager.getLastUserLoing(user1.getUid());
+        
+        FacesContext.getCurrentInstance().getExternalContext()
+                .getSessionMap().put("editinguser_logins", login);
+      
         return "admin_profile";
     }
 
@@ -473,7 +480,7 @@ public class PeopleAministration implements Serializable {
 
     public String activateYubikeyUser(User user1) {
         this.selectedYubikyUser = user1;
-        this.address = userManager.findAddress(user1.getUid());
+        this.address = this.selectedYubikyUser.getAddress();
         return "activate_yubikey";
     }
 
@@ -486,7 +493,7 @@ public class PeopleAministration implements Serializable {
                 return "";
             }
 
-            Yubikey yubi = userManager.findYubikey(this.selectedYubikyUser.getUid());
+            Yubikey yubi = this.selectedYubikyUser.getYubikey();
 
             yubi.setStatus(1);
 
@@ -508,10 +515,10 @@ public class PeopleAministration implements Serializable {
             userManager.updateYubikey(yubi);
 
             if (!"#".equals(sgroup) && (!sgroup.equals(BBCGroups.BBC_GUEST.name()))) {
-                userManager.registerGroup(this.selectedYubikyUser.getUid(), BBCGroups.valueOf(sgroup).getValue());
+                userManager.registerGroup(this.selectedYubikyUser, BBCGroups.valueOf(sgroup).getValue());
             }
 
-            userManager.updateStatus(this.selectedYubikyUser.getUid(), PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
+            userManager.updateStatus(this.selectedYubikyUser, PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
             userTransaction.commit();
 
             // Update the user management GUI
@@ -563,14 +570,14 @@ public class PeopleAministration implements Serializable {
             // update status
             if (!"#".equals(selectedStatus)) {
                 editingUser.setStatus(PeoplAccountStatus.valueOf(selectedStatus).getValue());
-                userManager.updateStatus(editingUser.getUid(), PeoplAccountStatus.valueOf(selectedStatus).getValue());
+                userManager.updateStatus(editingUser, PeoplAccountStatus.valueOf(selectedStatus).getValue());
                 MessagesController.addInfoMessage("Success", "Status updated successfully.");
 
             }
 
             // register a new group
             if (!"#".equals(nGroup)) {
-                userManager.registerGroup(editingUser.getUid(), BBCGroups.valueOf(nGroup).getValue());
+                userManager.registerGroup(editingUser, BBCGroups.valueOf(nGroup).getValue());
                 MessagesController.addInfoMessage("Success", "Role updated successfully.");
 
             }

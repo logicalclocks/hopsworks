@@ -7,19 +7,25 @@
 package se.kth.bbc.security.ua.model;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  *
@@ -49,6 +55,17 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "User.findBySecurityAnswer", query = "SELECT u FROM User u WHERE u.securityAnswer = :securityAnswer"),
     @NamedQuery(name = "User.findByYubikeyUser", query = "SELECT u FROM User u WHERE u.yubikeyUser = :yubikeyUser")})
 public class User implements Serializable {
+    @Size(max = 500)
+    @Column(name = "notes")
+    private String notes;
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "uid")
+    private Yubikey yubikey;
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "uid")
+    private Address address;
+    @OneToMany(mappedBy = "uid")
+    private Collection<PeopleGroup> peopleGroupCollection;
+    @OneToMany(mappedBy = "uid")
+    private Collection<Userlogins> userloginsCollection;
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -118,11 +135,7 @@ public class User implements Serializable {
     @Column(name = "password_changed")
     @Temporal(TemporalType.TIMESTAMP)
     private Date passwordChanged;
-    @Basic(optional = false)
-    @Column(name = "last_login")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date lastLogin;
-   
+
 
     public User() {
     }
@@ -323,12 +336,48 @@ public class User implements Serializable {
         this.passwordChanged = passwordChanged;
     }
 
-    public Date getLastLogin() {
-        return lastLogin;
+    public String getNotes() {
+        return notes;
     }
 
-    public void setLastLogin(Date lastLogin) {
-        this.lastLogin = lastLogin;
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public Yubikey getYubikey() {
+        return yubikey;
+    }
+
+    public void setYubikey(Yubikey yubikey) {
+        this.yubikey = yubikey;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<PeopleGroup> getPeopleGroupCollection() {
+        return peopleGroupCollection;
+    }
+
+    public void setPeopleGroupCollection(Collection<PeopleGroup> peopleGroupCollection) {
+        this.peopleGroupCollection = peopleGroupCollection;
+    }
+
+    @XmlTransient
+    @JsonIgnore
+    public Collection<Userlogins> getUserloginsCollection() {
+        return userloginsCollection;
+    }
+
+    public void setUserloginsCollection(Collection<Userlogins> userloginsCollection) {
+        this.userloginsCollection = userloginsCollection;
     }
     
 }

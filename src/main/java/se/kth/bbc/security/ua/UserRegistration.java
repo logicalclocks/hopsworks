@@ -12,7 +12,10 @@ import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.NotSupportedException;
@@ -23,11 +26,12 @@ import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.auth.CustomAuthentication;
 import se.kth.bbc.security.auth.QRCodeGenerator;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  * This class provides user registration functions to get the input through the
  * user registration GUIs and register the info in the database.
- * 
+ *
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @ManagedBean
@@ -64,7 +68,7 @@ public class UserRegistration implements Serializable {
     private boolean tos;
 
     private List<String> questions;
-    
+
     public List<String> getQuestions() {
         return questions;
     }
@@ -72,8 +76,6 @@ public class UserRegistration implements Serializable {
     public void setQuestions(List<String> questions) {
         this.questions = questions;
     }
-    
-
 
     public boolean isTos() {
         return tos;
@@ -156,7 +158,7 @@ public class UserRegistration implements Serializable {
     }
     // Quick response code URL
     private String qrUrl = "Pass";
-    
+
     // To send the user the QR code image
     private StreamedContent qrCode;
 
@@ -274,21 +276,43 @@ public class UserRegistration implements Serializable {
     }
 
     @PostConstruct
-    private void init()
-    {
+    private void init() {
         questions = new ArrayList<>();
-        for(SecurityQuestions value: SecurityQuestions.values()){
-           questions.add(value.getValue());
-       }
-        
+        for (SecurityQuestions value : SecurityQuestions.values()) {
+            questions.add(value.getValue());
+        }
 
     }
+
     /**
      * Register new mobile users.
      *
      * @return
      */
     public String registerMobileUser() {
+
+        HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+        String ip = httpServletRequest.getRemoteAddr();
+
+        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+        String userAgent = externalContext.getRequestHeaderMap().get("User-Agent");
+
+        String browser = null;
+        if (userAgent.contains("MSIE")) {
+            browser = "Internet Explorer";
+        }
+        if (userAgent.contains("Firefox")) {
+            browser = "Firefox";
+        }
+        if (userAgent.contains("Chrome")) {
+            browser = "Chrome";
+        }
+        if (userAgent.contains("Opera")) {
+            browser = "Opera";
+        }
+        if (userAgent.contains("Safari")) {
+            browser = "Safari";
+        }
 
         try {
 
@@ -301,19 +325,38 @@ public class UserRegistration implements Serializable {
             // Register the new request in the platform
             userTransaction.begin();
 
-            
-            username = mgr.register(fname, lname, mail, title, org, tel, orcid, uid,
+            User user = mgr.register(fname, lname, mail, title, org, tel, orcid, uid,
                     SecurityUtils.converToSHA256(password), otpSecret, SecurityQuestions.getQuestion(security_question).name(),
                     SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue(), yubikey);
 
+            username = user.getUsername();
             // Register group
-            mgr.registerGroup(uid, BBCGroups.BBC_GUEST.getValue());
+            mgr.registerGroup(user, BBCGroups.BBC_GUEST.getValue());
 
             // Create address entry
-            mgr.registerAddress(uid);
+            mgr.registerAddress(user);
+
+     
+            if (userAgent.contains("MSIE")) {
+                browser = "Internet Explorer";
+            }
+            if (userAgent.contains("Firefox")) {
+                browser = "Firefox";
+            }
+            if (userAgent.contains("Chrome")) {
+                browser = "Chrome";
+            }
+            if (userAgent.contains("Opera")) {
+                browser = "Opera";
+            }
+            if (userAgent.contains("Safari")) {
+                browser = "Safari";
+            }
 
             // Generate qr code to be displayed to user
             qrCode = QRCodeGenerator.getQRCode(mail, CustomAuthentication.ISSUER, otpSecret);
+
+            mgr.registerLoginInfo(user, "REGISTRATION", ip, browser);
 
             userTransaction.commit();
 
@@ -335,7 +378,7 @@ public class UserRegistration implements Serializable {
             tos = false;
 
         } catch (NotSupportedException | SystemException | NoSuchAlgorithmException | IOException | WriterException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException e) {
-            MessagesController.addSecurityErrorMessage("Technical Error" );
+            MessagesController.addSecurityErrorMessage("Technical Error");
             return ("");
 
         }
@@ -349,6 +392,29 @@ public class UserRegistration implements Serializable {
      */
     public String registerYubikey() {
 
+        HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+        String ip = httpServletRequest.getRemoteAddr();
+
+        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+        String userAgent = externalContext.getRequestHeaderMap().get("User-Agent");
+
+        String browser = null;
+        if (userAgent.contains("MSIE")) {
+            browser = "Internet Explorer";
+        }
+        if (userAgent.contains("Firefox")) {
+            browser = "Firefox";
+        }
+        if (userAgent.contains("Chrome")) {
+            browser = "Chrome";
+        }
+        if (userAgent.contains("Opera")) {
+            browser = "Opera";
+        }
+        if (userAgent.contains("Safari")) {
+            browser = "Safari";
+        }
+
         try {
 
             short yubikey = 1;
@@ -361,14 +427,16 @@ public class UserRegistration implements Serializable {
             // Register the request in the platform
             userTransaction.begin();
 
-            username = mgr.register(fname, lname, mail, title, org,
+            User user = mgr.register(fname, lname, mail, title, org,
                     tel, orcid, uid, SecurityUtils.converToSHA256(password), otp,
                     SecurityQuestions.getQuestion(security_question).name(), SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue(), yubikey);
 
-            mgr.registerGroup(uid, BBCGroups.BBC_GUEST.getValue());
+            mgr.registerGroup(user, BBCGroups.BBC_GUEST.getValue());
 
-            mgr.registerAddress(uid, address1, address2, address3, city, state, country, postalcode);
-            mgr.registerYubikey(uid);
+            mgr.registerAddress(user, address1, address2, address3, city, state, country, postalcode);
+            mgr.registerYubikey(user);
+
+            mgr.registerLoginInfo(user, "REGISTRATION", ip, browser);
 
             userTransaction.commit();
 
@@ -397,7 +465,7 @@ public class UserRegistration implements Serializable {
             tos = false;
 
         } catch (NotSupportedException | SystemException | NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException e) {
-            MessagesController.addSecurityErrorMessage("Technical Error" );
+            MessagesController.addSecurityErrorMessage("Technical Error");
             return ("");
         }
         return ("yubico");

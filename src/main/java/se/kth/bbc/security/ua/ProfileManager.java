@@ -45,7 +45,7 @@ public class ProfileManager implements Serializable {
         if (user == null) {
             try {
                 user = userManager.findByEmail(getLoginName());
-                address = userManager.findAddress(user.getUid());
+                address = user.getAddress();
                 login = userManager.getLastUserLoing(user.getUid());
             } catch (IOException ex) {
                 Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null, ex);
@@ -62,7 +62,7 @@ public class ProfileManager implements Serializable {
     }
 
     public void setLogin(Userlogins login) {
-        this.login = login;
+        this.login = login; 
     }
 
  

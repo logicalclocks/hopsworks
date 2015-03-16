@@ -15,7 +15,6 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.validator.Validator;
 import javax.faces.validator.ValidatorException;
-import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 import se.kth.bbc.security.ua.model.User;
 
@@ -28,6 +27,7 @@ import se.kth.bbc.security.ua.model.User;
 @RequestScoped
 public class UsernameValidator implements Validator {
 
+  
     @EJB
     private UserManager mgr;
 
@@ -56,28 +56,15 @@ public class UsernameValidator implements Validator {
             throw new ValidatorException(facesMsg);
 
         }
-
-        if (mgr.isUsernameTaken(uname)) {
-
-            // if it's a profile change ignore 
-            if (getRequest().getRemoteUser() != null) {
-                User p = mgr.findByEmail(getRequest().getRemoteUser());
-                if (p.getEmail().equals(uname)) {
-                    ;
-                } else {
-
-                    FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.EMAIL_TAKEN);
-                    facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-                    throw new ValidatorException(facesMsg);
-
-                }
-            } else {
-
-                FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.EMAIL_TAKEN);
-                facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-                throw new ValidatorException(facesMsg);
-            }
+        
+  
+        
+        if(mgr.isUsernameTaken(uname) ) {
+            FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.EMAIL_TAKEN);
+            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+            throw new ValidatorException(facesMsg);
         }
+
     }
 
     /**
@@ -92,8 +79,5 @@ public class UsernameValidator implements Validator {
         return matcher.matches();
     }
 
-    private HttpServletRequest getRequest() {
-        return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-    }
 
 }
