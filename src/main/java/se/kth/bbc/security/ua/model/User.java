@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package se.kth.bbc.security.ua.model;
 
 import java.io.Serializable;
@@ -29,7 +28,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  *
- * @author jdowling
+ * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
 @Table(name = "USERS")
@@ -53,19 +52,10 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "User.findBySecret", query = "SELECT u FROM User u WHERE u.secret = :secret"),
     @NamedQuery(name = "User.findBySecurityQuestion", query = "SELECT u FROM User u WHERE u.securityQuestion = :securityQuestion"),
     @NamedQuery(name = "User.findBySecurityAnswer", query = "SELECT u FROM User u WHERE u.securityAnswer = :securityAnswer"),
-    @NamedQuery(name = "User.findByYubikeyUser", query = "SELECT u FROM User u WHERE u.yubikeyUser = :yubikeyUser")})
+    @NamedQuery(name = "User.findByYubikeyUser", query = "SELECT u FROM User u WHERE u.yubikeyUser = :yubikeyUser"),
+    @NamedQuery(name = "User.findByPasswordChanged", query = "SELECT u FROM User u WHERE u.passwordChanged = :passwordChanged"),
+    @NamedQuery(name = "User.findByNotes", query = "SELECT u FROM User u WHERE u.notes = :notes")})
 public class User implements Serializable {
-    @Size(max = 500)
-    @Column(name = "notes")
-    private String notes;
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "uid")
-    private Yubikey yubikey;
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "uid")
-    private Address address;
-    @OneToMany(mappedBy = "uid")
-    private Collection<PeopleGroup> peopleGroupCollection;
-    @OneToMany(mappedBy = "uid")
-    private Collection<Userlogins> userloginsCollection;
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -135,7 +125,17 @@ public class User implements Serializable {
     @Column(name = "password_changed")
     @Temporal(TemporalType.TIMESTAMP)
     private Date passwordChanged;
-
+    @Size(max = 500)
+    @Column(name = "notes")
+    private String notes;
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "uid")
+    private Yubikey yubikey;
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "uid")
+    private Address address;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
+    private Collection<PeopleGroup> peopleGroupCollection;
+    @OneToMany(mappedBy = "uid")
+    private Collection<Userlogins> userloginsCollection;
 
     public User() {
     }
@@ -297,36 +297,6 @@ public class User implements Serializable {
     public void setYubikeyUser(Short yubikeyUser) {
         this.yubikeyUser = yubikeyUser;
     }
-    
-    public String getName() {
-        return getFname() + " " + getLname();
-    }
-    
-
-    @Override
-    public int hashCode() {
-        int hash = 0;
-        hash += (uid != null ? uid.hashCode() : 0);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof User)) {
-            return false;
-        }
-        User other = (User) object;
-        if ((this.uid == null && other.uid != null) || (this.uid != null && !this.uid.equals(other.uid))) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return "se.kth.bbc.security.ua.model.User[ uid=" + uid + " ]";
-    }
 
     public Date getPasswordChanged() {
         return passwordChanged;
@@ -378,6 +348,31 @@ public class User implements Serializable {
 
     public void setUserloginsCollection(Collection<Userlogins> userloginsCollection) {
         this.userloginsCollection = userloginsCollection;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 0;
+        hash += (uid != null ? uid.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        // TODO: Warning - this method won't work in the case the id fields are not set
+        if (!(object instanceof User)) {
+            return false;
+        }
+        User other = (User) object;
+        if ((this.uid == null && other.uid != null) || (this.uid != null && !this.uid.equals(other.uid))) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "se.kth.bbc.security.ua.model.User[ uid=" + uid + " ]";
     }
     
 }

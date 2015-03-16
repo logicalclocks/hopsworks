@@ -198,7 +198,7 @@ public class StudyMB implements Serializable {
         themes = new ArrayList<>();
         int i = 0;
         for (User user : list) {
-            themes.add(new Theme(i, user.getName(), user.getEmail()));
+            themes.add(new Theme(i, user.getFname()+ " "+user.getLname(), user.getEmail()));
             i++;
         }
 
@@ -483,7 +483,7 @@ public class StudyMB implements Serializable {
             if (!mems.isEmpty()) {
                 List<RoledUser> roleMems = new ArrayList<>();
                 for (User u : mems) {
-                    roleMems.add(new RoledUser(u.getEmail(), u.getName(), role));
+                    roleMems.add(new RoledUser(u.getEmail(), u.getFname() + " " + u.getLname(), role));
                 }
                 groupedUsers.add(new UserGroup(role, roleMems));
             }

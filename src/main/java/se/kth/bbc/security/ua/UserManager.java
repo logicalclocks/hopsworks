@@ -216,7 +216,7 @@ public class UserManager {
      * @param gid
      */
     public void removeGroup(User user, int gid) {
-       PeopleGroup p = em.find(PeopleGroup.class, new PeopleGroup(user.getUid(), gid));
+       PeopleGroup p = em.find(PeopleGroup.class, new PeopleGroup(new PeopleGroupPK(user.getUid(), gid)).getPeopleGroupPK());
        em.remove(p);
      }
 

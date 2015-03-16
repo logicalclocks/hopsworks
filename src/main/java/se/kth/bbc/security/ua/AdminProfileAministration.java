@@ -237,7 +237,7 @@ public class AdminProfileAministration implements Serializable {
             User p = userManager.findByEmail(principal.getName());
             
             if (p != null) {
-                return p.getName();
+                return p.getFname() +  " " + p.getLname();
             } else {
                 return principal.getName();
             }

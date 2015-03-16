@@ -39,25 +39,25 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Address.findByAddressId", query = "SELECT a FROM Address a WHERE a.addressId = :addressId")})
 public class Address implements Serializable {
     private static final long serialVersionUID = 1L;
-    @Size(max = 120)
+    @Size(max = 50)
     @Column(name = "address1")
     private String address1;
-    @Size(max = 120)
+    @Size(max = 50)
     @Column(name = "address2")
     private String address2;
-    @Size(max = 120)
+    @Size(max = 50)
     @Column(name = "address3")
     private String address3;
-    @Size(max = 100)
+    @Size(max = 30)
     @Column(name = "city")
     private String city;
     @Size(max = 100)
     @Column(name = "state")
     private String state;
-    @Size(max = 100)
+    @Size(max = 40)
     @Column(name = "country")
     private String country;
-    @Size(max = 16)
+    @Size(max = 10)
     @Column(name = "postalcode")
     private String postalcode;
     @Id
