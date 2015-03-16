@@ -173,14 +173,11 @@ DROP TABLE IF EXISTS `People_Group`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `People_Group` (
   `uid` int(10) DEFAULT NULL,
-  `pgid` int(11) NOT NULL AUTO_INCREMENT,
-  `gid` int(11) DEFAULT NULL,
-  PRIMARY KEY (`pgid`),
-  UNIQUE KEY `pgid_UNIQUE` (`pgid`),
-  KEY `fk_People_Group_USERS_idx` (`uid`),
-  KEY `fk_BBCGroups` (`gid`),
-  CONSTRAINT `fk_People_Group_USERS` FOREIGN KEY (`uid`) REFERENCES `USERS` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=latin1;
+  `gid` int(10) DEFAULT NULL,   
+   PRIMARY KEY (`uid`, `gid`),
+   CONSTRAINT `fk_People_Group_USERS` FOREIGN KEY (`uid`)
+   REFERENCES `USERS` (`uid`)  ON DELETE CASCADE 
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 

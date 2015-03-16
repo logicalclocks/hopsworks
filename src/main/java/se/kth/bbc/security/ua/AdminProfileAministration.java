@@ -286,7 +286,7 @@ public class AdminProfileAministration implements Serializable {
             if (selectedGroup.equals(BBCGroups.BBC_GUEST.toString())) {
                 MessagesController.addErrorMessage("Error", BBCGroups.BBC_GUEST.toString() + " can not be removed.");
             } else {
-                userManager.removeGroup(editingUser.getUid(), BBCGroups.valueOf(selectedGroup).getValue());
+                userManager.removeGroup(editingUser, BBCGroups.valueOf(selectedGroup).getValue());
                 MessagesController.addInfoMessage("Success", "User updated successfully.");
             }
         }

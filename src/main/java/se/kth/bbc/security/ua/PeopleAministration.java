@@ -587,7 +587,7 @@ public class PeopleAministration implements Serializable {
                 if (sgroup.equals(BBCGroups.BBC_GUEST.name())) {
                     MessagesController.addSecurityErrorMessage(BBCGroups.BBC_GUEST.name() + " can not be removed.");
                 } else {
-                    userManager.removeGroup(editingUser.getUid(), BBCGroups.valueOf(sgroup).getValue());
+                    userManager.removeGroup(editingUser, BBCGroups.valueOf(sgroup).getValue());
                     MessagesController.addInfoMessage("Success", "User updated successfully.");
                 }
             }

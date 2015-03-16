@@ -11,6 +11,7 @@ import javax.persistence.TypedQuery;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.ua.model.PeopleGroup;
+import se.kth.bbc.security.ua.model.PeopleGroupPK;
 import se.kth.bbc.security.ua.model.Userlogins;
 import se.kth.bbc.security.ua.model.Yubikey;
 
@@ -39,8 +40,7 @@ public class UserManager {
      */
     public boolean registerGroup(User uid, int gidNumber) {
         PeopleGroup p = new PeopleGroup();
-        p.setUid(uid);
-        p.setGid(gidNumber);
+        p.setPeopleGroupPK(new PeopleGroupPK(uid.getUid(), gidNumber));
         em.persist(p);
         return true;
     }
@@ -121,7 +121,7 @@ public class UserManager {
         TypedQuery<PeopleGroup> query = em.createNamedQuery("PeopleGroup.findByUid", PeopleGroup.class);
         query.setParameter("uid", uid);
         PeopleGroup p = (PeopleGroup) query.getSingleResult();
-        p.setGid(gid);
+        p.setPeopleGroupPK(new PeopleGroupPK(uid, gid));
         em.merge(p);
         return true;
     }
@@ -215,11 +215,10 @@ public class UserManager {
      * @param uid
      * @param gid
      */
-    public void removeGroup(int uid, int gid) {
-        String sql = "delete from PeopleGroup p where (p.uid = " + uid + " and " + " p.gid= " + gid + ")";
-        em.createQuery(sql).executeUpdate();
-
-    }
+    public void removeGroup(User user, int gid) {
+       PeopleGroup p = em.find(PeopleGroup.class, new PeopleGroup(user.getUid(), gid));
+       em.remove(p);
+     }
 
     /**
      * Study authorization methods

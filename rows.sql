@@ -12,6 +12,8 @@ INSERT INTO BBCGroup (gid,group_name,group_desc) VALUES
     To create admin account 
     username: admin
     password: admin
+    security question: admin
+    two-factor secret: V3WBPS4G2WMQ53VA
  */;
 INSERT INTO USERS (uid, username, password, email, fname, lname, activated, status, secret, security_question, 
 security_answer, yubikey_user, password_changed, title, orcid, home_org, mobile)

@@ -6,12 +6,8 @@
 package se.kth.bbc.security.ua.model;
 
 import java.io.Serializable;
-import javax.persistence.Basic;
-import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
@@ -28,56 +24,47 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "PeopleGroup.findAll", query = "SELECT p FROM PeopleGroup p"),
-    @NamedQuery(name = "PeopleGroup.findByPgid", query = "SELECT p FROM PeopleGroup p WHERE p.pgid = :pgid"),
-    @NamedQuery(name = "PeopleGroup.findByGid", query = "SELECT p FROM PeopleGroup p WHERE p.gid = :gid")})
+    @NamedQuery(name = "PeopleGroup.findByUid", query = "SELECT p FROM PeopleGroup p WHERE p.peopleGroupPK.uid = :uid"),
+    @NamedQuery(name = "PeopleGroup.findByGid", query = "SELECT p FROM PeopleGroup p WHERE p.peopleGroupPK.gid = :gid")})
 public class PeopleGroup implements Serializable {
     private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Basic(optional = false)
-    @Column(name = "pgid")
-    private Integer pgid;
-    @Column(name = "gid")
-    private Integer gid;
-    @JoinColumn(name = "uid", referencedColumnName = "uid")
-    @ManyToOne
-    private User uid;
+    @EmbeddedId
+    protected PeopleGroupPK peopleGroupPK;
+    @JoinColumn(name = "uid", referencedColumnName = "uid", insertable = false, updatable = false)
+    @ManyToOne(optional = false)
+    private User user;
 
     public PeopleGroup() {
     }
 
-    public PeopleGroup(Integer pgid) {
-        this.pgid = pgid;
+    public PeopleGroup(PeopleGroupPK peopleGroupPK) {
+        this.peopleGroupPK = peopleGroupPK;
     }
 
-    public Integer getPgid() {
-        return pgid;
+    public PeopleGroup(int uid, int gid) {
+        this.peopleGroupPK = new PeopleGroupPK(uid, gid);
     }
 
-    public void setPgid(Integer pgid) {
-        this.pgid = pgid;
+    public PeopleGroupPK getPeopleGroupPK() {
+        return peopleGroupPK;
     }
 
-    public Integer getGid() {
-        return gid;
+    public void setPeopleGroupPK(PeopleGroupPK peopleGroupPK) {
+        this.peopleGroupPK = peopleGroupPK;
     }
 
-    public void setGid(Integer gid) {
-        this.gid = gid;
+    public User getUser() {
+        return user;
     }
 
-    public User getUid() {
-        return uid;
-    }
-
-    public void setUid(User uid) {
-        this.uid = uid;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (pgid != null ? pgid.hashCode() : 0);
+        hash += (peopleGroupPK != null ? peopleGroupPK.hashCode() : 0);
         return hash;
     }
 
@@ -88,7 +75,7 @@ public class PeopleGroup implements Serializable {
             return false;
         }
         PeopleGroup other = (PeopleGroup) object;
-        if ((this.pgid == null && other.pgid != null) || (this.pgid != null && !this.pgid.equals(other.pgid))) {
+        if ((this.peopleGroupPK == null && other.peopleGroupPK != null) || (this.peopleGroupPK != null && !this.peopleGroupPK.equals(other.peopleGroupPK))) {
             return false;
         }
         return true;
@@ -96,7 +83,7 @@ public class PeopleGroup implements Serializable {
 
     @Override
     public String toString() {
-        return "se.kth.bbc.security.ua.model.PeopleGroup[ pgid=" + pgid + " ]";
+        return "se.kth.bbc.security.ua.model.PeopleGroup[ peopleGroupPK=" + peopleGroupPK + " ]";
     }
     
 }
