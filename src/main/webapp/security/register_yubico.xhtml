@@ -26,7 +26,7 @@
                     styleClass="registerContainer">
 
                     <h:panelGroup styleClass="MobileRegistation" >
-                        <h3>Create your BiobankCloud Account</h3>
+                        <h3>Create your BiobankCloud account</h3>
 
                         <h:form class="register_form"> 
                             <h:panelGrid columns="4" >			
@@ -54,7 +54,7 @@
                                              requiredMessage="Enter email">
                                     <f:validator binding="#{usernameValidator}" />
                                 </p:inputText>    
-                                <p:watermark for="email" value="Enter your email" />
+                                <p:watermark for="email" value="Email" />
 
                                 <p:inputText id="tel" 
                                              value="#{userRegistration.tel}" 
@@ -62,7 +62,7 @@
                                              validatorMessage="Invalid phone number">
                                     <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                 </p:inputText>
-                                <p:watermark for="tel" value="Enter your telephone number" />
+                                <p:watermark for="tel" value="Telephone number" />
         
 
 
@@ -95,6 +95,7 @@
                                                  requiredMessage="Enter country">
                                     </p:inputText>
                                  <p:watermark for="country1" value="Country" />
+                                 
                                 <p:password id="password0" 
                                             value="#{userRegistration.password}" 
                                             required="true"
@@ -103,7 +104,7 @@
                                     <f:validator validatorId="passwordValidator" />
                                     <f:attribute name="confirmPassword" value="#{confirmPassword}" />
                                 </p:password>
-                                <p:watermark for="password0" value="Choose a pasword" />
+                                <p:watermark for="password0" value="Choose a password" />
 
                                 <p:password id="password" 
                                             value="#{userRegistration.passwordAgain}"
@@ -112,7 +113,7 @@
                                             binding="#{confirmPassword}"
                                             required="true">
                                 </p:password>
-                                <p:watermark for="password" value="Repeat the pasword" />
+                                <p:watermark for="password" value="Repeat the password" />
 
                                  
                             </h:panelGrid>
@@ -125,7 +126,7 @@
                                                  style="width: 508px; height: 30px; " 
                                                  requiredMessage="Select security question">
 
-                                    <f:selectItem itemLabel="Select Security Question for Password Recovery" 
+                                    <f:selectItem itemLabel="Select security question for password recovery" 
 
                                                   itemValue="" />
                                     <f:selectItems value="#{userRegistration.questions}"/>
@@ -138,7 +139,7 @@
                                              required="true"
                                              autocomplete="off"
                                              requiredMessage="Answer security question" />
-                                <p:watermark for="answer" value="Enter your security answer" />
+                                <p:watermark for="answer" value="Security answer" />
 
 
                                 <p:captcha id ="captcha" 
