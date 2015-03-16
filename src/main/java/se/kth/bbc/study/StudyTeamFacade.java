@@ -50,7 +50,7 @@ public class StudyTeamFacade {
      * @return 
      */
     public List<User> findTeamMembersByName(String name, String role){
-        Query query = em.createNativeQuery("SELECT fname,lname,email,uid FROM USERS WHERE email IN (SELECT team_member FROM StudyTeam WHERE name=? AND team_role=?)" , User.class)
+        Query query = em.createNativeQuery("SELECT fname,lname,email,uid FROM users WHERE email IN (SELECT team_member FROM study_team WHERE name=? AND team_role=?)" , User.class)
                     .setParameter(1, name).setParameter(2, role);
         return query.getResultList();
     
@@ -58,12 +58,12 @@ public class StudyTeamFacade {
     
     
     public List<StudyTeam> findResearchMembersByName(String name){
-        Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_role=?" , StudyTeam.class).setParameter(1, name).setParameter(2, "Researcher");
+        Query query = em.createNativeQuery("SELECT * FROM study_team WHERE name =? AND team_role=?" , StudyTeam.class).setParameter(1, name).setParameter(2, "Researcher");
         return query.getResultList();    
     }
     
     public List<StudyTeam> findGuestMembersByName(String name){
-        Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_role=?" , StudyTeam.class).setParameter(1, name).setParameter(2, "Guest");
+        Query query = em.createNativeQuery("SELECT * FROM study_team WHERE name =? AND team_role=?" , StudyTeam.class).setParameter(1, name).setParameter(2, "Guest");
         return query.getResultList();    
     }
     
@@ -76,7 +76,7 @@ public class StudyTeamFacade {
     
     
     public List<TrackStudy> findStudyMaster(String name){
-        Query query = em.createNativeQuery("SELECT * FROM study WHERE name IN (SELECT name FROM StudyTeam WHERE name=?)", TrackStudy.class).setParameter(1, name);
+        Query query = em.createNativeQuery("SELECT * FROM study WHERE name IN (SELECT name FROM study_team WHERE name=?)", TrackStudy.class).setParameter(1, name);
         return query.getResultList();
     }
     
@@ -96,7 +96,7 @@ public class StudyTeamFacade {
     
     public List<StudyTeam> findCurrentRole(String name, String username){
     
-        Query query = em.createNativeQuery("SELECT * FROM StudyTeam where name=? AND team_member=?",StudyTeam.class).setParameter(1, name).setParameter(2, username);
+        Query query = em.createNativeQuery("SELECT * FROM study_team where name=? AND team_member=?",StudyTeam.class).setParameter(1, name).setParameter(2, username);
         return query.getResultList();
     
     }
@@ -130,7 +130,7 @@ public class StudyTeamFacade {
     public boolean findUserForActiveStudy(String studyname, String username){
         // TODO
 //        Query query = em.createNamedQuery("StudyTeam.findByNameAndTeamMember", StudyTeam.class).setParameter("name", studyname).setParameter("teamMember", username);
-        Query query = em.createNativeQuery("SELECT * FROM StudyTeam WHERE name =? AND team_member=?", StudyTeam.class).setParameter(1, studyname).setParameter(2, username);
+        Query query = em.createNativeQuery("SELECT * FROM study_team WHERE name =? AND team_member=?", StudyTeam.class).setParameter(1, studyname).setParameter(2, username);
         //List<StudyTeam> res = query.getResultList();
         if( query.getResultList().size() > 0)
             return true;

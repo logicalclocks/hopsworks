@@ -16,12 +16,12 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Entity class mapped to the view "activitydetails". Used to present the 
+ * Entity class mapped to the view "activity_details". Used to present the 
  * activity in a complete way to the user in the activity log.
  * @author stig
  */
 @Entity
-@Table(name = "activitydetails")
+@Table(name = "activity_details")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "ActivityDetail.findAll", query = "SELECT a FROM ActivityDetail a ORDER BY a.timestamp DESC"),

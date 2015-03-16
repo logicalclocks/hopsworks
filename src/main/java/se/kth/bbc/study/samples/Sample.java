@@ -25,14 +25,13 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
-import se.kth.bbc.study.metadata.CollectionTypeStudyDesignEnum;
 
 /**
  *
  * @author stig
  */
 @Entity
-@Table(name = "SAMPLES")
+@Table(name = "samples")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Sample.findAll",
@@ -74,7 +73,7 @@ public class Sample implements Serializable {
   @ManyToOne(optional = false)
   private Samplecollection samplecollectionId;
   @ElementCollection(targetClass = MaterialTypeEnum.class)
-  @CollectionTable(name = "SAMPLE_MATERIAL",
+  @CollectionTable(name = "sample_material",
           joinColumns = @JoinColumn(name = "sample_id",
                   referencedColumnName = "id"))
   @Column(name = "type")

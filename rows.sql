@@ -1,6 +1,6 @@
 
 /* BBC groups table values */;
-INSERT INTO BBCGroup (gid,group_name,group_desc) VALUES 
+INSERT INTO bbc_group (gid,group_name,group_desc) VALUES 
 (1001,'BBC_ADMIN','Data Owner'),
 (1002,'BBC_RESEARCHER','Users to run experiment'),
 (1003,'BBC_GUEST','New users'),
@@ -15,7 +15,7 @@ INSERT INTO BBCGroup (gid,group_name,group_desc) VALUES
     security question: admin
     two-factor secret: V3WBPS4G2WMQ53VA
  */;
-INSERT INTO USERS (uid, username, password, email, fname, lname, activated, status, secret, security_question, 
+INSERT INTO users (uid, username, password, email, fname, lname, activated, status, secret, security_question, 
 security_answer, yubikey_user, password_changed, title, orcid, home_org, mobile)
 VALUES ('10000', 'meb10000', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918','admin','Admin','Admin',CURRENT_TIMESTAMP, 4, 'V3WBPS4G2WMQ53VA', 'FRIEND', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', -1, CURRENT_TIMESTAMP, 'Mr', '1234-5678-1234-5678', 'KTH', '04672223200');
 
@@ -24,15 +24,15 @@ VALUES ('10000', 'meb10000', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a8
     Mapping between uid/role of guest,admin
 */
 
-insert into People_Group (uid,gid) values (10000,1003);
-insert into People_Group (uid,gid) values (10000,1005);
+insert into people_group (uid,gid) values (10000,1003);
+insert into people_group (uid,gid) values (10000,1005);
 /*
     adding a new address entry for admin user
 */
-insert into Address (uid, address1,address2,address3,city,state,country,postalcode) values (10000, 'Admin Office','Teknikringen 14', 'Vallhalevägen', 'Stockholm län', 'Stockholm', 'Svergie', '10044');
+insert into address (uid, address1,address2,address3,city,state,country,postalcode) values (10000, 'Admin Office','Teknikringen 14', 'Vallhalevägen', 'Stockholm län', 'Stockholm', 'Svergie', '10044');
 
 /*
     Upadte the User Logins table
 */
-insert into USERLOGINS (ip, browser, action, uid, login_date) values 
+insert into userlogins (ip, browser, action, uid, login_date) values 
 ('127.0.0.1', 'Firefox', 'AUTHENTICATION', 10000,CURRENT_TIMESTAMP);

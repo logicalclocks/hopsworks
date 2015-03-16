@@ -29,7 +29,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author stig
  */
 @Entity
-@Table(name = "Inodes")
+@Table(name = "inodes")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Inode.findAll",

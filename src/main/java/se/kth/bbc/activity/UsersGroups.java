@@ -22,7 +22,7 @@ import se.kth.bbc.security.ua.model.User;
  * @author jdowling
  */
 @Entity
-@Table(name = "USERS_GROUPS")
+@Table(name = "users_groups")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "UsersGroups.findAll", query = "SELECT u FROM UsersGroups u"),

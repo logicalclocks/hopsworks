@@ -16,13 +16,13 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `ANATOMICAL_PARTS`
+-- Table structure for table `anatomical_parts`
 --
 
-DROP TABLE IF EXISTS `ANATOMICAL_PARTS`;
+DROP TABLE IF EXISTS `anatomical_parts`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `ANATOMICAL_PARTS` (
+CREATE TABLE `anatomical_parts` (
   `id` int(16) NOT NULL AUTO_INCREMENT,
   `ontology_name` varchar(255) DEFAULT NULL,
   `ontology_version` varchar(255) DEFAULT NULL,
@@ -37,10 +37,10 @@ CREATE TABLE `ANATOMICAL_PARTS` (
 -- Table structure for table `Address`
 --
 
-DROP TABLE IF EXISTS `Address`;
+DROP TABLE IF EXISTS `address`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Address` (
+CREATE TABLE `address` (
   `address1` varchar(50) DEFAULT NULL,
   `address2` varchar(50) DEFAULT NULL,
   `address3` varchar(50) DEFAULT NULL,
@@ -53,18 +53,18 @@ CREATE TABLE `Address` (
   PRIMARY KEY (`address_id`),
   UNIQUE KEY `address_id_UNIQUE` (`address_id`),
   UNIQUE KEY `uid_UNIQUE` (`uid`),
-  CONSTRAINT `fk_Address` FOREIGN KEY (`uid`) REFERENCES `USERS` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+  CONSTRAINT `fk_Address` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=NDBCLUSTER  DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `BBCGroup`
+-- Table structure for table `bbc_group`
 --
 
-DROP TABLE IF EXISTS `BBCGroup`;
+DROP TABLE IF EXISTS `bbc_group`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `BBCGroup` (
+CREATE TABLE `bbc_group` (
   `group_name` varchar(20) NOT NULL,
   `group_desc` varchar(200) DEFAULT NULL,
   `gid` int(11) NOT NULL,
@@ -77,10 +77,10 @@ CREATE TABLE `BBCGroup` (
 -- Table structure for table `CONSENT`
 --
 
-DROP TABLE IF EXISTS `CONSENT`;
+DROP TABLE IF EXISTS `consent`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `CONSENT` (
+CREATE TABLE `consent` (
   `id` int(11) NOT NULL,
   `date` date DEFAULT NULL,
   `study_name` varchar(128) DEFAULT NULL,
@@ -98,10 +98,10 @@ CREATE TABLE `CONSENT` (
 -- Table structure for table `DISEASES`
 --
 
-DROP TABLE IF EXISTS `DISEASES`;
+DROP TABLE IF EXISTS `diseases`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `DISEASES` (
+CREATE TABLE `diseases` (
   `id` int(16) NOT NULL AUTO_INCREMENT,
   `ontology_name` varchar(255) DEFAULT NULL,
   `ontology_version` varchar(255) DEFAULT NULL,
@@ -116,10 +116,10 @@ CREATE TABLE `DISEASES` (
 -- Table structure for table `Inodes`
 --
 
-DROP TABLE IF EXISTS `Inodes`;
+DROP TABLE IF EXISTS `inodes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Inodes` (
+CREATE TABLE `inodes` (
   `id` mediumint(9) NOT NULL AUTO_INCREMENT,
   `name` varchar(128) NOT NULL,
   `pid` mediumint(9) DEFAULT NULL,
@@ -132,24 +132,24 @@ CREATE TABLE `Inodes` (
   KEY `pid` (`pid`),
   KEY `pid_2` (`pid`,`isDir`),
   KEY `name` (`name`),
-  CONSTRAINT `Inodes_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `Inodes` (`id`) ON DELETE CASCADE
+  CONSTRAINT `Inodes_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `inodes` (`id`) ON DELETE CASCADE
 ) ENGINE=NDBCLUSTER  DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `People_Group`
+-- Table structure for table `people_group`
 --
 
-DROP TABLE IF EXISTS `People_Group`;
+DROP TABLE IF EXISTS `people_group`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `People_Group` (
+CREATE TABLE `people_group` (
   `uid` int(10) NOT NULL DEFAULT '0',
   `gid` int(10) NOT NULL DEFAULT '0',
   PRIMARY KEY (`uid`,`gid`),
   KEY `gid` (`gid`),
-  CONSTRAINT `People_Group_ibfk_1` FOREIGN KEY (`gid`) REFERENCES `BBCGroup` (`gid`),
-  CONSTRAINT `fk_People_Group_USERS` FOREIGN KEY (`uid`) REFERENCES `USERS` (`uid`) ON DELETE CASCADE
+  CONSTRAINT `people_group_ibfk_1` FOREIGN KEY (`gid`) REFERENCES `bbc_group` (`gid`),
+  CONSTRAINT `fk_people_group_users` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -157,31 +157,31 @@ CREATE TABLE `People_Group` (
 -- Table structure for table `Roles`
 --
 
-DROP TABLE IF EXISTS `Roles`;
+DROP TABLE IF EXISTS `roles`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Roles` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `CLUSTER` varchar(48) NOT NULL,
-  `HOSTID` varchar(128) NOT NULL,
-  `PID` int(11) DEFAULT NULL,
-  `ROLE_` varchar(48) NOT NULL,
-  `SERVICE` varchar(48) NOT NULL,
-  `STATUS` int(11) NOT NULL,
-  `UPTIME` bigint(20) DEFAULT NULL,
-  `WEBPORT` int(11) DEFAULT NULL,
-  PRIMARY KEY (`ID`)
+CREATE TABLE `roles` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `cluster` varchar(48) NOT NULL,
+  `hostid` varchar(128) NOT NULL,
+  `pid` int(11) DEFAULT NULL,
+  `role_` varchar(48) NOT NULL,
+  `service` varchar(48) NOT NULL,
+  `status` int(11) NOT NULL,
+  `uptime` bigint(20) DEFAULT NULL,
+  `webport` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `SAMPLECOLLECTIONS`
+-- Table structure for table `samplecollections`
 --
 
-DROP TABLE IF EXISTS `SAMPLECOLLECTIONS`;
+DROP TABLE IF EXISTS `samplecollections`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `SAMPLECOLLECTIONS` (
+CREATE TABLE `samplecollections` (
   `id` varchar(255) NOT NULL,
   `acronym` varchar(255) NOT NULL,
   `name` varchar(1024) NOT NULL,
@@ -190,10 +190,10 @@ CREATE TABLE `SAMPLECOLLECTIONS` (
   `study` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `acronym` (`acronym`),
-  KEY `FK_SAMPLECOLLECTIONS_study` (`study`),
-  KEY `FK_SAMPLECOLLECTIONS_contact` (`contact`),
-  CONSTRAINT `SAMPLECOLLECTIONS_ibfk_1` FOREIGN KEY (`contact`) REFERENCES `USERS` (`EMAIL`),
-  CONSTRAINT `SAMPLECOLLECTIONS_ibfk_2` FOREIGN KEY (`study`) REFERENCES `study` (`name`)
+  KEY `FK_samplecollections_study` (`study`),
+  KEY `FK_samplecollections_contact` (`contact`),
+  CONSTRAINT `samplecollections_ibfk_1` FOREIGN KEY (`contact`) REFERENCES `users` (`email`),
+  CONSTRAINT `samplecollections_ibfk_2` FOREIGN KEY (`study`) REFERENCES `study` (`name`)
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -201,156 +201,156 @@ CREATE TABLE `SAMPLECOLLECTIONS` (
 -- Table structure for table `SAMPLECOLLECTION_DISEASE`
 --
 
-DROP TABLE IF EXISTS `SAMPLECOLLECTION_DISEASE`;
+DROP TABLE IF EXISTS `samplecollection_disease`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `SAMPLECOLLECTION_DISEASE` (
+CREATE TABLE `samplecollection_disease` (
   `collection_id` varchar(255) NOT NULL DEFAULT '',
   `disease_id` int(16) NOT NULL DEFAULT '0',
   PRIMARY KEY (`collection_id`,`disease_id`),
   KEY `FK_SAMPLECOLLECTION_DISEASE_disease_id` (`disease_id`),
-  CONSTRAINT `FK_SAMPLECOLLECTION_DISEASE_disease_id` FOREIGN KEY (`disease_id`) REFERENCES `DISEASES` (`id`),
-  CONSTRAINT `SAMPLECOLLECTION_DISEASE_ibfk_1` FOREIGN KEY (`collection_id`) REFERENCES `SAMPLECOLLECTIONS` (`id`) ON DELETE CASCADE
+  CONSTRAINT `FK_SAMPLECOLLECTION_DISEASE_disease_id` FOREIGN KEY (`disease_id`) REFERENCES `diseases` (`id`),
+  CONSTRAINT `SAMPLECOLLECTION_DISEASE_ibfk_1` FOREIGN KEY (`collection_id`) REFERENCES `samplecollections` (`id`) ON DELETE CASCADE
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `SAMPLECOLLECTION_TYPE`
+-- Table structure for table `samplecollection_type`
 --
 
-DROP TABLE IF EXISTS `SAMPLECOLLECTION_TYPE`;
+DROP TABLE IF EXISTS `samplecollection_type`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `SAMPLECOLLECTION_TYPE` (
+CREATE TABLE `samplecollection_type` (
   `collection_id` varchar(255) NOT NULL,
   `type` varchar(128) NOT NULL,
   PRIMARY KEY (`collection_id`,`type`),
-  CONSTRAINT `SAMPLECOLLECTION_TYPE_ibfk_1` FOREIGN KEY (`collection_id`) REFERENCES `SAMPLECOLLECTIONS` (`id`) ON DELETE CASCADE
+  CONSTRAINT `samplecollection_type_ibfk_1` FOREIGN KEY (`collection_id`) REFERENCES `samplecollections` (`id`) ON DELETE CASCADE
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `SAMPLES`
+-- Table structure for table `samples`
 --
 
-DROP TABLE IF EXISTS `SAMPLES`;
+DROP TABLE IF EXISTS `samples`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `SAMPLES` (
+CREATE TABLE `samples` (
   `samplecollection_id` varchar(255) NOT NULL,
   `id` varchar(255) NOT NULL,
   `parent_id` varchar(255) DEFAULT NULL,
   `sampled_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `anatomical_site` int(16) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `FK_SAMPLES_parent_id` (`parent_id`),
-  KEY `FK_SAMPLES_anatomical_site` (`anatomical_site`),
-  KEY `FK_SAMPLES_samplecollection_id` (`samplecollection_id`),
-  CONSTRAINT `SAMPLES_ibfk_2` FOREIGN KEY (`parent_id`) REFERENCES `SAMPLES` (`id`),
-  CONSTRAINT `SAMPLES_ibfk_3` FOREIGN KEY (`anatomical_site`) REFERENCES `ANATOMICAL_PARTS` (`id`),
-  CONSTRAINT `SAMPLES_ibfk_4` FOREIGN KEY (`samplecollection_id`) REFERENCES `SAMPLECOLLECTIONS` (`id`) ON DELETE CASCADE
+  KEY `FK_samples_parent_id` (`parent_id`),
+  KEY `FK_samples_anatomical_site` (`anatomical_site`),
+  KEY `FK_samples_samplecollection_id` (`samplecollection_id`),
+  CONSTRAINT `samples_ibfk_2` FOREIGN KEY (`parent_id`) REFERENCES `samples` (`id`),
+  CONSTRAINT `samples_ibfk_3` FOREIGN KEY (`anatomical_site`) REFERENCES `anatomical_parts` (`id`),
+  CONSTRAINT `samples_ibfk_4` FOREIGN KEY (`samplecollection_id`) REFERENCES `samplecollections` (`id`) ON DELETE CASCADE
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `SAMPLE_MATERIAL`
+-- Table structure for table `sample_material`
 --
 
-DROP TABLE IF EXISTS `SAMPLE_MATERIAL`;
+DROP TABLE IF EXISTS `sample_material`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `SAMPLE_MATERIAL` (
+CREATE TABLE `sample_material` (
   `sample_id` varchar(255) NOT NULL,
   `type` varchar(128) NOT NULL,
   PRIMARY KEY (`sample_id`,`type`),
-  CONSTRAINT `SAMPLE_MATERIAL_ibfk_1` FOREIGN KEY (`sample_id`) REFERENCES `SAMPLES` (`id`) ON DELETE CASCADE
+  CONSTRAINT `sample_material_ibfk_1` FOREIGN KEY (`sample_id`) REFERENCES `samples` (`id`) ON DELETE CASCADE
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `STUDY_DESIGN`
+-- Table structure for table `study_design`
 --
 
-DROP TABLE IF EXISTS `STUDY_DESIGN`;
+DROP TABLE IF EXISTS `study_design`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `STUDY_DESIGN` (
+CREATE TABLE `study_design` (
   `study_id` varchar(128) DEFAULT NULL,
   `design` varchar(128) DEFAULT NULL,
-  KEY `FK_STUDY_DESIGN_study_id` (`study_id`),
-  CONSTRAINT `STUDY_DESIGN_ibfk_1` FOREIGN KEY (`study_id`) REFERENCES `STUDY_META` (`id`) ON DELETE CASCADE
+  KEY `FK_study_design_study_id` (`study_id`),
+  CONSTRAINT `study_design_ibfk_1` FOREIGN KEY (`study_id`) REFERENCES `study_meta` (`id`) ON DELETE CASCADE
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `STUDY_GROUPS`
+-- Table structure for table `study_groups`
 --
 
-DROP TABLE IF EXISTS `STUDY_GROUPS`;
+DROP TABLE IF EXISTS `study_groups`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `STUDY_GROUPS` (
+CREATE TABLE `study_groups` (
   `email` varchar(255) NOT NULL,
   `groupname` varchar(64) NOT NULL,
   PRIMARY KEY (`email`,`groupname`),
-  CONSTRAINT `STUDY_GROUPS_ibfk_1` FOREIGN KEY (`email`) REFERENCES `USERS` (`EMAIL`) ON DELETE CASCADE
+  CONSTRAINT `study_groups_ibfk_1` FOREIGN KEY (`email`) REFERENCES `users` (`email`) ON DELETE CASCADE
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `STUDY_INCLUSION_CRITERIA`
+-- Table structure for table `study_inclusion_criteria`
 --
 
-DROP TABLE IF EXISTS `STUDY_INCLUSION_CRITERIA`;
+DROP TABLE IF EXISTS `study_inclusion_criteria`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `STUDY_INCLUSION_CRITERIA` (
+CREATE TABLE `study_inclusion_criteria` (
   `study_id` varchar(128) NOT NULL DEFAULT '',
   `criterium` varchar(128) NOT NULL,
   PRIMARY KEY (`study_id`,`criterium`),
-  CONSTRAINT `STUDY_INCLUSION_CRITERIA_ibfk_1` FOREIGN KEY (`study_id`) REFERENCES `STUDY_META` (`id`) ON DELETE CASCADE
+  CONSTRAINT `study_inclusion_criteria_ibfk_1` FOREIGN KEY (`study_id`) REFERENCES `study_meta` (`id`) ON DELETE CASCADE
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `STUDY_META`
+-- Table structure for table `study_meta`
 --
 
-DROP TABLE IF EXISTS `STUDY_META`;
+DROP TABLE IF EXISTS `study_meta`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `STUDY_META` (
+CREATE TABLE `study_meta` (
   `id` varchar(128) NOT NULL,
   `studyname` varchar(128) NOT NULL,
   `description` varchar(2000) DEFAULT NULL,
   PRIMARY KEY (`studyname`),
   UNIQUE KEY `id` (`id`),
-  CONSTRAINT `STUDY_META_ibfk_1` FOREIGN KEY (`studyname`) REFERENCES `study` (`name`) ON DELETE CASCADE
+  CONSTRAINT `study_meta_ibfk_1` FOREIGN KEY (`studyname`) REFERENCES `study` (`name`) ON DELETE CASCADE
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Temporary view structure for view `StudyDetails`
+-- Temporary view structure for view `study_details`
 --
 
-DROP TABLE IF EXISTS `StudyDetails`;
-/*!50001 DROP VIEW IF EXISTS `StudyDetails`*/;
+DROP TABLE IF EXISTS `study_details`;
+/*!50001 DROP VIEW IF EXISTS `study_details`*/;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
-/*!50001 CREATE VIEW `StudyDetails` AS SELECT 
+/*!50001 CREATE VIEW `study_details` AS SELECT 
  1 AS `studyName`,
  1 AS `email`,
  1 AS `creator`*/;
 SET character_set_client = @saved_cs_client;
 
 --
--- Table structure for table `StudyRoles`
+-- Table structure for table `study_roles`
 --
 
-DROP TABLE IF EXISTS `StudyRoles`;
+DROP TABLE IF EXISTS `study_roles`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `StudyRoles` (
+CREATE TABLE `study_roles` (
   `id` int(11) NOT NULL,
   `email` varchar(255) DEFAULT NULL,
   `study_role` varchar(255) DEFAULT NULL,
@@ -359,32 +359,32 @@ CREATE TABLE `StudyRoles` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `StudyTeam`
+-- Table structure for table `study_team`
 --
 
-DROP TABLE IF EXISTS `StudyTeam`;
+DROP TABLE IF EXISTS `study_team`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `StudyTeam` (
+CREATE TABLE `study_team` (
   `name` varchar(255) NOT NULL,
   `team_member` varchar(255) NOT NULL,
   `team_role` enum('Master','Researcher','Auditor') NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`name`,`team_member`),
-  KEY `fk_studyTeam_users` (`team_member`),
-  CONSTRAINT `fk_studyTeam_users` FOREIGN KEY (`team_member`) REFERENCES `USERS` (`EMAIL`) ON DELETE CASCADE,
-  CONSTRAINT `fk_study_studyTeam` FOREIGN KEY (`name`) REFERENCES `study` (`name`) ON DELETE CASCADE
+  KEY `fk_study_team_users` (`team_member`),
+  CONSTRAINT `fk_study_team_users` FOREIGN KEY (`team_member`) REFERENCES `users` (`email`) ON DELETE CASCADE,
+  CONSTRAINT `fk_study_study_team` FOREIGN KEY (`name`) REFERENCES `study` (`name`) ON DELETE CASCADE
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `USERLOGINS`
+-- Table structure for table `userlogins`
 --
 
-DROP TABLE IF EXISTS `USERLOGINS`;
+DROP TABLE IF EXISTS `userlogins`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `USERLOGINS` (
+CREATE TABLE `userlogins` (
   `login_id` bigint(20) NOT NULL AUTO_INCREMENT,
   `ip` varchar(16) DEFAULT NULL,
   `os` varchar(30) DEFAULT NULL,
@@ -400,13 +400,13 @@ CREATE TABLE `USERLOGINS` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `USERS`
+-- Table structure for table `users`
 --
 
-DROP TABLE IF EXISTS `USERS`;
+DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `USERS` (
+CREATE TABLE `users` (
   `uid` int(10) NOT NULL DEFAULT '1000',
   `username` varchar(10) NOT NULL,
   `password` varchar(128) NOT NULL,
@@ -435,14 +435,14 @@ CREATE TABLE `USERS` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Temporary view structure for view `USERS_GROUPS`
+-- Temporary view structure for view `users_groups`
 --
 
-DROP TABLE IF EXISTS `USERS_GROUPS`;
-/*!50001 DROP VIEW IF EXISTS `USERS_GROUPS`*/;
+DROP TABLE IF EXISTS `users_groups`;
+/*!50001 DROP VIEW IF EXISTS `users_groups`*/;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
-/*!50001 CREATE VIEW `USERS_GROUPS` AS SELECT 
+/*!50001 CREATE VIEW `users_groups` AS SELECT 
  1 AS `username`,
  1 AS `password`,
  1 AS `secret`,
@@ -451,13 +451,13 @@ SET character_set_client = utf8;
 SET character_set_client = @saved_cs_client;
 
 --
--- Table structure for table `Yubikey`
+-- Table structure for table `yubikey`
 --
 
-DROP TABLE IF EXISTS `Yubikey`;
+DROP TABLE IF EXISTS `yubikey`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Yubikey` (
+CREATE TABLE `yubikey` (
   `serial` varchar(10) DEFAULT NULL,
   `version` varchar(15) DEFAULT NULL,
   `notes` varchar(100) DEFAULT NULL,
@@ -477,7 +477,7 @@ CREATE TABLE `Yubikey` (
   UNIQUE KEY `uid_UNIQUE` (`uid`),
   UNIQUE KEY `serial_UNIQUE` (`serial`),
   UNIQUE KEY `public_id_UNIQUE` (`public_id`),
-  CONSTRAINT `fk_Yubikey_USERS` FOREIGN KEY (`uid`) REFERENCES `USERS` (`uid`) ON DELETE NO ACTION ON UPDATE CASCADE
+  CONSTRAINT `fk_yubikey_users` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE CASCADE
 ) ENGINE=NDBCLUSTER  DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -493,21 +493,21 @@ CREATE TABLE `activity` (
   `activity` varchar(128) DEFAULT NULL,
   `performed_By` varchar(255) DEFAULT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `flag` enum('DATA','STUDY','TEAM','USERS') DEFAULT NULL,
+  `flag` enum('DATA','STUDY','TEAM','users') DEFAULT NULL,
   `activity_on` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=NDBCLUSTER  DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Temporary view structure for view `activitydetails`
+-- Temporary view structure for view `activity_details`
 --
 
-DROP TABLE IF EXISTS `activitydetails`;
-/*!50001 DROP VIEW IF EXISTS `activitydetails`*/;
+DROP TABLE IF EXISTS `activity_details`;
+/*!50001 DROP VIEW IF EXISTS `activity_details`*/;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
-/*!50001 CREATE VIEW `activitydetails` AS SELECT 
+/*!50001 CREATE VIEW `activity_details` AS SELECT 
  1 AS `id`,
  1 AS `performed_by_email`,
  1 AS `performed_by_name`,
@@ -527,7 +527,7 @@ CREATE TABLE `collection_type` (
   `collection_id` varchar(255) NOT NULL DEFAULT '',
   `type` varchar(128) NOT NULL,
   PRIMARY KEY (`collection_id`,`type`),
-  CONSTRAINT `collection_type_ibfk_1` FOREIGN KEY (`collection_id`) REFERENCES `SAMPLECOLLECTIONS` (`id`)
+  CONSTRAINT `collection_type_ibfk_1` FOREIGN KEY (`collection_id`) REFERENCES `samplecollections` (`id`)
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -602,7 +602,7 @@ CREATE TABLE `jobhistory` (
   UNIQUE KEY `id` (`id`),
   KEY `FK_jobhistory_user` (`user`),
   KEY `FK_jobhistory_study` (`study`),
-  CONSTRAINT `FK_jobhistory_user` FOREIGN KEY (`user`) REFERENCES `USERS` (`email`),
+  CONSTRAINT `FK_jobhistory_user` FOREIGN KEY (`user`) REFERENCES `users` (`email`),
   CONSTRAINT `jobhistory_ibfk_3` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE CASCADE
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -621,7 +621,7 @@ CREATE TABLE `study` (
   PRIMARY KEY (`name`),
   UNIQUE KEY `name` (`name`),
   KEY `fk_study_users` (`username`),
-  CONSTRAINT `fk_study_users` FOREIGN KEY (`username`) REFERENCES `USERS` (`email`) ON DELETE CASCADE
+  CONSTRAINT `fk_study_users` FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE CASCADE
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -659,10 +659,10 @@ CREATE TABLE `study_services` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Final view structure for view `StudyDetails`
+-- Final view structure for view `study_details`
 --
 
-/*!50001 DROP VIEW IF EXISTS `StudyDetails`*/;
+/*!50001 DROP VIEW IF EXISTS `study_details`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
@@ -671,16 +671,16 @@ CREATE TABLE `study_services` (
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 
-/*!50001 VIEW `StudyDetails` AS select `study`.`name` AS `studyName`,`study`.`username` AS `email`,concat(`USERS`.`fname`,' ',`USERS`.`lname`) AS `creator` from (`study` join `USERS` on((`study`.`username` = `USERS`.`email`))) where `study`.`name` in (select `StudyTeam`.`name` from `StudyTeam`) */;
+/*!50001 VIEW `study_details` AS select `study`.`name` AS `studyname`,`study`.`username` AS `email`,concat(`users`.`fname`,' ',`users`.`lname`) AS `creator` from (`study` join `users` on((`study`.`username` = `users`.`email`))) where `study`.`name` in (select `study_team`.`name` from `study_team`) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
 
 --
--- Final view structure for view `USERS_GROUPS`
+-- Final view structure for view `users_groups`
 --
 
-/*!50001 DROP VIEW IF EXISTS `USERS_GROUPS`*/;
+/*!50001 DROP VIEW IF EXISTS `users_groups`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
@@ -689,16 +689,16 @@ CREATE TABLE `study_services` (
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 
-/*!50001 VIEW `USERS_GROUPS` AS select `u`.`username` AS `username`,`u`.`password` AS `password`,`u`.`secret` AS `secret`,`u`.`email` AS `email`,`g`.`group_name` AS `group_name` from ((`People_Group` `ug` join `USERS` `u` on((`u`.`uid` = `ug`.`uid`))) join `BBCGroup` `g` on((`g`.`gid` = `ug`.`gid`))) */;
+/*!50001 VIEW `users_groups` AS select `u`.`username` AS `username`,`u`.`password` AS `password`,`u`.`secret` AS `secret`,`u`.`email` AS `email`,`g`.`group_name` AS `group_name` from ((`people_group` `ug` join `users` `u` on((`u`.`uid` = `ug`.`uid`))) join `bbc_group` `g` on((`g`.`gid` = `ug`.`gid`))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
 
 --
--- Final view structure for view `activitydetails`
+-- Final view structure for view `activity_details`
 --
 
-/*!50001 DROP VIEW IF EXISTS `activitydetails`*/;
+/*!50001 DROP VIEW IF EXISTS `activity_details`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
 /*!50001 SET @saved_col_connection     = @@collation_connection */;
@@ -707,7 +707,7 @@ CREATE TABLE `study_services` (
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 
-/*!50001 VIEW `activitydetails` AS select `activity`.`id` AS `id`,`activity`.`performed_By` AS `performed_by_email`,concat(`USERS`.`fname`,' ',`USERS`.`lname`) AS `performed_by_name`,`activity`.`activity` AS `description`,`activity`.`activity_on` AS `studyname`,`activity`.`timestamp` AS `timestamp` from (`activity` join `USERS` on((`activity`.`performed_By` = `USERS`.`email`))) */;
+/*!50001 VIEW `activity_details` AS select `activity`.`id` AS `id`,`activity`.`performed_By` AS `performed_by_email`,concat(`users`.`fname`,' ',`users`.`lname`) AS `performed_by_name`,`activity`.`activity` AS `description`,`activity`.`activity_on` AS `studyname`,`activity`.`timestamp` AS `timestamp` from (`activity` join `users` on((`activity`.`performed_By` = `users`.`email`))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;

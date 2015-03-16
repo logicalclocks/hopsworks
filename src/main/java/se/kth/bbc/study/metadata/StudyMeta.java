@@ -25,7 +25,7 @@ import se.kth.bbc.study.TrackStudy;
  * @author stig
  */
 @Entity
-@Table(name = "STUDY_META")
+@Table(name = "study_meta")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "StudyMeta.findAll",
@@ -64,12 +64,12 @@ public class StudyMeta implements Serializable {
   @OneToOne(optional = false)
   private TrackStudy trackStudy;
   @ElementCollection(targetClass = CollectionTypeStudyDesignEnum.class)
-  @CollectionTable(name="STUDY_DESIGN",joinColumns=@JoinColumn(name="study_id",referencedColumnName = "id"))
+  @CollectionTable(name="study_design",joinColumns=@JoinColumn(name="study_id",referencedColumnName = "id"))
   @Column(name="design")
   @Enumerated(EnumType.STRING)
   private List<CollectionTypeStudyDesignEnum> studyDesignList;
    @ElementCollection(targetClass = InclusionCriteriumEnum.class)
-  @CollectionTable(name="STUDY_INCLUSION_CRITERIA",joinColumns=@JoinColumn(name="study_id",referencedColumnName = "id"))
+  @CollectionTable(name="study_inclustion_criteria",joinColumns=@JoinColumn(name="study_id",referencedColumnName = "id"))
   @Column(name="criterium")
   @Enumerated(EnumType.STRING)
   private List<InclusionCriteriumEnum> inclusionCriteriaList;

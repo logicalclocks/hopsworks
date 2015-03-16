@@ -127,7 +127,7 @@ public class UserManager {
     }
 
     public List<User> findInactivateUsers() {
-        Query query = em.createNativeQuery("SELECT * FROM USERS p WHERE p.active = " + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
+        Query query = em.createNativeQuery("SELECT * FROM users p WHERE p.active = " + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
         List<User> people = query.getResultList();
         return people;
     }
@@ -204,7 +204,7 @@ public class UserManager {
     }
 
     public List<String> findGroups(int uid) {
-        String sql = "SELECT group_name FROM BBCGroup INNER JOIN People_Group ON (People_Group.gid = BBCGroup.gid AND People_Group.uid = " + uid + " )";
+        String sql = "SELECT group_name FROM bbc_group INNER JOIN people_group ON (people_group.gid = bbc_group.gid AND people_group.uid = " + uid + " )";
         List existing = em.createNativeQuery(sql).getResultList();
         return existing;
     }
@@ -228,7 +228,7 @@ public class UserManager {
      */
     public List<User> filterUsersBasedOnStudy(String name) {
 
-        Query query = em.createNativeQuery("SELECT * FROM USERS WHERE email NOT IN (SELECT team_member FROM StudyTeam WHERE name=?)", User.class).setParameter(1, name);
+        Query query = em.createNativeQuery("SELECT * FROM users WHERE email NOT IN (SELECT team_member FROM study_team WHERE name=?)", User.class).setParameter(1, name);
         return query.getResultList();
     }
 
@@ -321,7 +321,7 @@ public class UserManager {
      * @return
      */
     public int lastUserID() {
-        Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM USERS p");
+        Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM users p");
         Object obj = query.getSingleResult();
 
         if (obj == null) {
@@ -393,7 +393,7 @@ public class UserManager {
     }
 
     public Userlogins getLastUserLoing(int uid) {
-        String sql = "SELECT * FROM USERLOGINS  WHERE uid=" + uid + " ORDER BY login_date DESC LIMIT 1 OFFSET 2";
+        String sql = "SELECT * FROM userlogins  WHERE uid=" + uid + " ORDER BY login_date DESC LIMIT 1 OFFSET 2";
         Query query = em.createNativeQuery(sql, Userlogins.class);
         query.setMaxResults(2);
 

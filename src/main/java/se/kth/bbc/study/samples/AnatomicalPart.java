@@ -22,7 +22,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author stig
  */
 @Entity
-@Table(name = "ANATOMICAL_PARTS")
+@Table(name = "anatomical_parts")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "AnatomicalPart.findAll",

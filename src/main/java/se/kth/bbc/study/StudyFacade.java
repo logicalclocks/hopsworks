@@ -92,7 +92,7 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
     
     public List<TrackStudy> findAllStudies(String user){
     
-        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE username=? UNION SELECT name, username FROM study WHERE name IN (SELECT name FROM StudyTeam WHERE team_member=?)",TrackStudy.class)
+        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE username=? UNION SELECT name, username FROM study WHERE name IN (SELECT name FROM study_team WHERE team_member=?)",TrackStudy.class)
                 .setParameter(1, user).setParameter(2, user);   
         
         return query.getResultList();
@@ -104,7 +104,7 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
      * @return 
      */
     public List<StudyDetail> findAllStudyDetails(String useremail){
-        Query query = em.createNativeQuery("SELECT * FROM StudyDetails WHERE studyName IN (SELECT name FROM StudyTeam WHERE team_member=?)",StudyDetail.class)
+        Query query = em.createNativeQuery("SELECT * FROM study_details WHERE studyname IN (SELECT name FROM study_team WHERE team_member=?)",StudyDetail.class)
                 .setParameter(1, useremail); 
         return query.getResultList();
     }
@@ -123,7 +123,7 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
     //TODO: remove this method and replace with findJoinedStudyDetails
     public List<TrackStudy> findJoinedStudies(String user){
         
-        Query query = em.createNativeQuery("select study.name, study.username from (StudyTeam join study on StudyTeam.name=study.name) join USERS on study.username=USERS.email where study.username not like ? and StudyTeam.team_member like ?", TrackStudy.class)
+        Query query = em.createNativeQuery("select study.name, study.username from (study_team join study on study_team.name=study.name) join users on study.username=users.email where study.username not like ? and study_team.team_member like ?", TrackStudy.class)
                 .setParameter(1, user).setParameter(2, user);
         return query.getResultList();
     }
@@ -134,7 +134,7 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
      * @return 
      */
     public List<StudyDetail> findJoinedStudyDetails(String useremail){
-        Query query = em.createNativeQuery("SELECT * FROM StudyDetails WHERE studyName IN (SELECT name FROM StudyTeam WHERE team_member=?) AND email NOT LIKE ?", StudyDetail.class)
+        Query query = em.createNativeQuery("SELECT * FROM study_details WHERE studyname IN (SELECT name FROM study_team WHERE team_member=?) AND email NOT LIKE ?", StudyDetail.class)
                 .setParameter(1, useremail).setParameter(2,useremail);
        
         return query.getResultList();
@@ -142,7 +142,7 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
     
     public List<TrackStudy> QueryForNonRegistered(String user){
         
-        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE name IN (SELECT name FROM StudyTeam WHERE team_member=?)", TrackStudy.class)
+        Query query = em.createNativeQuery("SELECT name, username FROM study WHERE name IN (SELECT name FROM study_team WHERE team_member=?)", TrackStudy.class)
                 .setParameter(1, user);
         return query.getResultList();
     }

@@ -34,7 +34,7 @@ import se.kth.bbc.security.ua.model.User;
  * @author stig
  */
 @Entity
-@Table(name = "SAMPLECOLLECTIONS")
+@Table(name = "samplecollections")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Samplecollection.findAll",
@@ -92,7 +92,7 @@ public class Samplecollection implements Serializable {
   private User contact;
   @ManyToMany
   @JoinTable(
-          name = "SAMPLECOLLECTION_DISEASE",
+          name = "samplecollection_disease",
           joinColumns = {
             @JoinColumn(name = "collection_id",
                     referencedColumnName = "id")},
@@ -101,7 +101,7 @@ public class Samplecollection implements Serializable {
                     referencedColumnName = "id")})
   private Collection<Disease> diseases;
   @ElementCollection(targetClass = CollectionTypeStudyDesignEnum.class)
-  @CollectionTable(name = "SAMPLECOLLECTION_TYPE",
+  @CollectionTable(name = "samplecollection_type",
           joinColumns = @JoinColumn(name = "collection_id",
                   referencedColumnName = "id"))
   @Column(name = "type")

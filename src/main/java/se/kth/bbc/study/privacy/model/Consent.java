@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "CONSENT")
+@Table(name = "consent")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "Consent.findAll", query = "SELECT c FROM Consent c"),
