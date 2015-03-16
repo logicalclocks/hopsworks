@@ -54,9 +54,8 @@ CREATE TABLE `USERLOGINS` (
   `login_date` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`login_id`),
   KEY `LOGIN_uid_idx` (`uid`),
-  KEY `LOGIN_login_date_idx` (`login_date`),
-  CONSTRAINT `fk_USERLOGINS_USERS` FOREIGN KEY (`uid`) REFERENCES `USERS` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=85 DEFAULT CHARSET=latin1;
+  KEY `LOGIN_login_date_idx` (`login_date`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 
