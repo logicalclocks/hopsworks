@@ -18,7 +18,12 @@
             <to-view-id>/security/login.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
-      
+
+        <navigation-case>
+            <from-outcome>user_guides</from-outcome>
+            <to-view-id>/security/user_guides.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>      
         <navigation-case>
             <from-outcome>register_mobile</from-outcome>
             <to-view-id>/security/register_mobile.xhtml</to-view-id>
