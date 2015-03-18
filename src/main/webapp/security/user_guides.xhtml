@@ -60,39 +60,125 @@
                         </p:tab>
 
                         <p:tab title="Support for different devices">
-                            <h:form>
-                                <p:menu toggleable="true">
-                                  <p:submenu label="Windows">
-                                  
-                                  </p:submenu>
-
-                                  <p:submenu label="Android">
-                                      <p:menuitem>
-                                         
-                                      <ul class="user_guides_docs" style="padding-left: 100px;">
-                                            <li>
-                                                Downloading the app
-                                           </li>
-
-                                             <li>
-                                                 Setup the account
-                                             </li>    
-
+                                
+                            <p:tabView orientation="left">
+                                <p:tab  title="Android" >
+                                    <div align="left">
+                                        <ul>
+                                            <li style="font-size: 15px; padding: 10px;">
+                                                Download the Authenticator app in
+                                                <a target ="_blank" href="https://play.google.com/">
+                                                   Google Play and install it in your phone
+                                                </a>
+                                            </li>
+                                            
+                                            
+                                            <li  style="font-size: 15px; padding: 10px;">
+                                                Open the Authenticator app (label 1a) a
+                 S                              elect Scan account barcode (label 1a). 
+                                            </li>
+                                            
+                                            <li style="font-size: 15px; padding: 10px;">
+                                           If you don't have a barcode scanner app, then install the barcode scanner (label 2a).
+                                            </li>
+                                            <li style="font-size: 15px; padding: 10px;">
+                                            After installation, reopen Authenticator and point it to your 
+                                            camera at the QR code on your computer screen. This is where you have submitted the
+                                            registration form successfully.
+                                            </li>
                                         </ul>
-                                              
-                                      </p:menuitem>   
-                                  
+                                        
+                                        
+                                        <h:panelGrid columns="2" style="border: 0px none;">
+                                        <p:graphicImage value="/resources/images/users/android1.gif">
+                                        </p:graphicImage>
 
-                                  </p:submenu>
+                                       <p:graphicImage value="/resources/images/users/android2.gif">
+                                        </p:graphicImage>
+                                        </h:panelGrid>
+                                    </div>
+                                    
+                                    <p:commandButton value="Create Account" class="account-button" style="margin-top: 50px;"
+                     action="welcome" 
+                     type="submit"
+                     />
 
-                                    <p:submenu label="iPhone/iPad">
-                                              
-                                              
-                                  </p:submenu>
-                              </p:menu>
-                            </h:form>  
+                                </p:tab>
+                                
+                                <p:tab title="Windows">
+                                    <div align="left">
+                                        <ul>
+                                            <li style="font-size: 15px; padding: 10px;">
+                                                Download the Authenticator app in
+                                                the on the Windows Phone Store.
+                                              </li>
+                                            
+                                            
+                                            <li  style="font-size: 15px; padding: 10px;">
+                                                Open the Authenticator app and tap the add (+) button to set up the account.
+                                            </li>
+                                            
+                                            <li style="font-size: 15px; padding: 10px;">
+                                                Then point the camera to the barcode and press scan. 
+                                            </li>
+                                        </ul>
+                                        
+                                        <div align="center">
+                                        <h:panelGrid columns="2" cellpadding="20">
+                                            <p:graphicImage 
+                                                 width="200" height="300"
+                                                value="/resources/images/users/windows1.png"
+                                                            >
+                                            </p:graphicImage>
+                                     
+                                            <p:graphicImage 
+                                                 width="200" height="300"
+                                                value="/resources/images/users/windows-qr.png">
+                                            </p:graphicImage>
+                                        </h:panelGrid>
+                                    </div>
+                                    </div>
+                                    
+                                    <p:commandButton value="Create Account" class="account-button" style="margin-top: 50px;"
+                                            action="welcome" 
+                                            type="submit"
+                                            />
+                                </p:tab>
+
+                                <p:tab title="iPhone/iPad">
+                                    <div align="left">
+                                        <ul>
+                                            <li style="font-size: 15px; padding: 10px;">
+                                                Download the Authenticator app in
+                                                the App store and install it in your phone
+                                              </li>
+                                            
+                                            
+                                            <li  style="font-size: 15px; padding: 10px;">
+                                                Open the Authenticator app 
+                                            </li>
+                                            
+                                            <li style="font-size: 15px; padding: 10px;">
+                                                Click on the "Scan Barcode" and then point your 
+                                                camera at the QR code on your computer screen. This is where you have submitted the
+                                            registration form successfully.
+                                            </li>
+                                        </ul>
+                                        
+                                        <div align="center">    
+                                            <p:graphicImage value="/resources/images/users/iphone.png">
+                                            </p:graphicImage>
+                                        </div>
+                                       </div>
+                                    
+                                    <p:commandButton value="Create Account" class="account-button" style="margin-top: 50px;"
+                     action="welcome" 
+                     type="submit"
+                     />
+
+                                </p:tab>
+                            </p:tabView>
                         </p:tab>
-
                         <p:tab title="Benefits of 2-step verification">
                             <p align="left" class="user_guides_docs">
                                 In 2-step verification, there is a little risk your account becomes compromised and put your sensitive data at risk.
@@ -103,19 +189,14 @@
                                 We care about security and privacy of your data, and that is why we require you to use 2-step verification.
                             </p>
                             
-                        </p:tab>
+                           </p:tab>
 
-                    </p:tabView>
+                       </p:tabView>
                     </h:panelGroup>
                   
             </div>
-            
-            <div align="center">
-                <p:commandButton value="Create Account" class="account-button"
-                     action="welcome" 
-                     type="submit"
-                     />
-            </div>
+                         
+                       
         </h:body>
     </f:view>
 </html> 

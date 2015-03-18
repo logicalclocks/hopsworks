@@ -230,13 +230,13 @@
                    <p:separator></p:separator>
 
                    <br></br>
-                   <p:panelGrid columns="4" layout="grid">
-                                        
+                   
+                   <h:panelGrid columns="3" cellpadding="10px;" cellspacing="10px;">
                        <h:form id="add_role" >
+                   <h:panelGrid columns="2" >
                     
                         <p:selectOneMenu id="addRole"
                                          value="#{adminProfileAministration.new_group}" 
-                                         style="width: 200px; "
                                          editable="false">
 
                             <f:selectItem itemValue="#"
@@ -247,16 +247,16 @@
 
                         <p:commandButton  type="submit" 
                                           value="Update"
-                                          style="margin-top: 10px;"
                                           update=":account_status :remove_role :add_role :user_stat"
                                           action="#{adminProfileAministration.addRoleByAdmin()}"/> 
-                    </h:form>        
+                   </h:panelGrid>
+                       </h:form>        
 
                 
                     <h:form id="remove_role">
-
+                        <h:panelGrid columns="2">
+   
                         <p:selectOneMenu id="removeRole" 
-                                         style="width: 200px;"
                                          value="#{adminProfileAministration.selectedGroup}">
                             <f:selectItem itemValue="#" itemLabel="Remove Role" 
                                           noSelectionOption="true"/>
@@ -264,14 +264,15 @@
                         </p:selectOneMenu>
 
                         <p:commandButton  type="submit" 
-                                         style="margin-top: 10px;"
                                           value="Update"
                                           update=":account_status :add_role :remove_role :user_stat"
                                           action="#{adminProfileAministration.removeRoleByAdmin()}"/> 
+                   </h:panelGrid>
                     </h:form>
             
                     <h:form id="user_stat">
-
+                        <h:panelGrid columns="2">
+   
                         <p:selectOneMenu id="statChoose" 
                                          value="#{adminProfileAministration.selectedStatus}" 
                                          >
@@ -283,19 +284,15 @@
                         </p:selectOneMenu>
                     
                         <p:commandButton  type="submit" 
-                                          style="margin-top: 10px;"
                                           value="Update"
                                           update=":account_status :user_stat"
                                           action="#{adminProfileAministration.updateStatusByAdmin()}"/> 
-
-
+                        </h:panelGrid>
                          </h:form>
-                       
-    
-                   </p:panelGrid>
+    </h:panelGrid>
             </div>
 
-            <div align="left" style="padding-top: 20px; padding-left:7px; padding-bottom: 100px;">
+            <div align="left" style="margin-bottom: 5%">
                 <p:separator></p:separator>
                 <p:commandLink type="submit" value="Back to User Management Page" action="userMgmt" immediate="true"/>
 

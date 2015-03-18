@@ -300,11 +300,6 @@ input[type="password"] {
     padding-left: 100px;
 }
 
-.account-button{
-    color: #FFF !important;
-    text-decoration: none;
-}
-
 .account-button {
     border-radius: 2.5px;
     color: #FFF;
@@ -321,7 +316,6 @@ input[type="password"] {
     background-image: -moz-linear-gradient(center top , #5E8EE4, #4173C9);
     border: 0px none;
     position: relative;
-    margin-top: 300px;
 }
 
 
