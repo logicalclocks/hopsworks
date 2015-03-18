@@ -12,8 +12,8 @@ package se.kth.bbc.security.ua;
  */
 public enum SecurityQuestions {
     
-    HISTORY("Who is your favorite historical figure"),
-    TEACHER("What is name of your favorite teacher?"),
+    HISTORY("Who is your favorite historical figure?"),
+    TEACHER("What is the name of your favorite teacher?"),
     PHONE("What is your first phone number?"),
     FRIEND("What is the name of your favorite childhood friend?");
 
