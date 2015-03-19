@@ -10,7 +10,8 @@
     margin-top:50px;
     margin-left: 300px;
     margin-right: 300px;
-   // background-color: #F5F5F5;
+    
+    // background-color: #F5F5F5;
 }
 
 .PersonalInfo{
@@ -19,11 +20,13 @@
     color: #4184F3;
     font-weight: 500;
     line-height: 1; 
+    margin-bottom: 20px;
  }
 
 .PersonalInfo .h2 {
     color: rgba(0, 0, 0, 0.87);
     font-weight: 400;
+    
 }
 
 .ui-panelgrid .ui-panelgrid-cell {
@@ -50,12 +53,12 @@
 
 
 
-.AddressInfo{
+.EditInfo{
     
     padding-top: 10px; 
     padding-left: 10px; 
     padding-right: 10px;
-    
+    width: 700px;
 }
 
 .Info {
@@ -65,11 +68,7 @@
     
 }
 
-
-.PersonalInfo {
-    text-align: left;
-    color: #4184F3;
-    font-weight: 500;
-    line-height: 1;
+ .ui-panelgrid .ui-panelgrid-cell {
+    border-width: 0px;
+    padding: 2px;
 }
-

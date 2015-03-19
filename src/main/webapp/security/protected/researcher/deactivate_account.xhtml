@@ -20,41 +20,35 @@
         <ui:insert name="titleBar" >
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
+
+             <div class="ForgotPassword" align="center">
+
+       
         <h:form >
-            <div class="ForgotPassword" align="center">
-
-                    <p:password id="tcur" 
+                    <p:password id="tcurp" 
                                 value="#{resetPassword.current}"  
-                                label="current" required="true" 
+                                required="true" 
                                 requiredMessage="Enter password"/>
-                   <p:watermark for="tcur" value="Enter you current password" />
-
-
-                    <p:password id="tpwd1" 
-                                value="#{resetPassword.passwd1}" 
-                                match="tpwd2" 
-                                label="Password 1" required="true"
-                                requiredMessage="Enter new password"/>
-                   <p:watermark for="tpwd1" value="Enter new password" />
-
+                   <p:watermark for="tcurp" value="Enter you password" />
                    
-                    <p:password id="tpwd2" 
-                                value="#{resetPassword.passwd2}" 
-                                label="Password 2" required="true" 
-                                requiredMessage="Repeat the new password"/>
-
-                    <p:watermark for="tpwd2" value="Repeat the new password" />
-
-                    <p:messages id="messages" autoUpdate="true" closable="true"/>
-
-              
+                   <p:inputTextarea id="notes"
+                                    rows="5" 
+                                    cols="30"
+                                    value="#{resetPassword.notes}"
+                                    required="true" 
+                                    requiredMessage="Enter the deactivation reason"
+                                    >
+                    </p:inputTextarea>
+                    <p:watermark for="notes" value="Deactivation reason" />
+                   
+        
+                    <p:messages id="messages" severity="error,info" autoUpdate="true" showDetail="false" closable="true"/>
                     
                     <h:panelGrid columns="2" style="padding: 20px;">
                               <p:commandButton  
                                      type="submit" 
-                                     value="Save"
-                                      ajax="false"
-                                     action="#{resetPassword.changeProfilePassword()}"/>
+                                     value="Close Account"
+                                      action="#{resetPassword.deactivatedProfile()}"/>
                
                     <p:commandButton 
                                      type="submit"
@@ -62,10 +56,10 @@
                                      action="profile" process="@this"/>
               
                         
-                </h:panelGrid>
+                    </h:panelGrid>
 
-                     </div>
+          
         </h:form>
-
+      </div>
     </h:body>
 </html>

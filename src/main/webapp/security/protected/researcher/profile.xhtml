@@ -19,7 +19,8 @@
             <ui:insert name="titleBar" >
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
-
+            <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
+            
             <div align="center" class="UserProfile">
 
                 <div class="PersonalInfo">
@@ -28,17 +29,17 @@
                     <p:panelGrid id="profile_head" columns="4" styleClass="PersonalIfo">
 
                         <p:column>
-                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Name</h3>
+                            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Name" /></h3> 
                         </p:column>   
 
                         <p:column>
-                            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+                             <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
                                 #{profileManager.user.title} #{profileManager.user.fname} #{profileManager.user.lname} 
                             </h3>
                         </p:column>
 
                         <p:column>
-                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Member Since</h3>
+                            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Member Since" /></h3> 
                         </p:column>   
 
                         <p:column>
@@ -48,7 +49,7 @@
                         </p:column>
 
                         <p:column>
-                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Email</h3>
+                            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Email" /></h3> 
                         </p:column>
 
                         <p:column>
@@ -56,7 +57,7 @@
                         </p:column>
 
                         <p:column>
-                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Phone</h3>
+                            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Phone" /></h3> 
                         </p:column>
 
                         <p:column>
@@ -72,10 +73,10 @@
 
                     <p:panelGrid columns="2" styleClass="PersonalIfo">
                         <p:column>
-                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Current BiobankCloud Roles</h3>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Current BiobankCloud Roles" /></h3> 
                         </p:column>
 
-                        <p:column >
+                        <p:column>
 
                             <p:dataGrid  value="#{profileManager.currentGroups}" 
                                          var="role" 
@@ -91,7 +92,7 @@
                         </p:column>   
 
                         <p:column>
-                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Last Login</h3>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Last Login" /></h3>                             
                         </p:column>
 
                         <p:column>
@@ -101,8 +102,7 @@
                         </p:column>
 
                         <p:column>
-                            <h3 style="color: rgba(0, 0, 0, 0.87); font-weight: 400;">Last Password Change</h3>
-                        </p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Last Passsword Changed " /></h3>                         </p:column>
 
                         <p:column>
                             <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
@@ -118,7 +118,7 @@
                 <h:form >
 
                     <p:panelMenu>
-                        <p:submenu label="Edit Personal Info">
+                        <p:submenu   style="padding-bottom: 10px;" label="Edit Personal Info">
                             <p:menuitem value=""
                                         ajax="false" 
                                         icon="ui-icon-close">
@@ -126,7 +126,7 @@
                                              styleClass="AddressInfo"
                                              >			
 
-                                    <h:outputLabel for="fname" value="First Name" />
+                                    <p:outputLabel for="fname" value="First Name" />
                                     <p:inplace  id="fname"  editor="true">
 
                                         <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head"/>   
@@ -138,8 +138,7 @@
                                         </p:inputText>
                                     </p:inplace>
 
-
-                                    <h:outputLabel for="lname" value="Last Name" />
+                                    <p:outputLabel for="lname" value="Last Name" />
                                     <p:inplace  id="lname" editor="true">
                                         <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head"/>   
 
@@ -149,24 +148,27 @@
                                         </p:inputText>
                                     </p:inplace>
 
-                                    <h:outputLabel for="title" value="Title" />
-                                    <p:inplace  id="title" editor="true">
-                                        <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head"/>   
-
+                                    <p:outputLabel for="title" value="Title" />
+                                    <p:inplace  id="title" 
+                                                editor="true" >
+                                        <p:ajax event="save" 
+                                                listener="#{profileManager.updateUserInfo()}"
+                                                update=":profile_head"/>
                                         <p:inputText value="#{profileManager.user.title}">
                                         </p:inputText>
                                     </p:inplace>
 
-                                    <h:outputLabel for="org" value="Organization" />
+                                    <p:outputLabel for="org" value="Organization" />
 
 
-                                    <p:inplace  id="org"  editor="true">
-                                        <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head"/>   
+                                    <p:inplace  id="org"  
+                                                editor="true" >
+                                        <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head" />   
 
                                         <p:inputText value="#{profileManager.user.homeOrg}"></p:inputText>
                                     </p:inplace>
 
-                                    <h:outputLabel for="orcid" value="Orcid ID" />
+                                    <p:outputLabel for="orcid" value="Orcid ID" />
 
 
                                     <p:inplace  id="orcid"  editor="true">
@@ -175,7 +177,7 @@
                                         <p:inputText value="#{profileManager.user.orcid}"></p:inputText>
                                     </p:inplace>
 
-                                    <h:outputLabel for="mobile" value="Phone" />
+                                    <p:outputLabel for="mobile" value="Phone" />
 
                                     <p:inplace  id="mobile"  editor="true">
                                         <p:ajax event="save" listener="#{profileManager.updateUserInfo()}"
@@ -190,7 +192,7 @@
                             </p:menuitem>
                         </p:submenu>
 
-                        <p:submenu label="Edit Address">
+                        <p:submenu  style="padding-bottom: 10px;" label="Edit Address">
                             <p:menuitem value=""
                                         ajax="false" icon="ui-icon-close">
 
@@ -244,24 +246,21 @@
                         </p:submenu>
 
 
-                        <p:submenu label="Security Settings">
+                        <p:submenu label="Security Settings"  style="padding-bottom: 10px;">
                             <p:menuitem value=""
                                         update="messages" ajax="false" icon="ui-icon-close">
 
                                 <div align="left">
-                                    <h:panelGroup>
+                                    <h:panelGrid columns="2">
 
-                                        <p:outputLabel for="sec" value="Security Question" 
-                                                       />					
-
+                                        <p:outputLabel for="sec" value="Change Security Question"  />					
                                         <p:commandLink id="sec" 
                                                        value="Change"  
                                                        action="change_sec_question"
                                                        styleClass="command_link">
                                         </p:commandLink>
 
-                                        <br></br>
-                                        <p:outputLabel for="password" value="Password" />					
+                                        <p:outputLabel for="password" value="Change Password" />					
                                         <p:commandLink id ="password" 
                                                        value="Change"
                                                        action="profile_password"
@@ -269,9 +268,6 @@
                                                        >
                                         </p:commandLink>
 
-
-                                        <br></br>
-                                        <!-- 
                                         <p:outputLabel for="deactivate" value="Close My Account" />					
                                          <p:commandLink id ="deactivate" 
                                                         value="Deactivate My Account"
@@ -279,9 +275,7 @@
                                                         styleClass="command_link"
                                                         >
                                          </p:commandLink>
-         
-                                         !-->    
-                                    </h:panelGroup>
+                                    </h:panelGrid>
                                 </div>
                             </p:menuitem>
                         </p:submenu>

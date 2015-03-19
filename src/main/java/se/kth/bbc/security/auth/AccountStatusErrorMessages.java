@@ -36,4 +36,7 @@ public class AccountStatusErrorMessages {
     public final static String PASSWORD_MISMATCH = "Passowrs are not matched.";
 
     public final static String PASSWORD_EMPTY = "Password not entetred.";
+    
+    public final static String INCCORCT_PASSWORD ="The password is incorrect.";
+
 }

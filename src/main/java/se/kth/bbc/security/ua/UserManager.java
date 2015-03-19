@@ -89,6 +89,16 @@ public class UserManager {
         return true;
     }
 
+    public boolean closeUserAccount(int id, String note) {
+        User p = (User) em.find(User.class, id);
+        if (p != null) {
+            p.setStatus(PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue());
+            p.setNotes(note);
+            em.merge(p);
+        }
+        return true;
+    }
+        
     public boolean resetPassword(User p, String pass) {
         p.setPassword(pass);
         p.setPasswordChanged(new Timestamp(new Date().getTime()));

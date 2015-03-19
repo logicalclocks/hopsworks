@@ -275,8 +275,8 @@ public class CustomAuthentication implements Serializable {
         if (null != sess) {
             sess.invalidate();
         }
-
         mgr.setOnline(userid, -1);
+
         return ("welcome");
     }
 
