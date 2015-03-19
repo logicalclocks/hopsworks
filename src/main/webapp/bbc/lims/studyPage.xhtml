@@ -86,11 +86,10 @@
                 </p:layoutUnit>
             </p:layout>
 
-            <!-- Subscribe to the study push channel and add ajax event handlers for those necessary -->
-            <p:socket channel="#{studyManagedBean.pushChannel}">
-                <p:ajax event="message" update="@(.historyForm) @(.resultsForm)"/>
-            </p:socket>
-
+            <!-- Update execution info -->
+            <h:form>
+                <p:poll interval="10" update="@(.historyForm) @(.resultsForm)"/>
+            </h:form>
 
             <!-- In case Study has not been set: user navigated to the page manually. -->
             <p:layout id="bbcMainLayoutAlt" styleClass="BbcMainLayoutStudy" rendered="#{studyManagedBean.studyName == null}">  
@@ -299,7 +298,7 @@
                     <h:panelGrid columns="2">
                         <h:outputLabel value="Selected file" for="chooseFileSelected"/>
                         <h:inputText value="#{fileSelectionController.selectedPath}" readonly="true" id="chooseFileSelected" />
-                   
+
                         <h:outputLabel value="Or upload a new file" for="chooseFileUpload"/>
                         <p:fileUpload id="chooseFileUpload" auto="true" 
                                       multiple="false" label="Upload" 
