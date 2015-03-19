@@ -69,10 +69,12 @@
     <servlet-class>org.primefaces.push.PushServlet</servlet-class>
     <async-supported>true</async-supported>
   </servlet>
-  <error-page>
+  <!-- Commented out because I suspect it to be responsible for IllegalStateException: getOutputStream() has already been called for this response -->
+  <!-- Assuming guilty until otherwise proven -->
+<!--  <error-page>
     <exception-type>javax.faces.application.ViewExpiredException</exception-type>
     <location>/index.xhtml</location>
-  </error-page>
+  </error-page>-->
   <servlet-mapping>
     <servlet-name>Push Servlet</servlet-name>
     <url-pattern>/primepush/*</url-pattern>
