@@ -36,4 +36,11 @@ public class AccountStatusErrorMessages {
     public final static String PASSWORD_MISMATCH = "Passowrs are not matched.";
 
     public final static String PASSWORD_EMPTY = "Password not entetred.";
+    
+    public final static String INCCORCT_PASSWORD ="The password is incorrect.";
+    
+    public final static String INCCORCT_DEACTIVATION_LENGTH ="The message should not be less than 5 chars and more than 500 chars.";
+
+    public final static String INCCORCT_TMP_PIN ="The temporary code was wrong.";
+
 }

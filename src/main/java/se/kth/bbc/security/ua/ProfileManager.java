@@ -12,11 +12,14 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+import org.primefaces.event.CellEditEvent;
+import org.primefaces.event.RowEditEvent;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.Address;
 import se.kth.bbc.security.ua.model.User;
@@ -40,6 +43,16 @@ public class ProfileManager implements Serializable {
     private User user;
     private Address address;
     private Userlogins login;
+
+    private boolean editable;
+
+    public boolean isEditable() {
+        return editable;
+    }
+
+    public void setEditable(boolean editable) {
+        this.editable = editable;
+    }
     
     public User getUser() {
         if (user == null) {
@@ -65,6 +78,14 @@ public class ProfileManager implements Serializable {
         this.login = login; 
     }
 
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
  
     public Address getAddress() {
         return this.address;
@@ -85,36 +106,23 @@ public class ProfileManager implements Serializable {
         }
     }
 
-    public String getGravatar() {
-        String email;
-        try {
-            email = getLoginName();
-
-        } catch (IOException ex) {
-            Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null, ex);
-            return DEFAULT_GRAVATAR;
-        }
-        String url = Gravatar.getUrl(email, 60);
-
-        return url;
-    }
-
-       public List<String> getCurrentGroups() {
+    
+    public List<String> getCurrentGroups() {
         List<String> list = userManager.findGroups(user.getUid());
         return list;
     }
-
     
+       
     public void updateUserInfo(){
 
         if (userManager.updatePeople(user)) {
             MessagesController.addInfoMessage("Success", "Profile updated successfully.");
         } else {
-            MessagesController.addSecurityErrorMessage("Update failed.");
+            FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Failed to update", null);
+            FacesContext.getCurrentInstance().addMessage(null, msg);
+
             return;
         }
-    
-            userManager.updateAddress(address);
     }
 
       public void updateAddress(){

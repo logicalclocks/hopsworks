@@ -259,7 +259,7 @@ public class AdminProfileAministration implements Serializable {
             MessagesController.addInfoMessage("Success", "Status updated successfully.");
 
         } else {
-            MessagesController.addErrorMessage("Error", "Faied to update!");
+            MessagesController.addErrorMessage("Error", "No selection made!");
 
         }
 
@@ -273,7 +273,7 @@ public class AdminProfileAministration implements Serializable {
             MessagesController.addInfoMessage("Success", "Role updated successfully.");
             
         } else {
-            MessagesController.addErrorMessage("Error", "Faied to update!");
+            MessagesController.addErrorMessage("Error", "No selection made!!");
 
         }
 

@@ -18,7 +18,12 @@
             <to-view-id>/security/login.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
-      
+
+        <navigation-case>
+            <from-outcome>user_guides</from-outcome>
+            <to-view-id>/security/user_guides.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>      
         <navigation-case>
             <from-outcome>register_mobile</from-outcome>
             <to-view-id>/security/register_mobile.xhtml</to-view-id>
@@ -154,6 +159,12 @@
         <navigation-case>
             <from-outcome>profile</from-outcome>
             <to-view-id>/security/protected/researcher/profile.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
+
+        <navigation-case>
+            <from-outcome>deactivate_account</from-outcome>
+            <to-view-id>/security/protected/researcher/deactivate_account.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
         

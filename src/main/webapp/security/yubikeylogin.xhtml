@@ -57,6 +57,8 @@
                         showDetail="false" closable="true"/>
 
             <p:commandButton value="Sign in" 
+                             ajax="false"
+                             update=":ylogin"
                              action="#{customAuthentication.yubikeyLogin()}"  
                              />
             <div align="center">

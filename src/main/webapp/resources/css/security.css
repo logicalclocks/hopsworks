@@ -9,6 +9,7 @@ and open the template in the editor.
 */
 
 
+
 /* Banner*/
 .banner {
     font-size: 35px;
@@ -231,7 +232,7 @@ input[type="email"], input[type="number"], input[type="password"], input[type="o
 
 /* Account Registration*/
 
-.MobileRegistation {
+.Registation {
     text-align: left;
     font-family: "Open Sans",arial;
     color: #555;
@@ -249,11 +250,9 @@ input[type="email"], input[type="number"], input[type="password"], input[type="o
     margin-bottom: 10px;
 }
 
-
-
 .ForgotPassword {
     font-size: 14px;
-    width: 420px;
+    width: 320px;
     margin: 0 auto;
     margin-top: 50px;
     border-width: 1px; 
@@ -261,7 +260,7 @@ input[type="email"], input[type="number"], input[type="password"], input[type="o
     border-color: lightgray; 
     background-color: #F0F0F0; 
     border-radius: 6px;  
-    padding-top:  40px;   
+    padding:  20px;   
 }
 
 .ForgotPassword .ui-inputfield {
@@ -299,4 +298,38 @@ input[type="email"], input[type="number"], input[type="password"], input[type="o
 }
 .ui-state-default {
 }
+
+
+/*Change Security Question*/
+
+.CSQ {
+    font-size: 14px;
+    width: 420px;
+    margin: 0 auto;
+    margin-top: 50px;
+    border-width: 1px; 
+    border-style: solid; 
+    border-color: lightgray; 
+    background-color: #F0F0F0; 
+    border-radius: 6px;  
+    padding: 40px;   
+}
+
+
+
+.CSQ .ui-inputfield {
+    width: 310px;
+    font-size: 14px;
+    margin-bottom: 10px;
+    padding: 3px;
+}
+
+.CSQ .ui-button {
+    float: right;
+}
+
+.CSQ .ui-messages-error-icon {
+    display: none!important;
+}
+
 

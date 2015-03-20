@@ -46,7 +46,9 @@ public class UserAccountsEmailMessages {
     
     public final static String GREETINGS_HEADER="Hello";
     
-    
+    /* Account deactivation */
+    public final static String ACCOUNT_DEACTIVATED = "Account Deactivated";
+
     
     /**
      * Build an email message for Yubikey users upon registration.
@@ -75,7 +77,7 @@ public class UserAccountsEmailMessages {
         String message;
         
         String l1 = GREETINGS_HEADER +",\n\n"
-                + "\n\nWe received your mobile account request for the BiobankCloud.\n\n";
+                + "We received your mobile account request for the BiobankCloud.\n\n";
         String l2 = "Your account will be activated within "+ ACCOUNT_ACITVATION_PERIOD +" hours.\n\n\n";
         String l3 = "If you have any questions please contact "+ BIOBANKCLOUD_SUPPORT_EMAIL;
 
@@ -117,14 +119,26 @@ public class UserAccountsEmailMessages {
 
         String message;
         String l1 = GREETINGS_HEADER +",\n\n"
-                + "\n\nA security question change has been requested on your behalf.\n\n";
+                + "A security question change has been requested on your behalf.\n\n";
         String l2 = "Your security question has been changed successfully.\n\n\n";
         String l3 = "If you have any questions please contact "+ BIOBANKCLOUD_SUPPORT_EMAIL;
 
         message =  l1 + l2 + l3;
         return message;
     }
+    
+        
+    public static String buildDeactMessage() {
 
+        String message;
+        String l1 = GREETINGS_HEADER +",\n\n"
+                + "We receieved an account deactivation request and your BiobankCloud account has been deactivated.\n\n";
+        String l2 = "If you have any questions please contact "+ BIOBANKCLOUD_SUPPORT_EMAIL;
+
+        message =  l1 + l2;
+        return message;
+    }
+    
     /**
      * Construct message for profile password change
      *

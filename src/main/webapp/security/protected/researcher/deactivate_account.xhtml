@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core">
+
+    <h:head>
+        <title>BiobankCloud - Password reset</title>
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    </h:head>
+
+    <h:body >
+        <ui:insert name="titleBar" >
+            <ui:include src="/bbc/lims/titleBar.xhtml" />       
+        </ui:insert>
+
+        <div align="center">
+
+            <h:form style="margin-top: 75px;" >
+                <h:panelGrid columns="2" >
+                <p:password id="tcurp" 
+                            value="#{resetPassword.current}"  
+                            required="true"
+                            size="35"
+                            requiredMessage="Enter password"/>
+                <p:watermark for="tcurp" value="Enter you password" />
+                
+                <p:inputTextarea id="notes"
+                                 rows="5" 
+                                 cols="35"
+                                 value="#{resetPassword.notes}"
+                                 required="true" 
+                                 requiredMessage="Enter the deactivation reason"
+                                 >
+                </p:inputTextarea>
+                <p:watermark for="notes" value="Deactivation reason" />
+                    
+
+                <p:messages id="messages" severity="error,info" autoUpdate="true" showDetail="false" closable="true"/>
+                <p:spacer></p:spacer>
+                
+              
+                    <h:panelGrid columns="2">   
+                        <p:commandButton  
+                                type="submit" 
+                                value="Close Account"
+                                ajax="false"
+                                action="#{resetPassword.deactivatedProfile()}"/>
+                        <p:commandButton 
+                                type="submit"
+                                value="Cancel" 
+                                action="profile" process="@this"/>
+                    </h:panelGrid>
+                </h:panelGrid>
+
+
+            </h:form>
+        </div>
+    </h:body>
+</html>

@@ -11,146 +11,197 @@
         <h:head>
             <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+                    <link rel="stylesheet" type="text/css" href="#{resource['/css/profile.css']}" />
+
         </h:head>
 
         <h:body>
             <ui:insert name="titleBar" >
                 <ui:include src="/bbc/lims/titleBar.xhtml" />       
             </ui:insert>
-            <p:layout id="bbcMainLayoutYubikey" styleClass="BbcMainLayoutUser">
-                <p:tooltip/>
-                <p:layoutUnit position="center">
-                    <div class="container">
-       
-                        <div class="content" align="center">
-                             <h3 class="register_banner" align="center">Activate Yubikey Account</h3>
-                            
-                            <h:form id="yubikey_registration" class="new_user"> 
-                                
-                                <h:panelGrid columns="3" >			
-                              
-                           
-                                <p:outputLabel for="fname" value="First Name"/>
-                                    <p:inputText id="fname" 
-                                                 value="#{peopleAministration.selectedYubikyUser.fname}" 
-                                                   size="40"
-                                                 readonly="true"
-                                                   />
-                                       <p:spacer></p:spacer>
-                                       
-                                    <p:outputLabel for="lname" 
-                                                   value="Last Name" />
-                                    <p:inputText id="lname" value="#{peopleAministration.selectedYubikyUser.lname}" 
-                                                 size="40"
-                                                 readonly="true"
-                                                 />
-                                    <p:spacer></p:spacer>
 
-                                    <p:outputLabel for="email" 
-                                                   value="Email" />
-                                    <p:inputText id="email" value="#{peopleAministration.selectedYubikyUser.email}"
-                                                 size="40"
-                                                 readonly="true"
-                                                 >
-                                    </p:inputText>    
-                                    <p:spacer></p:spacer>
-                                    
-                                    <p:outputLabel for="tel" value="Mobile:" />
-                                    <p:inputText id="tel" 
-                                                 value="#{peopleAministration.selectedYubikyUser.mobile}" 
-                                                 size="40"
-                                                readonly="true">
-                                    </p:inputText>
-                                    <p:spacer></p:spacer>
-                                    
-                                    <p:outputLabel for="address1" value="C/O" />
-                                    <p:inputText id="address1"
-                                                 value="#{peopleAministration.address.address1}" 
-                                                 size="40"
-                                                 readonly="true">
-                                    </p:inputText>
-                                    <p:spacer></p:spacer>
-                                    
-                                    <p:outputLabel for="address2" value="Street and number"/>
-                                    <p:inputText id="address2"
-                                                 value="#{peopleAministration.address.address2}"
-                                                  readonly="true"
-                                                 size="40">
-                                    </p:inputText>
-                                   <p:spacer></p:spacer>
-                                      
-                                    <p:outputLabel for="city" value="City" style="font-weight:bold" />
-                                    <p:inputText id="city" 
-                                                 value="#{peopleAministration.address.city}"  
-                                                 readonly="true"
-                                                 size="40">
-                                    </p:inputText>
-                                    <p:spacer></p:spacer>
-                                      
-                                    <p:outputLabel for="zip" value="Postal Code:" />
-                                    <p:inputText id="zip" 
-                                                 readonly="true"
-                                                value="#{peopleAministration.address.postalcode}" 
-                                                 size="40">
-                                    </p:inputText>
-                                    <p:spacer></p:spacer>
-                                    
-                                    <p:outputLabel for="country" value="Country:"/>
-                                    <p:inputText id="country" 
-                                                 value="#{peopleAministration.address.country}" 
-                                                 readonly="true"
-                                                 size="40">
-                                    </p:inputText>
-                                    <p:spacer></p:spacer>
-                                      
-                                    <p:outputLabel for="seri" value="Yubikey Serial"/>
-                                    <p:inputText id="seri" value="#{peopleAministration.serial}"  
-                                                 required="true"
-                                                 requiredMessage="Enter the Yubikey Serial Number" 
-                                                 size="40">
-                                    </p:inputText>
-                                
-                                    <p:tooltip   for="seri" 
-                                                 value="Yubikey Device Serial Number" 
-                                                 trackMouse="true" />
-                                    
-                                    <p:outputLabel for="pid" value="Yubikey PublicId"/>
-                                    <p:inputText id="pid" 
-                                                 value="#{peopleAministration.pubid}" 
-                                                 required="true"
-                                                 requiredMessage="Enter the Yubikey  Public Id" 
-                                                 size="40">
-                                    </p:inputText>
-                                    <p:tooltip   for="pid" 
-                                                 value="Yubikey Public Identity ( 6 bytes Modhex)" 
-                                                 trackMouse="true" />
-                                    
-                                    <p:outputLabel for="secret" value="Yubikey Secret"/>
-                                    <p:inputText id="secret"
-                                                 value="#{peopleAministration.secret}" 
-                                                 required="true"
-                                                 requiredMessage="Enter the Yubikey Secret Code" 
-                                                 size="40">
-                                    </p:inputText>
-                                      <p:tooltip   for="secret" 
-                                                 value="Yubikey Secret Key (16 bytes Hex)" 
-                                                 trackMouse="true" />
-                                    <p:spacer></p:spacer>
-                                    <p:messages id="messages" autoUpdate="true" showDetail="false" closable="true"/>
+        <div align="center" class="UserProfile">
+        <p:tooltip/>
+            
+            <div class="PersonalInfo">
+                <h3 > Personal Info</h3>
+                <p:separator></p:separator>
 
-                                 
-                                </h:panelGrid>
+                <p:panelGrid columns="4" styleClass="PersonalIfo">
 
-                                <div style="padding-bottom: 70px; padding-top: 10px;">
-                                    <p:commandButton  type="submit" value="Register" action="#{peopleAministration.activateYubikey()}"/>
-                                    <p:commandButton  type="submit" value="Cancel" action="userMgmt" immediate="true" />
-                                </div>
+                    <p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Name" /></h3> 
+                    </p:column>   
 
-                            </h:form>     
-                        </div>
-                    </div> 
-                </p:layoutUnit>
-            </p:layout>
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+                            #{peopleAministration.selectedYubikyUser.title} #{peopleAministration.selectedYubikyUser.fname} #{peopleAministration.selectedYubikyUser.lname} 
+                        </h3>
+                    </p:column>
+
+                    <p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Member Since" /></h3> 
+                    </p:column>   
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+                            #{peopleAministration.selectedYubikyUser.activated}
+                        </h3>
+                    </p:column>
+
+                    <p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Email" /></h3> 
+                    </p:column>
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{peopleAministration.selectedYubikyUser.email}  </h3>
+                    </p:column>
+
+                    <p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Phone" /></h3> 
+                    </p:column>
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{peopleAministration.selectedYubikyUser.mobile}  </h3>
+                    </p:column>
+
+                    <p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Organization" /></h3> 
+                    </p:column>
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{peopleAministration.selectedYubikyUser.homeOrg}  </h3>
+                    </p:column>
+
+                    <p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Orcid ID" /></h3> 
+                    </p:column>
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{peopleAministration.selectedYubikyUser.orcid}  </h3>
+                    </p:column>
+
+
+                </p:panelGrid>
+            </div>
+
+            <br></br>
+            <div class="PersonalInfo">
+                <h3 > Contact Info</h3>
+                <p:separator></p:separator>
+
+                <p:panelGrid columns="2" >
+
+                    <p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="C/O" /></h3> 
+                    </p:column>   
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+                            #{peopleAministration.selectedYubikyUser.address.address1}
+                        </h3>
+                    </p:column>
+
+                    <p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Street and number" /></h3> 
+                    </p:column>   
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"  >
+                           #{peopleAministration.selectedYubikyUser.address.address2} #{peopleAministration.selectedYubikyUser.address.address3} 
+                        </h3>
+                    </p:column>
+
+
+                    <p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Postal Code" /></h3> 
+                    </p:column>   
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+                            #{peopleAministration.selectedYubikyUser.address.postalcode}  #{peopleAministration.selectedYubikyUser.address.city}
+                        </h3>
+                    </p:column>
+
+                    <p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="State" /></h3> 
+                    </p:column>   
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+                            #{peopleAministration.selectedYubikyUser.address.state} 
+                        </h3>
+                    </p:column>
+
+                    <p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Country" /></h3> 
+                    </p:column>   
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+                            #{peopleAministration.selectedYubikyUser.address.country} 
+                        </h3>
+                    </p:column>
+
+                </p:panelGrid>
+            </div>
+            <p:separator></p:separator>
+
+            <h:form>
+                    <h:panelGrid columns="3">  
+                        <p:outputLabel for="seri" 
+                                       style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"
+                                       value="Yubikey Serial"/>
+                        <p:inputText id="seri" 
+                                     value="#{peopleAministration.serial}"  
+                                     required="true"
+                                     requiredMessage="Enter the Yubikey Serial Number" 
+                                     size="40">
+                        </p:inputText>
+
+                        <p:tooltip   for="seri" 
+                                     value="Yubikey Device Serial Number" 
+                                     trackMouse="true" />
+
+                        <p:outputLabel for="pid" 
+                                       style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"
+                                       value="Yubikey PublicId"/>
+
+                        <p:inputText id="pid" 
+                                     value="#{peopleAministration.pubid}" 
+                                     required="true"
+                                     requiredMessage="Enter the Yubikey  Public Id" 
+                                     size="40">
+                        </p:inputText>
+
+                        <p:tooltip   for="pid" 
+                                     value="Yubikey Public Identity ( 6 bytes Modhex)" 
+                                     trackMouse="true" />
+
+                        <p:outputLabel for="secret"
+                                       style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"
+                                       value="Yubikey Secret"/>
+                        <p:inputText id="secret"
+                                     value="#{peopleAministration.secret}" 
+                                     required="true"
+                                     requiredMessage="Enter the Yubikey Secret Code" 
+                                     size="40">
+                        </p:inputText>
+                        <p:tooltip   for="secret" 
+                                     value="Yubikey Secret Key (16 bytes Hex)" 
+                                     trackMouse="true" />
+                        <p:spacer></p:spacer>
+                        <p:messages id="messages" autoUpdate="true" showDetail="false" closable="true"/>
+                        <p:spacer></p:spacer>
+                    </h:panelGrid>
+                
+                <div align="center">
+                        <p:commandButton  type="submit" value="Register" action="#{peopleAministration.activateYubikey()}"/>
+                        <p:spacer width="10px"></p:spacer>
+                        <p:commandButton  type="submit" value="Cancel" action="userMgmt" immediate="true" />
+                    </div>
+                </h:form>     
+            </div>
         </h:body>
     </f:view>
 </html>

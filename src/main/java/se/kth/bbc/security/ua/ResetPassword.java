@@ -10,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -51,7 +52,9 @@ public class ResetPassword implements Serializable {
     private List<String> questions;
 
     private String answer;
-
+    
+    private String notes;
+    
     @EJB
     private UserManager mgr;
 
@@ -60,6 +63,14 @@ public class ResetPassword implements Serializable {
 
     @Resource
     private UserTransaction userTransaction;
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
 
     
     public List<String> getQuestions() {
@@ -317,10 +328,46 @@ public class ResetPassword implements Serializable {
         return ("reset_password");
     }
 
-    /**
-     *
-     * @return
-     */
+    
+    public String deactivatedProfile(){
+         FacesContext ctx = FacesContext.getCurrentInstance();
+        HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
+
+        if (req.getRemoteUser() == null) {
+            return ("welcome");
+        }
+
+        people = mgr.getUser(req.getRemoteUser());
+ 
+        try {
+            
+            // check the deactivation reason length
+            if(this.notes.length() <  5 || this.notes.length() > 500){
+                    MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_DEACTIVATION_LENGTH);
+            }
+        
+            if (SecurityUtils.converToSHA256(this.current).equals(people.getPassword())) {
+                
+                // close the account
+                mgr.closeUserAccount(people.getUid(), this.notes);
+                // send email    
+                String message = UserAccountsEmailMessages.buildSecResetMessage();
+                emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_DEACTIVATED, message);
+             
+ 
+            } else {
+                MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_PASSWORD);
+                return "";
+            }
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
+            Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return logout();
+    }
+    
+    
+    
     public String changeProfilePassword() {
         FacesContext ctx = FacesContext.getCurrentInstance();
         HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
@@ -377,11 +424,23 @@ public class ResetPassword implements Serializable {
     }
 
     public String logout() {
+        
+        
         // Logout user
         FacesContext context = FacesContext.getCurrentInstance();
-        HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
-        session.invalidate();
+        
+        HttpServletRequest req = (HttpServletRequest) context.getExternalContext().getRequest();
 
+        HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
+      
+        if (req.getRemoteUser() == null) {
+            return ("welcome");
+        }
+
+        people = mgr.getUser(req.getRemoteUser());
+        session.invalidate();
+        
+        mgr.setOnline(people.getUid(), -1);
         return ("welcome");
     }
 

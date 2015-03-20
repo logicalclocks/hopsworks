@@ -25,10 +25,10 @@
                     columns="#{customAuthenticationSwitch.otpEnabled?2:1}" 
                     styleClass="registerContainer">
 
-                        <h:form class="register_form"> 
-                    <h:panelGroup styleClass="MobileRegistation" >
-                        <h3>Create your BiobankCloud account</h3>
 
+                    <h:panelGroup styleClass="Registation" >
+                        <h2 styule="padding-top: 40px;">Create your BiobankCloud account</h2>
+                        <h:form class="register_form"> 
 
                             <h:panelGrid columns="4" >			
 
@@ -64,7 +64,7 @@
                                     <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                 </p:inputText>
                                 <p:watermark for="tel" value="Telephone number" />
-                                
+
                                 <p:password id="password0" 
                                             value="#{userRegistration.password}" 
                                             required="true"
@@ -105,19 +105,18 @@
                                              value="#{userRegistration.security_answer}"
                                              style="width: 508px"
                                              required="true"
-                                             autocomplete="off"
                                              requiredMessage="Answer security question" />
                                 <p:watermark for="answer" value="Security answer" />
 
-
+<!--
                                 <p:captcha id ="captcha" 
                                            label="Captcha"
                                            required="true" 
                                            requiredMessage="Enter Captcha"/>
 
                                 <p:spacer></p:spacer>
-
-                                <h:panelGroup style="padding: 10">
+-->
+                                <h:panelGroup >
                                     <p:selectBooleanCheckbox 
                                         value="#{userRegistration.tos}"> 
                                         <f:validator binding="#{tosCheckboxValidator}" />
@@ -131,84 +130,89 @@
                                     </p:commandLink>
                                 </h:panelGroup>
                             </h:panelGrid>
-                            <p:messages id="messages" showDetail="false" autoUpdate="true" closable="true"/>
 
+                            <p:messages id="messages" showDetail="false" autoUpdate="true" closable="true"/>
                             <div class="register_user">
-                            <p:commandButton  
-                                              type="submit"
-                                              value="Register" 
-                                              oncomplete="Recaptcha.reload();" 
-                                              action="#{userRegistration.registerMobileUser()}"/>
-                        
-                           <p:spacer width="10"></p:spacer>
-                           
-                            <p:commandButton  
-                                              type="submit"
-                                              value="Cancel" 
-                                              action="welcome" 
-                                              immediate="true" 
-                                              />
+                                <p:commandButton  
+                                    type="submit"
+                                    value="Register" 
+                                    oncomplete="Recaptcha.reload();" 
+                                    action="#{userRegistration.registerMobileUser()}"
+                                    ajax="false"
+                                    update=":register_form"
+                                    />
+
+                                <p:spacer width="10"></p:spacer>
+
+                                <p:commandButton  
+                                    type="submit"
+                                    value="Cancel" 
+                                    action="welcome" 
+                                    immediate="true"
+                                    ajax="false"
+                                    />
                             </div>
-                    </h:panelGroup>
 
                         </h:form> 
-
-                    <h:panelGroup rendered="#{customAuthenticationSwitch.otpEnabled}"
-                                  styleClass="registerPanel">
-                        
-                        <div id="mobile_user_guide" style="padding-left: 150px;" align="left">
-                            
-                            <h3 align="left">Why mobile two-step verification?</h3>
-                       
-                            <p>
-                                It's easier than you think for someone to steal your password.
-                                <br></br>
-                                Any of these common actions could put you at risk of having your password stolen:
-                                <ul>
-                                    <li>Using the same password on more than one site</li>
-                                    <li>Downloading software from the Internet</li>
-                                    <li>Clicking on links in email messages</li>
-                                </ul>
-                                2-Step Verification can help keep bad guys out, even if they have your password.
-                                <br></br>
-                                <br></br>
-                                <p style="width: 500px;">
-                                    In order to use mobile verification you need to install Google Authenticator on your mobile
-                                    device (such as Apple iPhone, iPad, Google Nexus). 
-                                    For instructions on how to do this, refer to: 
-                                    <a style="color: #075fa9;font-style: italic" target="_blank" 
-                                       href="https://support.google.com/accounts/answer/1066447?hl=en"> 
-                                        Installing Google Authenticator.
-                                    </a> 
-
-                                    <br></br>
-                                    <br></br>
-                                    After submitting the form on the left, a QR code as shown below will be generated and you need to scan it with your device.
-                                    <br></br>
-                                    <br></br>
-                                    <div align="center">
-                                        <p:graphicImage library="images" name="icons/qrcode.png" style="width: 100px; height: 100px;" ></p:graphicImage>
-                                    </div>
-                                    <br></br>
-                                </p>
-                                <div align="left">
-                                    <p style="width: 500px; height: auto;">
-                                        After loading the code, every 30 seconds a new one-time password will be generated by Google Authenticator.
-                                        You will be required to provide this one-time password as PIN in addition to your password.
-                                    </p>
-                                    <br></br>
-                                    <div align="center" >   
-                                        <p:graphicImage library="images" name="icons/gauth.png" style="float: inside; width: 200px; height: 300px; "></p:graphicImage>
-                                    </div>
-                                    <br></br>
-                                    <p style="width: 500px; height: auto;">
-                                        Please note that the generated one-time password will not be sent to your mobile number. 
-                                        The one-time password will be generated on your device in the Google Authenticator app. 
-                                    </p>
-                                </div>  
-                            </p>
-                        </div>                    
                     </h:panelGroup>
+                  
+                        <h:panelGroup rendered="#{customAuthenticationSwitch.otpEnabled}">
+                            
+                            <div class="UserGuides">
+
+                                <h2 align="center" class="signup_header">More security for your data</h2>
+
+                                <p class="signup_contents">                               
+                                   BiobankCloud provides two-factor authentication to ensure strong security.
+                                   For this purpose, you are required to have a smartphone and install the Google Authenticator app.
+                                     
+                                   <a target="_blank" 
+                                      href="user_guides.xhtml">More guidelines
+                                    </a> 
+                                </p>  
+
+                                <p class="signup_contents" >
+                                   When you login to the BiobankCloud you will be asked to enter your usual password (label 1) 
+                                   and a 6-digit code that is generated by the Google Authenticator app (label 2).
+
+                                    <div align="center">
+                                        <p:graphicImage library="images" name="users/2factorauth.png" 
+                                           style="width: 200px; height: 200px ;padding-bottom: 20px;" >
+                                        </p:graphicImage>
+                                    </div>
+                                </p>
+
+                                <p class="signup_contents">
+                                   After filling in the information on the left menu and registering an account, 
+                                   you will be asked to scan an image as following by the app in your mobile.
+                                    <div align="center">
+                                        <p:graphicImage library="images" name="icons/qrcode.png" 
+                                            style="width: 480px; height: 100px; padding-bottom: 20px;" >
+                                        </p:graphicImage>
+                                    </div>
+                                </p>
+
+                                <p class="signup_contents">
+                                   By scanning this image your BiobankCloud account will be setup and everytime you sign-in
+                                   you will need to check your app to get the 6-digit code. In the following example the code is: 671362
+                                </p>
+
+                                <p class="signup_contents">
+                                    <div align="center" >   
+                                        <p:graphicImage library="images" name="icons/gauth.png" 
+                                           style="float: inside; width: 130px; height: 170px; padding-bottom: 20px;">
+                                        </p:graphicImage>
+                                    </div>
+                                </p>
+
+                                <p class="signup_contents" style="margin-bottom: 100px;">
+                                   Please note that the generated one-time password will not be sent to your mobile number. 
+                                   The one-time password will be generated on your device in the Google Authenticator app. 
+                               </p>
+
+                           </div>  
+                        
+                     </h:panelGroup>
                 </h:panelGrid>
             </div>   
         </h:body>
