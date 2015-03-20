@@ -46,14 +46,21 @@ public class UserManager {
     }
 
     /**
-     * Register an address for new users
+     * Register an address for new mobile users.
      *
      * @return
      */
     public boolean registerAddress(User user) {
-        Address p = new Address();
-        p.setUid(user);
-        em.persist(p);
+        Address add = new Address();
+        add.setUid(user);
+        add.setAddress1("-");
+        add.setAddress2("-");
+        add.setAddress3("-");
+        add.setState("-");
+        add.setCity("-");
+        add.setCountry("-");
+        add.setPostalcode("-");
+        em.persist(add);
         return true;
     }
 
@@ -259,16 +266,27 @@ public class UserManager {
 
         Address add = new Address();
         add.setUid(uid);
-        add.setAddress1(address1);
-        add.setAddress2(address2);
-        add.setAddress3(address3);
-        add.setState(state);
-        add.setCity(city);
-        add.setCountry(country);
-        add.setPostalcode(postalcode);
+        add.setAddress1(checkDefaultValue(address1));
+        add.setAddress2(checkDefaultValue(address2));
+        add.setAddress3(checkDefaultValue(address3));
+        add.setState(checkDefaultValue(state));
+        add.setCity(checkDefaultValue(city));
+        add.setCountry(checkDefaultValue(country));
+        add.setPostalcode(checkDefaultValue(postalcode));
         em.persist(add);
 
         return true;
+    }
+    
+    /**
+     * Check the value and if empty set as '-'.
+     * @param var
+     * @return 
+     */    
+    public String checkDefaultValue(String var){
+        if(var!=null && !var.isEmpty())
+            return var;
+        return "-";
     }
 
     /**
@@ -304,11 +322,11 @@ public class UserManager {
         user.setEmail(email);
         user.setFname(fname);
         user.setLname(lname);
-        user.setHomeOrg(org);
-        user.setMobile(tel);
+        user.setHomeOrg(checkDefaultValue(org));
+        user.setMobile(checkDefaultValue(tel));
         user.setUid(uid);
-        user.setOrcid(orcid);
-        user.setTitle(title);
+        user.setOrcid(checkDefaultValue(orcid));
+        user.setTitle(checkDefaultValue(title));
         user.setActivated(new Timestamp(new Date().getTime()));
         user.setStatus(status);
         /*

@@ -38,7 +38,7 @@
 
                     <p:column>
                         <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                            #{adminProfileAministration.editingUser.title} #{adminProfileAministration.editingUser.fname} #{adminProfileAministration.editingUser.lname} 
+                           #{adminProfileAministration.editingUser.title eq '-'?'':adminProfileAministration.editingUser.title} #{adminProfileAministration.editingUser.fname} #{adminProfileAministration.editingUser.lname} 
                         </h3>
                     </p:column>
 
@@ -122,20 +122,21 @@
 
                     <p:column>
                         <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"  >
-                           #{adminProfileAministration.address.address2} #{adminProfileAministration.address.address3} 
+                            
+                           #{adminProfileAministration.address.address2} #{adminProfileAministration.address.address3 eq '-'? '': adminProfileAministration.address.address3} 
                         </h3>
                     </p:column>
 
 
                     <p:column>
                           <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel value="Postal Code" />
+                              <p:outputLabel value="Postal Code/City" />
                           </h3> 
                     </p:column>   
 
                     <p:column>
                         <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                            #{adminProfileAministration.address.postalcode}  #{adminProfileAministration.address.city}
+                            #{adminProfileAministration.address.postalcode} #{adminProfileAministration.address.city eq '-'? '': '/ '.concat(adminProfileAministration.address.city)} 
                         </h3>
                     </p:column>
 

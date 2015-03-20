@@ -338,9 +338,14 @@ public class ResetPassword implements Serializable {
         }
 
         people = mgr.getUser(req.getRemoteUser());
-
-        
+ 
         try {
+            
+            // check the deactivation reason length
+            if(this.notes.length() <  5 || this.notes.length() > 500){
+                    MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_DEACTIVATION_LENGTH);
+            }
+        
             if (SecurityUtils.converToSHA256(this.current).equals(people.getPassword())) {
                 
                 // close the account

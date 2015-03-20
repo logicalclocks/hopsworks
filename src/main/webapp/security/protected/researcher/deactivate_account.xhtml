@@ -10,10 +10,7 @@
 
     <h:head>
         <title>BiobankCloud - Password reset</title>
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-                <link rel="stylesheet" type="text/css" href="#{resource['/css/signup.css']}" />
-
     </h:head>
 
     <h:body >
@@ -21,45 +18,47 @@
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
 
-             <div class="ForgotPassword" align="center">
+        <div align="center">
 
-       
-        <h:form >
-                    <p:password id="tcurp" 
-                                value="#{resetPassword.current}"  
-                                required="true" 
-                                requiredMessage="Enter password"/>
-                   <p:watermark for="tcurp" value="Enter you password" />
-                   
-                   <p:inputTextarea id="notes"
-                                    rows="5" 
-                                    cols="30"
-                                    value="#{resetPassword.notes}"
-                                    required="true" 
-                                    requiredMessage="Enter the deactivation reason"
-                                    >
-                    </p:inputTextarea>
-                    <p:watermark for="notes" value="Deactivation reason" />
-                   
-        
-                    <p:messages id="messages" severity="error,info" autoUpdate="true" showDetail="false" closable="true"/>
+            <h:form style="margin-top: 75px;" >
+                <h:panelGrid columns="2" >
+                <p:password id="tcurp" 
+                            value="#{resetPassword.current}"  
+                            required="true"
+                            size="35"
+                            requiredMessage="Enter password"/>
+                <p:watermark for="tcurp" value="Enter you password" />
+                
+                <p:inputTextarea id="notes"
+                                 rows="5" 
+                                 cols="35"
+                                 value="#{resetPassword.notes}"
+                                 required="true" 
+                                 requiredMessage="Enter the deactivation reason"
+                                 >
+                </p:inputTextarea>
+                <p:watermark for="notes" value="Deactivation reason" />
                     
-                    <h:panelGrid columns="2" style="padding: 20px;">
-                              <p:commandButton  
-                                     type="submit" 
-                                     value="Close Account"
-                                      action="#{resetPassword.deactivatedProfile()}"/>
-               
-                    <p:commandButton 
-                                     type="submit"
-                                     value="Cancel" 
-                                     action="profile" process="@this"/>
-              
-                        
-                    </h:panelGrid>
 
-          
-        </h:form>
-      </div>
+                <p:messages id="messages" severity="error,info" autoUpdate="true" showDetail="false" closable="true"/>
+                <p:spacer></p:spacer>
+                
+              
+                    <h:panelGrid columns="2">   
+                        <p:commandButton  
+                                type="submit" 
+                                value="Close Account"
+                                ajax="false"
+                                action="#{resetPassword.deactivatedProfile()}"/>
+                        <p:commandButton 
+                                type="submit"
+                                value="Cancel" 
+                                action="profile" process="@this"/>
+                    </h:panelGrid>
+                </h:panelGrid>
+
+
+            </h:form>
+        </div>
     </h:body>
 </html>

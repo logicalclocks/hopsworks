@@ -161,6 +161,12 @@
             <to-view-id>/security/protected/researcher/profile.xhtml</to-view-id>
             <redirect/>
         </navigation-case>
+
+        <navigation-case>
+            <from-outcome>deactivate_account</from-outcome>
+            <to-view-id>/security/protected/researcher/deactivate_account.xhtml</to-view-id>
+            <redirect/>
+        </navigation-case>
         
          <navigation-case>
             <from-outcome>admin_profile</from-outcome>

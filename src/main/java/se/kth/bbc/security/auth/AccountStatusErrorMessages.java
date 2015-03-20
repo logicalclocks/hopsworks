@@ -38,5 +38,7 @@ public class AccountStatusErrorMessages {
     public final static String PASSWORD_EMPTY = "Password not entetred.";
     
     public final static String INCCORCT_PASSWORD ="The password is incorrect.";
+    
+    public final static String INCCORCT_DEACTIVATION_LENGTH ="The message should not be less than 5 chars and more than 500 chars.";
 
 }

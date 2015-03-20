@@ -34,7 +34,7 @@
 
                         <p:column>
                             <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                                #{profileManager.user.title} #{profileManager.user.fname} #{profileManager.user.lname} 
+                                #{profileManager.user.title eq '-'?'':profileManager.user.title}  #{profileManager.user.fname} #{profileManager.user.lname} 
                             </h3>
                         </p:column>
 
