@@ -248,6 +248,7 @@
 
                                     <p:outputLabel for="city" value="City"  />
                                     <p:inplace  id="city" editor="true">
+                                         <p:ajax event="save" listener="#{profileManager.updateAddress()}" update=":profile_head"/>   
                                         <p:inputText       value="#{profileManager.address.city}"   
                                                            required="true"
                                                            requiredMessage="Value is requires"
@@ -257,6 +258,7 @@
 
                                     <p:outputLabel for="st" value="State"/>
                                     <p:inplace  id="st" editor="true">
+                                         <p:ajax event="save" listener="#{profileManager.updateAddress()}" update=":profile_head"/>   
                                         <p:inputText       value="#{profileManager.address.state}"   
                                                            required="true"
                                                            requiredMessage="Value is requires"
@@ -267,6 +269,7 @@
 
                                     <p:outputLabel for="co" value="Country" />
                                     <p:inplace  id="co" editor="true">
+                                         <p:ajax event="save" listener="#{profileManager.updateAddress()}" update=":profile_head"/>   
                                         <p:inputText       value="#{profileManager.address.country}"   
                                                            required="true"
                                                            requiredMessage="Value is requires"
