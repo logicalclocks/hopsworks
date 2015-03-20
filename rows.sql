@@ -13,7 +13,7 @@ INSERT INTO bbc_group (gid,group_name,group_desc) VALUES
     username: admin
     password: admin
     security question: admin
-    two-factor secret: V3WBPS4G2WMQ53VA
+    two-factor secret: V3WBPS4G2WMQ53VA. This can be used for manual setup on the Authenticator app by admin instead of the QR code.
  */;
 INSERT INTO users (uid, username, password, email, fname, lname, activated, status, secret, security_question, 
 security_answer, yubikey_user, password_changed, title, orcid, home_org, mobile)
