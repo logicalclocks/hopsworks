@@ -22,7 +22,7 @@
         <h:form >
             <div class="ForgotPassword" align="center">
 
-                    <p:inputText id="runame" required="true" label="email" size="40"
+                    <p:inputText id="runame" required="true"  
                                  requiredMessage="Enter your email address."
                                  validatorMessage="Invalid email format"
                                  value="#{recoverySelector.uname}"
@@ -35,7 +35,7 @@
                     <p:watermark for="runame" value="Enter your email" />
 
                     <p:password id="curpwd" value="#{recoverySelector.passwd}"  
-                                label="current" required="true" 
+                                 required="true" 
                                   size="40"  
                                   requiredMessage="Enter password"/>
                     <p:watermark for="curpwd" value="******" />
@@ -45,8 +45,11 @@
 
                     <p:messages id="messages" autoUpdate="true" closable="true"/>
 
-                    <h:panelGrid columns="2" > 
-                        <p:commandButton type="submit" value="Submit" action="#{recoverySelector.sendQrCode()}"/>
+                    <h:panelGrid columns="2" style="margin-top: 20px"> 
+                        <p:commandButton type="submit"
+                                         value="Submit" 
+                                         ajax="false"
+                                         action="#{recoverySelector.sendQrCode()}"/>
                         <p:commandButton type="submit" value="Cancel" action="welcome" process="@this"/>
                     </h:panelGrid>   
 

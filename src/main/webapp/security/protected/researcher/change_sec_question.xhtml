@@ -10,8 +10,7 @@
     <h:head>
         <title>BiobankCloud - Password reset</title>
         <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
-        
+        <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />       
     </h:head>                                                    
 
     <h:body >
@@ -20,9 +19,9 @@
         </ui:insert>
 
 
-        <h:form>
-            <div class="ForgotPassword" align="center">
-
+ 
+        <div  align="center" class="CSQ"> 
+       <h:form>
                 <p:selectOneMenu id="sec_question" 
                                  value="#{resetPassword.question}" 
                                  required="true"
@@ -49,10 +48,11 @@
 
 
 
-                <h:panelGrid columns="2" style="padding: 10px;">
+                <h:panelGrid columns="2" style="margin-top: 10px;">
                     <p:commandButton 
                         type="submit"
                         value="Submit"
+                        ajax="false"
                         action="#{resetPassword.changeSecQuestion()}"/>
 
                     <p:commandButton 
@@ -61,9 +61,11 @@
                         action="profile" process="@this" />
 
                 </h:panelGrid>
-            </div>
 
         </h:form>
+            </div>
+
+
 
     </h:body>
 </html>

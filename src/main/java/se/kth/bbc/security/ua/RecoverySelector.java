@@ -205,7 +205,7 @@ public class RecoverySelector implements Serializable {
                 }
             }
 
-            MessagesController.addSecurityErrorMessage("Wrong Password!");
+            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_TMP_PIN);
 
             return "";
         }

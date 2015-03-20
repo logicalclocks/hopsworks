@@ -19,33 +19,35 @@
             <ui:include src="/bbc/lims/titleBar.xhtml" />       
         </ui:insert>
 
-        <h:form>
-            <div class="GenericMenue" align="center">
-            
-            
-                    <p:inputText id="uname" required="true" label="email" 
-                                 requiredMessage="Please enter your email address."
-                                 validatorMessage="Invalid email format"
-                                 value="#{resetPassword.username}">
+        <div class="ForgotPassword" align="center">
 
-                        <f:validateRegex
-                            pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+            <h:form>
+                <p:inputText id="uname" 
+                             required="true"  
+                             requiredMessage="Please enter your email address."
+                             validatorMessage="Invalid email format"
+                             value="#{resetPassword.username}">
 
-                    </p:inputText>
-                    <p:watermark for="uname" value="Email Address" />
-                  
-                    <p:messages id="messages" autoUpdate="true" closable="true"/>
-                        
-                    <h:panelGrid columns="2" >
-                        <p:commandButton value="Continue" 
-                                         action="#{resetPassword.findQuestion}" >
-                            <f:param name="username" value="#{resetPassword.username}" />
-                        </p:commandButton>
-                        <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" />
-                    </h:panelGrid>
-            
-            </div>          
-        </h:form>
+                    <f:validateRegex
+                        pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+
+                </p:inputText>
+
+                <p:watermark for="uname" value="Email Address" />
+
+                <p:messages id="messages" autoUpdate="true" closable="true"/>
+
+                <h:panelGrid columns="2" style="margin-top: 20px;">
+                    <p:commandButton value="Continue"
+                                     ajax="false"
+                                     action="#{resetPassword.findQuestion}" >
+                        <f:param name="username" value="#{resetPassword.username}" />
+                    </p:commandButton>
+                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" />
+                </h:panelGrid>
+            </h:form>
+
+        </div>          
 
     </h:body>
 </html>
