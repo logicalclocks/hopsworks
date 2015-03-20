@@ -20,7 +20,7 @@
                 <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
             </ui:insert>
             <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
-            
+
             <div align="center" class="UserProfile">
 
                 <div class="PersonalInfo">
@@ -33,7 +33,7 @@
                         </p:column>   
 
                         <p:column>
-                             <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+                            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
                                 #{profileManager.user.title} #{profileManager.user.fname} #{profileManager.user.lname} 
                             </h3>
                         </p:column>
@@ -73,7 +73,7 @@
 
                     <p:panelGrid columns="2" styleClass="PersonalIfo">
                         <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Current BiobankCloud Roles" /></h3> 
+                            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Current BiobankCloud Roles" /></h3> 
                         </p:column>
 
                         <p:column>
@@ -92,7 +92,7 @@
                         </p:column>   
 
                         <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Last Login" /></h3>                             
+                            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Last Login" /></h3>                             
                         </p:column>
 
                         <p:column>
@@ -102,7 +102,7 @@
                         </p:column>
 
                         <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Last Passsword Changed " /></h3>                         </p:column>
+                            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"><p:outputLabel   value="Last Passsword Changed " /></h3>                         </p:column>
 
                         <p:column>
                             <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
@@ -154,7 +154,10 @@
                                         <p:ajax event="save" 
                                                 listener="#{profileManager.updateUserInfo()}"
                                                 update=":profile_head"/>
-                                        <p:inputText value="#{profileManager.user.title}">
+                                        <p:inputText value="#{profileManager.user.title}"
+                                                     required="true"
+                                                     requiredMessage="Value is requires"
+                                                     >
                                         </p:inputText>
                                     </p:inplace>
 
@@ -165,7 +168,10 @@
                                                 editor="true" >
                                         <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head" />   
 
-                                        <p:inputText value="#{profileManager.user.homeOrg}"></p:inputText>
+                                        <p:inputText value="#{profileManager.user.homeOrg}"
+                                                     required="true"
+                                                     requiredMessage="Value is requires"
+                                                     ></p:inputText>
                                     </p:inplace>
 
                                     <p:outputLabel for="orcid" value="Orcid ID" />
@@ -174,7 +180,11 @@
                                     <p:inplace  id="orcid"  editor="true">
                                         <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head"/>   
 
-                                        <p:inputText value="#{profileManager.user.orcid}"></p:inputText>
+                                        <p:inputText value="#{profileManager.user.orcid}"
+                                                     required="true"
+                                                     requiredMessage="Value is requires"
+
+                                                     ></p:inputText>
                                     </p:inplace>
 
                                     <p:outputLabel for="mobile" value="Phone" />
@@ -183,7 +193,11 @@
                                         <p:ajax event="save" listener="#{profileManager.updateUserInfo()}"
                                                 update=":profile_head"/>   
 
-                                        <p:inputText  value="#{profileManager.user.mobile}"></p:inputText>
+                                        <p:inputText  value="#{profileManager.user.mobile}"
+                                                      required="true"
+                                                      requiredMessage="Value is requires"
+
+                                                      ></p:inputText>
                                     </p:inplace>
 
                                 </p:panelGrid>   
@@ -196,12 +210,17 @@
                             <p:menuitem value=""
                                         ajax="false" icon="ui-icon-close">
 
-                                <p:panelGrid columns="4" styleClass="AddressInfo">			
+                                <p:panelGrid columns="4" styleClass="AddressInfo" style="border-width: 1px;
+                                             padding: 2px;">
 
-                                    <p:outputLabel for="add1" value="C/O"  />					
+                                    <p:outputLabel for="add1" value="C/O" />					
                                     <p:inplace  id="add1" editor="true">
-                                        <p:ajax event="save" listener="#{profileManager.updateAddress()}" update=":profile_head"/>   
-                                        <p:inputText value="#{profileManager.address.address1}">
+                                        <p:ajax event="save" listener="#{profileManager.updateAddress()}" 
+                                                update=":profile_head" />   
+                                        <p:inputText value="#{profileManager.address.address1}"
+                                                     required="true"
+                                                     requiredMessage="Value is requires"
+                                                     >
                                         </p:inputText>
                                     </p:inplace>
 
@@ -209,20 +228,29 @@
                                     <p:outputLabel for="add2" value="Street and number"/>
                                     <p:inplace  id="add2" editor="true">
                                         <p:ajax event="save" listener="#{profileManager.updateAddress()}" update=":profile_head"/>   
-                                        <p:inputText value="#{profileManager.address.address2}">
+                                        <p:inputText value="#{profileManager.address.address2}"
+                                                     required="true"
+                                                     requiredMessage="Value is requires"
+                                                     >
                                         </p:inputText>
                                     </p:inplace>
 
                                     <p:outputLabel for="pc" value="Postal Code"  />
                                     <p:inplace  id="pc" editor="true">
                                         <p:ajax event="save" listener="#{profileManager.updateAddress()}" update=":profile_head"/>   
-                                        <p:inputText value="#{profileManager.address.postalcode}">
+                                        <p:inputText value="#{profileManager.address.postalcode}"
+                                                     required="true"
+                                                     requiredMessage="Value is requires"
+
+                                                     >
                                         </p:inputText>
                                     </p:inplace>
 
                                     <p:outputLabel for="city" value="City"  />
                                     <p:inplace  id="city" editor="true">
                                         <p:inputText       value="#{profileManager.address.city}"   
+                                                           required="true"
+                                                           requiredMessage="Value is requires"
                                                            >
                                         </p:inputText>
                                     </p:inplace>
@@ -230,6 +258,9 @@
                                     <p:outputLabel for="st" value="State"/>
                                     <p:inplace  id="st" editor="true">
                                         <p:inputText       value="#{profileManager.address.state}"   
+                                                           required="true"
+                                                           requiredMessage="Value is requires"
+
                                                            >
                                         </p:inputText>
                                     </p:inplace>
@@ -237,6 +268,8 @@
                                     <p:outputLabel for="co" value="Country" />
                                     <p:inplace  id="co" editor="true">
                                         <p:inputText       value="#{profileManager.address.country}"   
+                                                           required="true"
+                                                           requiredMessage="Value is requires"
                                                            >
                                         </p:inputText>
                                     </p:inplace>
@@ -269,12 +302,12 @@
                                         </p:commandLink>
 
                                         <p:outputLabel for="deactivate" value="Close My Account" />					
-                                         <p:commandLink id ="deactivate" 
-                                                        value="Deactivate My Account"
-                                                        action="deactivate_account"
-                                                        styleClass="command_link"
-                                                        >
-                                         </p:commandLink>
+                                        <p:commandLink id ="deactivate" 
+                                                       value="Deactivate My Account"
+                                                       action="deactivate_account"
+                                                       styleClass="command_link"
+                                                       >
+                                        </p:commandLink>
                                     </h:panelGrid>
                                 </div>
                             </p:menuitem>
