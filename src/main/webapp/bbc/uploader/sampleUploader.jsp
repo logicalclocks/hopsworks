@@ -12,7 +12,7 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <title>BioBankCloud LIMS</title>
+        <title>HopsWorks</title>
         <link rel="stylesheet" type="text/css" href="resumable.css"/>
     </head>
     <body>
@@ -70,7 +70,7 @@
             </a>
       <script>
         var r = new Resumable({
-            target:'/hop-dashboard/bbc/uploader',
+            target:'/hopsworks/bbc/uploader',
             chunkSize:1*1024*1024,
             simultaneousUploads:4,
             testChunks: true,
