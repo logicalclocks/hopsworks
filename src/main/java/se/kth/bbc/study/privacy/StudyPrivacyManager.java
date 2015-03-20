@@ -26,6 +26,8 @@ import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityDetail;
+import se.kth.bbc.security.ua.EmailBean;
+import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.study.StudyTeam;
 import se.kth.bbc.study.StudyTeamFacade;
 import se.kth.bbc.study.privacy.model.Consent;
@@ -44,6 +46,13 @@ public class StudyPrivacyManager {
    @EJB
     private StudyTeamFacade stc;
    
+   
+    @EJB
+    private UserManager mgr;
+
+    @EJB
+    private EmailBean emailBean;
+
     private List <ActivityDetail> ad;
      
     protected EntityManager getEntityManager() {
@@ -67,9 +76,21 @@ public class StudyPrivacyManager {
 
     }
 
-    public Date getDate() throws ParseException {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
+    public String uploadConsent(){
+    
+    
+        return "";
+    }
+    
+    public String updateConsent(){
+        // TODO: send email to user
+        //emailBean.sendEmail(studyname, studyname, studyname);
 
+        return "";
+    }
+    
+    public Date getDate() throws ParseException {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         this.date = format.parse(format.format(this.date));
         return this.date;
     }
@@ -85,6 +106,8 @@ public class StudyPrivacyManager {
         Consent consent = q.getSingleResult();
         consent.setDate(date);
         em.merge(consent);
+        // TODO: send email to user
+        //emailBean.sendEmail(studyname, studyname, studyname);
         return true;
 
     }
@@ -95,8 +118,8 @@ public class StudyPrivacyManager {
         q.setParameter("studyName", studyname);
         Consent consent = q.getSingleResult();
         this.date = consent.getRetentionPeriod();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
-
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        
         return format.parse(format.format(this.date));
 
     }
