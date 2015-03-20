@@ -21,6 +21,7 @@
             </ui:insert>
 
             <div align="center">
+                          
                 <h:panelGrid 
                     columns="#{customAuthenticationSwitch.otpEnabled?2:1}" 
                     styleClass="registerContainer">
@@ -37,14 +38,14 @@
                                              required="true"
                                              autocomplete="off"
                                              requiredMessage="Enter first name" />
-                                <p:watermark for="fname" value="First name" />
+                                <p:watermark for="fname" value="First name*" />
 
                                 <p:inputText id="lname"
                                              value="#{userRegistration.lname}" 
                                              required="true"
                                              autocomplete="off"
                                              requiredMessage="Enter last name"/>
-                                <p:watermark for="lname" value="Last name" />
+                                <p:watermark for="lname" value="Last name*" />
 
                                 <p:inputText id="email"
                                              value="#{userRegistration.mail}" 
@@ -53,7 +54,7 @@
                                              requiredMessage="Enter email">
                                     <f:validator binding="#{usernameValidator}" />
                                 </p:inputText>    
-                                <p:watermark for="email" value="Email" />
+                                <p:watermark for="email" value="Email*" />
 
                                 <p:inputText id="tel" 
                                              value="#{userRegistration.tel}" 
@@ -61,21 +62,21 @@
                                              validatorMessage="Invalid phone number">
                                     <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                 </p:inputText>
-                                <p:watermark for="tel" value="Telephone number" />
+                                <p:watermark for="tel" value="Telephone number*" />
 
                                 <p:inputText id="address2" value="#{userRegistration.address2}" 
                                              required="true"
                                              autocomplete="off"
                                              requiredMessage="Enter street" >
                                 </p:inputText>
-                                <p:watermark for="address2" value="Street and number" />
+                                <p:watermark for="address2" value="Street and number*" />
 
                                 <p:inputText id="city1" value="#{userRegistration.city}" 
                                              required="true"
                                              autocomplete="off"
                                              requiredMessage="Enter city"> 
                                 </p:inputText>
-                                <p:watermark for="city1" value="City" />
+                                <p:watermark for="city1" value="City*" />
 
 
                                 <p:inputText id="zip1" value="#{userRegistration.postalcode}" 
@@ -83,7 +84,7 @@
                                              autocomplete="off"
                                              requiredMessage="Enter postal code">
                                 </p:inputText>
-                                <p:watermark for="zip1" value="Postal Code" />
+                                <p:watermark for="zip1" value="Postal Code*" />
 
 
                                 <p:inputText id="country1" value="#{userRegistration.country}"  
@@ -91,7 +92,7 @@
                                              autocomplete="off"
                                              requiredMessage="Enter country">
                                 </p:inputText>
-                                <p:watermark for="country1" value="Country" />
+                                <p:watermark for="country1" value="Country*" />
 
                                 <p:password id="password0" 
                                             value="#{userRegistration.password}" 
@@ -101,7 +102,7 @@
                                     <f:validator validatorId="passwordValidator" />
                                     <f:attribute name="confirmPassword" value="#{confirmPassword}" />
                                 </p:password>
-                                <p:watermark for="password0" value="Choose a password" />
+                                <p:watermark for="password0" value="Choose a password*" />
 
                                 <p:password id="password" 
                                             value="#{userRegistration.passwordAgain}"
@@ -110,7 +111,7 @@
                                             binding="#{confirmPassword}"
                                             required="true">
                                 </p:password>
-                                <p:watermark for="password" value="Repeat the password" />
+                                <p:watermark for="password" value="Repeat the password*" />
                             </h:panelGrid>
 
                             <h:panelGrid columns="2" >			
@@ -121,7 +122,7 @@
                                                  style="width: 508px; height: 30px; " 
                                                  requiredMessage="Select security question">
 
-                                    <f:selectItem itemLabel="Select security question for password recovery" 
+                                    <f:selectItem itemLabel="Select security question for password recovery *" 
 
                                                   itemValue="" />
                                     <f:selectItems value="#{userRegistration.questions}"/>
@@ -134,7 +135,7 @@
                                              required="true"
                                              autocomplete="off"
                                              requiredMessage="Answer security question" />
-                                <p:watermark for="answer" value="Security answer" />
+                                <p:watermark for="answer" value="Security answer*" />
 
                                 <!--
                                                                 <p:captcha id ="captcha" 
@@ -188,9 +189,19 @@
 
                         <div class="UserGuides">     
                             <h2 align="center" class="signup_header">More security for your data</h2>
+                            
                                 <p class="signup_contents">                               
-                                    BiobankCloud provides two-factor authentication to ensure strong security.
-                                    For this purpose, we will send you a hardware token called Yubikey.
+                                    The BiobankCloud provides 2-Factor authentication to ensure strong security. You can login using a Yubikey device or      
+                                    a 
+                                    <a 
+                                      href="register_mobile.xhtml">smartphone.
+                                    </a> 
+                                </p>
+                            
+                            <p class="signup_contents">                               
+                                    Yubikey authentication is an option for users who don't use mobile devices for authentication.
+                                    The Yubikey is a hardware authentication device that changes passwords every time it is used. 
+                                    For Yubikey login a hardware token called Yubikey will be sent to you.
                                 </p>  
 
                                 <div align="center">
@@ -198,12 +209,13 @@
                                 </div>
 
                                 <p class="signup_contents">
-                                    The Yubikey is a hardware authentication device that changes passwords every time it is used. 
-                                    Yubikey authentication is an option for users who don't use mobile devices for authentication.
+                                    1. Insert the device into the USB port of your computer.
                                 </p>
 
                                 <p class="signup_contents">
-                                    In order to use Yubikey verification you need to insert the device into the USB port of your computer.
+                                    2. When you login to the BiobankCloud you will be asked to enter your usual password (label 1) and 
+                                    a PIN code that is generated by pressing the Yubikey green button, as 
+                                    displayed in the image above (label 2).
                                 </p>
 
                                 <div align="center">
@@ -211,9 +223,8 @@
                                 </div>
 
                                 <p class="signup_contents" >
-                                    When you login to the BiobankCloud you will be asked to enter your usual password (label 1) 
-                                    and a PIN code that is generated by pressing the Yubikey green button, as displayed in the image above (label 2).
-
+                                    3. Press the Yubikey button. Every time you press the Yubikey button, a new code will 
+                                    be generated in the Yubikey field (label 2). 
                                     <div align="center">
                                         <p:graphicImage library="images" name="users/yauth.png" 
                                             style="width: 200px; height: 200px;" >
@@ -222,9 +233,8 @@
                                 </p>
                             
                                 <p class="signup_contents" style="margin-bottom: 100px;">
-                                    Every time you press the Yubikey button, a new code will be generated in the Yubikey field (label 2). You will be required to provide this code in addition to your usual password.
+                                    4. The Yubikey device updates (label 2) and you will be authenticated.
                                 </p>
-                            
                         </div>                    
                     </h:panelGroup>
                          
