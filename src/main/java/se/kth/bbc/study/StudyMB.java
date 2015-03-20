@@ -317,16 +317,7 @@ public class StudyMB implements Serializable {
         } else {
             return studyController.QueryForNonRegistered(getUsername()).size();
         }
-    }
-    
-  /**
-   * Get the channel to subscribe to to receive Primefaces Push updates.
-   * <p>
-   * @return
-   */
-  public final String getPushChannel() {
-    return "/" + sessionState.getActiveStudyname();
-  }    
+    }   
 
     /**
      * @return

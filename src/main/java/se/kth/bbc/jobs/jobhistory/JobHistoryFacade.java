@@ -64,7 +64,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     JobHistory jh = findById(id);
     if (jh.getState() != newState) {
       updateState(id, newState);
-      publishStateChange(jh);
     }
   }
 
@@ -74,9 +73,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     updateState(id,newState);
     jh.setExecutionDuration(BigInteger.valueOf(executionTime));
     em.merge(jh);
-    if (oldstate != newState) {
-      publishStateChange(jh);
-    }
   }
 
   public void update(Long id, JobState newState,
@@ -88,9 +84,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     output.addAll(output);
     jh.setJobOutputFileCollection(output);
     em.merge(jh);
-    if (oldstate != newState) {
-      publishStateChange(jh);
-    }
   }
 
   public void update(Long id, Collection<JobOutputFile> extraOutputFiles) {
@@ -161,7 +154,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
     em.persist(jh);
     em.flush();
-    publishStateChange(jh);
     return jh.getId();
   }
 
@@ -190,17 +182,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
   public void persist(JobOutputFile jof) {
     em.persist(jof);
-  }
-
-  /**
-   * Publish the state change to Primefaces Push.
-   * TODO: should this be somewhere else? Separation of concerns?
-   */
-  private void publishStateChange(JobHistory jh) {
-    EventBus eventBus = EventBusFactory.getDefault().eventBus();
-    eventBus.publish("/" + jh.getStudy().getName(), jh.
-            getId().toString());
-
   }
 
 }
