@@ -32,11 +32,8 @@ public class NewStudyController implements Serializable {
   private static final String TEMPLATE_BBC = "Biobank";
   private static final StudyServiceEnum[] SERVICES_BBC = {
     StudyServiceEnum.CUNEIFORM, StudyServiceEnum.SAMPLES,
-    StudyServiceEnum.STUDY_INFO};
+    StudyServiceEnum.STUDY_INFO, StudyServiceEnum.ADAM};
   private static final String TEMPLATE_CUSTOM = "Custom...";
-  private static final String TEMPLATE_ADAM = "Adam";
-  private static final StudyServiceEnum[] SERVICES_ADAM
-          = {StudyServiceEnum.ADAM};
   private static final String TEMPLATE_SPARK = "Spark";
   private static final StudyServiceEnum[] SERVICES_SPARK = {
     StudyServiceEnum.SPARK};
@@ -84,7 +81,6 @@ public class NewStudyController implements Serializable {
 
   public List<String> getStudyTemplates() {
     List<String> values = new ArrayList<>(4);
-    values.add(TEMPLATE_ADAM);
     values.add(TEMPLATE_BBC);
     values.add(TEMPLATE_SPARK);
     values.add(TEMPLATE_CUSTOM);
@@ -225,9 +221,6 @@ public class NewStudyController implements Serializable {
     switch (chosenTemplate) {
       case TEMPLATE_BBC:
         studyServices.persistServicesForStudy(newStudyName, SERVICES_BBC);
-        break;
-      case TEMPLATE_ADAM:
-        studyServices.persistServicesForStudy(newStudyName, SERVICES_ADAM);
         break;
       case TEMPLATE_SPARK:
         studyServices.persistServicesForStudy(newStudyName, SERVICES_SPARK);
