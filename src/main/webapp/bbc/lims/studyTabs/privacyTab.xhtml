@@ -29,15 +29,18 @@ and open the template in the editor.
                             </p:column>
 
                             <p:column>
-                                Retention Period: #{studyPrivacyManager.getRetentionPeriod(studyManagedBean.studyName)}
+                                Retention Period: #{studyManagedBean.retentionPeriod}
                             </p:column>
                             
                             <p:column>
-                                Update 
+                                <p:calendar id="cal" value="#{studyManagedBean.retentionPeriod}"  showOn="button" >
+                               
+                                </p:calendar>  
                             </p:column>
                             <p:column>
                                 <p:commandButton  value="Update Period"  
-                                                  action="#{studyPrivacyManager.updateRetentionPeriod(studyManagedBean.studyName)}"
+                                                  update="privacy"
+                                                  action="#{studyManagedBean.updateRetentionPeriod()}"
                                                   rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                             </p:column>
                             

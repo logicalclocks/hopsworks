@@ -35,6 +35,7 @@ import se.kth.bbc.study.samples.Samplecollection;
     @NamedQuery(name = "TrackStudy.findByName", query = "SELECT t FROM TrackStudy t WHERE t.name = :name"),
     @NamedQuery(name = "TrackStudy.findByUsername", query = "SELECT t FROM TrackStudy t WHERE t.username = :username"),
     @NamedQuery(name = "TrackStudy.findByTimestamp", query = "SELECT t FROM TrackStudy t WHERE t.timestamp = :timestamp"),
+    @NamedQuery(name = "TrackStudy.findByRetentionPeriod", query = "SELECT t FROM TrackStudy t WHERE t.retentionPeriod = :retentionPeriod"),
     @NamedQuery(name = "TrackStudy.findOwner", query = "SELECT t.username FROM TrackStudy t WHERE t.name = :name"),
     @NamedQuery(name = "TrackStudy.countStudyByOwner", query = "SELECT count(t.name) FROM TrackStudy t WHERE t.username = :username")})
 public class TrackStudy implements Serializable {
@@ -55,6 +56,9 @@ public class TrackStudy implements Serializable {
     @Size(min = 1, max = 255)
     @Column(name = "username")
     private String username;
+    @Column(name = "retention_period")
+    @Temporal(TemporalType.DATE)
+    private Date retentionPeriod;
     @Basic(optional = false)
     @NotNull
     @Column(name = "timestamp")
@@ -99,7 +103,16 @@ public class TrackStudy implements Serializable {
     public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
     }
+    
+    public Date getRetentionPeriod() {
+        return retentionPeriod;
+    }
 
+    public void setRetentionPeriod(Date retentionPeriod) {
+        this.retentionPeriod = retentionPeriod;
+    }
+
+    
     @XmlTransient
     @JsonIgnore
     public Collection<StudyGroups> getStudyGroupsCollection() {

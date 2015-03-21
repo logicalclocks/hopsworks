@@ -38,8 +38,7 @@ public class StudyPrivacyManager {
 
     @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
-    private Date date;
-
+  
    @EJB
     private ActivityController activityController;
 
@@ -89,41 +88,6 @@ public class StudyPrivacyManager {
         return "";
     }
     
-    public Date getDate() throws ParseException {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        this.date = format.parse(format.format(this.date));
-        return this.date;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
-    }
-
-    public boolean updateRetentionPeriod(String studyname) {
-
-        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
-        q.setParameter("studyName", studyname);
-        Consent consent = q.getSingleResult();
-        consent.setDate(date);
-        em.merge(consent);
-        // TODO: send email to user
-        //emailBean.sendEmail(studyname, studyname, studyname);
-        return true;
-
-    }
-
-    public Date getRetentionPeriod(String studyname) throws ParseException {
-
-        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
-        q.setParameter("studyName", studyname);
-        Consent consent = q.getSingleResult();
-        this.date = consent.getRetentionPeriod();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        
-        return format.parse(format.format(this.date));
-
-    }
-
     public String getConsentStatus(String studyname) throws ParseException {
 
         TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);

@@ -1,5 +1,6 @@
 package se.kth.bbc.study;
 
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -180,4 +181,21 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
         return study != null;
     }
 
+    public boolean updateRetentionPeriod(String name, Date date){
+    
+        TrackStudy study = em.find(TrackStudy.class, name);
+        study.setRetentionPeriod(date);
+        if(study!= null) {
+            em.merge(study);
+            return true;
+        }
+        return false;
+    }
+    
+    public Date getRetentionPeriod(String name){
+        TrackStudy study = em.find(TrackStudy.class, name);
+        if (study!=null)
+            return study.getRetentionPeriod();
+        return null;
+    }
 }

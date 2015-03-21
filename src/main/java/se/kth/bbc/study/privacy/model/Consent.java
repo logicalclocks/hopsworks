@@ -33,7 +33,6 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Consent.findById", query = "SELECT c FROM Consent c WHERE c.id = :id"),
     @NamedQuery(name = "Consent.findByDate", query = "SELECT c FROM Consent c WHERE c.date = :date"),
     @NamedQuery(name = "Consent.findByStudyName", query = "SELECT c FROM Consent c WHERE c.studyName = :studyName"),
-    @NamedQuery(name = "Consent.findByRetentionPeriod", query = "SELECT c FROM Consent c WHERE c.retentionPeriod = :retentionPeriod"),
     @NamedQuery(name = "Consent.findByStatus", query = "SELECT c FROM Consent c WHERE c.status = :status"),
     @NamedQuery(name = "Consent.findByName", query = "SELECT c FROM Consent c WHERE c.name = :name")})
 public class Consent implements Serializable {
@@ -49,9 +48,6 @@ public class Consent implements Serializable {
     @Size(max = 128)
     @Column(name = "study_name")
     private String studyName;
-    @Column(name = "retention_period")
-    @Temporal(TemporalType.DATE)
-    private Date retentionPeriod;
     @Lob
     @Column(name = "consent_form")
     private byte[] consentForm;
@@ -91,14 +87,6 @@ public class Consent implements Serializable {
 
     public void setStudyName(String studyName) {
         this.studyName = studyName;
-    }
-
-    public Date getRetentionPeriod() {
-        return retentionPeriod;
-    }
-
-    public void setRetentionPeriod(Date retentionPeriod) {
-        this.retentionPeriod = retentionPeriod;
     }
 
     public byte[] getConsentForm() {

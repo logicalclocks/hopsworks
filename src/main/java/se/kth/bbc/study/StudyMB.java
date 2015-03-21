@@ -5,6 +5,8 @@ import se.kth.bbc.study.services.StudyServiceEnum;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -14,6 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
@@ -63,7 +66,7 @@ public class StudyMB implements Serializable {
 
     @EJB
     private ActivityFacade activityFacade;
-    
+
     @EJB
     private ActivityDetailFacade activityDetailFacade;
 
@@ -72,7 +75,7 @@ public class StudyMB implements Serializable {
 
     @EJB
     private StudyServiceFacade studyServices;
-    
+
     @ManagedProperty(value = "#{clientSessionState}")
     private ClientSessionState sessionState;
 
@@ -87,20 +90,23 @@ public class StudyMB implements Serializable {
     private String studyCreator;
     private int tabIndex;
     private String loginName;
-    
+
     private StudyServiceEnum[] selectedServices;
 
     private boolean deleteFilesOnRemove = true;
 
     private LazyActivityModel lazyModel = null;
 
+    private Date date;
+    
+    private Date retentionPeriod;
+
     public StudyMB() {
     }
 
-  public void setSessionState(ClientSessionState sessionState) {
-    this.sessionState = sessionState;
-  }
-
+    public void setSessionState(ClientSessionState sessionState) {
+        this.sessionState = sessionState;
+    }
 
     public List<User> getUsersname() {
         return usernames;
@@ -198,7 +204,7 @@ public class StudyMB implements Serializable {
         themes = new ArrayList<>();
         int i = 0;
         for (User user : list) {
-            themes.add(new Theme(i, user.getFname()+ " "+user.getLname(), user.getEmail()));
+            themes.add(new Theme(i, user.getFname() + " " + user.getLname(), user.getEmail()));
             i++;
         }
 
@@ -260,7 +266,7 @@ public class StudyMB implements Serializable {
     }
 
     public boolean checkOwnerForSamples() {
-      return getUsername().equals(getCreator());
+        return getUsername().equals(getCreator());
     }
 
     public String checkCurrentUser(String email) {
@@ -314,7 +320,7 @@ public class StudyMB implements Serializable {
         } else {
             return studyController.QueryForNonRegistered(getUsername()).size();
         }
-    }    
+    }
 
     /**
      * @return
@@ -326,22 +332,21 @@ public class StudyMB implements Serializable {
         this.studyCreator = params.get("username");
         return fetchStudy(studyname);
     }
-    
-    public String fetchStudy(String studyname){
-      setStudyName(studyname);
-      sessionState.setActiveStudyByName(studyName);
-      return checkAccess();
+
+    public String fetchStudy(String studyname) {
+        setStudyName(studyname);
+        sessionState.setActiveStudyByName(studyName);
+        return checkAccess();
     }
-    
-    
+
     public String checkAccess() {
         boolean res = studyTeamController.findUserForActiveStudy(studyName,
-        getUsername());
+                getUsername());
         boolean rec = userGroupsController.checkForCurrentSession(getUsername());
         if (!res) {
             if (!rec) {
                 userGroupsController.persistUserGroups(new UsersGroups(
-                    new UsersGroupsPK(getUsername(), "GUEST")));
+                        new UsersGroupsPK(getUsername(), "GUEST")));
                 logger.log(Level.FINE, "Guest role added for: {0}.", getUsername());
                 return "studyPage";
             }
@@ -390,19 +395,19 @@ public class StudyMB implements Serializable {
     }
 
     public void onTabChange(TabChangeEvent event) {
-      switch (event.getTab().getTitle()) {
-        case "All":
-          setTabIndex(0);
-          break;
-        case "Personal":
-          setTabIndex(1);
-          break;
-        case "Joined":
-          setTabIndex(2);
-          break;
-        default:
-          break;
-      }
+        switch (event.getTab().getTitle()) {
+            case "All":
+                setTabIndex(0);
+                break;
+            case "Personal":
+                setTabIndex(1);
+                break;
+            case "Joined":
+                setTabIndex(2);
+                break;
+            default:
+                break;
+        }
     }
 
     public boolean isCurrentOwner() {
@@ -569,25 +574,55 @@ public class StudyMB implements Serializable {
         } else {
             return t.getUsername().equalsIgnoreCase(email);
         }
-    }    
-    
-  public StudyServiceEnum[] getSelectedServices() {
-    List<StudyServiceEnum> services = studyServices.findEnabledServicesForStudy(studyName);
-    StudyServiceEnum[] reArr = new StudyServiceEnum[services.size()];
-    return services.toArray(reArr);
-  }
-  
-  public boolean shouldDrawTab(String service){    
-    return studyServices.findEnabledServicesForStudy(studyName).contains(StudyServiceEnum.valueOf(service));
-  }
-  
-  public void setSelectedServices(StudyServiceEnum[] selectedServices){
-    this.selectedServices = selectedServices;
-  }
-  
-  public String updateServices(){
-    studyServices.persistServicesForStudy(studyName, selectedServices);
-    return "studyPage";
-  } 
+    }
 
+    public StudyServiceEnum[] getSelectedServices() {
+        List<StudyServiceEnum> services = studyServices.findEnabledServicesForStudy(studyName);
+        StudyServiceEnum[] reArr = new StudyServiceEnum[services.size()];
+        return services.toArray(reArr);
+    }
+
+    public boolean shouldDrawTab(String service) {
+        return studyServices.findEnabledServicesForStudy(studyName).contains(StudyServiceEnum.valueOf(service));
+    }
+
+    public void setSelectedServices(StudyServiceEnum[] selectedServices) {
+        this.selectedServices = selectedServices;
+    }
+
+    public String updateServices() {
+        studyServices.persistServicesForStudy(studyName, selectedServices);
+        return "studyPage";
+    }
+
+
+    public void updateRetentionPeriod() {
+        if(studyController.updateRetentionPeriod(studyName, this.retentionPeriod)){
+            
+                  MessagesController.addInfoMessage("Success: Updated retention period.");
+      
+        }else {
+        
+              MessagesController.addErrorMessage("Error: Update retention period failed.");
+        }
+    }
+    
+    
+    public Date getDate() {
+        return this.date;
+      }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public Date getRetentionPeriod() {
+        this.retentionPeriod = studyController.getRetentionPeriod(studyName);
+        return this.retentionPeriod;
+    }
+
+    public void setRetentionPeriod(Date retentionPeriod) {
+        this.retentionPeriod = retentionPeriod;
+    }
+    
 }
