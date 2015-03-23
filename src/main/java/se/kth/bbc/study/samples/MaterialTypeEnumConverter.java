@@ -10,8 +10,8 @@ import javax.faces.convert.FacesConverter;
 @FacesConverter("materialTypeEnumConverter")
 public class MaterialTypeEnumConverter extends EnumConverter {
 
-    public MaterialTypeEnumConverter() {
-        super(MaterialTypeEnum.class);
-    }
+  public MaterialTypeEnumConverter() {
+    super(MaterialTypeEnum.class);
+  }
 
 }

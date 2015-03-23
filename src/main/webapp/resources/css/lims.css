@@ -2433,9 +2433,9 @@ ui-wizard {
 
 .container .ui-button {
   background-color: #F0F0F0;
-background-image: linear-gradient(to bottom, #FFF, #E9E9E9);
-border: 1px solid rgba(0, 0, 0, 0.2);
-box-shadow: none;
+  background-image: linear-gradient(to bottom, #FFF, #E9E9E9);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: none;
 }
 
 .container .content .jobPanel .labelColumn {

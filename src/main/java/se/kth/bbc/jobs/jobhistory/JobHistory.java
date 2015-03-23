@@ -73,7 +73,7 @@ import se.kth.kthfsdashboard.user.Username;
   @NamedQuery(name = "JobHistory.findStateForId",
           query
           = "SELECT j.state FROM JobHistory j WHERE j.id = :id")})
-public class JobHistory implements Serializable {  
+public class JobHistory implements Serializable {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -281,7 +281,8 @@ public class JobHistory implements Serializable {
 
   @Override
   public String toString() {
-    return "JobHistory "+id+", "+name+": submitted on "+submissionTime+", state "+state+", type "+type;
+    return "JobHistory " + id + ", " + name + ": submitted on " + submissionTime
+            + ", state " + state + ", type " + type;
   }
 
   public boolean isFinished() {

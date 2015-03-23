@@ -16,99 +16,115 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Entity class mapped to the view "activitydetails". Used to present the 
+ * Entity class mapped to the view "activitydetails". Used to present the
  * activity in a complete way to the user in the activity log.
+ * <p>
  * @author stig
  */
 @Entity
 @Table(name = "activitydetails")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "ActivityDetail.findAll", query = "SELECT a FROM ActivityDetail a ORDER BY a.timestamp DESC"),
-    @NamedQuery(name = "ActivityDetail.findById", query = "SELECT a FROM ActivityDetail a WHERE a.id = :id"),
-    @NamedQuery(name = "ActivityDetail.findByPerformedByEmail", query = "SELECT a FROM ActivityDetail a WHERE a.performedByEmail = :performedByEmail ORDER BY a.timestamp DESC"),
-    @NamedQuery(name = "ActivityDetail.findByPerformedByName", query = "SELECT a FROM ActivityDetail a WHERE a.performedByName = :performedByName ORDER BY a.timestamp DESC"),
-    @NamedQuery(name = "ActivityDetail.findByDescription", query = "SELECT a FROM ActivityDetail a WHERE a.description = :description ORDER BY a.timestamp DESC"),
-    @NamedQuery(name = "ActivityDetail.findByStudyname", query = "SELECT a FROM ActivityDetail a WHERE a.studyname = :studyname ORDER BY a.timestamp DESC"),
-    @NamedQuery(name = "ActivityDetail.findByTimestamp", query = "SELECT a FROM ActivityDetail a WHERE a.timestamp = :timestamp ORDER BY a.timestamp DESC")})
+  @NamedQuery(name = "ActivityDetail.findAll",
+          query = "SELECT a FROM ActivityDetail a ORDER BY a.timestamp DESC"),
+  @NamedQuery(name = "ActivityDetail.findById",
+          query = "SELECT a FROM ActivityDetail a WHERE a.id = :id"),
+  @NamedQuery(name = "ActivityDetail.findByPerformedByEmail",
+          query
+          = "SELECT a FROM ActivityDetail a WHERE a.performedByEmail = :performedByEmail ORDER BY a.timestamp DESC"),
+  @NamedQuery(name = "ActivityDetail.findByPerformedByName",
+          query
+          = "SELECT a FROM ActivityDetail a WHERE a.performedByName = :performedByName ORDER BY a.timestamp DESC"),
+  @NamedQuery(name = "ActivityDetail.findByDescription",
+          query
+          = "SELECT a FROM ActivityDetail a WHERE a.description = :description ORDER BY a.timestamp DESC"),
+  @NamedQuery(name = "ActivityDetail.findByStudyname",
+          query
+          = "SELECT a FROM ActivityDetail a WHERE a.studyname = :studyname ORDER BY a.timestamp DESC"),
+  @NamedQuery(name = "ActivityDetail.findByTimestamp",
+          query
+          = "SELECT a FROM ActivityDetail a WHERE a.timestamp = :timestamp ORDER BY a.timestamp DESC")})
 public class ActivityDetail implements Serializable {
-    private static final long serialVersionUID = 1L;
-    @Id
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "id")
-    private int id;
-    @Size(max = 255)
-    @Column(name = "performed_by_email")
-    private String performedByEmail;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 255)
-    @Column(name = "performed_by_name")
-    private String performedByName;
-    @Size(max = 128)
-    @Column(name = "description")
-    private String description;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 255)
-    @Column(name = "studyname")
-    private String studyname;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "timestamp")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date timestamp;
 
-    public ActivityDetail() {
-    }
+  private static final long serialVersionUID = 1L;
+  @Id
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "id")
+  private int id;
+  @Size(max = 255)
+  @Column(name = "performed_by_email")
+  private String performedByEmail;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 255)
+  @Column(name = "performed_by_name")
+  private String performedByName;
+  @Size(max = 128)
+  @Column(name = "description")
+  private String description;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 255)
+  @Column(name = "studyname")
+  private String studyname;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "timestamp")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date timestamp;
 
-    public int getId() {
-        return id;
-    }
+  public ActivityDetail() {
+  }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+  public int getId() {
+    return id;
+  }
 
-    public String getPerformedByEmail() {
-        return performedByEmail;
-    }
+  public void setId(int id) {
+    this.id = id;
+  }
 
-    public void setPerformedByEmail(String performedByEmail) {
-        this.performedByEmail = performedByEmail;
-    }
+  public String getPerformedByEmail() {
+    return performedByEmail;
+  }
 
-    public String getPerformedByName() {
-        return performedByName;
-    }
+  public void setPerformedByEmail(String performedByEmail) {
+    this.performedByEmail = performedByEmail;
+  }
 
-    public void setPerformedByName(String performedByName) {
-        this.performedByName = performedByName;
-    }
+  public String getPerformedByName() {
+    return performedByName;
+  }
 
-    public String getDescription() {
-        return description;
-    }
+  public void setPerformedByName(String performedByName) {
+    this.performedByName = performedByName;
+  }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+  public String getDescription() {
+    return description;
+  }
 
-    public String getStudyname() {
-        return studyname;
-    }
+  public void setDescription(String description) {
+    this.description = description;
+  }
 
-    public void setStudyname(String studyname) {
-        this.studyname = studyname;
-    }
+  public String getStudyname() {
+    return studyname;
+  }
 
-    public Date getTimestamp() {
-        return timestamp;
-    }
+  public void setStudyname(String studyname) {
+    this.studyname = studyname;
+  }
 
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
-    }
-    
+  public Date getTimestamp() {
+    return timestamp;
+  }
+
+  public void setTimestamp(Date timestamp) {
+    this.timestamp = timestamp;
+  }
+
 }

@@ -8,219 +8,219 @@ import java.util.Date;
  * @author Hamidreza Afzali <afzali@kth.se>
  */
 public class Study implements Serializable {
-    
-    public Study() {
-    }
-    
-    private String aim;
-    private boolean typeOfStudyCaseControl;
-    private boolean typeOfStudyCohort;
-    private boolean typeOfStudyLongitudinal;
-    private boolean typeOfStudyTwinStudy;
-    private boolean typeOfStudyQualityControl;
-    private boolean typeOfStudyPopulationbased;
-    private boolean typeOfStudyDiseaseSpecific;
-    private boolean typeOfStudyCrossSectional;
-    private boolean typeOfStudyOther;
-    private String typeOfStudyOtherText;
-    private Date start;
-    private String plannedSampledIndividuals;
-    private boolean omicsExperimentsExists;
-    private boolean omicsExperimentsPlanned;
-    private boolean TypeOfOmicsGenomics;
-    private boolean TypeOfOmicsTranscriptomics;
-    private boolean TypeOfOmicsProteomics;
-    private boolean TypeOfOmicsMetabolomics;
-    private boolean TypeOfOmicsLipidomics;
-    private boolean TypeOfOmicsOther;
-    private String omicsMethod;
 
-    public String getAim() {
-        return aim;
-    }
-    
-    public String getTypeOfOmicsAll() {
-        String all = "";
-        all += TypeOfOmicsGenomics ? "@Genomics" : "";
-        all += TypeOfOmicsTranscriptomics ? "@Transcriptomics" : "";
-        all += TypeOfOmicsProteomics ? "@Proteomics" : "";
-        all += TypeOfOmicsMetabolomics ? "@Metabolomics" : "";
-        all += TypeOfOmicsLipidomics ? "@Lipidomics" : "";
-        all += TypeOfOmicsOther ? "@Other" : "";
-        all = all.length() > 0 ? all.substring(1) : all;
-        return all;
-    }    
+  public Study() {
+  }
 
-    public void setAim(String aim) {
-        this.aim = aim;
-    }
+  private String aim;
+  private boolean typeOfStudyCaseControl;
+  private boolean typeOfStudyCohort;
+  private boolean typeOfStudyLongitudinal;
+  private boolean typeOfStudyTwinStudy;
+  private boolean typeOfStudyQualityControl;
+  private boolean typeOfStudyPopulationbased;
+  private boolean typeOfStudyDiseaseSpecific;
+  private boolean typeOfStudyCrossSectional;
+  private boolean typeOfStudyOther;
+  private String typeOfStudyOtherText;
+  private Date start;
+  private String plannedSampledIndividuals;
+  private boolean omicsExperimentsExists;
+  private boolean omicsExperimentsPlanned;
+  private boolean TypeOfOmicsGenomics;
+  private boolean TypeOfOmicsTranscriptomics;
+  private boolean TypeOfOmicsProteomics;
+  private boolean TypeOfOmicsMetabolomics;
+  private boolean TypeOfOmicsLipidomics;
+  private boolean TypeOfOmicsOther;
+  private String omicsMethod;
 
-    public boolean isTypeOfStudyCaseControl() {
-        return typeOfStudyCaseControl;
-    }
+  public String getAim() {
+    return aim;
+  }
 
-    public void setTypeOfStudyCaseControl(boolean typeOfStudyCaseControl) {
-        this.typeOfStudyCaseControl = typeOfStudyCaseControl;
-    }
+  public String getTypeOfOmicsAll() {
+    String all = "";
+    all += TypeOfOmicsGenomics ? "@Genomics" : "";
+    all += TypeOfOmicsTranscriptomics ? "@Transcriptomics" : "";
+    all += TypeOfOmicsProteomics ? "@Proteomics" : "";
+    all += TypeOfOmicsMetabolomics ? "@Metabolomics" : "";
+    all += TypeOfOmicsLipidomics ? "@Lipidomics" : "";
+    all += TypeOfOmicsOther ? "@Other" : "";
+    all = all.length() > 0 ? all.substring(1) : all;
+    return all;
+  }
 
-    public boolean isTypeOfStudyCohort() {
-        return typeOfStudyCohort;
-    }
+  public void setAim(String aim) {
+    this.aim = aim;
+  }
 
-    public void setTypeOfStudyCohort(boolean typeOfStudyCohort) {
-        this.typeOfStudyCohort = typeOfStudyCohort;
-    }
+  public boolean isTypeOfStudyCaseControl() {
+    return typeOfStudyCaseControl;
+  }
 
-    public boolean isTypeOfStudyLongitudinal() {
-        return typeOfStudyLongitudinal;
-    }
+  public void setTypeOfStudyCaseControl(boolean typeOfStudyCaseControl) {
+    this.typeOfStudyCaseControl = typeOfStudyCaseControl;
+  }
 
-    public void setTypeOfStudyLongitudinal(boolean typeOfStudyLongitudinal) {
-        this.typeOfStudyLongitudinal = typeOfStudyLongitudinal;
-    }
+  public boolean isTypeOfStudyCohort() {
+    return typeOfStudyCohort;
+  }
 
-    public boolean isTypeOfStudyTwinStudy() {
-        return typeOfStudyTwinStudy;
-    }
+  public void setTypeOfStudyCohort(boolean typeOfStudyCohort) {
+    this.typeOfStudyCohort = typeOfStudyCohort;
+  }
 
-    public void setTypeOfStudyTwinStudy(boolean typeOfStudyTwinStudy) {
-        this.typeOfStudyTwinStudy = typeOfStudyTwinStudy;
-    }
+  public boolean isTypeOfStudyLongitudinal() {
+    return typeOfStudyLongitudinal;
+  }
 
-    public boolean isTypeOfStudyQualityControl() {
-        return typeOfStudyQualityControl;
-    }
+  public void setTypeOfStudyLongitudinal(boolean typeOfStudyLongitudinal) {
+    this.typeOfStudyLongitudinal = typeOfStudyLongitudinal;
+  }
 
-    public void setTypeOfStudyQualityControl(boolean typeOfStudyQualityControl) {
-        this.typeOfStudyQualityControl = typeOfStudyQualityControl;
-    }
+  public boolean isTypeOfStudyTwinStudy() {
+    return typeOfStudyTwinStudy;
+  }
 
-    public boolean isTypeOfStudyPopulationbased() {
-        return typeOfStudyPopulationbased;
-    }
+  public void setTypeOfStudyTwinStudy(boolean typeOfStudyTwinStudy) {
+    this.typeOfStudyTwinStudy = typeOfStudyTwinStudy;
+  }
 
-    public void setTypeOfStudyPopulationbased(boolean typeOfStudyPopulationbased) {
-        this.typeOfStudyPopulationbased = typeOfStudyPopulationbased;
-    }
+  public boolean isTypeOfStudyQualityControl() {
+    return typeOfStudyQualityControl;
+  }
 
-    public boolean isTypeOfStudyDiseaseSpecific() {
-        return typeOfStudyDiseaseSpecific;
-    }
+  public void setTypeOfStudyQualityControl(boolean typeOfStudyQualityControl) {
+    this.typeOfStudyQualityControl = typeOfStudyQualityControl;
+  }
 
-    public void setTypeOfStudyDiseaseSpecific(boolean typeOfStudyDiseaseSpecific) {
-        this.typeOfStudyDiseaseSpecific = typeOfStudyDiseaseSpecific;
-    }
+  public boolean isTypeOfStudyPopulationbased() {
+    return typeOfStudyPopulationbased;
+  }
 
-    public boolean isTypeOfStudyCrossSectional() {
-        return typeOfStudyCrossSectional;
-    }
+  public void setTypeOfStudyPopulationbased(boolean typeOfStudyPopulationbased) {
+    this.typeOfStudyPopulationbased = typeOfStudyPopulationbased;
+  }
 
-    public void setTypeOfStudyCrossSectional(boolean typeOfStudyCrossSectional) {
-        this.typeOfStudyCrossSectional = typeOfStudyCrossSectional;
-    }
+  public boolean isTypeOfStudyDiseaseSpecific() {
+    return typeOfStudyDiseaseSpecific;
+  }
 
-    public boolean isTypeOfStudyOther() {
-        return typeOfStudyOther;
-    }
+  public void setTypeOfStudyDiseaseSpecific(boolean typeOfStudyDiseaseSpecific) {
+    this.typeOfStudyDiseaseSpecific = typeOfStudyDiseaseSpecific;
+  }
 
-    public void setTypeOfStudyOther(boolean typeOfStudyOther) {
-        this.typeOfStudyOther = typeOfStudyOther;
-    }
+  public boolean isTypeOfStudyCrossSectional() {
+    return typeOfStudyCrossSectional;
+  }
 
-    public String getTypeOfStudyOtherText() {
-        return typeOfStudyOtherText;
-    }
+  public void setTypeOfStudyCrossSectional(boolean typeOfStudyCrossSectional) {
+    this.typeOfStudyCrossSectional = typeOfStudyCrossSectional;
+  }
 
-    public void setTypeOfStudyOtherText(String typeOfStudyOtherText) {
-        this.typeOfStudyOtherText = typeOfStudyOtherText;
-    }
+  public boolean isTypeOfStudyOther() {
+    return typeOfStudyOther;
+  }
 
-    public Date getStart() {
-        return start;
-    }
+  public void setTypeOfStudyOther(boolean typeOfStudyOther) {
+    this.typeOfStudyOther = typeOfStudyOther;
+  }
 
-    public void setStart(Date start) {
-        this.start = start;
-    }
+  public String getTypeOfStudyOtherText() {
+    return typeOfStudyOtherText;
+  }
 
-    public String getPlannedSampledIndividuals() {
-        return plannedSampledIndividuals;
-    }
+  public void setTypeOfStudyOtherText(String typeOfStudyOtherText) {
+    this.typeOfStudyOtherText = typeOfStudyOtherText;
+  }
 
-    public void setPlannedSampledIndividuals(String plannedSampledIndividuals) {
-        this.plannedSampledIndividuals = plannedSampledIndividuals;
-    }
+  public Date getStart() {
+    return start;
+  }
 
-    public boolean isOmicsExperimentsExists() {
-        return omicsExperimentsExists;
-    }
+  public void setStart(Date start) {
+    this.start = start;
+  }
 
-    public void setOmicsExperimentsExists(boolean omicsExperimentsExists) {
-        this.omicsExperimentsExists = omicsExperimentsExists;
-    }
+  public String getPlannedSampledIndividuals() {
+    return plannedSampledIndividuals;
+  }
 
-    public boolean isOmicsExperimentsPlanned() {
-        return omicsExperimentsPlanned;
-    }
+  public void setPlannedSampledIndividuals(String plannedSampledIndividuals) {
+    this.plannedSampledIndividuals = plannedSampledIndividuals;
+  }
 
-    public void setOmicsExperimentsPlanned(boolean omicsExperimentsPlanned) {
-        this.omicsExperimentsPlanned = omicsExperimentsPlanned;
-    }
+  public boolean isOmicsExperimentsExists() {
+    return omicsExperimentsExists;
+  }
 
-    public boolean isTypeOfOmicsGenomics() {
-        return TypeOfOmicsGenomics;
-    }
+  public void setOmicsExperimentsExists(boolean omicsExperimentsExists) {
+    this.omicsExperimentsExists = omicsExperimentsExists;
+  }
 
-    public void setTypeOfOmicsGenomics(boolean TypeOfOmicsGenomics) {
-        this.TypeOfOmicsGenomics = TypeOfOmicsGenomics;
-    }
+  public boolean isOmicsExperimentsPlanned() {
+    return omicsExperimentsPlanned;
+  }
 
-    public boolean isTypeOfOmicsTranscriptomics() {
-        return TypeOfOmicsTranscriptomics;
-    }
+  public void setOmicsExperimentsPlanned(boolean omicsExperimentsPlanned) {
+    this.omicsExperimentsPlanned = omicsExperimentsPlanned;
+  }
 
-    public void setTypeOfOmicsTranscriptomics(boolean TypeOfOmicsTranscriptomics) {
-        this.TypeOfOmicsTranscriptomics = TypeOfOmicsTranscriptomics;
-    }
+  public boolean isTypeOfOmicsGenomics() {
+    return TypeOfOmicsGenomics;
+  }
 
-    public boolean isTypeOfOmicsProteomics() {
-        return TypeOfOmicsProteomics;
-    }
+  public void setTypeOfOmicsGenomics(boolean TypeOfOmicsGenomics) {
+    this.TypeOfOmicsGenomics = TypeOfOmicsGenomics;
+  }
 
-    public void setTypeOfOmicsProteomics(boolean TypeOfOmicsProteomics) {
-        this.TypeOfOmicsProteomics = TypeOfOmicsProteomics;
-    }
+  public boolean isTypeOfOmicsTranscriptomics() {
+    return TypeOfOmicsTranscriptomics;
+  }
 
-    public boolean isTypeOfOmicsMetabolomics() {
-        return TypeOfOmicsMetabolomics;
-    }
+  public void setTypeOfOmicsTranscriptomics(boolean TypeOfOmicsTranscriptomics) {
+    this.TypeOfOmicsTranscriptomics = TypeOfOmicsTranscriptomics;
+  }
 
-    public void setTypeOfOmicsMetabolomics(boolean TypeOfOmicsMetabolomics) {
-        this.TypeOfOmicsMetabolomics = TypeOfOmicsMetabolomics;
-    }
+  public boolean isTypeOfOmicsProteomics() {
+    return TypeOfOmicsProteomics;
+  }
 
-    public boolean isTypeOfOmicsLipidomics() {
-        return TypeOfOmicsLipidomics;
-    }
+  public void setTypeOfOmicsProteomics(boolean TypeOfOmicsProteomics) {
+    this.TypeOfOmicsProteomics = TypeOfOmicsProteomics;
+  }
 
-    public void setTypeOfOmicsLipidomics(boolean TypeOfOmicsLipidomics) {
-        this.TypeOfOmicsLipidomics = TypeOfOmicsLipidomics;
-    }
+  public boolean isTypeOfOmicsMetabolomics() {
+    return TypeOfOmicsMetabolomics;
+  }
 
-    public boolean isTypeOfOmicsOther() {
-        return TypeOfOmicsOther;
-    }
+  public void setTypeOfOmicsMetabolomics(boolean TypeOfOmicsMetabolomics) {
+    this.TypeOfOmicsMetabolomics = TypeOfOmicsMetabolomics;
+  }
 
-    public void setTypeOfOmicsOther(boolean TypeOfOmicsOther) {
-        this.TypeOfOmicsOther = TypeOfOmicsOther;
-    }
+  public boolean isTypeOfOmicsLipidomics() {
+    return TypeOfOmicsLipidomics;
+  }
 
-    public String getOmicsMethod() {
-        return omicsMethod;
-    }
+  public void setTypeOfOmicsLipidomics(boolean TypeOfOmicsLipidomics) {
+    this.TypeOfOmicsLipidomics = TypeOfOmicsLipidomics;
+  }
 
-    public void setOmicsMethod(String omicsMethod) {
-        this.omicsMethod = omicsMethod;
-    }
-        
+  public boolean isTypeOfOmicsOther() {
+    return TypeOfOmicsOther;
+  }
+
+  public void setTypeOfOmicsOther(boolean TypeOfOmicsOther) {
+    this.TypeOfOmicsOther = TypeOfOmicsOther;
+  }
+
+  public String getOmicsMethod() {
+    return omicsMethod;
+  }
+
+  public void setOmicsMethod(String omicsMethod) {
+    this.omicsMethod = omicsMethod;
+  }
+
 }

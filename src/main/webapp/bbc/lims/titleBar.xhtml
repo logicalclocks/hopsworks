@@ -17,7 +17,7 @@ and open the template in the editor.
                         <p:commandLink value="BiobankCloud" action="indexPage" rendered="#{userMB.loggedIn}"/>
                         <p:commandLink value="BiobankCloud" action="welcome" rendered="#{!userMB.loggedIn}"/>
                     </p:toolbarGroup> 
-                  
+
                     <p:toolbarGroup align="right" rendered="#{userMB.loggedIn}">
                         <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{userMB.adminUser}"/>
                         <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  

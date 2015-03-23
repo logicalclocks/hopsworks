@@ -6,30 +6,29 @@ import java.io.Serializable;
  *
  * @author Hamidreza Afzali <afzali@kth.se>
  */
-public class Diagnosis implements Serializable{
-    
-    public Diagnosis() {
-        
-    }
-    
-    private String diagnosisGroup;
-    private Boolean comorbidity;
+public class Diagnosis implements Serializable {
 
-    public String getDiagnosisGroup() {
-        return diagnosisGroup;
-    }
+  public Diagnosis() {
 
-    public void setDiagnosisGroup(String diagnosisGroup) {
-        this.diagnosisGroup = diagnosisGroup;
-    }
+  }
 
-    public Boolean getComorbidity() {
-        return comorbidity;
-    }
+  private String diagnosisGroup;
+  private Boolean comorbidity;
 
-    public void setComorbidity(Boolean comorbidity) {
-        this.comorbidity = comorbidity;
-    }
-    
-    
+  public String getDiagnosisGroup() {
+    return diagnosisGroup;
+  }
+
+  public void setDiagnosisGroup(String diagnosisGroup) {
+    this.diagnosisGroup = diagnosisGroup;
+  }
+
+  public Boolean getComorbidity() {
+    return comorbidity;
+  }
+
+  public void setComorbidity(Boolean comorbidity) {
+    this.comorbidity = comorbidity;
+  }
+
 }

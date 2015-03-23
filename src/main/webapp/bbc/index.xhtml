@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"   
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -57,16 +57,16 @@
                             <h3>Number of Sample Collections per Diagnosis Group</h3>
                         </p:panel>
                     </p:tab>
-                   </p:tabView>
-                
-                
-     <!-- begin duplicate-->           
-                
-     
-              
-    <!-- end of duplicate-->           
-                
-                
+                </p:tabView>
+
+
+                <!-- begin duplicate-->           
+
+
+
+                <!-- end of duplicate-->           
+
+
 
 
                 <h:form id="showsample" rendered="#{searchController.showSamples}">
@@ -192,74 +192,74 @@
                                                    </p:column>
                                                                                        
                                                </p:dataTable>-->
-                               </h:panelGrid>
-            
+                                </h:panelGrid>
+
                             </p:panel>
                         </p:tab>
-                        
+
                         <!-- user view end -->
-                        
-       <p:tab title="Add New Users">
-           <h:form id="userReg">
-               <p:panel styleClass="BbcNewSamplePanel" header="User Data"> 
-                   <p:messages autoUpdate="true"/>
-                   <h:panelGrid id="grid" columns="4" cellpadding="5">                                 
-                  
-                            <h:outputLabel for="name" value="Name:" style="font-weight:bold"/>					
-                            <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}"/>
-                            <p:message for="name" />
-                            <h:outputText value=""/>
 
-                            <h:outputLabel for="email" value="Email:" style="font-weight:bold"/>					
-                            <p:inputText id="email"  required="true" label="Email" value="#{userController.user.email}">
-                            </p:inputText>
-                            <p:message for="email" />
-                            <h:outputText value="" />
+                        <p:tab title="Add New Users">
+                            <h:form id="userReg">
+                                <p:panel styleClass="BbcNewSamplePanel" header="User Data"> 
+                                    <p:messages autoUpdate="true"/>
+                                    <h:panelGrid id="grid" columns="4" cellpadding="5">                                 
 
-                            <h:outputLabel for="uname" value="Username:" style="font-weight:bold"/>					
-                            <p:inputText id="uname" required="true" label="Username" value="#{userController.user.name}">
-                            </p:inputText>
-                            <p:message for="uname" />
-                            <h:outputText value="" />
+                                        <h:outputLabel for="name" value="Name:" style="font-weight:bold"/>					
+                                        <p:inputText id="name" required="true" label="Name" value="#{userController.user.name}"/>
+                                        <p:message for="name" />
+                                        <h:outputText value=""/>
 
-                            <h:outputLabel for="password" value="Password:" style="font-weight:bold"/>					
-                            <p:password id="password" label="password" required="true" value="#{userController.user.password}">
-                            </p:password>
-                            <p:message for="password" />
-                            <h:outputText value=""/>
-                                
-                            <h:outputLabel for="mobile" value="Mobile Number:" style="font-weight:bold"/>					
-                            <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" validatorMessage="Only contain numbers">
-                            </p:inputText>
-                            <p:message for="mobile"/>
-                            <h:outputText value=""/>
+                                        <h:outputLabel for="email" value="Email:" style="font-weight:bold"/>					
+                                        <p:inputText id="email"  required="true" label="Email" value="#{userController.user.email}">
+                                        </p:inputText>
+                                        <p:message for="email" />
+                                        <h:outputText value="" />
 
-                           <!--<h:outputLabel for="popupCal" value="Registered Date:" style="font-weight:bold"/>
-                            <p:calendar id="popupCal" value="#{userController.user.registeredOn}" pattern="yyyy-MM-dd HH:mm:ss"/>-->
-                           
-                     </h:panelGrid>
-                   <p:commandButton update="grid" value="Add" icon="ui-icon-person" style="margin-right:10px" action="#{userController.addUser()}"/>
-             </p:panel>
-           </h:form>
-                        
-       
-       </p:tab>
-                     </p:tabView>
+                                        <h:outputLabel for="uname" value="Username:" style="font-weight:bold"/>					
+                                        <p:inputText id="uname" required="true" label="Username" value="#{userController.user.name}">
+                                        </p:inputText>
+                                        <p:message for="uname" />
+                                        <h:outputText value="" />
+
+                                        <h:outputLabel for="password" value="Password:" style="font-weight:bold"/>					
+                                        <p:password id="password" label="password" required="true" value="#{userController.user.password}">
+                                        </p:password>
+                                        <p:message for="password" />
+                                        <h:outputText value=""/>
+
+                                        <h:outputLabel for="mobile" value="Mobile Number:" style="font-weight:bold"/>					
+                                        <p:inputText id="mobile" label="Mobile Number" value="#{userController.user.mobileNum}" validatorMessage="Only contain numbers">
+                                        </p:inputText>
+                                        <p:message for="mobile"/>
+                                        <h:outputText value=""/>
+
+                                        <!--<h:outputLabel for="popupCal" value="Registered Date:" style="font-weight:bold"/>
+                                         <p:calendar id="popupCal" value="#{userController.user.registeredOn}" pattern="yyyy-MM-dd HH:mm:ss"/>-->
+
+                                    </h:panelGrid>
+                                    <p:commandButton update="grid" value="Add" icon="ui-icon-person" style="margin-right:10px" action="#{userController.addUser()}"/>
+                                </p:panel>
+                            </h:form>
+
+
+                        </p:tab>
+                    </p:tabView>
                 </h:form>
             </p:dialog>
 
-                    
-                                        
-                                    
-                                
-                                
-                               
-            
-                            
 
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
             <p:dialog modal="true" id="newSampleCollection" widgetVar="dlgNewSampleCollection" header="Information about the sample collection" 
                       draggable="true" closable="true" resizable="true" width="825"  height="620">  
 

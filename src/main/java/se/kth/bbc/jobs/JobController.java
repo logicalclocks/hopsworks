@@ -232,9 +232,9 @@ public abstract class JobController implements Serializable {
               "FileSelectionController has not been set.");
     }
   }
-  
-  private void checkIfActivityFacadeSet(){
-    if(activityFacade == null){
+
+  private void checkIfActivityFacadeSet() {
+    if (activityFacade == null) {
       throw new IllegalStateException("ActivityFacade has not been set.");
     }
   }
@@ -250,8 +250,8 @@ public abstract class JobController implements Serializable {
   protected void setFileSelector(FileSelectionController fileSelector) {
     this.fileSelector = fileSelector;
   }
-  
-  protected void setActivityFacade(ActivityFacade facade){
+
+  protected void setActivityFacade(ActivityFacade facade) {
     this.activityFacade = facade;
   }
 
@@ -470,8 +470,8 @@ public abstract class JobController implements Serializable {
     //Setup file selector
     fileSelector.init(this, isMainUpload, reqAttrs);
   }
-  
-  protected void writeJobStartedActivity(String study, String user){
+
+  protected void writeJobStartedActivity(String study, String user) {
     checkIfActivityFacadeSet();
     activityFacade.persistActivity(ActivityFacade.RAN_JOB, study, user);
   }

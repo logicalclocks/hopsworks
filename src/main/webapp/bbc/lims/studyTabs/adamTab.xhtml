@@ -38,7 +38,7 @@
                         </p:selectOneMenu>
                         <p:commandButton value="Execute" styleClass="right_button" rendered="#{adamController.selectedCommand != null}" action="#{adamController.startJob()}"/> 
                         <div>
-                        <h:outputText value="#{adamController.selectedCommand.description}" rendered="#{adamController.selectedCommand != null}"/>
+                            <h:outputText value="#{adamController.selectedCommand.description}" rendered="#{adamController.selectedCommand != null}"/>
                         </div>
 
                         <!-- JOBNAME -->

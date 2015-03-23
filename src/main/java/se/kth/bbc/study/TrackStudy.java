@@ -31,106 +31,119 @@ import se.kth.bbc.study.samples.Samplecollection;
 @Table(name = "study")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "TrackStudy.findAll", query = "SELECT t FROM TrackStudy t"),
-    @NamedQuery(name = "TrackStudy.findByName", query = "SELECT t FROM TrackStudy t WHERE t.name = :name"),
-    @NamedQuery(name = "TrackStudy.findByUsername", query = "SELECT t FROM TrackStudy t WHERE t.username = :username"),
-    @NamedQuery(name = "TrackStudy.findByTimestamp", query = "SELECT t FROM TrackStudy t WHERE t.timestamp = :timestamp"),
-    @NamedQuery(name = "TrackStudy.findOwner", query = "SELECT t.username FROM TrackStudy t WHERE t.name = :name"),
-    @NamedQuery(name = "TrackStudy.countStudyByOwner", query = "SELECT count(t.name) FROM TrackStudy t WHERE t.username = :username")})
+  @NamedQuery(name = "TrackStudy.findAll",
+          query = "SELECT t FROM TrackStudy t"),
+  @NamedQuery(name = "TrackStudy.findByName",
+          query = "SELECT t FROM TrackStudy t WHERE t.name = :name"),
+  @NamedQuery(name = "TrackStudy.findByUsername",
+          query = "SELECT t FROM TrackStudy t WHERE t.username = :username"),
+  @NamedQuery(name = "TrackStudy.findByTimestamp",
+          query = "SELECT t FROM TrackStudy t WHERE t.timestamp = :timestamp"),
+  @NamedQuery(name = "TrackStudy.findOwner",
+          query = "SELECT t.username FROM TrackStudy t WHERE t.name = :name"),
+  @NamedQuery(name = "TrackStudy.countStudyByOwner",
+          query
+          = "SELECT count(t.name) FROM TrackStudy t WHERE t.username = :username")})
 public class TrackStudy implements Serializable {
+
   @OneToMany(mappedBy = "study")
   private Collection<Samplecollection> samplecollectionCollection;
   @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "trackStudy")
   private StudyMeta studyMeta;
-    private static final long serialVersionUID = 1L;
-    @Id
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 128)
-    @Column(name = "name")
-    private String name;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 255)
-    @Column(name = "username")
-    private String username;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "timestamp")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date timestamp;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "trackStudy")
-    private Collection<StudyGroups> studyGroupsCollection;
+  private static final long serialVersionUID = 1L;
+  @Id
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 128)
+  @Column(name = "name")
+  private String name;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 255)
+  @Column(name = "username")
+  private String username;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "timestamp")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date timestamp;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "trackStudy")
+  private Collection<StudyGroups> studyGroupsCollection;
 
-    public TrackStudy() {
-    }
+  public TrackStudy() {
+  }
 
-    public TrackStudy(String name) {
-        this.name = name;
-    }
+  public TrackStudy(String name) {
+    this.name = name;
+  }
 
-    public TrackStudy(String name, String username, Date timestamp) {
-        this.name = name;
-        this.username = username;
-        this.timestamp = timestamp;
-    }
+  public TrackStudy(String name, String username, Date timestamp) {
+    this.name = name;
+    this.username = username;
+    this.timestamp = timestamp;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public String getUsername() {
-        return username;
-    }
+  public String getUsername() {
+    return username;
+  }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+  public void setUsername(String username) {
+    this.username = username;
+  }
 
-    public Date getTimestamp() {
-        return timestamp;
-    }
+  public Date getTimestamp() {
+    return timestamp;
+  }
 
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
-    }
+  public void setTimestamp(Date timestamp) {
+    this.timestamp = timestamp;
+  }
 
-    @XmlTransient
-    @JsonIgnore
-    public Collection<StudyGroups> getStudyGroupsCollection() {
-        return studyGroupsCollection;
-    }
+  @XmlTransient
+  @JsonIgnore
+  public Collection<StudyGroups> getStudyGroupsCollection() {
+    return studyGroupsCollection;
+  }
 
-    public void setStudyGroupsCollection(Collection<StudyGroups> studyGroupsCollection) {
-        this.studyGroupsCollection = studyGroupsCollection;
-    }
+  public void setStudyGroupsCollection(
+          Collection<StudyGroups> studyGroupsCollection) {
+    this.studyGroupsCollection = studyGroupsCollection;
+  }
 
-    @Override
-    public int hashCode() {
-        int hash = 0;
-        hash += (name != null ? name.hashCode() : 0);
-        return hash;
-    }
+  @Override
+  public int hashCode() {
+    int hash = 0;
+    hash += (name != null ? name.hashCode() : 0);
+    return hash;
+  }
 
-    @Override
-    public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof TrackStudy)) {
-            return false;
-        }
-        TrackStudy other = (TrackStudy) object;
-        return !((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name)));
+  @Override
+  public boolean equals(Object object) {
+    // TODO: Warning - this method won't work in the case the id fields are not set
+    if (!(object instanceof TrackStudy)) {
+      return false;
     }
+    TrackStudy other = (TrackStudy) object;
+    return !((this.name == null && other.name != null) || (this.name != null
+            && !this.name.equals(other.name)));
+  }
 
-    @Override
-    public String toString() {
-        return "se.kth.bbc.study.TrackStudy[ name=" + name + " ]";
-    }
+  @Override
+  public String toString() {
+    return "se.kth.bbc.study.TrackStudy[ name=" + name + " ]";
+  }
 
   public StudyMeta getStudyMeta() {
     return studyMeta;
@@ -150,5 +163,5 @@ public class TrackStudy implements Serializable {
           Collection<Samplecollection> samplecollectionCollection) {
     this.samplecollectionCollection = samplecollectionCollection;
   }
-    
+
 }

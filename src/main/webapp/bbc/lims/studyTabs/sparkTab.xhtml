@@ -37,9 +37,9 @@
 
                                     <h:outputLabel value="Upload job jar" for="sparkAppUploader"/>
                                     <p:commandButton process="@this"
-                                      value="Select..." id="sparkAppUploader"
-                                      oncomplete="PF('chooseFileDlg').show()"
-                                      actionListener="#{sparkController.prepareFileSelector(true,'')}">
+                                                     value="Select..." id="sparkAppUploader"
+                                                     oncomplete="PF('chooseFileDlg').show()"
+                                                     actionListener="#{sparkController.prepareFileSelector(true,'')}">
                                     </p:commandButton>
 
                                     <h:outputLabel value="Uploaded file"/>

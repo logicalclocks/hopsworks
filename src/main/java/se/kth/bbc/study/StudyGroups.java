@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package se.kth.bbc.study;
 
 import java.io.Serializable;
@@ -31,116 +30,133 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "study_group_members")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "StudyGroups.findAll", query = "SELECT s FROM StudyGroups s"),
-    @NamedQuery(name = "StudyGroups.findByStudyname", query = "SELECT s FROM StudyGroups s WHERE s.studyGroupsPK.studyname = :studyname"),
-    @NamedQuery(name = "StudyGroups.findByUsername", query = "SELECT s FROM StudyGroups s WHERE s.studyGroupsPK.username = :username"),
-    @NamedQuery(name = "StudyGroups.findByTimeadded", query = "SELECT s FROM StudyGroups s WHERE s.timeadded = :timeadded"),
-    @NamedQuery(name = "StudyGroups.findByAddedBy", query = "SELECT s FROM StudyGroups s WHERE s.addedBy = :addedBy"),
-    @NamedQuery(name = "StudyGroups.findByTeamRole", query = "SELECT s FROM StudyGroups s WHERE s.teamRole = :teamRole")})
+  @NamedQuery(name = "StudyGroups.findAll",
+          query = "SELECT s FROM StudyGroups s"),
+  @NamedQuery(name = "StudyGroups.findByStudyname",
+          query
+          = "SELECT s FROM StudyGroups s WHERE s.studyGroupsPK.studyname = :studyname"),
+  @NamedQuery(name = "StudyGroups.findByUsername",
+          query
+          = "SELECT s FROM StudyGroups s WHERE s.studyGroupsPK.username = :username"),
+  @NamedQuery(name = "StudyGroups.findByTimeadded",
+          query = "SELECT s FROM StudyGroups s WHERE s.timeadded = :timeadded"),
+  @NamedQuery(name = "StudyGroups.findByAddedBy",
+          query = "SELECT s FROM StudyGroups s WHERE s.addedBy = :addedBy"),
+  @NamedQuery(name = "StudyGroups.findByTeamRole",
+          query = "SELECT s FROM StudyGroups s WHERE s.teamRole = :teamRole")})
 public class StudyGroups implements Serializable {
-    private static final long serialVersionUID = 1L;
-    @EmbeddedId
-    protected StudyGroupsPK studyGroupsPK;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "timeadded")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date timeadded;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 255)
-    @Column(name = "added_by")
-    private String addedBy;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 10)
-    @Column(name = "team_role")
-    private String teamRole;
-    @JoinColumn(name = "studyname", referencedColumnName = "name", insertable = false, updatable = false)
-    @ManyToOne(optional = false)
-    private TrackStudy trackStudy;
 
-    public StudyGroups() {
-    }
+  private static final long serialVersionUID = 1L;
+  @EmbeddedId
+  protected StudyGroupsPK studyGroupsPK;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "timeadded")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date timeadded;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 255)
+  @Column(name = "added_by")
+  private String addedBy;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 10)
+  @Column(name = "team_role")
+  private String teamRole;
+  @JoinColumn(name = "studyname",
+          referencedColumnName = "name",
+          insertable = false,
+          updatable = false)
+  @ManyToOne(optional = false)
+  private TrackStudy trackStudy;
 
-    public StudyGroups(StudyGroupsPK studyGroupsPK) {
-        this.studyGroupsPK = studyGroupsPK;
-    }
+  public StudyGroups() {
+  }
 
-    public StudyGroups(StudyGroupsPK studyGroupsPK, Date timeadded, String addedBy, String teamRole) {
-        this.studyGroupsPK = studyGroupsPK;
-        this.timeadded = timeadded;
-        this.addedBy = addedBy;
-        this.teamRole = teamRole;
-    }
+  public StudyGroups(StudyGroupsPK studyGroupsPK) {
+    this.studyGroupsPK = studyGroupsPK;
+  }
 
-    public StudyGroups(String studyname, String username) {
-        this.studyGroupsPK = new StudyGroupsPK(studyname, username);
-    }
+  public StudyGroups(StudyGroupsPK studyGroupsPK, Date timeadded, String addedBy,
+          String teamRole) {
+    this.studyGroupsPK = studyGroupsPK;
+    this.timeadded = timeadded;
+    this.addedBy = addedBy;
+    this.teamRole = teamRole;
+  }
 
-    public StudyGroupsPK getStudyGroupsPK() {
-        return studyGroupsPK;
-    }
+  public StudyGroups(String studyname, String username) {
+    this.studyGroupsPK = new StudyGroupsPK(studyname, username);
+  }
 
-    public void setStudyGroupsPK(StudyGroupsPK studyGroupsPK) {
-        this.studyGroupsPK = studyGroupsPK;
-    }
+  public StudyGroupsPK getStudyGroupsPK() {
+    return studyGroupsPK;
+  }
 
-    public Date getTimeadded() {
-        return timeadded;
-    }
+  public void setStudyGroupsPK(StudyGroupsPK studyGroupsPK) {
+    this.studyGroupsPK = studyGroupsPK;
+  }
 
-    public void setTimeadded(Date timeadded) {
-        this.timeadded = timeadded;
-    }
+  public Date getTimeadded() {
+    return timeadded;
+  }
 
-    public String getAddedBy() {
-        return addedBy;
-    }
+  public void setTimeadded(Date timeadded) {
+    this.timeadded = timeadded;
+  }
 
-    public void setAddedBy(String addedBy) {
-        this.addedBy = addedBy;
-    }
+  public String getAddedBy() {
+    return addedBy;
+  }
 
-    public String getTeamRole() {
-        return teamRole;
-    }
+  public void setAddedBy(String addedBy) {
+    this.addedBy = addedBy;
+  }
 
-    public void setTeamRole(String teamRole) {
-        this.teamRole = teamRole;
-    }
+  public String getTeamRole() {
+    return teamRole;
+  }
 
-    public TrackStudy getTrackStudy() {
-        return trackStudy;
-    }
+  public void setTeamRole(String teamRole) {
+    this.teamRole = teamRole;
+  }
 
-    public void setTrackStudy(TrackStudy trackStudy) {
-        this.trackStudy = trackStudy;
-    }
+  public TrackStudy getTrackStudy() {
+    return trackStudy;
+  }
 
-    @Override
-    public int hashCode() {
-        int hash = 0;
-        hash += (studyGroupsPK != null ? studyGroupsPK.hashCode() : 0);
-        return hash;
-    }
+  public void setTrackStudy(TrackStudy trackStudy) {
+    this.trackStudy = trackStudy;
+  }
 
-    @Override
-    public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof StudyGroups)) {
-            return false;
-        }
-        StudyGroups other = (StudyGroups) object;
-        if ((this.studyGroupsPK == null && other.studyGroupsPK != null) || (this.studyGroupsPK != null && !this.studyGroupsPK.equals(other.studyGroupsPK))) {
-            return false;
-        }
-        return true;
-    }
+  @Override
+  public int hashCode() {
+    int hash = 0;
+    hash += (studyGroupsPK != null ? studyGroupsPK.hashCode() : 0);
+    return hash;
+  }
 
-    @Override
-    public String toString() {
-        return "se.kth.bbc.study.StudyGroups[ studyGroupsPK=" + studyGroupsPK + " ]";
+  @Override
+  public boolean equals(Object object) {
+    // TODO: Warning - this method won't work in the case the id fields are not set
+    if (!(object instanceof StudyGroups)) {
+      return false;
     }
-    
+    StudyGroups other = (StudyGroups) object;
+    if ((this.studyGroupsPK == null && other.studyGroupsPK != null)
+            || (this.studyGroupsPK != null && !this.studyGroupsPK.equals(
+                    other.studyGroupsPK))) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return "se.kth.bbc.study.StudyGroups[ studyGroupsPK=" + studyGroupsPK + " ]";
+  }
+
 }

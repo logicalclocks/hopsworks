@@ -56,7 +56,7 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
       //addErrorMessageToUserAction("Error: Update failed.");
       return "Failed";
     }
-            //addMessage("Team role updated successful "+ email + " at "+ studyMB.getStudyName());
+    //addMessage("Team role updated successful "+ email + " at "+ studyMB.getStudyName());
     //return "studyPage?faces-redirect=true";
     newTeamRole = null;
     return "OK";

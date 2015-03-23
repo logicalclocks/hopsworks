@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
           query
           = "SELECT j FROM JobInputFile j WHERE j.jobInputFilePK.name = :name")})
 public class JobInputFile implements Serializable {
+
   private static final long serialVersionUID = 1L;
   @EmbeddedId
   protected JobInputFilePK jobInputFilePK;
@@ -106,9 +107,9 @@ public class JobInputFile implements Serializable {
       return false;
     }
     JobInputFile other = (JobInputFile) object;
-    if ((this.jobInputFilePK == null && other.jobInputFilePK != null) ||
-            (this.jobInputFilePK != null &&
-            !this.jobInputFilePK.equals(other.jobInputFilePK))) {
+    if ((this.jobInputFilePK == null && other.jobInputFilePK != null)
+            || (this.jobInputFilePK != null && !this.jobInputFilePK.equals(
+                    other.jobInputFilePK))) {
       return false;
     }
     return true;
@@ -116,7 +117,8 @@ public class JobInputFile implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.job.JobInputFile[ jobInputFilePK=" + jobInputFilePK + " ]";
+    return "se.kth.bbc.job.JobInputFile[ jobInputFilePK=" + jobInputFilePK
+            + " ]";
   }
-  
+
 }

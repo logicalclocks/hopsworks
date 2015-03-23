@@ -17,21 +17,24 @@ import javax.servlet.http.HttpServletRequest;
 @RequestScoped
 public class IndexController implements Serializable {
 
-    @EJB
-    private UserFacade userFacade;
+  @EJB
+  private UserFacade userFacade;
 
-    /*
-     Checks if there are new request and whether this should show in a dialog box (i.e. if the user is an admin).
-     */
-    public boolean checkForRequests() {
-        if (getRequest().isUserInRole("ADMIN") || getRequest().isUserInRole("BBC_ADMIN")) {
-            //return false if no requests
-            return !(userFacade.findAllByStatus(Username.STATUS_REQUEST).isEmpty());
-        }
-        return false;
+  /*
+   * Checks if there are new request and whether this should show in a dialog
+   * box (i.e. if the user is an admin).
+   */
+  public boolean checkForRequests() {
+    if (getRequest().isUserInRole("ADMIN") || getRequest().isUserInRole(
+            "BBC_ADMIN")) {
+      //return false if no requests
+      return !(userFacade.findAllByStatus(Username.STATUS_REQUEST).isEmpty());
     }
+    return false;
+  }
 
-    private HttpServletRequest getRequest() {
-        return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-    }
+  private HttpServletRequest getRequest() {
+    return (HttpServletRequest) FacesContext.getCurrentInstance().
+            getExternalContext().getRequest();
+  }
 }

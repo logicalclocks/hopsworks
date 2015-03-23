@@ -4,13 +4,13 @@
        xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
                        http://xmlns.jcp.org/xml/ns/javaee/beans_1_1.xsd"
        version="1.1" bean-discovery-mode="annotated">
-        <!-- Don't allow jee7 to scann for classes from guice or jclouds -->
-        <!--See bug here: https://blogs.oracle.com/theaquarium/entry/default_cdi_enablement_in_java-->
-    <scan>
-        <exclude name="com.sun.jersey.guice.**" />
-        <exclude name="org.jclouds.**" />
-        <exclude name="com.google.inject.**" />     
-        <exclude name="com.sun.jersey.guice.**" />
-    </scan>
+  <!-- Don't allow jee7 to scann for classes from guice or jclouds -->
+  <!--See bug here: https://blogs.oracle.com/theaquarium/entry/default_cdi_enablement_in_java-->
+  <scan>
+    <exclude name="com.sun.jersey.guice.**" />
+    <exclude name="org.jclouds.**" />
+    <exclude name="com.google.inject.**" />     
+    <exclude name="com.sun.jersey.guice.**" />
+  </scan>
     
 </beans>

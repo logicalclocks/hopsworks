@@ -20,100 +20,129 @@ import se.kth.kthfsdashboard.user.Gravatar;
 @SessionScoped
 public class ActivityMB implements Serializable {
 
-    private static final Logger logger = Logger.getLogger(ActivityMB.class.getName());
-    private static final long serialVersionUID = 1L;
+  private static final Logger logger = Logger.getLogger(ActivityMB.class.
+          getName());
+  private static final long serialVersionUID = 1L;
 
-    @EJB
-    private ActivityFacade activityController;
-    
-    @EJB
-    private ActivityDetailFacade activityDetailFacade;
-    
-    private LazyDataModel<ActivityDetail> allLazyModel;
-    
-    @PostConstruct
-    public void init(){
-        this.allLazyModel = new LazyActivityModel(activityDetailFacade);
-        int cnt = (int)activityController.getTotalCount();
-        allLazyModel.setRowCount(cnt);
-    }
-    
-    public LazyDataModel<ActivityDetail> getAllLazyModel(){
-        return allLazyModel;
-    }
-    
-    public List<ActivityDetail> getActivityDetailList() {
-        return activityDetailFacade.getAllActivityDetail();
-    }
-    
-    public List<ActivityDetail> getActivityDetailOnStudy(String studyName){
-        return activityDetailFacade.activityDetailOnStudy(studyName);
-    }
+  @EJB
+  private ActivityFacade activityController;
 
-    public String findLastActivity(int id) {
+  @EJB
+  private ActivityDetailFacade activityDetailFacade;
 
-        Iterator<UserActivity> itr = activityController.activityOnID(id).listIterator();
-        long currentTime = new Date().getTime();
-        while (itr.hasNext()) {
-            long fetchedTime = itr.next().getTimestamp().getTime();
-            if ((currentTime - fetchedTime) / 1000 >= 0 && (currentTime - fetchedTime) / 1000 <= 20) {
-                return String.format("less than a minute ago.");
-            } else if((currentTime - fetchedTime) / 1000 > 20 && (currentTime - fetchedTime) / 1000 <= 118){
-                return String.format("about %s minute ago.", 1);
-            } else if ((currentTime - fetchedTime) / 1000 > 118 && (currentTime - fetchedTime) / 1000 < 1800) {
-                return String.format("%s minutes ago.", (currentTime - fetchedTime) / 60000);
-            } else if ((currentTime - fetchedTime) / 1000 > 1800 && (currentTime - fetchedTime) / 1000 <= 7056) {
-                return String.format("about %s hour ago.", 1);
-            } else if ((currentTime - fetchedTime) / 1000 > 7056 && (currentTime - fetchedTime) / 1000 <= 45400) {
-                return String.format("%s hours ago.", (currentTime - fetchedTime) / 3600000);
-            } else if ((currentTime - fetchedTime) / 1000 > 45400 && (currentTime - fetchedTime) / 1000 <= 170000) {
-                return String.format("about %s day ago.", 1);
-            } else if ((currentTime - fetchedTime) / 1000 > 170000 && (currentTime - fetchedTime) / 1000 <= 1300000) {
-                return String.format("%s days ago.", (currentTime - fetchedTime) / 86400000);
-            } else if ((currentTime - fetchedTime) / 1000 > 1300000 && (currentTime - fetchedTime) / 1000 <= 2500000) {
-                return String.format("about %s month ago.", 1);
-            } else if ((currentTime - fetchedTime) / 1000 > 2500000 && (currentTime - fetchedTime) / 1000 < 25000000) {
-                return String.format("%s months ago.", (currentTime - fetchedTime) / (1000 * 2600000));
-            } else {
-                return String.format("about %s year ago.", 1);
-            }
-        }
-        return "more than a year ago"; // dummy
+  private LazyDataModel<ActivityDetail> allLazyModel;
+
+  @PostConstruct
+  public void init() {
+    this.allLazyModel = new LazyActivityModel(activityDetailFacade);
+    int cnt = (int) activityController.getTotalCount();
+    allLazyModel.setRowCount(cnt);
+  }
+
+  public LazyDataModel<ActivityDetail> getAllLazyModel() {
+    return allLazyModel;
+  }
+
+  public List<ActivityDetail> getActivityDetailList() {
+    return activityDetailFacade.getAllActivityDetail();
+  }
+
+  public List<ActivityDetail> getActivityDetailOnStudy(String studyName) {
+    return activityDetailFacade.activityDetailOnStudy(studyName);
+  }
+
+  public String findLastActivity(int id) {
+
+    Iterator<UserActivity> itr = activityController.activityOnID(id).
+            listIterator();
+    long currentTime = new Date().getTime();
+    while (itr.hasNext()) {
+      long fetchedTime = itr.next().getTimestamp().getTime();
+      if ((currentTime - fetchedTime) / 1000 >= 0 && (currentTime - fetchedTime)
+              / 1000 <= 20) {
+        return String.format("less than a minute ago.");
+      } else if ((currentTime - fetchedTime) / 1000 > 20 && (currentTime
+              - fetchedTime) / 1000 <= 118) {
+        return String.format("about %s minute ago.", 1);
+      } else if ((currentTime - fetchedTime) / 1000 > 118 && (currentTime
+              - fetchedTime) / 1000 < 1800) {
+        return String.format("%s minutes ago.", (currentTime - fetchedTime)
+                / 60000);
+      } else if ((currentTime - fetchedTime) / 1000 > 1800 && (currentTime
+              - fetchedTime) / 1000 <= 7056) {
+        return String.format("about %s hour ago.", 1);
+      } else if ((currentTime - fetchedTime) / 1000 > 7056 && (currentTime
+              - fetchedTime) / 1000 <= 45400) {
+        return String.format("%s hours ago.", (currentTime - fetchedTime)
+                / 3600000);
+      } else if ((currentTime - fetchedTime) / 1000 > 45400 && (currentTime
+              - fetchedTime) / 1000 <= 170000) {
+        return String.format("about %s day ago.", 1);
+      } else if ((currentTime - fetchedTime) / 1000 > 170000 && (currentTime
+              - fetchedTime) / 1000 <= 1300000) {
+        return String.format("%s days ago.", (currentTime - fetchedTime)
+                / 86400000);
+      } else if ((currentTime - fetchedTime) / 1000 > 1300000 && (currentTime
+              - fetchedTime) / 1000 <= 2500000) {
+        return String.format("about %s month ago.", 1);
+      } else if ((currentTime - fetchedTime) / 1000 > 2500000 && (currentTime
+              - fetchedTime) / 1000 < 25000000) {
+        return String.format("%s months ago.", (currentTime - fetchedTime)
+                / (1000 * 2600000));
+      } else {
+        return String.format("about %s year ago.", 1);
+      }
     }
+    return "more than a year ago"; // dummy
+  }
 
-    public String findLastActivityOnStudy(String name) {
+  public String findLastActivityOnStudy(String name) {
 
-        Iterator<UserActivity> itr = activityController.lastActivityOnStudy(name).listIterator();
-        long currentTime = new Date().getTime();
-        while (itr.hasNext()) {
-            long getLastUpdate = itr.next().getTimestamp().getTime();
-            if ((currentTime - getLastUpdate) / 1000 >= 0 && (currentTime - getLastUpdate) / 1000 <= 20) {
-                return String.format("less than a minute ago.");
-            } else if((currentTime - getLastUpdate) / 1000 > 20 && (currentTime - getLastUpdate) / 1000 <= 118){
-                return String.format("about %s minute ago.", 1);
-            } else if ((currentTime - getLastUpdate) / 1000 > 118 && (currentTime - getLastUpdate) / 1000 < 1800) {
-                return String.format("%s minutes ago.", (currentTime - getLastUpdate) / 60000);
-            } else if ((currentTime - getLastUpdate) / 1000 > 1800 && (currentTime - getLastUpdate) / 1000 <= 7056) {
-                return String.format("about %s hour ago.", 1);
-            } else if ((currentTime - getLastUpdate) / 1000 > 7056 && (currentTime - getLastUpdate) / 1000 <= 45400) {
-                return String.format("%s hours ago.", (currentTime - getLastUpdate) / 3600000);
-            } else if ((currentTime - getLastUpdate) / 1000 > 45400 && (currentTime - getLastUpdate) / 1000 <= 170000) {
-                return String.format("about %s day ago.", 1);
-            } else if ((currentTime - getLastUpdate) / 1000 > 170000 && (currentTime - getLastUpdate) / 1000 <= 1300000) {
-                return String.format("%s days ago.", (currentTime - getLastUpdate) / 86400000);
-            } else if ((currentTime - getLastUpdate) / 1000 > 1300000 && (currentTime - getLastUpdate) / 1000 <= 2500000) {
-                return String.format("about %s month ago.", 1);
-            } else if ((currentTime - getLastUpdate) / 1000 > 2500000 && (currentTime - getLastUpdate) / 1000 < 25000000) {
-                return String.format("%s months ago.", (currentTime - getLastUpdate) / (1000 * 2600000));
-            } else {
-                return String.format("about %s year ago.", 1);
-            }
-        }
-        return "more than a year ago"; // dummy
+    Iterator<UserActivity> itr = activityController.lastActivityOnStudy(name).
+            listIterator();
+    long currentTime = new Date().getTime();
+    while (itr.hasNext()) {
+      long getLastUpdate = itr.next().getTimestamp().getTime();
+      if ((currentTime - getLastUpdate) / 1000 >= 0 && (currentTime
+              - getLastUpdate) / 1000 <= 20) {
+        return String.format("less than a minute ago.");
+      } else if ((currentTime - getLastUpdate) / 1000 > 20 && (currentTime
+              - getLastUpdate) / 1000 <= 118) {
+        return String.format("about %s minute ago.", 1);
+      } else if ((currentTime - getLastUpdate) / 1000 > 118 && (currentTime
+              - getLastUpdate) / 1000 < 1800) {
+        return String.format("%s minutes ago.", (currentTime - getLastUpdate)
+                / 60000);
+      } else if ((currentTime - getLastUpdate) / 1000 > 1800 && (currentTime
+              - getLastUpdate) / 1000 <= 7056) {
+        return String.format("about %s hour ago.", 1);
+      } else if ((currentTime - getLastUpdate) / 1000 > 7056 && (currentTime
+              - getLastUpdate) / 1000 <= 45400) {
+        return String.format("%s hours ago.", (currentTime - getLastUpdate)
+                / 3600000);
+      } else if ((currentTime - getLastUpdate) / 1000 > 45400 && (currentTime
+              - getLastUpdate) / 1000 <= 170000) {
+        return String.format("about %s day ago.", 1);
+      } else if ((currentTime - getLastUpdate) / 1000 > 170000 && (currentTime
+              - getLastUpdate) / 1000 <= 1300000) {
+        return String.format("%s days ago.", (currentTime - getLastUpdate)
+                / 86400000);
+      } else if ((currentTime - getLastUpdate) / 1000 > 1300000 && (currentTime
+              - getLastUpdate) / 1000 <= 2500000) {
+        return String.format("about %s month ago.", 1);
+      } else if ((currentTime - getLastUpdate) / 1000 > 2500000 && (currentTime
+              - getLastUpdate) / 1000 < 25000000) {
+        return String.format("%s months ago.", (currentTime - getLastUpdate)
+                / (1000 * 2600000));
+      } else {
+        return String.format("about %s year ago.", 1);
+      }
     }
+    return "more than a year ago"; // dummy
+  }
 
-    public String getGravatar(String email, int size) {
-        return Gravatar.getUrl(email,size);
-    }
+  public String getGravatar(String email, int size) {
+    return Gravatar.getUrl(email, size);
+  }
 
 }

@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
           query
           = "SELECT s FROM StudyServices s WHERE s.studyServicePK.service = :service")})
 public class StudyServices implements Serializable {
+
   private static final long serialVersionUID = 1L;
   @EmbeddedId
   protected StudyServicePK studyServicePK;
@@ -71,9 +72,9 @@ public class StudyServices implements Serializable {
       return false;
     }
     StudyServices other = (StudyServices) object;
-    if ((this.studyServicePK == null && other.studyServicePK != null) ||
-            (this.studyServicePK != null &&
-            !this.studyServicePK.equals(other.studyServicePK))) {
+    if ((this.studyServicePK == null && other.studyServicePK != null)
+            || (this.studyServicePK != null && !this.studyServicePK.equals(
+                    other.studyServicePK))) {
       return false;
     }
     return true;
@@ -81,8 +82,8 @@ public class StudyServices implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.study.StudyService[ studyServicePK=" + studyServicePK +
-            " ]";
+    return "se.kth.bbc.study.StudyService[ studyServicePK=" + studyServicePK
+            + " ]";
   }
-  
+
 }

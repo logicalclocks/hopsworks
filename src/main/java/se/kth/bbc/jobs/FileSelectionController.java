@@ -12,7 +12,7 @@ import org.primefaces.event.FileUploadEvent;
  */
 @ManagedBean
 @ViewScoped
-public class FileSelectionController implements Serializable{
+public class FileSelectionController implements Serializable {
 
   private String selectedPath;
   private boolean isMainFile;

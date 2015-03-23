@@ -41,20 +41,20 @@ public class StudyServiceFacade extends AbstractFacade<StudyServices> {
     //TODO: use copy instead
     List<StudyServices> newSrvs = new ArrayList<>(services.length);
     List<StudyServices> toPersist = new ArrayList<>(services.length);
-    for(StudyServiceEnum sse:services){
-      StudyServices c = new StudyServices(studyname,sse);
+    for (StudyServiceEnum sse : services) {
+      StudyServices c = new StudyServices(studyname, sse);
       newSrvs.add(c);
       toPersist.add(c);
-    }    
+    }
     List<StudyServices> current = getAllStudyServicesForStudy(studyname);
-    
+
     toPersist.removeAll(current);
     current.removeAll(newSrvs);
-    
-    for(StudyServices se: toPersist){
+
+    for (StudyServices se : toPersist) {
       em.persist(se);
     }
-    for(StudyServices se: current){
+    for (StudyServices se : current) {
       em.remove(se);
     }
   }

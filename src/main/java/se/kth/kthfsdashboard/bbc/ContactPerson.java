@@ -7,109 +7,109 @@ import java.io.Serializable;
  * @author Hamidreza Afzali <afzali@kth.se>
  */
 public class ContactPerson implements Serializable {
-    
-    private String firstName;
-    private String lastName;
-    private String emailAddress;
-    private String phone;
-    private String streetName;
-    private String zip;
-    private String city;
-    private String country;
-    private String organization;
-    private String department;     
-    private String address;
-    
-    public ContactPerson() {
-        
-    }      
 
-    public String getFirstName() {
-        return firstName;
-    }
+  private String firstName;
+  private String lastName;
+  private String emailAddress;
+  private String phone;
+  private String streetName;
+  private String zip;
+  private String city;
+  private String country;
+  private String organization;
+  private String department;
+  private String address;
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
+  public ContactPerson() {
 
-    public String getLastName() {
-        return lastName;
-    }
+  }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
+  public String getFirstName() {
+    return firstName;
+  }
 
-    public String getEmailAddress() {
-        return emailAddress;
-    }
+  public void setFirstName(String firstName) {
+    this.firstName = firstName;
+  }
 
-    public void setEmailAddress(String emailAddress) {
-        this.emailAddress = emailAddress;
-    }
+  public String getLastName() {
+    return lastName;
+  }
 
-    public String getPhone() {
-        return phone;
-    }
+  public void setLastName(String lastName) {
+    this.lastName = lastName;
+  }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
+  public String getEmailAddress() {
+    return emailAddress;
+  }
 
-    public String getStreetName() {
-        return streetName;
-    }
+  public void setEmailAddress(String emailAddress) {
+    this.emailAddress = emailAddress;
+  }
 
-    public void setStreetName(String streetName) {
-        this.streetName = streetName;
-    }
+  public String getPhone() {
+    return phone;
+  }
 
-    public String getZip() {
-        return zip;
-    }
+  public void setPhone(String phone) {
+    this.phone = phone;
+  }
 
-    public void setZip(String zip) {
-        this.zip = zip;
-    }
+  public String getStreetName() {
+    return streetName;
+  }
 
-    public String getCity() {
-        return city;
-    }
+  public void setStreetName(String streetName) {
+    this.streetName = streetName;
+  }
 
-    public void setCity(String city) {
-        this.city = city;
-    }
+  public String getZip() {
+    return zip;
+  }
 
-    public String getCountry() {
-        return country;
-    }
+  public void setZip(String zip) {
+    this.zip = zip;
+  }
 
-    public void setCountry(String country) {
-        this.country = country;
-    }
+  public String getCity() {
+    return city;
+  }
 
-    public String getOrganization() {
-        return organization;
-    }
+  public void setCity(String city) {
+    this.city = city;
+  }
 
-    public void setOrganization(String organization) {
-        this.organization = organization;
-    }
+  public String getCountry() {
+    return country;
+  }
 
-    public String getDepartment() {
-        return department;
-    }
+  public void setCountry(String country) {
+    this.country = country;
+  }
 
-    public void setDepartment(String department) {
-        this.department = department;
-    }
+  public String getOrganization() {
+    return organization;
+  }
 
-    public String getAddress() {
-        return address;
-    }
+  public void setOrganization(String organization) {
+    this.organization = organization;
+  }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
-    
+  public String getDepartment() {
+    return department;
+  }
+
+  public void setDepartment(String department) {
+    this.department = department;
+  }
+
+  public String getAddress() {
+    return address;
+  }
+
+  public void setAddress(String address) {
+    this.address = address;
+  }
+
 }

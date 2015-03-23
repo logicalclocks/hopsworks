@@ -32,26 +32,26 @@ public abstract class HopsJob {
   public final void setJobHistoryFacade(JobHistoryFacade jobHistoryFacade) {
     this.jobHistoryFacade = jobHistoryFacade;
   }
-  
-  public final boolean isIdAssigned(){
+
+  public final boolean isIdAssigned() {
     return initialized;
   }
-  
-  public final Long getJobId(){
+
+  public final Long getJobId() {
     return jobId;
   }
-  
-  protected final void updateState(JobState newState){
+
+  protected final void updateState(JobState newState) {
     jobHistoryFacade.update(jobId, newState);
-  }  
-    
-  protected final void updateArgs(String args){
+  }
+
+  protected final void updateArgs(String args) {
     jobHistoryFacade.updateArgs(jobId, args);
   }
 
   /**
    * Takes care of the execution of the job. First checks if the job has
-   * been assigned a job id (achieved by calling requestJobId) and then calls 
+   * been assigned a job id (achieved by calling requestJobId) and then calls
    * runJobInternal(), which takes care of the real execution of the job.
    * Is not intended to perform any work asynchronously, so should not be called
    * from a synchronous context.
@@ -69,9 +69,10 @@ public abstract class HopsJob {
 
   /**
    * Request a unique job id by creating a JobHistory object. Creates
-   * and persists a JobHistory object that should ultimately enable this job to 
-   * be rerun. The object is in the state INITIALIZING. Upon success, returns the 
-   * unique id of the created JobHistory object to allow tracking. 
+   * and persists a JobHistory object that should ultimately enable this job to
+   * be rerun. The object is in the state INITIALIZING. Upon success, returns
+   * the
+   * unique id of the created JobHistory object to allow tracking.
    * This method must be called before attempting to run it.
    * <p>
    * @param jobname The (optional) name for the job.
@@ -81,8 +82,9 @@ public abstract class HopsJob {
    * @return Unique id of the JobHistory object associated with this job.
    * @throws JobInitializationFailedException Thrown when initialization failed.
    */
-  public final Long requestJobId(String jobname, String userEmail, String studyname,
-          JobType jobType){
+  public final Long requestJobId(String jobname, String userEmail,
+          String studyname,
+          JobType jobType) {
     jobId = jobHistoryFacade.create(jobname, userEmail, studyname, jobType,
             null, JobState.INITIALIZING, null, null, null, null);
     initialized = true;
@@ -92,8 +94,6 @@ public abstract class HopsJob {
   /*
    * Methods meant to be overriden.
    */
-  
-  
   /**
    * Create a new job instance that runs the same job as contained in the
    * JobHistory object.

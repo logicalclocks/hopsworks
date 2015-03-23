@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -24,21 +24,21 @@
         <h:form id="hopviews">                  
             <div class="Bbcview">            
                 <div class="BbcSelect" align="center">            
-                <h:body>Select a View</h:body>
-            </div>
+                    <h:body>Select a View</h:body>
+                </div>
                 <h:panelGrid columns="3" >  
                     <p:commandButton id="limsButton" value="Lims" 
                                      rendered="#{bbcViewController.renderLims()}" 
                                      action="#{bbcViewController.loadLims()}" 
-                                      styleClass="ViewButton" icon="ui-icon-lims"/>
+                                     styleClass="ViewButton" icon="ui-icon-lims"/>
                     <p:commandButton id="workflowsButton" value="Workflows" 
                                      rendered="#{bbcViewController.renderWorfkflows()}" 
                                      action="#{bbcViewController.loadWorkflows()}" 
-                                      styleClass="ViewButton" icon="ui-icon-wf"/>
+                                     styleClass="ViewButton" icon="ui-icon-wf"/>
                     <p:commandButton id="clusterButton" value="Hadoop" 
                                      rendered="#{bbcViewController.renderClusters()}" 
                                      action="#{bbcViewController.loadClusters()}" 
-                                      styleClass="ViewButton" icon="ui-icon-hadoop"/>
+                                     styleClass="ViewButton" icon="ui-icon-hadoop"/>
                 </h:panelGrid>
             </div>
         </h:form> 

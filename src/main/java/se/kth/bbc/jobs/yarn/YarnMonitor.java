@@ -12,34 +12,33 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
  *
  * @author stig
  */
-public final class YarnMonitor implements Closeable{
-  
+public final class YarnMonitor implements Closeable {
+
   private final YarnClient yarnClient;
   private final ApplicationId appId;
-  
-  public YarnMonitor(ApplicationId id, YarnClient yarnClient){
+
+  public YarnMonitor(ApplicationId id, YarnClient yarnClient) {
     this.appId = id;
     this.yarnClient = yarnClient;
   }
-  
-  public YarnMonitor start(){
+
+  public YarnMonitor start() {
     yarnClient.start();
     return this;
   }
-  
-  public void stop(){
+
+  public void stop() {
     yarnClient.stop();
   }
-  
-  public boolean isStarted(){
+
+  public boolean isStarted() {
     return yarnClient.isInState(Service.STATE.STARTED);
   }
-  
-  public boolean isStopped(){
+
+  public boolean isStopped() {
     return yarnClient.isInState(Service.STATE.STOPPED);
   }
-  
-  
+
   //---------------------------------------------------------------------------        
   //--------------------------- STATUS QUERIES --------------------------------
   //---------------------------------------------------------------------------
@@ -52,7 +51,7 @@ public final class YarnMonitor implements Closeable{
   //------------------------- YARNCLIENT UTILS --------------------------------
   //---------------------------------------------------------------------------
   @Override
-  public void close(){
+  public void close() {
     stop();
   }
 

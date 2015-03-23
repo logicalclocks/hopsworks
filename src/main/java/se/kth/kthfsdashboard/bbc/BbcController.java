@@ -13,31 +13,32 @@ import org.primefaces.context.RequestContext;
 @SessionScoped
 public class BbcController implements Serializable {
 
-    public BbcController() {
-    }
-   
-    public void showNewSampleCollectionDialog() {
-        RequestContext.getCurrentInstance().update("formNewSampleCollection");
-        RequestContext.getCurrentInstance().reset("formNewSampleCollection");
-        RequestContext.getCurrentInstance().execute("dlgNewSampleCollection.show()");
-    }
-    
-    public void showSampleCollectionDialog() {
-        RequestContext.getCurrentInstance().update("formNewSampleCollection");
-        RequestContext.getCurrentInstance().reset("formNewSampleCollection");        
-        RequestContext.getCurrentInstance().execute("dlgNewSampleCollection.show()");
-    }    
+  public BbcController() {
+  }
 
-    public void showFindSampleCollectionDialog() {
-        RequestContext.getCurrentInstance().update("formFindSampleCollection");
-        RequestContext.getCurrentInstance().reset("formFindSampleCollection");
-        RequestContext.getCurrentInstance().execute("dlgFindSampleCollection.show()");
-    }
-    
-    public void showNewUserManagementDialog() {
+  public void showNewSampleCollectionDialog() {
+    RequestContext.getCurrentInstance().update("formNewSampleCollection");
+    RequestContext.getCurrentInstance().reset("formNewSampleCollection");
+    RequestContext.getCurrentInstance().execute("dlgNewSampleCollection.show()");
+  }
+
+  public void showSampleCollectionDialog() {
+    RequestContext.getCurrentInstance().update("formNewSampleCollection");
+    RequestContext.getCurrentInstance().reset("formNewSampleCollection");
+    RequestContext.getCurrentInstance().execute("dlgNewSampleCollection.show()");
+  }
+
+  public void showFindSampleCollectionDialog() {
+    RequestContext.getCurrentInstance().update("formFindSampleCollection");
+    RequestContext.getCurrentInstance().reset("formFindSampleCollection");
+    RequestContext.getCurrentInstance().
+            execute("dlgFindSampleCollection.show()");
+  }
+
+  public void showNewUserManagementDialog() {
 //        RequestContext.getCurrentInstance().update("formNewUserManagement");
 //        RequestContext.getCurrentInstance().reset("formNewUserManagement");
-        RequestContext.getCurrentInstance().execute("dlgUserManagement.show()");
-    }
+    RequestContext.getCurrentInstance().execute("dlgUserManagement.show()");
+  }
 
 }
