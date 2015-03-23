@@ -167,7 +167,7 @@ public class YarnRunner {
   //--------------------------- CALLBACK METHODS ------------------------------
   //---------------------------------------------------------------------------
   /**
-   * Get the ApplicationSubmissoinContext used to submit the app. This method
+   * Get the ApplicationSubmissionContext used to submit the app. This method
    * should only be called from registered Commands. Invoking it before the
    * ApplicationSubmissionContext is properly set up will result in an
    * IllegalStateException.
@@ -513,11 +513,19 @@ public class YarnRunner {
       return this;
     }
 
+    /**
+     * Set the amount of memory allocated to the Application Master (in MB).
+     * @param amMem Memory in MB.
+     */
     public Builder amMemory(int amMem) {
       this.amMemory = amMem;
       return this;
     }
 
+    /**
+     * Set the amount of cores allocated to the Application Master.
+     * @param amVCores
+     */
     public Builder amVCores(int amVCores) {
       this.amVCores = amVCores;
       return this;

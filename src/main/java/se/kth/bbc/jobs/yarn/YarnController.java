@@ -127,11 +127,7 @@ public class YarnController extends JobController {
     YarnRunner runner;
     try {
       runner = builder.build();
-    } catch (IllegalStateException e) {
-      logger.log(Level.SEVERE, "Could not initialize YarnRunner.", e);
-      MessagesController.addErrorMessage("Failed to initialize Yarn client");
-      return;
-    } catch (IOException e) {
+    } catch (IllegalStateException | IOException e) {
       logger.log(Level.SEVERE, "Could not initialize YarnRunner.", e);
       MessagesController.addErrorMessage("Failed to initialize Yarn client.");
       return;
