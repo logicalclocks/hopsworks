@@ -211,44 +211,5 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
             return study.getRetentionPeriod();
         return null;
     }
-    
-    
-        public String getConsentStatus(String studyname) throws ParseException {
-
-        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
-        q.setParameter("studyName", studyname);
-        Consent consent = q.getSingleResult();
-        return consent.getStatus();
-    }
-
-    public String getConsentName(String studyname) throws ParseException {
-
-        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
-        q.setParameter("studyName", studyname);
-        Consent consent = q.getSingleResult();
-        return consent.getName();
-    }
-
-    public String getRoles(String study, String username) throws ParseException {
-        List<StudyTeam> list = stc.findCurrentRole(study, username);
-        return list.get(0).getTeamRole();
-    }
-
-    public List<ActivityDetail> getAllActivities(String studyName) {
-        List<ActivityDetail> ad = activityController.activityDetailOnStudy(studyName);
-        return ad;
-    }
-
-
-    public Consent getActiveConsent(String studyName) {
-        return (Consent) em.createQuery("SELECT c FROM Consent c WHERE c.active =1 AND c.studyName = '" + studyName + "'").getSingleResult();
-        
-    }
-
-    public List<Consent> getAllConsets(String studyName) {
-        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
-        q.setParameter("studyName", studyName);
-        return q.getResultList();
-    
-    }
+   
 }

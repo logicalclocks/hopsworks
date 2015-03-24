@@ -1,12 +1,8 @@
 package se.kth.bbc.study;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.Closeable;
 import se.kth.bbc.study.services.StudyServiceFacade;
 import se.kth.bbc.study.services.StudyServiceEnum;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -16,13 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
-import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -43,6 +37,7 @@ import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.study.privacy.StudyPrivacyManager;
 import se.kth.bbc.study.privacy.model.Consent;
 
 /**
@@ -80,7 +75,10 @@ public class StudyMB implements Serializable {
 
     @EJB
     private StudyServiceFacade studyServices;
-
+    
+    @EJB
+    private StudyPrivacyManager privacyManager;
+    
     @ManagedProperty(value = "#{clientSessionState}")
     private ClientSessionState sessionState;
 
@@ -95,7 +93,8 @@ public class StudyMB implements Serializable {
     private String studyCreator;
     private int tabIndex;
     private String loginName;
-
+    private List<ActivityDetail> allActivities;
+    
     private StudyServiceEnum[] selectedServices;
 
     private boolean deleteFilesOnRemove = true;
@@ -106,10 +105,8 @@ public class StudyMB implements Serializable {
 
     private Date retentionPeriod;
     private Consent activeConset;
-    
 
     private List<Consent> allConsent;
-
 
     public void setActiveConset(Consent activeConset) {
         this.activeConset = activeConset;
@@ -645,87 +642,29 @@ public class StudyMB implements Serializable {
     }
 
     public Consent getActiveConent() {
-        this.activeConset = studyController.getActiveConsent(studyName);
+        this.activeConset = privacyManager.getActiveConsent(studyName);
         return this.activeConset;
     }
 
+    public List<Consent> getAllConsent() {
 
-    public List<Consent> getAllConsent(){
-
-     this.allConsent = studyController.getAllConsets(studyName);
-            return this.allConsent;
+        this.allConsent = privacyManager.getAllConsets(studyName);
+        return this.allConsent;
     }
-    
-    private List<ActivityDetail> allActivities;
-    
-    public List<ActivityDetail> getAllActivities(){
+
+
+
+    public List<ActivityDetail> getAllActivities() {
         return allActivities;
     }
+
+    public void showConsent(String path) {
     
-    public void showConsent(){
-    }
-    
-   // Constants ----------------------------------------------------------------------------------
-
-    private static final int DEFAULT_BUFFER_SIZE = 10240; // 10KB.
-
-    // Actions ------------------------------------------------------------------------------------
-
-    public void downloadPDF() throws IOException {
-
-        // Prepare.
-        FacesContext facesContext = FacesContext.getCurrentInstance();
-        ExternalContext externalContext = facesContext.getExternalContext();
-        HttpServletResponse response = (HttpServletResponse) externalContext.getResponse();
-
-        File file = new File("/usr/biobankcloud/kthfs-dashboard/src/main/webapp/resources/images/users/sampleinformedconsent.pdf");
-        BufferedInputStream input = null;
-        BufferedOutputStream output = null;
-
         try {
-            // Open file.
-            input = new BufferedInputStream(new FileInputStream(file), DEFAULT_BUFFER_SIZE);
-
-            // Init servlet response.
-            response.reset();
-            response.setHeader("Content-Type", "application/pdf");
-            response.setHeader("Content-Length", String.valueOf(file.length()));
-            response.setHeader("Content-Disposition", "inline; filename=Basicresume.pdf");
-            output = new BufferedOutputStream(response.getOutputStream(), DEFAULT_BUFFER_SIZE);
-
-            // Write file contents to response.
-            byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-            int length;
-            while ((length = input.read(buffer)) > 0) {
-                output.write(buffer, 0, length);
-            }
-
-            // Finalize task.
-            output.flush();
-        } finally {
-            // Gently close streams.
-            close(output);
-            close(input);
-        }
-
-        // Inform JSF that it doesn't need to handle response.
-        // This is very important, otherwise you will get the following exception in the logs:
-        // java.lang.IllegalStateException: Cannot forward after response has been committed.
-        facesContext.responseComplete();
-    }
-
-    // Helpers (can be refactored to public utility class) ----------------------------------------
-
-    private static void close(Closeable resource) {
-        if (resource != null) {
-            try {
-                resource.close();
-            } catch (IOException e) {
-                // Do your thing with the exception. Print it, log it or mail it. It may be useful to 
-                // know that this will generally only be thrown when the client aborted the download.
-                e.printStackTrace();
-            }
+            privacyManager.downloadPDF(path);
+        } catch (IOException ex) {
+            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
 }
