@@ -14,7 +14,7 @@ and open the template in the editor.
 
         <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
 
-        <h:form id="privacy">
+        <h:form id="privacy" enctype="multipart/form-data">
             <p:panelMenu>
                 <p:submenu   style="padding-bottom: 10px;" label="Consent and Ethical Approval">
                     <p:menuitem value=""
@@ -71,10 +71,16 @@ and open the template in the editor.
                         
                         
                         <h:panelGrid columns="3" style="padding-top: 80px;">
-                            <p:fileUpload value="#{studyManagedBean.file}" 
+                            <p:fileUpload 
+                                      value="#{studyManagedBean.file}" 
                                       label="Upload Consent Form" 
+                                      multiple="true"
                                       mode="advanced"
-                                      fileUploadListener="#{studyManagedBean.uploadConsnet()}"
+                                      fileLimit="1" 
+                                       allowTypes="/(\.|\/)(pdf|PDF)$/"
+                                       oncomplete="PF('chooseFileDlg').hide()"
+                                       update="privacy"
+                                      fileUploadListener="#{studyManagedBean.uploadConsnet}"
                                       rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
                             />
                         
@@ -82,14 +88,24 @@ and open the template in the editor.
                         <p:fileUpload value="#{studyManagedBean.file}" 
                                       label="Upload Ethical Approval"
                                       mode="advanced" 
-                                       rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
+                                      multiple="true"
+                                      fileLimit="1" 
+                                      allowTypes="/(\.|\/)(pdf|PDF)$/"
+                                      oncomplete="PF('chooseFileDlg').hide()"
+                                      fileUploadListener="#{studyManagedBean.uploadConsnet}"
+                                      rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
                                        />
                            
                         
                         <p:fileUpload value="#{studyManagedBean.file}" 
                                       label="Upload Amendment"
                                       mode="advanced" 
-                                       rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
+                                      multiple="true"
+                                      fileLimit="1" 
+                                      allowTypes="/(\.|\/)(pdf|PDF)$/"
+                                      oncomplete="PF('chooseFileDlg').hide()"
+                                      fileUploadListener="#{studyManagedBean.uploadConsnet}"
+                                      rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
                                        />
                          
                         </h:panelGrid>

@@ -3,6 +3,8 @@ package se.kth.bbc.study;
 import se.kth.bbc.study.services.StudyServiceFacade;
 import se.kth.bbc.study.services.StudyServiceEnum;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -21,6 +23,7 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.LazyDataModel;
@@ -112,6 +115,16 @@ public class StudyMB implements Serializable {
     private List<Consent> allConsent;
     
     private UploadedFile file;
+    
+   private String filePath;
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
 
     public void setActiveConset(Consent activeConset) {
         this.activeConset = activeConset;
@@ -119,9 +132,6 @@ public class StudyMB implements Serializable {
 
     public StudyMB() {
     }
-
-    
-    
  
     public UploadedFile getFile() {
         return file;
@@ -657,12 +667,20 @@ public class StudyMB implements Serializable {
         return "";
     }
 
-    public void uploadConsnet(){
-        if (privacyManager.upload(file)) {
-            FacesMessage message = new FacesMessage("Succesful", file.getFileName() + " is uploaded.");
+    public void uploadConsnet(FileUploadEvent event) throws FileNotFoundException{
+        Consent consent = new Consent();
+        consent.setActive(-1);
+        consent.setConsentForm(event.getFile().getContents());
+        consent.setDate(new Date());
+        consent.setStudyName(studyName);
+        consent.setStatus("PENDING");
+        consent.setName(event.getFile().getFileName());
+        if (privacyManager.upload(consent)) {
+          
+            FacesMessage message = new FacesMessage("Succesful", event.getFile().getFileName() + " is uploaded.");
             FacesContext.getCurrentInstance().addMessage(null, message);
         }else {
-            FacesMessage message = new FacesMessage("Error", file.getFileName() + " is not uploaded.");
+            FacesMessage message = new FacesMessage("Error", event.getFile().getFileName() + " is not uploaded.");
             FacesContext.getCurrentInstance().addMessage(null, message);
         }
     }

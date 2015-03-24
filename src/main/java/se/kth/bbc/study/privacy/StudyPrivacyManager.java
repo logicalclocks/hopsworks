@@ -82,11 +82,9 @@ public class StudyPrivacyManager {
     }
 
      
-    public boolean upload(UploadedFile file) {
-        if(file!=null)
+    public boolean upload(Consent consent) {
+        em.persist(consent);
         return true;
-        
-        return false;
     }
     
     public String getConsentStatus(String studyname) throws ParseException {
