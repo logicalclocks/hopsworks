@@ -11,6 +11,7 @@ package se.kth.bbc.study.privacy;
  */
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,8 +28,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.IOUtils;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
+import org.primefaces.model.DefaultStreamedContent;
+import org.primefaces.model.StreamedContent;
 import org.primefaces.model.UploadedFile;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityDetail;
@@ -95,12 +99,12 @@ public class StudyPrivacyManager {
         return consent.getStatus();
     }
 
-    public String getConsentName(String studyname) throws ParseException {
+    public Consent getConsentName(String name) throws ParseException {
 
-        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
-        q.setParameter("studyName", studyname);
+        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByName", Consent.class);
+        q.setParameter("name", name);
         Consent consent = q.getSingleResult();
-        return consent.getName();
+        return consent;
     }
 
     public String getRoles(String study, String username) throws ParseException {
@@ -126,31 +130,30 @@ public class StudyPrivacyManager {
     }
     
     // Actions ------------------------------------------------------------------------------------
-    public void downloadPDF(String path) throws IOException {
+    public void downloadPDF(Consent consent) throws IOException {
 
         // Prepare.
         FacesContext facesContext = FacesContext.getCurrentInstance();
         ExternalContext externalContext = facesContext.getExternalContext();
         HttpServletResponse response = (HttpServletResponse) externalContext.getResponse();
-        path = "/usr/biobankcloud/kthfs-dashboard/src/main/webapp/resources/images/users/sampleinformedconsent.pdf";
-        File file = new File(path);
-        BufferedInputStream input = null;
+  
+        StreamedContent input = null;
         BufferedOutputStream output = null;
 
         try {
             // Open file.
-            input = new BufferedInputStream(new FileInputStream(file), DEFAULT_BUFFER_SIZE);
-
+            input = new DefaultStreamedContent(new ByteArrayInputStream(consent.getConsentForm()));
+       
             // Init servlet response.
             response.reset();
             response.setHeader("Content-Type", "application/pdf");
-            response.setHeader("Content-Length", String.valueOf(file.length()));
+            response.setHeader("Content-Length", String.valueOf(consent.getConsentForm().length));
             output = new BufferedOutputStream(response.getOutputStream(), DEFAULT_BUFFER_SIZE);
 
             // Write file contents to response.
             byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
             int length;
-            while ((length = input.read(buffer)) > 0) {
+            while ((length = input.getStream().read(buffer)) > 0) {
                 output.write(buffer, 0, length);
             }
 
@@ -159,7 +162,6 @@ public class StudyPrivacyManager {
         } finally {
             // Gently close streams.
             close(output);
-            close(input);
         }
 
         // Inform JSF that it doesn't need to handle response.

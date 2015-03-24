@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -23,6 +24,7 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.IOUtils;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
@@ -669,10 +671,14 @@ public class StudyMB implements Serializable {
         return "";
     }
 
-    public void uploadConsnet(FileUploadEvent event) throws FileNotFoundException {
+    public void uploadConsnet(FileUploadEvent event) {
         Consent consent = new Consent();
         consent.setActive(-1);
-        consent.setConsentForm(event.getFile().getContents());
+        try {
+            consent.setConsentForm(IOUtils.toByteArray(event.getFile().getInputstream()));
+        } catch (IOException ex) {
+            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+        }
         consent.setDate(new Date());
         consent.setStudyName(studyName);
         consent.setStatus("PENDING");
@@ -703,13 +709,17 @@ public class StudyMB implements Serializable {
         return ad;
     }
 
-    public void showConsent(String path) {
+    public void showConsent(String consName) {
 
-        try {
-            privacyManager.downloadPDF(path);
-        } catch (IOException ex) {
-            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+        
+            try {
+                Consent consent = privacyManager.getConsentName(consName);
+                 privacyManager.downloadPDF(consent);
+            } catch (ParseException | IOException ex) {
+                Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+           
+        
         }
-    }
-
+        
 }
