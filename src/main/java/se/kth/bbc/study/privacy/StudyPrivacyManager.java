@@ -118,7 +118,7 @@ public class StudyPrivacyManager {
     }
 
      public Consent getActiveConsent(String studyName) {
-        return (Consent) em.createQuery("SELECT c FROM Consent c WHERE c.active =1 AND c.studyName = '" + studyName + "'").getSingleResult();
+        return (Consent) em.createQuery("SELECT c FROM Consent c WHERE c.status ='APPROVED' AND c.studyName = '" + studyName + "'").getSingleResult();
         
     }
 

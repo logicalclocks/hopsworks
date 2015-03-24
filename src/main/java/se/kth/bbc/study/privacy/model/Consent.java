@@ -36,7 +36,7 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Consent.findByStatus", query = "SELECT c FROM Consent c WHERE c.status = :status"),
     @NamedQuery(name = "Consent.findByName", query = "SELECT c FROM Consent c WHERE c.name = :name"),
     @NamedQuery(name = "Consent.findByStudyName", query = "SELECT c FROM Consent c WHERE c.studyName = :studyName"),
-   @NamedQuery(name = "Consent.findByActive", query = "SELECT c FROM Consent c WHERE c.active = :active")})
+    @NamedQuery(name = "Consent.findByType", query = "SELECT c FROM Consent c WHERE c.type = :type")})
 public class Consent implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -65,16 +65,11 @@ public class Consent implements Serializable {
         this.studyName = studyName;
     }
     @Lob
-    @Column(name = "ethical_approval")
-    private byte[] ethicalApproval;
-    @Lob
-    @Column(name = "ammendment")
-    private byte[] ammendment;
-    @Column(name = "active")
-    private Integer active;
-    @Lob
     @Column(name = "consent_form")
     private byte[] consentForm;
+    @Size(max = 20)
+    @Column(name = "type")
+    private String type;
 
     public Consent() {
     }
@@ -115,36 +110,20 @@ public class Consent implements Serializable {
         this.name = name;
     }
 
-    public byte[] getEthicalApproval() {
-        return ethicalApproval;
-    }
-
-    public void setEthicalApproval(byte[] ethicalApproval) {
-        this.ethicalApproval = ethicalApproval;
-    }
-
-    public byte[] getAmmendment() {
-        return ammendment;
-    }
-
-    public void setAmmendment(byte[] ammendment) {
-        this.ammendment = ammendment;
-    }
-
-    public Integer getActive() {
-        return active;
-    }
-
-    public void setActive(Integer active) {
-        this.active = active;
-    }
-
     public byte[] getConsentForm() {
         return consentForm;
     }
 
     public void setConsentForm(byte[] consentForm) {
         this.consentForm = consentForm;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     @Override

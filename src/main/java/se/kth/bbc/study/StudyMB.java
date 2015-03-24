@@ -673,7 +673,7 @@ public class StudyMB implements Serializable {
 
     public void uploadConsnet(FileUploadEvent event) {
         Consent consent = new Consent();
-        consent.setActive(-1);
+        consent.setType("CONSENT");
         try {
             consent.setConsentForm(IOUtils.toByteArray(event.getFile().getInputstream()));
         } catch (IOException ex) {
@@ -693,6 +693,51 @@ public class StudyMB implements Serializable {
         }
     }
 
+    public void uploadEthicalApproval(FileUploadEvent event) {
+        Consent consent = new Consent();
+        consent.setType("EAPPROVAL");
+        try {
+            consent.setConsentForm(IOUtils.toByteArray(event.getFile().getInputstream()));
+        } catch (IOException ex) {
+            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        consent.setDate(new Date());
+        consent.setStudyName(studyName);
+        consent.setStatus("PENDING");
+        consent.setName(event.getFile().getFileName());
+        if (privacyManager.upload(consent)) {
+
+            FacesMessage message = new FacesMessage("Succesful", event.getFile().getFileName() + " is uploaded.");
+            FacesContext.getCurrentInstance().addMessage(null, message);
+        } else {
+            FacesMessage message = new FacesMessage("Error", event.getFile().getFileName() + " is not uploaded.");
+            FacesContext.getCurrentInstance().addMessage(null, message);
+        }
+    }
+
+    public void uploadEthicalAmmendment(FileUploadEvent event) {
+        Consent consent = new Consent();
+        consent.setType("AMMENDMENT");
+        try {
+            consent.setConsentForm(IOUtils.toByteArray(event.getFile().getInputstream()));
+        } catch (IOException ex) {
+            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        consent.setDate(new Date());
+        consent.setStudyName(studyName);
+        consent.setStatus("PENDING");
+        consent.setName(event.getFile().getFileName());
+        if (privacyManager.upload(consent)) {
+
+            FacesMessage message = new FacesMessage("Succesful", event.getFile().getFileName() + " is uploaded.");
+            FacesContext.getCurrentInstance().addMessage(null, message);
+        } else {
+            FacesMessage message = new FacesMessage("Error", event.getFile().getFileName() + " is not uploaded.");
+            FacesContext.getCurrentInstance().addMessage(null, message);
+        }
+    }
+
+    
     public Consent getActiveConent() {
         this.activeConset = privacyManager.getActiveConsent(studyName);
         return this.activeConset;
@@ -710,8 +755,7 @@ public class StudyMB implements Serializable {
     }
 
     public void showConsent(String consName) {
-
-        
+    
             try {
                 Consent consent = privacyManager.getConsentName(consName);
                  privacyManager.downloadPDF(consent);
