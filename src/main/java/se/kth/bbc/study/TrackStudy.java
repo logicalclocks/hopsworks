@@ -57,11 +57,9 @@ public class TrackStudy implements Serializable {
     private String username;
     @Basic(optional = false)
     @NotNull
-    @Column(name = "timestamp")
+    @Column(name = "created")
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "trackStudy")
-    private Collection<StudyGroups> studyGroupsCollection;
 
     public TrackStudy() {
     }
@@ -98,16 +96,6 @@ public class TrackStudy implements Serializable {
 
     public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
-    }
-
-    @XmlTransient
-    @JsonIgnore
-    public Collection<StudyGroups> getStudyGroupsCollection() {
-        return studyGroupsCollection;
-    }
-
-    public void setStudyGroupsCollection(Collection<StudyGroups> studyGroupsCollection) {
-        this.studyGroupsCollection = studyGroupsCollection;
     }
 
     @Override

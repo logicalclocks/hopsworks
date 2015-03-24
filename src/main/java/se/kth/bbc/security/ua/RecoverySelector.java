@@ -123,12 +123,12 @@ public class RecoverySelector implements Serializable {
         }
 
         // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
@@ -170,12 +170,12 @@ public class RecoverySelector implements Serializable {
         }
 
         // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
@@ -222,7 +222,7 @@ public class RecoverySelector implements Serializable {
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
 
             return "";
@@ -238,7 +238,7 @@ public class RecoverySelector implements Serializable {
 
                 String message = UserAccountsEmailMessages.buildYubikeyRequestMessage();
                 email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT, message);
-                people.setStatus(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
+                people.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
                 um.updatePeople(people);
                 return "yubico";
             } else {

@@ -47,9 +47,8 @@ public class ResetPassword implements Serializable {
     private String passwd1;
     private String passwd2;
     private String current;
-    private String question;
+    private SecurityQuestion question;
     private User people;
-    private List<String> questions;
 
     private String answer;
     
@@ -73,19 +72,15 @@ public class ResetPassword implements Serializable {
     }
 
     
-    public List<String> getQuestions() {
-        return questions;
-    }
-
-    public void setQuestions(List<String> questions) {
-        this.questions = questions;
+    public SecurityQuestion[] getQuestions() {
+        return SecurityQuestion.values();
     }
     
-    public String getQuestion() {
+    public SecurityQuestion getQuestion() {
         return question;
     }
 
-    public void setQuestion(String question) {
+    public void setQuestion(SecurityQuestion question) {
         this.question = question;
     }
 
@@ -138,16 +133,6 @@ public class ResetPassword implements Serializable {
         this.passwd2 = passwd2;
     }
 
-    @PostConstruct
-    public void initGroups() {
-
-        questions = new ArrayList<>();
-        for (SecurityQuestions value : SecurityQuestions.values()) {
-            questions.add(value.getValue());
-        }
-
-    }
-
     public String sendTmpPassword() {
 
         people = mgr.getUser(this.username);
@@ -175,7 +160,7 @@ public class ResetPassword implements Serializable {
 
             userTransaction.begin();
             // make the account pending until it will be reset by user upon first login
-            mgr.updateStatus(people, PeoplAccountStatus.ACCOUNT_PENDING.getValue());
+            mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
 
             // reset the old password with a new one
             mgr.resetPassword(people, SecurityUtils.converToSHA256(random_password));
@@ -217,7 +202,7 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             MessagesController.addSecurityErrorMessage("Inactive Account");
             return "";
         }
@@ -227,7 +212,7 @@ public class ResetPassword implements Serializable {
             // Reset the old password with a new one
             mgr.resetPassword(people, SecurityUtils.converToSHA256(passwd1));
 
-            mgr.updateStatus(people, PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
+            mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
 
             // Send email    
             String message = UserAccountsEmailMessages.buildResetMessage();
@@ -273,12 +258,12 @@ public class ResetPassword implements Serializable {
         }
 
         // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
@@ -287,7 +272,7 @@ public class ResetPassword implements Serializable {
             if (SecurityUtils.converToSHA256(this.current).equals(people.getPassword())) {
 
                 // update the security question
-                mgr.resetSecQuestion(people.getUid(), SecurityQuestions.getQuestion(question).name(), SecurityUtils.converToSHA256(this.answer));
+                mgr.resetSecQuestion(people.getUid(), question, SecurityUtils.converToSHA256(this.answer));
 
                 // send email    
                 String message = UserAccountsEmailMessages.buildSecResetMessage();
@@ -317,13 +302,12 @@ public class ResetPassword implements Serializable {
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
 
-        String quest = people.getSecurityQuestion();
-        this.question = SecurityQuestions.valueOf(quest).getValue();
+        this.question = people.getSecurityQuestion();
 
         return ("reset_password");
     }
@@ -386,12 +370,12 @@ public class ResetPassword implements Serializable {
         }
 
         // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }

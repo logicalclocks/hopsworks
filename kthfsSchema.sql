@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.6.23, for Linux (x86_64)
 --
--- Host: localhost    Database: test
+-- Host: localhost    Database: kthfs
 -- ------------------------------------------------------
 -- Server version	5.6.23-ndb-7.4.4-cluster-gpl
 
@@ -26,11 +26,11 @@ CREATE TABLE `activity` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `activity` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
   `performed_by` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `flag` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
   `activity_on` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=ndbcluster DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=ndbcluster AUTO_INCREMENT=1034 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -47,7 +47,7 @@ SET character_set_client = utf8;
  1 AS `performed_by_name`,
  1 AS `description`,
  1 AS `studyname`,
- 1 AS `timestamp`*/;
+ 1 AS `created`*/;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -70,7 +70,7 @@ CREATE TABLE `address` (
   PRIMARY KEY (`address_id`),
   KEY `uid` (`uid`),
   CONSTRAINT `FK_243_251` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=ndbcluster DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=ndbcluster AUTO_INCREMENT=1026 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -130,7 +130,7 @@ DROP TABLE IF EXISTS `consent`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `consent` (
   `id` int(11) NOT NULL,
-  `date` date DEFAULT NULL,
+  `added` date DEFAULT NULL,
   `study_name` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
   `retention_period` date DEFAULT NULL,
   `consent_form` blob,
@@ -172,16 +172,16 @@ CREATE TABLE `inodes` (
   `name` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
   `pid` mediumint(9) DEFAULT NULL,
   `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `isDir` tinyint(1) NOT NULL,
+  `is_dir` tinyint(1) NOT NULL,
   `size` int(11) DEFAULT NULL,
   `status` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `pid` (`pid`,`name`),
   KEY `pid_2` (`pid`),
-  KEY `pid_3` (`pid`,`isDir`),
+  KEY `pid_3` (`pid`,`is_dir`),
   KEY `name` (`name`),
   CONSTRAINT `FK_253_257` FOREIGN KEY (`pid`) REFERENCES `inodes` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=ndbcluster DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=ndbcluster AUTO_INCREMENT=1025 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -254,9 +254,9 @@ CREATE TABLE `jobhistory` (
   PRIMARY KEY (`id`),
   KEY `user` (`user`),
   KEY `study` (`study`),
-  CONSTRAINT `FK_248_299` FOREIGN KEY (`user`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `FK_266_300` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=ndbcluster DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+  CONSTRAINT `FK_266_300` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  CONSTRAINT `FK_248_299` FOREIGN KEY (`user`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=ndbcluster AUTO_INCREMENT=1025 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -341,8 +341,8 @@ CREATE TABLE `samplecollections` (
   UNIQUE KEY `acronym` (`acronym`),
   KEY `contact` (`contact`),
   KEY `study` (`study`),
-  CONSTRAINT `FK_248_316` FOREIGN KEY (`contact`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `FK_266_317` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `FK_266_317` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `FK_248_316` FOREIGN KEY (`contact`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -364,8 +364,8 @@ CREATE TABLE `samples` (
   KEY `anatomical_site` (`anatomical_site`),
   KEY `samplecollection_id` (`samplecollection_id`),
   CONSTRAINT `FK_237_331` FOREIGN KEY (`anatomical_site`) REFERENCES `anatomical_parts` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `FK_312_332` FOREIGN KEY (`samplecollection_id`) REFERENCES `samplecollections` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  CONSTRAINT `FK_328_330` FOREIGN KEY (`parent_id`) REFERENCES `samples` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `FK_328_330` FOREIGN KEY (`parent_id`) REFERENCES `samples` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `FK_312_332` FOREIGN KEY (`samplecollection_id`) REFERENCES `samplecollections` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -379,7 +379,7 @@ DROP TABLE IF EXISTS `study`;
 CREATE TABLE `study` (
   `name` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
   `username` varchar(45) COLLATE utf8_unicode_ci NOT NULL,
-  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`name`),
   KEY `username` (`username`),
   CONSTRAINT `FK_248_268` FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION
@@ -414,26 +414,6 @@ SET character_set_client = utf8;
  1 AS `email`,
  1 AS `creator`*/;
 SET character_set_client = @saved_cs_client;
-
---
--- Table structure for table `study_group_members`
---
-
-DROP TABLE IF EXISTS `study_group_members`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `study_group_members` (
-  `studyname` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
-  `username` varchar(45) COLLATE utf8_unicode_ci NOT NULL,
-  `timeadded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `added_by` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `team_role` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
-  PRIMARY KEY (`studyname`,`username`),
-  KEY `username` (`username`),
-  CONSTRAINT `FK_248_341` FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `FK_266_340` FOREIGN KEY (`studyname`) REFERENCES `study` (`name`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=ndbcluster DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `study_inclusion_criteria`
@@ -493,11 +473,11 @@ CREATE TABLE `study_team` (
   `name` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
   `team_member` varchar(45) COLLATE utf8_unicode_ci NOT NULL,
   `team_role` varchar(32) COLLATE utf8_unicode_ci NOT NULL,
-  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `added` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`name`,`team_member`),
   KEY `team_member` (`team_member`),
-  CONSTRAINT `FK_248_280` FOREIGN KEY (`team_member`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  CONSTRAINT `FK_266_279` FOREIGN KEY (`name`) REFERENCES `study` (`name`) ON DELETE CASCADE ON UPDATE NO ACTION
+  CONSTRAINT `FK_266_279` FOREIGN KEY (`name`) REFERENCES `study` (`name`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  CONSTRAINT `FK_248_280` FOREIGN KEY (`team_member`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -520,8 +500,8 @@ CREATE TABLE `userlogins` (
   PRIMARY KEY (`login_id`),
   KEY `uid` (`uid`),
   KEY `login_date` (`login_date`),
-  CONSTRAINT `FK_243_349` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=ndbcluster DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+  CONSTRAINT `FK_496_345` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=ndbcluster AUTO_INCREMENT=1029 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -543,13 +523,15 @@ CREATE TABLE `users` (
   `title` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
   `orcid` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
   `false_login` int(11) NOT NULL DEFAULT '-1',
-  `isonline` int(11) NOT NULL DEFAULT '-1',
+  `isonline` tinyint(1) NOT NULL DEFAULT '0',
   `secret` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
   `security_question` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
   `security_answer` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `yubikey_user` tinyint(4) DEFAULT NULL,
+  `yubikey_user` tinyint(1) NOT NULL DEFAULT '0',
   `password_changed` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `notes` varchar(500) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `mobile` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `status` int(11) NOT NULL DEFAULT '-1',
   PRIMARY KEY (`uid`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
@@ -648,7 +630,7 @@ CREATE TABLE `zeppelin_paragraph` (
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `activity_details` AS select `activity`.`id` AS `id`,`activity`.`performed_by` AS `performed_by_email`,concat(`users`.`fname`,' ',`users`.`lname`) AS `performed_by_name`,`activity`.`activity` AS `description`,`activity`.`activity_on` AS `studyname`,`activity`.`timestamp` AS `timestamp` from (`activity` join `users` on((`activity`.`performed_by` = `users`.`email`))) */;
+/*!50001 VIEW `activity_details` AS select `activity`.`id` AS `id`,`activity`.`performed_by` AS `performed_by_email`,concat(`users`.`fname`,' ',`users`.`lname`) AS `performed_by_name`,`activity`.`activity` AS `description`,`activity`.`activity_on` AS `studyname`,`activity`.`created` AS `created` from (`activity` join `users` on((`activity`.`performed_by` = `users`.`email`))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -698,4 +680,4 @@ CREATE TABLE `zeppelin_paragraph` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-03-23 19:08:33
+-- Dump completed on 2015-03-24 14:24:27

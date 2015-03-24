@@ -53,7 +53,7 @@ public class UserRegistration implements Serializable {
     private String mobile;
     private String org;
     private String orcid;
-    private String security_question;
+    private SecurityQuestion security_question;
     private String security_answer;
     private String title;
     private String password;
@@ -67,14 +67,8 @@ public class UserRegistration implements Serializable {
     private String postalcode;
     private boolean tos;
 
-    private List<String> questions;
-
-    public List<String> getQuestions() {
-        return questions;
-    }
-
-    public void setQuestions(List<String> questions) {
-        this.questions = questions;
+    public SecurityQuestion[] getQuestions() {
+        return SecurityQuestion.values();
     }
 
     public boolean isTos() {
@@ -141,11 +135,11 @@ public class UserRegistration implements Serializable {
         this.postalcode = postalcode;
     }
 
-    public String getSecurity_question() {
+    public SecurityQuestion getSecurity_question() {
         return security_question;
     }
 
-    public void setSecurity_question(String security_question) {
+    public void setSecurity_question(SecurityQuestion security_question) {
         this.security_question = security_question;
     }
 
@@ -275,15 +269,6 @@ public class UserRegistration implements Serializable {
         this.passwordAgain = passwordAgain;
     }
 
-    @PostConstruct
-    private void init() {
-        questions = new ArrayList<>();
-        for (SecurityQuestions value : SecurityQuestions.values()) {
-            questions.add(value.getValue());
-        }
-
-    }
-
     /**
      * Register new mobile users.
      *
@@ -326,12 +311,12 @@ public class UserRegistration implements Serializable {
             userTransaction.begin();
 
             User user = mgr.register(fname, lname, mail, title, org, tel, orcid, uid,
-                    SecurityUtils.converToSHA256(password), otpSecret, SecurityQuestions.getQuestion(security_question).name(),
-                    SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue(), yubikey);
+                    SecurityUtils.converToSHA256(password), otpSecret, security_question,
+                    SecurityUtils.converToSHA256(security_answer), PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue(), yubikey);
 
             username = user.getUsername();
             // Register group
-            mgr.registerGroup(user, BBCGroups.BBC_GUEST.getValue());
+            mgr.registerGroup(user, BBCGroup.BBC_GUEST.getValue());
 
             // Create address entry
             mgr.registerAddress(user);
@@ -372,7 +357,7 @@ public class UserRegistration implements Serializable {
             tel = "";
             orcid = "";
             security_answer = "";
-            security_question = "";
+            security_question = null;
             password = "";
             passwordAgain = "";
             tos = false;
@@ -429,9 +414,9 @@ public class UserRegistration implements Serializable {
 
             User user = mgr.register(fname, lname, mail, title, org,
                     tel, orcid, uid, SecurityUtils.converToSHA256(password), otp,
-                    SecurityQuestions.getQuestion(security_question).name(), SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue(), yubikey);
+                    security_question, SecurityUtils.converToSHA256(security_answer), PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue(), yubikey);
 
-            mgr.registerGroup(user, BBCGroups.BBC_GUEST.getValue());
+            mgr.registerGroup(user, BBCGroup.BBC_GUEST.getValue());
 
             mgr.registerAddress(user, address1, address2, address3, city, state, country, postalcode);
             mgr.registerYubikey(user);
@@ -452,7 +437,7 @@ public class UserRegistration implements Serializable {
             tel = "";
             orcid = "";
             security_answer = "";
-            security_question = "";
+            security_question = null;
             password = "";
             passwordAgain = "";
             address1 = "";

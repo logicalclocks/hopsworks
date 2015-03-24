@@ -43,7 +43,7 @@ public class Consent implements Serializable {
     @NotNull
     @Column(name = "id")
     private Integer id;
-    @Column(name = "date")
+    @Column(name = "added")
     @Temporal(TemporalType.DATE)
     private Date date;
     @Size(max = 128)

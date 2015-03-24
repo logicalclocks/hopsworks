@@ -11,7 +11,7 @@ package se.kth.bbc.security.ua;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 
-public enum PeoplAccountStatus{
+public enum PeopleAccountStatus{
     
     // Status of new Yubikey users requests
     YUBIKEY_ACCOUNT_INACTIVE(1),
@@ -43,7 +43,7 @@ public enum PeoplAccountStatus{
     
     private final int value;
 
-    private PeoplAccountStatus(int value) {
+    private PeopleAccountStatus(int value) {
         this.value = value;
     }
 

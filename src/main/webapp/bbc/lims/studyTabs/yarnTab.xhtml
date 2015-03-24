@@ -77,7 +77,7 @@
                             <div>
                                 <!-- TODO: add validator that checks if the CF file is parseable -->
                                 <p:commandButton id="yarnExecuteButton" value="Execute" action="#{cuneiformController.startWorkflow()}" 
-                                                 update="@form"/>
+                                                 update="@(.historyForm) @(.resultsForm) @(.runConfForm)"/>
                             </div>
                         </div>
                     </h:form>

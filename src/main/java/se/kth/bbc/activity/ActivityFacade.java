@@ -71,7 +71,7 @@ public class ActivityFacade extends AbstractFacade<UserActivity> {
 
   public List<UserActivity> lastActivityOnStudy(String name) {
     Query query = em.createNativeQuery(
-            "SELECT * FROM activity WHERE activity_on=? ORDER BY timestamp DESC LIMIT 1",
+            "SELECT * FROM activity WHERE activity_on=? ORDER BY created DESC LIMIT 1",
             UserActivity.class).setParameter(1, name);
     return query.getResultList();
   }

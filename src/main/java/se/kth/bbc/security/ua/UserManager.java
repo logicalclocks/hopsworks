@@ -90,7 +90,7 @@ public class UserManager {
     public boolean deactivateUser(int id) {
         User p = (User) em.find(User.class, id);
         if (p != null) {
-            p.setStatus(PeoplAccountStatus.ACCOUNT_BLOCKED.getValue());
+            p.setStatus(PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
             em.merge(p);
         }
         return true;
@@ -99,7 +99,7 @@ public class UserManager {
     public boolean closeUserAccount(int id, String note) {
         User p = (User) em.find(User.class, id);
         if (p != null) {
-            p.setStatus(PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue());
+            p.setStatus(PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
             p.setNotes(note);
             em.merge(p);
         }
@@ -113,7 +113,7 @@ public class UserManager {
         return true;
     }
 
-    public boolean resetSecQuestion(int id, String question, String ans) {
+    public boolean resetSecQuestion(int id, SecurityQuestion question, String ans) {
         User p = (User) em.find(User.class, id);
         p.setSecurityQuestion(question);
         p.setSecurityAnswer(ans);
@@ -144,7 +144,7 @@ public class UserManager {
     }
 
     public List<User> findInactivateUsers() {
-        Query query = em.createNativeQuery("SELECT * FROM users p WHERE p.active = " + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
+        Query query = em.createNativeQuery("SELECT * FROM users p WHERE p.active = " + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
         List<User> people = query.getResultList();
         return people;
     }
@@ -181,7 +181,7 @@ public class UserManager {
 
     public boolean findYubikeyUsersByStatus(int status) {
         List existing = em.createQuery(
-                "SELECT p FROM User p WHERE p.status ='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.yubikey_user = " + status)
+                "SELECT p FROM User p WHERE p.status ='" + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.yubikey_user = " + status)
                 .getResultList();
         return (existing.size() > 0);
     }
@@ -196,7 +196,7 @@ public class UserManager {
     public List<User> findAllUsers() {
         //TypedQuery<User> query = em.createNamedQuery("User.findAll", User.class);
         List<User> query = em.createQuery(
-                "SELECT p FROM User p WHERE p.status !='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='" + PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='" + PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue() + "'")
+                "SELECT p FROM User p WHERE p.status !='" + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='" + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='" + PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue() + "'")
                 .getResultList();
 
         return query;
@@ -310,7 +310,7 @@ public class UserManager {
      */
     public User register(String fname, String lname, String email, String title, String org,
             String tel, String orcid, int uid, String password, String otpSecret,
-            String question, String answer, int status, short yubikey) {
+            SecurityQuestion question, String answer, int status, short yubikey) {
 
         // assigne a username
         String uname = USERNAME_PREFIX + uid;
