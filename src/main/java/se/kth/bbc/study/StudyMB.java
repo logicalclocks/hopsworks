@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
@@ -23,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.LazyDataModel;
+import org.primefaces.model.UploadedFile;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.activity.ActivityDetailFacade;
@@ -82,6 +84,7 @@ public class StudyMB implements Serializable {
     @ManagedProperty(value = "#{clientSessionState}")
     private ClientSessionState sessionState;
 
+    
     private TrackStudy study;
     private List<User> usernames;
     private StudyTeam studyTeamEntry;
@@ -107,6 +110,8 @@ public class StudyMB implements Serializable {
     private Consent activeConset;
 
     private List<Consent> allConsent;
+    
+    private UploadedFile file;
 
     public void setActiveConset(Consent activeConset) {
         this.activeConset = activeConset;
@@ -115,6 +120,17 @@ public class StudyMB implements Serializable {
     public StudyMB() {
     }
 
+    
+    
+ 
+    public UploadedFile getFile() {
+        return file;
+    }
+    
+    public void setFile(UploadedFile file) {
+        this.file = file;
+    }
+    
     public void setSessionState(ClientSessionState sessionState) {
         this.sessionState = sessionState;
     }
@@ -641,6 +657,16 @@ public class StudyMB implements Serializable {
         return "";
     }
 
+    public void uploadConsnet(){
+        if (privacyManager.upload(file)) {
+            FacesMessage message = new FacesMessage("Succesful", file.getFileName() + " is uploaded.");
+            FacesContext.getCurrentInstance().addMessage(null, message);
+        }else {
+            FacesMessage message = new FacesMessage("Error", file.getFileName() + " is not uploaded.");
+            FacesContext.getCurrentInstance().addMessage(null, message);
+        }
+    }
+    
     public Consent getActiveConent() {
         this.activeConset = privacyManager.getActiveConsent(studyName);
         return this.activeConset;

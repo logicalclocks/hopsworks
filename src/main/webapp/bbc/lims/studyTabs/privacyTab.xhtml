@@ -71,31 +71,23 @@ and open the template in the editor.
                         
                         
                         <h:panelGrid columns="3" style="padding-top: 80px;">
-                        <p:fileUpload value="#{fileSelectionController.selectedPath}" 
-                                        auto="true" 
-                                      multiple="false"
+                            <p:fileUpload value="#{studyManagedBean.file}" 
                                       label="Upload Consent Form" 
-                                      oncomplete="PF('chooseFileDlg').hide()"
-                                      mode="advanced" 
-                                       rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
-                                       />
+                                      mode="advanced"
+                                      fileUploadListener="#{studyManagedBean.uploadConsnet()}"
+                                      rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
+                            />
                         
                          
-                        <p:fileUpload value="#{fileSelectionController.selectedPath}" 
-                                        auto="true" 
-                                      multiple="false"
+                        <p:fileUpload value="#{studyManagedBean.file}" 
                                       label="Upload Ethical Approval"
-                                      oncomplete="PF('chooseFileDlg').hide()"
                                       mode="advanced" 
                                        rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
                                        />
                            
                         
-                        <p:fileUpload value="#{fileSelectionController.selectedPath}" 
-                                        auto="true" 
-                                      multiple="false"
+                        <p:fileUpload value="#{studyManagedBean.file}" 
                                       label="Upload Amendment"
-                                      oncomplete="PF('chooseFileDlg').hide()"
                                       mode="advanced" 
                                        rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
                                        />

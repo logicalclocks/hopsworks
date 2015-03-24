@@ -29,6 +29,7 @@ import javax.persistence.TypedQuery;
 import javax.servlet.http.HttpServletResponse;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
+import org.primefaces.model.UploadedFile;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.security.ua.EmailBean;
@@ -60,6 +61,8 @@ public class StudyPrivacyManager {
     // Constants ----------------------------------------------------------------------------------
     private static final int DEFAULT_BUFFER_SIZE = 10240; // 10KB.
 
+
+ 
     
     protected EntityManager getEntityManager() {
         return em;
@@ -78,22 +81,14 @@ public class StudyPrivacyManager {
         requestContext.execute("PF('dlg').show()");
     }
 
-    public void showConsent(String name) {
-
+     
+    public boolean upload(UploadedFile file) {
+        if(file!=null)
+        return true;
+        
+        return false;
     }
-
-    public String uploadConsent() {
-
-        return "";
-    }
-
-    public String updateConsent() {
-        // TODO: send email to user
-        //emailBean.sendEmail(studyname, studyname, studyname);
-
-        return "";
-    }
-
+    
     public String getConsentStatus(String studyname) throws ParseException {
 
         TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
