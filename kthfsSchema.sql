@@ -81,12 +81,15 @@ DROP TABLE IF EXISTS `consent`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `consent` (
-  `id` int(11) NOT NULL,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `date` date DEFAULT NULL,
   `study_name` varchar(128) DEFAULT NULL,
-  `consent_form` blob,
   `status` varchar(30) DEFAULT NULL,
   `name` varchar(80) DEFAULT NULL,
+  `ethical_approval` blob,
+  `ammendment` blob,
+  `active` int(11) DEFAULT NULL,
+  `consent_form` blob,
   PRIMARY KEY (`id`),
   KEY `study_name` (`study_name`),
   CONSTRAINT `CONSENT_ibfk_1` FOREIGN KEY (`study_name`) REFERENCES `study` (`name`)

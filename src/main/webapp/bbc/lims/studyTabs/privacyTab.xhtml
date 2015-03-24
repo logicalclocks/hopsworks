@@ -20,21 +20,19 @@ and open the template in the editor.
                     <p:menuitem value=""
                                 ajax="false" 
                                 icon="ui-icon-close">
-
-
-                        <p:panelGrid columns="4">         
+                        <p:panelGrid columns="4" >         
 
                             <p:column>    
-                                Consent Status: #{studyPrivacyManager.getConsentStatus(studyManagedBean.studyName)}
+                                Consent Status: #{studyManagedBean.activeConent.status}
                             </p:column>
 
                             <p:column>
                                 Retention Period: #{studyManagedBean.retentionPeriod}
                             </p:column>
-                            
+
                             <p:column>
                                 <p:calendar id="cal" value="#{studyManagedBean.retentionPeriod}"  showOn="button" >
-                               
+
                                 </p:calendar>  
                             </p:column>
                             <p:column>
@@ -43,50 +41,77 @@ and open the template in the editor.
                                                   action="#{studyManagedBean.updateRetentionPeriod()}"
                                                   rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
                             </p:column>
-                            
+
                         </p:panelGrid>
+                
+                        <p:dataGrid 
+                            value="#{studyManagedBean.allConsent}"
+                            var="consent"
+                             >
+                            
+                            <f:facet name="header" >Consent and Ethical Approval </f:facet>
+   
+                            <p:column>
+                                <h:commandLink  action="#{studyManagedBean.downloadPDF}" 
+                                                    target="_blank"
+                                                    style="float:left;margin-right:10px">
+                                    
+                                <h:graphicImage  library="images/icons" 
+                                                     name="consent.png" 
+                                                     width="30"
+                                                     height="30"/>
+                                </h:commandLink>
+                            </p:column>
+                            
+                            <p:column>
+                                    <h:outputLabel value="#{consent.name}" />
+                                
+                            </p:column>
+                        </p:dataGrid>
                         
                         
-                        <h:panelGrid columns="2">
-                            <h:graphicImage  library="images/icons" name="consent.png" width="50" height="50"/>
-                            <h:outputText value="#{studyManagedBean.studyName}" 
-                                          style="float: right" />
+                        <h:panelGrid columns="3" style="padding-top: 80px;">
+                        <p:fileUpload value="#{fileSelectionController.selectedPath}" 
+                                        auto="true" 
+                                      multiple="false"
+                                      label="Upload Consent Form" 
+                                      oncomplete="PF('chooseFileDlg').hide()"
+                                      mode="advanced" 
+                                       rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
+                                       />
+                        
+                         
+                        <p:fileUpload value="#{fileSelectionController.selectedPath}" 
+                                        auto="true" 
+                                      multiple="false"
+                                      label="Upload Ethical Approval"
+                                      oncomplete="PF('chooseFileDlg').hide()"
+                                      mode="advanced" 
+                                       rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
+                                       />
+                           
+                        
+                        <p:fileUpload value="#{fileSelectionController.selectedPath}" 
+                                        auto="true" 
+                                      multiple="false"
+                                      label="Upload Amendment"
+                                      oncomplete="PF('chooseFileDlg').hide()"
+                                      mode="advanced" 
+                                       rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
+                                       />
+                         
                         </h:panelGrid>
-
-                        
-                            <p:commandButton value="View Consent"
-                                             action="#{studyPrivacyManager.showConsent(studyManagedBean.studyName)}"
-                                             id="imageBtn"
-                                             type="button"
-                                             rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                <p:lightBox styleClass="imagebox" id="lighbox1">
-                                    <p:graphicImage library="images" name="consent.gif" width="300" />
-                                </p:lightBox>
-                            </p:commandButton>
-
-
-                            <p:commandButton value="Upload Consent" action="#{studyManagedBean.uploadConsent()}"
-                                             rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-                            
-                            <p:commandButton value="Renew Consent" type="button"
-                                             rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-
-                            <p:commandButton value="Upload Ethical Approval" type="button"
-                                             rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-
-                            <p:commandButton value="Upload Amendment" type="button"
-                                             rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-
-                            
+                   
                     </p:menuitem>
                 </p:submenu>
             </p:panelMenu>
-        </h:form>    
 
+        </h:form>
+
+        
         <h:form id="audit">
             <p:dataTable var="user"
-                         value="#{studyPrivacyManager.getAllActivities(studyManagedBean.studyName)}" 
-                         rowKey="#{user.performedByEmail}"
+                         value="#{studyManagedBean.allActivities}" 
                          emptyMessage="No audit logs"
                          scrollable="true">
 
@@ -96,28 +121,30 @@ and open the template in the editor.
                           headerText="Name"
                           style="width:32%; font-size: 12px; text-align: left;">
 
-                <h:outputText value="#{user.performedByName}" />
+                    <h:outputText value="#{user.performedByName}" />
                 </p:column>
 
                 <p:column id="emailColumn" filterBy="#{user.performedByEmail}"
                           headerText="Email" 
                           style="width:32%;font-size: 12px;text-align: left;">
-                <h:outputText value="#{user.performedByEmail}" />
+                    <h:outputText value="#{user.performedByEmail}" />
                 </p:column>
 
 
                 <p:column  filterBy="#{user.timestamp}"
                            headerText="Action Date" 
                            style="width:32%;font-size: 12px;text-align: left;">
-                <h:outputText value="#{user.timestamp}"/>
+                    <h:outputText value="#{user.timestamp}"/>
                 </p:column>
 
                 <p:column  filterBy="#{user.description}"
                            headerText="Action" 
                            style="width:32%;font-size: 12px;text-align: left;">
-                <h:outputText value="#{user.description}"/>
+                    <h:outputText value="#{user.description}"/>
                 </p:column>
             </p:dataTable>
         </h:form>
+
+
     </body>
 </html> 

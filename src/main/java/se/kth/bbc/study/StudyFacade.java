@@ -1,15 +1,19 @@
 package se.kth.bbc.study;
 
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.activity.ActivityController;
+import se.kth.bbc.activity.ActivityDetail;
+import se.kth.bbc.study.privacy.model.Consent;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -29,6 +33,15 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
         return em;
     }
         
+        @EJB
+    private StudyTeamFacade stc;
+
+    private List<ActivityDetail> ad;
+        
+       @EJB
+    private ActivityController activityController;
+
+       
     public StudyFacade() {
       super(TrackStudy.class);
     }
@@ -197,5 +210,45 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
         if (study!=null)
             return study.getRetentionPeriod();
         return null;
+    }
+    
+    
+        public String getConsentStatus(String studyname) throws ParseException {
+
+        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
+        q.setParameter("studyName", studyname);
+        Consent consent = q.getSingleResult();
+        return consent.getStatus();
+    }
+
+    public String getConsentName(String studyname) throws ParseException {
+
+        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
+        q.setParameter("studyName", studyname);
+        Consent consent = q.getSingleResult();
+        return consent.getName();
+    }
+
+    public String getRoles(String study, String username) throws ParseException {
+        List<StudyTeam> list = stc.findCurrentRole(study, username);
+        return list.get(0).getTeamRole();
+    }
+
+    public List<ActivityDetail> getAllActivities(String studyName) {
+        List<ActivityDetail> ad = activityController.activityDetailOnStudy(studyName);
+        return ad;
+    }
+
+
+    public Consent getActiveConsent(String studyName) {
+        return (Consent) em.createQuery("SELECT c FROM Consent c WHERE c.active =1 AND c.studyName = '" + studyName + "'").getSingleResult();
+        
+    }
+
+    public List<Consent> getAllConsets(String studyName) {
+        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
+        q.setParameter("studyName", studyName);
+        return q.getResultList();
+    
     }
 }

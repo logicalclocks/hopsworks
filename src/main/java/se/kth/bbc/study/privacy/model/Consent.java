@@ -10,6 +10,8 @@ import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
@@ -17,7 +19,6 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -32,44 +33,61 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Consent.findAll", query = "SELECT c FROM Consent c"),
     @NamedQuery(name = "Consent.findById", query = "SELECT c FROM Consent c WHERE c.id = :id"),
     @NamedQuery(name = "Consent.findByDate", query = "SELECT c FROM Consent c WHERE c.date = :date"),
-    @NamedQuery(name = "Consent.findByStudyName", query = "SELECT c FROM Consent c WHERE c.studyName = :studyName"),
     @NamedQuery(name = "Consent.findByStatus", query = "SELECT c FROM Consent c WHERE c.status = :status"),
-    @NamedQuery(name = "Consent.findByName", query = "SELECT c FROM Consent c WHERE c.name = :name")})
+    @NamedQuery(name = "Consent.findByName", query = "SELECT c FROM Consent c WHERE c.name = :name"),
+    @NamedQuery(name = "Consent.findByStudyName", query = "SELECT c FROM Consent c WHERE c.studyName = :studyName"),
+   @NamedQuery(name = "Consent.findByActive", query = "SELECT c FROM Consent c WHERE c.active = :active")})
 public class Consent implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id")
-    private Integer id;
+    private Long id;
     @Column(name = "date")
     @Temporal(TemporalType.DATE)
     private Date date;
-    @Size(max = 128)
-    @Column(name = "study_name")
-    private String studyName;
-    @Lob
-    @Column(name = "consent_form")
-    private byte[] consentForm;
     @Size(max = 30)
     @Column(name = "status")
     private String status;
     @Size(max = 80)
     @Column(name = "name")
     private String name;
+    @Size(max = 80)
+    @Column(name = "study_name")
+    private String studyName;
+
+    public String getStudyName() {
+        return studyName;
+    }
+
+    public void setStudyName(String studyName) {
+        this.studyName = studyName;
+    }
+    @Lob
+    @Column(name = "ethical_approval")
+    private byte[] ethicalApproval;
+    @Lob
+    @Column(name = "ammendment")
+    private byte[] ammendment;
+    @Column(name = "active")
+    private Integer active;
+    @Lob
+    @Column(name = "consent_form")
+    private byte[] consentForm;
 
     public Consent() {
     }
 
-    public Consent(Integer id) {
+    public Consent(Long id) {
         this.id = id;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -79,22 +97,6 @@ public class Consent implements Serializable {
 
     public void setDate(Date date) {
         this.date = date;
-    }
-
-    public String getStudyName() {
-        return studyName;
-    }
-
-    public void setStudyName(String studyName) {
-        this.studyName = studyName;
-    }
-
-    public byte[] getConsentForm() {
-        return consentForm;
-    }
-
-    public void setConsentForm(byte[] consentForm) {
-        this.consentForm = consentForm;
     }
 
     public String getStatus() {
@@ -111,6 +113,38 @@ public class Consent implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public byte[] getEthicalApproval() {
+        return ethicalApproval;
+    }
+
+    public void setEthicalApproval(byte[] ethicalApproval) {
+        this.ethicalApproval = ethicalApproval;
+    }
+
+    public byte[] getAmmendment() {
+        return ammendment;
+    }
+
+    public void setAmmendment(byte[] ammendment) {
+        this.ammendment = ammendment;
+    }
+
+    public Integer getActive() {
+        return active;
+    }
+
+    public void setActive(Integer active) {
+        this.active = active;
+    }
+
+    public byte[] getConsentForm() {
+        return consentForm;
+    }
+
+    public void setConsentForm(byte[] consentForm) {
+        this.consentForm = consentForm;
     }
 
     @Override

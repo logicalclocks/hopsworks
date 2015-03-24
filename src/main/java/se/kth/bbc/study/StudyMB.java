@@ -1,8 +1,13 @@
 package se.kth.bbc.study;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.Closeable;
 import se.kth.bbc.study.services.StudyServiceFacade;
 import se.kth.bbc.study.services.StudyServiceEnum;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.text.ParseException;
@@ -14,18 +19,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.faces.event.PhaseId;
+import javax.persistence.TypedQuery;
+import javax.print.attribute.standard.Media;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
+import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.LazyDataModel;
+import org.primefaces.model.StreamedContent;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.activity.ActivityDetailFacade;
@@ -37,8 +49,10 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.study.privacy.model.Consent;
 
 /**
  *
@@ -98,8 +112,17 @@ public class StudyMB implements Serializable {
     private LazyActivityModel lazyModel = null;
 
     private Date date;
-    
+
     private Date retentionPeriod;
+    private Consent activeConset;
+    
+
+    private List<Consent> allConsent;
+
+
+    public void setActiveConset(Consent activeConset) {
+        this.activeConset = activeConset;
+    }
 
     public StudyMB() {
     }
@@ -595,22 +618,20 @@ public class StudyMB implements Serializable {
         return "studyPage";
     }
 
-
     public void updateRetentionPeriod() {
-        if(studyController.updateRetentionPeriod(studyName, this.retentionPeriod)){
-            
-                  MessagesController.addInfoMessage("Success: Updated retention period.");
-      
-        }else {
-        
-              MessagesController.addErrorMessage("Error: Update retention period failed.");
+        if (studyController.updateRetentionPeriod(studyName, this.retentionPeriod)) {
+
+            MessagesController.addInfoMessage("Success: Updated retention period.");
+
+        } else {
+
+            MessagesController.addErrorMessage("Error: Update retention period failed.");
         }
     }
-    
-    
+
     public Date getDate() {
         return this.date;
-      }
+    }
 
     public void setDate(Date date) {
         this.date = date;
@@ -623,6 +644,97 @@ public class StudyMB implements Serializable {
 
     public void setRetentionPeriod(Date retentionPeriod) {
         this.retentionPeriod = retentionPeriod;
+    }
+
+    public String updateConsent() {
+        // TODO: send email to user
+        //emailBean.sendEmail(studyname, studyname, studyname);
+
+        return "";
+    }
+
+    public Consent getActiveConent() {
+        this.activeConset = studyController.getActiveConsent(studyName);
+        return this.activeConset;
+    }
+
+
+    public List<Consent> getAllConsent(){
+
+     this.allConsent = studyController.getAllConsets(studyName);
+            return this.allConsent;
+    }
+    
+    private List<ActivityDetail> allActivities;
+    
+    public List<ActivityDetail> getAllActivities(){
+        return allActivities;
+    }
+    
+    public void showConsent(){
+    }
+    
+   // Constants ----------------------------------------------------------------------------------
+
+    private static final int DEFAULT_BUFFER_SIZE = 10240; // 10KB.
+
+    // Actions ------------------------------------------------------------------------------------
+
+    public void downloadPDF() throws IOException {
+
+        // Prepare.
+        FacesContext facesContext = FacesContext.getCurrentInstance();
+        ExternalContext externalContext = facesContext.getExternalContext();
+        HttpServletResponse response = (HttpServletResponse) externalContext.getResponse();
+
+        File file = new File("/usr/biobankcloud/kthfs-dashboard/src/main/webapp/resources/images/users/sampleinformedconsent.pdf");
+        BufferedInputStream input = null;
+        BufferedOutputStream output = null;
+
+        try {
+            // Open file.
+            input = new BufferedInputStream(new FileInputStream(file), DEFAULT_BUFFER_SIZE);
+
+            // Init servlet response.
+            response.reset();
+            response.setHeader("Content-Type", "application/pdf");
+            response.setHeader("Content-Length", String.valueOf(file.length()));
+            response.setHeader("Content-Disposition", "inline; filename=Basicresume.pdf");
+            output = new BufferedOutputStream(response.getOutputStream(), DEFAULT_BUFFER_SIZE);
+
+            // Write file contents to response.
+            byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+            int length;
+            while ((length = input.read(buffer)) > 0) {
+                output.write(buffer, 0, length);
+            }
+
+            // Finalize task.
+            output.flush();
+        } finally {
+            // Gently close streams.
+            close(output);
+            close(input);
+        }
+
+        // Inform JSF that it doesn't need to handle response.
+        // This is very important, otherwise you will get the following exception in the logs:
+        // java.lang.IllegalStateException: Cannot forward after response has been committed.
+        facesContext.responseComplete();
+    }
+
+    // Helpers (can be refactored to public utility class) ----------------------------------------
+
+    private static void close(Closeable resource) {
+        if (resource != null) {
+            try {
+                resource.close();
+            } catch (IOException e) {
+                // Do your thing with the exception. Print it, log it or mail it. It may be useful to 
+                // know that this will generally only be thrown when the client aborted the download.
+                e.printStackTrace();
+            }
+        }
     }
     
 }
