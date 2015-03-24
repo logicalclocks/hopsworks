@@ -39,7 +39,7 @@ public class StudyPrivacyManager {
     @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
   
-   @EJB
+    @EJB
     private ActivityController activityController;
 
    @EJB
