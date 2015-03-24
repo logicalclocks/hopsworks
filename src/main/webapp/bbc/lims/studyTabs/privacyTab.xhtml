@@ -119,7 +119,7 @@ and open the template in the editor.
         
         <h:form id="audit">
             <p:dataTable var="user"
-                         value="#{studyManagedBean.allActivities}" 
+                         value="#{studyManagedBean.getAllActivities(studyManagedBean.studyName)}" 
                          emptyMessage="No audit logs"
                          scrollable="true">
 

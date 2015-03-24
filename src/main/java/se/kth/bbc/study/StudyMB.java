@@ -28,6 +28,7 @@ import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.UploadedFile;
+import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.activity.ActivityDetailFacade;
@@ -80,14 +81,16 @@ public class StudyMB implements Serializable {
 
     @EJB
     private StudyServiceFacade studyServices;
-    
+
     @EJB
     private StudyPrivacyManager privacyManager;
-    
+
     @ManagedProperty(value = "#{clientSessionState}")
     private ClientSessionState sessionState;
 
-    
+    @EJB
+    private ActivityController activityController;
+
     private TrackStudy study;
     private List<User> usernames;
     private StudyTeam studyTeamEntry;
@@ -99,8 +102,7 @@ public class StudyMB implements Serializable {
     private String studyCreator;
     private int tabIndex;
     private String loginName;
-    private List<ActivityDetail> allActivities;
-    
+
     private StudyServiceEnum[] selectedServices;
 
     private boolean deleteFilesOnRemove = true;
@@ -113,10 +115,10 @@ public class StudyMB implements Serializable {
     private Consent activeConset;
 
     private List<Consent> allConsent;
-    
+
     private UploadedFile file;
-    
-   private String filePath;
+
+    private String filePath;
 
     public String getFilePath() {
         return filePath;
@@ -132,15 +134,15 @@ public class StudyMB implements Serializable {
 
     public StudyMB() {
     }
- 
+
     public UploadedFile getFile() {
         return file;
     }
-    
+
     public void setFile(UploadedFile file) {
         this.file = file;
     }
-    
+
     public void setSessionState(ClientSessionState sessionState) {
         this.sessionState = sessionState;
     }
@@ -667,7 +669,7 @@ public class StudyMB implements Serializable {
         return "";
     }
 
-    public void uploadConsnet(FileUploadEvent event) throws FileNotFoundException{
+    public void uploadConsnet(FileUploadEvent event) throws FileNotFoundException {
         Consent consent = new Consent();
         consent.setActive(-1);
         consent.setConsentForm(event.getFile().getContents());
@@ -676,15 +678,15 @@ public class StudyMB implements Serializable {
         consent.setStatus("PENDING");
         consent.setName(event.getFile().getFileName());
         if (privacyManager.upload(consent)) {
-          
+
             FacesMessage message = new FacesMessage("Succesful", event.getFile().getFileName() + " is uploaded.");
             FacesContext.getCurrentInstance().addMessage(null, message);
-        }else {
+        } else {
             FacesMessage message = new FacesMessage("Error", event.getFile().getFileName() + " is not uploaded.");
             FacesContext.getCurrentInstance().addMessage(null, message);
         }
     }
-    
+
     public Consent getActiveConent() {
         this.activeConset = privacyManager.getActiveConsent(studyName);
         return this.activeConset;
@@ -696,14 +698,13 @@ public class StudyMB implements Serializable {
         return this.allConsent;
     }
 
-
-
-    public List<ActivityDetail> getAllActivities() {
-        return allActivities;
+    public List<ActivityDetail> getAllActivities(String studyName) {
+        List<ActivityDetail> ad = activityController.activityDetailOnStudy(studyName);
+        return ad;
     }
 
     public void showConsent(String path) {
-    
+
         try {
             privacyManager.downloadPDF(path);
         } catch (IOException ex) {
