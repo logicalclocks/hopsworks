@@ -34,6 +34,7 @@ public class Constants {
   public static final String ENV_KEY_HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
 
   //Spark constants
+  public static final String SPARK_VERSION = "1.2.1";
   public static final String SPARK_STAGING_DIR = ".sparkStaging";
   public static final String SPARK_LOCRSC_SPARK_JAR = "__spark__.jar";
   public static final String SPARK_LOCRSC_APP_JAR = "__app__.jar";
@@ -43,6 +44,12 @@ public class Constants {
   public static final String SPARK_DEFAULT_OUTPUT_PATH = "Spark/Output/";
   public static final String DEFAULT_SPARK_JAR_HDFS_PATH
           = "hdfs:///user/spark/spark.jar";
+  public static final String SPARK_DEFAULT_CLASSPATH = "/srv/spark/conf:"
+          + "/srv/spark/lib/spark-assembly-" + SPARK_VERSION
+          + "-hadoop2.4.0.jar:"
+          + "/srv/spark/lib/datanucleus-core-3.2.10.jar:"
+          + "/srv/spark/lib/datanucleus-api-jdo-3.2.6.jar:"
+          + "/srv/spark/lib/datanucleus-rdbms-3.2.9.jar";
 
   //ADAM constants
   public static final String ADAM_MAINCLASS = "org.bdgenomics.adam.cli.ADAMMain";
