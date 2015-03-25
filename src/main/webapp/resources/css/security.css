@@ -12,135 +12,135 @@ and open the template in the editor.
 
 /* Banner*/
 .banner {
-    font-size: 35px;
-    font-family: "Open Sans",arial;
-    color: #555;
-    font-weight: 200;
-    margin-top: 100px;
-    margin-bottom: 30px;
+  font-size: 35px;
+  font-family: "Open Sans",arial;
+  color: #555;
+  font-weight: 200;
+  margin-top: 100px;
+  margin-bottom: 30px;
 }
 
 
 .Login .profile-img {
-    width: 100px;
-    height: 100px;
-    margin: 0px auto 10px;
-    display: block;
-    border-radius: 50%;
-    padding: 20px;
+  width: 100px;
+  height: 100px;
+  margin: 0px auto 10px;
+  display: block;
+  border-radius: 50%;
+  padding: 20px;
 }
 
 /*Main login menue*/
 
 .Login {
-    font-family: Arial,sans-serif;
-    width: 350px;
-    margin: 0 auto;
-    margin-top: 50px;
-    border-width: 1px; 
-    border-style: solid; 
-    border-color: lightgray; 
-    background-color: #3399FF; 
-    border-radius: 6px;  
-    padding: 20px;   
+  font-family: Arial,sans-serif;
+  width: 350px;
+  margin: 0 auto;
+  margin-top: 50px;
+  border-width: 1px; 
+  border-style: solid; 
+  border-color: lightgray; 
+  background-color: #3399FF; 
+  border-radius: 6px;  
+  padding: 20px;   
 }
 
 .Login #uname:hover, .Login #uname:focus, .Login #password:hover, .Login #password:focus {
-    z-index: 3;
+  z-index: 3;
 }
 
 .Login #uname {
-    margin-bottom: 0px;
+  margin-bottom: 0px;
 }
 
 .Login #password {
-    margin-bottom: 0px;
+  margin-bottom: 0px;
 }
 
 .Login #otp {
-    margin-bottom: 0px;
+  margin-bottom: 0px;
 }
 
 .Login #uname, .Login #password, .Login #otp {
-    direction: ltr;
-    height: 44px;
-    font-size: 16px;
+  direction: ltr;
+  height: 44px;
+  font-size: 16px;
 }
 .Login input[type="email"], .Login input[type="password"], Login input[type="otp"], .Login input[type="text"], .Login input[type="submit"] {
-    width:95%;
-    display: block;
-    margin-bottom: 10px;
-    z-index: 1;
-    position: relative;
-    box-sizing: border-box;
+  width:95%;
+  display: block;
+  margin-bottom: 10px;
+  z-index: 1;
+  position: relative;
+  box-sizing: border-box;
 }
 input[type="email"]:focus, input[type="number"]:focus, input[type="password"]:focus, input[type="otp"]:focus, input[type="text"]:focus {
-    outline: medium none;
-    border: 1px solid #4D90FE;
-    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3) inset;
+  outline: medium none;
+  border: 1px solid #4D90FE;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3) inset;
 }
 input[type="email"], input[type="number"], input[type="password"], input[type="otp"], input[type="text"] {
-    display: inline-block;
-    height: 40px;
-    padding: 0px 8px;
-    margin: 10px;
-    box-sizing: border-box;
-    border-radius: 1px;
-    font-size: 15px;
-    color: #404040;
+  display: inline-block;
+  height: 40px;
+  padding: 0px 8px;
+  margin: 10px;
+  box-sizing: border-box;
+  border-radius: 1px;
+  font-size: 15px;
+  color: #404040;
 }
 
 .Login .ui-button[type="submit"] {
-    width: 95%;
-    height: 40px;
-    display: block;
-    margin: 10px;
-    z-index: 1;
-    position: relative;
-    box-sizing: border-box;
+  width: 95%;
+  height: 40px;
+  display: block;
+  margin: 10px;
+  z-index: 1;
+  position: relative;
+  box-sizing: border-box;
 }
 
 
 .ui-messages-error, .ui-message-error {
-    color: #B94A48;
-    width: 88%;
-    margin: 10px;
+  color: #B94A48;
+  width: 88%;
+  margin: 10px;
 }
 
 .new_user{
-    width: 50%;
-    min-height: 400px;
-    height: auto !important;
-    margin-bottom: 18px;
-    font-size: 12px;
-    font-weight:bold;
+  width: 50%;
+  min-height: 400px;
+  height: auto !important;
+  margin-bottom: 18px;
+  font-size: 12px;
+  font-weight:bold;
 }
 
 .register_user{
-    padding-top: 17px;
-    padding-right: 20px;
-    padding-bottom: 18px;
-    padding-left: 300px;
-    margin-top: 18px;
-    margin-bottom: 18px;
-    background-color: white;
-    border-top: 1px solid #e5e5e5;
-    width: 400px;
-    height: 28px;
+  padding-top: 17px;
+  padding-right: 20px;
+  padding-bottom: 18px;
+  padding-left: 300px;
+  margin-top: 18px;
+  margin-bottom: 18px;
+  background-color: white;
+  border-top: 1px solid #e5e5e5;
+  width: 400px;
+  height: 28px;
 }
 
 
 .register_banner{
-    padding-top: 17px;
-    padding-right: 20px;
-    padding-bottom: 18px;
-    padding-left: 165px;
-    margin-top: 18px;
-    margin-bottom: 18px;
-    background-color: #f5f5f5;
-    border-top: 1px solid #e5e5e5;
-    width: 400px;
-    height: 28px;
+  padding-top: 17px;
+  padding-right: 20px;
+  padding-bottom: 18px;
+  padding-left: 165px;
+  margin-top: 18px;
+  margin-bottom: 18px;
+  background-color: #f5f5f5;
+  border-top: 1px solid #e5e5e5;
+  width: 400px;
+  height: 28px;
 }
 
 .register_banner .ui-button {
@@ -165,136 +165,136 @@ input[type="email"], input[type="number"], input[type="password"], input[type="o
 /*QRcode*/
 
 .QRcode {
-    font-size: 14px;
-    width: 320px;
-    margin: 0 auto;
-    margin-top: 50px;
-    border-width: 1px; 
-    border-style: solid; 
-    border-color: lightgray; 
-    background-color: #F0F0F0; 
-    border-radius: 6px;  
-    padding: 20px;   
+  font-size: 14px;
+  width: 320px;
+  margin: 0 auto;
+  margin-top: 50px;
+  border-width: 1px; 
+  border-style: solid; 
+  border-color: lightgray; 
+  background-color: #F0F0F0; 
+  border-radius: 6px;  
+  padding: 20px;   
 }
 
 .QRcode td {
-    padding: 1px 5px;
+  padding: 1px 5px;
 }
 
 .QRcode .ui-inputfield {
-    width: 290px;
-    font-size: 14px;
-    margin-bottom: 10px;
+  width: 290px;
+  font-size: 14px;
+  margin-bottom: 10px;
 }
 
 .QRcode .ui-button {
-    float: right;
+  float: right;
 }
 
 .QRcode .ui-messages-error-icon {
-    display: none!important;
+  display: none!important;
 }
 
 
 /*QRcode*/
 
 .GenericMenue {
-    font-size: 14px;
-    width: 400px;
-    margin: 0 auto;
-    margin-top: 50px;
-    border-width: 1px; 
-    border-style: solid; 
-    border-color: lightgray; 
-    background-color: #F0F0F0; 
-    border-radius: 6px;  
-    padding: 20px;   
+  font-size: 14px;
+  width: 400px;
+  margin: 0 auto;
+  margin-top: 50px;
+  border-width: 1px; 
+  border-style: solid; 
+  border-color: lightgray; 
+  background-color: #F0F0F0; 
+  border-radius: 6px;  
+  padding: 20px;   
 }
 
 .GenericMenue td {
-    padding: 5px 15px;
+  padding: 5px 15px;
 }
 
 .GenericMenue .ui-inputfield {
-    width: 300px;
-    height: 20px;
-    font-size: 14px;
-    margin-bottom: 10px;
+  width: 300px;
+  height: 20px;
+  font-size: 14px;
+  margin-bottom: 10px;
 }
 
 .GenericMenue .ui-button {
-    float: right;
+  float: right;
 }
 
 .GenericMenue .ui-messages-error-icon {
-    display: none!important;
+  display: none!important;
 }
 
 /* Account Registration*/
 
 .Registation {
-    text-align: left;
-    font-family: "Open Sans",arial;
-    color: #555;
-    font-size: 20px;
-    font-weight: 100;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    margin-right: 10px;
+  text-align: left;
+  font-family: "Open Sans",arial;
+  color: #555;
+  font-size: 20px;
+  font-weight: 100;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-right: 10px;
 }
 
 .GenericMenue .ui-inputfield {
-    width: 300px;
-    height: 40px;
-    font-size: 14px;
-    margin-bottom: 10px;
+  width: 300px;
+  height: 40px;
+  font-size: 14px;
+  margin-bottom: 10px;
 }
 
 .ForgotPassword {
-    font-size: 14px;
-    width: 320px;
-    margin: 0 auto;
-    margin-top: 50px;
-    border-width: 1px; 
-    border-style: solid; 
-    border-color: lightgray; 
-    background-color: #F0F0F0; 
-    border-radius: 6px;  
-    padding:  20px;   
+  font-size: 14px;
+  width: 320px;
+  margin: 0 auto;
+  margin-top: 50px;
+  border-width: 1px; 
+  border-style: solid; 
+  border-color: lightgray; 
+  background-color: #F0F0F0; 
+  border-radius: 6px;  
+  padding:  20px;   
 }
 
 .ForgotPassword .ui-inputfield {
-    width: 300px;
-    font-size: 14px;
-    height: 30px;
+  width: 300px;
+  font-size: 14px;
+  height: 30px;
 }
 
 .ForgotPassword .ui-button {
-    float: right;
+  float: right;
 }
 
 .ForgotPassword .ui-messages-error-icon {
-    display: none!important;
+  display: none!important;
 }
 
 .ForgotPassword .ui-messages-error, .ui-message-error {
-    color: #B94A48;
-    width: 70%;
-    margin: 10px;
+  color: #B94A48;
+  width: 70%;
+  margin: 10px;
 }
 
 .ForgotPassword .ui-selectonemenu {
-    display: inline-block;
-    position: relative;
-    width: auto;
-    cursor: pointer;
-  }
+  display: inline-block;
+  position: relative;
+  width: auto;
+  cursor: pointer;
+}
 .ForgotPassword .ui-corner-all {
-    border: 0px;
+  border: 0px;
 }
 
 .ui-corner-all {
-    border-radius: 1px;
+  border-radius: 1px;
 }
 .ui-state-default {
 }
@@ -303,33 +303,33 @@ input[type="email"], input[type="number"], input[type="password"], input[type="o
 /*Change Security Question*/
 
 .CSQ {
-    font-size: 14px;
-    width: 420px;
-    margin: 0 auto;
-    margin-top: 50px;
-    border-width: 1px; 
-    border-style: solid; 
-    border-color: lightgray; 
-    background-color: #F0F0F0; 
-    border-radius: 6px;  
-    padding: 40px;   
+  font-size: 14px;
+  width: 420px;
+  margin: 0 auto;
+  margin-top: 50px;
+  border-width: 1px; 
+  border-style: solid; 
+  border-color: lightgray; 
+  background-color: #F0F0F0; 
+  border-radius: 6px;  
+  padding: 40px;   
 }
 
 
 
 .CSQ .ui-inputfield {
-    width: 310px;
-    font-size: 14px;
-    margin-bottom: 10px;
-    padding: 3px;
+  width: 310px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  padding: 3px;
 }
 
 .CSQ .ui-button {
-    float: right;
+  float: right;
 }
 
 .CSQ .ui-messages-error-icon {
-    display: none!important;
+  display: none!important;
 }
 
 

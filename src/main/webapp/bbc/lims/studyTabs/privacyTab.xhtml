@@ -10,91 +10,91 @@ and open the template in the editor.
       xmlns:p="http://primefaces.org/ui"
       xmlns:f="http://java.sun.com/jsf/core"
       >
-    <body>
-        <h:form>   
-            <h:dataTable value=""  
-                         headerClass="browser_header" 
-                         styleClass="ui_box browser_table"
-                         >
+  <body>
+    <h:form>   
+      <h:dataTable value=""  
+                   headerClass="browser_header" 
+                   styleClass="ui_box browser_table"
+                   >
 
-                <h:column>
-                    <!-- consent status: yes, no, not specified -->
-                    <f:facet name="header">Consent Status: #{studyPrivacyManager.getConsentStatus((studyManagedBean.studyName))}</f:facet>
-                    <h:panelGrid columns="2">
-                        <h:graphicImage  library="images/icons" name="consent.png" width="50" height="50"/>
-                        <h:outputText value="#{studyManagedBean.studyName}" style="float: right" />
-                    </h:panelGrid>
-                </h:column>
+        <h:column>
+          <!-- consent status: yes, no, not specified -->
+          <f:facet name="header">Consent Status: #{studyPrivacyManager.getConsentStatus((studyManagedBean.studyName))}</f:facet>
+          <h:panelGrid columns="2">
+            <h:graphicImage  library="images/icons" name="consent.png" width="50" height="50"/>
+            <h:outputText value="#{studyManagedBean.studyName}" style="float: right" />
+          </h:panelGrid>
+        </h:column>
 
-                <h:column>
-                    <f:facet name="header">  Retention Period: #{studyPrivacyManager.getRetentionPeriod(studyManagedBean.studyName)}</f:facet>
-                    <p:calendar title="Calender" value="#{studyPrivacyManager.date}" size="15" showOn="button"  pattern="yyyy-MM-dd" mask="true"/>
+        <h:column>
+          <f:facet name="header">  Retention Period: #{studyPrivacyManager.getRetentionPeriod(studyManagedBean.studyName)}</f:facet>
+          <p:calendar title="Calender" value="#{studyPrivacyManager.date}" size="15" showOn="button"  pattern="yyyy-MM-dd" mask="true"/>
 
-                    <p:commandButton  value="Update Period"  action="#{studyPrivacyManager.updateRetentionPeriod(studyManagedBean.studyName)}"
-                                      rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-                </h:column>
+          <p:commandButton  value="Update Period"  action="#{studyPrivacyManager.updateRetentionPeriod(studyManagedBean.studyName)}"
+                            rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+        </h:column>
 
-                <f:facet name="footer" >
-                    <p:commandButton value="View Consent"
-                                     action="#{studyPrivacyManager.showConsent(studyManagedBean.studyName)}" 
-                                     id="imageBtn" type="button"
-                                     rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                        <p:lightBox styleClass="imagebox" id="lighbox1">  
-                            <p:graphicImage library="images" name="consent.gif" width="300" />
-                     </p:lightBox>
-                    </p:commandButton>
-
-
-                    <p:commandButton value="Upload Consent" action="#{studyManagedBean.redirectToUploader()}" 
-                                     rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-                    <p:commandButton value="Renew Consent" type="button"   
-                                     rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+        <f:facet name="footer" >
+          <p:commandButton value="View Consent"
+                           action="#{studyPrivacyManager.showConsent(studyManagedBean.studyName)}" 
+                           id="imageBtn" type="button"
+                           rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
+            <p:lightBox styleClass="imagebox" id="lighbox1">  
+              <p:graphicImage library="images" name="consent.gif" width="300" />
+            </p:lightBox>
+          </p:commandButton>
 
 
-                </f:facet>
-            </h:dataTable>
-        </h:form>
+          <p:commandButton value="Upload Consent" action="#{studyManagedBean.redirectToUploader()}" 
+                           rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+          <p:commandButton value="Renew Consent" type="button"   
+                           rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
 
 
-        <h:form>
-            <p:dataTable var="user"
-                         value="#{studyPrivacyManager.getAllActivities(studyManagedBean.studyName)}" 
-                         rowKey="#{user.performedByEmail}"
-                         emptyMessage="No audit logs"
-                         scrollable="true">
+        </f:facet>
+      </h:dataTable>
+    </h:form>
 
-                <f:facet name="header" >Audit </f:facet>
 
-                <p:column id="lnameColumn" filterBy="performedByName"
-                          headerText="Name"
-                          style="width:32%; font-size: 12px; text-align: left;">
-                    <h:outputText value="#{user.performedByName}" />
-                </p:column>
+    <h:form>
+      <p:dataTable var="user"
+                   value="#{studyPrivacyManager.getAllActivities(studyManagedBean.studyName)}" 
+                   rowKey="#{user.performedByEmail}"
+                   emptyMessage="No audit logs"
+                   scrollable="true">
 
-                <p:column id="emailColumn" filterBy="performedByEmail"
-                          headerText="Email" 
-                          style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="#{user.performedByEmail}" />
-                </p:column>
+        <f:facet name="header" >Audit </f:facet>
 
-                <p:column  filterBy="role"
-                           headerText="Role" 
-                           style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="DATA PROVIDER"/>
-                </p:column>
+        <p:column id="lnameColumn" filterBy="performedByName"
+                  headerText="Name"
+                  style="width:32%; font-size: 12px; text-align: left;">
+          <h:outputText value="#{user.performedByName}" />
+        </p:column>
 
-                <p:column  filterBy="timestamp"
-                           headerText="Action Date" 
-                           style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="#{user.timestamp}"/>
-                </p:column>
+        <p:column id="emailColumn" filterBy="performedByEmail"
+                  headerText="Email" 
+                  style="width:32%;font-size: 12px;text-align: left;">
+          <h:outputText value="#{user.performedByEmail}" />
+        </p:column>
 
-                <p:column  filterBy="action"
-                           headerText="Action" 
-                           style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="#{user.description}"/>
-                </p:column>
-            </p:dataTable>
-        </h:form>
-    </body>
+        <p:column  filterBy="role"
+                   headerText="Role" 
+                   style="width:32%;font-size: 12px;text-align: left;">
+          <h:outputText value="DATA PROVIDER"/>
+        </p:column>
+
+        <p:column  filterBy="timestamp"
+                   headerText="Action Date" 
+                   style="width:32%;font-size: 12px;text-align: left;">
+          <h:outputText value="#{user.timestamp}"/>
+        </p:column>
+
+        <p:column  filterBy="action"
+                   headerText="Action" 
+                   style="width:32%;font-size: 12px;text-align: left;">
+          <h:outputText value="#{user.description}"/>
+        </p:column>
+      </p:dataTable>
+    </h:form>
+  </body>
 </html> 

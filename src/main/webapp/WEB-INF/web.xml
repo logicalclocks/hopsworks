@@ -203,53 +203,53 @@
 <!-- 
  To be enabled in the production for https connections                
       
-                     <user-data-constraint>
-                    <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-                </user-data-constraint>
-        -->    
-    </security-constraint>
+                 <user-data-constraint>
+                <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+            </user-data-constraint>
+    -->    
+  </security-constraint>
     
-    <login-config>
-        <auth-method>BASIC</auth-method>
-        <realm-name>CauthRealm</realm-name>
-        <form-login-config>
-            <form-login-page>/index.xhtml</form-login-page>
-            <form-error-page>/error.xhtml</form-error-page>
-        </form-login-config>
-    </login-config>
-    <session-config>
-        <!-- on production systems you might have another value for the timeout -->
-        <session-timeout>30</session-timeout>
-        <!-- we don't want to use the default name JSESSIONID because this 
-        tells everyone (especially hackers) that our application is based on java -->
-        <cookie-config>
-            <name>SESSIONID</name>
-        </cookie-config>
-    </session-config>
-    <!-- PrimeFaces FileUpload Filter -->
-    <filter>
-        <filter-name>PrimeFaces FileUpload Filter</filter-name>
-        <filter-class>org.primefaces.webapp.filter.FileUploadFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>PrimeFaces FileUpload Filter</filter-name>
-        <servlet-name>Faces Servlet</servlet-name>
-    </filter-mapping>
+  <login-config>
+    <auth-method>BASIC</auth-method>
+    <realm-name>CauthRealm</realm-name>
+    <form-login-config>
+      <form-login-page>/index.xhtml</form-login-page>
+      <form-error-page>/error.xhtml</form-error-page>
+    </form-login-config>
+  </login-config>
+  <session-config>
+    <!-- on production systems you might have another value for the timeout -->
+    <session-timeout>30</session-timeout>
+    <!-- we don't want to use the default name JSESSIONID because this 
+    tells everyone (especially hackers) that our application is based on java -->
+    <cookie-config>
+      <name>SESSIONID</name>
+    </cookie-config>
+  </session-config>
+  <!-- PrimeFaces FileUpload Filter -->
+  <filter>
+    <filter-name>PrimeFaces FileUpload Filter</filter-name>
+    <filter-class>org.primefaces.webapp.filter.FileUploadFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>PrimeFaces FileUpload Filter</filter-name>
+    <servlet-name>Faces Servlet</servlet-name>
+  </filter-mapping>
     
-    <filter>
-        <filter-name>LoginFilter</filter-name>
-        <filter-class>se.kth.bbc.security.auth.LoginFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>LoginFilter</filter-name>
-        <url-pattern>/index.xhtml</url-pattern>
-        <url-pattern>/security/login.xhtml</url-pattern>
-        <url-pattern>/security/yubikeylogin.xhtml</url-pattern>
-        <url-pattern>/security/register_mobile.xhtml</url-pattern>
-        <url-pattern>/security/register_yubico.xhtml</url-pattern>
-        <url-pattern>/security/index.xhtml</url-pattern>
-        <url-pattern>/security/protected/index.xhtml</url-pattern>
-    </filter-mapping>
+  <filter>
+    <filter-name>LoginFilter</filter-name>
+    <filter-class>se.kth.bbc.security.auth.LoginFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>LoginFilter</filter-name>
+    <url-pattern>/index.xhtml</url-pattern>
+    <url-pattern>/security/login.xhtml</url-pattern>
+    <url-pattern>/security/yubikeylogin.xhtml</url-pattern>
+    <url-pattern>/security/register_mobile.xhtml</url-pattern>
+    <url-pattern>/security/register_yubico.xhtml</url-pattern>
+    <url-pattern>/security/index.xhtml</url-pattern>
+    <url-pattern>/security/protected/index.xhtml</url-pattern>
+  </filter-mapping>
 
 </web-app>
 

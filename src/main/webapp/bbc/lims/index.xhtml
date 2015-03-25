@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"   
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -9,153 +9,153 @@
       xmlns:c="http://java.sun.com/jsp/jstl/core"
       >
 
-    
-    <f:view contentType="text/html">
 
-        <h:head>
-            <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
-            <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
-        </h:head>
+  <f:view contentType="text/html">
 
-        <h:body>
-            <ui:insert name="titleBar" >
-                <ui:include src="/bbc/lims/titleBar.xhtml" />
-            </ui:insert>
+    <h:head>
+      <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/customized.css']}" />
+      <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+    </h:head>
 
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayout" rendered="#{peopleStatusBean.researcher}">  
-                <p:growl for="studyRemoved" autoUpdate="true" showDetail="true"/>
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/bbc/lims/titleBar.xhtml" />
+      </ui:insert>
 
-                <p:layoutUnit position="center" style="height: auto;">
+      <p:layout id="bbcMainLayout" styleClass="BbcMainLayout" rendered="#{peopleStatusBean.researcher}">  
+        <p:growl for="studyRemoved" autoUpdate="true" showDetail="true"/>
 
-                    <div class="container"> 
-                        <ul class="main_menu"></ul>
-                        <div class="content"> 
-                            <div class="study">
-                                <div class="span8">
-                                    <div class="event_filter">
-                                    </div>
-                                    <h:panelGroup id="contentList">
-                                        <h:form>
-                                            <p:dataScroller value="#{activityBean.allLazyModel}" var="act" chunkSize="25" lazy="true" buffer="50">
-                                                <div class="event-item" align="left">
-                                                    <span class="cgray right">#{activityBean.findLastActivity(act.id)}</span>
-                                                    <img class="avatar s24" src="#{activityBean.getGravatar(act.performedByEmail,24)}"/>
-                                                    <div class="event-title">
-                                                        <span class="author_name"><p:commandLink> #{act.performedByName}</p:commandLink></span>
-                                                        <span class="event_label merged">#{act.description}</span>
-                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}" disabled="#{studyManagedBean.isRemoved(act.studyname)}">
-                                                            <strong>at #{act.performedByName} / #{act.studyname}</strong>
-                                                            <f:param name="studyname" value="#{act.studyname}"/>
-                                                            <f:param name="username" value="#{act.performedByEmail}"/>
-                                                        </p:commandLink>
-                                                    </div>
-                                                </div>
-                                            </p:dataScroller>
-                                        </h:form>
-                                    </h:panelGroup>
-                                </div>  
-                                <div id="divSpan4" class="span4">
-                                    <div class="study_box">
-                                        <h:panelGroup id="studyBoxHeader" styleClass="title">
-                                            <c:if id="allTabChange" test="${studyManagedBean.tabIndex == 0}">
-                                                Studies<small>(#{studyManagedBean.countAllStudiesPerUser()})</small>
-                                            </c:if>
-                                            <c:if id="personalTabChange" test="${studyManagedBean.tabIndex == 1}">
-                                                Studies<small>(#{studyManagedBean.countPersonalStudy()})</small>
-                                            </c:if>
-                                            <c:if id="joinedTabChange" test="${studyManagedBean.tabIndex == 2}">
-                                                Studies<small>(#{studyManagedBean.countJoinedStudy()})</small>
-                                            </c:if>
-                                            <span class="right">
-                                   <p:commandButton value="New Study" type="button" rendered="#{peopleStatusBean.anyAuthorizedRole}" icon="ui-icon-plus" onclick="window.location.href = 'newStudy.xhtml'"/>
-                                            </span>
-                                        </h:panelGroup>
-                                        <p:tabView id="tabViewSummary" styleClass="ui-tabs" dynamic="true" cache="false" activeIndex="#{studyManagedBean.tabIndex}">
-                                            <p:ajax event="tabChange" listener="#{studyManagedBean.onTabChange}" update=":#{p:component('studyBoxHeader')}"/>
-                                            <p:tab id="allTab" title="All">
-                                                <c:if test="${studyManagedBean.countAllStudiesPerUser() eq 0}">
-                                                    <li class="nothing_here_message">
-                                                        There are no studies here.
-                                                    </li>
-                                                </c:if>
-                                                <c:forEach var="aList" items="${studyManagedBean.allStudiesPerUser}" varStatus="allStatus">
-                                                    <li class="ui-tabs-panel">
-                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                                                            <span class="tiny">#{aList.creator}</span> / <strong>#{aList.studyName}</strong>
-                                                            <f:param name="studyname" value="#{aList.studyName}"/>
-                                                            <f:param name="username" value="#{aList.email}"/>
-                                                        </p:commandLink>
-                                                        <span class="last_activity">
-                                                            <strong style="font-size: 12px;color: #666;">Last activity:</strong>
-                                                            <span>#{activityBean.findLastActivityOnStudy(aList.studyName)}</span>
-                                                        </span>
-                                                    </li> 
-                                                </c:forEach>
-                                            </p:tab>
-                                            <p:tab id="personalTab" title="Personal">
-                                                <c:if test="${studyManagedBean.countPersonalStudy() eq 0}">
-                                                    <li class="nothing_here_message">
-                                                        There are no studies here.
-                                                    </li>
-                                                </c:if>
-                                                <c:forEach var="pList" items="${studyManagedBean.personalStudy}" varStatus="personalStatus">
-                                                    <li class="ui-tabs-panel">
-                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}" >
-                                                            <span class="tiny">#{pList.creator}</span> / <strong>#{pList.studyName}</strong>
-                                                            <f:param name="studyname" value="#{pList.studyName}"/>
-                                                            <f:param name="username" value="#{pList.email}"/>
-                                                        </p:commandLink>
-                                                        <span class="last_activity">
-                                                            <strong style="font-size: 12px;color: #666;">Last activity:</strong>
-                                                            <span>#{activityBean.findLastActivityOnStudy(pList.studyName)}</span>
-                                                        </span>
-                                                    </li> 
-                                                </c:forEach>
-                                                <!--         </h:form>-->
-                                            </p:tab>
-                                            <p:tab id="joinedTab" title="Joined">
-                                                <c:if test="${studyManagedBean.countJoinedStudy() eq 0}">
-                                                    <li class="nothing_here_message">
-                                                        There are no studies here.
-                                                    </li>
-                                                </c:if>
-                                                <c:forEach var="jList" items="${studyManagedBean.joinedStudies}" varStatus="joinStatus">
-                                                    <li class="ui-tabs-panel">
-                                                        <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                                                            <span class="tiny">#{jList.creator}</span> / <strong>#{jList.studyName}</strong>
-                                                            <f:param name="studyname" value="#{jList.studyName}"/>
-                                                            <f:param name="username" value="#{jList.email}"/>
-                                                        </p:commandLink>
-                                                        <span class="last_activity">
-                                                            <strong style="font-size: 12px;color: #666;">Last activity:</strong>
-                                                            <span>#{activityBean.findLastActivityOnStudy(jList.studyName)}</span>
-                                                        </span>
-                                                    </li> 
-                                                </c:forEach>
+        <p:layoutUnit position="center" style="height: auto;">
 
-                                            </p:tab>
-                                        </p:tabView>
-
-                                    </div>
-                                </div>
-
-                            </div>
+          <div class="container"> 
+            <ul class="main_menu"></ul>
+            <div class="content"> 
+              <div class="study">
+                <div class="span8">
+                  <div class="event_filter">
+                  </div>
+                  <h:panelGroup id="contentList">
+                    <h:form>
+                      <p:dataScroller value="#{activityBean.allLazyModel}" var="act" chunkSize="25" lazy="true" buffer="50">
+                        <div class="event-item" align="left">
+                          <span class="cgray right">#{activityBean.findLastActivity(act.id)}</span>
+                          <img class="avatar s24" src="#{activityBean.getGravatar(act.performedByEmail,24)}"/>
+                          <div class="event-title">
+                            <span class="author_name"><p:commandLink> #{act.performedByName}</p:commandLink></span>
+                            <span class="event_label merged">#{act.description}</span>
+                            <p:commandLink action="#{studyManagedBean.fetchStudy()}" disabled="#{studyManagedBean.isRemoved(act.studyname)}">
+                              <strong>at #{act.performedByName} / #{act.studyname}</strong>
+                              <f:param name="studyname" value="#{act.studyname}"/>
+                              <f:param name="username" value="#{act.performedByEmail}"/>
+                            </p:commandLink>
+                          </div>
                         </div>
-                    </div>
-                </p:layoutUnit>
-            </p:layout>
-            <p:dialog draggable="false" resizable="false" styleClass="requestPopup" position="right bottom" header="Open user requests" visible="#{peopleStatusBean.checkForRequests()}">
-                <div align="center">
-                    There are open user requests!<br/>
-                    <p:commandButton action="#{peopleStatusBean.openRequests()}" 
-                                     value="View requests"
-                                     styleClass="viewReqButton">
-                    </p:commandButton>
+                      </p:dataScroller>
+                    </h:form>
+                  </h:panelGroup>
+                </div>  
+                <div id="divSpan4" class="span4">
+                  <div class="study_box">
+                    <h:panelGroup id="studyBoxHeader" styleClass="title">
+                      <c:if id="allTabChange" test="${studyManagedBean.tabIndex == 0}">
+                        Studies<small>(#{studyManagedBean.countAllStudiesPerUser()})</small>
+                      </c:if>
+                      <c:if id="personalTabChange" test="${studyManagedBean.tabIndex == 1}">
+                        Studies<small>(#{studyManagedBean.countPersonalStudy()})</small>
+                      </c:if>
+                      <c:if id="joinedTabChange" test="${studyManagedBean.tabIndex == 2}">
+                        Studies<small>(#{studyManagedBean.countJoinedStudy()})</small>
+                      </c:if>
+                      <span class="right">
+                        <p:commandButton value="New Study" type="button" rendered="#{peopleStatusBean.anyAuthorizedRole}" icon="ui-icon-plus" onclick="window.location.href = 'newStudy.xhtml'"/>
+                      </span>
+                    </h:panelGroup>
+                    <p:tabView id="tabViewSummary" styleClass="ui-tabs" dynamic="true" cache="false" activeIndex="#{studyManagedBean.tabIndex}">
+                      <p:ajax event="tabChange" listener="#{studyManagedBean.onTabChange}" update=":#{p:component('studyBoxHeader')}"/>
+                      <p:tab id="allTab" title="All">
+                        <c:if test="${studyManagedBean.countAllStudiesPerUser() eq 0}">
+                          <li class="nothing_here_message">
+                            There are no studies here.
+                          </li>
+                        </c:if>
+                        <c:forEach var="aList" items="${studyManagedBean.allStudiesPerUser}" varStatus="allStatus">
+                          <li class="ui-tabs-panel">
+                            <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                              <span class="tiny">#{aList.creator}</span> / <strong>#{aList.studyName}</strong>
+                              <f:param name="studyname" value="#{aList.studyName}"/>
+                              <f:param name="username" value="#{aList.email}"/>
+                            </p:commandLink>
+                            <span class="last_activity">
+                              <strong style="font-size: 12px;color: #666;">Last activity:</strong>
+                              <span>#{activityBean.findLastActivityOnStudy(aList.studyName)}</span>
+                            </span>
+                          </li> 
+                        </c:forEach>
+                      </p:tab>
+                      <p:tab id="personalTab" title="Personal">
+                        <c:if test="${studyManagedBean.countPersonalStudy() eq 0}">
+                          <li class="nothing_here_message">
+                            There are no studies here.
+                          </li>
+                        </c:if>
+                        <c:forEach var="pList" items="${studyManagedBean.personalStudy}" varStatus="personalStatus">
+                          <li class="ui-tabs-panel">
+                            <p:commandLink action="#{studyManagedBean.fetchStudy()}" >
+                              <span class="tiny">#{pList.creator}</span> / <strong>#{pList.studyName}</strong>
+                              <f:param name="studyname" value="#{pList.studyName}"/>
+                              <f:param name="username" value="#{pList.email}"/>
+                            </p:commandLink>
+                            <span class="last_activity">
+                              <strong style="font-size: 12px;color: #666;">Last activity:</strong>
+                              <span>#{activityBean.findLastActivityOnStudy(pList.studyName)}</span>
+                            </span>
+                          </li> 
+                        </c:forEach>
+                        <!--         </h:form>-->
+                      </p:tab>
+                      <p:tab id="joinedTab" title="Joined">
+                        <c:if test="${studyManagedBean.countJoinedStudy() eq 0}">
+                          <li class="nothing_here_message">
+                            There are no studies here.
+                          </li>
+                        </c:if>
+                        <c:forEach var="jList" items="${studyManagedBean.joinedStudies}" varStatus="joinStatus">
+                          <li class="ui-tabs-panel">
+                            <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                              <span class="tiny">#{jList.creator}</span> / <strong>#{jList.studyName}</strong>
+                              <f:param name="studyname" value="#{jList.studyName}"/>
+                              <f:param name="username" value="#{jList.email}"/>
+                            </p:commandLink>
+                            <span class="last_activity">
+                              <strong style="font-size: 12px;color: #666;">Last activity:</strong>
+                              <span>#{activityBean.findLastActivityOnStudy(jList.studyName)}</span>
+                            </span>
+                          </li> 
+                        </c:forEach>
+
+                      </p:tab>
+                    </p:tabView>
+
+                  </div>
                 </div>
-            </p:dialog>
-        </h:body>
-    </f:view>
+
+              </div>
+            </div>
+          </div>
+        </p:layoutUnit>
+      </p:layout>
+      <p:dialog draggable="false" resizable="false" styleClass="requestPopup" position="right bottom" header="Open user requests" visible="#{peopleStatusBean.checkForRequests()}">
+        <div align="center">
+          There are open user requests!<br/>
+          <p:commandButton action="#{peopleStatusBean.openRequests()}" 
+                           value="View requests"
+                           styleClass="viewReqButton">
+          </p:commandButton>
+        </div>
+      </p:dialog>
+    </h:body>
+  </f:view>
 </html>

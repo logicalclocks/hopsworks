@@ -13,10 +13,10 @@
 
 
 .BbcMainLayoutTeam .ui-widget-content {
-    border-width: 0px;  
-   //overflow-y: auto;
-   // overflow-x: hidden;
-    height: auto !important;
+  border-width: 0px;  
+  //overflow-y: auto;
+  // overflow-x: hidden;
+  height: auto !important;
 }
 .BbcMainLayoutTeam::-webkit-scrollbar {
   display: none;
@@ -1424,11 +1424,11 @@ img .browser .s16 {
 }
 
 .new_user_content{
-    width: 50%;
-    min-height: 400px;
-    height: auto !important;
-    margin-bottom: 18px;
-    overflow-y: auto;
+  width: 50%;
+  min-height: 400px;
+  height: auto !important;
+  margin-bottom: 18px;
+  overflow-y: auto;
 }
 
 .new_user_content .clear_fixing{
@@ -2432,9 +2432,9 @@ ui-wizard {
 
 .container .ui-button {
   background-color: #F0F0F0;
-background-image: linear-gradient(to bottom, #FFF, #E9E9E9);
-border: 1px solid rgba(0, 0, 0, 0.2);
-box-shadow: none;
+  background-image: linear-gradient(to bottom, #FFF, #E9E9E9);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: none;
 }
 
 .container .content .jobPanel .labelColumn {

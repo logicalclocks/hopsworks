@@ -10,57 +10,57 @@ and open the template in the editor.
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       xmlns:f="http://java.sun.com/jsf/core">
-    <body>
-        <ui:composition>
-            <h:form id="historyForm_#{type}" styleClass="historyForm">
-                <!-- takes a parameter "type": the type of jobs for which the history is to be loaded -->
-                <ui:repeat value="#{jobHistoryController.getHistoryForType(type)}" var="job" varStatus="cnt">
-                    <p:panel id="job_#{cnt}" closable="false" styleClass="historyItem">
-                        <f:facet name="header">
-                            <h:outputText value="#{job.name==null? job.id :job.name}"/>
-                            <p:commandLink styleClass="fa fa-arrow-circle-right loadArrow" action="#{jobHistoryController.selectJob(job)}" update=":#{p:component('resultForm_'.concat(type))}"/>
-                        </f:facet>
-                        <h:panelGrid columns="2" columnClasses="labelColumn,valueColumn">
-                            <h:outputLabel value="Run on"/>
-                            <h:outputLabel value="#{job.submissionTime}"/>
+  <body>
+    <ui:composition>
+      <h:form id="historyForm_#{type}" styleClass="historyForm">
+        <!-- takes a parameter "type": the type of jobs for which the history is to be loaded -->
+        <ui:repeat value="#{jobHistoryController.getHistoryForType(type)}" var="job" varStatus="cnt">
+          <p:panel id="job_#{cnt}" closable="false" styleClass="historyItem">
+            <f:facet name="header">
+              <h:outputText value="#{job.name==null? job.id :job.name}"/>
+              <p:commandLink styleClass="fa fa-arrow-circle-right loadArrow" action="#{jobHistoryController.selectJob(job)}" update=":#{p:component('resultForm_'.concat(type))}"/>
+            </f:facet>
+            <h:panelGrid columns="2" columnClasses="labelColumn,valueColumn">
+              <h:outputLabel value="Run on"/>
+              <h:outputLabel value="#{job.submissionTime}"/>
 
-                            <h:outputLabel value="Run by"/>
-                            <h:outputLabel value="#{job.user.fname} #{job.user.lname}"/>
+              <h:outputLabel value="Run by"/>
+              <h:outputLabel value="#{job.user.fname} #{job.user.lname}"/>
 
-                            <h:outputLabel value="State"/>
-                            <h:outputLabel value="#{job.state}"/>
+              <h:outputLabel value="State"/>
+              <h:outputLabel value="#{job.state}"/>
 
-                            <h:outputLabel value="Execution time" rendered="#{job.finished and job.executionDuration>0}"/>
-                            <h:outputLabel value="#{job.executionDuration} ms" rendered="#{job.finished and job.executionDuration>0}"/>
+              <h:outputLabel value="Execution time" rendered="#{job.finished and job.executionDuration>0}"/>
+              <h:outputLabel value="#{job.executionDuration} ms" rendered="#{job.finished and job.executionDuration>0}"/>
 
-                            <h:outputLabel value="Logs" rendered="#{job.finished  and (job.stderrPath!=null or job.stdoutPath!=null)}"/>
-                            <h:panelGrid columns="1" rendered="#{job.finished and (job.stderrPath!=null or job.stdoutPath!=null)}" styleClass="no-border">
-                                <p:commandLink ajax="false" rendered="#{job.stdoutPath!=null}">
-                                    <strong>stdout.log</strong>
-                                    <p:fileDownload value="#{jobHistoryController.downloadFile(job.stdoutPath)}"/>
-                                </p:commandLink>
-                                <p:commandLink ajax="false" rendered="#{job.stderrPath!=null}">
-                                    <strong>stderr.log</strong>
-                                    <p:fileDownload value="#{jobHistoryController.downloadFile(job.stderrPath)}"/>
-                                </p:commandLink>
-                            </h:panelGrid>
+              <h:outputLabel value="Logs" rendered="#{job.finished  and (job.stderrPath!=null or job.stdoutPath!=null)}"/>
+              <h:panelGrid columns="1" rendered="#{job.finished and (job.stderrPath!=null or job.stdoutPath!=null)}" styleClass="no-border">
+                <p:commandLink ajax="false" rendered="#{job.stdoutPath!=null}">
+                  <strong>stdout.log</strong>
+                  <p:fileDownload value="#{jobHistoryController.downloadFile(job.stdoutPath)}"/>
+                </p:commandLink>
+                <p:commandLink ajax="false" rendered="#{job.stderrPath!=null}">
+                  <strong>stderr.log</strong>
+                  <p:fileDownload value="#{jobHistoryController.downloadFile(job.stderrPath)}"/>
+                </p:commandLink>
+              </h:panelGrid>
 
-                            <h:outputLabel value="Results" rendered="#{job.jobOutputFileCollection.size()>0}"/>
-                            <h:panelGrid columns="1" styleClass="no-border" rendered="#{job.jobOutputFileCollection.size()>0}">
-                                <ui:repeat value="#{job.jobOutputFileCollection}" var="file">
-                                    <p:commandLink ajax="false" rendered="#{not jobHistoryController.isDir(file.path)}">
-                                        <strong>#{file.jobOutputFilePK.name}</strong>
-                                        <p:fileDownload value="#{jobHistoryController.downloadFile(file.path)}"/>
-                                    </p:commandLink>
-                                    <p:commandLink rendered="#{jobHistoryController.isDir(file.path)}" action="#{InodesMB.cdGlobal(file.path)}" oncomplete="PF('studyTabs').select(2)">
-                                        <strong>#{file.jobOutputFilePK.name}</strong>
-                                    </p:commandLink>
-                                </ui:repeat>
-                            </h:panelGrid>
-                        </h:panelGrid>
-                    </p:panel>
+              <h:outputLabel value="Results" rendered="#{job.jobOutputFileCollection.size()>0}"/>
+              <h:panelGrid columns="1" styleClass="no-border" rendered="#{job.jobOutputFileCollection.size()>0}">
+                <ui:repeat value="#{job.jobOutputFileCollection}" var="file">
+                  <p:commandLink ajax="false" rendered="#{not jobHistoryController.isDir(file.path)}">
+                    <strong>#{file.jobOutputFilePK.name}</strong>
+                    <p:fileDownload value="#{jobHistoryController.downloadFile(file.path)}"/>
+                  </p:commandLink>
+                  <p:commandLink rendered="#{jobHistoryController.isDir(file.path)}" action="#{InodesMB.cdGlobal(file.path)}" oncomplete="PF('studyTabs').select(2)">
+                    <strong>#{file.jobOutputFilePK.name}</strong>
+                  </p:commandLink>
                 </ui:repeat>
-            </h:form>
-        </ui:composition>
-    </body>
+              </h:panelGrid>
+            </h:panelGrid>
+          </p:panel>
+        </ui:repeat>
+      </h:form>
+    </ui:composition>
+  </body>
 </html>

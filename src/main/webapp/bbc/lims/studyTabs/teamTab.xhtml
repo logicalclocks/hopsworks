@@ -11,77 +11,77 @@ and open the template in the editor.
       xmlns:p="http://primefaces.org/ui" 
       xmlns:f="http://java.sun.com/jsf/core"
       >
-    <body>
-        <ui:composition>
-            <h3 class="page_title" align="left">
-                Team Members (#{studyManagedBean.countAllMembersPerStudy()})
-                <span class="right_button">
-                    <h:form id="frmBtn">
-                        <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" action="newTeamMemb" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-                    </h:form>
-                </span>
-            </h3>
-            <hr/>
-            <div class="clear_fixing"></div>
-            <h:form id="teamForm">
-                <div id="divTeam" class="team_table"> 
-                    <!-- Loop over all member groups -->
-                    <ui:repeat value="#{studyManagedBean.groupedMembers}" var="memGroup" varStatus="memGroupStat">
-                        <h:panelGroup id="div_${memGroupStat.index}" styleClass="ui_box">
-                            <!-- Display role name and number of members in that group -->
-                            <h5 class="title" align="left">#{memGroup.groupname.team}s
-                                (<small>#{studyManagedBean.countRoleUsers(memGroup.groupname)}</small>)
-                            </h5>
-                            <ul class="well-list">
-                                <!-- Loop over all users in this group-->
-                                <ui:repeat value="#{memGroup.members}" var="usr" varStatus="usrStat">
-                                    <li id="team_member_row_${usrStat.index}_${memGroupStat.index}" class="team_member_row">
-                                        <div class="row">
-                                            <div class="span6">
-                                                <img class="avatar s36" src="#{activityBean.getGravatar(usr.email,36)}"/>
-                                                <p:commandLink styleClass="dark">
-                                                    <strong>#{usr.name}</strong>
-                                                    <br/>
-                                                    <small class="cgray">
-                                                        #{usr.email}
-                                                    </small>
-                                                </p:commandLink>
-                                            </div>
-                                            <div class="span5 right">
-                                                <div class="left">
-                                                    <div id="frmStudyMaster_${usrStat.index}_${memGroupStat.index}" class="edit_team_members"> 
-                                                        <div style="margin:0;padding:0;display:inline">
-                                                            <p:selectOneMenu value="#{usr.role}" 
-                                                                             styleClass="study_role_assign" 
-                                                                             disabled="#{studyManagedBean.studyOwnedBy(usr.email)}" 
-                                                                             style="width:170px;" 
-                                                                             rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
-                                                                <p:ajax update="@form" process="@all"
-                                                                        listener="#{valueChangeMB.updateStudyTeamRole(usr.email,usr.role)}"/>
-                                                                <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
-                                                            </p:selectOneMenu>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="right" align="right">
-                                                    <h:commandButton class="btn" value="This is you!" disabled="true" rendered="#{studyManagedBean.username eq usr.email}"/>
-                                                    <h:commandButton class="button-success" value="Owner" disabled="true" rendered="#{studyManagedBean.studyOwnedBy(usr.email)}"/>
-                                                    <p:commandLink styleClass="ui-button fa fa-minus"  
-                                                                   value="" 
-                                                                   rendered="#{studyManagedBean.renderComponentList() == 'Master' and not studyManagedBean.studyOwnedBy(usr.email)}" 
-                                                                   action="#{studyTeamController.setToRemove(usr.email, usr.name)}"
-                                                                   update=":#{p:component('remTeamMemForm')}" oncomplete="PF('remTeamMemDlg').show()">
-                                                    </p:commandLink>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                </ui:repeat>
-                            </ul>
-                        </h:panelGroup>
-                    </ui:repeat>
-                </div>
-            </h:form>
-        </ui:composition>
-    </body>
+  <body>
+    <ui:composition>
+      <h3 class="page_title" align="left">
+        Team Members (#{studyManagedBean.countAllMembersPerStudy()})
+        <span class="right_button">
+          <h:form id="frmBtn">
+            <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" action="newTeamMemb" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+          </h:form>
+        </span>
+      </h3>
+      <hr/>
+      <div class="clear_fixing"></div>
+      <h:form id="teamForm">
+        <div id="divTeam" class="team_table"> 
+          <!-- Loop over all member groups -->
+          <ui:repeat value="#{studyManagedBean.groupedMembers}" var="memGroup" varStatus="memGroupStat">
+            <h:panelGroup id="div_${memGroupStat.index}" styleClass="ui_box">
+              <!-- Display role name and number of members in that group -->
+              <h5 class="title" align="left">#{memGroup.groupname.team}s
+                (<small>#{studyManagedBean.countRoleUsers(memGroup.groupname)}</small>)
+              </h5>
+              <ul class="well-list">
+                <!-- Loop over all users in this group-->
+                <ui:repeat value="#{memGroup.members}" var="usr" varStatus="usrStat">
+                  <li id="team_member_row_${usrStat.index}_${memGroupStat.index}" class="team_member_row">
+                    <div class="row">
+                      <div class="span6">
+                        <img class="avatar s36" src="#{activityBean.getGravatar(usr.email,36)}"/>
+                        <p:commandLink styleClass="dark">
+                          <strong>#{usr.name}</strong>
+                          <br/>
+                          <small class="cgray">
+                            #{usr.email}
+                          </small>
+                        </p:commandLink>
+                      </div>
+                      <div class="span5 right">
+                        <div class="left">
+                          <div id="frmStudyMaster_${usrStat.index}_${memGroupStat.index}" class="edit_team_members"> 
+                            <div style="margin:0;padding:0;display:inline">
+                              <p:selectOneMenu value="#{usr.role}" 
+                                               styleClass="study_role_assign" 
+                                               disabled="#{studyManagedBean.studyOwnedBy(usr.email)}" 
+                                               style="width:170px;" 
+                                               rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
+                                <p:ajax update="@form" process="@all"
+                                        listener="#{valueChangeMB.updateStudyTeamRole(usr.email,usr.role)}"/>
+                                <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
+                              </p:selectOneMenu>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="right" align="right">
+                          <h:commandButton class="btn" value="This is you!" disabled="true" rendered="#{studyManagedBean.username eq usr.email}"/>
+                          <h:commandButton class="button-success" value="Owner" disabled="true" rendered="#{studyManagedBean.studyOwnedBy(usr.email)}"/>
+                          <p:commandLink styleClass="ui-button fa fa-minus"  
+                                         value="" 
+                                         rendered="#{studyManagedBean.renderComponentList() == 'Master' and not studyManagedBean.studyOwnedBy(usr.email)}" 
+                                         action="#{studyTeamController.setToRemove(usr.email, usr.name)}"
+                                         update=":#{p:component('remTeamMemForm')}" oncomplete="PF('remTeamMemDlg').show()">
+                          </p:commandLink>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </ui:repeat>
+              </ul>
+            </h:panelGroup>
+          </ui:repeat>
+        </div>
+      </h:form>
+    </ui:composition>
+  </body>
 </html>

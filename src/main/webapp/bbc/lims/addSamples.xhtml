@@ -6,55 +6,55 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui">
 
-    <f:view contentType="text/html">
+  <f:view contentType="text/html">
 
-        <h:head>
-            <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}"/>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}"/>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/newTeamMem.css']}"/>
-            <link rel="stylesheet" type="text/css" href="#{resource['/uploader/resumable.css']}"/>
-            <h:outputScript name="../uploader/resumable.js" />
-            <h:outputScript name="../js/jquery.min.js"/>
-            <h:outputScript name="../uploader/resumable-uploader.js" />
-        </h:head>
+    <h:head>
+      <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}"/>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}"/>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/newTeamMem.css']}"/>
+      <link rel="stylesheet" type="text/css" href="#{resource['/uploader/resumable.css']}"/>
+      <h:outputScript name="../uploader/resumable.js" />
+      <h:outputScript name="../js/jquery.min.js"/>
+      <h:outputScript name="../uploader/resumable-uploader.js" />
+    </h:head>
 
-        <h:body>
-            <ui:insert name="titleBar" >
-                <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
-            </ui:insert>
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
+      </ui:insert>
 
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayout" rendered="#{studyManagedBean.renderComponentList() != null}">  
-                <p:layoutUnit position="center">
+      <p:layout id="bbcMainLayout" styleClass="BbcMainLayout" rendered="#{studyManagedBean.renderComponentList() != null}">  
+        <p:layoutUnit position="center">
 
-                    <div class="container">
-                        <ul class="main_menu"></ul>
-                        <div class="content">
-                            <h3 class="page_title" align="left">
-                                Add New Sample(s)
-                            </h3>
-                            <hr/>
-                            <h:form class="new_member_content">
-                                <p:messages autoUpdate="true" closable="true"/>
+          <div class="container">
+            <ul class="main_menu"></ul>
+            <div class="content">
+              <h3 class="page_title" align="left">
+                Add New Sample(s)
+              </h3>
+              <hr/>
+              <h:form class="new_member_content">
+                <p:messages autoUpdate="true" closable="true"/>
 
-                                <h6 align="left">1. Choose an existing sample ID or enter a new one </h6>
-                                <div class="clearfix">
-                                    <label for="sampleId">Sample ID</label>
-                                    <p:autoComplete id="sampleId" dropdown="true" value="#{studyManagedBean.sampleID}" 
-                                                    completeMethod="#{studyManagedBean.completeSampleIDs}" required="true" requiredMessage="Error: Sample ID cannot be empty"/>
-                                </div>
+                <h6 align="left">1. Choose an existing sample ID or enter a new one </h6>
+                <div class="clearfix">
+                  <label for="sampleId">Sample ID</label>
+                  <p:autoComplete id="sampleId" dropdown="true" value="#{studyManagedBean.sampleID}" 
+                                  completeMethod="#{studyManagedBean.completeSampleIDs}" required="true" requiredMessage="Error: Sample ID cannot be empty"/>
+                </div>
 
-                                <div class="actions">
-                                    <h:commandButton class="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addSample}"/>
-                                    <h:commandButton class="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href = 'studyPage.xhtml'"/>
-                                </div>
-                            </h:form>     
-                        </div>
-                    </div> 
+                <div class="actions">
+                  <h:commandButton class="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addSample}"/>
+                  <h:commandButton class="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href = 'studyPage.xhtml'"/>
+                </div>
+              </h:form>     
+            </div>
+          </div> 
 
-                </p:layoutUnit>
-            </p:layout>
-        </h:body>
-    </f:view>
+        </p:layoutUnit>
+      </p:layout>
+    </h:body>
+  </f:view>
 </html>
 

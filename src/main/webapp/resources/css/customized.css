@@ -9,76 +9,76 @@ and open the template in the editor.
 */
 
 .ui-widget, .ui-widget .ui-widget .ui-widget-content {
-    //font-size: 70% !important;
-    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-    font-size: 12px;
-    min-height: 0;
-    
+  //font-size: 70% !important;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size: 12px;
+  min-height: 0;
+
 }
 
 .ui-tabs .ui-tabs-nav{
-    width: auto !important;
-    height: auto;
-    display: block;
-    border-bottom: 1px solid #ddd;
-    margin: 0 0 0 0;
-    padding-left: 8px;
-    list-style:none;
-    list-style-type: none;
-    list-style-position: outside;
-    list-style-image: none; 
+  width: auto !important;
+  height: auto;
+  display: block;
+  border-bottom: 1px solid #ddd;
+  margin: 0 0 0 0;
+  padding-left: 8px;
+  list-style:none;
+  list-style-type: none;
+  list-style-position: outside;
+  list-style-image: none; 
 }
 
 .ui-tabs .ui-tabs-panel .ui-widget-content li{
-     width: 364px;
-     line-height: 20px;
-     float: left;
-     display: block;
-     height: auto;
-     margin-bottom: -1px;
- }
- 
+  width: 364px;
+  line-height: 20px;
+  float: left;
+  display: block;
+  height: auto;
+  margin-bottom: -1px;
+}
+
 .ui-tabs .ui-tabs-nav li.ui-tabs-selected { 
-    padding-bottom: 0; 
-    border-right-width: 1px; 
-    border-right-width: 1px; 
+  padding-bottom: 0; 
+  border-right-width: 1px; 
+  border-right-width: 1px; 
 }
 
 
 
 
 .ui-tabs .ui-tabs-panels{
-     display: inline-block;
-     width: 100%;
-     min-height: 100%;
-     height: auto; 
-     margin: 0 0 0 0;
-     padding: 0 0 0 0;
-     float: left;
+  display: inline-block;
+  width: 100%;
+  min-height: 100%;
+  height: auto; 
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+  float: left;
 }
 
 .ui-tabs .ui-tabs-panel{
-    float: left;
-    display: list-item;
-    text-align: left;
-    background-color: #FFF;
-    padding: 7% 7% 7% 7%;
-    line-height: 18px;
-    width: 86%;
-    min-height: 42px;
-    list-style: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.0470588);
-    
+  float: left;
+  display: list-item;
+  text-align: left;
+  background-color: #FFF;
+  padding: 7% 7% 7% 7%;
+  line-height: 18px;
+  width: 86%;
+  min-height: 42px;
+  list-style: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.0470588);
+
 }
 
 .ui-tabs .ui-widget-content{
-    
-     display: block;
-     width: 100%;
-     height: auto !important; 
-     margin: 0 0 0 0;
-     padding: 0 0 0 0;
-    
+
+  display: block;
+  width: 100%;
+  height: auto !important; 
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+
 }
 
 .ui-tabs-panel.disabled{color:#888;}
@@ -93,68 +93,68 @@ and open the template in the editor.
 }*/
 
 .span4 .ui-button{
-        
-        border-top-color: rgb(187, 187, 187);
-        border-right-color: rgb(187, 187, 187);
-        border-bottom-color: rgb(187, 187, 187);
-        border-left-color: rgb(187, 187, 187);
-	text-shadow: 0 1px 1px rgba(255,255,255,0.75);
-        background-color: #f5f5f5;
-        color: #474d57;
-	padding:2px 6px 2px 6px;
-	color:#333;
-	font-family:'Helvetica Neue',sans-serif;
-	border-bottom-left-radius: 4px;
-        border-bottom-right-radius: 4px;
-        border-top-left-radius: 4px;
-        border-top-right-radius: 4px;
-/*	-moz-border-radius:5px;
-	-webkit-border-radius:5px;*/
-	border:1px solid #ccc;
-        width: 85px;
-        height: 22px;
-        display: inline-block;
-        //line-height: 0.6em;
-        margin-top: 2px;
-        margin-right: 2px;
-        margin-bottom: 2px;
-        margin-left: 2px;
-        background-image: -webkit-linear-gradient(#f7f7f7, #d5d5d5);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.2),0 1px 2px rgba(0,0,0,0.05);
-        vertical-align: middle;
-        text-align: match-parent;
-        cursor: pointer;
-        //background-repeat: repeat-x;
+
+  border-top-color: rgb(187, 187, 187);
+  border-right-color: rgb(187, 187, 187);
+  border-bottom-color: rgb(187, 187, 187);
+  border-left-color: rgb(187, 187, 187);
+  text-shadow: 0 1px 1px rgba(255,255,255,0.75);
+  background-color: #f5f5f5;
+  color: #474d57;
+  padding:2px 6px 2px 6px;
+  color:#333;
+  font-family:'Helvetica Neue',sans-serif;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  /*	-moz-border-radius:5px;
+    -webkit-border-radius:5px;*/
+  border:1px solid #ccc;
+  width: 85px;
+  height: 22px;
+  display: inline-block;
+  //line-height: 0.6em;
+  margin-top: 2px;
+  margin-right: 2px;
+  margin-bottom: 2px;
+  margin-left: 2px;
+  background-image: -webkit-linear-gradient(#f7f7f7, #d5d5d5);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2),0 1px 2px rgba(0,0,0,0.05);
+  vertical-align: middle;
+  text-align: match-parent;
+  cursor: pointer;
+  //background-repeat: repeat-x;
 }
 
 .span4 .ui-button .ui-button-text{
-    
-        font-size: 11px;
-        padding: 0 0 0 0;
-        width: 71px;
-        height: 16px;
-        font-weight: normal;
-        text-align: right;
+
+  font-size: 11px;
+  padding: 0 0 0 0;
+  width: 71px;
+  height: 16px;
+  font-weight: normal;
+  text-align: right;
 }
 
 .span4 .ui-button .ui-icon{
-    
-        width: 14px;
-        height: 14px;
-        top:40%;
+
+  width: 14px;
+  height: 14px;
+  top:40%;
 }
 
 .span4 .ui-button:hover{
-    
-        background: #ddd;
+
+  background: #ddd;
 }
 
 .requestPopup {
-    height: 100px !important;
-    width: 200px !important;
+  height: 100px !important;
+  width: 200px !important;
 }
 
 .requestPopup .viewReqButton {
-    margin-top: 10px;
-    background-color: lightblue;
+  margin-top: 10px;
+  background-color: lightblue;
 }

@@ -10,32 +10,32 @@ and open the template in the editor.
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui">
 
-    <body>
-        <ui:composition>
-            <h:form class="stylelayout" id="formToolbar">  
-                <p:toolbar styleClass="MainToolbar">
-                    <p:toolbarGroup align="left">  
-                        <p:commandLink value="BiobankCloud" action="indexPage" rendered="#{peopleStatusBean.loggedIn}"/>
-                        <p:commandLink value="BiobankCloud" action="welcome" rendered="#{!peopleStatusBean.loggedIn}"/>
-                    </p:toolbarGroup> 
+  <body>
+    <ui:composition>
+      <h:form class="stylelayout" id="formToolbar">  
+        <p:toolbar styleClass="MainToolbar">
+          <p:toolbarGroup align="left">  
+            <p:commandLink value="BiobankCloud" action="indexPage" rendered="#{peopleStatusBean.loggedIn}"/>
+            <p:commandLink value="BiobankCloud" action="welcome" rendered="#{!peopleStatusBean.loggedIn}"/>
+          </p:toolbarGroup> 
 
-                    <p:toolbarGroup align="left">              
-                    </p:toolbarGroup>  
+          <p:toolbarGroup align="left">              
+          </p:toolbarGroup>  
 
 
-                    <p:toolbarGroup align="right" rendered="#{peopleStatusBean.loggedIn}">
+          <p:toolbarGroup align="right" rendered="#{peopleStatusBean.loggedIn}">
 
-                        <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{peopleStatusBean.SYSAdmin}"/>
-                        <p:commandButton id="userBtn" value=" #{peopleAministration.loginName}" type="button" icon="ui-icon-person"/>  
-                        <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
-                            <p:menuitem value="My Account" action="profile" /> 
-                            <p:separator/>
-                            <p:menuitem value="Logout" action='#{peopleStatusBean.logOut()}'/> 
-                        </p:menu>  
-                    </p:toolbarGroup>  
+            <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{peopleStatusBean.SYSAdmin}"/>
+            <p:commandButton id="userBtn" value=" #{peopleAministration.loginName}" type="button" icon="ui-icon-person"/>  
+            <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
+              <p:menuitem value="My Account" action="profile" /> 
+              <p:separator/>
+              <p:menuitem value="Logout" action='#{peopleStatusBean.logOut()}'/> 
+            </p:menu>  
+          </p:toolbarGroup>  
 
-                </p:toolbar> 
-            </h:form>
-        </ui:composition>
-    </body>
+        </p:toolbar> 
+      </h:form>
+    </ui:composition>
+  </body>
 </html>

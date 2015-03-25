@@ -10,31 +10,31 @@ and open the template in the editor.
 
 @media only screen  and (min-width : 1224px) {
 
-.signup_header{
+  .signup_header{
     font-family: "open sans",arial,sans-serif;
     color: #333;
     font-size: 36px;
     font-weight: normal;
-}
+  }
 
-.signup_contents{
+  .signup_contents{
     color: #333;
     font-size: 20px;
     font-weight: normal;
     width: 570px;
     padding-bottom: 10px;
-}
+  }
 
-.signup_contents h4{
-     color: red;
-}
+  .signup_contents h4{
+    color: red;
+  }
 
-.signup_container td{
-  vertical-align: top;
-}
+  .signup_container td{
+    vertical-align: top;
+  }
 
 
-.user_guides{
+  .user_guides{
     color: #333;
     font-size: 20px;
     font-weight: normal;
@@ -43,70 +43,70 @@ and open the template in the editor.
     margin-right: 200px;
     padding-top: 20px;
     padding-bottom: 20px;
-}
+  }
 
-.user_guides .ui-widget-content {
+  .user_guides .ui-widget-content {
     border: 0px none;
     background: none repeat scroll 0% 0% #FFF;
     color: #4F4F4F;
-}
+  }
 
-.user_guides .ui-widget-header {
+  .user_guides .ui-widget-header {
     border: 0px none;
     background: white;
     color: #213EA4;
     font-weight: bold;
     text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.7);
-}
+  }
 
-.user_guides .ui-widget {
+  .user_guides .ui-widget {
     font-size: 10px;
-}
-.user_guides .ui-helper-reset {
+  }
+  .user_guides .ui-helper-reset {
     line-height: 1.3;
     font-size: 14px;
     list-style: outside none none;
-}
+  }
 
-.user_guides .ui-menu {
+  .user_guides .ui-menu {
     position: absolute;
     outline: 0px none;
-}
+  }
 
-.user_guides .ui-tabs .ui-tabs-nav li {
+  .user_guides .ui-tabs .ui-tabs-nav li {
     border: 0px none;
-}
+  }
 
-.user_guides_contents{
-    
+  .user_guides_contents{
+
     color: #333;
     font-size: 20px;
     font-weight: normal;
     width: 700px;
     margin-left: 50px;
-    
-}
+
+  }
 
 
-.user_guides_docs{
-    
+  .user_guides_docs{
+
     color: #444;;
     font-size: 24px;
     font-weight: normal;
     width: 800px;
     position: absolute;
-}
+  }
 
-.new_user{
+  .new_user{
     width: 50%;
     min-height: 400px;
     height: auto !important;
     margin-bottom: 18px;
     font-size: 12px;
     font-weight:bold;
-}
+  }
 
-.register_user{
+  .register_user{
     padding-top: 17px;
     padding-right: 20px;
     padding-bottom: 18px;
@@ -114,11 +114,11 @@ and open the template in the editor.
     margin-top: 18px;
     margin-bottom: 18px;
     width: 200px;
-    
-}
+
+  }
 
 
-.register_banner{
+  .register_banner{
     padding-top: 17px;
     padding-right: 20px;
     padding-bottom: 18px;
@@ -129,30 +129,30 @@ and open the template in the editor.
     border-top: 1px solid #e5e5e5;
     width: 400px;
     height: 28px;
-}
+  }
 
-.register_banner .ui-button {
-  margin-left: 10px;
-  min-width: 50px;
-}
+  .register_banner .ui-button {
+    margin-left: 10px;
+    min-width: 50px;
+  }
 
-.registerPanel{
-  width: 50%;
-}
+  .registerPanel{
+    width: 50%;
+  }
 
-.registerContainer td{
-  vertical-align: top;
-}
+  .registerContainer td{
+    vertical-align: top;
+  }
 
-.user_profile .ui-datalist-content {
-  border: none;
-}
+  .user_profile .ui-datalist-content {
+    border: none;
+  }
 
 
 
-/*QRcode*/
+  /*QRcode*/
 
-.QRcode {
+  .QRcode {
     font-size: 14px;
     width: 320px;
     margin: 0 auto;
@@ -163,29 +163,29 @@ and open the template in the editor.
     background-color: #F0F0F0; 
     border-radius: 6px;  
     padding: 20px;   
-}
+  }
 
-.QRcode td {
+  .QRcode td {
     padding: 1px 5px;
-}
+  }
 
-.QRcode .ui-inputfield {
+  .QRcode .ui-inputfield {
     width: 290px;
     font-size: 14px;
     margin-bottom: 10px;
-}
+  }
 
-.QRcode .ui-button {
+  .QRcode .ui-button {
     float: right;
-}
+  }
 
-.QRcode .ui-messages-error-icon {
+  .QRcode .ui-messages-error-icon {
     display: none!important;
-}
+  }
 
 
 
-.GenericMenue {
+  .GenericMenue {
     font-size: 14px;
     width: 400px;
     margin: 0 auto;
@@ -196,30 +196,30 @@ and open the template in the editor.
     background-color: #F0F0F0; 
     border-radius: 6px;  
     padding: 20px;   
-}
+  }
 
-.GenericMenue td {
+  .GenericMenue td {
     padding: 5px 15px;
-}
+  }
 
-.GenericMenue .ui-inputfield {
+  .GenericMenue .ui-inputfield {
     width: 300px;
     height: 20px;
     font-size: 14px;
     margin-bottom: 10px;
-}
+  }
 
-.GenericMenue .ui-button {
+  .GenericMenue .ui-button {
     float: right;
-}
+  }
 
-.GenericMenue .ui-messages-error-icon {
+  .GenericMenue .ui-messages-error-icon {
     display: none!important;
-}
+  }
 
-/* Account Registration*/
+  /* Account Registration*/
 
-.Registation {
+  .Registation {
     text-align: left;
     font-family: "Open Sans",arial;
     color: #555;
@@ -227,12 +227,12 @@ and open the template in the editor.
     font-weight: 100;
     margin-right: 20px;
     padding-right: 20px;
-}
+  }
 
 
-.ui-inputfield{
-    
-display: inline-block;
+  .ui-inputfield{
+
+    display: inline-block;
     height: 30px;
     width: 250px;
     background: none repeat scroll 0% 0% #FFF;
@@ -247,9 +247,9 @@ display: inline-block;
     border-image: none;
     box-sizing: border-box;
     border-radius: 1px;
-    
-}
-input[type="password"] {
+
+  }
+  input[type="password"] {
     display: inline-block;
     height: 30px;
     width: 250px;
@@ -264,9 +264,9 @@ input[type="password"] {
     border-image: none;
     box-sizing: border-box;
     border-radius: 1px;
-}
+  }
 
-.ui-selectonemenu-label {
+  .ui-selectonemenu-label {
     display: block;
     border: medium none;
     white-space: nowrap;
@@ -274,31 +274,31 @@ input[type="password"] {
     font-weight: normal;
     width: 510px;
     text-align: left;
-}
+  }
 
-.ui-selectonemenu{
+  .ui-selectonemenu{
     width: 510px;    
-}
+  }
 
 
-.ui-messages-error, .ui-message-error {
+  .ui-messages-error, .ui-message-error {
     color: #B94A48;
     width: 88%;
     margin: 10px;
-}
+  }
 
-.register_form{
+  .register_form{
     padding: 30px;
     background-color:#F0F0F0;
-    
-}
+
+  }
 
 
-.UserGuides{
+  .UserGuides{
     padding-left: 100px;
-}
+  }
 
-.account-button {
+  .account-button {
     border-radius: 2.5px;
     color: #FFF;
     cursor: pointer;
@@ -314,18 +314,18 @@ input[type="password"] {
     background-image: -moz-linear-gradient(center top , #5E8EE4, #4173C9);
     border: 0px none;
     position: relative;
-}
+  }
 
 
-.account-button .a {
+  .account-button .a {
     color: #245DC1;
     text-decoration: none;
-}
+  }
 
-.ui-state-error {
+  .ui-state-error {
     border: 1px solid #CD0A0A;
     background: -moz-linear-gradient(center top , rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0)) repeat scroll 0% 0% #FEF1EC;
     color: #CD0A0A;
-}
+  }
 
 }
