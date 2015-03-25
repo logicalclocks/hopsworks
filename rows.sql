@@ -35,7 +35,7 @@ insert into address (uid, address1,address2,address3,city,state,country,postalco
 /*
    Adding organizational information for users
 */
-insert into kthfs.organization (uid, org_name, website, contact_person, contact_email, department, phone, fax) values (10000, 'KI', 'www.ki.se', 'Admin Admin', 'admin@ki.se', 'MEB', '+4670080010', '4670080015');
+insert into organization (uid, org_name, website, contact_person, contact_email, department, phone, fax) values (10000, 'KI', 'www.ki.se', 'Admin Admin', 'admin@ki.se', 'MEB', '+4670080010', '+4670080015');
 
 /*
     Upadte the User Logins table

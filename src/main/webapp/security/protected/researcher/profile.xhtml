@@ -161,6 +161,33 @@
                                         </p:inputText>
                                     </p:inplace>
 
+                                    <p:outputLabel for="mobile" value="Phone" />
+                                    <p:inplace  id="mobile"  editor="true">
+                                        <p:ajax event="save" listener="#{profileManager.updateUserInfo()}"
+                                                update=":profile_head"/>   
+
+                                        <p:inputText  value="#{profileManager.user.mobile}"
+                                                      required="true"
+                                                      requiredMessage="Value is required"
+
+                                                      >
+                                        </p:inputText>
+                                    </p:inplace>
+
+                                    
+                                </p:panelGrid>   
+
+
+                            </p:menuitem>
+                        </p:submenu>
+                        <p:submenu  style="padding-bottom: 10px;" label="Edit Organizational Info">
+                            <p:menuitem value=""
+                                        ajax="false" icon="ui-icon-close">
+
+                                <p:panelGrid columns="4" styleClass="AddressInfo" style="border-width: 1px;
+                                             padding: 2px;">
+                                    
+
                                     <p:outputLabel for="org" value="Organization" />
                                      <p:inplace  id="org"  
                                                 editor="true" >
@@ -169,18 +196,6 @@
                                         <p:inputText value="#{profileManager.user.organization.orgName}"
                                                      required="true"
                                                      requiredMessage="Value is required"
-                                                     >
-                                        </p:inputText>
-                                    </p:inplace>
-
-                                    <p:outputLabel for="orcid" value="Orcid ID" />
-                                    <p:inplace  id="orcid"  editor="true">
-                                        <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head"/>   
-
-                                        <p:inputText value="#{profileManager.user.orcid}"
-                                                     required="true"
-                                                     requiredMessage="Value is required"
-
                                                      >
                                         </p:inputText>
                                     </p:inplace>
@@ -209,26 +224,62 @@
                                         </p:inputText>
                                     </p:inplace>
 
-                                    <p:outputLabel for="mobile" value="Phone" />
-                                    <p:inplace  id="mobile"  editor="true">
-                                        <p:ajax event="save" listener="#{profileManager.updateUserInfo()}"
-                                                update=":profile_head"/>   
+                                    <p:outputLabel for="orgPhone" value="Organization Phone" />
+                                     <p:inplace  id="orgPhone"  
+                                                editor="true" >
+                                        <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head" />   
 
-                                        <p:inputText  value="#{profileManager.user.mobile}"
-                                                      required="true"
-                                                      requiredMessage="Value is required"
-
-                                                      >
+                                        <p:inputText value="#{profileManager.user.organization.phone}"
+                                                     required="true"
+                                                     requiredMessage="Value is required"
+                                                     >
                                         </p:inputText>
                                     </p:inplace>
 
                                     
-                                </p:panelGrid>   
+                                    <p:outputLabel for="contactPerson" value="Contact Person" />
+                                     <p:inplace  id="contactPerson"  
+                                                editor="true" >
+                                        <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head" />   
 
+                                        <p:inputText value="#{profileManager.user.organization.contactPerson}"
+                                                     required="true"
+                                                     requiredMessage="Value is required"
+                                                     >
+                                        </p:inputText>
+                                    </p:inplace>
 
+                                    
+                                    <p:outputLabel for="fax" value="Faxl" />
+                                     <p:inplace  id="fax"  
+                                                editor="true" >
+                                        <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head" />   
+
+                                        <p:inputText value="#{profileManager.user.organization.fax}"
+                                                     required="true"
+                                                     requiredMessage="Value is required"
+                                                     >
+                                        </p:inputText>
+                                    </p:inplace>
+                                    
+                                    
+                                    <p:outputLabel for="contactPersonEmail" value="Contact Person Email" />
+                                     <p:inplace  id="contactPersonEmail"  
+                                                editor="true" >
+                                        <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head" />   
+
+                                        <p:inputText value="#{profileManager.user.organization.contactEmail}"
+                                                     required="true"
+                                                     requiredMessage="Value is required"
+                                                     >
+                                        </p:inputText>
+                                    </p:inplace>
+              
+                                                 
+                                </p:panelGrid>
                             </p:menuitem>
                         </p:submenu>
-
+                                
                         <p:submenu  style="padding-bottom: 10px;" label="Edit Address">
                             <p:menuitem value=""
                                         ajax="false" icon="ui-icon-close">
