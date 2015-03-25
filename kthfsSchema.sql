@@ -86,11 +86,10 @@ CREATE TABLE `consent` (
   `study_name` varchar(128) DEFAULT NULL,
   `status` varchar(30) DEFAULT NULL,
   `name` varchar(80) DEFAULT NULL,
-  `ethical_approval` blob,
-  `ammendment` blob,
-  `active` int(11) DEFAULT NULL,
+  `type` varchar(30) DEFAULT NULL,
   `consent_form` blob,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
   KEY `study_name` (`study_name`),
   CONSTRAINT `CONSENT_ibfk_1` FOREIGN KEY (`study_name`) REFERENCES `study` (`name`)
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
@@ -114,6 +113,24 @@ CREATE TABLE `diseases` (
 ) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+
+--
+-- Table structure for table `organization`
+--
+DROP TABLE IF EXISTS `organization`;
+CREATE TABLE `organization` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) DEFAULT NULL,  
+  `org_name` varchar(100) DEFAULT NULL,
+  `website` varchar(200) DEFAULT NULL,
+  `contact_person` varchar(100) DEFAULT NULL,
+  `contact_email` varchar(100) DEFAULT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `fax` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_Organization` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`)
+) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
 --
 -- Table structure for table `Inodes`
 --
@@ -621,6 +638,7 @@ CREATE TABLE `study` (
   `username` varchar(255) NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `retention_period` date DEFAULT NULL,
+  `ethical_satus` varchar(30) DEFAULT NULL,
   PRIMARY KEY (`name`),
   UNIQUE KEY `name` (`name`),
   KEY `fk_study_users` (`username`),
