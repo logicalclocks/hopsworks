@@ -134,7 +134,6 @@ public final class SparkController extends JobController {
     String[] jobArgs = args.trim().split(" ");
     runnerbuilder.addAllJobArgs(jobArgs);
     runnerbuilder.setExtraFiles(getExtraFiles());
-    //And that should be it!
 
     YarnRunner r;
     try {
