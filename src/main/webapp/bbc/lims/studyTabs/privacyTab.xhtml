@@ -70,11 +70,10 @@ and open the template in the editor.
                         </p:dataGrid>
                         
                         
-                        <h:panelGrid columns="3" style="padding-top: 80px;">
+                        <h:panelGrid id= "consent_menu" columns="3" style="padding-top: 80px;">
                             <p:fileUpload 
                                       value="#{studyManagedBean.file}" 
-                                      label="Upload Consent Form" 
-                                      multiple="true"
+                                      label="Upload Consent Information" 
                                       mode="advanced"
                                       fileLimit="1" 
                                        allowTypes="/(\.|\/)(pdf|PDF)$/"
@@ -88,21 +87,21 @@ and open the template in the editor.
                         <p:fileUpload value="#{studyManagedBean.file}" 
                                       label="Upload Ethical Approval"
                                       mode="advanced" 
-                                      multiple="true"
                                       fileLimit="1" 
                                       allowTypes="/(\.|\/)(pdf|PDF)$/"
                                       oncomplete="PF('chooseFileDlg').hide()"
-                                      fileUploadListener="#{studyManagedBean.uploadConsnet}"
+                                      fileUploadListener="#{studyManagedBean.uploadEthicalApproval}"
                                       rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
-                                       />
+                                       update="privacy"
+                                      />
                            
                         
                         <p:fileUpload value="#{studyManagedBean.file}" 
-                                      label="Upload Amendment"
+                                      label="Upload SINC"
                                       mode="advanced" 
-                                      multiple="true"
                                       fileLimit="1" 
                                       allowTypes="/(\.|\/)(pdf|PDF)$/"
+                                       update="privacy"
                                       oncomplete="PF('chooseFileDlg').hide()"
                                       fileUploadListener="#{studyManagedBean.uploadEthicalAmmendment}"
                                       rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
