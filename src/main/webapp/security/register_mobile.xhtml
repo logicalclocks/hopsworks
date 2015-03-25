@@ -65,6 +65,20 @@
                                 </p:inputText>
                                 <p:watermark for="tel" value="Telephone number" />
 
+                                <p:inputText id="org" 
+                                             value="#{userRegistration.org}" 
+                                             autocomplete="off"
+                                             validatorMessage="Invalid organiztion name">
+                                </p:inputText>
+                                <p:watermark for="org" value="Organization" />
+
+                                <p:inputText id="dept" 
+                                             value="#{userRegistration.department}" 
+                                             autocomplete="off"
+                                             validatorMessage="Invalid department name">
+                                </p:inputText>
+                                <p:watermark for="dept" value="Department name" />
+                                
                                 <p:password id="password0" 
                                             value="#{userRegistration.password}" 
                                             required="true"

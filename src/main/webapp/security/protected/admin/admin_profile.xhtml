@@ -80,7 +80,7 @@
                     </p:column>
 
                     <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.homeOrg}  </h3>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.organization.orgName}  </h3>
                     </p:column>
 
                     <p:column>
@@ -92,7 +92,26 @@
                         <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.orcid}  </h3>
                     </p:column>
 
+                    <p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+                              <p:outputLabel value="Department" /></h3> 
+                    </p:column>
 
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.organization.department}  </h3>
+                    </p:column>
+
+                    
+                    <p:column>
+                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+                              <p:outputLabel value="Website" /></h3> 
+                    </p:column>
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.organization.website}  </h3>
+                    </p:column>
+
+                    
                 </p:panelGrid>
             </div>
 

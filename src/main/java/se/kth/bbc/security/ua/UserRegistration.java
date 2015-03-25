@@ -66,6 +66,15 @@ public class UserRegistration implements Serializable {
     private String country;
     private String postalcode;
     private boolean tos;
+    private String department;
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
 
     private List<String> questions;
 
@@ -325,7 +334,7 @@ public class UserRegistration implements Serializable {
             // Register the new request in the platform
             userTransaction.begin();
 
-            User user = mgr.register(fname, lname, mail, title, org, tel, orcid, uid,
+            User user = mgr.register(fname, lname, mail, title, tel, orcid, uid,
                     SecurityUtils.converToSHA256(password), otpSecret, SecurityQuestions.getQuestion(security_question).name(),
                     SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue(), yubikey);
 
@@ -336,7 +345,8 @@ public class UserRegistration implements Serializable {
             // Create address entry
             mgr.registerAddress(user);
 
-     
+            mgr.registerOrg(user, org, department);
+
             if (userAgent.contains("MSIE")) {
                 browser = "Internet Explorer";
             }
@@ -369,6 +379,7 @@ public class UserRegistration implements Serializable {
             mail = "";
             title = "";
             org = "";
+            department = "";
             tel = "";
             orcid = "";
             security_answer = "";
@@ -427,13 +438,15 @@ public class UserRegistration implements Serializable {
             // Register the request in the platform
             userTransaction.begin();
 
-            User user = mgr.register(fname, lname, mail, title, org,
+            User user = mgr.register(fname, lname, mail, title,
                     tel, orcid, uid, SecurityUtils.converToSHA256(password), otp,
                     SecurityQuestions.getQuestion(security_question).name(), SecurityUtils.converToSHA256(security_answer), PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue(), yubikey);
 
             mgr.registerGroup(user, BBCGroups.BBC_GUEST.getValue());
 
             mgr.registerAddress(user, address1, address2, address3, city, state, country, postalcode);
+            mgr.registerOrg(user, org, department);
+
             mgr.registerYubikey(user);
 
             mgr.registerLoginInfo(user, "REGISTRATION", ip, browser);
@@ -463,6 +476,7 @@ public class UserRegistration implements Serializable {
             country = "";
             postalcode = "";
             tos = false;
+            department = "";
 
         } catch (NotSupportedException | SystemException | NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException e) {
             MessagesController.addSecurityErrorMessage("Technical Error");

@@ -63,7 +63,21 @@
                                     <f:validateRegex pattern="^([+]?[\d]+)?$" />
                                 </p:inputText>
                                 <p:watermark for="tel" value="Telephone number*" />
+                           
+                                <p:inputText id="org1" 
+                                             value="#{userRegistration.org}" 
+                                             autocomplete="off"
+                                             validatorMessage="Invalid organiztion name">
+                                </p:inputText>
+                                <p:watermark for="org1" value="Organization" />
 
+                                <p:inputText id="dept1" 
+                                             value="#{userRegistration.department}" 
+                                             autocomplete="off"
+                                             validatorMessage="Invalid department name">
+                                </p:inputText>
+                                <p:watermark for="dept1" value="Department name" />
+                                
                                 <p:inputText id="address2" value="#{userRegistration.address2}" 
                                              required="true"
                                              autocomplete="off"

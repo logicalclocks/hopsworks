@@ -162,21 +162,18 @@
                                     </p:inplace>
 
                                     <p:outputLabel for="org" value="Organization" />
-
-
-                                    <p:inplace  id="org"  
+                                     <p:inplace  id="org"  
                                                 editor="true" >
                                         <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head" />   
 
-                                        <p:inputText value="#{profileManager.user.homeOrg}"
+                                        <p:inputText value="#{profileManager.user.organization.orgName}"
                                                      required="true"
                                                      requiredMessage="Value is required"
-                                                     ></p:inputText>
+                                                     >
+                                        </p:inputText>
                                     </p:inplace>
 
                                     <p:outputLabel for="orcid" value="Orcid ID" />
-
-
                                     <p:inplace  id="orcid"  editor="true">
                                         <p:ajax event="save" listener="#{profileManager.updateUserInfo()}" update=":profile_head"/>   
 
@@ -184,11 +181,35 @@
                                                      required="true"
                                                      requiredMessage="Value is required"
 
-                                                     ></p:inputText>
+                                                     >
+                                        </p:inputText>
+                                    </p:inplace>
+
+                                    <p:outputLabel for="dept" value="Department" />
+                                    <p:inplace  id="dept"  editor="true">
+                                        <p:ajax event="save" listener="#{profileManager.updateUserOrg()}"
+                                                update=":profile_head"/>   
+
+                                        <p:inputText  value="#{profileManager.organization.department}"
+                                                      required="true"
+                                                      requiredMessage="Value is required"
+
+                                                      >
+                                        </p:inputText>
+                                    </p:inplace>
+                                    <p:outputLabel for="website" value="Website" />
+                                    <p:inplace  id="website"  editor="true">
+                                        <p:ajax event="save" listener="#{profileManager.updateUserOrg()}" update=":profile_head"/>   
+
+                                        <p:inputText value="#{profileManager.organization.website}"
+                                                     required="true"
+                                                     requiredMessage="Value is required"
+
+                                                     >
+                                        </p:inputText>
                                     </p:inplace>
 
                                     <p:outputLabel for="mobile" value="Phone" />
-
                                     <p:inplace  id="mobile"  editor="true">
                                         <p:ajax event="save" listener="#{profileManager.updateUserInfo()}"
                                                 update=":profile_head"/>   
@@ -197,9 +218,11 @@
                                                       required="true"
                                                       requiredMessage="Value is required"
 
-                                                      ></p:inputText>
+                                                      >
+                                        </p:inputText>
                                     </p:inplace>
 
+                                    
                                 </p:panelGrid>   
 
 

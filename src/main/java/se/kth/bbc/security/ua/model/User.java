@@ -42,7 +42,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "User.findByFname", query = "SELECT u FROM User u WHERE u.fname = :fname"),
     @NamedQuery(name = "User.findByLname", query = "SELECT u FROM User u WHERE u.lname = :lname"),
     @NamedQuery(name = "User.findByActivated", query = "SELECT u FROM User u WHERE u.activated = :activated"),
-    @NamedQuery(name = "User.findByHomeOrg", query = "SELECT u FROM User u WHERE u.homeOrg = :homeOrg"),
     @NamedQuery(name = "User.findByTitle", query = "SELECT u FROM User u WHERE u.title = :title"),
     @NamedQuery(name = "User.findByMobile", query = "SELECT u FROM User u WHERE u.mobile = :mobile"),
     @NamedQuery(name = "User.findByOrcid", query = "SELECT u FROM User u WHERE u.orcid = :orcid"),
@@ -56,6 +55,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
     @NamedQuery(name = "User.findByPasswordChanged", query = "SELECT u FROM User u WHERE u.passwordChanged = :passwordChanged"),
     @NamedQuery(name = "User.findByNotes", query = "SELECT u FROM User u WHERE u.notes = :notes")})
 public class User implements Serializable {
+   
     private static final long serialVersionUID = 1L;
     @Id
     @Basic(optional = false)
@@ -134,7 +134,9 @@ public class User implements Serializable {
     private Address address;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
     private Collection<PeopleGroup> peopleGroupCollection;
-
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "uid")
+    private Organization organization;
+    
     public User() {
     }
 
@@ -328,6 +330,15 @@ public class User implements Serializable {
         this.address = address;
     }
 
+    public Organization getOrganization() {
+        return organization;
+    }
+
+    public void setOrganization(Organization organization) {
+        this.organization = organization;
+    }
+
+    
     @XmlTransient
     @JsonIgnore
     public Collection<PeopleGroup> getPeopleGroupCollection() {
@@ -362,5 +373,6 @@ public class User implements Serializable {
     public String toString() {
         return "se.kth.bbc.security.ua.model.User[ uid=" + uid + " ]";
     }
+
     
 }

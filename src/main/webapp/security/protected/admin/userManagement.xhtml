@@ -50,10 +50,6 @@
                                                      style="table-layout: fixed" 
                                                      scrollable="false">
 
-                                            <p:column id="unameCol"  filterBy="#{muser.username}"  headerText="Username" style="width:32%;font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{muser.username}" />
-                                            </p:column>
-
                                             <p:column id="nameColumn" filterBy="#{muser.fname}" headerText="First Name" style="width:32%; font-size: 12px; text-align: left;">
                                                 <h:outputText value="#{muser.fname}" />
                                             </p:column>
@@ -65,7 +61,11 @@
                                             <p:column id="emailColumn" filterBy="#{muser.email}" headerText="Email" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{muser.email}" />
                                             </p:column>
-
+                                            
+                                            <p:column id="unameCol"  filterBy="#{muser.organization.orgName}"  headerText="Organization" style="width:32%;font-size: 12px;text-align: left;">
+                                                <h:outputText value="#{muser.organization.orgName}" />
+                                            </p:column>
+                                            
                                             <p:column id="statCol"  filterBy="status" 
                                                       headerText="Status" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{peopleAministration.getChanged_Status(muser)}"/>
@@ -102,7 +102,12 @@
                                             <p:column id="mobileNumColumn" headerText="Mobile Phone" >
                                                 <h:outputText value="#{req.mobile}" />
                                             </p:column>
+                                            
+                                            <p:column id="orgColumn" headerText="Organization" >
+                                                <h:outputText value="#{req.organization.orgName}" />
+                                            </p:column>
 
+                                            
                                             <p:column id="roleColumn" headerText="Role">
                                                 <p:selectOneMenu id="roleChoose" 
                                                                  value="#{peopleAministration.sgroup}" 
@@ -154,6 +159,10 @@
                                                 <h:outputText value="#{yreq.mobile}" />
                                             </p:column>
 
+                                            <p:column id="yorgColumn" headerText="Organization" >
+                                                <h:outputText value="#{yreq.organization.orgName}" />
+                                            </p:column>
+                                            
                                             <p:column id="yroleColumn" headerText="Role">
                                                 <p:selectOneMenu id="yroleChoose" 
                                                                  value="#{peopleAministration.sgroup}"
