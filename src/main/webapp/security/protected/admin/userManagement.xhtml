@@ -66,7 +66,7 @@
                                                 <h:outputText value="#{muser.organization.orgName}" />
                                             </p:column>
                                             
-                                            <p:column id="statCol"  filterBy="status" 
+                                            <p:column id="statCol"  filterBy="#{muser.status}" 
                                                       headerText="Status" style="width:32%;font-size: 12px;text-align: left;">
                                                 <h:outputText value="#{peopleAministration.getChanged_Status(muser)}"/>
                                             </p:column>
@@ -88,25 +88,29 @@
                                         <p:dataTable id="userReqTable" var="req" value="#{peopleAministration.allRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
                                                      rowKey="#{req.email}" selection="#{peopleAministration.selectedUsers}" editable="true" editMode="cell">
 
-                                            <p:column id="nameColumn" headerText="First Name" >
-                                                <h:outputText value="#{req.fname}" />
+                                            <p:column id="nameColumn" headerText="First Name"  
+                                                      filterBy="#{req.fname}">
+                                                <h:outputText value="#{req.fname}"  />
                                             </p:column>
-                                            <p:column id="lnameCol" headerText="Last Name" >
+                                            <p:column id="lnameCol" headerText="Last Name" 
+                                                      filterBy="#{req.lname}">
                                                 <h:outputText value="#{req.lname}" />
                                             </p:column>
 
-                                            <p:column id="emailColumn" headerText="Email">
+                                            <p:column id="emailColumn" headerText="Email" 
+                                                      filterBy="#{req.email}">
                                                 <h:outputText value="#{req.email}" />
                                             </p:column>
 
-                                            <p:column id="mobileNumColumn" headerText="Mobile Phone" >
+                                            <p:column id="mobileNumColumn" headerText="Mobile Phone" 
+                                                      filterBy="#{req.mobile}">
                                                 <h:outputText value="#{req.mobile}" />
                                             </p:column>
                                             
-                                            <p:column id="orgColumn" headerText="Organization" >
+                                            <p:column id="orgColumn" headerText="Organization"  
+                                                      filterBy="#{req.organization.orgName}">
                                                 <h:outputText value="#{req.organization.orgName}" />
                                             </p:column>
-
                                             
                                             <p:column id="roleColumn" headerText="Role">
                                                 <p:selectOneMenu id="roleChoose" 
@@ -144,25 +148,30 @@
                                         <p:dataTable id="yubikeyUserReqTable" var="yreq" value="#{peopleAministration.allYubikeyRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
                                                      rowKey="#{yreq.email}" selection="#{peopleAministration.selectedUsers}" editable="true" editMode="cell">
 
-                                            <p:column id="ynameColumn" headerText="First Name">
+                                            <p:column id="ynameColumn" headerText="First Name" 
+                                                      filterBy="#{yreq.fname}">
                                                 <h:outputText value="#{yreq.fname}" />
                                             </p:column>
-                                            <p:column id="ylnameCol" headerText="Last Name">
+                                            <p:column id="ylnameCol" headerText="Last Name"
+                                                      filterBy="#{yreq.lname}">
                                                 <h:outputText value="#{yreq.lname}" />
                                             </p:column>
 
-                                            <p:column id="yemailColumn" headerText="Email" >
+                                            <p:column id="yemailColumn" headerText="Email" 
+                                                      filterBy="#{yreq.email}">
                                                 <h:outputText value="#{yreq.email}" />
                                             </p:column>
 
-                                            <p:column id="ymobileNumColumn" headerText="Mobile Phone" >
+                                            <p:column id="ymobileNumColumn" headerText="Mobile Phone" 
+                                                      filterBy="#{yreq.mobile}">
                                                 <h:outputText value="#{yreq.mobile}" />
                                             </p:column>
 
-                                            <p:column id="yorgColumn" headerText="Organization" >
+                                            <p:column id="yorgColumn" headerText="Organization" 
+                                                      filterBy="#{yreq.organization.orgName}">
                                                 <h:outputText value="#{yreq.organization.orgName}" />
                                             </p:column>
-                                            
+
                                             <p:column id="yroleColumn" headerText="Role">
                                                 <p:selectOneMenu id="yroleChoose" 
                                                                  value="#{peopleAministration.sgroup}"
