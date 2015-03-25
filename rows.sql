@@ -26,13 +26,18 @@ VALUES ('10000', 'meb10000', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a8
 
 insert into people_group (uid,gid) values (10000,1003);
 insert into people_group (uid,gid) values (10000,1005);
+
 /*
     adding a new address entry for admin user
 */
 insert into address (uid, address1,address2,address3,city,state,country,postalcode) values (10000, 'Admin Office','Teknikringen 14', 'Vallhalevägen', 'Stockholm län', 'Stockholm', 'Svergie', '10044');
 
 /*
+   Adding organizational information for users
+*/
+insert into kthfs.organization (uid, org_name, website, contact_person, contact_email, department, phone, fax) values (10000, 'KI', 'www.ki.se', 'Admin Admin', 'admin@ki.se', 'MEB', '+4670080010', '4670080015');
+
+/*
     Upadte the User Logins table
 */
-insert into userlogins (ip, browser, action, uid, login_date) values 
-('127.0.0.1', 'Firefox', 'AUTHENTICATION', 10000,CURRENT_TIMESTAMP);
+insert into userlogins (ip, browser, action, uid, login_date) values ('127.0.0.1', 'Firefox', 'AUTHENTICATION', 10000,CURRENT_TIMESTAMP);
