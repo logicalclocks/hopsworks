@@ -121,6 +121,7 @@ public class StudyMB implements Serializable {
     private UploadedFile file;
 
     private String filePath;
+    private String ethicalStatus;
 
     public String getFilePath() {
         return filePath;
@@ -143,6 +144,16 @@ public class StudyMB implements Serializable {
 
     public void setFile(UploadedFile file) {
         this.file = file;
+    }
+
+    public String getEthicalStatus() {
+
+        this.ethicalStatus = studyController.findByName(studyName).getEthicalStatus();
+        return this.ethicalStatus;
+    }
+
+    public void setEthicalStatus(String ethicalStatus) {
+        this.ethicalStatus = ethicalStatus;
     }
 
     public void setSessionState(ClientSessionState sessionState) {
@@ -664,13 +675,6 @@ public class StudyMB implements Serializable {
         this.retentionPeriod = retentionPeriod;
     }
 
-    public String updateConsent() {
-        // TODO: send email to user
-        //emailBean.sendEmail(studyname, studyname, studyname);
-
-        return "";
-    }
-
     public void uploadConsnet(FileUploadEvent event) {
         Consent consent = new Consent();
         consent.setType("CONSENT");
@@ -683,13 +687,22 @@ public class StudyMB implements Serializable {
         consent.setStudyName(studyName);
         consent.setStatus("PENDING");
         consent.setName(event.getFile().getFileName());
-        if (privacyManager.upload(consent)) {
 
-            FacesMessage message = new FacesMessage("Succesful", event.getFile().getFileName() + " is uploaded.");
-            FacesContext.getCurrentInstance().addMessage(null, message);
+        try {
+            if (privacyManager.getConsentByName(consent.getName()) != null) {
+                MessagesController.addErrorMessage("Error", "Select another file name that does not exist.");
+                return;
+            }
+        } catch (ParseException ex) {
+            MessagesController.addErrorMessage("Error", "Something went wrong!");
+            return;
+        }
+        if (privacyManager.upload(consent)) {
+            MessagesController.addInfoMessage("Success", event.getFile().getFileName() + " file uploaded successfully.");
+
         } else {
-            FacesMessage message = new FacesMessage("Error", event.getFile().getFileName() + " is not uploaded.");
-            FacesContext.getCurrentInstance().addMessage(null, message);
+            MessagesController.addErrorMessage("Error", "Something went wrong!");
+
         }
     }
 
@@ -705,19 +718,28 @@ public class StudyMB implements Serializable {
         consent.setStudyName(studyName);
         consent.setStatus("PENDING");
         consent.setName(event.getFile().getFileName());
-        if (privacyManager.upload(consent)) {
 
-            FacesMessage message = new FacesMessage("Succesful", event.getFile().getFileName() + " is uploaded.");
-            FacesContext.getCurrentInstance().addMessage(null, message);
+        try {
+            if (privacyManager.getConsentByName(consent.getName()) != null) {
+                MessagesController.addErrorMessage("Error", "Select another file name that does not exist.");
+                return;
+            }
+        } catch (ParseException ex) {
+            MessagesController.addErrorMessage("Error", "Something went wrong!");
+            return;
+        }
+        if (privacyManager.upload(consent)) {
+            MessagesController.addInfoMessage("Success", event.getFile().getFileName() + " file uploaded successfully.");
+
         } else {
-            FacesMessage message = new FacesMessage("Error", event.getFile().getFileName() + " is not uploaded.");
-            FacesContext.getCurrentInstance().addMessage(null, message);
+            MessagesController.addErrorMessage("Error", "Something went wrong!");
+
         }
     }
 
-    public void uploadEthicalAmmendment(FileUploadEvent event) {
+    public void uploadEthicaNonConsent(FileUploadEvent event) {
         Consent consent = new Consent();
-        consent.setType("AMMENDMENT");
+        consent.setType("NONCONSENT");
         try {
             consent.setConsentForm(IOUtils.toByteArray(event.getFile().getInputstream()));
         } catch (IOException ex) {
@@ -727,17 +749,25 @@ public class StudyMB implements Serializable {
         consent.setStudyName(studyName);
         consent.setStatus("PENDING");
         consent.setName(event.getFile().getFileName());
-        if (privacyManager.upload(consent)) {
 
-            FacesMessage message = new FacesMessage("Succesful", event.getFile().getFileName() + " is uploaded.");
-            FacesContext.getCurrentInstance().addMessage(null, message);
+        try {
+            if (privacyManager.getConsentByName(consent.getName()) != null) {
+                MessagesController.addErrorMessage("Error", "Select another file name that does not exist.");
+                return;
+            }
+        } catch (ParseException ex) {
+            MessagesController.addErrorMessage("Error", "Something went wrong!");
+            return;
+        }
+        if (privacyManager.upload(consent)) {
+            MessagesController.addInfoMessage("Success", event.getFile().getFileName() + " file uploaded successfully.");
+
         } else {
-            FacesMessage message = new FacesMessage("Error", event.getFile().getFileName() + " is not uploaded.");
-            FacesContext.getCurrentInstance().addMessage(null, message);
+            MessagesController.addErrorMessage("Error", "Something went wrong!");
+
         }
     }
 
-    
     public Consent getActiveConent() {
         this.activeConset = privacyManager.getActiveConsent(studyName);
         return this.activeConset;
@@ -755,15 +785,14 @@ public class StudyMB implements Serializable {
     }
 
     public void showConsent(String consName) {
-    
-            try {
-                Consent consent = privacyManager.getConsentName(consName);
-                 privacyManager.downloadPDF(consent);
-            } catch (ParseException | IOException ex) {
-                Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
-            }
-           
-        
+
+        try {
+            Consent consent = privacyManager.getConsentByName(consName);
+            privacyManager.downloadPDF(consent);
+        } catch (ParseException | IOException ex) {
+            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
+    }
+
 }

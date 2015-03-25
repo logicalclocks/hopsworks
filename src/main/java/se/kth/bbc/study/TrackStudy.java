@@ -35,6 +35,7 @@ import se.kth.bbc.study.samples.Samplecollection;
     @NamedQuery(name = "TrackStudy.findByName", query = "SELECT t FROM TrackStudy t WHERE t.name = :name"),
     @NamedQuery(name = "TrackStudy.findByUsername", query = "SELECT t FROM TrackStudy t WHERE t.username = :username"),
     @NamedQuery(name = "TrackStudy.findByTimestamp", query = "SELECT t FROM TrackStudy t WHERE t.timestamp = :timestamp"),
+    @NamedQuery(name = "TrackStudy.findByEthicalStatus", query = "SELECT t FROM TrackStudy t WHERE t.ethicalStatus = :ethicalStatus"),
     @NamedQuery(name = "TrackStudy.findByRetentionPeriod", query = "SELECT t FROM TrackStudy t WHERE t.retentionPeriod = :retentionPeriod"),
     @NamedQuery(name = "TrackStudy.findOwner", query = "SELECT t.username FROM TrackStudy t WHERE t.name = :name"),
     @NamedQuery(name = "TrackStudy.countStudyByOwner", query = "SELECT count(t.name) FROM TrackStudy t WHERE t.username = :username")})
@@ -64,6 +65,11 @@ public class TrackStudy implements Serializable {
     @Column(name = "timestamp")
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
+    @NotNull
+    @Size(min = 1, max = 30)
+    @Column(name = "ethical_satus")
+    private String ethicalStatus;
+   
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "trackStudy")
     private Collection<StudyGroups> studyGroupsCollection;
 
@@ -80,6 +86,14 @@ public class TrackStudy implements Serializable {
         this.timestamp = timestamp;
     }
 
+    
+    public String getEthicalStatus() {
+        return ethicalStatus;
+    }
+
+    public void setEthicalStatus(String ethicalStatus) {
+        this.ethicalStatus = ethicalStatus;
+    }
     public String getName() {
         return name;
     }

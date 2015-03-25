@@ -91,20 +91,26 @@ public class StudyPrivacyManager {
         return true;
     }
     
-    public String getConsentStatus(String studyname) throws ParseException {
+    public Consent getConsentByStudyName(String studyname) throws ParseException {
 
         TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
         q.setParameter("studyName", studyname);
-        Consent consent = q.getSingleResult();
-        return consent.getStatus();
-    }
+        List<Consent> consent = q.getResultList();
+        if(consent.size()>0)
+            return consent.get(0);
+        return null;
 
-    public Consent getConsentName(String name) throws ParseException {
+    }
+    
+       public Consent getConsentByName(String name) throws ParseException {
 
         TypedQuery<Consent> q = em.createNamedQuery("Consent.findByName", Consent.class);
         q.setParameter("name", name);
-        Consent consent = q.getSingleResult();
-        return consent;
+        List<Consent> consent = q.getResultList();
+        if(consent.size()>0)
+            return consent.get(0);
+        return null;
+
     }
 
     public String getRoles(String study, String username) throws ParseException {

@@ -23,7 +23,7 @@ and open the template in the editor.
                         <p:panelGrid columns="4" >         
 
                             <p:column>    
-                                Consent Status: #{studyManagedBean.activeConent.status}
+                                Consent Status: #{studyManagedBean.ethicalStatus}
                             </p:column>
 
                             <p:column>
@@ -73,7 +73,7 @@ and open the template in the editor.
                         <h:panelGrid id= "consent_menu" columns="3" style="padding-top: 80px;">
                             <p:fileUpload 
                                       value="#{studyManagedBean.file}" 
-                                      label="Upload Consent Information" 
+                                      label="Upload Consent Info" 
                                       mode="advanced"
                                       fileLimit="1" 
                                        allowTypes="/(\.|\/)(pdf|PDF)$/"
@@ -97,13 +97,13 @@ and open the template in the editor.
                            
                         
                         <p:fileUpload value="#{studyManagedBean.file}" 
-                                      label="Upload SINC"
+                                      label="Upload Non-Consent Info"
                                       mode="advanced" 
                                       fileLimit="1" 
                                       allowTypes="/(\.|\/)(pdf|PDF)$/"
                                        update="privacy"
                                       oncomplete="PF('chooseFileDlg').hide()"
-                                      fileUploadListener="#{studyManagedBean.uploadEthicalAmmendment}"
+                                      fileUploadListener="#{studyManagedBean.uploadEthicaNonConsent}"
                                       rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
                                        />
                          
