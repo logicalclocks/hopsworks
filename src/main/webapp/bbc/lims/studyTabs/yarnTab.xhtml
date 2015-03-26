@@ -38,7 +38,7 @@
                   <h:outputLabel value="Upload workflow file" for="yarn_amUploader"/>
                   <p:commandButton 
                     value="Select..." id="yarn_amUploader"
-                    oncomplete="PF('chooseFileDlg').show()"
+                    oncomplete="PF('chooseFileDlg').show()" immediate="true"
                     actionListener="#{yarnController.prepareFileSelector(true,'')}">
                   </p:commandButton>
 
