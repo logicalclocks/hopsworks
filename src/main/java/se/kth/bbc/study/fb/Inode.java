@@ -19,7 +19,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author stig
  */
 @Entity
-@Table(name = "inodes")
+@Table(name = "hdfs_inodes")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Inode.findAll",

@@ -3,7 +3,7 @@
   <persistence-unit name="kthfsPU" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>jdbc/kthfs</jta-data-source>
-    <exclude-unlisted-classes>true</exclude-unlisted-classes>
+    <exclude-unlisted-classes>false</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
     <properties>
@@ -12,9 +12,8 @@
       <property name="eclipselink.jpa.uppercase-column-names" value="true"/>
     </properties>
   </persistence-unit>
-  <persistence-unit name="ndb" transaction-type="JTA">
-    <jta-data-source>jdbc/hop</jta-data-source>
-    <exclude-unlisted-classes>true</exclude-unlisted-classes>
+  <persistence-unit name="hopsPU" transaction-type="JTA">
+    <jta-data-source>jdbc/hops</jta-data-source>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
     <properties/>
