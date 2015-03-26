@@ -129,7 +129,6 @@ DROP TABLE IF EXISTS `consent`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `consent` (
-<<<<<<< HEAD
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `date` date DEFAULT NULL,
   `study_name` varchar(128) DEFAULT NULL,
@@ -137,15 +136,6 @@ CREATE TABLE `consent` (
   `name` varchar(80) DEFAULT NULL,
   `type` varchar(30) DEFAULT NULL,
   `consent_form` longblob DEFAULT NULL,
-=======
-  `id` int(11) NOT NULL,
-  `added` date DEFAULT NULL,
-  `study_name` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `retention_period` date DEFAULT NULL,
-  `consent_form` blob,
-  `status` varchar(30) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `name` varchar(80) COLLATE utf8_unicode_ci DEFAULT NULL,
->>>>>>> cauth_schema
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   KEY `study_name` (`study_name`),
@@ -410,6 +400,8 @@ CREATE TABLE `study` (
   `name` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
   `username` varchar(45) COLLATE utf8_unicode_ci NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `retention_period` date DEFAULT NULL,
+  `ethical_satus` varchar(30) DEFAULT NULL,
   PRIMARY KEY (`name`),
   KEY `username` (`username`),
   CONSTRAINT `FK_248_268` FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION
@@ -637,52 +629,7 @@ CREATE TABLE `zeppelin_notes` (
 DROP TABLE IF EXISTS `zeppelin_paragraph`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-<<<<<<< HEAD
-CREATE TABLE `study` (
-  `name` varchar(128) NOT NULL,
-  `username` varchar(255) NOT NULL,
-  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `retention_period` date DEFAULT NULL,
-  `ethical_satus` varchar(30) DEFAULT NULL,
-  PRIMARY KEY (`name`),
-  UNIQUE KEY `name` (`name`),
-  KEY `fk_study_users` (`username`),
-  CONSTRAINT `fk_study_users` FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE CASCADE
-) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `study_group_members`
---
-
-DROP TABLE IF EXISTS `study_group_members`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `study_group_members` (
-  `studyname` varchar(255) NOT NULL,
-  `username` varchar(255) NOT NULL,
-  `timeadded` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `added_by` varchar(255) NOT NULL,
-  `team_role` enum('Master','Researcher','Guest') NOT NULL,
-  PRIMARY KEY (`studyname`,`username`),
-  CONSTRAINT `FK_study_group_members_studyname` FOREIGN KEY (`studyname`) REFERENCES `study` (`name`)
-) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `study_services`
---
-
-DROP TABLE IF EXISTS `study_services`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `study_services` (
-  `study` varchar(128) NOT NULL,
-  `service` varchar(32) NOT NULL,
-  PRIMARY KEY (`study`,`service`),
-  CONSTRAINT `study_services_ibfk_1` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE CASCADE
-) ENGINE=NDBCLUSTER DEFAULT CHARSET=latin1;
-=======
 CREATE TABLE `zeppelin_paragraph` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `note_id` int(11) NOT NULL,
@@ -691,10 +638,21 @@ CREATE TABLE `zeppelin_paragraph` (
   KEY `note_id` (`note_id`),
   CONSTRAINT `FK_237_244` FOREIGN KEY (`note_id`) REFERENCES `zeppelin_notes` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
->>>>>>> cauth_schema
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
+
+DROP TABLE IF EXISTS `study_services`;
+/*!40101 SET @saved_cs_client = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `study_services` (
+`study` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
+`service` varchar(32) COLLATE utf8_unicode_ci NOT NULL,
+PRIMARY KEY (`study`,`service`),
+CONSTRAINT `FK_266_276` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=ndbcluster DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+----
 -- Final view structure for view `activity_details`
 --
 
