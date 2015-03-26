@@ -111,7 +111,7 @@
                                     <f:selectItem itemLabel="Select security question for password recovery *" 
 
                                                   itemValue="" />
-                                    <f:selectItems value="#{userRegistration.questions}"/>
+                                    <f:selectItems value="#{userRegistration.questions}" var="val" itemLabel="#{val.toString()}" itemValue="#{val}"/>
                                 </p:selectOneMenu>  
                                 <p:spacer></p:spacer>
 

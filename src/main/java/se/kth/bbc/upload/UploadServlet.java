@@ -5,13 +5,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.study.fb.InodesMB;
 
@@ -19,7 +20,7 @@ import se.kth.bbc.study.fb.InodesMB;
  * by fanxu
  */
 public class UploadServlet extends HttpServlet {
-
+  private static final Logger logger = Logger.getLogger(UploadServlet.class.getName());
   @EJB
   private FileOperations fileOps;
 
@@ -82,7 +83,7 @@ public class UploadServlet extends HttpServlet {
         fileOps.copyAfterUploading(info.resumableFilename, uploadPath
                 + info.resumableFilename);
       } catch (IOException e) {
-        MessagesController.addErrorMessage("Failed to write to HDFS");
+        logger.log(Level.SEVERE,"Failed to write to HDSF",e);
       }
     }
   }

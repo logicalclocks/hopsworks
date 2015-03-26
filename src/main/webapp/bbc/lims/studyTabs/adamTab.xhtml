@@ -36,7 +36,7 @@
                             <f:selectItems value="#{adamController.adamCommands}" var="command" itemValue="#{command}" itemLabel="#{command.command}"/>
                             <p:ajax event="change" update="@form" process="@form"/>
                         </p:selectOneMenu>
-                        <p:commandButton value="Execute" styleClass="right_button" rendered="#{adamController.selectedCommand != null}" action="#{adamController.startJob()}"/> 
+                        <p:commandButton value="Execute" styleClass="right_button" rendered="#{adamController.selectedCommand != null}" action="#{adamController.startJob()}" update="@(.historyForm) @(.resultsForm) @(.runConfForm)"/> 
                         <div>
                         <h:outputText value="#{adamController.selectedCommand.description}" rendered="#{adamController.selectedCommand != null}"/>
                         </div>

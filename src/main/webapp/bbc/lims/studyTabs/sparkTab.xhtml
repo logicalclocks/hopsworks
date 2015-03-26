@@ -55,7 +55,7 @@
 
                             <div>
                                 <p:commandButton id="sparkExecuteButton" value="Execute" action="#{sparkController.startJob()}" 
-                                                 update="@form"/>
+                                                 update="@(.historyForm) @(.resultsForm) @(.runConfForm)"/>
                             </div>
                         </div>
                     </h:form>

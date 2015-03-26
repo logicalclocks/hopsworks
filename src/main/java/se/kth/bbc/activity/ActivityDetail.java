@@ -56,7 +56,7 @@ public class ActivityDetail implements Serializable {
     private String studyname;
     @Basic(optional = false)
     @NotNull
-    @Column(name = "timestamp")
+    @Column(name = "created")
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 

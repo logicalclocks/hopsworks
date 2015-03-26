@@ -12,6 +12,8 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -25,6 +27,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import se.kth.bbc.security.ua.SecurityQuestion;
 
 /**
  *
@@ -115,8 +118,9 @@ public class User implements Serializable {
     @Column(name = "secret")
     private String secret;
     @Size(max = 20)
+    @Enumerated(EnumType.STRING)
     @Column(name = "security_question")
-    private String securityQuestion;
+    private SecurityQuestion securityQuestion;
     @Size(max = 128)
     @Column(name = "security_answer")
     private String securityAnswer;
@@ -274,11 +278,11 @@ public class User implements Serializable {
         this.secret = secret;
     }
 
-    public String getSecurityQuestion() {
+    public SecurityQuestion getSecurityQuestion() {
         return securityQuestion;
     }
 
-    public void setSecurityQuestion(String securityQuestion) {
+    public void setSecurityQuestion(SecurityQuestion securityQuestion) {
         this.securityQuestion = securityQuestion;
     }
 

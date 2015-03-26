@@ -76,7 +76,7 @@ public class SparkYarnRunnerBuilder {
     builder.addToAppMasterEnvironment("SPARK_USER", Utils.getYarnUser());
     builder.addToAppMasterEnvironment("CLASSPATH",
             classPath
-            + ":/srv/spark/conf:/srv/spark/lib/spark-assembly-1.2.0-hadoop2.4.0.jar:/srv/spark/lib/datanucleus-core-3.2.10.jar:/srv/spark/lib/datanucleus-api-jdo-3.2.6.jar:/srv/spark/lib/datanucleus-rdbms-3.2.9.jar");
+            + ":" + Constants.SPARK_DEFAULT_CLASSPATH);
     for (String key : envVars.keySet()) {
       builder.addToAppMasterEnvironment(key, envVars.get(key));
     }

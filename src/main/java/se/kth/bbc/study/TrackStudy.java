@@ -62,7 +62,7 @@ public class TrackStudy implements Serializable {
     private Date retentionPeriod;
     @Basic(optional = false)
     @NotNull
-    @Column(name = "timestamp")
+    @Column(name = "created")
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
     @NotNull
@@ -70,9 +70,6 @@ public class TrackStudy implements Serializable {
     @Column(name = "ethical_satus")
     private String ethicalStatus;
    
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "trackStudy")
-    private Collection<StudyGroups> studyGroupsCollection;
-
     public TrackStudy() {
     }
 
@@ -124,17 +121,6 @@ public class TrackStudy implements Serializable {
 
     public void setRetentionPeriod(Date retentionPeriod) {
         this.retentionPeriod = retentionPeriod;
-    }
-
-    
-    @XmlTransient
-    @JsonIgnore
-    public Collection<StudyGroups> getStudyGroupsCollection() {
-        return studyGroupsCollection;
-    }
-
-    public void setStudyGroupsCollection(Collection<StudyGroups> studyGroupsCollection) {
-        this.studyGroupsCollection = studyGroupsCollection;
     }
 
     @Override
