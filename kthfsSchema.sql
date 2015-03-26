@@ -87,7 +87,7 @@ CREATE TABLE `consent` (
   `status` varchar(30) DEFAULT NULL,
   `name` varchar(80) DEFAULT NULL,
   `type` varchar(30) DEFAULT NULL,
-  `consent_form` blob,
+  `consent_form` longblob DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   KEY `study_name` (`study_name`),
@@ -136,6 +136,7 @@ CREATE TABLE `organization` (
 --
 
 DROP TABLE IF EXISTS `inodes`;
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `inodes` (
