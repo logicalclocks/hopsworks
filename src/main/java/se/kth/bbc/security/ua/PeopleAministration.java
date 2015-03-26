@@ -484,7 +484,7 @@ public class PeopleAministration implements Serializable {
 
             Yubikey yubi = this.selectedYubikyUser.getYubikey();
 
-            yubi.setStatus(1);
+            yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
 
             // Trim the input
             yubi.setSerial(serial.replaceAll("\\s", ""));
