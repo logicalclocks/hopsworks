@@ -237,9 +237,10 @@ public class RecoverySelector implements Serializable {
             if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
 
                 String message = UserAccountsEmailMessages.buildYubikeyRequestMessage();
-                email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT, message);
                 people.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
+                people.getYubikey().setStatus(PeopleAccountStatus.YUBIKEY_LOST.getValue());
                 um.updatePeople(people);
+                email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT, message);
                 return "yubico";
             } else {
 

@@ -172,8 +172,10 @@
                                                 <h:outputText value="#{yreq.organization.orgName}" />
                                             </p:column>
 
-                                            <p:column id="yroleColumn" headerText="Role">
+                                            <p:column id="yroleColumn" headerText="Role" >
+                                                
                                                 <p:selectOneMenu id="yroleChoose" 
+                                                                 rendered="#{yreq.yubikey.status==1}"
                                                                  value="#{peopleAministration.sgroup}"
                                                                  editable="false"
                                                                  >

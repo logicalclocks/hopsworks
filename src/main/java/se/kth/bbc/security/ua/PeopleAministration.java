@@ -498,13 +498,20 @@ public class PeopleAministration implements Serializable {
             yubi.setSessionUse(0);
             yubi.setHigh(0);
             yubi.setLow(0);
-
+            
+            // Set stauts to active
+            yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
+            
             userTransaction.begin();
 
             userManager.updateYubikey(yubi);
-
-            if (!"#".equals(sgroup) && (!sgroup.equals(BBCGroup.BBC_GUEST.name()))) {
+            
+             
+            if(this.selectedYubikyUser.getYubikey().getStatus() == 
+                    PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()){
+                if (!"#".equals(sgroup) && (!sgroup.equals(BBCGroup.BBC_GUEST.name())))  {
                 userManager.registerGroup(this.selectedYubikyUser, BBCGroup.valueOf(sgroup).getValue());
+                }
             }
 
             userManager.updateStatus(this.selectedYubikyUser, PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());

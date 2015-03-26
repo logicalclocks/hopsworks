@@ -153,6 +153,7 @@ public class UserManager {
     public boolean registerYubikey(User uid) {
         Yubikey yk = new Yubikey();
         yk.setUid(uid);
+        yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
         em.persist(yk);
         return true;
     }
