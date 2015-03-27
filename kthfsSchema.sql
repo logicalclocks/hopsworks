@@ -88,30 +88,6 @@ CREATE TABLE `Group` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `Inodes`
---
-
-DROP TABLE IF EXISTS `Inodes`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `Inodes` (
-  `id` mediumint(9) NOT NULL AUTO_INCREMENT,
-  `name` varchar(128) NOT NULL,
-  `pid` mediumint(9) DEFAULT NULL,
-  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `isDir` tinyint(1) NOT NULL,
-  `size` int(11) DEFAULT NULL,
-  `status` enum('uploading','copying_to_hdfs','available') NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `pid_3` (`pid`,`name`),
-  KEY `pid` (`pid`),
-  KEY `pid_2` (`pid`,`isDir`),
-  KEY `name` (`name`),
-  CONSTRAINT `Inodes_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `Inodes` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `Login`
 --
 
