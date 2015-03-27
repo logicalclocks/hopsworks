@@ -8,8 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import static javax.ejb.TransactionAttributeType.REQUIRES_NEW;
+
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -106,7 +105,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
    * @param jh
    * @param state 
    */
-  @TransactionAttribute(REQUIRES_NEW)
   private void updateState(Long id, JobState state){
     Query q = em.createNativeQuery("UPDATE jobhistory SET state=? WHERE id=?");
     q.setParameter(1, state.name());
