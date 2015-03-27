@@ -29,6 +29,7 @@
     </properties>
   </persistence-unit>
   <persistence-unit name="hopsPU" transaction-type="JTA">
+    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>jdbc/hops</jta-data-source>
     <class>se.kth.bbc.study.fb.Inode</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>

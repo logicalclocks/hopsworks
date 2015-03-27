@@ -218,7 +218,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
     Inode parent = i;
     while (parent.getId() != 1) {
       pathComponents.add(parent.getInodePK().getName());
-      parent = findParent(i);
+      parent = findParent(parent);
     }
     StringBuilder path = new StringBuilder();
     for (int j = pathComponents.size() - 1; j >= 0; j--) {
