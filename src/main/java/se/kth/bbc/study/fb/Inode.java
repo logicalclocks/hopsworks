@@ -13,8 +13,8 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-//import org.eclipse.persistence.annotations.Convert;
-//import org.eclipse.persistence.annotations.Converter;
+import org.eclipse.persistence.annotations.Convert;
+import org.eclipse.persistence.annotations.Converter;
 
 /**
  *
@@ -112,18 +112,18 @@ public class Inode implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "quota_enabled")
-//  @Converter(name="byteConverter", converterClass=se.kth.bbc.study.fb.ByteConverter.class)
-//  @Convert("byteConverter")
+  @Converter(name="byteConverter", converterClass=se.kth.bbc.study.fb.ByteConverter.class)
+  @Convert("byteConverter")
   private Byte quotaEnabled;
   @Basic(optional = false)
   @NotNull
   @Column(name = "under_construction")
-//  @Converter(name="byteConverter", converterClass=se.kth.bbc.study.fb.ByteConverter.class)
-//  @Convert("byteConverter")
+  @Converter(name="byteConverter", converterClass=se.kth.bbc.study.fb.ByteConverter.class)
+  @Convert("byteConverter")
   private Byte underConstruction;
   @Column(name = "subtree_locked")
-//  @Converter(name="byteConverter", converterClass=se.kth.bbc.study.fb.ByteConverter.class)
-//  @Convert("byteConverter")
+  @Converter(name="byteConverter", converterClass=se.kth.bbc.study.fb.ByteConverter.class)
+  @Convert("byteConverter")
   private Byte subtreeLocked;
   @Column(name = "subtree_lock_owner")
   private BigInteger subtreeLockOwner;
