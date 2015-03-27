@@ -60,9 +60,8 @@ public class SecurityUtils {
      * @param length
      * @return
      */
-    public static String getRandomString() {
-        // password length
-        int length = 6;
+    public static String getRandomString(int length) {
+       
         String randomStr = UUID.randomUUID().toString();
         while (randomStr.length() < length) {
             randomStr += UUID.randomUUID().toString();

@@ -52,6 +52,7 @@ import se.kth.bbc.security.ua.SecurityQuestion;
     @NamedQuery(name = "User.findByStatus", query = "SELECT u FROM User u WHERE u.status = :status"),
     @NamedQuery(name = "User.findByIsonline", query = "SELECT u FROM User u WHERE u.isonline = :isonline"),
     @NamedQuery(name = "User.findBySecret", query = "SELECT u FROM User u WHERE u.secret = :secret"),
+    @NamedQuery(name = "User.findByValidationKey", query = "SELECT u FROM User u WHERE u.validationKey = :validationKey"),
     @NamedQuery(name = "User.findBySecurityQuestion", query = "SELECT u FROM User u WHERE u.securityQuestion = :securityQuestion"),
     @NamedQuery(name = "User.findBySecurityAnswer", query = "SELECT u FROM User u WHERE u.securityAnswer = :securityAnswer"),
     @NamedQuery(name = "User.findByYubikeyUser", query = "SELECT u FROM User u WHERE u.yubikeyUser = :yubikeyUser"),
@@ -117,6 +118,9 @@ public class User implements Serializable {
     @Size(max = 20)
     @Column(name = "secret")
     private String secret;
+    @Size(max = 128)
+    @Column(name = "validation_key")
+    private String validationKey;
     @Size(max = 20)
     @Enumerated(EnumType.STRING)
     @Column(name = "security_question")
@@ -125,7 +129,7 @@ public class User implements Serializable {
     @Column(name = "security_answer")
     private String securityAnswer;
     @Column(name = "yubikey_user")
-    private Short yubikeyUser;
+    private int yubikeyUser;
     @Column(name = "password_changed")
     @Temporal(TemporalType.TIMESTAMP)
     private Date passwordChanged;
@@ -158,6 +162,15 @@ public class User implements Serializable {
         this.isonline = isonline;
     }
 
+    public String getValidationKey() {
+        return validationKey;
+    }
+
+    public void setValidationKey(String validationKey) {
+        this.validationKey = validationKey;
+    }
+
+    
     public Integer getUid() {
         return uid;
     }
@@ -173,7 +186,6 @@ public class User implements Serializable {
     public void setUsername(String username) {
         this.username = username;
     }
-
     public String getPassword() {
         return password;
     }
@@ -294,11 +306,11 @@ public class User implements Serializable {
         this.securityAnswer = securityAnswer;
     }
 
-    public Short getYubikeyUser() {
+    public int getYubikeyUser() {
         return yubikeyUser;
     }
 
-    public void setYubikeyUser(Short yubikeyUser) {
+    public void setYubikeyUser(int yubikeyUser) {
         this.yubikeyUser = yubikeyUser;
     }
 

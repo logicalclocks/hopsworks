@@ -547,6 +547,7 @@ CREATE TABLE `users` (
   `false_login` int(11) NOT NULL DEFAULT '-1',
   `isonline` tinyint(1) NOT NULL DEFAULT '0',
   `secret` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `validation_key` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
   `security_question` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
   `security_answer` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
   `yubikey_user` tinyint(1) NOT NULL DEFAULT '0',
