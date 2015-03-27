@@ -372,7 +372,7 @@ public class StudyMB implements Serializable {
         } else {
             return studyController.QueryForNonRegistered(getUsername()).size();
         }
-    }
+    }   
 
     /**
      * @return

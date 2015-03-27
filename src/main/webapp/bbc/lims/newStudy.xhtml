@@ -10,7 +10,7 @@
     <f:view contentType="text/html">
 
         <h:head>
-            <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+            <title><ui:insert name="title">HopsWorks</ui:insert></title>
             <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
             <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
         </h:head>
@@ -38,7 +38,8 @@
                                     <div class="clear_fix study_name_holder">
                                         <label for="study_name" class="study_name" style="float: left; font-size: 16px;">Study name</label>
                                         <div class="input">
-                                            <h:inputText required="true" styleClass="xxlarge createStudy" id="studyName" value="#{newStudyController.newStudyName}" requiredMessage="Study name cannot be empty!" onclick="(this.value = '')">
+                                            <h:inputText styleClass="xxlarge createStudy" id="studyName" value="#{newStudyController.newStudyName}" >
+                                                <f:validator validatorId="newStudyNameValidator"/>
                                             </h:inputText>
                                             <p:selectOneMenu id="templateChooser" widgetVar="chooser" value="#{newStudyController.chosenTemplate}" immediate="true">
                                                 <f:selectItems value="#{newStudyController.studyTemplates}"/>

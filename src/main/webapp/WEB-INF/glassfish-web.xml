@@ -19,7 +19,7 @@
     <group-name>BBC_USER</group-name>
   </security-role-mapping>
   <parameter-encoding default-charset="UTF-8"/>
-  <context-root>/hop-dashboard</context-root>
+  <context-root>/hopsworks</context-root>
   <security-role-mapping>
     <role-name>BBC_RESEARCHER</role-name>
     <group-name>BBC_RESEARCHER</group-name>

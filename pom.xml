@@ -5,11 +5,11 @@
 
 
     <groupId>se.kth.hop</groupId>
-    <artifactId>hop-dashboard</artifactId>
+    <artifactId>hopsworks</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
 
-    <name>Hop Dashboard</name>
+    <name>HopsWorks</name>
 
     <properties>
         <java.version>1.7</java.version>

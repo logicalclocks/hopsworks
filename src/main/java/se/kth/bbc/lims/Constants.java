@@ -135,4 +135,9 @@ public class Constants {
   public static final String DIR_FASTQ = "fastq";
   public static final String DIR_FASTA = "fasta";
   public static final String DIR_VCF = "vcf";
+  
+  //Filename conventions
+  public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#";
+  public static final String PRINT_FILENAME_DISALLOWED_CHARS = "space, /, \\, ?, *, :, |, ', \", <, >, %, (, ), &, ;, #";
+          
 }
