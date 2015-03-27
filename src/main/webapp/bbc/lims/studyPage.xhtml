@@ -22,7 +22,9 @@
       <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutStudy" rendered="#{studyManagedBean.studyName != null}">
         <p:layoutUnit position="center">
           <div class="container">
-            <h1>#{studyManagedBean.studyName} </h1>
+            <div>
+              <h1>#{studyManagedBean.studyName} </h1>
+            </div>
             <h:form>
               <p:commandButton id="toolsBtn" value="Study..." type="button" rendered="#{studyManagedBean.currentOwner}" style="float:right;margin-top: 26px;"/> 
               <p:menu overlay="true" trigger="toolsBtn" my="left top" at="left bottom" >  
@@ -34,7 +36,7 @@
               </p:menu> 
             </h:form>
             <div class="archivedWarning">
-              <h:outputText value="This study has been archived. To have full access to its functionality, you should unarchive it." rendered="#{studyManagedBean.studyArchived}"/>
+              <h:outputText value="This study has been archived. To have full access to its functionality and data, you should unarchive it." rendered="#{studyManagedBean.studyArchived}"/>
             </div>
             <div class="content">
               <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="studyTabs">
@@ -302,17 +304,17 @@
           <p:dataTable value="#{InodesMB.children}" var="inode"
                        styleClass="chooseFileTable"
                        scrollable="true" scrollHeight="200">
-      
+
             <p:column>
               <h:graphicImage class="browser s16" library="images/icons" name="#{inode.isDir()?'folder.png':'file.png'}" />
-      
+
               <p:commandLink styleClass="dark" 
                              action="#{InodesMB.cdUp()}" 
                              update="@form" 
                              rendered="#{inode.isParent()}">
                 <strong>#{inode.name}</strong>
               </p:commandLink>
-      
+
               <p:commandLink styleClass="dark" 
                              action="#{InodesMB.cdDown(inode.name)}" 
                              actionListener="#{fileSelectionController.setSelectedPath(inode.path)}" 
@@ -320,7 +322,7 @@
                              rendered="#{not inode.isParent() and inode.dir}">
                 <strong>#{inode.name}</strong>
               </p:commandLink>
-      
+
               <p:commandLink styleClass="dark" 
                              rendered="#{not inode.dir}" 
                              action="#{fileSelectionController.setSelectedPath(inode.path)}"
@@ -332,7 +334,7 @@
           <h:panelGrid columns="2">
             <h:outputLabel value="Selected file" for="chooseFileSelected"/>
             <h:inputText value="#{fileSelectionController.selectedPath}" readonly="true" id="chooseFileSelected" />
-      
+
             <h:outputLabel value="Or upload a new file" for="chooseFileUpload"/>
             <p:fileUpload id="chooseFileUpload" auto="true" 
                           multiple="false" label="Upload" 
