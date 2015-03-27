@@ -52,7 +52,7 @@ public class AccountVerification {
         
         if (key.equals(user.getValidationKey())){
             if (user.getYubikeyUser()==1){
-            
+
                 mgr.restrictAccount(user.getUid(), "", PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
 
             } else if(user.getYubikeyUser()== PeopleAccountStatus.MOBILE_USER.getValue()) {

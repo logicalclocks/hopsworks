@@ -1,4 +1,4 @@
-package se.kth.bbc.security.ua;
+    package se.kth.bbc.security.ua;
 
 import com.google.zxing.WriterException;
 import java.io.IOException;

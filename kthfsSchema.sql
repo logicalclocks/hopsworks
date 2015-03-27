@@ -69,7 +69,7 @@ CREATE TABLE `users` (
     `validation_key` varchar(128)  DEFAULT NULL,
     `security_question` varchar(20)  DEFAULT NULL,
     `security_answer` varchar(128)  DEFAULT NULL,
-    `yubikey_user` tinyint(1) NOT NULL DEFAULT '0',
+    `yubikey_user` int(11) NOT NULL DEFAULT '0',
     `password_changed` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
     `notes` varchar(500)  DEFAULT NULL,
     `mobile` varchar(20)  DEFAULT NULL,
