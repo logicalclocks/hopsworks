@@ -20,16 +20,16 @@
 --
 
 DROP TABLE IF EXISTS `activity`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET @saved_cs_client = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `activity` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `activity` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
-  `performed_by` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `flag` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `activity_on` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`)
+`id` int(11) NOT NULL AUTO_INCREMENT,
+`activity` varchar(128) COLLATE utf8_unicode_ci NOT NULL,
+`performed_by` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+`created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+`flag` varchar(128) COLLATE utf8_unicode_ci DEFAULT NULL,
+`activity_on` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+PRIMARY KEY (`id`)
 ) ENGINE=ndbcluster AUTO_INCREMENT=1034 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -653,28 +653,12 @@ CONSTRAINT `FK_266_276` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DEL
 ) ENGINE=ndbcluster DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-----
--- Final view structure for view `activity_details`
---
 
-/*!50001 DROP VIEW IF EXISTS `activity_details`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8 */;
-/*!50001 SET character_set_results     = utf8 */;
-/*!50001 SET collation_connection      = utf8_general_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `activity_details` AS select `activity`.`id` AS `id`,`activity`.`performed_by` AS `performed_by_email`,concat(`users`.`fname`,' ',`users`.`lname`) AS `performed_by_name`,`activity`.`activity` AS `description`,`activity`.`activity_on` AS `studyname`,`activity`.`created` AS `created` from (`activity` join `users` on((`activity`.`performed_by` = `users`.`email`))) */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
+--                                                                                                                                                                                                           
+-- Final view structure for view `study_details`                                                                                                                                                             
+--                                                                                                                                                                                                           
 
---
--- Final view structure for view `study_details`
---
-
+/*!50001 DROP TABLE IF EXISTS `study_details`*/;
 /*!50001 DROP VIEW IF EXISTS `study_details`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
@@ -683,16 +667,17 @@ CONSTRAINT `FK_266_276` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DEL
 /*!50001 SET character_set_results     = utf8 */;
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`kthfs`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `study_details` AS select `study`.`name` AS `studyname`,`study`.`username` AS `email`,concat(`users`.`fname`,' ',`users`.`lname`) AS `creator` from (`study` join `users` on((`study`.`username` = `users`.`email`))) where `study`.`name` in (select `study_team`.`name` from `study_team`) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
 
---
--- Final view structure for view `users_groups`
---
+--                                                                                                                                                                                                           
+-- Final view structure for view `users_groups`                                                                                                                                                              
+--                                                                                                                                                                                                           
 
+/*!50001 DROP TABLE IF EXISTS `users_groups`*/;
 /*!50001 DROP VIEW IF EXISTS `users_groups`*/;
 /*!50001 SET @saved_cs_client          = @@character_set_client */;
 /*!50001 SET @saved_cs_results         = @@character_set_results */;
@@ -701,7 +686,7 @@ CONSTRAINT `FK_266_276` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DEL
 /*!50001 SET character_set_results     = utf8 */;
 /*!50001 SET collation_connection      = utf8_general_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50013 DEFINER=`kthfs`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `users_groups` AS select `u`.`username` AS `username`,`u`.`password` AS `password`,`u`.`secret` AS `secret`,`u`.`email` AS `email`,`g`.`group_name` AS `group_name` from ((`people_group` `ug` join `users` `u` on((`u`.`uid` = `ug`.`uid`))) join `bbc_group` `g` on((`g`.`gid` = `ug`.`gid`))) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
@@ -715,5 +700,3 @@ CONSTRAINT `FK_266_276` FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DEL
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2015-03-24 14:24:27
