@@ -21,8 +21,8 @@ public class Constants {
   public static final String CUNEIFORM_DEFAULT_INPUT_PATH = "Cuneiform/Input/";
 
   //Default configuration locations
-  public static final String DEFAULT_HADOOP_CONF_DIR = "/srv/hadoop/etc/hadoop/";
-  public static final String DEFAULT_YARN_CONF_DIR = "/srv/hadoop/etc/hadoop/";
+  public static final String DEFAULT_HADOOP_CONF_DIR = "/home/stig/projects/hops/hadoop-2.4.0/etc/hadoop/";
+  public static final String DEFAULT_YARN_CONF_DIR = "/home/stig/projects/hops/hadoop-2.4.0/etc/hadoop/";
 
   //Default configuration file names
   public static final String DEFAULT_YARN_CONFFILE_NAME = "yarn-site.xml";

@@ -16,7 +16,7 @@ public final class InodeView {
   
   public InodeView(Inode i, String path){
     this.name = i.getInodePK().getName();
-    this.dir = i.getDir();
+    this.dir = i.isDir();
     this.parent = false;
     this.path = path;
     this.modification = new Date(i.getModificationTime().longValue());

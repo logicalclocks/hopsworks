@@ -39,7 +39,7 @@ import se.kth.bbc.study.samples.Samplecollection;
     @NamedQuery(name = "TrackStudy.countStudyByOwner", query = "SELECT count(t.name) FROM TrackStudy t WHERE t.username = :username")})
 public class TrackStudy implements Serializable {
   @Column(name = "archived")
-  private Boolean archived;
+  private boolean archived;
   @OneToMany(mappedBy = "study")
   private Collection<Samplecollection> samplecollectionCollection;
   @OneToOne(cascade = CascadeType.ALL,

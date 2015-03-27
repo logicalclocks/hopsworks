@@ -47,9 +47,9 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @return
    */
   public List<Inode> findByParent(Inode parent) {
-    TypedQuery<Inode> query = em.createNamedQuery("Inode.findByParent",
+    TypedQuery<Inode> query = em.createNamedQuery("Inode.findByParentId",
             Inode.class);
-    query.setParameter("parent", parent);
+    query.setParameter("parentId", parent.getId());
     return query.getResultList();
   }
 
@@ -71,7 +71,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @return The parent, or null if no parent.
    */
   public Inode findParent(Inode i) {
-    int id = i.getId();
+    int id = i.getInodePK().getParentId();
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findById", Inode.class);
     q.setParameter("id", id);
     try {
@@ -155,7 +155,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
   public Inode findByParentAndName(Inode parent, String name) {
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findByPrimaryKey",
             Inode.class);
-    q.setParameter("inodePK", new InodePK(parent.getId(), name));
+    q.setParameter("inodePk", new InodePK(parent.getId(), name));
     try {
       return q.getSingleResult();
     } catch (NoResultException e) {
@@ -178,13 +178,12 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   public boolean isStudyRoot(Inode i) {
     Inode parent = findParent(i);
-    if (parent == null || !parent.getInodePK().getName().equals(
+    if (!parent.getInodePK().getName().equals(
             Constants.DIR_ROOT)) {
       return false;
     } else {
-      Inode grandParent = findParent(parent);
-      //A node is the study root if its parent has the name $DIR_ROOT and its grandparent is null.
-      return grandParent == null;
+      //A node is the study root if its parent has the name $DIR_ROOT and its grandparent is the root node
+      return parent.getInodePK().getParentId() == 1;
     }
   }
 
@@ -202,7 +201,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
     } else {
       List<NavigationPath> p = getConstituentsPath(findParent(i));
       NavigationPath a;
-      if (i.getDir()) {
+      if (i.isDir()) {
         a = new NavigationPath(i.getInodePK().getName(), p.get(p.size() - 1).
                 getPath() + i.getInodePK().getName() + "/");
       } else {
@@ -217,7 +216,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
   public String getPath(Inode i) {
     List<String> pathComponents = new ArrayList<>();
     Inode parent = i;
-    while (parent != null) {
+    while (parent.getId() != 1) {
       pathComponents.add(parent.getInodePK().getName());
       parent = findParent(i);
     }

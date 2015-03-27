@@ -13,6 +13,8 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.eclipse.persistence.annotations.Convert;
+import org.eclipse.persistence.annotations.Converter;
 
 /**
  *
@@ -61,9 +63,6 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "Inode.findBySymlink",
           query
           = "SELECT i FROM Inode i WHERE i.symlink = :symlink"),
-  @NamedQuery(name = "Inode.findByDir",
-          query
-          = "SELECT i FROM Inode i WHERE i.dir = :dir"),
   @NamedQuery(name = "Inode.findByQuotaEnabled",
           query
           = "SELECT i FROM Inode i WHERE i.quotaEnabled = :quotaEnabled"),
@@ -75,7 +74,10 @@ import javax.xml.bind.annotation.XmlRootElement;
           = "SELECT i FROM Inode i WHERE i.subtreeLocked = :subtreeLocked"),
   @NamedQuery(name = "Inode.findBySubtreeLockOwner",
           query
-          = "SELECT i FROM Inode i WHERE i.subtreeLockOwner = :subtreeLockOwner")})
+          = "SELECT i FROM Inode i WHERE i.subtreeLockOwner = :subtreeLockOwner"),
+  @NamedQuery(name = "Inode.findRootByName",
+          query
+          = "SELECT i FROM Inode i WHERE i.inodePK.parentId = 1 AND i.inodePK.name = :name")})
 public class Inode implements Serializable {
   private static final long serialVersionUID = 1L;
   @EmbeddedId
@@ -109,18 +111,20 @@ public class Inode implements Serializable {
   private String symlink;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "dir")
-  private boolean dir;
-  @Basic(optional = false)
-  @NotNull
   @Column(name = "quota_enabled")
-  private boolean quotaEnabled;
+  @Converter(name="byteConverter", converterClass=se.kth.bbc.study.fb.ByteConverter.class)
+  @Convert("byteConverter")
+  private Byte quotaEnabled;
   @Basic(optional = false)
   @NotNull
   @Column(name = "under_construction")
-  private boolean underConstruction;
+  @Converter(name="byteConverter", converterClass=se.kth.bbc.study.fb.ByteConverter.class)
+  @Convert("byteConverter")
+  private Byte underConstruction;
   @Column(name = "subtree_locked")
-  private Boolean subtreeLocked;
+  @Converter(name="byteConverter", converterClass=se.kth.bbc.study.fb.ByteConverter.class)
+  @Convert("byteConverter")
+  private Byte subtreeLocked;
   @Column(name = "subtree_lock_owner")
   private BigInteger subtreeLockOwner;
 
@@ -131,11 +135,10 @@ public class Inode implements Serializable {
     this.inodePK = inodePK;
   }
 
-  public Inode(InodePK inodePK, int id, boolean dir, boolean quotaEnabled,
-          boolean underConstruction) {
+  public Inode(InodePK inodePK, int id, byte quotaEnabled,
+          byte underConstruction) {
     this.inodePK = inodePK;
     this.id = id;
-    this.dir = dir;
     this.quotaEnabled = quotaEnabled;
     this.underConstruction = underConstruction;
   }
@@ -232,35 +235,27 @@ public class Inode implements Serializable {
     this.symlink = symlink;
   }
 
-  public boolean getDir() {
-    return dir;
-  }
-
-  public void setDir(boolean dir) {
-    this.dir = dir;
-  }
-
-  public boolean getQuotaEnabled() {
+  public byte getQuotaEnabled() {
     return quotaEnabled;
   }
 
-  public void setQuotaEnabled(boolean quotaEnabled) {
+  public void setQuotaEnabled(byte quotaEnabled) {
     this.quotaEnabled = quotaEnabled;
   }
 
-  public boolean getUnderConstruction() {
+  public byte getUnderConstruction() {
     return underConstruction;
   }
 
-  public void setUnderConstruction(boolean underConstruction) {
+  public void setUnderConstruction(byte underConstruction) {
     this.underConstruction = underConstruction;
   }
 
-  public Boolean getSubtreeLocked() {
+  public Byte getSubtreeLocked() {
     return subtreeLocked;
   }
 
-  public void setSubtreeLocked(Boolean subtreeLocked) {
+  public void setSubtreeLocked(Byte subtreeLocked) {
     this.subtreeLocked = subtreeLocked;
   }
 
@@ -296,6 +291,10 @@ public class Inode implements Serializable {
   @Override
   public String toString() {
     return "se.kth.bbc.study.fb.Inode[ inodePK=" + inodePK + " ]";
+  }
+  
+  public boolean isDir(){
+    return header.equals(BigInteger.ZERO);
   }
   
 }

@@ -82,7 +82,7 @@ public class InodesMB implements Serializable {
 
   public void cdDown(String name) {
     Inode kid = inodes.findByParentAndName(cwd, name);
-    if(kid != null && kid.getDir()){
+    if(kid != null && kid.isDir()){
       cwdParent = cwd;
       cwd = kid;
       cwdChildren = inodes.getChildren(cwd);

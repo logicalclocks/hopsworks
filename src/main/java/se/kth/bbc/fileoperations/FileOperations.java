@@ -199,7 +199,7 @@ public class FileOperations {
   public boolean isDir(String path){
     Inode i = inodes.getInodeAtPath(path);
     if(i!=null)
-      return i.getDir();
+      return i.isDir();
     else
       return false;
   }
