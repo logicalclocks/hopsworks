@@ -10,48 +10,59 @@ and open the template in the editor.
       xmlns:p="http://primefaces.org/ui"
       xmlns:f="http://java.sun.com/jsf/core"
       >
+    
+    <style>
+    
+    </style>
+  
     <body>
 
         <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
 
         <h:form id="privacy" enctype="multipart/form-data">
             <p:panelMenu>
-                <p:submenu   style="padding-bottom: 10px;" label="Consent and Ethical Approval">
+                <p:submenu   style="padding-bottom: 10px; border-color: white; border: 0px none;" label="Consent and Ethical Approval">
                     <p:menuitem value=""
-                                ajax="false" 
+                                ajax="false"
                                 icon="ui-icon-close">
-                        <p:panelGrid columns="4" >         
+                        
+                        <h:panelGrid columns="3" style="padding-top: 20px;">         
 
-                            <p:column>    
+                            <h:panelGroup style="padding-right:50px;">
                                 Consent Status: #{studyManagedBean.ethicalStatus}
-                            </p:column>
-
-                            <p:column>
+                            </h:panelGroup>
+                            
+                            
+                            <h:panelGroup style="padding-right:50px;">
                                 Retention Period: #{studyManagedBean.retentionPeriod}
-                            </p:column>
-
-                            <p:column>
-                                <p:calendar id="cal" value="#{studyManagedBean.retentionPeriod}"  showOn="button" >
+                            </h:panelGroup>
+                            
+                            
+                            
+                            <h:panelGroup style="padding-right:50px;">
+                                <p:calendar id="cal"
+                                            style="padding-right: 10px;"
+                                            value="#{studyManagedBean.retentionPeriod}" 
+                                            showOn="button" >
 
                                 </p:calendar>  
-                            </p:column>
-                            <p:column>
-                                <p:commandButton  value="Update Period"  
+                            
+                                <p:commandButton  
+                                                  value="Update Period"  
                                                   update="privacy"
                                                   action="#{studyManagedBean.updateRetentionPeriod()}"
                                                   rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-                            </p:column>
-
-                        </p:panelGrid>
-                
+                            </h:panelGroup>
+                   
+                        </h:panelGrid>
+                      
+                        <p:separator></p:separator>
+                      
                         <p:dataGrid 
                             value="#{studyManagedBean.allConsent}"
                             var="consent"
-                             >
-                            
-                            <f:facet name="header" >Consent and Ethical Approval </f:facet>
-   
-                            <p:panelGrid columns="1">
+                            >
+                            <h:panelGrid columns="1">
                                 <p:column>
                                     <h:commandLink  action="#{studyManagedBean.showConsent(consent.name)}" 
                                                         target="_blank"
@@ -71,13 +82,14 @@ and open the template in the editor.
                                 <p:column>
                                     <h:outputLabel value="#{consent.date}" />
                                 </p:column>
-                            </p:panelGrid>
+                            </h:panelGrid>
                         </p:dataGrid>
                         
                         
                         <h:panelGrid id= "consent_menu" columns="3" style="padding-top: 80px;">
+                            
                             <p:fileUpload 
-                                      value="#{studyManagedBean.file}" 
+                                value="#{studyManagedBean.file}" 
                                       label="Upload Consent Info" 
                                       mode="advanced"
                                       fileLimit="1" 
@@ -89,7 +101,7 @@ and open the template in the editor.
                             />
                         
                          
-                        <p:fileUpload value="#{studyManagedBean.file}" 
+                            <p:fileUpload value="#{studyManagedBean.file}" 
                                       label="Upload Ethical Approval"
                                       mode="advanced" 
                                       fileLimit="1" 
@@ -101,7 +113,7 @@ and open the template in the editor.
                                       />
                            
                         
-                        <p:fileUpload value="#{studyManagedBean.file}" 
+                            <p:fileUpload value="#{studyManagedBean.file}" 
                                       label="Upload Non-Consent Info"
                                       mode="advanced" 
                                       fileLimit="1" 
