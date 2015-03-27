@@ -92,7 +92,7 @@ public class CustomAuthentication implements Serializable {
             return logout();
         }
 
-        user = mgr.getUser(username);
+        user = mgr.getUserByEmail(username);
 
         // Add padding if custom realm is disabled
         if (this.otpCode == null || this.otpCode.isEmpty()) {
@@ -148,7 +148,7 @@ public class CustomAuthentication implements Serializable {
             int val = user.getFalseLogin();
             mgr.increaseLockNum(userid, val + 1);
             if (val > 5) {
-                mgr.deactivateUser(userid);
+                mgr.restrictAccount(userid,"",PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
                 try {
                     emailBean.sendEmail(user.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                             UserAccountsEmailMessages.accountBlockedMessage());
@@ -187,7 +187,7 @@ public class CustomAuthentication implements Serializable {
 
         }
 
-        user = mgr.getUser(username);
+        user = mgr.getUserByEmail(username);
 
         // Return if username is wrong
         if (user == null) {
@@ -243,7 +243,7 @@ public class CustomAuthentication implements Serializable {
             int val = user.getFalseLogin();
             mgr.increaseLockNum(userid, val + 1);
             if (val > 5) {
-                mgr.deactivateUser(userid);
+                mgr.restrictAccount(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
                 try {
                     emailBean.sendEmail(user.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                             UserAccountsEmailMessages.accountBlockedMessage());

@@ -9,6 +9,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.security.ua.model.Address;
+import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.ua.model.PeopleGroup;
 import se.kth.bbc.security.ua.model.PeopleGroupPK;
@@ -48,6 +49,7 @@ public class UserManager {
     /**
      * Register an address for new mobile users.
      *
+     * @param user
      * @return
      */
     public boolean registerAddress(User user) {
@@ -87,25 +89,24 @@ public class UserManager {
         return true;
     }
 
-    public boolean deactivateUser(int id) {
+    public boolean restrictAccount(int id, String note, int status) {
         User p = (User) em.find(User.class, id);
         if (p != null) {
-            p.setStatus(PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
+            p.setNotes(note);
+            p.setStatus(status);
             em.merge(p);
         }
         return true;
     }
 
-    public boolean closeUserAccount(int id, String note) {
+    
+    public boolean resetKey(int id) {
         User p = (User) em.find(User.class, id);
-        if (p != null) {
-            p.setStatus(PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
-            p.setNotes(note);
-            em.merge(p);
-        }
+        p.setValidationKey(SecurityUtils.getRandomString(64));
+        em.merge(p);
         return true;
     }
-        
+    
     public boolean resetPassword(User p, String pass) {
         p.setPassword(pass);
         p.setPasswordChanged(new Timestamp(new Date().getTime()));
@@ -152,6 +153,7 @@ public class UserManager {
     public boolean registerYubikey(User uid) {
         Yubikey yk = new Yubikey();
         yk.setUid(uid);
+        yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
         em.persist(yk);
         return true;
     }
@@ -162,7 +164,7 @@ public class UserManager {
      * @param username
      * @return
      */
-    public User getUser(String username) {
+    public User getUserByEmail(String username) {
         TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
         query.setParameter("email", username);
         List<User> list = query.getResultList();
@@ -174,9 +176,21 @@ public class UserManager {
         return list.get(0);
     }
 
+    public User getUserByUsernmae(String username) {
+        TypedQuery<User> query = em.createNamedQuery("User.findByUsername", User.class);
+        query.setParameter("username", username);
+        List<User> list = query.getResultList();
+
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+
+        return list.get(0);
+    }
+
     public boolean isUsernameTaken(String username) {
 
-        return (getUser(username) != null);
+        return (getUserByEmail(username) != null);
     }
 
     public boolean findYubikeyUsersByStatus(int status) {
@@ -194,9 +208,14 @@ public class UserManager {
     }
 
     public List<User> findAllUsers() {
-        //TypedQuery<User> query = em.createNamedQuery("User.findAll", User.class);
         List<User> query = em.createQuery(
-                "SELECT p FROM User p WHERE p.status !='" + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='" + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue() + "' AND p.status!='" + PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue() + "'")
+                "SELECT p FROM User p WHERE p.status !='"
+                + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()
+                + "' AND p.status!='" + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()
+                + "' AND p.status!='" + PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()
+                + "' AND p.status!='" + PeopleAccountStatus.SPAM_ACCOUNTS.getValue()
+                + "' AND p.status!='" + PeopleAccountStatus.ACCOUNT_VARIFICATION.getValue()
+                + "'")
                 .getResultList();
 
         return query;
@@ -277,15 +296,17 @@ public class UserManager {
 
         return true;
     }
-    
+
     /**
      * Check the value and if empty set as '-'.
+     *
      * @param var
-     * @return 
-     */    
-    public String checkDefaultValue(String var){
-        if(var!=null && !var.isEmpty())
+     * @return
+     */
+    public String checkDefaultValue(String var) {
+        if (var != null && !var.isEmpty()) {
             return var;
+        }
         return "-";
     }
 
@@ -308,9 +329,9 @@ public class UserManager {
      * @param yubikey
      * @return
      */
-    public User register(String fname, String lname, String email, String title, String org,
+    public User register(String fname, String lname, String email, String title,
             String tel, String orcid, int uid, String password, String otpSecret,
-            SecurityQuestion question, String answer, int status, short yubikey) {
+            SecurityQuestion question, String answer, int status, int yubikey, String validationKey) {
 
         // assigne a username
         String uname = USERNAME_PREFIX + uid;
@@ -322,13 +343,13 @@ public class UserManager {
         user.setEmail(email);
         user.setFname(fname);
         user.setLname(lname);
-        user.setHomeOrg(checkDefaultValue(org));
         user.setMobile(checkDefaultValue(tel));
         user.setUid(uid);
         user.setOrcid(checkDefaultValue(orcid));
         user.setTitle(checkDefaultValue(title));
         user.setActivated(new Timestamp(new Date().getTime()));
         user.setStatus(status);
+        user.setValidationKey(validationKey);
         /*
          * offline: -1
          * online:   1  
@@ -338,7 +359,6 @@ public class UserManager {
         user.setSecurityAnswer(answer);
         user.setPasswordChanged(new Timestamp(new Date().getTime()));
         user.setYubikeyUser(yubikey);
-
         em.persist(user);
         return user;
     }
@@ -391,15 +411,15 @@ public class UserManager {
             PeopleGroup p = (PeopleGroup) query.getSingleResult();
 
             Address a = u.getAddress();
-         
-                em.remove(a);
-                em.remove(p);
-                
-                if (u.getYubikeyUser() == 1) {
-                    em.remove(u.getYubikey());
-                }
-              
-                em.remove(u);
+
+            em.remove(a);
+            em.remove(p);
+
+            if (u.getYubikeyUser() == 1) {
+                em.remove(u.getYubikey());
+            }
+
+            em.remove(u);
             success = true;
         }
 
@@ -437,6 +457,27 @@ public class UserManager {
 
         return ul.get(1);
 
+    }
+
+    public boolean registerOrg(User uid, String org, String department) {
+
+        Organization organization = new Organization();
+        organization.setUid(uid);
+        organization.setOrgName(checkDefaultValue(org));
+        organization.setDepartment(checkDefaultValue(department));
+        organization.setContactEmail(checkDefaultValue(""));
+        organization.setContactPerson(checkDefaultValue(""));
+        organization.setWebsite(checkDefaultValue(""));
+        organization.setFax(checkDefaultValue(""));
+        organization.setPhone(checkDefaultValue(""));
+        em.persist(organization);
+        return true;
+
+    }
+
+    public boolean updateOrganization(Organization org) {
+        em.merge(org);
+        return true;
     }
 
 }

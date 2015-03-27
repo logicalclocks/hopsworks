@@ -8,11 +8,8 @@ package se.kth.bbc.security.ua;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
@@ -53,6 +50,8 @@ public class ResetPassword implements Serializable {
     private String answer;
     
     private String notes;
+    
+    private final int passwordLength = 6;
     
     @EJB
     private UserManager mgr;
@@ -135,7 +134,7 @@ public class ResetPassword implements Serializable {
 
     public String sendTmpPassword() {
 
-        people = mgr.getUser(this.username);
+        people = mgr.getUserByEmail(this.username);
 
         try {
 
@@ -147,14 +146,14 @@ public class ResetPassword implements Serializable {
                 int val = people.getFalseLogin();
                 mgr.increaseLockNum(people.getUid(), val + 1);
                 if (val > 5) {
-                    mgr.deactivateUser(people.getUid());
+                    mgr.restrictAccount(people.getUid(),"", PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
                     return ("welcome");
                 }
                 return "";
             }
 
             // generate a radndom password
-            String random_password = SecurityUtils.getRandomString();
+            String random_password = SecurityUtils.getRandomString(passwordLength);
 
             String mess = UserAccountsEmailMessages.buildPasswordResetMessage(random_password);
 
@@ -193,7 +192,7 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
-        people = mgr.getUser(req.getRemoteUser());
+        people = mgr.getUserByEmail(req.getRemoteUser());
 
         if (people == null) {
             FacesContext context = FacesContext.getCurrentInstance();
@@ -243,7 +242,7 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
-        people = mgr.getUser(req.getRemoteUser());
+        people = mgr.getUserByEmail(req.getRemoteUser());
 
         if (this.answer.isEmpty() || this.answer == null || this.current == null || this.current.isEmpty()) {
             MessagesController.addSecurityErrorMessage("No valid answer!");
@@ -296,7 +295,7 @@ public class ResetPassword implements Serializable {
      */
     public String findQuestion() {
 
-        people = mgr.getUser(this.username);
+        people = mgr.getUserByEmail(this.username);
         if (people == null) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
             return "";
@@ -321,7 +320,7 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
-        people = mgr.getUser(req.getRemoteUser());
+        people = mgr.getUserByEmail(req.getRemoteUser());
  
         try {
             
@@ -333,7 +332,7 @@ public class ResetPassword implements Serializable {
             if (SecurityUtils.converToSHA256(this.current).equals(people.getPassword())) {
                 
                 // close the account
-                mgr.closeUserAccount(people.getUid(), this.notes);
+                mgr.restrictAccount(people.getUid(), this.notes, PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
                 // send email    
                 String message = UserAccountsEmailMessages.buildSecResetMessage();
                 emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_DEACTIVATED, message);
@@ -360,7 +359,7 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
-        people = mgr.getUser(req.getRemoteUser());
+        people = mgr.getUserByEmail(req.getRemoteUser());
 
         if (people == null) {
             FacesContext context = FacesContext.getCurrentInstance();
@@ -421,7 +420,7 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
-        people = mgr.getUser(req.getRemoteUser());
+        people = mgr.getUserByEmail(req.getRemoteUser());
         session.invalidate();
         
         mgr.setOnline(people.getUid(), -1);

@@ -3,8 +3,11 @@ package se.kth.bbc.study;
 import se.kth.bbc.study.services.StudyServiceFacade;
 import se.kth.bbc.study.services.StudyServiceEnum;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -14,15 +17,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.IOUtils;
+import org.primefaces.event.FileUploadEvent;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.LazyDataModel;
+import org.primefaces.model.UploadedFile;
+import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.activity.ActivityDetailFacade;
@@ -34,8 +42,11 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.study.privacy.StudyPrivacyManager;
+import se.kth.bbc.study.privacy.model.Consent;
 
 /**
  *
@@ -63,7 +74,7 @@ public class StudyMB implements Serializable {
 
     @EJB
     private ActivityFacade activityFacade;
-    
+
     @EJB
     private ActivityDetailFacade activityDetailFacade;
 
@@ -72,9 +83,15 @@ public class StudyMB implements Serializable {
 
     @EJB
     private StudyServiceFacade studyServices;
-    
+
+    @EJB
+    private StudyPrivacyManager privacyManager;
+
     @ManagedProperty(value = "#{clientSessionState}")
     private ClientSessionState sessionState;
+
+    @EJB
+    private ActivityController activityController;
 
     private TrackStudy study;
     private List<User> usernames;
@@ -87,20 +104,61 @@ public class StudyMB implements Serializable {
     private String studyCreator;
     private int tabIndex;
     private String loginName;
-    
+
     private StudyServiceEnum[] selectedServices;
 
     private boolean deleteFilesOnRemove = true;
 
     private LazyActivityModel lazyModel = null;
 
+    private Date date;
+
+    private Date retentionPeriod;
+    private Consent activeConset;
+
+    private List<Consent> allConsent;
+
+    private UploadedFile file;
+
+    private String filePath;
+    private String ethicalStatus;
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public void setActiveConset(Consent activeConset) {
+        this.activeConset = activeConset;
+    }
+
     public StudyMB() {
     }
 
-  public void setSessionState(ClientSessionState sessionState) {
-    this.sessionState = sessionState;
-  }
+    public UploadedFile getFile() {
+        return file;
+    }
 
+    public void setFile(UploadedFile file) {
+        this.file = file;
+    }
+
+    public String getEthicalStatus() {
+
+        this.ethicalStatus = studyController.findByName(studyName).getEthicalStatus();
+        return this.ethicalStatus;
+    }
+
+    public void setEthicalStatus(String ethicalStatus) {
+        this.ethicalStatus = ethicalStatus;
+    }
+
+    public void setSessionState(ClientSessionState sessionState) {
+        this.sessionState = sessionState;
+    }
 
     public List<User> getUsersname() {
         return usernames;
@@ -198,7 +256,7 @@ public class StudyMB implements Serializable {
         themes = new ArrayList<>();
         int i = 0;
         for (User user : list) {
-            themes.add(new Theme(i, user.getFname()+ " "+user.getLname(), user.getEmail()));
+            themes.add(new Theme(i, user.getFname() + " " + user.getLname(), user.getEmail()));
             i++;
         }
 
@@ -260,7 +318,7 @@ public class StudyMB implements Serializable {
     }
 
     public boolean checkOwnerForSamples() {
-      return getUsername().equals(getCreator());
+        return getUsername().equals(getCreator());
     }
 
     public String checkCurrentUser(String email) {
@@ -314,7 +372,7 @@ public class StudyMB implements Serializable {
         } else {
             return studyController.QueryForNonRegistered(getUsername()).size();
         }
-    }    
+    }
 
     /**
      * @return
@@ -326,22 +384,21 @@ public class StudyMB implements Serializable {
         this.studyCreator = params.get("username");
         return fetchStudy(studyname);
     }
-    
-    public String fetchStudy(String studyname){
-      setStudyName(studyname);
-      sessionState.setActiveStudyByName(studyName);
-      return checkAccess();
+
+    public String fetchStudy(String studyname) {
+        setStudyName(studyname);
+        sessionState.setActiveStudyByName(studyName);
+        return checkAccess();
     }
-    
-    
+
     public String checkAccess() {
         boolean res = studyTeamController.findUserForActiveStudy(studyName,
-        getUsername());
+                getUsername());
         boolean rec = userGroupsController.checkForCurrentSession(getUsername());
         if (!res) {
             if (!rec) {
                 userGroupsController.persistUserGroups(new UsersGroups(
-                    new UsersGroupsPK(getUsername(), "GUEST")));
+                        new UsersGroupsPK(getUsername(), "GUEST")));
                 logger.log(Level.FINE, "Guest role added for: {0}.", getUsername());
                 return "studyPage";
             }
@@ -390,19 +447,19 @@ public class StudyMB implements Serializable {
     }
 
     public void onTabChange(TabChangeEvent event) {
-      switch (event.getTab().getTitle()) {
-        case "All":
-          setTabIndex(0);
-          break;
-        case "Personal":
-          setTabIndex(1);
-          break;
-        case "Joined":
-          setTabIndex(2);
-          break;
-        default:
-          break;
-      }
+        switch (event.getTab().getTitle()) {
+            case "All":
+                setTabIndex(0);
+                break;
+            case "Personal":
+                setTabIndex(1);
+                break;
+            case "Joined":
+                setTabIndex(2);
+                break;
+            default:
+                break;
+        }
     }
 
     public boolean isCurrentOwner() {
@@ -569,25 +626,173 @@ public class StudyMB implements Serializable {
         } else {
             return t.getUsername().equalsIgnoreCase(email);
         }
-    }    
-    
-  public StudyServiceEnum[] getSelectedServices() {
-    List<StudyServiceEnum> services = studyServices.findEnabledServicesForStudy(studyName);
-    StudyServiceEnum[] reArr = new StudyServiceEnum[services.size()];
-    return services.toArray(reArr);
-  }
-  
-  public boolean shouldDrawTab(String service){    
-    return studyServices.findEnabledServicesForStudy(studyName).contains(StudyServiceEnum.valueOf(service));
-  }
-  
-  public void setSelectedServices(StudyServiceEnum[] selectedServices){
-    this.selectedServices = selectedServices;
-  }
-  
-  public String updateServices(){
-    studyServices.persistServicesForStudy(studyName, selectedServices);
-    return "studyPage";
-  } 
+    }
+
+    public StudyServiceEnum[] getSelectedServices() {
+        List<StudyServiceEnum> services = studyServices.findEnabledServicesForStudy(studyName);
+        StudyServiceEnum[] reArr = new StudyServiceEnum[services.size()];
+        return services.toArray(reArr);
+    }
+
+    public boolean shouldDrawTab(String service) {
+        return studyServices.findEnabledServicesForStudy(studyName).contains(StudyServiceEnum.valueOf(service));
+    }
+
+    public void setSelectedServices(StudyServiceEnum[] selectedServices) {
+        this.selectedServices = selectedServices;
+    }
+
+    public String updateServices() {
+        studyServices.persistServicesForStudy(studyName, selectedServices);
+        return "studyPage";
+    }
+
+    public void updateRetentionPeriod() {
+        if (studyController.updateRetentionPeriod(studyName, this.retentionPeriod)) {
+
+            MessagesController.addInfoMessage("Success: Updated retention period.");
+
+        } else {
+
+            MessagesController.addErrorMessage("Error: Update retention period failed.");
+        }
+    }
+
+    public Date getDate() {
+        return this.date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public Date getRetentionPeriod() {
+        this.retentionPeriod = studyController.getRetentionPeriod(studyName);
+        return this.retentionPeriod;
+    }
+
+    public void setRetentionPeriod(Date retentionPeriod) {
+        this.retentionPeriod = retentionPeriod;
+    }
+
+    public void uploadConsnet(FileUploadEvent event) {
+        Consent consent = new Consent();
+        consent.setType("CONSENT");
+        try {
+            consent.setConsentForm(IOUtils.toByteArray(event.getFile().getInputstream()));
+        } catch (IOException ex) {
+            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        consent.setDate(new Date());
+        consent.setStudyName(studyName);
+        consent.setStatus("PENDING");
+        consent.setName(event.getFile().getFileName());
+
+        try {
+            if (privacyManager.getConsentByName(consent.getName()) != null) {
+                MessagesController.addErrorMessage("Error", "Select another file name that does not exist.");
+                return;
+            }
+        } catch (ParseException ex) {
+            MessagesController.addErrorMessage("Error", "Something went wrong!");
+            return;
+        }
+        if (privacyManager.upload(consent)) {
+            MessagesController.addInfoMessage("Success", event.getFile().getFileName() + " file uploaded successfully.");
+
+        } else {
+            MessagesController.addErrorMessage("Error", "Something went wrong!");
+
+        }
+    }
+
+    public void uploadEthicalApproval(FileUploadEvent event) {
+        Consent consent = new Consent();
+        consent.setType("EAPPROVAL");
+        try {
+            consent.setConsentForm(IOUtils.toByteArray(event.getFile().getInputstream()));
+        } catch (IOException ex) {
+            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        consent.setDate(new Date());
+        consent.setStudyName(studyName);
+        consent.setStatus("PENDING");
+        consent.setName(event.getFile().getFileName());
+
+        try {
+            if (privacyManager.getConsentByName(consent.getName()) != null) {
+                MessagesController.addErrorMessage("Error", "Select another file name that does not exist.");
+                return;
+            }
+        } catch (ParseException ex) {
+            MessagesController.addErrorMessage("Error", "Something went wrong!");
+            return;
+        }
+        if (privacyManager.upload(consent)) {
+            MessagesController.addInfoMessage("Success", event.getFile().getFileName() + " file uploaded successfully.");
+
+        } else {
+            MessagesController.addErrorMessage("Error", "Something went wrong!");
+
+        }
+    }
+
+    public void uploadEthicaNonConsent(FileUploadEvent event) {
+        Consent consent = new Consent();
+        consent.setType("NONCONSENT");
+        try {
+            consent.setConsentForm(IOUtils.toByteArray(event.getFile().getInputstream()));
+        } catch (IOException ex) {
+            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        consent.setDate(new Date());
+        consent.setStudyName(studyName);
+        consent.setStatus("PENDING");
+        consent.setName(event.getFile().getFileName());
+
+        try {
+            if (privacyManager.getConsentByName(consent.getName()) != null) {
+                MessagesController.addErrorMessage("Error", "Select another file name that does not exist.");
+                return;
+            }
+        } catch (ParseException ex) {
+            MessagesController.addErrorMessage("Error", "Something went wrong!");
+            return;
+        }
+        if (privacyManager.upload(consent)) {
+            MessagesController.addInfoMessage("Success", event.getFile().getFileName() + " file uploaded successfully.");
+
+        } else {
+            MessagesController.addErrorMessage("Error", "Something went wrong!");
+
+        }
+    }
+
+    public Consent getActiveConent() {
+        this.activeConset = privacyManager.getActiveConsent(studyName);
+        return this.activeConset;
+    }
+
+    public List<Consent> getAllConsent() {
+
+        this.allConsent = privacyManager.getAllConsets(studyName);
+        return this.allConsent;
+    }
+
+    public List<ActivityDetail> getAllActivities(String studyName) {
+        List<ActivityDetail> ad = activityController.activityDetailOnStudy(studyName);
+        return ad;
+    }
+
+    public void showConsent(String consName) {
+
+        try {
+            Consent consent = privacyManager.getConsentByName(consName);
+            privacyManager.downloadPDF(consent);
+        } catch (ParseException | IOException ex) {
+            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
 
 }

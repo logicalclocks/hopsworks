@@ -1,14 +1,19 @@
 package se.kth.bbc.study;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.activity.ActivityController;
+import se.kth.bbc.activity.ActivityDetail;
+import se.kth.bbc.study.privacy.model.Consent;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -28,6 +33,15 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
         return em;
     }
         
+        @EJB
+    private StudyTeamFacade stc;
+
+    private List<ActivityDetail> ad;
+        
+       @EJB
+    private ActivityController activityController;
+
+       
     public StudyFacade() {
       super(TrackStudy.class);
     }
@@ -180,4 +194,22 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
         return study != null;
     }
 
+    public boolean updateRetentionPeriod(String name, Date date){
+    
+        TrackStudy study = em.find(TrackStudy.class, name);
+        study.setRetentionPeriod(date);
+        if(study!= null) {
+            em.merge(study);
+            return true;
+        }
+        return false;
+    }
+    
+    public Date getRetentionPeriod(String name){
+        TrackStudy study = em.find(TrackStudy.class, name);
+        if (study!=null)
+            return study.getRetentionPeriod();
+        return null;
+    }
+   
 }

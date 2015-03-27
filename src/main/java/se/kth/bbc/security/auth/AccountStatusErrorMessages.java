@@ -39,7 +39,7 @@ public class AccountStatusErrorMessages {
     
     public final static String INCCORCT_PASSWORD ="The password is incorrect.";
     
-    public final static String INCCORCT_DEACTIVATION_LENGTH ="The message should have a lengths between 5 and 500 characters.";
+    public final static String INCCORCT_DEACTIVATION_LENGTH ="The message should have a length between 5 and 500 characters.";
 
     public final static String INCCORCT_TMP_PIN ="The temporary code was wrong.";
 
