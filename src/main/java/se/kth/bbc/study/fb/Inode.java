@@ -72,7 +72,7 @@ public class Inode implements Serializable {
   private Date modified;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "isDir")
+  @Column(name = "is_dir")
   private boolean dir;
   @Column(name = "size")
   private Integer size;

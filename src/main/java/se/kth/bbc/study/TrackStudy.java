@@ -34,7 +34,7 @@ import se.kth.bbc.study.samples.Samplecollection;
     @NamedQuery(name = "TrackStudy.findAll", query = "SELECT t FROM TrackStudy t"),
     @NamedQuery(name = "TrackStudy.findByName", query = "SELECT t FROM TrackStudy t WHERE t.name = :name"),
     @NamedQuery(name = "TrackStudy.findByUsername", query = "SELECT t FROM TrackStudy t WHERE t.username = :username"),
-    @NamedQuery(name = "TrackStudy.findByTimestamp", query = "SELECT t FROM TrackStudy t WHERE t.timestamp = :timestamp"),
+    @NamedQuery(name = "TrackStudy.findByCreated", query = "SELECT t FROM TrackStudy t WHERE t.created = :created"),
     @NamedQuery(name = "TrackStudy.findByEthicalStatus", query = "SELECT t FROM TrackStudy t WHERE t.ethicalStatus = :ethicalStatus"),
     @NamedQuery(name = "TrackStudy.findByRetentionPeriod", query = "SELECT t FROM TrackStudy t WHERE t.retentionPeriod = :retentionPeriod"),
     @NamedQuery(name = "TrackStudy.findOwner", query = "SELECT t.username FROM TrackStudy t WHERE t.name = :name"),
@@ -62,17 +62,22 @@ public class TrackStudy implements Serializable {
     private Date retentionPeriod;
     @Basic(optional = false)
     @NotNull
-    @Column(name = "timestamp")
+    @Column(name = "created")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date timestamp;
+    private Date created;
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
+    }
     @NotNull
     @Size(min = 1, max = 30)
     @Column(name = "ethical_satus")
     private String ethicalStatus;
    
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "trackStudy")
-    private Collection<StudyGroups> studyGroupsCollection;
-
     public TrackStudy() {
     }
 
@@ -83,7 +88,7 @@ public class TrackStudy implements Serializable {
     public TrackStudy(String name, String username, Date timestamp) {
         this.name = name;
         this.username = username;
-        this.timestamp = timestamp;
+        this.created = timestamp;
     }
 
     
@@ -109,14 +114,6 @@ public class TrackStudy implements Serializable {
     public void setUsername(String username) {
         this.username = username;
     }
-
-    public Date getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
-    }
     
     public Date getRetentionPeriod() {
         return retentionPeriod;
@@ -124,17 +121,6 @@ public class TrackStudy implements Serializable {
 
     public void setRetentionPeriod(Date retentionPeriod) {
         this.retentionPeriod = retentionPeriod;
-    }
-
-    
-    @XmlTransient
-    @JsonIgnore
-    public Collection<StudyGroups> getStudyGroupsCollection() {
-        return studyGroupsCollection;
-    }
-
-    public void setStudyGroupsCollection(Collection<StudyGroups> studyGroupsCollection) {
-        this.studyGroupsCollection = studyGroupsCollection;
     }
 
     @Override

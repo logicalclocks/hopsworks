@@ -11,7 +11,6 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.mail.MessagingException;
-import javax.security.auth.login.AccountException;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
@@ -48,6 +47,8 @@ public class RecoverySelector implements Serializable {
     private String tmpCode;
     private String passwd;
 
+    private final int passwordLength =6;
+          
     public String getQrUrl() {
         return qrUrl;
     }
@@ -115,7 +116,7 @@ public class RecoverySelector implements Serializable {
 
     public String sendQrCode() {
 
-        people = um.getUser(this.uname);
+        people = um.getUserByEmail(this.uname);
 
         if (people == null) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
@@ -123,12 +124,12 @@ public class RecoverySelector implements Serializable {
         }
 
         // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
@@ -141,8 +142,9 @@ public class RecoverySelector implements Serializable {
         try {
 
             if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
-
-                String random = SecurityUtils.getRandomString();
+                
+                // generate a randome secret of legth 6
+                String random = SecurityUtils.getRandomString(passwordLength);
                 um.updateSecret(people.getUid(), random);
                 String message = UserAccountsEmailMessages.buildTempResetMessage(random);
                 email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
@@ -162,7 +164,7 @@ public class RecoverySelector implements Serializable {
 
     public String validateTmpCode() {
 
-        people = um.getUser(this.uname);
+        people = um.getUserByEmail(this.uname);
 
         if (people == null) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
@@ -170,12 +172,12 @@ public class RecoverySelector implements Serializable {
         }
 
         // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
@@ -197,7 +199,7 @@ public class RecoverySelector implements Serializable {
             int val = people.getFalseLogin();
             um.increaseLockNum(people.getUid(), val + 1);
             if (val > 5) {
-                um.deactivateUser(people.getUid());
+                um.restrictAccount(people.getUid(),"",PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
                 try {
                     email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
                 } catch (MessagingException ex1) {
@@ -214,7 +216,7 @@ public class RecoverySelector implements Serializable {
 
     public String sendYubiReq() {
 
-        people = um.getUser(this.uname);
+        people = um.getUserByEmail(this.uname);
 
         if (people == null) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
@@ -222,7 +224,7 @@ public class RecoverySelector implements Serializable {
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
 
             return "";
@@ -236,17 +238,18 @@ public class RecoverySelector implements Serializable {
         try {
             if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
 
-                String message = UserAccountsEmailMessages.buildYubikeyRequestMessage();
-                email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT, message);
-                people.setStatus(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
+                String message = UserAccountsEmailMessages.buildYubikeyResetMessage();
+                people.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
+                people.getYubikey().setStatus(PeopleAccountStatus.YUBIKEY_LOST.getValue());
                 um.updatePeople(people);
+                email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT, message);
                 return "yubico";
             } else {
 
                 int val = people.getFalseLogin();
                 um.increaseLockNum(people.getUid(), val + 1);
                 if (val > 5) {
-                    um.deactivateUser(people.getUid());
+                    um.restrictAccount(people.getUid(),"",PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
                     try {
                         email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
                     } catch (MessagingException ex1) {

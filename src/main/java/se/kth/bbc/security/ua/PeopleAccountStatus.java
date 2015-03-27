@@ -11,7 +11,7 @@ package se.kth.bbc.security.ua;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 
-public enum PeoplAccountStatus{
+public enum PeopleAccountStatus{
     
     // Status of new Yubikey users requests
     YUBIKEY_ACCOUNT_INACTIVE(1),
@@ -39,11 +39,22 @@ public enum PeoplAccountStatus{
     
     // Users that are no longer granted to access the platform.
     // Users with this state, can not login, change password even as guest users
-    ACCOUNT_DEACTIVATED(8);
+    ACCOUNT_DEACTIVATED(8),
+    
+    // For new account requestes where users should validate their account request
+    ACCOUNT_VARIFICATION(9),
+    
+    // To mark an account as spam
+    SPAM_ACCOUNTS(10),
+    
+    YUBIKEY_USER(11),
+    
+    MOBILE_USER(12);
+    
     
     private final int value;
 
-    private PeoplAccountStatus(int value) {
+    private PeopleAccountStatus(int value) {
         this.value = value;
     }
 

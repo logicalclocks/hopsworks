@@ -10,7 +10,7 @@ package se.kth.bbc.security.ua;
  * 
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
-public enum SecurityQuestions {
+public enum SecurityQuestion {
     
     HISTORY("Who is your favorite historical figure?"),
     TEACHER("What is the name of your favorite teacher?"),
@@ -19,7 +19,7 @@ public enum SecurityQuestions {
 
     private final String value;
 
-    private SecurityQuestions(String value) {
+    private SecurityQuestion(String value) {
         this.value = value;
     }
 
@@ -27,9 +27,9 @@ public enum SecurityQuestions {
         return value;
     }
     
-    public static SecurityQuestions getQuestion(String text) {
+    public static SecurityQuestion getQuestion(String text) {
     if (text != null) {
-      for (SecurityQuestions b : SecurityQuestions.values()) {
+      for (SecurityQuestion b : SecurityQuestion.values()) {
         if (text.equalsIgnoreCase(b.value)) {
           return b;
         }
@@ -37,4 +37,9 @@ public enum SecurityQuestions {
     }
     return null;
   }
+    
+    @Override
+    public String toString(){
+      return value;
+    }
 }

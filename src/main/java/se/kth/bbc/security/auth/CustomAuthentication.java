@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.EmailBean;
-import se.kth.bbc.security.ua.PeoplAccountStatus;
+import se.kth.bbc.security.ua.PeopleAccountStatus;
 import se.kth.bbc.security.ua.UserAccountsEmailMessages;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
@@ -92,7 +92,7 @@ public class CustomAuthentication implements Serializable {
             return logout();
         }
 
-        user = mgr.getUser(username);
+        user = mgr.getUserByEmail(username);
 
         // Add padding if custom realm is disabled
         if (this.otpCode == null || this.otpCode.isEmpty()) {
@@ -112,20 +112,20 @@ public class CustomAuthentication implements Serializable {
 
         }
         // Return if user not activated
-        if (user.getStatus() == PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()) {
+        if (user.getStatus() == PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()) {
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.INACTIVE_ACCOUNT);
             return ("");
         }
 
         // Return if used is bloked
-        if (user.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (user.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             // Inform the use about the blocked account
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return ("");
         }
 
         // Return if used is bloked
-        if (user.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (user.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             // Inform the use about the blocked account
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return ("");
@@ -148,7 +148,7 @@ public class CustomAuthentication implements Serializable {
             int val = user.getFalseLogin();
             mgr.increaseLockNum(userid, val + 1);
             if (val > 5) {
-                mgr.deactivateUser(userid);
+                mgr.restrictAccount(userid,"",PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
                 try {
                     emailBean.sendEmail(user.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                             UserAccountsEmailMessages.accountBlockedMessage());
@@ -164,7 +164,7 @@ public class CustomAuthentication implements Serializable {
         }
 
         // Reset the password after first login
-        if (user.getStatus() == PeoplAccountStatus.ACCOUNT_PENDING.getValue()) {
+        if (user.getStatus() == PeopleAccountStatus.ACCOUNT_PENDING.getValue()) {
             return ("reset");
         }
 
@@ -187,7 +187,7 @@ public class CustomAuthentication implements Serializable {
 
         }
 
-        user = mgr.getUser(username);
+        user = mgr.getUserByEmail(username);
 
         // Return if username is wrong
         if (user == null) {
@@ -202,20 +202,20 @@ public class CustomAuthentication implements Serializable {
         }
 
         // Return if user not activated
-        if (user.getStatus() == PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()) {
+        if (user.getStatus() == PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()) {
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.INACTIVE_ACCOUNT);
             return ("");
         }
 
         // Return if used is bloked
-        if (user.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (user.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             // Inform the use about the blocked account
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return ("");
         }
 
         // Return if used is bloked
-        if (user.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (user.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             // Inform the use about the blocked account
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return ("");
@@ -243,7 +243,7 @@ public class CustomAuthentication implements Serializable {
             int val = user.getFalseLogin();
             mgr.increaseLockNum(userid, val + 1);
             if (val > 5) {
-                mgr.deactivateUser(userid);
+                mgr.restrictAccount(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
                 try {
                     emailBean.sendEmail(user.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                             UserAccountsEmailMessages.accountBlockedMessage());
@@ -259,7 +259,7 @@ public class CustomAuthentication implements Serializable {
         }
 
         // Reset the password after first login
-        if (user.getStatus() == PeoplAccountStatus.ACCOUNT_PENDING.getValue()) {
+        if (user.getStatus() == PeopleAccountStatus.ACCOUNT_PENDING.getValue()) {
             return ("reset");
         }
 

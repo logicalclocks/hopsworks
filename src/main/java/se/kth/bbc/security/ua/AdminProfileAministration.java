@@ -108,7 +108,7 @@ public class AdminProfileAministration implements Serializable {
     }
 
     public String getChangedStatus(User p) {
-        return PeoplAccountStatus.values()[userManager.findByEmail(p.getEmail()).getStatus() - 1].name();
+        return PeopleAccountStatus.values()[userManager.findByEmail(p.getEmail()).getStatus() - 1].name();
     }
 
     public User getUser() {
@@ -157,7 +157,7 @@ public class AdminProfileAministration implements Serializable {
         List<String> list = userManager.findGroups(editingUser.getUid());
         List<String> tmp = new ArrayList<>();
 
-        for (BBCGroups b : BBCGroups.values()) {
+        for (BBCGroup b : BBCGroup.values()) {
 
             if (!list.contains(b.name())) {
                 tmp.add(b.name());
@@ -168,8 +168,8 @@ public class AdminProfileAministration implements Serializable {
 
     public String getEditStatus() {
 
-        int status = userManager.getUser(this.editingUser.getEmail()).getStatus();
-        this.editStatus = PeoplAccountStatus.values()[status - 1].name();
+        int status = userManager.getUserByEmail(this.editingUser.getEmail()).getStatus();
+        this.editStatus = PeopleAccountStatus.values()[status - 1].name();
         return this.editStatus;
     }
 
@@ -179,7 +179,7 @@ public class AdminProfileAministration implements Serializable {
         groups = new ArrayList<>();
         status = new ArrayList<>();
 
-        for (BBCGroups value : BBCGroups.values()) {
+        for (BBCGroup value : BBCGroup.values()) {
             groups.add(value.name());
         }
 
@@ -196,13 +196,13 @@ public class AdminProfileAministration implements Serializable {
 
         status = new ArrayList<>();
 
-        for (PeoplAccountStatus p : PeoplAccountStatus.values()) {
+        for (PeopleAccountStatus p : PeopleAccountStatus.values()) {
             status.add(p.name());
         }
 
         // Remove the inactive users
-        status.remove(PeoplAccountStatus.MOBILE_ACCOUNT_INACTIVE.name());
-        status.remove(PeoplAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.name());
+        status.remove(PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.name());
+        status.remove(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.name());
 
         return status;
     }
@@ -254,8 +254,8 @@ public class AdminProfileAministration implements Serializable {
     public void updateStatusByAdmin() {
         // Update status
         if (!"#".equals(selectedStatus)) {
-            editingUser.setStatus(PeoplAccountStatus.valueOf(selectedStatus).getValue());
-            userManager.updateStatus(editingUser, PeoplAccountStatus.valueOf(selectedStatus).getValue());
+            editingUser.setStatus(PeopleAccountStatus.valueOf(selectedStatus).getValue());
+            userManager.updateStatus(editingUser, PeopleAccountStatus.valueOf(selectedStatus).getValue());
             MessagesController.addInfoMessage("Success", "Status updated successfully.");
 
         } else {
@@ -269,7 +269,7 @@ public class AdminProfileAministration implements Serializable {
 
         // Register a new group
         if (!"#".equals(newGroup)) {
-            userManager.registerGroup(editingUser, BBCGroups.valueOf(newGroup).getValue());
+            userManager.registerGroup(editingUser, BBCGroup.valueOf(newGroup).getValue());
             MessagesController.addInfoMessage("Success", "Role updated successfully.");
             
         } else {
@@ -283,10 +283,10 @@ public class AdminProfileAministration implements Serializable {
 
         // Remove a group
         if (!"#".equals(selectedGroup)) {
-            if (selectedGroup.equals(BBCGroups.BBC_GUEST.toString())) {
-                MessagesController.addErrorMessage("Error", BBCGroups.BBC_GUEST.toString() + " can not be removed.");
+            if (selectedGroup.equals(BBCGroup.BBC_GUEST.toString())) {
+                MessagesController.addErrorMessage("Error", BBCGroup.BBC_GUEST.toString() + " can not be removed.");
             } else {
-                userManager.removeGroup(editingUser, BBCGroups.valueOf(selectedGroup).getValue());
+                userManager.removeGroup(editingUser, BBCGroup.valueOf(selectedGroup).getValue());
                 MessagesController.addInfoMessage("Success", "User updated successfully.");
             }
         }

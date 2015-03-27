@@ -59,7 +59,7 @@ public class UserActivity implements Serializable {
     private String performedBy;
     @Basic(optional = false)
     @NotNull
-    @Column(name = "timestamp")
+    @Column(name = "created")
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
 

@@ -9,7 +9,7 @@ package se.kth.bbc.security.ua;
  *
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
-public enum BBCGroups {
+public enum BBCGroup {
     
     BBC_ADMIN(1001),
     BBC_RESEARCHER(1002),
@@ -20,7 +20,7 @@ public enum BBCGroups {
     
     private final int value;
 
-    private BBCGroups(int value) {
+    private BBCGroup(int value) {
         this.value = value;
     }
 

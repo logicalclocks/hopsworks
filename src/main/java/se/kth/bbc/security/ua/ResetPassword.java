@@ -8,11 +8,8 @@ package se.kth.bbc.security.ua;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
@@ -47,13 +44,14 @@ public class ResetPassword implements Serializable {
     private String passwd1;
     private String passwd2;
     private String current;
-    private String question;
+    private SecurityQuestion question;
     private User people;
-    private List<String> questions;
 
     private String answer;
     
     private String notes;
+    
+    private final int passwordLength = 6;
     
     @EJB
     private UserManager mgr;
@@ -73,19 +71,15 @@ public class ResetPassword implements Serializable {
     }
 
     
-    public List<String> getQuestions() {
-        return questions;
-    }
-
-    public void setQuestions(List<String> questions) {
-        this.questions = questions;
+    public SecurityQuestion[] getQuestions() {
+        return SecurityQuestion.values();
     }
     
-    public String getQuestion() {
+    public SecurityQuestion getQuestion() {
         return question;
     }
 
-    public void setQuestion(String question) {
+    public void setQuestion(SecurityQuestion question) {
         this.question = question;
     }
 
@@ -138,19 +132,9 @@ public class ResetPassword implements Serializable {
         this.passwd2 = passwd2;
     }
 
-    @PostConstruct
-    public void initGroups() {
-
-        questions = new ArrayList<>();
-        for (SecurityQuestions value : SecurityQuestions.values()) {
-            questions.add(value.getValue());
-        }
-
-    }
-
     public String sendTmpPassword() {
 
-        people = mgr.getUser(this.username);
+        people = mgr.getUserByEmail(this.username);
 
         try {
 
@@ -162,20 +146,20 @@ public class ResetPassword implements Serializable {
                 int val = people.getFalseLogin();
                 mgr.increaseLockNum(people.getUid(), val + 1);
                 if (val > 5) {
-                    mgr.deactivateUser(people.getUid());
+                    mgr.restrictAccount(people.getUid(),"", PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
                     return ("welcome");
                 }
                 return "";
             }
 
             // generate a radndom password
-            String random_password = SecurityUtils.getRandomString();
+            String random_password = SecurityUtils.getRandomString(passwordLength);
 
             String mess = UserAccountsEmailMessages.buildPasswordResetMessage(random_password);
 
             userTransaction.begin();
             // make the account pending until it will be reset by user upon first login
-            mgr.updateStatus(people, PeoplAccountStatus.ACCOUNT_PENDING.getValue());
+            mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
 
             // reset the old password with a new one
             mgr.resetPassword(people, SecurityUtils.converToSHA256(random_password));
@@ -208,7 +192,7 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
-        people = mgr.getUser(req.getRemoteUser());
+        people = mgr.getUserByEmail(req.getRemoteUser());
 
         if (people == null) {
             FacesContext context = FacesContext.getCurrentInstance();
@@ -217,7 +201,7 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             MessagesController.addSecurityErrorMessage("Inactive Account");
             return "";
         }
@@ -227,7 +211,7 @@ public class ResetPassword implements Serializable {
             // Reset the old password with a new one
             mgr.resetPassword(people, SecurityUtils.converToSHA256(passwd1));
 
-            mgr.updateStatus(people, PeoplAccountStatus.ACCOUNT_ACTIVE.getValue());
+            mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
 
             // Send email    
             String message = UserAccountsEmailMessages.buildResetMessage();
@@ -258,7 +242,7 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
-        people = mgr.getUser(req.getRemoteUser());
+        people = mgr.getUserByEmail(req.getRemoteUser());
 
         if (this.answer.isEmpty() || this.answer == null || this.current == null || this.current.isEmpty()) {
             MessagesController.addSecurityErrorMessage("No valid answer!");
@@ -273,12 +257,12 @@ public class ResetPassword implements Serializable {
         }
 
         // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
@@ -287,7 +271,7 @@ public class ResetPassword implements Serializable {
             if (SecurityUtils.converToSHA256(this.current).equals(people.getPassword())) {
 
                 // update the security question
-                mgr.resetSecQuestion(people.getUid(), SecurityQuestions.getQuestion(question).name(), SecurityUtils.converToSHA256(this.answer));
+                mgr.resetSecQuestion(people.getUid(), question, SecurityUtils.converToSHA256(this.answer));
 
                 // send email    
                 String message = UserAccountsEmailMessages.buildSecResetMessage();
@@ -311,19 +295,18 @@ public class ResetPassword implements Serializable {
      */
     public String findQuestion() {
 
-        people = mgr.getUser(this.username);
+        people = mgr.getUserByEmail(this.username);
         if (people == null) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
 
-        String quest = people.getSecurityQuestion();
-        this.question = SecurityQuestions.valueOf(quest).getValue();
+        this.question = people.getSecurityQuestion();
 
         return ("reset_password");
     }
@@ -337,7 +320,7 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
-        people = mgr.getUser(req.getRemoteUser());
+        people = mgr.getUserByEmail(req.getRemoteUser());
  
         try {
             
@@ -349,7 +332,7 @@ public class ResetPassword implements Serializable {
             if (SecurityUtils.converToSHA256(this.current).equals(people.getPassword())) {
                 
                 // close the account
-                mgr.closeUserAccount(people.getUid(), this.notes);
+                mgr.restrictAccount(people.getUid(), this.notes, PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
                 // send email    
                 String message = UserAccountsEmailMessages.buildSecResetMessage();
                 emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_DEACTIVATED, message);
@@ -376,7 +359,7 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
-        people = mgr.getUser(req.getRemoteUser());
+        people = mgr.getUserByEmail(req.getRemoteUser());
 
         if (people == null) {
             FacesContext context = FacesContext.getCurrentInstance();
@@ -386,12 +369,12 @@ public class ResetPassword implements Serializable {
         }
 
         // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
             return "";
         }
 
-        if (people.getStatus() == PeoplAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
             return "";
         }
@@ -437,7 +420,7 @@ public class ResetPassword implements Serializable {
             return ("welcome");
         }
 
-        people = mgr.getUser(req.getRemoteUser());
+        people = mgr.getUserByEmail(req.getRemoteUser());
         session.invalidate();
         
         mgr.setOnline(people.getUid(), -1);
