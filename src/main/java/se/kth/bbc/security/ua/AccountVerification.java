@@ -41,23 +41,23 @@ public class AccountVerification {
      
         // get the 8 char username
         String secret = key.substring(8, key.length());
-             valid = check(secret);
+             valid = validateKey(secret);
     }
 
-    private boolean check(String key) {
+    private boolean validateKey(String key) {
         User user  = mgr.getUserByUsernmae(username);
         
         if(user.getStatus()!= PeopleAccountStatus.ACCOUNT_VARIFICATION.getValue())
             return false;
         
         if (key.equals(user.getValidationKey())){
-            if (user.getYubikeyUser()==1){
+            if (user.getYubikeyUser()== PeopleAccountStatus.YUBIKEY_USER.getValue()){
 
-                mgr.restrictAccount(user.getUid(), "", PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
+                mgr.changeAccountStatus(user.getUid(), "", PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
 
             } else if(user.getYubikeyUser()== PeopleAccountStatus.MOBILE_USER.getValue()) {
              
-                mgr.restrictAccount(user.getUid(), "", PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
+                mgr.changeAccountStatus(user.getUid(), "", PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
             }
             mgr.resetKey(user.getUid());
             return true;
@@ -67,7 +67,7 @@ public class AccountVerification {
         mgr.increaseLockNum(user.getUid(), val + 1);
         
         if (val > 5) {
-            mgr.restrictAccount(user.getUid(),"SPAM Acccount",PeopleAccountStatus.SPAM_ACCOUNTS.getValue());
+            mgr.changeAccountStatus(user.getUid(),"SPAM Acccount",PeopleAccountStatus.SPAM_ACCOUNTS.getValue());
             mgr.resetKey(user.getUid());
             mgr.resetKey(user.getUid());
         }

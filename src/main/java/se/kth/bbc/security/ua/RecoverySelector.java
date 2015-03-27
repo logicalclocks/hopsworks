@@ -134,7 +134,7 @@ public class RecoverySelector implements Serializable {
             return "";
         }
 
-        if (people.getYubikeyUser() == 1) {
+        if (people.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
             return "";
         }
@@ -199,7 +199,7 @@ public class RecoverySelector implements Serializable {
             int val = people.getFalseLogin();
             um.increaseLockNum(people.getUid(), val + 1);
             if (val > 5) {
-                um.restrictAccount(people.getUid(),"",PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
+                um.changeAccountStatus(people.getUid(),"",PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
                 try {
                     email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
                 } catch (MessagingException ex1) {
@@ -230,7 +230,7 @@ public class RecoverySelector implements Serializable {
             return "";
         }
 
-        if (people.getYubikeyUser() != 1) {
+        if (people.getYubikeyUser() != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
             MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
             return "";
         }
@@ -249,7 +249,7 @@ public class RecoverySelector implements Serializable {
                 int val = people.getFalseLogin();
                 um.increaseLockNum(people.getUid(), val + 1);
                 if (val > 5) {
-                    um.restrictAccount(people.getUid(),"",PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
+                    um.changeAccountStatus(people.getUid(),"",PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
                     try {
                         email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
                     } catch (MessagingException ex1) {

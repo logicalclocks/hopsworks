@@ -146,7 +146,7 @@ public class ResetPassword implements Serializable {
                 int val = people.getFalseLogin();
                 mgr.increaseLockNum(people.getUid(), val + 1);
                 if (val > 5) {
-                    mgr.restrictAccount(people.getUid(),"", PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
+                    mgr.changeAccountStatus(people.getUid(),"", PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
                     return ("welcome");
                 }
                 return "";
@@ -332,7 +332,7 @@ public class ResetPassword implements Serializable {
             if (SecurityUtils.converToSHA256(this.current).equals(people.getPassword())) {
                 
                 // close the account
-                mgr.restrictAccount(people.getUid(), this.notes, PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
+                mgr.changeAccountStatus(people.getUid(), this.notes, PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
                 // send email    
                 String message = UserAccountsEmailMessages.buildSecResetMessage();
                 emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_DEACTIVATED, message);

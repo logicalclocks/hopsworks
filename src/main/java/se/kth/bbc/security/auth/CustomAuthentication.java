@@ -106,7 +106,7 @@ public class CustomAuthentication implements Serializable {
         }
 
         // Retrun if user is not Mobile user     
-        if (user.getYubikeyUser() == 1) {
+        if (user.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.USER_NOT_FOUND);
             return ("");
 
@@ -148,7 +148,7 @@ public class CustomAuthentication implements Serializable {
             int val = user.getFalseLogin();
             mgr.increaseLockNum(userid, val + 1);
             if (val > 5) {
-                mgr.restrictAccount(userid,"",PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
+                mgr.changeAccountStatus(userid,"",PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
                 try {
                     emailBean.sendEmail(user.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                             UserAccountsEmailMessages.accountBlockedMessage());
@@ -196,7 +196,7 @@ public class CustomAuthentication implements Serializable {
         }
 
         // Retrun if user is not Yubikey user     
-        if (user.getYubikeyUser() != 1) {
+        if (user.getYubikeyUser() != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
             MessagesController.addMessageToGrowl(AccountStatusErrorMessages.USER_NOT_FOUND);
             return ("");
         }
@@ -243,7 +243,7 @@ public class CustomAuthentication implements Serializable {
             int val = user.getFalseLogin();
             mgr.increaseLockNum(userid, val + 1);
             if (val > 5) {
-                mgr.restrictAccount(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
+                mgr.changeAccountStatus(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
                 try {
                     emailBean.sendEmail(user.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
                             UserAccountsEmailMessages.accountBlockedMessage());

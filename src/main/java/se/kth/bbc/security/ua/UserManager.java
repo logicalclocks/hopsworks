@@ -89,7 +89,7 @@ public class UserManager {
         return true;
     }
 
-    public boolean restrictAccount(int id, String note, int status) {
+    public boolean changeAccountStatus(int id, String note, int status) {
         User p = (User) em.find(User.class, id);
         if (p != null) {
             p.setNotes(note);
@@ -415,7 +415,7 @@ public class UserManager {
             em.remove(a);
             em.remove(p);
 
-            if (u.getYubikeyUser() == 1) {
+            if (u.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
                 em.remove(u.getYubikey());
             }
 

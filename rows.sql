@@ -17,7 +17,7 @@ INSERT INTO bbc_group (gid,group_name,group_desc) VALUES
  */;
 INSERT INTO users (uid, username, password, email, fname, lname, activated, status, secret, security_question, 
 security_answer, yubikey_user, password_changed, title, orcid, home_org, mobile)
-VALUES ('10000', 'meb10000', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918','admin','Admin','Admin',CURRENT_TIMESTAMP, 4, 'V3WBPS4G2WMQ53VA', 'FRIEND', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', -1, CURRENT_TIMESTAMP, 'Mr', '1234-5678-1234-5678', 'KTH', '04672223200');
+VALUES ('10000', 'meb10000', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918','admin','Admin','Admin',CURRENT_TIMESTAMP, 4, 'V3WBPS4G2WMQ53VA', 'FRIEND', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 12, CURRENT_TIMESTAMP, 'Mr', '1234-5678-1234-5678', 'KTH', '04672223200');
 
 
 /*

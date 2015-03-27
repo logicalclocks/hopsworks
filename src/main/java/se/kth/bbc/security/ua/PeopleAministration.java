@@ -317,7 +317,7 @@ public class PeopleAministration implements Serializable {
             // update the user request table
             if (removeByEmail) {
                 allUsers.remove(user1);
-                if (user1.getYubikeyUser() == 1) {
+                if (user1.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
                     yRequests.remove(user1);
                 } else {
                     requests.remove(user1);
@@ -477,7 +477,7 @@ public class PeopleAministration implements Serializable {
         try {
             // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
 
-            if (this.selectedYubikyUser.getYubikeyUser() != 1) {
+            if (this.selectedYubikyUser.getYubikeyUser() != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
                 MessagesController.addSecurityErrorMessage(user.getEmail() + " is not a Yubikey user");
                 return "";
             }
