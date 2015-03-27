@@ -322,8 +322,7 @@
               </p:commandLink>
       
               <p:commandLink styleClass="dark" 
-                             rendered="#{not inode.dir}"
-                             disabled="#{inode.status != 'available'}" 
+                             rendered="#{not inode.dir}" 
                              action="#{fileSelectionController.setSelectedPath(inode.path)}"
                              update="@form">
                 <strong>#{inode.name}</strong>

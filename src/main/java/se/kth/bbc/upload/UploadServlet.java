@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.StagingManager;
+import se.kth.bbc.lims.Utils;
 import se.kth.bbc.study.fb.InodesMB;
 
 /**
@@ -75,6 +76,7 @@ public class UploadServlet extends HttpServlet {
 
     if (finished) {
       try {
+        uploadPath = Utils.ensurePathEndsInSlash(uploadPath);
         fileOps.copyAfterUploading(info.resumableFilename, uploadPath
                 + info.resumableFilename);
       } catch (IOException e) {
