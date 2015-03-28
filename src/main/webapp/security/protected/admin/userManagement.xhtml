@@ -102,11 +102,6 @@
                                                 <h:outputText value="#{req.email}" />
                                             </p:column>
 
-                                            <p:column id="mobileNumColumn" headerText="Mobile Phone" 
-                                                      filterBy="#{req.mobile}">
-                                                <h:outputText value="#{req.mobile}" />
-                                            </p:column>
-                                            
                                             <p:column id="orgColumn" headerText="Organization"  
                                                       filterBy="#{req.organization.orgName}">
                                                 <h:outputText value="#{req.organization.orgName}" />
@@ -160,11 +155,6 @@
                                             <p:column id="yemailColumn" headerText="Email" 
                                                       filterBy="#{yreq.email}">
                                                 <h:outputText value="#{yreq.email}" />
-                                            </p:column>
-
-                                            <p:column id="ymobileNumColumn" headerText="Mobile Phone" 
-                                                      filterBy="#{yreq.mobile}">
-                                                <h:outputText value="#{yreq.mobile}" />
                                             </p:column>
 
                                             <p:column id="yorgColumn" headerText="Organization" 
