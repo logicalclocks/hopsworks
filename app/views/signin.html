@@ -1,0 +1,127 @@
+    <div class="container">
+
+    <div class="row">
+        <div class="col-md-12 text-center" style="padding:20px;">
+            <img width="90" src="https://dc.sics.se/pics/hops.png"/>
+            <h3 style="margin-top:0px; margin-left:30px;">HOPS</h3>
+        </div>
+    </div>
+
+        <div class="row">
+            <div class="col-sm-4 col-md-4 col-md-offset-4" ng-show="!isLoggedIn">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <strong> Sign in to continue</strong>
+                    </div>
+                    <div class="panel-body" style="padding:30px;">
+                            <fieldset>
+                                <div class="row">
+                                    <div class="col-sm-12 col-md-10  col-md-offset-1 ">
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                                <span class="input-group-addon">
+                                                    <i class="glyphicon glyphicon-user"></i>
+                                                </span> 
+                                                <input class="form-control" 
+                                                placeholder="Username" 
+                                                name="username" 
+                                                id="username"
+                                                type="text" 
+                                                ng-model="username"
+                                                autofocus>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                                <span class="input-group-addon">
+                                                    <i class="glyphicon glyphicon-lock"></i>
+                                                </span>
+                                                <input class="form-control" 
+                                                placeholder="Password" 
+                                                name="password" 
+                                                id="password" 
+                                                type="password" 
+                                                ng-model="password"
+                                                value="">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <input type="submit" class="btn btn-lg btn-primary btn-block" value="Sign in" ng-click="signin()">
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                    </div>
+                    <div class="panel-footer ">
+                        Don't have an account! <a href="#" onClick=""> Sign Up Here </a>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+            <div class="col-sm-4 col-md-4 col-md-offset-4" ng-show="isLoggedIn">
+                <h2>Welcome mate! <br> Long time no see.</br></h2>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <strong> You are already logged in...</strong>
+                    </div>
+                    <div class="panel-body">
+                            <fieldset>
+                                <div class="row">
+                                    <div class="center-block">
+                                        <img class="profile-img"
+                                            src="https://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/eu7opA4byxI/photo.jpg?sz=120" alt="">
+                                    </div>
+                                </div>
+                                <!-- 
+                                <div class="row text-center">
+                                    <label>Project name: 
+                                        <input type="text" ng-model="projectName"/>
+                                    </label>
+                                </div>
+                                -->
+
+                                <div class="row">
+                                   <div class="form-group col-md-offset-3 col-md-6">
+                                            <input type="submit" 
+                                            class="btn btn-lg btn-danger btn-block" 
+                                            value="Logout" 
+                                            ng-click="logout()">
+                                        </div>
+                                </div>
+                            </fieldset>
+                    </div>
+                </div>
+                
+            </div>
+
+            
+
+            <div class="row" style="margin-bottom:20px;">
+                    <div class="col-md-offset-4 col-md-2">
+                        <input type="submit" 
+                               class="btn btn-lg btn-success btn-block" 
+                               value="Test PostMethod" 
+                               ng-click="doPostMethod()">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="submit" 
+                               class="btn btn-lg btn-success btn-block" 
+                               value="Test GetMethod" 
+                               ng-click="doGetMethod()">
+                    </div>
+                </div>
+
+                <!-- <div class="row text-center">Return message: <b>{{message}}</b></div> -->
+
+
+
+
+
+
+
+
+        </div>
+    </div>
