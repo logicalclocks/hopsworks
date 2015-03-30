@@ -165,7 +165,7 @@
                                             <p:column id="yroleColumn" headerText="Role" >
                                                 
                                                 <p:selectOneMenu id="yroleChoose" 
-                                                                 rendered="#{yreq.yubikey.status==1}"
+                                                                 rendered="#{yreq.yubikey.status != '7'}"
                                                                  value="#{peopleAministration.sgroup}"
                                                                  editable="false"
                                                                  >

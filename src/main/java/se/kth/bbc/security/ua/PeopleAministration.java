@@ -100,7 +100,6 @@ public class PeopleAministration implements Serializable {
 
     List<String> status;
 
-
     // all groups
     List<String> groups;
 
@@ -303,7 +302,8 @@ public class PeopleAministration implements Serializable {
 
     /**
      * Reject users that are not validated.
-     * @param user1 
+     *
+     * @param user1
      */
     public void rejectUser(User user1) {
 
@@ -407,7 +407,7 @@ public class PeopleAministration implements Serializable {
             if (!"#".equals(sgroup) && (!sgroup.equals(BBCGroup.BBC_GUEST.name()))) {
                 userManager.registerGroup(user1, BBCGroup.valueOf(sgroup).getValue());
             }
- 
+
             userManager.updateStatus(user1, PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
             userTransaction.commit();
 
@@ -438,12 +438,12 @@ public class PeopleAministration implements Serializable {
         User newStatus = userManager.getUserByEmail(user1.getEmail());
         FacesContext.getCurrentInstance().getExternalContext()
                 .getSessionMap().put("editinguser", newStatus);
-      
+
         Userlogins login = userManager.getLastUserLoing(user1.getUid());
-        
+
         FacesContext.getCurrentInstance().getExternalContext()
                 .getSessionMap().put("editinguser_logins", login);
-      
+
         return "admin_profile";
     }
 
@@ -484,8 +484,6 @@ public class PeopleAministration implements Serializable {
 
             Yubikey yubi = this.selectedYubikyUser.getYubikey();
 
-            yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
-
             // Trim the input
             yubi.setSerial(serial.replaceAll("\\s", ""));
             yubi.setPublicId(pubid.replaceAll("\\s", ""));
@@ -498,19 +496,18 @@ public class PeopleAministration implements Serializable {
             yubi.setSessionUse(0);
             yubi.setHigh(0);
             yubi.setLow(0);
-            
-            // Set stauts to active
-            yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
-            
+           
             userTransaction.begin();
+          
+            if (this.selectedYubikyUser.getYubikey().getStatus()
+                    == PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()) {
+                // Set stauts to active
+                 yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
 
-            userManager.updateYubikey(yubi);
-            
-             
-            if(this.selectedYubikyUser.getYubikey().getStatus() == 
-                    PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()){
-                if (!"#".equals(sgroup) && (!sgroup.equals(BBCGroup.BBC_GUEST.name())))  {
-                userManager.registerGroup(this.selectedYubikyUser, BBCGroup.valueOf(sgroup).getValue());
+                userManager.updateYubikey(yubi);
+                if (!"#".equals(sgroup) || (!sgroup.equals(BBCGroup.BBC_GUEST.name()))) {
+
+                    userManager.registerGroup(this.selectedYubikyUser, BBCGroup.valueOf(sgroup).getValue());
                 }
             }
 
