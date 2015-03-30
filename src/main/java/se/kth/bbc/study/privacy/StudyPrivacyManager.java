@@ -34,7 +34,7 @@ import se.kth.bbc.study.privacy.model.Consent;
 @RequestScoped
 public class StudyPrivacyManager {
 
-    @PersistenceContext(unitName = "hopsPU")
+    @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
     private Date date;
 

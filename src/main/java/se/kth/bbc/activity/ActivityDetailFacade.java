@@ -14,7 +14,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 @Stateless
 public class ActivityDetailFacade extends AbstractFacade<ActivityDetail> {
 
-  @PersistenceContext(unitName = "hopsPU")
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   @Override

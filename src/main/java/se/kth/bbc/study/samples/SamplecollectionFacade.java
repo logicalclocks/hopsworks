@@ -15,7 +15,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 @Stateless
 public class SamplecollectionFacade extends AbstractFacade<Samplecollection> {
 
-  @PersistenceContext(unitName = "hopsPU")
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   @Override

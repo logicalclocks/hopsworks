@@ -22,7 +22,7 @@ import se.kth.bbc.security.ua.model.Yubikey;
 @Stateless
 public class UserManager {
 
-    @PersistenceContext(unitName = "hopsPU")
+    @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
 
     // Strating user id from 1000 to create a POSIX compliant username: meb1000
