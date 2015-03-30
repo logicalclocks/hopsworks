@@ -102,4 +102,13 @@ public class FileOperationsManagedBean implements Serializable {
             MessagesController.addErrorMessage(MessagesController.ERROR, "Remove failed.");
         }
     }
+    
+    public void deleteFolderRecursive(String path){
+      try{
+        fileOps.rmRecursive(path);
+      } catch (IOException ex){
+        Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, "Failed to remove file.", ex);
+        MessagesController.addErrorMessage(MessagesController.ERROR, "Remove failed.");
+      }
+    }
 }

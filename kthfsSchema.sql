@@ -35,21 +35,6 @@ CREATE TABLE `diseases` (
   PRIMARY KEY (`id`)
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `inodes` (
-  `id` MEDIUMINT(9) NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(128) NOT NULL,
-  `pid` MEDIUMINT(9) DEFAULT NULL,
-  `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `is_dir` TINYINT(1) NOT NULL,
-  `size` INT(11) DEFAULT NULL,
-  `status` VARCHAR(128) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY (`pid`,`name`),
-  KEY (`pid`,`is_dir`),
-  KEY (`name`),
-  FOREIGN KEY (`pid`) REFERENCES `inodes` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
-) ENGINE=ndbcluster;
-
 CREATE TABLE `users` (
   `uid` INT(10) NOT NULL DEFAULT '1000',
   `username` VARCHAR(10) NOT NULL,
