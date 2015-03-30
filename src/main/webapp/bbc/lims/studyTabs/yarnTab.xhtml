@@ -35,7 +35,7 @@
                   <h:outputLabel for="yarn_JobName" value="Job name"/>
                   <h:inputText id="yarn_JobName" value="#{yarnController.jobName}"/>
 
-                  <h:outputLabel value="Upload workflow file" for="yarn_amUploader"/>
+                  <h:outputLabel value="Upload job jar" for="yarn_amUploader"/>
                   <p:commandButton 
                     value="Select..." id="yarn_amUploader"
                     oncomplete="PF('chooseFileDlg').show()" immediate="true"
@@ -45,7 +45,7 @@
                   <h:outputLabel value="Uploaded file"/>
                   <h:outputLabel value="#{yarnController.appMasterName==null ? 'No file uploaded yet' : yarnController.appMasterName}"/>
                   
-                  <h:outputLabel value="Main class name" for="yarn_MC"/>
+                  <h:outputLabel value="Application Master main class" for="yarn_MC"/>
                   <h:inputText id="yarnMC" value="#{yarnController.mainClass}" required="true"/>
 
                   <h:outputLabel value="Arguments" for="yarn_Args"/>

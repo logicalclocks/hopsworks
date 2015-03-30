@@ -9,9 +9,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -307,14 +309,12 @@ public class YarnRunner{
   private void setUpClassPath(Map<String, String> env) {
     // Add AppMaster.jar location to classpath
     StringBuilder classPathEnv = new StringBuilder(
-            ApplicationConstants.Environment.CLASSPATH.$())
-            .append(":").append("./*");
+            ApplicationConstants.Environment.CLASSPATH.$());
     for (String c : conf.getStrings(
             YarnConfiguration.YARN_APPLICATION_CLASSPATH,
             YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH)) {
       classPathEnv.append(":").append(c.trim());
     }
-    classPathEnv.append(":").append("./log4j.properties");
     // add the runtime classpath needed for tests to work
     if (conf.getBoolean(YarnConfiguration.IS_MINI_YARN_CLUSTER, false)) {
       classPathEnv.append(':');
@@ -328,6 +328,11 @@ public class YarnRunner{
     } else {
       env.put(KEY_CLASSPATH, classPathEnv.toString());
     }
+    //Put some environment vars in env
+    env.put(Constants.HADOOP_COMMON_HOME_KEY, Constants.HADOOP_COMMON_HOME_VALUE);
+    env.put(Constants.HADOOP_CONF_DIR_KEY, Constants.HADOOP_CONF_DIR_VALUE);
+    env.put(Constants.HADOOP_HDFS_HOME_KEY, Constants.HADOOP_HDFS_HOME_VALUE);
+    env.put(Constants.HADOOP_YARN_HOME_KEY, Constants.HADOOP_YARN_HOME_VALUE);
   }
 
   private List<String> setUpCommands() {
@@ -734,7 +739,7 @@ public class YarnRunner{
       }
       //Default localResourcesBasePath
       if (localResourcesBasePath == null) {
-        localResourcesBasePath = appName + File.separator + APPID_PLACEHOLDER;
+        localResourcesBasePath = File.separator + APPID_PLACEHOLDER;
       }
       //Default log locations: tmp files
       if (stdOutPath == null || stdOutPath.isEmpty()) {

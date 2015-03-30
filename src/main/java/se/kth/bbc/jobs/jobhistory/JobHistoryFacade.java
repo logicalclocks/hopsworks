@@ -15,8 +15,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import org.primefaces.push.EventBus;
-import org.primefaces.push.EventBusFactory;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.study.StudyFacade;
 import se.kth.bbc.study.TrackStudy;
@@ -69,7 +67,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
   public void update(Long id, JobState newState, long executionTime) {
     JobHistory jh = findById(id);
-    JobState oldstate = jh.getState();
     updateState(id,newState);
     jh.setExecutionDuration(BigInteger.valueOf(executionTime));
     em.merge(jh);
@@ -78,7 +75,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   public void update(Long id, JobState newState,
           Collection<JobOutputFile> outputFiles) {
     JobHistory jh = findById(id);
-    JobState oldstate = jh.getState();
     updateState(id,newState);
     Collection<JobOutputFile> output = jh.getJobOutputFileCollection();
     output.addAll(output);
