@@ -124,6 +124,7 @@ CREATE TABLE `study` (
   `name` VARCHAR(128) NOT NULL,
   `username` VARCHAR(45) NOT NULL,
   `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `archived` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`name`),
   FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
