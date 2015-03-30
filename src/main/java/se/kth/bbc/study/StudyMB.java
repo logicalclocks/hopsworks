@@ -76,7 +76,6 @@ public class StudyMB implements Serializable {
     @ManagedProperty(value = "#{clientSessionState}")
     private ClientSessionState sessionState;
 
-    private TrackStudy study;
     private List<User> usernames;
     private StudyTeam studyTeamEntry;
     private List<Theme> selectedUsernames;
@@ -595,7 +594,7 @@ public class StudyMB implements Serializable {
   }
   
   public boolean isStudyArchived(){
-    TrackStudy study = studyFacade.findByName(studyName);
+    TrackStudy study = sessionState.getActiveStudy();
     if(study == null){
       logger.log(Level.SEVERE,"Trying to call if study is archived, but has not been set.");
       throw new IllegalStateException("Cannot check on StudyMB if study is archived if it has not been set.");

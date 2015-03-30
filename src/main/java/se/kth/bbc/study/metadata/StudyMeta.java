@@ -69,7 +69,7 @@ public class StudyMeta implements Serializable {
   @Enumerated(EnumType.STRING)
   private List<CollectionTypeStudyDesignEnum> studyDesignList;
    @ElementCollection(targetClass = InclusionCriteriumEnum.class)
-  @CollectionTable(name="study_inclustion_criteria",joinColumns=@JoinColumn(name="study_id",referencedColumnName = "id"))
+  @CollectionTable(name="study_inclusion_criteria",joinColumns=@JoinColumn(name="study_id",referencedColumnName = "id"))
   @Column(name="criterium")
   @Enumerated(EnumType.STRING)
   private List<InclusionCriteriumEnum> inclusionCriteriaList;

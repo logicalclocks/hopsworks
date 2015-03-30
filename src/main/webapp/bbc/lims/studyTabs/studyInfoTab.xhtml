@@ -34,13 +34,16 @@
             <p:dataList id="studyDesignList" value="#{studyMetaController.studyDesignDual.target}" var="item">
               #{item.toString()}
             </p:dataList>
-            <p:commandLink styleClass="fa fa-edit" oncomplete="PF('editStudyDesignDlg').show()" type="button"/>
+            <p:commandLink styleClass="fa fa-edit" oncomplete="PF('editStudyDesignDlg').show()" 
+                           type="button" immediate="true"/>
 
             <h:outputLabel value="Inclusion criteria" for="inclusionCriteriaList"/>
             <p:dataList id="inclusionCriteriaList" value="#{studyMetaController.inclusionCriteriaDual.target}" var="item">
               #{item.toString()}
             </p:dataList>
-            <p:commandLink styleClass="fa fa-edit" oncomplete="PF('editInclusionCriteriaDlg').show()" type="button"/>
+            <p:commandLink styleClass="fa fa-edit" 
+                           oncomplete="PF('editInclusionCriteriaDlg').show()" 
+                           type="button" immediate="true"/>
 
           </h:panelGrid>
           <p:commandButton value="Save" actionListener="#{studyMetaController.updateMetadata()}" update="@form"/>
