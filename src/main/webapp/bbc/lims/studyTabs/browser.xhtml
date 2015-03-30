@@ -30,27 +30,27 @@ and open the template in the editor.
                        styleClass="ui_box browser_table"
                        headerClass="browser_header" rowClasses="browser_row" columnClasses=",,action_column">
 
-            <h:column>
+          <h:column>
               <f:facet name="header">Name</f:facet>
-              <h:graphicImage class="browser s16" library="images/icons" name="#{inode.isDir()?'folder.png':'file.png'}" />
+              <h:graphicImage class="browser s16" library="images/icons" name="#{inode.dir?'folder.png':'file.png'}" />
 
-              <p:commandLink styleClass="dark" action="#{InodesMB.cdUp()}" update="@form" rendered="#{inode.isParent()}">
+              <p:commandLink styleClass="dark" action="#{InodesMB.cdUp()}" update="@form" rendered="#{inode.parent}">
+                  <strong>#{inode.name}</strong>
+              </p:commandLink>
+
+              <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}" update="@form" rendered="#{not inode.parent and inode.dir}">
                 <strong>#{inode.name}</strong>
               </p:commandLink>
 
-              <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}" update="@form" rendered="#{not inode.isParent() and inode.dir}">
+              <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false">
                 <strong>#{inode.name}</strong>
-              </p:commandLink>
-
-              <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false" disabled="#{inode.status != 'available'}">
-                <strong>#{inode.name}</strong>
-                <p:fileDownload value="#{fileOperationsMB.downloadFile(inode)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+                <p:fileDownload value="#{fileOperationsMB.downloadFile(inode.path)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
               </p:commandLink>
             </h:column>
 
             <h:column >
               <f:facet name="header">Last modified</f:facet>
-                #{inode.isParent()?"":InodesMB.approximateTime(inode.modified)}
+                  #{inode.parent?"":InodesMB.approximateTime(inode.modification)}
             </h:column>
 
             <h:column>
@@ -69,7 +69,6 @@ and open the template in the editor.
               <p:commandButton value="Create folder" type="button" onclick="PF('createFolderDlg').show()" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
             </f:facet>
           </h:dataTable>
-
         </h:form>
 
       </div> 

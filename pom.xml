@@ -23,17 +23,24 @@
             <artifactId>cuneiform-core</artifactId>
             <version>2.0.0-SNAPSHOT</version>
         </dependency>
-    <dependency>
-      <groupId>com.google.zxing</groupId>
-      <artifactId>javase</artifactId>
-      <version>3.0.0</version>
-    </dependency>
-    <dependency>
-        <groupId>commons-codec</groupId>
+        <dependency>
+          <groupId>com.google.zxing</groupId>
+          <artifactId>javase</artifactId>
+          <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.8</version>
+            </dependency>
+        <dependency>
+        <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>eclipselink</artifactId>
+            <version>2.7.0-SNAPSHOT</version>
+            <type>jar</type>
         </dependency>
-    <dependency>
+        <dependency>
             <groupId>javax</groupId>
             <artifactId>javaee-api</artifactId>
             <version>7.0</version>

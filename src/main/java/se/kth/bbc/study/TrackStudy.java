@@ -38,6 +38,8 @@ import se.kth.bbc.study.samples.Samplecollection;
     @NamedQuery(name = "TrackStudy.findOwner", query = "SELECT t.username FROM TrackStudy t WHERE t.name = :name"),
     @NamedQuery(name = "TrackStudy.countStudyByOwner", query = "SELECT count(t.name) FROM TrackStudy t WHERE t.username = :username")})
 public class TrackStudy implements Serializable {
+  @Column(name = "archived")
+  private boolean archived;
   @OneToMany(mappedBy = "study")
   private Collection<Samplecollection> samplecollectionCollection;
   @OneToOne(cascade = CascadeType.ALL,
@@ -137,6 +139,14 @@ public class TrackStudy implements Serializable {
   public void setSamplecollectionCollection(
           Collection<Samplecollection> samplecollectionCollection) {
     this.samplecollectionCollection = samplecollectionCollection;
+  }
+
+  public Boolean getArchived() {
+    return archived;
+  }
+
+  public void setArchived(Boolean archived) {
+    this.archived = archived;
   }
     
 }

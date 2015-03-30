@@ -25,8 +25,10 @@ import se.kth.bbc.lims.Constants;
 @SessionScoped
 public class InodesMB implements Serializable {
 
-  Inode root;
-  Inode cwd;
+  private Inode root;
+  private Inode cwd;
+  private List<Inode> cwdChildren;
+  private Inode cwdParent;
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
@@ -51,40 +53,39 @@ public class InodesMB implements Serializable {
     cwd = root;
   }
 
-  public List<Inode> getChildren() {
+  public List<InodeView> getChildren() {
         //Because InodesMB is session scoped, need to check for change of study!!!!
     //TODO: implement this more gracefully.
-    if (!cwd.getStudyRoot().equals(sessionState.getActiveStudyname())) {
+    if (!inodes.getStudyNameForInode(cwd).equals(sessionState.getActiveStudyname())) {
       init();
     }
     //get from DB and update Inode
-    cwd.setChildren(inodes.findByParent(cwd));
-    List<Inode> res = new ArrayList<>();
-    res.addAll(cwd.getChildren());
-    if (!cwd.isStudyRoot()) { // root doesn't have a parent to show
-      res.add(0, new Inode(0, "..", new Date(), true, cwd.getParent().
-              getStatus()));
+    cwdChildren = inodes.findByParent(cwd);
+    List<InodeView> kids = new ArrayList<>();
+    for(Inode i:cwdChildren){
+      kids.add(new InodeView(i,inodes.getPath(i)));
     }
-    return res;
+    if (!inodes.isStudyRoot(cwd)) { // root doesn't have a parent to show
+      InodeView parent = InodeView.getParentInode(inodes.getPath(cwd));
+      kids.add(0, parent);
+    }
+    return kids;
   }
 
   public void cdUp() {
-    if (!cwd.isStudyRoot()) {
-      Inode parent = cwd.getParent();
-            // nullify object reference to prevent mem leak
-      // TODO: uncomment this line when we get the list of children from the DB.
-//            cwd.setParent(null);
-      // set cwd to move up a directory
-      cwd = parent;
+    if (!inodes.isStudyRoot(cwd)) {
+      cwd = cwdParent;
+      cwdChildren = inodes.getChildren(cwd);
+      cwdParent = inodes.findParent(cwd);
     }
   }
 
   public void cdDown(String name) {
-
-    for (Inode f : cwd.getChildren()) {
-      if (f.getName().compareTo(name) == 0 && f.isDir()) {
-        cwd = f;
-      }
+    Inode kid = inodes.findByParentAndName(cwd, name);
+    if(kid != null && kid.isDir()){
+      cwdParent = cwd;
+      cwd = kid;
+      cwdChildren = inodes.getChildren(cwd);
     }
   }
 
@@ -152,14 +153,14 @@ public class InodesMB implements Serializable {
   public List<NavigationPath> getCurrentPath() {
         //Because InodesMB is session scoped, need to check for change of study!!!!
     //TODO: implement this more gracefully.
-    if (cwd == null || !cwd.getStudyRoot().equals(sessionState.getActiveStudyname())) {
+    if (cwd == null || !inodes.getStudyNameForInode(cwd).equals(sessionState.getActiveStudyname())) {
       init();
     }
-    return cwd.getConstituentsPath();
+    return inodes.getConstituentsPath(cwd);
   }
 
   public String getCwdPath() {
-    return cwd.getPath();
+    return inodes.getPath(cwd);
   }
 
   public void cdBrowse(String name) {
@@ -167,7 +168,7 @@ public class InodesMB implements Serializable {
     Inode curr = root;
     for (int i = 1; i < p.length; i++) {
       String s = p[i];
-      Inode next = curr.getChild(s);
+      Inode next = inodes.findByParentAndName(curr, s);
       curr = next;
     }
     cwd = curr;
