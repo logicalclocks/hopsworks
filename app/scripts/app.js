@@ -13,21 +13,31 @@ angular.module('hopsWorksApp', [
     $httpProvider.interceptors.push('RequestInterceptorService');
 
 
-
     // Every POST data becoms jQuery style
     $httpProvider.defaults.transformRequest.push(
       function (data) {
         var requestStr;
+
         if (data) {
-          data = JSON.parse(data);
-          for (var key in data) {
-            if (requestStr) {
-              requestStr += '&' + key + '=' + data[key];
-            } else {
-              requestStr = key + '=' + data[key];
+
+          var isRegistration = data.indexOf('firstName');
+
+          if (isRegistration != -1) {
+            return data;
+          } else {
+
+            data = JSON.parse(data);
+
+            for (var key in data) {
+              if (requestStr) {
+                requestStr += '&' + key + '=' + data[key];
+              } else {
+                requestStr = key + '=' + data[key];
+              }
             }
           }
         }
+
 
         return requestStr;
       });
@@ -40,11 +50,11 @@ angular.module('hopsWorksApp', [
     $routeProvider
       .when('/', {
         templateUrl: 'views/main.html',
-        controller: 'MainCtrl'
-       })
+        controller: 'MainCtrl as mainCtrl'
+      })
       .when('/login', {
         templateUrl: 'views/login.html',
-        controller: 'LoginCtrl',
+        controller: 'LoginCtrl as loginCtrl',
         resolve: {
           auth: ['$q', '$location', 'AuthService',
             function ($q, $location, AuthService) {
@@ -61,20 +71,7 @@ angular.module('hopsWorksApp', [
       })
       .when('/register', {
         templateUrl: 'views/register.html',
-        controller: 'RegCtrl',
-        resolve: {
-          auth: ['$q', '$location', 'AuthService',
-            function ($q, $location, AuthService) {
-              return AuthService.session().then(
-                function (success) {
-                  $location.path('/');
-                  $location.replace();
-                  return $q.when(success);
-                },
-                function (err) {
-                });
-            }]
-        }
+        controller: 'RegCtrl as regCtrl'
       })
       .otherwise({
         redirectTo: '/'

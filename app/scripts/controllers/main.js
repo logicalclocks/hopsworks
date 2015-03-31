@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('MainCtrl', ['$scope', 'AuthService', function ($scope, AuthService) {
+  .controller('MainCtrl', ['$scope','$location', 'AuthService', function ($scope, $location, AuthService) {
 
     var self = this;
     self.authService = AuthService;
@@ -12,6 +12,14 @@ angular.module('hopsWorksApp')
     //self.userService.logout();
 
 
+    self.logout = function () {
+      console.log(self.user);
+      AuthService.logout(self.user).then(function (success) {
+        $location.url('/login');
+      }, function (error) {
+        self.errorMessage = error.data.msg;
+      });
+    };
 
 
     $scope.projects = [
@@ -21,9 +29,4 @@ angular.module('hopsWorksApp')
       {name: 'StatisticsHops', 'private': false}
     ];
 
-
-
-
-
   }]);
-

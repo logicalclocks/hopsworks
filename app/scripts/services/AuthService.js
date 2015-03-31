@@ -13,7 +13,6 @@ angular.module('hopsWorksApp')
             return response;
           });
       },
-
       login: function (user) {
         return $http.post('/api/auth/login', user)
           .then(function (response) {
@@ -22,8 +21,25 @@ angular.module('hopsWorksApp')
           });
       },
       logout: function () {
-        return $http.Get('/api/auth/logout')
+        return $http.get('/api/auth/logout')
           .then(function (response) {
+            service.isLoggedIn = false;
+            return response;
+          });
+      },
+      register: function (user) {
+
+        var regReq = {
+          method: 'POST',
+          url: '/api/auth/register',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          data: user
+        }
+
+
+        return $http(regReq).then(function (response) {
             service.isLoggedIn = false;
             return response;
           });

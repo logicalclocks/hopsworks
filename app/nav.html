@@ -2,7 +2,7 @@
 <link href='http://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>
 <link href='http://fonts.googleapis.com/css?family=Varela+Round' rel='stylesheet' type='text/css'>
 
-<nav class="navbar navbar-default navbar-sics navbar-fixed-top">
+<nav class="navbar navbar-default navbar-sics navbar-fixed-top" ng-controller="MainCtrl as mainCtrl">
     <div class="container">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
@@ -32,7 +32,7 @@
                         <li><a href="#">My profile</a></li>
                         <li><a href="#">General</a></li>
                         <li class="divider"></li>
-                        <li><a href="#">Logout</a></li>
+                        <li><a href="#" ng-click="mainCtrl.logout()">Logout</a></li>
                     </ul>
                 </li>
             </ul>
