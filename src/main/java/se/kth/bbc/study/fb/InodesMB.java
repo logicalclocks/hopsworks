@@ -2,6 +2,7 @@ package se.kth.bbc.study.fb;
 
 import com.google.common.collect.Lists;
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,19 +12,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.SessionScoped;
+import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.Constants;
+import se.kth.bbc.lims.MessagesController;
 
 /**
  *
  * @author jdowling
  */
 @ManagedBean(name = "InodesMB")
-@SessionScoped
+@ViewScoped
 public class InodesMB implements Serializable {
+  private static final Logger logger = Logger.getLogger(InodesMB.class.getName());
 
   private Inode root;
   private Inode cwd;
@@ -54,11 +59,6 @@ public class InodesMB implements Serializable {
   }
 
   public List<InodeView> getChildren() {
-        //Because InodesMB is session scoped, need to check for change of study!!!!
-    //TODO: implement this more gracefully.
-    if (!inodes.getStudyNameForInode(cwd).equals(sessionState.getActiveStudyname())) {
-      init();
-    }
     //get from DB and update Inode
     cwdChildren = inodes.findByParent(cwd);
     List<InodeView> kids = new ArrayList<>();
@@ -132,7 +132,7 @@ public class InodesMB implements Serializable {
       // Change cwd to last element in the path
       this.cwd = path.get(path.size() - 1);
     } catch (BadPath ex) {
-      Logger.getLogger(InodesMB.class.getName()).log(Level.SEVERE, null, ex);
+      logger.log(Level.SEVERE, "Tried to cd to an invalid path.", ex);
       // TODO: Faces msg to user here.
     }
   }
@@ -151,8 +151,6 @@ public class InodesMB implements Serializable {
   }
 
   public List<NavigationPath> getCurrentPath() {
-        //Because InodesMB is session scoped, need to check for change of study!!!!
-    //TODO: implement this more gracefully.
     if (cwd == null || !inodes.getStudyNameForInode(cwd).equals(sessionState.getActiveStudyname())) {
       init();
     }

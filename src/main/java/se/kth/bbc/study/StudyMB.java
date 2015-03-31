@@ -36,568 +36,606 @@ import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.study.fb.Inode;
+import se.kth.bbc.study.fb.InodeFacade;
 
 /**
  *
  * @author roshan
  *
  */
-@ManagedBean(name = "studyManagedBean", eager = true)
+@ManagedBean(name = "studyManagedBean",
+        eager = true)
 @SessionScoped
 public class StudyMB implements Serializable {
 
-    private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
-    private static final long serialVersionUID = 1L;
+  private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
+  private static final long serialVersionUID = 1L;
 
-    @EJB
-    private StudyFacade studyFacade;
+  @EJB
+  private StudyFacade studyFacade;
 
-    @EJB
-    private StudyTeamFacade studyTeamController;
+  @EJB
+  private StudyTeamFacade studyTeamController;
 
-    @EJB
-    private UserManager userMgr;
+  @EJB
+  private UserManager userMgr;
 
-    @EJB
-    private UserGroupsController userGroupsController;
+  @EJB
+  private UserGroupsController userGroupsController;
 
-    @EJB
-    private ActivityFacade activityFacade;
-    
-    @EJB
-    private ActivityDetailFacade activityDetailFacade;
+  @EJB
+  private ActivityFacade activityFacade;
 
-    @EJB
-    private FileOperations fileOps;
+  @EJB
+  private ActivityDetailFacade activityDetailFacade;
 
-    @EJB
-    private StudyServiceFacade studyServices;
-    
-    @ManagedProperty(value = "#{clientSessionState}")
-    private ClientSessionState sessionState;
+  @EJB
+  private FileOperations fileOps;
 
-    private List<User> usernames;
-    private StudyTeam studyTeamEntry;
-    private List<Theme> selectedUsernames;
-    private List<Theme> themes;
-    private String sample_Id;
+  @EJB
+  private StudyServiceFacade studyServices;
 
-    private String studyName;
-    private String studyCreator;
-    private int tabIndex;
-    private String loginName;
-    
-    private StudyServiceEnum[] selectedServices;
+  @EJB
+  private InodeFacade inodes;
 
-    private boolean deleteFilesOnRemove = true;
+  @ManagedProperty(value = "#{clientSessionState}")
+  private ClientSessionState sessionState;
 
-    private LazyActivityModel lazyModel = null;
+  private List<User> usernames;
+  private StudyTeam studyTeamEntry;
+  private List<Theme> selectedUsernames;
+  private List<Theme> themes;
+  private String sample_Id;
 
-    public StudyMB() {
-    }
+  private String studyName;
+  private String studyCreator;
+  private int tabIndex;
+  private String loginName;
+
+  private StudyServiceEnum[] selectedServices;
+
+  private boolean deleteFilesOnRemove = true;
+
+  private LazyActivityModel lazyModel = null;
+
+  public StudyMB() {
+  }
 
   public void setSessionState(ClientSessionState sessionState) {
     this.sessionState = sessionState;
   }
 
+  public List<User> getUsersname() {
+    return usernames;
+  }
 
-    public List<User> getUsersname() {
-        return usernames;
+  public String getLoginName() {
+    return loginName;
+  }
+
+  public void setLoginName(String loginName) {
+    this.loginName = loginName;
+  }
+
+  public String getStudyName() {
+    return studyName;
+  }
+
+  public void setStudyName(String studyName) {
+    this.studyName = studyName;
+    this.lazyModel = null;
+  }
+
+  public String getCreator() {
+    return studyCreator;
+  }
+
+  public void setCreator(String studyCreator) {
+    this.studyCreator = studyCreator;
+  }
+
+  public String getSampleID() {
+    return sample_Id;
+  }
+
+  public void setSampleID(String sample_Id) {
+    this.sample_Id = sample_Id;
+  }
+
+  public StudyTeam getStudyTeamEntry() {
+    if (studyTeamEntry == null) {
+      studyTeamEntry = new StudyTeam();
+    }
+    return studyTeamEntry;
+  }
+
+  public void setStudyTeamEntry(StudyTeam studyTeamEntry) {
+    this.studyTeamEntry = studyTeamEntry;
+  }
+
+  public List<TrackStudy> getStudyList() {
+    return studyFacade.findAll();
+  }
+
+  public List<StudyDetail> getPersonalStudy() {
+    return studyFacade.findAllPersonalStudyDetails(getUsername());
+  }
+
+  public long getAllStudy() {
+    return studyFacade.getAllStudy(getUsername());
+  }
+
+  public int getNOfMembers() {
+    return studyFacade.getMembers(getStudyName());
+  }
+
+  public boolean isDeleteFilesOnRemove() {
+    return deleteFilesOnRemove;
+  }
+
+  public void setDeleteFilesOnRemove(boolean deleteFilesOnRemove) {
+    this.deleteFilesOnRemove = deleteFilesOnRemove;
+  }
+
+  public List<TrackStudy> getPersonalStudyList() {
+    return studyFacade.filterPersonalStudy(getUsername());
+  }
+
+  public int getLatestStudyListSize() {
+    return studyFacade.filterPersonalStudy(getUsername()).size();
+  }
+
+  public List<Theme> addThemes() {
+    List<User> list = userMgr.filterUsersBasedOnStudy(getStudyName());
+    themes = new ArrayList<>();
+    int i = 0;
+    for (User user : list) {
+      themes.add(new Theme(i, user.getFname() + " " + user.getLname(), user.
+              getEmail()));
+      i++;
     }
 
-    public String getLoginName() {
-        return loginName;
-    }
+    return themes;
+  }
 
-    public void setLoginName(String loginName) {
-        this.loginName = loginName;
-    }
+  public List<Theme> getThemes() {
+    return themes;
+  }
 
-    public String getStudyName() {
-        return studyName;
-    }
+  public List<Theme> completeUsername(String query) {
+    List<Theme> allThemes = addThemes();
+    List<Theme> filteredThemes = new ArrayList<>();
 
-    public void setStudyName(String studyName) {
-        this.studyName = studyName;
-        this.lazyModel = null;
-    }
-
-    public String getCreator() {
-        return studyCreator;
-    }
-
-    public void setCreator(String studyCreator) {
-        this.studyCreator = studyCreator;
-    }
-
-    public String getSampleID() {
-        return sample_Id;
-    }
-
-    public void setSampleID(String sample_Id) {
-        this.sample_Id = sample_Id;
-    }
-
-    public StudyTeam getStudyTeamEntry() {
-        if (studyTeamEntry == null) {
-            studyTeamEntry = new StudyTeam();
-        }
-        return studyTeamEntry;
-    }
-
-    public void setStudyTeamEntry(StudyTeam studyTeamEntry) {
-        this.studyTeamEntry = studyTeamEntry;
-    }
-
-    public List<TrackStudy> getStudyList() {
-        return studyFacade.findAll();
-    }
-
-    public List<StudyDetail> getPersonalStudy() {
-        return studyFacade.findAllPersonalStudyDetails(getUsername());
-    }
-
-    public long getAllStudy() {
-        return studyFacade.getAllStudy(getUsername());
-    }
-
-    public int getNOfMembers() {
-        return studyFacade.getMembers(getStudyName());
-    }
-
-    public boolean isDeleteFilesOnRemove() {
-        return deleteFilesOnRemove;
-    }
-
-    public void setDeleteFilesOnRemove(boolean deleteFilesOnRemove) {
-        this.deleteFilesOnRemove = deleteFilesOnRemove;
-    }
-
-    public List<TrackStudy> getPersonalStudyList() {
-        return studyFacade.filterPersonalStudy(getUsername());
-    }
-
-    public int getLatestStudyListSize() {
-        return studyFacade.filterPersonalStudy(getUsername()).size();
-    }
-
-    public List<Theme> addThemes() {
-        List<User> list = userMgr.filterUsersBasedOnStudy(getStudyName());
-        themes = new ArrayList<>();
-        int i = 0;
-        for (User user : list) {
-            themes.add(new Theme(i, user.getFname()+ " "+user.getLname(), user.getEmail()));
-            i++;
-        }
-
-        return themes;
-    }
-
-    public List<Theme> getThemes() {
-        return themes;
-    }
-
-    public List<Theme> completeUsername(String query) {
-        List<Theme> allThemes = addThemes();
-        List<Theme> filteredThemes = new ArrayList<>();
-
-        for (Theme t : allThemes) {
-            if (t.getName().toLowerCase().contains(query)) {
-                filteredThemes.add(t);
-            }
-        }
-        return filteredThemes;
-    }
-
-    public List<Theme> getSelectedUsernames() {
-        return this.selectedUsernames;
-    }
-
-    public void setSelectedUsernames(List<Theme> selectedUsernames) {
-        this.selectedUsernames = selectedUsernames;
-    }
-
-    private HttpServletRequest getRequest() {
-        return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-    }
-
-    private HttpServletResponse getResponse() {
-        return (HttpServletResponse) FacesContext.getCurrentInstance().getExternalContext().getResponse();
-    }
-
-    public String getUsername() {
-        return getRequest().getRemoteUser();
-    }
-
-    public StudyRoleTypes[] getTeam() {
-        return StudyRoleTypes.values();
-    }
-
-    public int countAllMembersPerStudy() {
-        return studyTeamController.countMembersPerStudy(studyName).size();
-    }
-
-    public String checkStudyOwner(String email) {
-        List<TrackStudy> lst = studyTeamController.findStudyMaster(studyName);
-        for (TrackStudy tr : lst) {
-            if (tr.getUsername().equals(email)) {
-                return email;
-            }
-        }
-        return null;
-    }
-
-    public boolean checkOwnerForSamples() {
-      return getUsername().equals(getCreator());
-    }
-
-    public String checkCurrentUser(String email) {
-        if (email.equals(getUsername())) {
-            return email;
-        }
-        return null;
-    }
-
-    public String renderComponentList() {
-        List<StudyTeam> st = studyTeamController.findCurrentRole(studyName, getUsername());
-        if (st.iterator().hasNext()) {
-            StudyTeam t = st.iterator().next();
-            return t.getTeamRole();
-        }
-        return null;
-    }
-
-    public int getAllStudyUserTypesListSize() {
-        return studyTeamController.findMembersByStudy(studyName).size();
-    }
-
-    public List<StudyTeam> getAllStudyUserTypesList() {
-        return studyTeamController.findMembersByStudy(studyName);
-    }
-
-    public List<StudyDetail> getAllStudiesPerUser() {
-        return studyFacade.findAllStudyDetails(getUsername());
-    }
-
-    public List<StudyDetail> getJoinedStudies() {
-        return studyFacade.findJoinedStudyDetails(getUsername());
-    }
-
-    public List<StudyTeam> getTeamList() {
-        return studyTeamController.findMembersByStudy(studyName);
-    }
-
-    public long countAllStudiesPerUser() {
-        return studyTeamController.countByMember(getUsername());
-    }
-
-    public int countPersonalStudy() {
-        return studyFacade.findByUser(getUsername()).size();
-    }
-
-    public int countJoinedStudy() {
-        boolean check = studyFacade.checkForStudyOwnership(getUsername());
-        if (check) {
-            return studyFacade.findJoinedStudies(getUsername()).size();
-        } else {
-            return studyFacade.QueryForNonRegistered(getUsername()).size();
-        }
-    }    
-
-    /**
-     * @return
-     */
-    public String fetchStudy() {
-        FacesContext fc = FacesContext.getCurrentInstance();
-        Map<String, String> params = fc.getExternalContext().getRequestParameterMap();
-        String studyname = params.get("studyname");
-        this.studyCreator = params.get("username");
-        return fetchStudy(studyname);
-    }
-    
-    public String fetchStudy(String studyname){
-      setStudyName(studyname);
-      sessionState.setActiveStudyByName(studyName);
-      return checkAccess();
-    }
-    
-    
-    public String checkAccess() {
-        boolean res = studyTeamController.findUserForActiveStudy(studyName,
-        getUsername());
-        boolean rec = userGroupsController.checkForCurrentSession(getUsername());
-        if (!res) {
-            if (!rec) {
-                userGroupsController.persistUserGroups(new UsersGroups(
-                    new UsersGroupsPK(getUsername(), "GUEST")));
-                logger.log(Level.FINE, "Guest role added for: {0}.", getUsername());
-                return "studyPage";
-            }
-        }
-        return "studyPage";
-    }
-
-    //add members to a team - bulk persist 
-    public synchronized String addToTeam() {
-        try {
-            Iterator<Theme> itr = getSelectedUsernames().listIterator();
-            while (itr.hasNext()) {
-                Theme t = itr.next();
-                StudyTeamPK stp = new StudyTeamPK(studyName, t.getName());
-                StudyTeam st = new StudyTeam(stp);
-                st.setTimestamp(new Date());
-                st.setTeamRole(studyTeamEntry.getTeamRole());
-                studyTeamController.persistStudyTeam(st);
-                logger.log(Level.FINE, "{0} - member added to study : {1}.", new Object[]{t.getName(), studyName});
-                activityFacade.persistActivity(ActivityFacade.NEW_MEMBER + t.getName() + " ", studyName, sessionState.getLoggedInUsername());
-            }
-            if (!getSelectedUsernames().isEmpty()) {
-                getSelectedUsernames().clear();
-            }
-        } catch (EJBException ejb) {
-            MessagesController.addErrorMessage("Error: Adding team member failed.");
-            logger.log(Level.SEVERE, "Adding members to study failed...{0}", ejb.getMessage());
-            return null;
-        }
-        MessagesController.addInfoMessage("New Member Added!");
-        return "studyPage";
-    }
-
-    public void itemSelect(SelectEvent e) {
-        if (getSelectedUsernames().isEmpty()) {
-            MessagesController.addErrorMessage("Error: People field cannot be empty.");
-        }
-    }
-
-    public int getTabIndex() {
-        return tabIndex;
-    }
-
-    public void setTabIndex(int tabIndex) {
-        this.tabIndex = tabIndex;
-    }
-
-    public void onTabChange(TabChangeEvent event) {
-      switch (event.getTab().getTitle()) {
-        case "All":
-          setTabIndex(0);
-          break;
-        case "Personal":
-          setTabIndex(1);
-          break;
-        case "Joined":
-          setTabIndex(2);
-          break;
-        default:
-          break;
+    for (Theme t : allThemes) {
+      if (t.getName().toLowerCase().contains(query)) {
+        filteredThemes.add(t);
       }
     }
+    return filteredThemes;
+  }
 
-    public boolean isCurrentOwner() {
-        String email = getUsername();
-        return email.equals(studyFacade.findOwner(studyName));
+  public List<Theme> getSelectedUsernames() {
+    return this.selectedUsernames;
+  }
+
+  public void setSelectedUsernames(List<Theme> selectedUsernames) {
+    this.selectedUsernames = selectedUsernames;
+  }
+
+  private HttpServletRequest getRequest() {
+    return (HttpServletRequest) FacesContext.getCurrentInstance().
+            getExternalContext().getRequest();
+  }
+
+  private HttpServletResponse getResponse() {
+    return (HttpServletResponse) FacesContext.getCurrentInstance().
+            getExternalContext().getResponse();
+  }
+
+  public String getUsername() {
+    return getRequest().getRemoteUser();
+  }
+
+  public StudyRoleTypes[] getTeam() {
+    return StudyRoleTypes.values();
+  }
+
+  public int countAllMembersPerStudy() {
+    return studyTeamController.countMembersPerStudy(studyName).size();
+  }
+
+  public String checkStudyOwner(String email) {
+    List<TrackStudy> lst = studyTeamController.findStudyMaster(studyName);
+    for (TrackStudy tr : lst) {
+      if (tr.getUsername().equals(email)) {
+        return email;
+      }
+    }
+    return null;
+  }
+
+  public boolean checkOwnerForSamples() {
+    return getUsername().equals(getCreator());
+  }
+
+  public String checkCurrentUser(String email) {
+    if (email.equals(getUsername())) {
+      return email;
+    }
+    return null;
+  }
+
+  public String renderComponentList() {
+    List<StudyTeam> st = studyTeamController.findCurrentRole(studyName,
+            getUsername());
+    if (st.iterator().hasNext()) {
+      StudyTeam t = st.iterator().next();
+      return t.getTeamRole();
+    }
+    return null;
+  }
+
+  public int getAllStudyUserTypesListSize() {
+    return studyTeamController.findMembersByStudy(studyName).size();
+  }
+
+  public List<StudyTeam> getAllStudyUserTypesList() {
+    return studyTeamController.findMembersByStudy(studyName);
+  }
+
+  public List<StudyDetail> getAllStudiesPerUser() {
+    return studyFacade.findAllStudyDetails(getUsername());
+  }
+
+  public List<StudyDetail> getJoinedStudies() {
+    return studyFacade.findJoinedStudyDetails(getUsername());
+  }
+
+  public List<StudyTeam> getTeamList() {
+    return studyTeamController.findMembersByStudy(studyName);
+  }
+
+  public long countAllStudiesPerUser() {
+    return studyTeamController.countByMember(getUsername());
+  }
+
+  public int countPersonalStudy() {
+    return studyFacade.findByUser(getUsername()).size();
+  }
+
+  public int countJoinedStudy() {
+    boolean check = studyFacade.checkForStudyOwnership(getUsername());
+    if (check) {
+      return studyFacade.findJoinedStudies(getUsername()).size();
+    } else {
+      return studyFacade.QueryForNonRegistered(getUsername()).size();
+    }
+  }
+
+  /**
+   * @return
+   */
+  public String fetchStudy() {
+    FacesContext fc = FacesContext.getCurrentInstance();
+    Map<String, String> params = fc.getExternalContext().
+            getRequestParameterMap();
+    String studyname = params.get("studyname");
+    this.studyCreator = params.get("username");
+    if(!isStudyPresentInHdfs(studyname)){
+      return null;
+    }
+    return fetchStudy(studyname);
+  }
+
+  private boolean isStudyPresentInHdfs(String studyname) {
+    Inode root = inodes.getStudyRoot(studyname);
+    if (root == null) {
+      MessagesController.addErrorMessage("Study not found.",
+              "The study's root folder was not found in HDFS. You will be unable to access its contents.","loadError");
+      logger.log(Level.INFO, "Study folder not found in HDFS for study{0} .", studyname);
+      return false;
+    }
+    return true;
+  }
+
+  public String fetchStudy(String studyname) {
+    setStudyName(studyname);
+    sessionState.setActiveStudyByName(studyName);
+    return checkAccess();
+  }
+
+  public String checkAccess() {
+    boolean res = studyTeamController.findUserForActiveStudy(studyName,
+            getUsername());
+    boolean rec = userGroupsController.checkForCurrentSession(getUsername());
+    if (!res) {
+      if (!rec) {
+        userGroupsController.persistUserGroups(new UsersGroups(
+                new UsersGroupsPK(getUsername(), "GUEST")));
+        logger.log(Level.FINE, "Guest role added for: {0}.", getUsername());
+        return "studyPage";
+      }
+    }
+    return "studyPage";
+  }
+
+  //add members to a team - bulk persist 
+  public synchronized String addToTeam() {
+    try {
+      Iterator<Theme> itr = getSelectedUsernames().listIterator();
+      while (itr.hasNext()) {
+        Theme t = itr.next();
+        StudyTeamPK stp = new StudyTeamPK(studyName, t.getName());
+        StudyTeam st = new StudyTeam(stp);
+        st.setTimestamp(new Date());
+        st.setTeamRole(studyTeamEntry.getTeamRole());
+        studyTeamController.persistStudyTeam(st);
+        logger.log(Level.FINE, "{0} - member added to study : {1}.",
+                new Object[]{t.getName(), studyName});
+        activityFacade.persistActivity(ActivityFacade.NEW_MEMBER + t.getName()
+                + " ", studyName, sessionState.getLoggedInUsername());
+      }
+      if (!getSelectedUsernames().isEmpty()) {
+        getSelectedUsernames().clear();
+      }
+    } catch (EJBException ejb) {
+      MessagesController.addErrorMessage("Error: Adding team member failed.");
+      logger.log(Level.SEVERE, "Adding members to study failed...{0}", ejb.
+              getMessage());
+      return null;
+    }
+    MessagesController.addInfoMessage("New Member Added!");
+    return "studyPage";
+  }
+
+  public void itemSelect(SelectEvent e) {
+    if (getSelectedUsernames().isEmpty()) {
+      MessagesController.addErrorMessage("Error: People field cannot be empty.");
+    }
+  }
+
+  public int getTabIndex() {
+    return tabIndex;
+  }
+
+  public void setTabIndex(int tabIndex) {
+    this.tabIndex = tabIndex;
+  }
+
+  public void onTabChange(TabChangeEvent event) {
+    switch (event.getTab().getTitle()) {
+      case "All":
+        setTabIndex(0);
+        break;
+      case "Personal":
+        setTabIndex(1);
+        break;
+      case "Joined":
+        setTabIndex(2);
+        break;
+      default:
+        break;
+    }
+  }
+
+  public boolean isCurrentOwner() {
+    String email = getUsername();
+    return email.equals(studyFacade.findOwner(studyName));
+  }
+
+  public String removeByName() {
+    boolean success = false;
+    try {
+      studyFacade.removeByName(studyName);
+      activityFacade.persistActivity(ActivityFacade.REMOVED_STUDY, studyName,
+              sessionState.getLoggedInUsername());
+      if (deleteFilesOnRemove) {
+        String path = File.separator + Constants.DIR_ROOT + File.separator
+                + studyName;
+        success = fileOps.rmRecursive(path);
+        if (!success) {
+          MessagesController.addErrorMessage(MessagesController.ERROR,
+                  "Failed to remove study files.");
+        }
+      }
+      logger.log(Level.FINE, "{0} - study removed.", studyName);
+    } catch (IOException e) {
+      MessagesController.addErrorMessage("Error: Study wasn't removed.");
+      return null;
+    }
+    if (success) {
+      MessagesController.addInfoMessage("Success", "Study " + studyName
+              + " was successfully removed.", "studyRemoved");
+      FacesContext context = FacesContext.getCurrentInstance();
+      context.getExternalContext().getFlash().setKeepMessages(true);
+      deleteFilesOnRemove = true;
+    }
+    return "indexPage";
+  }
+
+  public boolean isRemoved(String studyName) {
+    TrackStudy item = studyFacade.findByName(studyName);
+    return item == null;
+  }
+
+  public LazyDataModel<ActivityDetail> getSpecificLazyModel() {
+    if (lazyModel == null) {
+      lazyModel = new LazyActivityModel(activityDetailFacade, studyName);
+      lazyModel.setRowCount((int) activityFacade.getStudyCount(studyName));
+    }
+    return lazyModel;
+  }
+
+  public void redirectToUploader() {
+    try {
+      setLoginName(getUsername());
+      getResponse().sendRedirect(getRequest().getContextPath()
+              + "/bbc/uploader/sampleUploader.jsp");
+      FacesContext.getCurrentInstance().responseComplete();
+    } catch (IOException ex) {
+      Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE,
+              "Failed to send redirect to uploader page.", ex);
+    }
+  }
+
+  /**
+   * Return a list of UserGroups, which contain the members of this study per
+   * role type.
+   *
+   * @return
+   */
+  public List<UserGroup> getGroupedMembers() {
+    List<UserGroup> groupedUsers = new ArrayList<>();
+    StudyRoleTypes[] roles = StudyRoleTypes.values();
+    for (StudyRoleTypes role : roles) {
+      List<User> mems = studyTeamController.findTeamMembersByName(studyName,
+              role.getTeam());
+      if (!mems.isEmpty()) {
+        List<RoledUser> roleMems = new ArrayList<>();
+        for (User u : mems) {
+          roleMems.add(new RoledUser(u.getEmail(), u.getFname() + " " + u.
+                  getLname(), role));
+        }
+        groupedUsers.add(new UserGroup(role, roleMems));
+      }
+    }
+    return groupedUsers;
+  }
+
+  /**
+   * Count the number of users with the given role in the current study.
+   *
+   * @param role
+   * @return
+   */
+  public int countRoleUsers(String role) {
+    return studyTeamController.countStudyTeam(studyName, role);
+  }
+
+  public class UserGroup {
+
+    private StudyRoleTypes groupname;
+    private List<RoledUser> members;
+
+    public StudyRoleTypes getGroupname() {
+      return groupname;
     }
 
-    public String removeByName() {
-        boolean success = false;
-        try {
-            studyFacade.removeByName(studyName);
-            activityFacade.persistActivity(ActivityFacade.REMOVED_STUDY, studyName, sessionState.getLoggedInUsername());
-            if (deleteFilesOnRemove) {
-                String path = File.separator + Constants.DIR_ROOT + File.separator + studyName;
-                success = fileOps.rmRecursive(path);
-                if (!success) {
-                    MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to remove study files.");
-                }
-            }
-            logger.log(Level.FINE, "{0} - study removed.", studyName);
-        } catch (IOException e) {
-            MessagesController.addErrorMessage("Error: Study wasn't removed.");
-            return null;
-        }
-        if (success) {
-            MessagesController.addInfoMessage("Success", "Study " + studyName + " was successfully removed.", "studyRemoved");
-            FacesContext context = FacesContext.getCurrentInstance();
-            context.getExternalContext().getFlash().setKeepMessages(true);
-            deleteFilesOnRemove = true;
-        }
-        return "indexPage";
+    public List<RoledUser> getMembers() {
+      return members;
     }
 
-    public boolean isRemoved(String studyName) {
-        TrackStudy item = studyFacade.findByName(studyName);
-        return item == null;
+    public UserGroup(StudyRoleTypes groupname, List<RoledUser> members) {
+      this.groupname = groupname;
+      this.members = members;
     }
 
-    public LazyDataModel<ActivityDetail> getSpecificLazyModel() {
-        if (lazyModel == null) {
-            lazyModel = new LazyActivityModel(activityDetailFacade, studyName);
-            lazyModel.setRowCount((int) activityFacade.getStudyCount(studyName));
-        }
-        return lazyModel;
+    public void setGroupname(StudyRoleTypes groupName) {
+      this.groupname = groupName;
     }
 
-    public void redirectToUploader() {
-        try {
-            setLoginName(getUsername());
-            getResponse().sendRedirect(getRequest().getContextPath() + "/bbc/uploader/sampleUploader.jsp");
-            FacesContext.getCurrentInstance().responseComplete();
-        } catch (IOException ex) {
-            Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, "Failed to send redirect to uploader page.", ex);
-        }
+    public void setMembers(List<RoledUser> members) {
+      this.members = members;
+    }
+  }
+
+  public class RoledUser {
+
+    private String email;
+    private String name;
+    private StudyRoleTypes role;
+
+    public RoledUser(String email, String name, StudyRoleTypes role) {
+      this.email = email;
+      this.name = name;
+      this.role = role;
     }
 
-    /**
-     * Return a list of UserGroups, which contain the members of this study per
-     * role type.
-     *
-     * @return
-     */
-    public List<UserGroup> getGroupedMembers() {
-        List<UserGroup> groupedUsers = new ArrayList<>();
-        StudyRoleTypes[] roles = StudyRoleTypes.values();
-        for (StudyRoleTypes role : roles) {
-            List<User> mems = studyTeamController.findTeamMembersByName(studyName, role.getTeam());
-            if (!mems.isEmpty()) {
-                List<RoledUser> roleMems = new ArrayList<>();
-                for (User u : mems) {
-                    roleMems.add(new RoledUser(u.getEmail(), u.getFname() + " " + u.getLname(), role));
-                }
-                groupedUsers.add(new UserGroup(role, roleMems));
-            }
-        }
-        return groupedUsers;
+    public String getEmail() {
+      return email;
     }
 
-    /**
-     * Count the number of users with the given role in the current study.
-     *
-     * @param role
-     * @return
-     */
-    public int countRoleUsers(String role) {
-        return studyTeamController.countStudyTeam(studyName, role);
+    public String getName() {
+      return name;
     }
 
-    public class UserGroup {
-
-        private StudyRoleTypes groupname;
-        private List<RoledUser> members;
-
-        public StudyRoleTypes getGroupname() {
-            return groupname;
-        }
-
-        public List<RoledUser> getMembers() {
-            return members;
-        }
-
-        public UserGroup(StudyRoleTypes groupname, List<RoledUser> members) {
-            this.groupname = groupname;
-            this.members = members;
-        }
-
-        public void setGroupname(StudyRoleTypes groupName) {
-            this.groupname = groupName;
-        }
-
-        public void setMembers(List<RoledUser> members) {
-            this.members = members;
-        }
+    public StudyRoleTypes getRole() {
+      return role;
     }
 
-    public class RoledUser {
-
-        private String email;
-        private String name;
-        private StudyRoleTypes role;
-
-        public RoledUser(String email, String name, StudyRoleTypes role) {
-            this.email = email;
-            this.name = name;
-            this.role = role;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public StudyRoleTypes getRole() {
-            return role;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public void setRole(StudyRoleTypes role) {
-            this.role = role;
-        }
+    public void setEmail(String email) {
+      this.email = email;
     }
 
-    /**
-     * Check if the current study is owned by the user with given email.
-     *
-     * @param email
-     * @return true if the study is owned by the user with given email
-     */
-    public boolean studyOwnedBy(String email) {
-        TrackStudy t = studyFacade.findByName(studyName);
-        if (t == null) {
-            return false;
-        } else {
-            return t.getUsername().equalsIgnoreCase(email);
-        }
-    }    
-    
+    public void setName(String name) {
+      this.name = name;
+    }
+
+    public void setRole(StudyRoleTypes role) {
+      this.role = role;
+    }
+  }
+
+  /**
+   * Check if the current study is owned by the user with given email.
+   *
+   * @param email
+   * @return true if the study is owned by the user with given email
+   */
+  public boolean studyOwnedBy(String email) {
+    TrackStudy t = studyFacade.findByName(studyName);
+    if (t == null) {
+      return false;
+    } else {
+      return t.getUsername().equalsIgnoreCase(email);
+    }
+  }
+
   public StudyServiceEnum[] getSelectedServices() {
-    List<StudyServiceEnum> services = studyServices.findEnabledServicesForStudy(studyName);
+    List<StudyServiceEnum> services = studyServices.findEnabledServicesForStudy(
+            studyName);
     StudyServiceEnum[] reArr = new StudyServiceEnum[services.size()];
     return services.toArray(reArr);
   }
-  
-  public boolean shouldDrawTab(String service){    
-    return studyServices.findEnabledServicesForStudy(studyName).contains(StudyServiceEnum.valueOf(service));
+
+  public boolean shouldDrawTab(String service) {
+    return studyServices.findEnabledServicesForStudy(studyName).contains(
+            StudyServiceEnum.valueOf(service));
   }
-  
-  public void setSelectedServices(StudyServiceEnum[] selectedServices){
+
+  public void setSelectedServices(StudyServiceEnum[] selectedServices) {
     this.selectedServices = selectedServices;
   }
-  
-  public String updateServices(){
+
+  public String updateServices() {
     studyServices.persistServicesForStudy(studyName, selectedServices);
     return "studyPage";
-  } 
-  
-  public void archiveStudy(){
+  }
+
+  public void archiveStudy() {
     //archive the study
     boolean success = true;
-    if(success){
+    if (success) {
       studyFacade.archiveStudy(studyName);
     }
   }
-  
-  public void unarchiveStudy(){
+
+  public void unarchiveStudy() {
     //unarchive study
     boolean success = true;
-    if(success){
+    if (success) {
       studyFacade.unarchiveStudy(studyName);
     }
   }
-  
-  public boolean isStudyArchived(){
+
+  public boolean isStudyArchived() {
     TrackStudy study = sessionState.getActiveStudy();
-    if(study == null){
-      logger.log(Level.SEVERE,"Trying to call if study is archived, but has not been set.");
-      throw new IllegalStateException("Cannot check on StudyMB if study is archived if it has not been set.");
+    if (study == null) {
+      logger.log(Level.SEVERE,
+              "Trying to call if study is archived, but has not been set.");
+      throw new IllegalStateException(
+              "Cannot check on StudyMB if study is archived if it has not been set.");
     }
     return study.getArchived();
   }
