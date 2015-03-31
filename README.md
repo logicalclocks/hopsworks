@@ -1,7 +1,5 @@
-# hopsworks-frontend
-
-This project is generated with [yo angular generator](https://github.com/yeoman/generator-angular)
-version 0.11.1.
+# HopsWorks - Frontend
+André More & Ermias Gebremeskel
 
 ## Build & development
 
