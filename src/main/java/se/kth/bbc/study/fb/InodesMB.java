@@ -2,7 +2,6 @@ package se.kth.bbc.study.fb;
 
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,21 +11,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.ViewScoped;
-import javax.faces.context.FacesContext;
+import javax.faces.bean.SessionScoped;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.Constants;
-import se.kth.bbc.lims.MessagesController;
 
 /**
  *
  * @author jdowling
  */
 @ManagedBean(name = "InodesMB")
-@ViewScoped
+@SessionScoped
 public class InodesMB implements Serializable {
   private static final Logger logger = Logger.getLogger(InodesMB.class.getName());
 
@@ -59,6 +55,9 @@ public class InodesMB implements Serializable {
   }
 
   public List<InodeView> getChildren() {
+    if (!inodes.getStudyNameForInode(cwd).equals(sessionState.getActiveStudyname())) {
+      init();
+    }
     //get from DB and update Inode
     cwdChildren = inodes.findByParent(cwd);
     List<InodeView> kids = new ArrayList<>();

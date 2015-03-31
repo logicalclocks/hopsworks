@@ -51,6 +51,7 @@ public class StudyMB implements Serializable {
 
   private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
   private static final long serialVersionUID = 1L;
+  private static final int TAB_INDEX_ALL_STUDIES = 0, TAB_INDEX_MY_STUDIES=1, TAB_INDEX_JOINED_STUDIES = 2;
 
   @EJB
   private StudyFacade studyFacade;
@@ -178,14 +179,6 @@ public class StudyMB implements Serializable {
     this.deleteFilesOnRemove = deleteFilesOnRemove;
   }
 
-  public List<TrackStudy> getPersonalStudyList() {
-    return studyFacade.filterPersonalStudy(getUsername());
-  }
-
-  public int getLatestStudyListSize() {
-    return studyFacade.filterPersonalStudy(getUsername()).size();
-  }
-
   public List<Theme> addThemes() {
     List<User> list = userMgr.filterUsersBasedOnStudy(getStudyName());
     themes = new ArrayList<>();
@@ -296,15 +289,15 @@ public class StudyMB implements Serializable {
     return studyTeamController.findMembersByStudy(studyName);
   }
 
-  public long countAllStudiesPerUser() {
+  private long countAllStudiesPerUser() {
     return studyTeamController.countByMember(getUsername());
   }
 
-  public int countPersonalStudy() {
+  private int countPersonalStudy() {
     return studyFacade.findByUser(getUsername()).size();
   }
 
-  public int countJoinedStudy() {
+  private int countJoinedStudy() {
     boolean check = studyFacade.checkForStudyOwnership(getUsername());
     if (check) {
       return studyFacade.findJoinedStudies(getUsername()).size();
@@ -406,17 +399,34 @@ public class StudyMB implements Serializable {
   public void onTabChange(TabChangeEvent event) {
     switch (event.getTab().getTitle()) {
       case "All":
-        setTabIndex(0);
+        setTabIndex(TAB_INDEX_ALL_STUDIES);
         break;
       case "Personal":
-        setTabIndex(1);
+        setTabIndex(TAB_INDEX_MY_STUDIES);
         break;
       case "Joined":
-        setTabIndex(2);
+        setTabIndex(TAB_INDEX_JOINED_STUDIES);
         break;
       default:
         break;
     }
+  }
+  
+  public int getNumberOfDisplayedStudies(){
+    switch(tabIndex){
+      case TAB_INDEX_ALL_STUDIES:
+        return (int) countAllStudiesPerUser();
+      case TAB_INDEX_JOINED_STUDIES:
+        return countJoinedStudy();
+      case TAB_INDEX_MY_STUDIES:
+        return countPersonalStudy();
+      default:
+        throw new IllegalStateException("Tab index can only be contained in the set {0,1,2}.");
+    }
+  }
+  
+  public boolean isEmpyListDisplayed(){
+    return getNumberOfDisplayedStudies() == 0;
   }
 
   public boolean isCurrentOwner() {
