@@ -69,64 +69,64 @@
                         </span>
                       </h:panelGroup>
                       <p:tabView id="tabViewSummary" styleClass="ui-tabs" dynamic="true" cache="false" activeIndex="#{studyManagedBean.tabIndex}">
-                          <p:ajax event="tabChange" listener="#{studyManagedBean.onTabChange}" update=":#{p:component('studyBoxHeader')}"/>
-                          <p:tab id="allTab" title="All">
-                            <h:outputText styleClass="nothing_here_message" rendered="#{studyManagedBean.empyListDisplayed}">
-                              There are no studies here.
-                            </h:outputText>
-                            <ui:repeat var="study" value="#{studyManagedBean.allStudiesPerUser}">
-                              <li class="ui-tabs-panel">
-                                <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                                  <span class="tiny">#{study.creator}</span> / <strong>#{study.studyName}</strong>
-                                  <f:param name="studyname" value="#{study.studyName}"/>
-                                  <f:param name="username" value="#{study.email}"/>
-                                </p:commandLink>
-                                <span class="last_activity">
-                                  <strong style="font-size: 12px;color: #666;">Last activity:</strong>
-                                  <span>#{activityBean.findLastActivityOnStudy(study.studyName)}</span>
-                                </span>
-                              </li>
-                            </ui:repeat>
-                          </p:tab>
-                          <p:tab id="personalTab" title="Personal">
-                            <h:outputText styleClass="nothing_here_message" rendered="#{studyManagedBean.empyListDisplayed}">
-                              There are no studies here.
-                            </h:outputText>
-                            <ui:repeat var="study" value="#{studyManagedBean.personalStudy}">
-                              <li class="ui-tabs-panel">
-                                <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                                  <span class="tiny">#{study.creator}</span> / <strong>#{study.studyName}</strong>
-                                  <f:param name="studyname" value="#{study.studyName}"/>
-                                  <f:param name="username" value="#{study.email}"/>
-                                </p:commandLink>
-                                <span class="last_activity">
-                                  <strong style="font-size: 12px;color: #666;">Last activity:</strong>
-                                  <span>#{activityBean.findLastActivityOnStudy(study.studyName)}</span>
-                                </span>
-                              </li>
-                            </ui:repeat>
-                          </p:tab>
-                          <p:tab id="joinedTab" title="Joined">
-                            <h:outputText styleClass="nothing_here_message" rendered="#{studyManagedBean.empyListDisplayed}">
-                              There are no studies here.
-                            </h:outputText>
-                            <ui:repeat var="study" value="#{studyManagedBean.joinedStudies}">
-                              <li class="ui-tabs-panel">
-                                <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                                  <span class="tiny">#{study.creator}</span> / <strong>#{study.studyName}</strong>
-                                  <f:param name="studyname" value="#{study.studyName}"/>
-                                  <f:param name="username" value="#{study.email}"/>
-                                </p:commandLink>
-                                <span class="last_activity">
-                                  <strong style="font-size: 12px;color: #666;">Last activity:</strong>
-                                  <span>#{activityBean.findLastActivityOnStudy(study.studyName)}</span>
-                                </span>
-                              </li>
-                            </ui:repeat>
-                          </p:tab>
-                        </p:tabView>
-                      </div>
+                        <p:ajax event="tabChange" listener="#{studyManagedBean.onTabChange}" update=":#{p:component('studyBoxHeader')}"/>
+                        <p:tab id="allTab" title="All">
+                          <h:panelGroup styleClass="nothing_here_message" rendered="#{studyManagedBean.allStudyListEmpty}">
+                            There are no studies here.
+                          </h:panelGroup>
+                          <ui:repeat var="study" value="#{studyManagedBean.allStudiesPerUser}">
+                            <li class="ui-tabs-panel">
+                              <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                                <span class="tiny">#{study.creator}</span> / <strong>#{study.studyName}</strong>
+                                <f:param name="studyname" value="#{study.studyName}"/>
+                                <f:param name="username" value="#{study.email}"/>
+                              </p:commandLink>
+                              <span class="last_activity">
+                                <strong style="font-size: 12px;color: #666;">Last activity:</strong>
+                                <span>#{activityBean.findLastActivityOnStudy(study.studyName)}</span>
+                              </span>
+                            </li>
+                          </ui:repeat>
+                        </p:tab>
+                        <p:tab id="personalTab" title="Personal">
+                          <h:panelGroup styleClass="nothing_here_message" rendered="#{studyManagedBean.personalStudyListEmpty}">
+                            There are no studies here.
+                          </h:panelGroup>
+                          <ui:repeat var="study" value="#{studyManagedBean.personalStudy}">
+                            <li class="ui-tabs-panel">
+                              <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                                <span class="tiny">#{study.creator}</span> / <strong>#{study.studyName}</strong>
+                                <f:param name="studyname" value="#{study.studyName}"/>
+                                <f:param name="username" value="#{study.email}"/>
+                              </p:commandLink>
+                              <span class="last_activity">
+                                <strong style="font-size: 12px;color: #666;">Last activity:</strong>
+                                <span>#{activityBean.findLastActivityOnStudy(study.studyName)}</span>
+                              </span>
+                            </li>
+                          </ui:repeat>
+                        </p:tab>
+                        <p:tab id="joinedTab" title="Joined">
+                          <h:panelGroup styleClass="nothing_here_message" rendered="#{studyManagedBean.joinedStudyListEmpty}">
+                            There are no studies here.
+                          </h:panelGroup>
+                          <ui:repeat var="study" value="#{studyManagedBean.joinedStudies}">
+                            <li class="ui-tabs-panel">
+                              <p:commandLink action="#{studyManagedBean.fetchStudy()}">
+                                <span class="tiny">#{study.creator}</span> / <strong>#{study.studyName}</strong>
+                                <f:param name="studyname" value="#{study.studyName}"/>
+                                <f:param name="username" value="#{study.email}"/>
+                              </p:commandLink>
+                              <span class="last_activity">
+                                <strong style="font-size: 12px;color: #666;">Last activity:</strong>
+                                <span>#{activityBean.findLastActivityOnStudy(study.studyName)}</span>
+                              </span>
+                            </li>
+                          </ui:repeat>
+                        </p:tab>
+                      </p:tabView>
                     </div>
+                  </div>
                 </h:form>
               </div>
             </div>

@@ -425,8 +425,16 @@ public class StudyMB implements Serializable {
     }
   }
   
-  public boolean isEmpyListDisplayed(){
-    return getNumberOfDisplayedStudies() == 0;
+  public boolean isAllStudyListEmpty(){
+    return countAllStudiesPerUser() == 0;
+  }
+  
+  public boolean isJoinedStudyListEmpty(){
+    return countJoinedStudy() == 0;
+  }
+  
+  public boolean isPersonalStudyListEmpty(){
+    return countPersonalStudy() == 0;
   }
 
   public boolean isCurrentOwner() {
