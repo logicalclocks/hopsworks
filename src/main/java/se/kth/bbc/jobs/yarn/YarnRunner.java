@@ -9,11 +9,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -308,9 +306,7 @@ public class YarnRunner{
 
   private void setUpClassPath(Map<String, String> env) {
     // Add AppMaster.jar location to classpath
-    StringBuilder classPathEnv = new StringBuilder(
-            ApplicationConstants.Environment.CLASSPATH.$())
-            .append(":").append("./*");
+    StringBuilder classPathEnv = new StringBuilder().append("./*");
     for (String c : conf.getStrings(
             YarnConfiguration.YARN_APPLICATION_CLASSPATH,
             YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH)) {
