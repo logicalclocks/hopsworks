@@ -316,7 +316,7 @@ CREATE TABLE `organization` (
     `phone` varchar(20) DEFAULT NULL,
     `fax` varchar(20) DEFAULT NULL,
     PRIMARY KEY (`id`),
-    CONSTRAINT `fk_Organization` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`)
+    CONSTRAINT `fk_Organization` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `collection_type` (
