@@ -130,7 +130,7 @@ CREATE TABLE `study` (
     `username` varchar(45)NOT NULL,
     `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `retention_period` date DEFAULT NULL,
-    `ethical_satus` varchar(30) DEFAULT NULL,
+    `ethical_status` varchar(30) DEFAULT NULL,
     PRIMARY KEY (`name`),
     FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;

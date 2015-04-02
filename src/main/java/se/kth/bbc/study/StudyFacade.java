@@ -21,7 +21,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
  * @author roshan
  */
 @Stateless
-public class StudyFacade extends AbstractFacade<TrackStudy> {
+public class StudyFacade extends AbstractFacade<Study> {
 
   private static final Logger logger = Logger.getLogger(StudyFacade.class.
           getName());
@@ -43,26 +43,26 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
   private ActivityController activityController;
 
   public StudyFacade() {
-    super(TrackStudy.class);
+    super(Study.class);
   }
 
-  public List<TrackStudy> findAll() {
-    TypedQuery<TrackStudy> query = em.createNamedQuery("TrackStudy.findAll",
-            TrackStudy.class);
+  public List<Study> findAll() {
+    TypedQuery<Study> query = em.createNamedQuery("Study.findAll",
+            Study.class);
     return query.getResultList();
   }
 
-  public List<TrackStudy> findByUser(String username) {
-    TypedQuery<TrackStudy> query = em.createNamedQuery(
-            "TrackStudy.findByUsername", TrackStudy.class).setParameter(
+  public List<Study> findByUser(String username) {
+    TypedQuery<Study> query = em.createNamedQuery(
+            "Study.findByUsername", Study.class).setParameter(
                     "username", username);
     return query.getResultList();
   }
 
-  public TrackStudy findByName(String studyname) {
-    TypedQuery<TrackStudy> query = em.createNamedQuery("TrackStudy.findByName",
-            TrackStudy.class).setParameter("name", studyname);
-    TrackStudy result;
+  public Study findByName(String studyname) {
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByName",
+            Study.class).setParameter("name", studyname);
+    Study result;
     try {
       result = query.getSingleResult();
       return result;
@@ -72,19 +72,19 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
   }
 
   public int getAllStudy(String username) {
-    return ((Long) em.createNamedQuery("TrackStudy.countStudyByOwner").
+    return ((Long) em.createNamedQuery("Study.countStudyByOwner").
             setParameter("username", username).getSingleResult()).intValue();
   }
 
   public int getMembers(String name) {
-    return ((Long) em.createNamedQuery("TrackStudy.findMembers").setParameter(
+    return ((Long) em.createNamedQuery("Study.findMembers").setParameter(
             "name", name).getSingleResult()).intValue();
   }
 
-  public List<TrackStudy> filterPersonalStudy(String username) {
+  public List<Study> filterPersonalStudy(String username) {
 
-    Query query = em.createNamedQuery("TrackStudy.findByUsername",
-            TrackStudy.class).setParameter("username", username);
+    Query query = em.createNamedQuery("Study.findByUsername",
+            Study.class).setParameter("username", username);
     return query.getResultList();
 
   }
@@ -92,11 +92,11 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
   public String filterByName(String name) {
 
     Query query
-            = em.createNamedQuery("TrackStudy.findByName", TrackStudy.class).
+            = em.createNamedQuery("Study.findByName", Study.class).
             setParameter("name", name);
-    List<TrackStudy> result = query.getResultList();
+    List<Study> result = query.getResultList();
     if (result.iterator().hasNext()) {
-      TrackStudy t = result.iterator().next();
+      Study t = result.iterator().next();
       return t.getUsername();
     }
     return null;
@@ -106,16 +106,16 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
    * Get the owner of the given study.
    */
   public String findOwner(String studyName) {
-    Query q = em.createNamedQuery("TrackStudy.findOwner", String.class).
+    Query q = em.createNamedQuery("Study.findOwner", String.class).
             setParameter("name", studyName);
     return (String) q.getSingleResult();
   }
 
-  public List<TrackStudy> findAllStudies(String user) {
+  public List<Study> findAllStudies(String user) {
 
     Query query = em.createNativeQuery(
             "SELECT name, username FROM study WHERE username=? UNION SELECT name, username FROM study WHERE name IN (SELECT name FROM study_team WHERE team_member=?)",
-            TrackStudy.class)
+            Study.class)
             .setParameter(1, user).setParameter(2, user);
 
     return query.getResultList();
@@ -149,11 +149,11 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
   }
 
   //TODO: remove this method and replace with findJoinedStudyDetails
-  public List<TrackStudy> findJoinedStudies(String user) {
+  public List<Study> findJoinedStudies(String user) {
 
     Query query = em.createNativeQuery(
             "select study.name, study.username from (study_team join study on study_team.name=study.name) join users on study.username=users.email where study.username not like ? and study_team.team_member like ?",
-            TrackStudy.class)
+            Study.class)
             .setParameter(1, user).setParameter(2, user);
     return query.getResultList();
   }
@@ -173,50 +173,50 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
     return query.getResultList();
   }
 
-  public List<TrackStudy> QueryForNonRegistered(String user) {
+  public List<Study> QueryForNonRegistered(String user) {
 
     Query query = em.createNativeQuery(
             "SELECT name, username FROM study WHERE name IN (SELECT name FROM study_team WHERE team_member=?)",
-            TrackStudy.class)
+            Study.class)
             .setParameter(1, user);
     return query.getResultList();
   }
 
   public boolean checkForStudyOwnership(String user) {
 
-    Query query = em.createNamedQuery("TrackStudy.countStudyByOwner",
-            TrackStudy.class).setParameter("username", user);
+    Query query = em.createNamedQuery("Study.countStudyByOwner",
+            Study.class).setParameter("username", user);
     long res = (Long) query.getSingleResult();
 
     return res > 0;
   }
 
-  public void persistStudy(TrackStudy study) {
+  public void persistStudy(Study study) {
     em.persist(study);
   }
 
   public void removeStudy(String name) {
-    TrackStudy study = em.find(TrackStudy.class, name);
+    Study study = em.find(Study.class, name);
     if (study != null) {
       em.remove(study);
     }
   }
 
   public synchronized void removeByName(String studyname) {
-    TrackStudy study = em.find(TrackStudy.class, studyname);
+    Study study = em.find(Study.class, studyname);
     if (study != null) {
       em.remove(study);
     }
   }
 
   public boolean findStudy(String name) {
-    TrackStudy study = em.find(TrackStudy.class, name);
+    Study study = em.find(Study.class, name);
     return study != null;
   }
 
   public boolean updateRetentionPeriod(String name, Date date) {
 
-    TrackStudy study = em.find(TrackStudy.class, name);
+    Study study = em.find(Study.class, name);
     study.setRetentionPeriod(date);
     if (study != null) {
       em.merge(study);
@@ -226,7 +226,7 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
   }
 
   public Date getRetentionPeriod(String name) {
-    TrackStudy study = em.find(TrackStudy.class, name);
+    Study study = em.find(Study.class, name);
     if (study != null) {
       return study.getRetentionPeriod();
     }

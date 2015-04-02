@@ -94,7 +94,7 @@ public class StudyMB implements Serializable {
   @EJB
   private ActivityController activityController;
 
-  private TrackStudy study;
+  private Study study;
   private List<User> usernames;
   private StudyTeam studyTeamEntry;
   private List<Theme> selectedUsernames;
@@ -199,14 +199,14 @@ public class StudyMB implements Serializable {
     this.sample_Id = sample_Id;
   }
 
-  public TrackStudy getStudy() {
+  public Study getStudy() {
     if (study == null) {
       study = studyController.findByName(studyName);
     }
     return study;
   }
 
-  public void setStudy(TrackStudy study) {
+  public void setStudy(Study study) {
     this.study = study;
   }
 
@@ -221,7 +221,7 @@ public class StudyMB implements Serializable {
     this.studyTeamEntry = studyTeamEntry;
   }
 
-  public List<TrackStudy> getStudyList() {
+  public List<Study> getStudyList() {
     return studyController.findAll();
   }
 
@@ -245,7 +245,7 @@ public class StudyMB implements Serializable {
     this.deleteFilesOnRemove = deleteFilesOnRemove;
   }
 
-  public List<TrackStudy> getPersonalStudyList() {
+  public List<Study> getPersonalStudyList() {
     return studyController.filterPersonalStudy(getUsername());
   }
 
@@ -313,8 +313,8 @@ public class StudyMB implements Serializable {
   }
 
   public String checkStudyOwner(String email) {
-    List<TrackStudy> lst = studyTeamController.findStudyMaster(studyName);
-    for (TrackStudy tr : lst) {
+    List<Study> lst = studyTeamController.findStudyMaster(studyName);
+    for (Study tr : lst) {
       if (tr.getUsername().equals(email)) {
         return email;
       }
@@ -508,14 +508,19 @@ public class StudyMB implements Serializable {
   }
 
   public boolean isRemoved(String studyName) {
-    TrackStudy item = studyController.findByName(studyName);
+    Study item = studyController.findByName(studyName);
     return item == null;
   }
 
   public LazyDataModel<ActivityDetail> getSpecificLazyModel() {
     if (lazyModel == null) {
+      try{
       lazyModel = new LazyActivityModel(activityDetailFacade, studyName);
       lazyModel.setRowCount((int) activityFacade.getStudyCount(studyName));
+      }catch(IllegalArgumentException e){
+        logger.log(Level.SEVERE,"Error loading lazy model.",e);
+        this.lazyModel = null;
+      }
     }
     return lazyModel;
   }
@@ -637,7 +642,7 @@ public class StudyMB implements Serializable {
    * @return true if the study is owned by the user with given email
    */
   public boolean studyOwnedBy(String email) {
-    TrackStudy t = studyController.findByName(studyName);
+    Study t = studyController.findByName(studyName);
     if (t == null) {
       return false;
     } else {

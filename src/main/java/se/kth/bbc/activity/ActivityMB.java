@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -34,9 +35,14 @@ public class ActivityMB implements Serializable {
 
   @PostConstruct
   public void init() {
-    this.allLazyModel = new LazyActivityModel(activityDetailFacade);
-    int cnt = (int) activityController.getTotalCount();
-    allLazyModel.setRowCount(cnt);
+    try {
+      this.allLazyModel = new LazyActivityModel(activityDetailFacade);
+      int cnt = (int) activityController.getTotalCount();
+      allLazyModel.setRowCount(cnt);
+    } catch (IllegalArgumentException e) {
+      logger.log(Level.SEVERE, "Failed to initialize LazyActivityModel.", e);
+      this.allLazyModel = null;
+    }
   }
 
   public LazyDataModel<ActivityDetail> getAllLazyModel() {

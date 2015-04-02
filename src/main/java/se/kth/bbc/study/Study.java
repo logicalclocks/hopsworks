@@ -31,31 +31,31 @@ import se.kth.bbc.study.samples.Samplecollection;
 @Table(name = "study")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "TrackStudy.findAll",
-          query = "SELECT t FROM TrackStudy t"),
-  @NamedQuery(name = "TrackStudy.findByName",
-          query = "SELECT t FROM TrackStudy t WHERE t.name = :name"),
-  @NamedQuery(name = "TrackStudy.findByUsername",
-          query = "SELECT t FROM TrackStudy t WHERE t.username = :username"),
-  @NamedQuery(name = "TrackStudy.findByCreated",
-          query = "SELECT t FROM TrackStudy t WHERE t.created = :created"),
-  @NamedQuery(name = "TrackStudy.findByEthicalStatus",
+  @NamedQuery(name = "Study.findAll",
+          query = "SELECT t FROM Study t"),
+  @NamedQuery(name = "Study.findByName",
+          query = "SELECT t FROM Study t WHERE t.name = :name"),
+  @NamedQuery(name = "Study.findByUsername",
+          query = "SELECT t FROM Study t WHERE t.username = :username"),
+  @NamedQuery(name = "Study.findByCreated",
+          query = "SELECT t FROM Study t WHERE t.created = :created"),
+  @NamedQuery(name = "Study.findByEthicalStatus",
           query
-          = "SELECT t FROM TrackStudy t WHERE t.ethicalStatus = :ethicalStatus"),
-  @NamedQuery(name = "TrackStudy.findByRetentionPeriod",
+          = "SELECT t FROM Study t WHERE t.ethicalStatus = :ethicalStatus"),
+  @NamedQuery(name = "Study.findByRetentionPeriod",
           query
-          = "SELECT t FROM TrackStudy t WHERE t.retentionPeriod = :retentionPeriod"),
-  @NamedQuery(name = "TrackStudy.findOwner",
-          query = "SELECT t.username FROM TrackStudy t WHERE t.name = :name"),
-  @NamedQuery(name = "TrackStudy.countStudyByOwner",
+          = "SELECT t FROM Study t WHERE t.retentionPeriod = :retentionPeriod"),
+  @NamedQuery(name = "Study.findOwner",
+          query = "SELECT t.username FROM Study t WHERE t.name = :name"),
+  @NamedQuery(name = "Study.countStudyByOwner",
           query
-          = "SELECT count(t.name) FROM TrackStudy t WHERE t.username = :username")})
-public class TrackStudy implements Serializable {
+          = "SELECT count(t.name) FROM Study t WHERE t.username = :username")})
+public class Study implements Serializable {
 
   @OneToMany(mappedBy = "study")
   private Collection<Samplecollection> samplecollectionCollection;
   @OneToOne(cascade = CascadeType.ALL,
-          mappedBy = "trackStudy")
+          mappedBy = "study")
   private StudyMeta studyMeta;
   private static final long serialVersionUID = 1L;
   @Id
@@ -79,6 +79,11 @@ public class TrackStudy implements Serializable {
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date created;
+  @NotNull
+  @Size(min = 1,
+          max = 30)
+  @Column(name = "ethical_status")
+  private String ethicalStatus;
 
   public Date getCreated() {
     return created;
@@ -87,20 +92,15 @@ public class TrackStudy implements Serializable {
   public void setCreated(Date created) {
     this.created = created;
   }
-  @NotNull
-  @Size(min = 1,
-          max = 30)
-  @Column(name = "ethical_satus")
-  private String ethicalStatus;
 
-  public TrackStudy() {
+  public Study() {
   }
 
-  public TrackStudy(String name) {
+  public Study(String name) {
     this.name = name;
   }
 
-  public TrackStudy(String name, String username, Date timestamp) {
+  public Study(String name, String username, Date timestamp) {
     this.name = name;
     this.username = username;
     this.created = timestamp;
@@ -148,17 +148,17 @@ public class TrackStudy implements Serializable {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof TrackStudy)) {
+    if (!(object instanceof Study)) {
       return false;
     }
-    TrackStudy other = (TrackStudy) object;
+    Study other = (Study) object;
     return !((this.name == null && other.name != null) || (this.name != null
             && !this.name.equals(other.name)));
   }
 
   @Override
   public String toString() {
-    return "se.kth.bbc.study.TrackStudy[ name=" + name + " ]";
+    return "se.kth.bbc.study.Study[ name=" + name + " ]";
   }
 
   public StudyMeta getStudyMeta() {

@@ -19,7 +19,7 @@ import org.primefaces.push.EventBus;
 import org.primefaces.push.EventBusFactory;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.study.StudyFacade;
-import se.kth.bbc.study.TrackStudy;
+import se.kth.bbc.study.Study;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 import se.kth.bbc.security.ua.model.User;
 
@@ -137,7 +137,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
           Collection<JobExecutionFile> execFiles,
           Collection<JobInputFile> inputFiles) {
     User user = users.findByEmail(userEmail);
-    TrackStudy study = studies.findByName(studyname);
+    Study study = studies.findByName(studyname);
     Date submission = new Date(); //now
     if (state == null) {
       state = JobState.INITIALIZING;

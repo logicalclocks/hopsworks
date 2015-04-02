@@ -7,7 +7,7 @@ import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.study.StudyFacade;
-import se.kth.bbc.study.TrackStudy;
+import se.kth.bbc.study.Study;
 
 /**
  *
@@ -20,13 +20,13 @@ public class ClientSessionState implements Serializable {
   @EJB
   private StudyFacade studyFacade;
 
-  private TrackStudy activeStudy;
+  private Study activeStudy;
 
-  public void setActiveStudy(TrackStudy study) {
+  public void setActiveStudy(Study study) {
     this.activeStudy = study;
   }
 
-  public TrackStudy getActiveStudy() {
+  public Study getActiveStudy() {
     return activeStudy;
   }
 

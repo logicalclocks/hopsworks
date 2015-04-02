@@ -82,10 +82,10 @@ public class StudyTeamFacade {
 
   }
 
-  public List<TrackStudy> findStudyMaster(String name) {
+  public List<Study> findStudyMaster(String name) {
     Query query = em.createNativeQuery(
             "SELECT * FROM study WHERE name IN (SELECT name FROM study_team WHERE name=?)",
-            TrackStudy.class).setParameter(1, name);
+            Study.class).setParameter(1, name);
     return query.getResultList();
   }
 

@@ -26,7 +26,8 @@ and open the template in the editor.
               <h:link><span class="tiny">#{act.performedByName}  /  </span><strong>#{act.studyname}</strong></h:link>
             </div>
           </div>
-        </p:dataScroller>
+        </p:dataScroller>        
+        <h:outputText value="An error occurred while loading the audit trail. Please try refreshing the page." rendered="#{studyManagedBean.specificLazyModel == null}"/>
       </div>
     </ui:composition>
   </body>

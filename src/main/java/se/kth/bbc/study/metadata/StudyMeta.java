@@ -18,7 +18,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.study.TrackStudy;
+import se.kth.bbc.study.Study;
 
 /**
  *
@@ -63,7 +63,7 @@ public class StudyMeta implements Serializable {
           = false,
           updatable = false)
   @OneToOne(optional = false)
-  private TrackStudy trackStudy;
+  private Study study;
   @ElementCollection(targetClass = CollectionTypeStudyDesignEnum.class)
   @CollectionTable(name = "study_design",
           joinColumns = @JoinColumn(name = "study_id",
@@ -128,12 +128,12 @@ public class StudyMeta implements Serializable {
     this.description = description;
   }
 
-  public TrackStudy getTrackStudy() {
-    return trackStudy;
+  public Study getStudy() {
+    return study;
   }
 
-  public void setTrackStudy(TrackStudy trackStudy) {
-    this.trackStudy = trackStudy;
+  public void setStudy(Study study) {
+    this.study = study;
   }
 
   @Override
