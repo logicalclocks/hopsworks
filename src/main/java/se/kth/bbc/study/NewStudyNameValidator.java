@@ -47,7 +47,7 @@ public class NewStudyNameValidator implements Validator, ClientValidator {
         throw new ValidatorException(new FacesMessage(
                 FacesMessage.SEVERITY_ERROR, title,
                 "The study name cannot contain any of the characters "
-                + Constants.PRINT_FILENAME_DISALLOWED_CHARS + ". You used " 
+                + Constants.PRINT_FILENAME_DISALLOWED_CHARS + ". You used "
                 + (c == ' ' ? "space" : c) + "."));
       }
     }

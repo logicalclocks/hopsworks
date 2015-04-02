@@ -15,57 +15,57 @@ import javax.faces.bean.ViewScoped;
 @SessionScoped
 public class CuneiformParamsMB implements Serializable {
 
-    private List<CuneiformParameter> input;
-    private List<CuneiformParameter> output;
+  private List<CuneiformParameter> input;
+  private List<CuneiformParameter> output;
 
-    /**
-     * Creates a new instance of CuneiformParamsMB
-     */
-    public CuneiformParamsMB() {
-        this.input = new ArrayList<>();
-        this.output = new ArrayList<>();
-    }
+  /**
+   * Creates a new instance of CuneiformParamsMB
+   */
+  public CuneiformParamsMB() {
+    this.input = new ArrayList<>();
+    this.output = new ArrayList<>();
+  }
 
-    public List<CuneiformParameter> getInput() {
-        return input;
-    }
+  public List<CuneiformParameter> getInput() {
+    return input;
+  }
 
-    public List<CuneiformParameter> getOutput() {
-        return output;
-    }
+  public List<CuneiformParameter> getOutput() {
+    return output;
+  }
 
-    public void addInputParam(CuneiformParameter in) {
-        if (!input.contains(in)) {
-            this.input.add(in);
-        }
+  public void addInputParam(CuneiformParameter in) {
+    if (!input.contains(in)) {
+      this.input.add(in);
     }
+  }
 
-    public void addOutputParam(CuneiformParameter out) {
-        if (!output.contains(out)) {
-            this.output.add(out);
-        }
+  public void addOutputParam(CuneiformParameter out) {
+    if (!output.contains(out)) {
+      this.output.add(out);
     }
+  }
 
-    public void deleteInputParam(CuneiformParameter in) {
-        this.input.remove(in);
-    }
+  public void deleteInputParam(CuneiformParameter in) {
+    this.input.remove(in);
+  }
 
-    public void deleteOutputParam(CuneiformParameter out) {
-        this.output.remove(out);
-    }
+  public void deleteOutputParam(CuneiformParameter out) {
+    this.output.remove(out);
+  }
 
-    public void addNewInputParam() {
-        CuneiformParameter in = new CuneiformParameter();
-        if (!input.contains(in)) {
-            this.input.add(in);
-        }
+  public void addNewInputParam() {
+    CuneiformParameter in = new CuneiformParameter();
+    if (!input.contains(in)) {
+      this.input.add(in);
     }
+  }
 
-    public void addNewOutputParam() {
-        CuneiformParameter out = new CuneiformParameter();
-        if (!output.contains(out)) {
-            this.output.add(out);
-        }
+  public void addNewOutputParam() {
+    CuneiformParameter out = new CuneiformParameter();
+    if (!output.contains(out)) {
+      this.output.add(out);
     }
+  }
 
 }

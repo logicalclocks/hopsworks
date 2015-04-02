@@ -30,125 +30,134 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "consent")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Consent.findAll", query = "SELECT c FROM Consent c"),
-    @NamedQuery(name = "Consent.findById", query = "SELECT c FROM Consent c WHERE c.id = :id"),
-    @NamedQuery(name = "Consent.findByDate", query = "SELECT c FROM Consent c WHERE c.date = :date"),
-    @NamedQuery(name = "Consent.findByStatus", query = "SELECT c FROM Consent c WHERE c.status = :status"),
-    @NamedQuery(name = "Consent.findByName", query = "SELECT c FROM Consent c WHERE c.name = :name"),
-    @NamedQuery(name = "Consent.findByStudyName", query = "SELECT c FROM Consent c WHERE c.studyName = :studyName"),
-    @NamedQuery(name = "Consent.findByType", query = "SELECT c FROM Consent c WHERE c.type = :type")})
+  @NamedQuery(name = "Consent.findAll",
+          query = "SELECT c FROM Consent c"),
+  @NamedQuery(name = "Consent.findById",
+          query = "SELECT c FROM Consent c WHERE c.id = :id"),
+  @NamedQuery(name = "Consent.findByDate",
+          query = "SELECT c FROM Consent c WHERE c.date = :date"),
+  @NamedQuery(name = "Consent.findByStatus",
+          query = "SELECT c FROM Consent c WHERE c.status = :status"),
+  @NamedQuery(name = "Consent.findByName",
+          query = "SELECT c FROM Consent c WHERE c.name = :name"),
+  @NamedQuery(name = "Consent.findByStudyName",
+          query = "SELECT c FROM Consent c WHERE c.studyName = :studyName"),
+  @NamedQuery(name = "Consent.findByType",
+          query = "SELECT c FROM Consent c WHERE c.type = :type")})
 public class Consent implements Serializable {
-    private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Basic(optional = false)
-    @Column(name = "id")
-    private Long id;
-    @Column(name = "date")
-    @Temporal(TemporalType.DATE)
-    private Date date;
-    @Size(max = 30)
-    @Column(name = "status")
-    private String status;
-    @Size(max = 80)
-    @Column(name = "name")
-    private String name;
-    @Size(max = 80)
-    @Column(name = "study_name")
-    private String studyName;
 
-    public String getStudyName() {
-        return studyName;
-    }
+  private static final long serialVersionUID = 1L;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Basic(optional = false)
+  @Column(name = "id")
+  private Long id;
+  @Column(name = "date")
+  @Temporal(TemporalType.DATE)
+  private Date date;
+  @Size(max = 30)
+  @Column(name = "status")
+  private String status;
+  @Size(max = 80)
+  @Column(name = "name")
+  private String name;
+  @Size(max = 80)
+  @Column(name = "study_name")
+  private String studyName;
 
-    public void setStudyName(String studyName) {
-        this.studyName = studyName;
-    }
-    @Lob
-    @Column(name = "consent_form")
-    private byte[] consentForm;
-    @Size(max = 20)
-    @Column(name = "type")
-    private String type;
+  public String getStudyName() {
+    return studyName;
+  }
 
-    public Consent() {
-    }
+  public void setStudyName(String studyName) {
+    this.studyName = studyName;
+  }
+  @Lob
+  @Column(name = "consent_form")
+  private byte[] consentForm;
+  @Size(max = 20)
+  @Column(name = "type")
+  private String type;
 
-    public Consent(Long id) {
-        this.id = id;
-    }
+  public Consent() {
+  }
 
-    public Long getId() {
-        return id;
-    }
+  public Consent(Long id) {
+    this.id = id;
+  }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+  public Long getId() {
+    return id;
+  }
 
-    public Date getDate() {
-        return date;
-    }
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-    public void setDate(Date date) {
-        this.date = date;
-    }
+  public Date getDate() {
+    return date;
+  }
 
-    public String getStatus() {
-        return status;
-    }
+  public void setDate(Date date) {
+    this.date = date;
+  }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+  public String getStatus() {
+    return status;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public void setStatus(String status) {
+    this.status = status;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public byte[] getConsentForm() {
-        return consentForm;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public void setConsentForm(byte[] consentForm) {
-        this.consentForm = consentForm;
-    }
+  public byte[] getConsentForm() {
+    return consentForm;
+  }
 
-    public String getType() {
-        return type;
-    }
+  public void setConsentForm(byte[] consentForm) {
+    this.consentForm = consentForm;
+  }
 
-    public void setType(String type) {
-        this.type = type;
-    }
+  public String getType() {
+    return type;
+  }
 
-    @Override
-    public int hashCode() {
-        int hash = 0;
-        hash += (id != null ? id.hashCode() : 0);
-        return hash;
-    }
+  public void setType(String type) {
+    this.type = type;
+  }
 
-    @Override
-    public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof Consent)) {
-            return false;
-        }
-        Consent other = (Consent) object;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-            return false;
-        }
-        return true;
-    }
+  @Override
+  public int hashCode() {
+    int hash = 0;
+    hash += (id != null ? id.hashCode() : 0);
+    return hash;
+  }
 
-    @Override
-    public String toString() {
-        return "se.kth.bbc.study.privacy.model.Consent[ id=" + id + " ]";
+  @Override
+  public boolean equals(Object object) {
+    // TODO: Warning - this method won't work in the case the id fields are not set
+    if (!(object instanceof Consent)) {
+      return false;
     }
-    
+    Consent other = (Consent) object;
+    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
+            equals(other.id))) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return "se.kth.bbc.study.privacy.model.Consent[ id=" + id + " ]";
+  }
+
 }

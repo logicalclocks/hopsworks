@@ -37,358 +37,389 @@ import se.kth.bbc.security.ua.SecurityQuestion;
 @Table(name = "users")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "User.findAll", query = "SELECT u FROM User u"),
-    @NamedQuery(name = "User.findByUid", query = "SELECT u FROM User u WHERE u.uid = :uid"),
-    @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username"),
-    @NamedQuery(name = "User.findByPassword", query = "SELECT u FROM User u WHERE u.password = :password"),
-    @NamedQuery(name = "User.findByEmail", query = "SELECT u FROM User u WHERE u.email = :email"),
-    @NamedQuery(name = "User.findByFname", query = "SELECT u FROM User u WHERE u.fname = :fname"),
-    @NamedQuery(name = "User.findByLname", query = "SELECT u FROM User u WHERE u.lname = :lname"),
-    @NamedQuery(name = "User.findByActivated", query = "SELECT u FROM User u WHERE u.activated = :activated"),
-    @NamedQuery(name = "User.findByTitle", query = "SELECT u FROM User u WHERE u.title = :title"),
-    @NamedQuery(name = "User.findByMobile", query = "SELECT u FROM User u WHERE u.mobile = :mobile"),
-    @NamedQuery(name = "User.findByOrcid", query = "SELECT u FROM User u WHERE u.orcid = :orcid"),
-    @NamedQuery(name = "User.findByFalseLogin", query = "SELECT u FROM User u WHERE u.falseLogin = :falseLogin"),
-    @NamedQuery(name = "User.findByStatus", query = "SELECT u FROM User u WHERE u.status = :status"),
-    @NamedQuery(name = "User.findByIsonline", query = "SELECT u FROM User u WHERE u.isonline = :isonline"),
-    @NamedQuery(name = "User.findBySecret", query = "SELECT u FROM User u WHERE u.secret = :secret"),
-    @NamedQuery(name = "User.findByValidationKey", query = "SELECT u FROM User u WHERE u.validationKey = :validationKey"),
-    @NamedQuery(name = "User.findBySecurityQuestion", query = "SELECT u FROM User u WHERE u.securityQuestion = :securityQuestion"),
-    @NamedQuery(name = "User.findBySecurityAnswer", query = "SELECT u FROM User u WHERE u.securityAnswer = :securityAnswer"),
-    @NamedQuery(name = "User.findByYubikeyUser", query = "SELECT u FROM User u WHERE u.yubikeyUser = :yubikeyUser"),
-    @NamedQuery(name = "User.findByPasswordChanged", query = "SELECT u FROM User u WHERE u.passwordChanged = :passwordChanged"),
-    @NamedQuery(name = "User.findByNotes", query = "SELECT u FROM User u WHERE u.notes = :notes")})
+  @NamedQuery(name = "User.findAll",
+          query = "SELECT u FROM User u"),
+  @NamedQuery(name = "User.findByUid",
+          query = "SELECT u FROM User u WHERE u.uid = :uid"),
+  @NamedQuery(name = "User.findByUsername",
+          query = "SELECT u FROM User u WHERE u.username = :username"),
+  @NamedQuery(name = "User.findByPassword",
+          query = "SELECT u FROM User u WHERE u.password = :password"),
+  @NamedQuery(name = "User.findByEmail",
+          query = "SELECT u FROM User u WHERE u.email = :email"),
+  @NamedQuery(name = "User.findByFname",
+          query = "SELECT u FROM User u WHERE u.fname = :fname"),
+  @NamedQuery(name = "User.findByLname",
+          query = "SELECT u FROM User u WHERE u.lname = :lname"),
+  @NamedQuery(name = "User.findByActivated",
+          query = "SELECT u FROM User u WHERE u.activated = :activated"),
+  @NamedQuery(name = "User.findByTitle",
+          query = "SELECT u FROM User u WHERE u.title = :title"),
+  @NamedQuery(name = "User.findByMobile",
+          query = "SELECT u FROM User u WHERE u.mobile = :mobile"),
+  @NamedQuery(name = "User.findByOrcid",
+          query = "SELECT u FROM User u WHERE u.orcid = :orcid"),
+  @NamedQuery(name = "User.findByFalseLogin",
+          query = "SELECT u FROM User u WHERE u.falseLogin = :falseLogin"),
+  @NamedQuery(name = "User.findByStatus",
+          query = "SELECT u FROM User u WHERE u.status = :status"),
+  @NamedQuery(name = "User.findByIsonline",
+          query = "SELECT u FROM User u WHERE u.isonline = :isonline"),
+  @NamedQuery(name = "User.findBySecret",
+          query = "SELECT u FROM User u WHERE u.secret = :secret"),
+  @NamedQuery(name = "User.findByValidationKey",
+          query = "SELECT u FROM User u WHERE u.validationKey = :validationKey"),
+  @NamedQuery(name = "User.findBySecurityQuestion",
+          query
+          = "SELECT u FROM User u WHERE u.securityQuestion = :securityQuestion"),
+  @NamedQuery(name = "User.findBySecurityAnswer",
+          query
+          = "SELECT u FROM User u WHERE u.securityAnswer = :securityAnswer"),
+  @NamedQuery(name = "User.findByYubikeyUser",
+          query = "SELECT u FROM User u WHERE u.yubikeyUser = :yubikeyUser"),
+  @NamedQuery(name = "User.findByPasswordChanged",
+          query
+          = "SELECT u FROM User u WHERE u.passwordChanged = :passwordChanged"),
+  @NamedQuery(name = "User.findByNotes",
+          query = "SELECT u FROM User u WHERE u.notes = :notes")})
 public class User implements Serializable {
-   
-    private static final long serialVersionUID = 1L;
-    @Id
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "uid")
-    private Integer uid;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 10)
-    @Column(name = "username")
-    private String username;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 128)
-    @Column(name = "password")
-    private String password;
-    // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
-    @Size(max = 45)
-    @Column(name = "email")
-    private String email;
-    @Size(max = 30)
-    @Column(name = "fname")
-    private String fname;
-    @Size(max = 30)
-    @Column(name = "lname")
-    private String lname;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "activated")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date activated;
-    @Size(max = 100)
-    @Column(name = "home_org")
-    private String homeOrg;
-    @Size(max = 10)
-    @Column(name = "title")
-    private String title;
-    @Size(max = 20)
-    @Column(name = "mobile")
-    private String mobile;
-    @Size(max = 20)
-    @Column(name = "orcid")
-    private String orcid;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "false_login")
-    private int falseLogin;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "status")
-    private int status;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "isonline")
-    private int isonline;
-    @Size(max = 20)
-    @Column(name = "secret")
-    private String secret;
-    @Size(max = 128)
-    @Column(name = "validation_key")
-    private String validationKey;
-    @Size(max = 20)
-    @Enumerated(EnumType.STRING)
-    @Column(name = "security_question")
-    private SecurityQuestion securityQuestion;
-    @Size(max = 128)
-    @Column(name = "security_answer")
-    private String securityAnswer;
-    @Column(name = "yubikey_user")
-    private int yubikeyUser;
-    @Column(name = "password_changed")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date passwordChanged;
-    @Size(max = 500)
-    @Column(name = "notes")
-    private String notes;
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "uid")
-    private Yubikey yubikey;
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "uid")
-    private Address address;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
-    private Collection<PeopleGroup> peopleGroupCollection;
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "uid")
-    private Organization organization;
-    
-    public User() {
-    }
 
-    public User(Integer uid) {
-        this.uid = uid;
-    }
+  private static final long serialVersionUID = 1L;
+  @Id
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "uid")
+  private Integer uid;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 10)
+  @Column(name = "username")
+  private String username;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 128)
+  @Column(name = "password")
+  private String password;
+  // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
+  @Size(max = 45)
+  @Column(name = "email")
+  private String email;
+  @Size(max = 30)
+  @Column(name = "fname")
+  private String fname;
+  @Size(max = 30)
+  @Column(name = "lname")
+  private String lname;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "activated")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date activated;
+  @Size(max = 100)
+  @Column(name = "home_org")
+  private String homeOrg;
+  @Size(max = 10)
+  @Column(name = "title")
+  private String title;
+  @Size(max = 20)
+  @Column(name = "mobile")
+  private String mobile;
+  @Size(max = 20)
+  @Column(name = "orcid")
+  private String orcid;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "false_login")
+  private int falseLogin;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "status")
+  private int status;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "isonline")
+  private int isonline;
+  @Size(max = 20)
+  @Column(name = "secret")
+  private String secret;
+  @Size(max = 128)
+  @Column(name = "validation_key")
+  private String validationKey;
+  @Size(max = 20)
+  @Enumerated(EnumType.STRING)
+  @Column(name = "security_question")
+  private SecurityQuestion securityQuestion;
+  @Size(max = 128)
+  @Column(name = "security_answer")
+  private String securityAnswer;
+  @Column(name = "yubikey_user")
+  private int yubikeyUser;
+  @Column(name = "password_changed")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date passwordChanged;
+  @Size(max = 500)
+  @Column(name = "notes")
+  private String notes;
+  @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "uid")
+  private Yubikey yubikey;
+  @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "uid")
+  private Address address;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "user")
+  private Collection<PeopleGroup> peopleGroupCollection;
+  @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "uid")
+  private Organization organization;
 
-    public User(Integer uid, String username, String password, Date activated, int falseLogin, int status, int isonline) {
-        this.uid = uid;
-        this.username = username;
-        this.password = password;
-        this.activated = activated;
-        this.falseLogin = falseLogin;
-        this.status = status;
-        this.isonline = isonline;
-    }
+  public User() {
+  }
 
-    public String getValidationKey() {
-        return validationKey;
-    }
+  public User(Integer uid) {
+    this.uid = uid;
+  }
 
-    public void setValidationKey(String validationKey) {
-        this.validationKey = validationKey;
-    }
+  public User(Integer uid, String username, String password, Date activated,
+          int falseLogin, int status, int isonline) {
+    this.uid = uid;
+    this.username = username;
+    this.password = password;
+    this.activated = activated;
+    this.falseLogin = falseLogin;
+    this.status = status;
+    this.isonline = isonline;
+  }
 
-    
-    public Integer getUid() {
-        return uid;
-    }
+  public String getValidationKey() {
+    return validationKey;
+  }
 
-    public void setUid(Integer uid) {
-        this.uid = uid;
-    }
+  public void setValidationKey(String validationKey) {
+    this.validationKey = validationKey;
+  }
 
-    public String getUsername() {
-        return username;
-    }
+  public Integer getUid() {
+    return uid;
+  }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-    public String getPassword() {
-        return password;
-    }
+  public void setUid(Integer uid) {
+    this.uid = uid;
+  }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+  public String getUsername() {
+    return username;
+  }
 
-    public String getEmail() {
-        return email;
-    }
+  public void setUsername(String username) {
+    this.username = username;
+  }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+  public String getPassword() {
+    return password;
+  }
 
-    public String getFname() {
-        return fname;
-    }
+  public void setPassword(String password) {
+    this.password = password;
+  }
 
-    public void setFname(String fname) {
-        this.fname = fname;
-    }
+  public String getEmail() {
+    return email;
+  }
 
-    public String getLname() {
-        return lname;
-    }
+  public void setEmail(String email) {
+    this.email = email;
+  }
 
-    public void setLname(String lname) {
-        this.lname = lname;
-    }
+  public String getFname() {
+    return fname;
+  }
 
-    public Date getActivated() {
-        return activated;
-    }
+  public void setFname(String fname) {
+    this.fname = fname;
+  }
 
-    public void setActivated(Date activated) {
-        this.activated = activated;
-    }
+  public String getLname() {
+    return lname;
+  }
 
-    public String getHomeOrg() {
-        return homeOrg;
-    }
+  public void setLname(String lname) {
+    this.lname = lname;
+  }
 
-    public void setHomeOrg(String homeOrg) {
-        this.homeOrg = homeOrg;
-    }
+  public Date getActivated() {
+    return activated;
+  }
 
-    public String getTitle() {
-        return title;
-    }
+  public void setActivated(Date activated) {
+    this.activated = activated;
+  }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+  public String getHomeOrg() {
+    return homeOrg;
+  }
 
-    public String getMobile() {
-        return mobile;
-    }
+  public void setHomeOrg(String homeOrg) {
+    this.homeOrg = homeOrg;
+  }
 
-    public void setMobile(String mobile) {
-        this.mobile = mobile;
-    }
+  public String getTitle() {
+    return title;
+  }
 
-    public String getOrcid() {
-        return orcid;
-    }
+  public void setTitle(String title) {
+    this.title = title;
+  }
 
-    public void setOrcid(String orcid) {
-        this.orcid = orcid;
-    }
+  public String getMobile() {
+    return mobile;
+  }
 
-    public int getFalseLogin() {
-        return falseLogin;
-    }
+  public void setMobile(String mobile) {
+    this.mobile = mobile;
+  }
 
-    public void setFalseLogin(int falseLogin) {
-        this.falseLogin = falseLogin;
-    }
+  public String getOrcid() {
+    return orcid;
+  }
 
-    public int getStatus() {
-        return status;
-    }
+  public void setOrcid(String orcid) {
+    this.orcid = orcid;
+  }
 
-    public void setStatus(int status) {
-        this.status = status;
-    }
+  public int getFalseLogin() {
+    return falseLogin;
+  }
 
-    public int getIsonline() {
-        return isonline;
-    }
+  public void setFalseLogin(int falseLogin) {
+    this.falseLogin = falseLogin;
+  }
 
-    public void setIsonline(int isonline) {
-        this.isonline = isonline;
-    }
+  public int getStatus() {
+    return status;
+  }
 
-    public String getSecret() {
-        return secret;
-    }
+  public void setStatus(int status) {
+    this.status = status;
+  }
 
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
+  public int getIsonline() {
+    return isonline;
+  }
 
-    public SecurityQuestion getSecurityQuestion() {
-        return securityQuestion;
-    }
+  public void setIsonline(int isonline) {
+    this.isonline = isonline;
+  }
 
-    public void setSecurityQuestion(SecurityQuestion securityQuestion) {
-        this.securityQuestion = securityQuestion;
-    }
+  public String getSecret() {
+    return secret;
+  }
 
-    public String getSecurityAnswer() {
-        return securityAnswer;
-    }
+  public void setSecret(String secret) {
+    this.secret = secret;
+  }
 
-    public void setSecurityAnswer(String securityAnswer) {
-        this.securityAnswer = securityAnswer;
-    }
+  public SecurityQuestion getSecurityQuestion() {
+    return securityQuestion;
+  }
 
-    public int getYubikeyUser() {
-        return yubikeyUser;
-    }
+  public void setSecurityQuestion(SecurityQuestion securityQuestion) {
+    this.securityQuestion = securityQuestion;
+  }
 
-    public void setYubikeyUser(int yubikeyUser) {
-        this.yubikeyUser = yubikeyUser;
-    }
+  public String getSecurityAnswer() {
+    return securityAnswer;
+  }
 
-    public Date getPasswordChanged() {
-        return passwordChanged;
-    }
+  public void setSecurityAnswer(String securityAnswer) {
+    this.securityAnswer = securityAnswer;
+  }
 
-    public void setPasswordChanged(Date passwordChanged) {
-        this.passwordChanged = passwordChanged;
-    }
+  public int getYubikeyUser() {
+    return yubikeyUser;
+  }
 
-    public String getNotes() {
-        return notes;
-    }
+  public void setYubikeyUser(int yubikeyUser) {
+    this.yubikeyUser = yubikeyUser;
+  }
 
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
+  public Date getPasswordChanged() {
+    return passwordChanged;
+  }
 
-    public Yubikey getYubikey() {
-        return yubikey;
-    }
+  public void setPasswordChanged(Date passwordChanged) {
+    this.passwordChanged = passwordChanged;
+  }
 
-    public void setYubikey(Yubikey yubikey) {
-        this.yubikey = yubikey;
-    }
+  public String getNotes() {
+    return notes;
+  }
 
-    public Address getAddress() {
-        return address;
-    }
+  public void setNotes(String notes) {
+    this.notes = notes;
+  }
 
-    public void setAddress(Address address) {
-        this.address = address;
-    }
+  public Yubikey getYubikey() {
+    return yubikey;
+  }
 
-    public Organization getOrganization() {
-        return organization;
-    }
+  public void setYubikey(Yubikey yubikey) {
+    this.yubikey = yubikey;
+  }
 
-    public void setOrganization(Organization organization) {
-        this.organization = organization;
-    }
+  public Address getAddress() {
+    return address;
+  }
 
-    
-    @XmlTransient
-    @JsonIgnore
-    public Collection<PeopleGroup> getPeopleGroupCollection() {
-        return peopleGroupCollection;
-    }
+  public void setAddress(Address address) {
+    this.address = address;
+  }
 
-    public void setPeopleGroupCollection(Collection<PeopleGroup> peopleGroupCollection) {
-        this.peopleGroupCollection = peopleGroupCollection;
-    }
+  public Organization getOrganization() {
+    return organization;
+  }
 
-    @Override
-    public int hashCode() {
-        int hash = 0;
-        hash += (uid != null ? uid.hashCode() : 0);
-        return hash;
-    }
+  public void setOrganization(Organization organization) {
+    this.organization = organization;
+  }
 
-    @Override
-    public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof User)) {
-            return false;
-        }
-        User other = (User) object;
-        if ((this.uid == null && other.uid != null) || (this.uid != null && !this.uid.equals(other.uid))) {
-            return false;
-        }
-        return true;
-    }
+  @XmlTransient
+  @JsonIgnore
+  public Collection<PeopleGroup> getPeopleGroupCollection() {
+    return peopleGroupCollection;
+  }
 
-    @Override
-    public String toString() {
-        return "se.kth.bbc.security.ua.model.User[ uid=" + uid + " ]";
-    }
+  public void setPeopleGroupCollection(
+          Collection<PeopleGroup> peopleGroupCollection) {
+    this.peopleGroupCollection = peopleGroupCollection;
+  }
 
-    
+  @Override
+  public int hashCode() {
+    int hash = 0;
+    hash += (uid != null ? uid.hashCode() : 0);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object object) {
+    // TODO: Warning - this method won't work in the case the id fields are not set
+    if (!(object instanceof User)) {
+      return false;
+    }
+    User other = (User) object;
+    if ((this.uid == null && other.uid != null) || (this.uid != null
+            && !this.uid.equals(other.uid))) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return "se.kth.bbc.security.ua.model.User[ uid=" + uid + " ]";
+  }
+
 }

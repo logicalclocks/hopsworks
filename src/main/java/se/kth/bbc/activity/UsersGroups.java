@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package se.kth.bbc.activity;
 
 import java.io.Serializable;
@@ -25,65 +24,81 @@ import se.kth.bbc.security.ua.model.User;
 @Table(name = "users_groups")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "UsersGroups.findAll", query = "SELECT u FROM UsersGroups u"),
-    @NamedQuery(name = "UsersGroups.findByEmail", query = "SELECT u FROM UsersGroups u WHERE u.usersGroupsPK.email = :email"),
-    @NamedQuery(name = "UsersGroups.findByGroupname", query = "SELECT u FROM UsersGroups u WHERE u.usersGroupsPK.groupname = :groupname"),
-    @NamedQuery(name = "UsersGroups.deleteGroupsForEmail", query = "DELETE FROM UsersGroups u WHERE u.usersGroupsPK.email = :email AND u.usersGroupsPK.groupname = 'GUEST'"),
-    @NamedQuery(name = "UsersGroups.findARecord", query = "SELECT COUNT(u.usersGroupsPK.email) FROM UsersGroups u WHERE u.usersGroupsPK.email = :email")})
+  @NamedQuery(name = "UsersGroups.findAll",
+          query = "SELECT u FROM UsersGroups u"),
+  @NamedQuery(name = "UsersGroups.findByEmail",
+          query
+          = "SELECT u FROM UsersGroups u WHERE u.usersGroupsPK.email = :email"),
+  @NamedQuery(name = "UsersGroups.findByGroupname",
+          query
+          = "SELECT u FROM UsersGroups u WHERE u.usersGroupsPK.groupname = :groupname"),
+  @NamedQuery(name = "UsersGroups.deleteGroupsForEmail",
+          query
+          = "DELETE FROM UsersGroups u WHERE u.usersGroupsPK.email = :email AND u.usersGroupsPK.groupname = 'GUEST'"),
+  @NamedQuery(name = "UsersGroups.findARecord",
+          query
+          = "SELECT COUNT(u.usersGroupsPK.email) FROM UsersGroups u WHERE u.usersGroupsPK.email = :email")})
 public class UsersGroups implements Serializable {
-    private static final long serialVersionUID = 1L;
-    @EmbeddedId
-    protected UsersGroupsPK usersGroupsPK;
-    @JoinColumn(name = "email", referencedColumnName = "EMAIL", insertable = false, updatable = false)
-    @ManyToOne(optional = false)
-    private User username;
 
-    public UsersGroups() {
-    }
+  private static final long serialVersionUID = 1L;
+  @EmbeddedId
+  protected UsersGroupsPK usersGroupsPK;
+  @JoinColumn(name = "email",
+          referencedColumnName = "EMAIL",
+          insertable = false,
+          updatable = false)
+  @ManyToOne(optional = false)
+  private User username;
 
-    public UsersGroups(UsersGroupsPK usersGroupsPK) {
-        this.usersGroupsPK = usersGroupsPK;
-    }
+  public UsersGroups() {
+  }
 
-    public UsersGroups(String email, String groupname) {
-        this.usersGroupsPK = new UsersGroupsPK(email, groupname);
-    }
+  public UsersGroups(UsersGroupsPK usersGroupsPK) {
+    this.usersGroupsPK = usersGroupsPK;
+  }
 
-    public UsersGroupsPK getUsersGroupsPK() {
-        return usersGroupsPK;
-    }
+  public UsersGroups(String email, String groupname) {
+    this.usersGroupsPK = new UsersGroupsPK(email, groupname);
+  }
 
-    public void setUsersGroupsPK(UsersGroupsPK usersGroupsPK) {
-        this.usersGroupsPK = usersGroupsPK;
-    }
+  public UsersGroupsPK getUsersGroupsPK() {
+    return usersGroupsPK;
+  }
 
-    public User getUsername() {
-        return username;
-    }
+  public void setUsersGroupsPK(UsersGroupsPK usersGroupsPK) {
+    this.usersGroupsPK = usersGroupsPK;
+  }
 
-    public void setUsername(User username) {
-        this.username = username;
-    }
+  public User getUsername() {
+    return username;
+  }
 
-    @Override
-    public int hashCode() {
-        int hash = 0;
-        hash += (usersGroupsPK != null ? usersGroupsPK.hashCode() : 0);
-        return hash;
-    }
+  public void setUsername(User username) {
+    this.username = username;
+  }
 
-    @Override
-    public boolean equals(Object object) {
-        if (!(object instanceof UsersGroups)) {
-            return false;
-        }
-        UsersGroups other = (UsersGroups) object;
-        return !((this.usersGroupsPK == null && other.usersGroupsPK != null) || (this.usersGroupsPK != null && !this.usersGroupsPK.equals(other.usersGroupsPK)));
-    }
+  @Override
+  public int hashCode() {
+    int hash = 0;
+    hash += (usersGroupsPK != null ? usersGroupsPK.hashCode() : 0);
+    return hash;
+  }
 
-    @Override
-    public String toString() {
-        return "se.kth.bbc.activity.UsersGroups[ usersGroupsPK=" + usersGroupsPK + " ]";
+  @Override
+  public boolean equals(Object object) {
+    if (!(object instanceof UsersGroups)) {
+      return false;
     }
-    
+    UsersGroups other = (UsersGroups) object;
+    return !((this.usersGroupsPK == null && other.usersGroupsPK != null)
+            || (this.usersGroupsPK != null && !this.usersGroupsPK.equals(
+                    other.usersGroupsPK)));
+  }
+
+  @Override
+  public String toString() {
+    return "se.kth.bbc.activity.UsersGroups[ usersGroupsPK=" + usersGroupsPK
+            + " ]";
+  }
+
 }

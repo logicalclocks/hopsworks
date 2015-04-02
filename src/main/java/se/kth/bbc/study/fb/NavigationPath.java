@@ -5,31 +5,32 @@ package se.kth.bbc.study.fb;
  * @author stig
  */
 public class NavigationPath {
-    private String top;
-    private String path;
 
-    public NavigationPath() {
-    }
+  private String top;
+  private String path;
 
-    public NavigationPath(String top, String path) {
-        this.top = top;
-        this.path = path;
-    }
+  public NavigationPath() {
+  }
 
-    public String getTop() {
-        return top;
-    }
+  public NavigationPath(String top, String path) {
+    this.top = top;
+    this.path = path;
+  }
 
-    public void setTop(String top) {
-        this.top = top;
-    }
+  public String getTop() {
+    return top;
+  }
 
-    public String getPath() {
-        return path;
-    }
+  public void setTop(String top) {
+    this.top = top;
+  }
 
-    public void setPath(String path) {
-        this.path = path;
-    }
-    
+  public String getPath() {
+    return path;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
+  }
+
 }

@@ -7,12 +7,23 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
  * @author stig
  */
 public enum JobState {
-  
-  INITIALIZING, FINISHED, RUNNING, ACCEPTED, FAILED, KILLED, NEW, NEW_SAVING, SUBMITTED,FRAMEWORK_FAILURE, STARTING_APP_MASTER,APP_MASTER_START_FAILED;
-  
+
+  INITIALIZING,
+  FINISHED,
+  RUNNING,
+  ACCEPTED,
+  FAILED,
+  KILLED,
+  NEW,
+  NEW_SAVING,
+  SUBMITTED,
+  FRAMEWORK_FAILURE,
+  STARTING_APP_MASTER,
+  APP_MASTER_START_FAILED;
+
   @Override
-  public String toString(){
-    switch(this){
+  public String toString() {
+    switch (this) {
       case INITIALIZING:
         return "Initializing";
       case FINISHED:
@@ -41,9 +52,9 @@ public enum JobState {
         throw new IllegalStateException("Illegal enum value.");
     }
   }
-  
-  public static JobState getJobState(YarnApplicationState yarnstate){
-    switch(yarnstate){
+
+  public static JobState getJobState(YarnApplicationState yarnstate) {
+    switch (yarnstate) {
       case RUNNING:
         return JobState.RUNNING;
       case ACCEPTED:
@@ -64,9 +75,9 @@ public enum JobState {
         throw new IllegalArgumentException("Invalid enum constant"); // can never happen        
     }
   }
-  
-  public boolean isFinalState(){
-    switch(this){
+
+  public boolean isFinalState() {
+    switch (this) {
       case FINISHED:
       case FAILED:
       case KILLED:
@@ -74,7 +85,7 @@ public enum JobState {
       case APP_MASTER_START_FAILED:
         return true;
       default:
-        return false;       
+        return false;
     }
   }
 

@@ -42,7 +42,7 @@ import se.kth.bbc.lims.Utils;
  *
  * @author stig
  */
-public class YarnRunner{
+public class YarnRunner {
 
   private static final Logger logger = Logger.getLogger(YarnRunner.class.
           getName());
@@ -147,19 +147,19 @@ public class YarnRunner{
     yarnClient.submitApplication(appContext);
 
     yarnClient.close();
-    
+
     // Create a new client for monitoring
     YarnClient newClient = YarnClient.createYarnClient();
     newClient.init(conf);
-    YarnMonitor monitor = new YarnMonitor(appId,newClient);
-    
+    YarnMonitor monitor = new YarnMonitor(appId, newClient);
+
     //Clean up some
     removeAllNecessary();
     yarnClient = null;
     conf = null;
     appId = null;
     appContext = null;
-    
+
     return monitor;
   }
 
@@ -364,13 +364,13 @@ public class YarnRunner{
     amCommands.add(amcommand.toString());
     return amCommands;
   }
-  
-  private void removeAllNecessary() throws IOException{    
+
+  private void removeAllNecessary() throws IOException {
     FileSystem fs = FileSystem.get(conf);
-    for(String s:filesToRemove){
-      if(s.startsWith("hdfs:")){
+    for (String s : filesToRemove) {
+      if (s.startsWith("hdfs:")) {
         fs.delete(new Path(s), true);
-      }else{
+      } else {
         Files.deleteIfExists(Paths.get(s));
       }
     }
@@ -408,7 +408,6 @@ public class YarnRunner{
   //---------------------------------------------------------------------------
   //-------------------------- GETTERS ----------------------------------------
   //---------------------------------------------------------------------------
-
   public String getAmArgs() {
     return amArgs;
   }

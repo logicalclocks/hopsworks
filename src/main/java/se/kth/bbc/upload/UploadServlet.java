@@ -20,7 +20,9 @@ import se.kth.bbc.study.fb.InodesMB;
  * by fanxu
  */
 public class UploadServlet extends HttpServlet {
-  private static final Logger logger = Logger.getLogger(UploadServlet.class.getName());
+
+  private static final Logger logger = Logger.getLogger(UploadServlet.class.
+          getName());
   @EJB
   private FileOperations fileOps;
 
@@ -83,7 +85,7 @@ public class UploadServlet extends HttpServlet {
         fileOps.copyAfterUploading(info.resumableFilename, uploadPath
                 + info.resumableFilename);
       } catch (IOException e) {
-        logger.log(Level.SEVERE,"Failed to write to HDSF",e);
+        logger.log(Level.SEVERE, "Failed to write to HDSF", e);
       }
     }
   }

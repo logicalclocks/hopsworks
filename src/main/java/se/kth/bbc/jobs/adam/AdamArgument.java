@@ -2,10 +2,11 @@ package se.kth.bbc.jobs.adam;
 
 /**
  * A non-optional argument to an ADAM command.
+ * <p>
  * @author stig
  */
-public final class AdamArgument{
-  
+public final class AdamArgument {
+
   private final String name;
   private final String description;
   private final boolean isPath;
@@ -15,14 +16,17 @@ public final class AdamArgument{
   public AdamArgument(String name, String description, boolean isPath) {
     this(name, description, isPath, false);
   }
-  
-  public AdamArgument(String name, String description, boolean isPath, boolean isOutputPath){
-    this(name,description,isPath,isOutputPath,true);
+
+  public AdamArgument(String name, String description, boolean isPath,
+          boolean isOutputPath) {
+    this(name, description, isPath, isOutputPath, true);
   }
-  
-  public AdamArgument(String name, String description, boolean isPath, boolean isOutputPath, boolean required){
-    if(isOutputPath && !isPath){
-      throw new IllegalArgumentException("Argument cannot be an output path if it is not a path.");
+
+  public AdamArgument(String name, String description, boolean isPath,
+          boolean isOutputPath, boolean required) {
+    if (isOutputPath && !isPath) {
+      throw new IllegalArgumentException(
+              "Argument cannot be an output path if it is not a path.");
     }
     this.name = name;
     this.description = description;
@@ -42,27 +46,27 @@ public final class AdamArgument{
   public boolean isPath() {
     return isPath;
   }
-  
-  public boolean isRequired(){
+
+  public boolean isRequired() {
     return required;
   }
-  
-  public boolean isOutputPath(){
+
+  public boolean isOutputPath() {
     return isOutputPath;
   }
-  
+
   @Override
-  public String toString(){
+  public String toString() {
     StringBuilder ret = new StringBuilder();
     ret.append(name).append("\t:\t");
     ret.append(description);
-    if(isPath){
+    if (isPath) {
       ret.append("[PATH]");
     }
-    if(required){
+    if (required) {
       ret.append("[REQUIRED]");
     }
     return ret.toString();
   }
-  
+
 }

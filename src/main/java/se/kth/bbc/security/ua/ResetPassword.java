@@ -36,395 +36,432 @@ import se.kth.bbc.security.ua.model.User;
 @SessionScoped
 public class ResetPassword implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    private static final Logger logger = Logger.getLogger(ResetPassword.class.getName());
+  private static final Logger logger = Logger.getLogger(ResetPassword.class.
+          getName());
 
-    private String username;
-    private String passwd1;
-    private String passwd2;
-    private String current;
-    private SecurityQuestion question;
-    private User people;
+  private String username;
+  private String passwd1;
+  private String passwd2;
+  private String current;
+  private SecurityQuestion question;
+  private User people;
 
-    private String answer;
-    
-    private String notes;
-    
-    private final int passwordLength = 6;
-    
-    @EJB
-    private UserManager mgr;
+  private String answer;
 
-    @EJB
-    private EmailBean emailBean;
+  private String notes;
 
-    @Resource
-    private UserTransaction userTransaction;
+  private final int passwordLength = 6;
 
-    public String getNotes() {
-        return notes;
-    }
+  @EJB
+  private UserManager mgr;
 
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
+  @EJB
+  private EmailBean emailBean;
 
-    
-    public SecurityQuestion[] getQuestions() {
-        return SecurityQuestion.values();
-    }
-    
-    public SecurityQuestion getQuestion() {
-        return question;
-    }
+  @Resource
+  private UserTransaction userTransaction;
 
-    public void setQuestion(SecurityQuestion question) {
-        this.question = question;
-    }
+  public String getNotes() {
+    return notes;
+  }
 
-    
-    public String getCurrent() {
-        return current;
-    }
+  public void setNotes(String notes) {
+    this.notes = notes;
+  }
 
-    public void setCurrent(String current) {
-        this.current = current;
-    }
+  public SecurityQuestion[] getQuestions() {
+    return SecurityQuestion.values();
+  }
 
-    public User getPeople() {
-        return people;
-    }
+  public SecurityQuestion getQuestion() {
+    return question;
+  }
 
-    public void setPeople(User people) {
-        this.people = people;
-    }
+  public void setQuestion(SecurityQuestion question) {
+    this.question = question;
+  }
 
-    public String getAnswer() {
-        return answer;
-    }
+  public String getCurrent() {
+    return current;
+  }
 
-    public void setAnswer(String answer) {
-        this.answer = answer;
-    }
+  public void setCurrent(String current) {
+    this.current = current;
+  }
 
-    public String getUsername() {
-        return username;
-    }
+  public User getPeople() {
+    return people;
+  }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+  public void setPeople(User people) {
+    this.people = people;
+  }
 
-    public String getPasswd1() {
-        return passwd1;
-    }
+  public String getAnswer() {
+    return answer;
+  }
 
-    public void setPasswd1(String passwd1) {
-        this.passwd1 = passwd1;
-    }
+  public void setAnswer(String answer) {
+    this.answer = answer;
+  }
 
-    public String getPasswd2() {
-        return passwd2;
-    }
+  public String getUsername() {
+    return username;
+  }
 
-    public void setPasswd2(String passwd2) {
-        this.passwd2 = passwd2;
-    }
+  public void setUsername(String username) {
+    this.username = username;
+  }
 
-    public String sendTmpPassword() {
+  public String getPasswd1() {
+    return passwd1;
+  }
 
-        people = mgr.getUserByEmail(this.username);
+  public void setPasswd1(String passwd1) {
+    this.passwd1 = passwd1;
+  }
 
-        try {
+  public String getPasswd2() {
+    return passwd2;
+  }
 
-            if (!SecurityUtils.converToSHA256(answer).equals(people.getSecurityAnswer())) {
+  public void setPasswd2(String passwd2) {
+    this.passwd2 = passwd2;
+  }
 
-                MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INVALID_SEQ_ANSWER);
+  public String sendTmpPassword() {
 
-                // Lock the account if 5 tmies wrong answer  
-                int val = people.getFalseLogin();
-                mgr.increaseLockNum(people.getUid(), val + 1);
-                if (val > 5) {
-                    mgr.changeAccountStatus(people.getUid(),"", PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
-                    return ("welcome");
-                }
-                return "";
-            }
+    people = mgr.getUserByEmail(this.username);
 
-            // generate a radndom password
-            String random_password = SecurityUtils.getRandomString(passwordLength);
+    try {
 
-            String mess = UserAccountsEmailMessages.buildPasswordResetMessage(random_password);
+      if (!SecurityUtils.converToSHA256(answer).equals(people.
+              getSecurityAnswer())) {
 
-            userTransaction.begin();
-            // make the account pending until it will be reset by user upon first login
-            mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
+        MessagesController.addSecurityErrorMessage(
+                AccountStatusErrorMessages.INVALID_SEQ_ANSWER);
 
-            // reset the old password with a new one
-            mgr.resetPassword(people, SecurityUtils.converToSHA256(random_password));
-
-            userTransaction.commit();
-
-            // sned the new password to the user email
-            emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
-
-        } catch (UnsupportedEncodingException | NoSuchAlgorithmException | MessagingException ex) {
-            MessagesController.addSecurityErrorMessage("Technical Error!");
-            return ("");
-        } catch (RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException | SystemException | NotSupportedException ex) {
-            MessagesController.addSecurityErrorMessage("Technical Error!");
-            return ("");
+        // Lock the account if 5 tmies wrong answer  
+        int val = people.getFalseLogin();
+        mgr.increaseLockNum(people.getUid(), val + 1);
+        if (val > 5) {
+          mgr.changeAccountStatus(people.getUid(), "",
+                  PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
+          return ("welcome");
         }
+        return "";
+      }
 
-        return ("password_sent");
+      // generate a radndom password
+      String random_password = SecurityUtils.getRandomString(passwordLength);
+
+      String mess = UserAccountsEmailMessages.buildPasswordResetMessage(
+              random_password);
+
+      userTransaction.begin();
+      // make the account pending until it will be reset by user upon first login
+      mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_PENDING.getValue());
+
+      // reset the old password with a new one
+      mgr.resetPassword(people, SecurityUtils.converToSHA256(random_password));
+
+      userTransaction.commit();
+
+      // sned the new password to the user email
+      emailBean.sendEmail(people.getEmail(),
+              UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, mess);
+
+    } catch (UnsupportedEncodingException | NoSuchAlgorithmException |
+            MessagingException ex) {
+      MessagesController.addSecurityErrorMessage("Technical Error!");
+      return ("");
+    } catch (RollbackException | HeuristicMixedException |
+            HeuristicRollbackException | SecurityException |
+            IllegalStateException | SystemException | NotSupportedException ex) {
+      MessagesController.addSecurityErrorMessage("Technical Error!");
+      return ("");
     }
 
-    /**
-     * Change password through profile.
-     * @return
-     */
-    public String changePassword() {
-        FacesContext ctx = FacesContext.getCurrentInstance();
-        HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
+    return ("password_sent");
+  }
 
-        if (req.getRemoteUser() == null) {
-            return ("welcome");
-        }
+  /**
+   * Change password through profile.
+   * <p>
+   * @return
+   */
+  public String changePassword() {
+    FacesContext ctx = FacesContext.getCurrentInstance();
+    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
+            getRequest();
 
-        people = mgr.getUserByEmail(req.getRemoteUser());
-
-        if (people == null) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
-            session.invalidate();
-            return ("welcome");
-        }
-
-        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
-            MessagesController.addSecurityErrorMessage("Inactive Account");
-            return "";
-        }
-
-        try {
-
-            // Reset the old password with a new one
-            mgr.resetPassword(people, SecurityUtils.converToSHA256(passwd1));
-
-            mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
-
-            // Send email    
-            String message = UserAccountsEmailMessages.buildResetMessage();
-            emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
-
-            // logout user
-            FacesContext context = FacesContext.getCurrentInstance();
-            HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
-            session.invalidate();
-            return ("password_changed");
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
-            MessagesController.addSecurityErrorMessage("Technical Error!");
-            return ("");
-
-        }
+    if (req.getRemoteUser() == null) {
+      return ("welcome");
     }
 
-    /**
-     * Change security question in through profile.
-     *
-     * @return
-     */
-    public String changeSecQuestion() {
-        FacesContext ctx = FacesContext.getCurrentInstance();
-        HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
+    people = mgr.getUserByEmail(req.getRemoteUser());
 
-        if (req.getRemoteUser() == null) {
-            return ("welcome");
-        }
-
-        people = mgr.getUserByEmail(req.getRemoteUser());
-
-        if (this.answer.isEmpty() || this.answer == null || this.current == null || this.current.isEmpty()) {
-            MessagesController.addSecurityErrorMessage("No valid answer!");
-            return ("");
-        }
-
-        if (people == null) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
-            session.invalidate();
-            return ("welcome");
-        }
-
-        // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
-            return "";
-        }
-
-        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
-            return "";
-        }
-
-        try {
-            if (SecurityUtils.converToSHA256(this.current).equals(people.getPassword())) {
-
-                // update the security question
-                mgr.resetSecQuestion(people.getUid(), question, SecurityUtils.converToSHA256(this.answer));
-
-                // send email    
-                String message = UserAccountsEmailMessages.buildSecResetMessage();
-                emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_PROFILE_UPDATE, message);
-                return ("sec_question_changed");
-            } else {
-                MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
-                return "";
-            }
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
-            MessagesController.addSecurityErrorMessage("Technical Error!");
-            return ("");
-        }
-
+    if (people == null) {
+      FacesContext context = FacesContext.getCurrentInstance();
+      HttpSession session = (HttpSession) context.getExternalContext().
+              getSession(false);
+      session.invalidate();
+      return ("welcome");
     }
 
-    /**
-     * Get the user security question.
-     *
-     * @return
-     */
-    public String findQuestion() {
-
-        people = mgr.getUserByEmail(this.username);
-        if (people == null) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
-            return "";
-        }
-
-        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
-            return "";
-        }
-
-        this.question = people.getSecurityQuestion();
-
-        return ("reset_password");
+    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+      MessagesController.addSecurityErrorMessage("Inactive Account");
+      return "";
     }
 
-    
-    public String deactivatedProfile(){
-         FacesContext ctx = FacesContext.getCurrentInstance();
-        HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
+    try {
 
-        if (req.getRemoteUser() == null) {
-            return ("welcome");
-        }
+      // Reset the old password with a new one
+      mgr.resetPassword(people, SecurityUtils.converToSHA256(passwd1));
 
-        people = mgr.getUserByEmail(req.getRemoteUser());
- 
-        try {
-            
-            // check the deactivation reason length
-            if(this.notes.length() <  5 || this.notes.length() > 500){
-                    MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_DEACTIVATION_LENGTH);
-            }
-        
-            if (SecurityUtils.converToSHA256(this.current).equals(people.getPassword())) {
-                
-                // close the account
-                mgr.changeAccountStatus(people.getUid(), this.notes, PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
-                // send email    
-                String message = UserAccountsEmailMessages.buildSecResetMessage();
-                emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_DEACTIVATED, message);
-             
- 
-            } else {
-                MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_PASSWORD);
-                return "";
-            }
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
-            Logger.getLogger(ResetPassword.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        return logout();
+      mgr.updateStatus(people, PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
+
+      // Send email    
+      String message = UserAccountsEmailMessages.buildResetMessage();
+      emailBean.sendEmail(people.getEmail(),
+              UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
+
+      // logout user
+      FacesContext context = FacesContext.getCurrentInstance();
+      HttpSession session = (HttpSession) context.getExternalContext().
+              getSession(false);
+      session.invalidate();
+      return ("password_changed");
+    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
+            MessagingException ex) {
+      MessagesController.addSecurityErrorMessage("Technical Error!");
+      return ("");
+
     }
-    
-    
-    
-    public String changeProfilePassword() {
-        FacesContext ctx = FacesContext.getCurrentInstance();
-        HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
+  }
 
-        if (req.getRemoteUser() == null) {
-            return ("welcome");
-        }
+  /**
+   * Change security question in through profile.
+   *
+   * @return
+   */
+  public String changeSecQuestion() {
+    FacesContext ctx = FacesContext.getCurrentInstance();
+    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
+            getRequest();
 
-        people = mgr.getUserByEmail(req.getRemoteUser());
-
-        if (people == null) {
-            FacesContext context = FacesContext.getCurrentInstance();
-            HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
-            session.invalidate();
-            return ("welcome");
-        }
-
-        // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
-            return "";
-        }
-
-        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
-            return "";
-        }
-
-        if (passwd1 == null || passwd2 == null) {
-            MessagesController.addSecurityErrorMessage("No Password Entry!");
-            return ("");
-        }
-
-        try {
-
-            if (SecurityUtils.converToSHA256(current).equals(people.getPassword())) {
-
-                // reset the old password with a new one
-                mgr.resetPassword(people, SecurityUtils.converToSHA256(passwd1));
-
-                // send email    
-                String message = UserAccountsEmailMessages.buildResetMessage();
-                emailBean.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT, message);
-
-                return ("profile_password_changed");
-            } else {
-                MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
-                return "";
-            }
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
-            MessagesController.addSecurityErrorMessage("Email Technical Error!");
-            return ("");
-        }
+    if (req.getRemoteUser() == null) {
+      return ("welcome");
     }
 
-    public String logout() {
-        
-        
-        // Logout user
-        FacesContext context = FacesContext.getCurrentInstance();
-        
-        HttpServletRequest req = (HttpServletRequest) context.getExternalContext().getRequest();
+    people = mgr.getUserByEmail(req.getRemoteUser());
 
-        HttpSession session = (HttpSession) context.getExternalContext().getSession(false);
-      
-        if (req.getRemoteUser() == null) {
-            return ("welcome");
-        }
-
-        people = mgr.getUserByEmail(req.getRemoteUser());
-        session.invalidate();
-        
-        mgr.setOnline(people.getUid(), -1);
-        return ("welcome");
+    if (this.answer.isEmpty() || this.answer == null || this.current == null
+            || this.current.isEmpty()) {
+      MessagesController.addSecurityErrorMessage("No valid answer!");
+      return ("");
     }
+
+    if (people == null) {
+      FacesContext context = FacesContext.getCurrentInstance();
+      HttpSession session = (HttpSession) context.getExternalContext().
+              getSession(false);
+      session.invalidate();
+      return ("welcome");
+    }
+
+    // Check the status to see if user is not blocked or deactivate
+    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.BLOCKED_ACCOUNT);
+      return "";
+    }
+
+    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
+      return "";
+    }
+
+    try {
+      if (SecurityUtils.converToSHA256(this.current).
+              equals(people.getPassword())) {
+
+        // update the security question
+        mgr.resetSecQuestion(people.getUid(), question, SecurityUtils.
+                converToSHA256(this.answer));
+
+        // send email    
+        String message = UserAccountsEmailMessages.buildSecResetMessage();
+        emailBean.sendEmail(people.getEmail(),
+                UserAccountsEmailMessages.ACCOUNT_PROFILE_UPDATE, message);
+        return ("sec_question_changed");
+      } else {
+        MessagesController.addSecurityErrorMessage(
+                AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
+        return "";
+      }
+    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
+            MessagingException ex) {
+      MessagesController.addSecurityErrorMessage("Technical Error!");
+      return ("");
+    }
+
+  }
+
+  /**
+   * Get the user security question.
+   *
+   * @return
+   */
+  public String findQuestion() {
+
+    people = mgr.getUserByEmail(this.username);
+    if (people == null) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.USER_NOT_FOUND);
+      return "";
+    }
+
+    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
+      return "";
+    }
+
+    this.question = people.getSecurityQuestion();
+
+    return ("reset_password");
+  }
+
+  public String deactivatedProfile() {
+    FacesContext ctx = FacesContext.getCurrentInstance();
+    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
+            getRequest();
+
+    if (req.getRemoteUser() == null) {
+      return ("welcome");
+    }
+
+    people = mgr.getUserByEmail(req.getRemoteUser());
+
+    try {
+
+      // check the deactivation reason length
+      if (this.notes.length() < 5 || this.notes.length() > 500) {
+        MessagesController.addSecurityErrorMessage(
+                AccountStatusErrorMessages.INCCORCT_DEACTIVATION_LENGTH);
+      }
+
+      if (SecurityUtils.converToSHA256(this.current).
+              equals(people.getPassword())) {
+
+        // close the account
+        mgr.changeAccountStatus(people.getUid(), this.notes,
+                PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
+        // send email    
+        String message = UserAccountsEmailMessages.buildSecResetMessage();
+        emailBean.sendEmail(people.getEmail(),
+                UserAccountsEmailMessages.ACCOUNT_DEACTIVATED, message);
+
+      } else {
+        MessagesController.addSecurityErrorMessage(
+                AccountStatusErrorMessages.INCCORCT_PASSWORD);
+        return "";
+      }
+    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
+            MessagingException ex) {
+      Logger.getLogger(ResetPassword.class.getName()).
+              log(Level.SEVERE, null, ex);
+    }
+
+    return logout();
+  }
+
+  public String changeProfilePassword() {
+    FacesContext ctx = FacesContext.getCurrentInstance();
+    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
+            getRequest();
+
+    if (req.getRemoteUser() == null) {
+      return ("welcome");
+    }
+
+    people = mgr.getUserByEmail(req.getRemoteUser());
+
+    if (people == null) {
+      FacesContext context = FacesContext.getCurrentInstance();
+      HttpSession session = (HttpSession) context.getExternalContext().
+              getSession(false);
+      session.invalidate();
+      return ("welcome");
+    }
+
+    // Check the status to see if user is not blocked or deactivate
+    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.BLOCKED_ACCOUNT);
+      return "";
+    }
+
+    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
+      return "";
+    }
+
+    if (passwd1 == null || passwd2 == null) {
+      MessagesController.addSecurityErrorMessage("No Password Entry!");
+      return ("");
+    }
+
+    try {
+
+      if (SecurityUtils.converToSHA256(current).equals(people.getPassword())) {
+
+        // reset the old password with a new one
+        mgr.resetPassword(people, SecurityUtils.converToSHA256(passwd1));
+
+        // send email    
+        String message = UserAccountsEmailMessages.buildResetMessage();
+        emailBean.sendEmail(people.getEmail(),
+                UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT, message);
+
+        return ("profile_password_changed");
+      } else {
+        MessagesController.addSecurityErrorMessage(
+                AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
+        return "";
+      }
+    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
+            MessagingException ex) {
+      MessagesController.addSecurityErrorMessage("Email Technical Error!");
+      return ("");
+    }
+  }
+
+  public String logout() {
+
+    // Logout user
+    FacesContext context = FacesContext.getCurrentInstance();
+
+    HttpServletRequest req = (HttpServletRequest) context.getExternalContext().
+            getRequest();
+
+    HttpSession session = (HttpSession) context.getExternalContext().getSession(
+            false);
+
+    if (req.getRemoteUser() == null) {
+      return ("welcome");
+    }
+
+    people = mgr.getUserByEmail(req.getRemoteUser());
+    session.invalidate();
+
+    mgr.setOnline(people.getUid(), -1);
+    return ("welcome");
+  }
 
 }

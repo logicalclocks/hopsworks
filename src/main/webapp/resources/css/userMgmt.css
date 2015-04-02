@@ -11,79 +11,79 @@ and open the template in the editor.
 
 
 .ui-widget, .ui-widget .ui-widget .ui-widget-content {
-    //font-size: 70% !important;
-    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-    font-size: 12px;
-    
-    
+  //font-size: 70% !important;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size: 12px;
+
+
 }
 
 
 .ui-tabs{
-    
-     width: 100%;
-     display: block;
-     height: auto !important;
-     padding: 0em !important;
+
+  width: 100%;
+  display: block;
+  height: auto !important;
+  padding: 0em !important;
 }
 
 .ui-tabs .ui-tabs-nav{
-    height: auto;
-    display: block;
-    border-bottom: 1px solid #ddd;
-    margin-bottom: 8px;
-    padding-left: 8px;
-    padding-bottom: 0px;
-    padding-right: 0px;
-    padding-top: 0px;
-    list-style: none;
-    list-style-type: none;
-    list-style-position: outside;
-    list-style-image: none; 
+  height: auto;
+  display: block;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 8px;
+  padding-left: 8px;
+  padding-bottom: 0px;
+  padding-right: 0px;
+  padding-top: 0px;
+  list-style: none;
+  list-style-type: none;
+  list-style-position: outside;
+  list-style-image: none; 
 }
 
 .ui-tabs .ui-tabs-panel .ui-widget-content{
-     line-height: 20px;
-     height: auto;
-     margin-bottom: -1px;
-     
- }
- 
+  line-height: 20px;
+  height: auto;
+  margin-bottom: -1px;
+
+}
+
 .ui-tabs .ui-tabs-nav li.ui-tabs-selected { 
-    padding-bottom: 0; 
-    border-right-width: 1px; 
-    border-right-width: 1px; 
+  padding-bottom: 0; 
+  border-right-width: 1px; 
+  border-right-width: 1px; 
 }
 
 .ui-tabs .ui-tabs-panels{
-     display: block;
-     min-height: 100%;
-     height: auto; 
-     margin: 0 0 0 0 !important;
-     padding-bottom: 0px !important;
-     padding-left: 0px !important;
-     padding-right: 0px !important;
-     padding-top: 0px !important;
+  display: block;
+  min-height: 100%;
+  height: auto; 
+  margin: 0 0 0 0 !important;
+  padding-bottom: 0px !important;
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+  padding-top: 0px !important;
 }
 
 .ui-tabs .ui-tabs-panel{
-     position: relative; 
-     display: block;
-     min-height: 100%;
-     height: auto; 
-     margin: 0 !important;
-     padding: 0 !important;
-     zoom:1;
-    
+  position: relative; 
+  display: block;
+  min-height: 100%;
+  height: auto; 
+  margin: 0 !important;
+  padding: 0 !important;
+  zoom:1;
+
 }
 
 .ui-tabs .ui-widget-content{
-     //min-height: 100%;
-     height: auto !important; 
-     margin: 0 !important;
-     padding: 0 !important;
-     //visibility: visible;
-    
+  //min-height: 100%;
+  height: auto !important; 
+  margin: 0 !important;
+  padding: 0 !important;
+  //visibility: visible;
+
 }
 
 .ui-tabs-panel.disabled{color:#888;}
@@ -91,148 +91,148 @@ and open the template in the editor.
 
 
 .ui-datatable table {
-    border-collapse: collapse;
-    table-layout: fixed;
+  border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .ui-datatable .ui-widget{    
-    font-size: 12px;
+  font-size: 12px;
 }
 
 .ui-datatable .ui-widget-content{
-    font-family: Arial,sans-serif;
-    height: auto !important;
-    font-size: 12px;
+  font-family: Arial,sans-serif;
+  height: auto !important;
+  font-size: 12px;
 }
 
 .ui-datatable .ui-datatable-header .ui-inputfield {
-    
-    width: auto !important;
-    font-family: Arial,sans-serif;
-    height: auto !important;
-    font-size: 12px;
-    
+
+  width: auto !important;
+  font-family: Arial,sans-serif;
+  height: auto !important;
+  font-size: 12px;
+
 }
 
 .ui-datatable .ui-datatable-header {
-    text-align: left;
+  text-align: left;
 }
 
 
 .ui-datatable .ui-column-filter {
-    
-    width: 150px !important;
+
+  width: 150px !important;
 }
 
 .ui-datatable th, .ui-datatable tfoot td {
-        text-align: left;
-        white-space: nowrap;
-        padding: 0px;
-        margin: 0px;
-        overflow: hidden;
-        font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+  padding: 0px;
+  margin: 0px;
+  overflow: hidden;
+  font-size: 12px;
 }
 
 .ui-datatable tr{
-    
-    display: table-row;
+
+  display: table-row;
 }
 
 
 .BbcMainLayoutUser {
-    text-align: center;
-    min-height: 900px;
-    height: auto !important;
+  text-align: center;
+  min-height: 900px;
+  height: auto !important;
 }
 
 .BbcMainLayoutUser .ui-widget-content {
-    border-width: 0px;  
-    //overflow-y: auto;
-    overflow-y: auto;
-    //////////////////////
+  border-width: 0px;  
+  //overflow-y: auto;
+  overflow-y: auto;
+  //////////////////////
 }
 
 .BbcMainLayoutUser::-webkit-scrollbar {
- display: none;
+  display: none;
 }
 
 .button-remove {
-    background-color: #ff0000 !important;
-    box-shadow: 0px 1px 0px #F5A9A9 inset !important;
+  background-color: #ff0000 !important;
+  box-shadow: 0px 1px 0px #F5A9A9 inset !important;
 }
 
 h1 {
-    font-size: 30px;
+  font-size: 30px;
 }
 
 .header-button-group {
-    overflow: hidden;
+  overflow: hidden;
 }
 
 
 .register_actions{
-padding-top: 17px;
-padding-right: 20px;
-padding-bottom: 18px;
-padding-left: 165px;
-margin-top: 18px;
-margin-bottom: 18px;
-background-color: #f5f5f5;
-border-top: 1px solid #e5e5e5;
-width: 970px;
-height: 28px;
+  padding-top: 17px;
+  padding-right: 20px;
+  padding-bottom: 18px;
+  padding-left: 165px;
+  margin-top: 18px;
+  margin-bottom: 18px;
+  background-color: #f5f5f5;
+  border-top: 1px solid #e5e5e5;
+  width: 970px;
+  height: 28px;
 }
 
 .ui-button-remove {
-    font-size: 11px;
-    padding: 2px 6px;
-    line-height: 16px !important;
-    margin: 2px;
-    border-color: #BD362F;
-    color: #FFF !important;
-    text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
-    background-color: #DB4F4A;
-    background-image: linear-gradient(to bottom, #EE5F5B, #BD362F);
-    background-repeat: repeat-x;
-    display: inline-block;
-    text-align: center;
-    vertical-align: middle;
-    cursor: pointer;
-    border-width: 1px;
-    border-style: solid;
-    border-image: none;
-    border-radius: 4px;
-    box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px 1px 2px rgba(0, 0, 0, 0.05);
-    font-family: 'FontAwesome' !important;
-    font-style: normal !important;   
-    text-decoration: none !important;
+  font-size: 11px;
+  padding: 2px 6px;
+  line-height: 16px !important;
+  margin: 2px;
+  border-color: #BD362F;
+  color: #FFF !important;
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+  background-color: #DB4F4A;
+  background-image: linear-gradient(to bottom, #EE5F5B, #BD362F);
+  background-repeat: repeat-x;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  border-width: 1px;
+  border-style: solid;
+  border-image: none;
+  border-radius: 4px;
+  box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px 1px 2px rgba(0, 0, 0, 0.05);
+  font-family: 'FontAwesome' !important;
+  font-style: normal !important;   
+  text-decoration: none !important;
 }
 
 .ui-button-allow {
-    font-size: 11px;
-    padding: 2px 6px;
-    line-height: 16px !important;
-    margin: 2px;
-    border-color: #00B233;
-    color: #FFF !important;
-    text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
-    background-color: #DB4F4A;
-    background-image: linear-gradient(to bottom, #00BD36, #00B233);
-    background-repeat: repeat-x;
-    display: inline-block;
-    text-align: center;
-    vertical-align: middle;
-    cursor: pointer;
-    border-width: 1px;
-    border-style: solid;
-    border-image: none;
-    border-radius: 4px;
-    box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px 1px 2px rgba(0, 0, 0, 0.05);
-    font-family: 'FontAwesome' !important;
-    font-style: normal !important;   
-    text-decoration: none !important;
+  font-size: 11px;
+  padding: 2px 6px;
+  line-height: 16px !important;
+  margin: 2px;
+  border-color: #00B233;
+  color: #FFF !important;
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+  background-color: #DB4F4A;
+  background-image: linear-gradient(to bottom, #00BD36, #00B233);
+  background-repeat: repeat-x;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  border-width: 1px;
+  border-style: solid;
+  border-image: none;
+  border-radius: 4px;
+  box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px 1px 2px rgba(0, 0, 0, 0.05);
+  font-family: 'FontAwesome' !important;
+  font-style: normal !important;   
+  text-decoration: none !important;
 }
 
 .ui-selectonemenu label {
-    text-align: left;
+  text-align: left;
 }

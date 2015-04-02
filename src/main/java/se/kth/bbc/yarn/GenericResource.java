@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package se.kth.bbc.yarn;
 
 import javax.ws.rs.core.Context;
@@ -23,33 +22,35 @@ import javax.ws.rs.Produces;
 @Path("generic")
 public class GenericResource {
 
-    @Context
-    private UriInfo context;
+  @Context
+  private UriInfo context;
 
-    /**
-     * Creates a new instance of GenericResource
-     */
-    public GenericResource() {
-    }
+  /**
+   * Creates a new instance of GenericResource
+   */
+  public GenericResource() {
+  }
 
-    /**
-     * Retrieves representation of an instance of se.kth.bbc.yarn.GenericResource
-     * @return an instance of java.lang.String
-     */
-    @GET
-    @Produces("application/json")
-    public String getJson() {
-        //TODO return proper representation object
-        throw new UnsupportedOperationException();
-    }
+  /**
+   * Retrieves representation of an instance of se.kth.bbc.yarn.GenericResource
+   * <p>
+   * @return an instance of java.lang.String
+   */
+  @GET
+  @Produces("application/json")
+  public String getJson() {
+    //TODO return proper representation object
+    throw new UnsupportedOperationException();
+  }
 
-    /**
-     * PUT method for updating or creating an instance of GenericResource
-     * @param content representation for the resource
-     * @return an HTTP response with content of the updated or created resource.
-     */
-    @PUT
-    @Consumes("application/json")
-    public void putJson(String content) {
-    }
+  /**
+   * PUT method for updating or creating an instance of GenericResource
+   * <p>
+   * @param content representation for the resource
+   * @return an HTTP response with content of the updated or created resource.
+   */
+  @PUT
+  @Consumes("application/json")
+  public void putJson(String content) {
+  }
 }

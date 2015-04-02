@@ -32,211 +32,228 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "yubikey")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Yubikey.findAll", query = "SELECT y FROM Yubikey y"),
-    @NamedQuery(name = "Yubikey.findBySerial", query = "SELECT y FROM Yubikey y WHERE y.serial = :serial"),
-    @NamedQuery(name = "Yubikey.findByVersion", query = "SELECT y FROM Yubikey y WHERE y.version = :version"),
-    @NamedQuery(name = "Yubikey.findByNotes", query = "SELECT y FROM Yubikey y WHERE y.notes = :notes"),
-    @NamedQuery(name = "Yubikey.findByCounter", query = "SELECT y FROM Yubikey y WHERE y.counter = :counter"),
-    @NamedQuery(name = "Yubikey.findByLow", query = "SELECT y FROM Yubikey y WHERE y.low = :low"),
-    @NamedQuery(name = "Yubikey.findByHigh", query = "SELECT y FROM Yubikey y WHERE y.high = :high"),
-    @NamedQuery(name = "Yubikey.findBySessionUse", query = "SELECT y FROM Yubikey y WHERE y.sessionUse = :sessionUse"),
-    @NamedQuery(name = "Yubikey.findByCreated", query = "SELECT y FROM Yubikey y WHERE y.created = :created"),
-    @NamedQuery(name = "Yubikey.findByAesSecret", query = "SELECT y FROM Yubikey y WHERE y.aesSecret = :aesSecret"),
-    @NamedQuery(name = "Yubikey.findByPublicId", query = "SELECT y FROM Yubikey y WHERE y.publicId = :publicId"),
-    @NamedQuery(name = "Yubikey.findByAccessed", query = "SELECT y FROM Yubikey y WHERE y.accessed = :accessed"),
-    @NamedQuery(name = "Yubikey.findByStatus", query = "SELECT y FROM Yubikey y WHERE y.status = :status"),
-    @NamedQuery(name = "Yubikey.findByYubidnum", query = "SELECT y FROM Yubikey y WHERE y.yubidnum = :yubidnum")})
+  @NamedQuery(name = "Yubikey.findAll",
+          query = "SELECT y FROM Yubikey y"),
+  @NamedQuery(name = "Yubikey.findBySerial",
+          query = "SELECT y FROM Yubikey y WHERE y.serial = :serial"),
+  @NamedQuery(name = "Yubikey.findByVersion",
+          query = "SELECT y FROM Yubikey y WHERE y.version = :version"),
+  @NamedQuery(name = "Yubikey.findByNotes",
+          query = "SELECT y FROM Yubikey y WHERE y.notes = :notes"),
+  @NamedQuery(name = "Yubikey.findByCounter",
+          query = "SELECT y FROM Yubikey y WHERE y.counter = :counter"),
+  @NamedQuery(name = "Yubikey.findByLow",
+          query = "SELECT y FROM Yubikey y WHERE y.low = :low"),
+  @NamedQuery(name = "Yubikey.findByHigh",
+          query = "SELECT y FROM Yubikey y WHERE y.high = :high"),
+  @NamedQuery(name = "Yubikey.findBySessionUse",
+          query = "SELECT y FROM Yubikey y WHERE y.sessionUse = :sessionUse"),
+  @NamedQuery(name = "Yubikey.findByCreated",
+          query = "SELECT y FROM Yubikey y WHERE y.created = :created"),
+  @NamedQuery(name = "Yubikey.findByAesSecret",
+          query = "SELECT y FROM Yubikey y WHERE y.aesSecret = :aesSecret"),
+  @NamedQuery(name = "Yubikey.findByPublicId",
+          query = "SELECT y FROM Yubikey y WHERE y.publicId = :publicId"),
+  @NamedQuery(name = "Yubikey.findByAccessed",
+          query = "SELECT y FROM Yubikey y WHERE y.accessed = :accessed"),
+  @NamedQuery(name = "Yubikey.findByStatus",
+          query = "SELECT y FROM Yubikey y WHERE y.status = :status"),
+  @NamedQuery(name = "Yubikey.findByYubidnum",
+          query = "SELECT y FROM Yubikey y WHERE y.yubidnum = :yubidnum")})
 public class Yubikey implements Serializable {
-    private static final long serialVersionUID = 1L;
-    @Size(max = 10)
-    @Column(name = "serial")
-    private String serial;
-    @Size(max = 15)
-    @Column(name = "version")
-    private String version;
-    @Size(max = 100)
-    @Column(name = "notes")
-    private String notes;
-    @Column(name = "counter")
-    private Integer counter;
-    @Column(name = "low")
-    private Integer low;
-    @Column(name = "high")
-    private Integer high;
-    @Column(name = "session_use")
-    private Integer sessionUse;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "created")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date created;
-    @Size(max = 100)
-    @Column(name = "aes_secret")
-    private String aesSecret;
-    @Size(max = 40)
-    @Column(name = "public_id")
-    private String publicId;
-    @Column(name = "accessed")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date accessed;
-    @Column(name = "status")
-    private Integer status;
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Basic(optional = false)
-    @Column(name = "yubidnum")
-    private Integer yubidnum;
-    @JoinColumn(name = "uid", referencedColumnName = "uid")
-    @OneToOne(optional = false)
-    private User uid;
 
-    public Yubikey() {
-    }
+  private static final long serialVersionUID = 1L;
+  @Size(max = 10)
+  @Column(name = "serial")
+  private String serial;
+  @Size(max = 15)
+  @Column(name = "version")
+  private String version;
+  @Size(max = 100)
+  @Column(name = "notes")
+  private String notes;
+  @Column(name = "counter")
+  private Integer counter;
+  @Column(name = "low")
+  private Integer low;
+  @Column(name = "high")
+  private Integer high;
+  @Column(name = "session_use")
+  private Integer sessionUse;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "created")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date created;
+  @Size(max = 100)
+  @Column(name = "aes_secret")
+  private String aesSecret;
+  @Size(max = 40)
+  @Column(name = "public_id")
+  private String publicId;
+  @Column(name = "accessed")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date accessed;
+  @Column(name = "status")
+  private Integer status;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Basic(optional = false)
+  @Column(name = "yubidnum")
+  private Integer yubidnum;
+  @JoinColumn(name = "uid",
+          referencedColumnName = "uid")
+  @OneToOne(optional = false)
+  private User uid;
 
-    public Yubikey(Integer yubidnum) {
-        this.yubidnum = yubidnum;
-    }
+  public Yubikey() {
+  }
 
-    public Yubikey(Integer yubidnum, Date created) {
-        this.yubidnum = yubidnum;
-        this.created = created;
-    }
+  public Yubikey(Integer yubidnum) {
+    this.yubidnum = yubidnum;
+  }
 
-    public String getSerial() {
-        return serial;
-    }
+  public Yubikey(Integer yubidnum, Date created) {
+    this.yubidnum = yubidnum;
+    this.created = created;
+  }
 
-    public void setSerial(String serial) {
-        this.serial = serial;
-    }
+  public String getSerial() {
+    return serial;
+  }
 
-    public String getVersion() {
-        return version;
-    }
+  public void setSerial(String serial) {
+    this.serial = serial;
+  }
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
+  public String getVersion() {
+    return version;
+  }
 
-    public String getNotes() {
-        return notes;
-    }
+  public void setVersion(String version) {
+    this.version = version;
+  }
 
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
+  public String getNotes() {
+    return notes;
+  }
 
-    public Integer getCounter() {
-        return counter;
-    }
+  public void setNotes(String notes) {
+    this.notes = notes;
+  }
 
-    public void setCounter(Integer counter) {
-        this.counter = counter;
-    }
+  public Integer getCounter() {
+    return counter;
+  }
 
-    public Integer getLow() {
-        return low;
-    }
+  public void setCounter(Integer counter) {
+    this.counter = counter;
+  }
 
-    public void setLow(Integer low) {
-        this.low = low;
-    }
+  public Integer getLow() {
+    return low;
+  }
 
-    public Integer getHigh() {
-        return high;
-    }
+  public void setLow(Integer low) {
+    this.low = low;
+  }
 
-    public void setHigh(Integer high) {
-        this.high = high;
-    }
+  public Integer getHigh() {
+    return high;
+  }
 
-    public Integer getSessionUse() {
-        return sessionUse;
-    }
+  public void setHigh(Integer high) {
+    this.high = high;
+  }
 
-    public void setSessionUse(Integer sessionUse) {
-        this.sessionUse = sessionUse;
-    }
+  public Integer getSessionUse() {
+    return sessionUse;
+  }
 
-    public Date getCreated() {
-        return created;
-    }
+  public void setSessionUse(Integer sessionUse) {
+    this.sessionUse = sessionUse;
+  }
 
-    public void setCreated(Date created) {
-        this.created = created;
-    }
+  public Date getCreated() {
+    return created;
+  }
 
-    public String getAesSecret() {
-        return aesSecret;
-    }
+  public void setCreated(Date created) {
+    this.created = created;
+  }
 
-    public void setAesSecret(String aesSecret) {
-        this.aesSecret = aesSecret;
-    }
+  public String getAesSecret() {
+    return aesSecret;
+  }
 
-    public String getPublicId() {
-        return publicId;
-    }
+  public void setAesSecret(String aesSecret) {
+    this.aesSecret = aesSecret;
+  }
 
-    public void setPublicId(String publicId) {
-        this.publicId = publicId;
-    }
+  public String getPublicId() {
+    return publicId;
+  }
 
-    public Date getAccessed() {
-        return accessed;
-    }
+  public void setPublicId(String publicId) {
+    this.publicId = publicId;
+  }
 
-    public void setAccessed(Date accessed) {
-        this.accessed = accessed;
-    }
+  public Date getAccessed() {
+    return accessed;
+  }
 
-    public Integer getStatus() {
-        return status;
-    }
+  public void setAccessed(Date accessed) {
+    this.accessed = accessed;
+  }
 
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
+  public Integer getStatus() {
+    return status;
+  }
 
-    public Integer getYubidnum() {
-        return yubidnum;
-    }
+  public void setStatus(Integer status) {
+    this.status = status;
+  }
 
-    public void setYubidnum(Integer yubidnum) {
-        this.yubidnum = yubidnum;
-    }
+  public Integer getYubidnum() {
+    return yubidnum;
+  }
 
-    public User getUid() {
-        return uid;
-    }
+  public void setYubidnum(Integer yubidnum) {
+    this.yubidnum = yubidnum;
+  }
 
-    public void setUid(User uid) {
-        this.uid = uid;
-    }
+  public User getUid() {
+    return uid;
+  }
 
-    @Override
-    public int hashCode() {
-        int hash = 0;
-        hash += (yubidnum != null ? yubidnum.hashCode() : 0);
-        return hash;
-    }
+  public void setUid(User uid) {
+    this.uid = uid;
+  }
 
-    @Override
-    public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof Yubikey)) {
-            return false;
-        }
-        Yubikey other = (Yubikey) object;
-        if ((this.yubidnum == null && other.yubidnum != null) || (this.yubidnum != null && !this.yubidnum.equals(other.yubidnum))) {
-            return false;
-        }
-        return true;
-    }
+  @Override
+  public int hashCode() {
+    int hash = 0;
+    hash += (yubidnum != null ? yubidnum.hashCode() : 0);
+    return hash;
+  }
 
-    @Override
-    public String toString() {
-        return "se.kth.bbc.security.ua.model.Yubikey[ yubidnum=" + yubidnum + " ]";
+  @Override
+  public boolean equals(Object object) {
+    // TODO: Warning - this method won't work in the case the id fields are not set
+    if (!(object instanceof Yubikey)) {
+      return false;
     }
-    
+    Yubikey other = (Yubikey) object;
+    if ((this.yubidnum == null && other.yubidnum != null) || (this.yubidnum
+            != null && !this.yubidnum.equals(other.yubidnum))) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return "se.kth.bbc.security.ua.model.Yubikey[ yubidnum=" + yubidnum + " ]";
+  }
+
 }

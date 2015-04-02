@@ -38,6 +38,7 @@ import javax.xml.bind.annotation.XmlRootElement;
           query
           = "SELECT j FROM JobOutputFile j WHERE j.jobOutputFilePK.name = :name AND j.jobOutputFilePK.jobId = :jobId")})
 public class JobOutputFile implements Serializable {
+
   private static final long serialVersionUID = 1L;
   @EmbeddedId
   protected JobOutputFilePK jobOutputFilePK;
@@ -109,9 +110,9 @@ public class JobOutputFile implements Serializable {
       return false;
     }
     JobOutputFile other = (JobOutputFile) object;
-    if ((this.jobOutputFilePK == null && other.jobOutputFilePK != null) ||
-            (this.jobOutputFilePK != null &&
-            !this.jobOutputFilePK.equals(other.jobOutputFilePK))) {
+    if ((this.jobOutputFilePK == null && other.jobOutputFilePK != null)
+            || (this.jobOutputFilePK != null && !this.jobOutputFilePK.equals(
+                    other.jobOutputFilePK))) {
       return false;
     }
     return true;
@@ -119,8 +120,8 @@ public class JobOutputFile implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.job.JobOutputFile[ jobOutputFilePK=" + jobOutputFilePK +
-            " ]";
+    return "se.kth.bbc.job.JobOutputFile[ jobOutputFilePK=" + jobOutputFilePK
+            + " ]";
   }
-  
+
 }

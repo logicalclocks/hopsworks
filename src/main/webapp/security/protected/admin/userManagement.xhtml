@@ -1,213 +1,213 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"   
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       >
-    <f:view contentType="text/html">
+  <f:view contentType="text/html">
 
-        <h:head>
-            <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-            <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
-            <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
-        </h:head>
+    <h:head>
+      <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+      <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+    </h:head>
 
-        <h:body>
-            <ui:insert name="titleBar" >
-                <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
-            </ui:insert>
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
+      </ui:insert>
 
-            <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.SYSAdmin}">  
+      <p:layout id="UserMgmLayout" styleClass="BbcMainLayoutUser" rendered="#{peopleStatusBean.SYSAdmin}">  
 
-                <p:growl autoUpdate="true" showDetail="true"/>
-                <p:layoutUnit id="centerLayout" position="center">
+        <p:growl autoUpdate="true" showDetail="true"/>
+        <p:layoutUnit id="centerLayout" position="center">
 
-                    <div class="container">
-                        <div align="left">
-                            <h2>User Administration</h2>
-                        </div>
+          <div class="container">
+            <div align="left">
+              <h2>User Administration</h2>
+            </div>
 
-                        <div class="content">
-                            <p:tabView id="tabViewNew" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="userMgmtTabview">
+            <div class="content">
+              <p:tabView id="tabViewNew" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="userMgmtTabview">
 
-                                <p:tab title="Registered Users" id="Registered">
-                                    <h:form id="usermodifyForm">
-                                        <p:growl id="growl" life="2000"/>
+                <p:tab title="Registered Users" id="Registered">
+                  <h:form id="usermodifyForm">
+                    <p:growl id="growl" life="2000"/>
 
-                                        <p:dataTable id="userdataTable" var="muser" 
-                                                     value="#{peopleAministration.allUsers}" 
-                                                     filteredValue="#{peopleAministration.filteredUsers}" 
-                                                     widgetVar="usersTable"
-                                                     emptyMessage="No users found with given criteria"
-                                                     rowKey="#{muser.email}"
-                                                     style="table-layout: fixed" 
-                                                     scrollable="false">
+                    <p:dataTable id="userdataTable" var="muser" 
+                                 value="#{peopleAministration.allUsers}" 
+                                 filteredValue="#{peopleAministration.filteredUsers}" 
+                                 widgetVar="usersTable"
+                                 emptyMessage="No users found with given criteria"
+                                 rowKey="#{muser.email}"
+                                 style="table-layout: fixed" 
+                                 scrollable="false">
 
-                                            <p:column id="nameColumn" filterBy="#{muser.fname}" headerText="First Name" style="width:32%; font-size: 12px; text-align: left;">
-                                                <h:outputText value="#{muser.fname}" />
-                                            </p:column>
+                      <p:column id="nameColumn" filterBy="#{muser.fname}" headerText="First Name" style="width:32%; font-size: 12px; text-align: left;">
+                        <h:outputText value="#{muser.fname}" />
+                      </p:column>
 
-                                            <p:column id="lnameColumn" filterBy="#{muser.lname}" headerText="Last Name" style="width:32%; font-size: 12px; text-align: left;">
-                                                <h:outputText value="#{muser.lname}" />
-                                            </p:column>
+                      <p:column id="lnameColumn" filterBy="#{muser.lname}" headerText="Last Name" style="width:32%; font-size: 12px; text-align: left;">
+                        <h:outputText value="#{muser.lname}" />
+                      </p:column>
 
-                                            <p:column id="emailColumn" filterBy="#{muser.email}" headerText="Email" style="width:32%;font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{muser.email}" />
-                                            </p:column>
-                                            
-                                            <p:column id="unameCol"  filterBy="#{muser.organization.orgName}"  headerText="Organization" style="width:32%;font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{muser.organization.orgName}" />
-                                            </p:column>
-                                            
-                                            <p:column id="statCol"  filterBy="#{muser.status}" 
-                                                      headerText="Status" style="width:32%;font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{peopleAministration.getChanged_Status(muser)}"/>
-                                            </p:column>
+                      <p:column id="emailColumn" filterBy="#{muser.email}" headerText="Email" style="width:32%;font-size: 12px;text-align: left;">
+                        <h:outputText value="#{muser.email}" />
+                      </p:column>
 
-                                            <p:column id="roleNCol" headerText="Role" style="width:32%;font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{peopleAministration.getUserRole(muser)}" />
-                                            </p:column>
+                      <p:column id="unameCol"  filterBy="#{muser.organization.orgName}"  headerText="Organization" style="width:32%;font-size: 12px;text-align: left;">
+                        <h:outputText value="#{muser.organization.orgName}" />
+                      </p:column>
+
+                      <p:column id="statCol"  filterBy="#{muser.status}" 
+                                headerText="Status" style="width:32%;font-size: 12px;text-align: left;">
+                        <h:outputText value="#{peopleAministration.getChanged_Status(muser)}"/>
+                      </p:column>
+
+                      <p:column id="roleNCol" headerText="Role" style="width:32%;font-size: 12px;text-align: left;">
+                        <h:outputText value="#{peopleAministration.getUserRole(muser)}" />
+                      </p:column>
 
 
-                                            <p:column id="actionUserColumn" headerText="Modify" style="width:20%;font-size: 12px;">                                                 
-                                                <p:commandLink  action="#{peopleAministration.modifyUser(muser)}" update="@form" styleClass="fa fa-pencil-square-o" value=""/>
-                                            </p:column>
-                                        </p:dataTable>                                            
-                                    </h:form>   
-                                </p:tab>                 
-                                
-                                <p:tab title="Mobile Request" id="requests">
-                                    <h:form id="reqdataForm">
-                                        <p:dataTable id="userReqTable" var="req" value="#{peopleAministration.allRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
-                                                     rowKey="#{req.email}" selection="#{peopleAministration.selectedUsers}" editable="true" editMode="cell">
+                      <p:column id="actionUserColumn" headerText="Modify" style="width:20%;font-size: 12px;">                                                 
+                        <p:commandLink  action="#{peopleAministration.modifyUser(muser)}" update="@form" styleClass="fa fa-pencil-square-o" value=""/>
+                      </p:column>
+                    </p:dataTable>                                            
+                  </h:form>   
+                </p:tab>                 
 
-                                            <p:column id="nameColumn" headerText="First Name"  
-                                                      filterBy="#{req.fname}">
-                                                <h:outputText value="#{req.fname}"  />
-                                            </p:column>
-                                            <p:column id="lnameCol" headerText="Last Name" 
-                                                      filterBy="#{req.lname}">
-                                                <h:outputText value="#{req.lname}" />
-                                            </p:column>
+                <p:tab title="Mobile Request" id="requests">
+                  <h:form id="reqdataForm">
+                    <p:dataTable id="userReqTable" var="req" value="#{peopleAministration.allRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
+                                 rowKey="#{req.email}" selection="#{peopleAministration.selectedUsers}" editable="true" editMode="cell">
 
-                                            <p:column id="emailColumn" headerText="Email" 
-                                                      filterBy="#{req.email}">
-                                                <h:outputText value="#{req.email}" />
-                                            </p:column>
+                      <p:column id="nameColumn" headerText="First Name"  
+                                filterBy="#{req.fname}">
+                        <h:outputText value="#{req.fname}"  />
+                      </p:column>
+                      <p:column id="lnameCol" headerText="Last Name" 
+                                filterBy="#{req.lname}">
+                        <h:outputText value="#{req.lname}" />
+                      </p:column>
 
-                                            <p:column id="orgColumn" headerText="Organization"  
-                                                      filterBy="#{req.organization.orgName}">
-                                                <h:outputText value="#{req.organization.orgName}" />
-                                            </p:column>
-                                            
-                                            <p:column id="roleColumn" headerText="Role">
-                                                <p:selectOneMenu id="roleChoose" 
-                                                                 value="#{peopleAministration.sgroup}" 
-                                                                 editable="false">
-                                                    <f:selectItem itemLabel="Select Role"
-                                                                  itemValue="#"
-                                                                  noSelectionOption="true" />
-                                                    <f:selectItems value="#{peopleAministration.groups}"/>
-                                                </p:selectOneMenu>
-                                            </p:column>
+                      <p:column id="emailColumn" headerText="Email" 
+                                filterBy="#{req.email}">
+                        <h:outputText value="#{req.email}" />
+                      </p:column>
 
-                                            <p:column id="actionColumn" headerText="Action">
-                                                <h:panelGrid columns="2" style="width: auto">                                                    
-                                                    <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{peopleAministration.rejectUser(req)}" update="@form">
-                                                        <p:confirm header="Reject user" message="Are you sure you want to reject this user?" icon="ui-icon-alert"/>
-                                                    </p:commandLink>
-                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" actionListener="#{peopleAministration.activateUser(req)}" update="@form">
-                                                        <p:confirm header="Activate user" message="Activate selected user?" icon="ui-icon-alert"/>
-                                                    </p:commandLink>
-                                                </h:panelGrid>
-                                            </p:column>
-                                        </p:dataTable>
+                      <p:column id="orgColumn" headerText="Organization"  
+                                filterBy="#{req.organization.orgName}">
+                        <h:outputText value="#{req.organization.orgName}" />
+                      </p:column>
 
-                                        <p:confirmDialog global="true" severity="alert" showEffect="fade">
-                                            <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
-                                            <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
-                                        </p:confirmDialog>
+                      <p:column id="roleColumn" headerText="Role">
+                        <p:selectOneMenu id="roleChoose" 
+                                         value="#{peopleAministration.sgroup}" 
+                                         editable="false">
+                          <f:selectItem itemLabel="Select Role"
+                                        itemValue="#"
+                                        noSelectionOption="true" />
+                          <f:selectItems value="#{peopleAministration.groups}"/>
+                        </p:selectOneMenu>
+                      </p:column>
 
-                                    </h:form>
-                                </p:tab>
+                      <p:column id="actionColumn" headerText="Action">
+                        <h:panelGrid columns="2" style="width: auto">                                                    
+                          <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{peopleAministration.rejectUser(req)}" update="@form">
+                            <p:confirm header="Reject user" message="Are you sure you want to reject this user?" icon="ui-icon-alert"/>
+                          </p:commandLink>
+                          <p:commandLink styleClass="ui-button-allow fa fa-check" actionListener="#{peopleAministration.activateUser(req)}" update="@form">
+                            <p:confirm header="Activate user" message="Activate selected user?" icon="ui-icon-alert"/>
+                          </p:commandLink>
+                        </h:panelGrid>
+                      </p:column>
+                    </p:dataTable>
 
-                                <p:tab title="Yubikey Requests" id="yrequests">
-                                    <h:form id="yubikeyReqdataForm">
-                                        <p:dataTable id="yubikeyUserReqTable" var="yreq" value="#{peopleAministration.allYubikeyRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
-                                                     rowKey="#{yreq.email}" selection="#{peopleAministration.selectedUsers}" editable="true" editMode="cell">
+                    <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                      <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                      <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+                    </p:confirmDialog>
 
-                                            <p:column id="ynameColumn" headerText="First Name" 
-                                                      filterBy="#{yreq.fname}">
-                                                <h:outputText value="#{yreq.fname}" />
-                                            </p:column>
-                                            <p:column id="ylnameCol" headerText="Last Name"
-                                                      filterBy="#{yreq.lname}">
-                                                <h:outputText value="#{yreq.lname}" />
-                                            </p:column>
+                  </h:form>
+                </p:tab>
 
-                                            <p:column id="yemailColumn" headerText="Email" 
-                                                      filterBy="#{yreq.email}">
-                                                <h:outputText value="#{yreq.email}" />
-                                            </p:column>
+                <p:tab title="Yubikey Requests" id="yrequests">
+                  <h:form id="yubikeyReqdataForm">
+                    <p:dataTable id="yubikeyUserReqTable" var="yreq" value="#{peopleAministration.allYubikeyRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
+                                 rowKey="#{yreq.email}" selection="#{peopleAministration.selectedUsers}" editable="true" editMode="cell">
 
-                                            <p:column id="yorgColumn" headerText="Organization" 
-                                                      filterBy="#{yreq.organization.orgName}">
-                                                <h:outputText value="#{yreq.organization.orgName}" />
-                                            </p:column>
+                      <p:column id="ynameColumn" headerText="First Name" 
+                                filterBy="#{yreq.fname}">
+                        <h:outputText value="#{yreq.fname}" />
+                      </p:column>
+                      <p:column id="ylnameCol" headerText="Last Name"
+                                filterBy="#{yreq.lname}">
+                        <h:outputText value="#{yreq.lname}" />
+                      </p:column>
 
-                                            <p:column id="yroleColumn" headerText="Role" >
-                                                
-                                                <p:selectOneMenu id="yroleChoose" 
-                                                                 rendered="#{yreq.yubikey.status != '7'}"
-                                                                 value="#{peopleAministration.sgroup}"
-                                                                 editable="false"
-                                                                 >
-                                                    <f:selectItem itemLabel="Select Role" 
-                                                                  itemValue="#"
-                                                                  />
-                                                    <f:selectItems value="#{peopleAministration.groups}"/>
-                                                </p:selectOneMenu>
-                                            </p:column>
+                      <p:column id="yemailColumn" headerText="Email" 
+                                filterBy="#{yreq.email}">
+                        <h:outputText value="#{yreq.email}" />
+                      </p:column>
 
-                                            <p:column id="yactionColumn" headerText="Action">
-                                                <h:panelGrid columns="2" style="width: auto">                                                    
-                                                    <p:commandLink styleClass="ui-button-remove fa fa-ban" 
-                                                                   action="#{peopleAministration.rejectUser(yreq)}" 
-                                                                   update="@form">
-                                                        <p:confirm header="Reject user" message="Are you sure you want to reject this user?" icon="ui-icon-alert"/>
-                                                    </p:commandLink>
-                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" 
-                                                                   action="#{peopleAministration.activateYubikeyUser(yreq)}" 
-                                                                   update="@form">
-                                                        <p:confirm header="Allow user" message="Activate selected user?" icon="ui-icon-alert"/>
-                                                    </p:commandLink>
-                                                </h:panelGrid>
-                                            </p:column>
-                                        </p:dataTable>
+                      <p:column id="yorgColumn" headerText="Organization" 
+                                filterBy="#{yreq.organization.orgName}">
+                        <h:outputText value="#{yreq.organization.orgName}" />
+                      </p:column>
 
-                                        <p:confirmDialog global="true" severity="alert" showEffect="fade">
-                                            <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
-                                            <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
-                                        </p:confirmDialog>
-                                    </h:form>
-                                </p:tab>
+                      <p:column id="yroleColumn" headerText="Role" >
 
-                            </p:tabView>
+                        <p:selectOneMenu id="yroleChoose" 
+                                         rendered="#{yreq.yubikey.status != '7'}"
+                                         value="#{peopleAministration.sgroup}"
+                                         editable="false"
+                                         >
+                          <f:selectItem itemLabel="Select Role" 
+                                        itemValue="#"
+                                        />
+                          <f:selectItems value="#{peopleAministration.groups}"/>
+                        </p:selectOneMenu>
+                      </p:column>
 
-                            <script>
-                                userMgmtTabview.select(#{peopleStatusBean.tabIndex});
-                            </script>
-                        </div>
-                    </div> 
-                </p:layoutUnit>
-            </p:layout>
-        </h:body>
-    </f:view>
+                      <p:column id="yactionColumn" headerText="Action">
+                        <h:panelGrid columns="2" style="width: auto">                                                    
+                          <p:commandLink styleClass="ui-button-remove fa fa-ban" 
+                                         action="#{peopleAministration.rejectUser(yreq)}" 
+                                         update="@form">
+                            <p:confirm header="Reject user" message="Are you sure you want to reject this user?" icon="ui-icon-alert"/>
+                          </p:commandLink>
+                          <p:commandLink styleClass="ui-button-allow fa fa-check" 
+                                         action="#{peopleAministration.activateYubikeyUser(yreq)}" 
+                                         update="@form">
+                            <p:confirm header="Allow user" message="Activate selected user?" icon="ui-icon-alert"/>
+                          </p:commandLink>
+                        </h:panelGrid>
+                      </p:column>
+                    </p:dataTable>
+
+                    <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                      <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                      <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+                    </p:confirmDialog>
+                  </h:form>
+                </p:tab>
+
+              </p:tabView>
+
+              <script>
+                userMgmtTabview.select(#{peopleStatusBean.tabIndex});
+              </script>
+            </div>
+          </div> 
+        </p:layoutUnit>
+      </p:layout>
+    </h:body>
+  </f:view>
 </html>

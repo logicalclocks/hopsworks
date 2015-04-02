@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -8,40 +8,40 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:f="http://java.sun.com/jsf/core">
 
-    <h:head>
-        <title>BiobankCloud - Password reset</title>
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}"/>
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}"/>   
-    </h:head>
+  <h:head>
+    <title>BiobankCloud - Password reset</title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}"/>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}"/>   
+  </h:head>
 
-    <h:body >
-        <ui:insert name="titleBar" >
-            <ui:include src="/bbc/lims/titleBar.xhtml" />       
-        </ui:insert>
-        <div class="CSQ" align="center">
-                <h:form >
-                    <h:outputLabel for="tcode" 
-                                   value="Enter the code sent to your email" 
-                                   />
-                    <p:password id="tcode" 
-                                value="#{recoverySelector.tmpCode}" 
-                                label="Password 1" 
-                                required="true" 
-                                requiredMessage="Enter the temporay code"/>
-                    
-                    <p:watermark for="tcode" value="e.g. 138cf9" />
+  <h:body >
+    <ui:insert name="titleBar" >
+      <ui:include src="/bbc/lims/titleBar.xhtml" />       
+    </ui:insert>
+    <div class="CSQ" align="center">
+      <h:form >
+        <h:outputLabel for="tcode" 
+                       value="Enter the code sent to your email" 
+                       />
+        <p:password id="tcode" 
+                    value="#{recoverySelector.tmpCode}" 
+                    label="Password 1" 
+                    required="true" 
+                    requiredMessage="Enter the temporay code"/>
 
-                    <p:messages id="messages"  autoUpdate="true" closable="true"/>
+        <p:watermark for="tcode" value="e.g. 138cf9" />
 
-                    <h:panelGrid columns="2" style="margin-top: 20px;">
-                        <p:commandButton type="submit"
-                                         value="Save"
-                                         ajax="false"
-                                         action="#{recoverySelector.validateTmpCode()}"/>
-                        <p:commandButton type="submit" value="Cancel" action="welcome" process="@this"/>
-                </h:panelGrid>
-                </h:form>
-            </div>
+        <p:messages id="messages"  autoUpdate="true" closable="true"/>
 
-    </h:body>
+        <h:panelGrid columns="2" style="margin-top: 20px;">
+          <p:commandButton type="submit"
+                           value="Save"
+                           ajax="false"
+                           action="#{recoverySelector.validateTmpCode()}"/>
+          <p:commandButton type="submit" value="Cancel" action="welcome" process="@this"/>
+        </h:panelGrid>
+      </h:form>
+    </div>
+
+  </h:body>
 </html>

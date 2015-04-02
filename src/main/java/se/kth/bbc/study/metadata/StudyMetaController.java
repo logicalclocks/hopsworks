@@ -53,16 +53,19 @@ public class StudyMetaController implements Serializable {
       metadata.setInclusionCriteriaList(inclusionCriteriaDual.getTarget());
       studyMetaFacade.update(metadata);
     } catch (EJBException ejb) {
-      MessagesController.addErrorMessage("Failed","Update failed.","updateMessage");
+      MessagesController.addErrorMessage("Failed", "Update failed.",
+              "updateMessage");
       return;
     }
     MessagesController.
-            addInfoMessage("Success", "Metadata has been updated.","updateMessage");
+            addInfoMessage("Success", "Metadata has been updated.",
+                    "updateMessage");
   }
 
   @PostConstruct
   public void init() {
-    metadata = studyMetaFacade.findByStudyname(sessionState.getActiveStudyname());
+    metadata = studyMetaFacade.
+            findByStudyname(sessionState.getActiveStudyname());
     if (metadata == null) {
       metadata = new StudyMeta();
       metadata.setStudyname(sessionState.getActiveStudyname());

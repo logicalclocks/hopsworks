@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -8,71 +8,71 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:f="http://java.sun.com/jsf/core">
 
-    <h:head>
-        <title>BiobankCloud - Sign in with Yubikey</title>
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
-    </h:head>
+  <h:head>
+    <title>BiobankCloud - Sign in with Yubikey</title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+  </h:head>
 
-    <h:body >
-        <div align="center" class="banner">
-            Yubikey Login
-        </div>    
+  <h:body >
+    <div align="center" class="banner">
+      Yubikey Login
+    </div>    
 
-        <h:form id="ylogin" class="Login">
-            <p:graphicImage 
-                value="/resources/images/users/avatar.png" 
-                styleClass="profile-img">
-            </p:graphicImage>
+    <h:form id="ylogin" class="Login">
+      <p:graphicImage 
+        value="/resources/images/users/avatar.png" 
+        styleClass="profile-img">
+      </p:graphicImage>
 
-            <p:inputText  id="username" 
-                          value="#{customAuthentication.username}" 
-                          requiredMessage="Enter Email"
-                          required="true" 
-                          >
-            </p:inputText>
-            <p:watermark for="username" value="Email" />
+      <p:inputText  id="username" 
+                    value="#{customAuthentication.username}" 
+                    requiredMessage="Enter Email"
+                    required="true" 
+                    >
+      </p:inputText>
+      <p:watermark for="username" value="Email" />
 
-            <p:password id="password" 
-                        value="#{customAuthentication.password}" 
-                        requiredMessage="Enter Password"
-                        required="true" >
-            </p:password>
-            <p:watermark for="password" value="Password" />
+      <p:password id="password" 
+                  value="#{customAuthentication.password}" 
+                  requiredMessage="Enter Password"
+                  required="true" >
+      </p:password>
+      <p:watermark for="password" value="Password" />
 
-            <p:password id="otp" 
-                        value="#{customAuthentication.otpCode}" 
-                        rendered="#{customAuthenticationSwitch.otpEnabled}" 
-                        required="true" 
-                        requiredMessage="Enter PIN"
-                        validatorMessage="PIN must be 44 digits">
-                <f:validateLength minimum="44" maximum="44"/> 
-            </p:password>
-            <p:watermark for="otp"
-                         rendered="#{customAuthenticationSwitch.otpEnabled}"
-                         value="Press the Yubikey" />
+      <p:password id="otp" 
+                  value="#{customAuthentication.otpCode}" 
+                  rendered="#{customAuthenticationSwitch.otpEnabled}" 
+                  required="true" 
+                  requiredMessage="Enter PIN"
+                  validatorMessage="PIN must be 44 digits">
+        <f:validateLength minimum="44" maximum="44"/> 
+      </p:password>
+      <p:watermark for="otp"
+                   rendered="#{customAuthenticationSwitch.otpEnabled}"
+                   value="Press the Yubikey" />
 
-            <p:messages id="messages" 
-                        autoUpdate="true" 
-                        showDetail="false" closable="true"/>
+      <p:messages id="messages" 
+                  autoUpdate="true" 
+                  showDetail="false" closable="true"/>
 
-            <p:commandButton value="Sign in" 
-                             ajax="false"
-                             update=":ylogin"
-                             action="#{customAuthentication.yubikeyLogin()}"  
-                             />
-            <div align="center">
-            </div>
-        </h:form> 
+      <p:commandButton value="Sign in" 
+                       ajax="false"
+                       update=":ylogin"
+                       action="#{customAuthentication.yubikeyLogin()}"  
+                       />
+      <div align="center">
+      </div>
+    </h:form> 
 
-        <div align="center">        
-            <h:form id="yform">
-                <p:commandLink  value="Sign up" action="register_yubico"/>
-                <p:spacer width="10px"></p:spacer>
-                <p:commandLink value="Mobile user" action="welcome" />
-                <p:spacer width="10px"></p:spacer>
-                <p:commandLink value="Can't login?" action="login_issue"/>
-            </h:form>
-        </div>
-    </h:body>
+    <div align="center">        
+      <h:form id="yform">
+        <p:commandLink  value="Sign up" action="register_yubico"/>
+        <p:spacer width="10px"></p:spacer>
+        <p:commandLink value="Mobile user" action="welcome" />
+        <p:spacer width="10px"></p:spacer>
+        <p:commandLink value="Can't login?" action="login_issue"/>
+      </h:form>
+    </div>
+  </h:body>
 </html>

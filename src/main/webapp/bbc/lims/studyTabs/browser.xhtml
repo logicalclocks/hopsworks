@@ -11,68 +11,68 @@ and open the template in the editor.
       xmlns:p="http://primefaces.org/ui" 
       xmlns:f="http://java.sun.com/jsf/core"
       >
-    <body>
-        <ui:composition>
-            <div class="clear_fixing"></div>
-            <div class="container" prependId="false">
+  <body>
+    <ui:composition>
+      <div class="clear_fixing"></div>
+      <div class="container" prependId="false">
 
-                <h:form id="browserForm">   
-                    <ui:repeat var="node" value="#{InodesMB.currentPath}">
-                        <p:commandLink action="#{InodesMB.cdBrowse(node.path)}" update="@form">
-                            <strong>#{node.top}</strong>
-                        </p:commandLink>/
-                    </ui:repeat>
+        <h:form id="browserForm">   
+          <ui:repeat var="node" value="#{InodesMB.currentPath}">
+            <p:commandLink action="#{InodesMB.cdBrowse(node.path)}" update="@form">
+              <strong>#{node.top}</strong>
+            </p:commandLink>/
+          </ui:repeat>
 
-                    <p:growl for="remove" autoUpdate="true" showDetail="true"/>
+          <p:growl for="remove" autoUpdate="true" showDetail="true"/>
 
 
-                    <h:dataTable value="#{InodesMB.children}" var="inode"
-                                 styleClass="ui_box browser_table"
-                                 headerClass="browser_header" rowClasses="browser_row" columnClasses=",,action_column">
+          <h:dataTable value="#{InodesMB.children}" var="inode"
+                       styleClass="ui_box browser_table"
+                       headerClass="browser_header" rowClasses="browser_row" columnClasses=",,action_column">
 
-                        <h:column>
-                            <f:facet name="header">Name</f:facet>
-                            <h:graphicImage class="browser s16" library="images/icons" name="#{inode.isDir()?'folder.png':'file.png'}" />
+            <h:column>
+              <f:facet name="header">Name</f:facet>
+              <h:graphicImage class="browser s16" library="images/icons" name="#{inode.isDir()?'folder.png':'file.png'}" />
 
-                            <p:commandLink styleClass="dark" action="#{InodesMB.cdUp()}" update="@form" rendered="#{inode.isParent()}">
-                                <strong>#{inode.name}</strong>
-                            </p:commandLink>
+              <p:commandLink styleClass="dark" action="#{InodesMB.cdUp()}" update="@form" rendered="#{inode.isParent()}">
+                <strong>#{inode.name}</strong>
+              </p:commandLink>
 
-                            <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}" update="@form" rendered="#{not inode.isParent() and inode.dir}">
-                                <strong>#{inode.name}</strong>
-                            </p:commandLink>
+              <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}" update="@form" rendered="#{not inode.isParent() and inode.dir}">
+                <strong>#{inode.name}</strong>
+              </p:commandLink>
 
-                            <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false" disabled="#{inode.status != 'available'}">
-                                <strong>#{inode.name}</strong>
-                                <p:fileDownload value="#{fileOperationsMB.downloadFile(inode)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-                            </p:commandLink>
-                        </h:column>
+              <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false" disabled="#{inode.status != 'available'}">
+                <strong>#{inode.name}</strong>
+                <p:fileDownload value="#{fileOperationsMB.downloadFile(inode)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+              </p:commandLink>
+            </h:column>
 
-                        <h:column >
-                            <f:facet name="header">Last modified</f:facet>
-                                #{inode.isParent()?"":InodesMB.approximateTime(inode.modified)}
-                        </h:column>
+            <h:column >
+              <f:facet name="header">Last modified</f:facet>
+                #{inode.isParent()?"":InodesMB.approximateTime(inode.modified)}
+            </h:column>
 
-                        <h:column>
-                            <p:commandLink styleClass="ui-button fa fa-trash remove_data_button"  
-                                           value="" rendered="#{studyManagedBean.renderComponentList() == 'Master' and not inode.dir}" 
-                                           update="@form" action="#{fileOperationsMB.deleteFile(inode)}">
-                                <p:confirm header="Remove data" message="Are you sure you want to remove this file?" icon="ui-icon-alert"/>
-                            </p:commandLink>
-                            <p:confirmDialog global="true" severity="alert" showEffect="fade"> 
-                                <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
-                                <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
-                            </p:confirmDialog>
-                        </h:column>
-                        <f:facet name="footer">
-                            <p:commandButton value="Upload file" action="#{studyManagedBean.redirectToUploader()}" ajax="false" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-                            <p:commandButton value="Create folder" type="button" onclick="PF('createFolderDlg').show()" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-                        </f:facet>
-                    </h:dataTable>
+            <h:column>
+              <p:commandLink styleClass="ui-button fa fa-trash remove_data_button"  
+                             value="" rendered="#{studyManagedBean.renderComponentList() == 'Master' and not inode.dir}" 
+                             update="@form" action="#{fileOperationsMB.deleteFile(inode)}">
+                <p:confirm header="Remove data" message="Are you sure you want to remove this file?" icon="ui-icon-alert"/>
+              </p:commandLink>
+              <p:confirmDialog global="true" severity="alert" showEffect="fade"> 
+                <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>   
+                <p:commandButton value="No"  icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>   
+              </p:confirmDialog>
+            </h:column>
+            <f:facet name="footer">
+              <p:commandButton value="Upload file" action="#{studyManagedBean.redirectToUploader()}" ajax="false" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+              <p:commandButton value="Create folder" type="button" onclick="PF('createFolderDlg').show()" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+            </f:facet>
+          </h:dataTable>
 
-                </h:form>
+        </h:form>
 
-            </div> 
-        </ui:composition>
-    </body>
+      </div> 
+    </ui:composition>
+  </body>
 </html>

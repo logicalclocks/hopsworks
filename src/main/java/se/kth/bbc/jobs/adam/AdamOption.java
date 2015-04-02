@@ -20,10 +20,12 @@ public final class AdamOption {
 
   public AdamOption(String name, String description, boolean valueIsPath,
           boolean isFlag, boolean isOutputPath) {
-    if(isFlag && (valueIsPath|| isOutputPath)){
-      throw new IllegalArgumentException("An option cannot be both a path and a flag.");
-    }else if(!valueIsPath && isOutputPath){
-      throw new IllegalArgumentException("An option cannot be an output path but not a path.");
+    if (isFlag && (valueIsPath || isOutputPath)) {
+      throw new IllegalArgumentException(
+              "An option cannot be both a path and a flag.");
+    } else if (!valueIsPath && isOutputPath) {
+      throw new IllegalArgumentException(
+              "An option cannot be an output path but not a path.");
     }
     this.name = name;
     this.valueIsPath = valueIsPath;
@@ -47,8 +49,8 @@ public final class AdamOption {
   public boolean isFlag() {
     return isFlag;
   }
-  
-  public boolean isOutputPath(){
+
+  public boolean isOutputPath() {
     return isOutputPath;
   }
 

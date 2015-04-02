@@ -23,28 +23,30 @@ import javax.faces.bean.RequestScoped;
 @RequestScoped
 public class CustomAuthenticationSwitch implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    public boolean isOtpEnabled() {
+  public boolean isOtpEnabled() {
 
-        Properties prop = new Properties();
-        try {
-            // Load the two factor authentication property file
-            InputStream inputStream
-                    = getClass().getClassLoader().getResourceAsStream("clientcauth.properties");
-            prop.load(inputStream);
- 
-        } catch (IOException ex) {
-     
-        }
-          
-        // Check if custom realm is enabled if not disable the gui
-        if (!"true".equals(prop.getProperty("cauth-realm-enabled"))) {
-            Logger.getLogger(CustomAuthenticationSwitch.class.getName()).log(Level.INFO, "## Custom authentication configuration disabled");
-            return false;
-        }
-        
-        return true;
+    Properties prop = new Properties();
+    try {
+      // Load the two factor authentication property file
+      InputStream inputStream
+              = getClass().getClassLoader().getResourceAsStream(
+                      "clientcauth.properties");
+      prop.load(inputStream);
+
+    } catch (IOException ex) {
+
     }
+
+    // Check if custom realm is enabled if not disable the gui
+    if (!"true".equals(prop.getProperty("cauth-realm-enabled"))) {
+      Logger.getLogger(CustomAuthenticationSwitch.class.getName()).log(
+              Level.INFO, "## Custom authentication configuration disabled");
+      return false;
+    }
+
+    return true;
+  }
 
 }

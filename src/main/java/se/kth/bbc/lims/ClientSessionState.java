@@ -15,43 +15,46 @@ import se.kth.bbc.study.TrackStudy;
  */
 @ManagedBean
 @SessionScoped
-public class ClientSessionState implements Serializable{
-  
+public class ClientSessionState implements Serializable {
+
   @EJB
   private StudyFacade studyFacade;
-  
+
   private TrackStudy activeStudy;
-  
-  public void setActiveStudy(TrackStudy study){
+
+  public void setActiveStudy(TrackStudy study) {
     this.activeStudy = study;
   }
-  
-  public TrackStudy getActiveStudy(){
+
+  public TrackStudy getActiveStudy() {
     return activeStudy;
   }
-  
-  public String getActiveStudyname(){
-    if(activeStudy != null){
+
+  public String getActiveStudyname() {
+    if (activeStudy != null) {
       return activeStudy.getName();
-    }else{
+    } else {
       return null;
     }
   }
-  
-  public void setActiveStudyByName(String studyname){
+
+  public void setActiveStudyByName(String studyname) {
     activeStudy = studyFacade.findByName(studyname);
   }
-  
+
   private HttpServletRequest getRequest() {
-        return (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-    }
+    return (HttpServletRequest) FacesContext.getCurrentInstance().
+            getExternalContext().getRequest();
+  }
 
   /**
    * Get the username of the user currently logged in.
-   * @return Email address of the user currently logged in. (Serves as username.)
+   * <p>
+   * @return Email address of the user currently logged in. (Serves as
+   * username.)
    */
-    public String getLoggedInUsername() {
-        return getRequest().getUserPrincipal().getName();
-    }
-  
+  public String getLoggedInUsername() {
+    return getRequest().getUserPrincipal().getName();
+  }
+
 }

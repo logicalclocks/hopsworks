@@ -1,259 +1,259 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui">
-    <f:view contentType="text/html">
+  <f:view contentType="text/html">
 
-        <h:head>
-            <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/signup.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <h:head>
+      <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/signup.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
 
-        </h:head>
+    </h:head>
 
-        <h:body >
-            <ui:insert name="titleBar" >
-                <ui:include src="/bbc/lims/titleBar.xhtml" />       
-            </ui:insert>
+    <h:body >
+      <ui:insert name="titleBar" >
+        <ui:include src="/bbc/lims/titleBar.xhtml" />       
+      </ui:insert>
 
-            <div align="center">
-                          
-                <h:panelGrid 
-                    columns="#{customAuthenticationSwitch.otpEnabled?2:1}" 
-                    styleClass="registerContainer">
+      <div align="center">
 
-                    <h:panelGroup styleClass="Registation" >
-                        <h3>Create your BiobankCloud account</h3>
+        <h:panelGrid 
+          columns="#{customAuthenticationSwitch.otpEnabled?2:1}" 
+          styleClass="registerContainer">
 
-                        <h:form id ="y_register_form" class="register_form"> 
-                            <h:panelGrid columns="4" >			
+          <h:panelGroup styleClass="Registation" >
+            <h3>Create your BiobankCloud account</h3>
 
-                                <p:inputText id="fname" 
-                                             value="#{userRegistration.fname}" 
-                                             type="text"
-                                             required="true"
-                                             autocomplete="off"
-                                             requiredMessage="Enter first name" />
-                                <p:watermark for="fname" value="First name*" />
+            <h:form id ="y_register_form" class="register_form"> 
+              <h:panelGrid columns="4" >			
 
-                                <p:inputText id="lname"
-                                             value="#{userRegistration.lname}" 
-                                             required="true"
-                                             autocomplete="off"
-                                             requiredMessage="Enter last name"/>
-                                <p:watermark for="lname" value="Last name*" />
+                <p:inputText id="fname" 
+                             value="#{userRegistration.fname}" 
+                             type="text"
+                             required="true"
+                             autocomplete="off"
+                             requiredMessage="Enter first name" />
+                <p:watermark for="fname" value="First name*" />
 
-                                <p:inputText id="email"
-                                             value="#{userRegistration.mail}" 
-                                             required="true"
-                                             autocomplete="off"
-                                             requiredMessage="Enter email">
-                                    <f:validator binding="#{usernameValidator}" />
-                                </p:inputText>    
-                                <p:watermark for="email" value="Email*" />
+                <p:inputText id="lname"
+                             value="#{userRegistration.lname}" 
+                             required="true"
+                             autocomplete="off"
+                             requiredMessage="Enter last name"/>
+                <p:watermark for="lname" value="Last name*" />
 
-                                <p:inputText id="tel" 
-                                             value="#{userRegistration.tel}" 
-                                             autocomplete="off"
-                                             validatorMessage="Invalid phone number">
-                                    <f:validateRegex pattern="^([+]?[\d]+)?$" />
-                                </p:inputText>
-                                <p:watermark for="tel" value="Telephone number" />
-                           
-                                <p:inputText id="org1" 
-                                             value="#{userRegistration.org}" 
-                                             autocomplete="off"
-                                             validatorMessage="Invalid organiztion name">
-                                </p:inputText>
-                                <p:watermark for="org1" value="Organization" />
+                <p:inputText id="email"
+                             value="#{userRegistration.mail}" 
+                             required="true"
+                             autocomplete="off"
+                             requiredMessage="Enter email">
+                  <f:validator binding="#{usernameValidator}" />
+                </p:inputText>    
+                <p:watermark for="email" value="Email*" />
 
-                                <p:inputText id="dept1" 
-                                             value="#{userRegistration.department}" 
-                                             autocomplete="off"
-                                             validatorMessage="Invalid department name">
-                                </p:inputText>
-                                <p:watermark for="dept1" value="Department name" />
-                                
-                                <p:inputText id="address2" value="#{userRegistration.address2}" 
-                                             required="true"
-                                             autocomplete="off"
-                                             requiredMessage="Enter street" >
-                                </p:inputText>
-                                <p:watermark for="address2" value="Street and number*" />
+                <p:inputText id="tel" 
+                             value="#{userRegistration.tel}" 
+                             autocomplete="off"
+                             validatorMessage="Invalid phone number">
+                  <f:validateRegex pattern="^([+]?[\d]+)?$" />
+                </p:inputText>
+                <p:watermark for="tel" value="Telephone number" />
 
-                                <p:inputText id="city1" value="#{userRegistration.city}" 
-                                             required="true"
-                                             autocomplete="off"
-                                             requiredMessage="Enter city"> 
-                                </p:inputText>
-                                <p:watermark for="city1" value="City*" />
+                <p:inputText id="org1" 
+                             value="#{userRegistration.org}" 
+                             autocomplete="off"
+                             validatorMessage="Invalid organiztion name">
+                </p:inputText>
+                <p:watermark for="org1" value="Organization" />
 
+                <p:inputText id="dept1" 
+                             value="#{userRegistration.department}" 
+                             autocomplete="off"
+                             validatorMessage="Invalid department name">
+                </p:inputText>
+                <p:watermark for="dept1" value="Department name" />
 
-                                <p:inputText id="zip1" value="#{userRegistration.postalcode}" 
-                                             required="true"
-                                             autocomplete="off"
-                                             requiredMessage="Enter postal code">
-                                </p:inputText>
-                                <p:watermark for="zip1" value="Postal Code*" />
+                <p:inputText id="address2" value="#{userRegistration.address2}" 
+                             required="true"
+                             autocomplete="off"
+                             requiredMessage="Enter street" >
+                </p:inputText>
+                <p:watermark for="address2" value="Street and number*" />
+
+                <p:inputText id="city1" value="#{userRegistration.city}" 
+                             required="true"
+                             autocomplete="off"
+                             requiredMessage="Enter city"> 
+                </p:inputText>
+                <p:watermark for="city1" value="City*" />
 
 
-                                <p:inputText id="country1" value="#{userRegistration.country}"  
-                                             required="true"
-                                             autocomplete="off"
-                                             requiredMessage="Enter country">
-                                </p:inputText>
-                                <p:watermark for="country1" value="Country*" />
-
-                                <p:password id="password0" 
-                                            value="#{userRegistration.password}" 
-                                            required="true"
-                                            autocomplete="off"
-                                            requiredMessage="Enter password">
-                                    <f:validator validatorId="passwordValidator" />
-                                    <f:attribute name="confirmPassword" value="#{confirmPassword}" />
-                                </p:password>
-                                <p:watermark for="password0" value="Choose a password*" />
-
-                                <p:password id="password" 
-                                            value="#{userRegistration.passwordAgain}"
-                                            requiredMessage="Re-enter password"
-                                            autocomplete="off" 
-                                            binding="#{confirmPassword}"
-                                            required="true">
-                                </p:password>
-                                <p:watermark for="password" value="Repeat the password*" />
-                            </h:panelGrid>
-
-                            <h:panelGrid columns="2" >			
-
-                                <p:selectOneMenu id="sec_question"
-                                                 value="#{userRegistration.security_question}" 
-                                                 required="true"
-                                                 style="width: 508px; height: 30px; " 
-                                                 requiredMessage="Select security question">
-
-                                    <f:selectItem itemLabel="Select security question for password recovery *" 
-
-                                                  itemValue="" />
-                                    <f:selectItems value="#{userRegistration.questions}"/>
-                                </p:selectOneMenu>  
-                                <p:spacer></p:spacer>
-
-                                <p:inputText id="answer"
-                                             value="#{userRegistration.security_answer}"
-                                             style="width: 508px"
-                                             required="true"
-                                             autocomplete="off"
-                                             requiredMessage="Answer security question" />
-                                <p:watermark for="answer" value="Security answer*" />
-
-                                <!--
-                                                                <p:captcha id ="captcha" 
-                                                                           label="Captcha"
-                                                                           required="true" 
-                                                                           requiredMessage="Enter Captcha"/>
-                                
-                                                                <p:spacer></p:spacer>
-                                -->
-                                <h:panelGroup style="padding: 10">
-                                    <p:selectBooleanCheckbox 
-                                        value="#{userRegistration.tos}"> 
-                                        <f:validator binding="#{tosCheckboxValidator}" />
-                                    </p:selectBooleanCheckbox> 
-                                    <p:spacer width="5"></p:spacer>
-                                    <p:commandLink 
-                                        action="tos.xhtml"
-                                        ajax="false" 
-                                        value=" I agree to the BiobankCloud Terms of Service (ToS)"
-                                        immediate="true" target="_blank">
-                                    </p:commandLink>
-                                </h:panelGroup>
-                            </h:panelGrid>
-                            <p:messages id="messages" showDetail="false" autoUpdate="true" closable="true"/>
-
-                            <div class="register_user">
-                                <p:commandButton  
-                                    type="submit"
-                                    value="Register" 
-                                    oncomplete="Recaptcha.reload();" 
-                                    action="#{userRegistration.registerYubikey()}"
-                                    ajax="false"
-                                    update=":y_register_form"
-                                    />
-
-                                <p:spacer width="10"></p:spacer>
-
-                                <p:commandButton  
-                                    type="submit"
-                                    value="Cancel" 
-                                    action="welcome" 
-                                    immediate="true" 
-                                    ajax="false"
-                                    />
-                            </div>
-                        </h:form> 
-                    </h:panelGroup>
+                <p:inputText id="zip1" value="#{userRegistration.postalcode}" 
+                             required="true"
+                             autocomplete="off"
+                             requiredMessage="Enter postal code">
+                </p:inputText>
+                <p:watermark for="zip1" value="Postal Code*" />
 
 
-                    <h:panelGroup rendered="#{customAuthenticationSwitch.otpEnabled}" styleClass="registerPanel">
+                <p:inputText id="country1" value="#{userRegistration.country}"  
+                             required="true"
+                             autocomplete="off"
+                             requiredMessage="Enter country">
+                </p:inputText>
+                <p:watermark for="country1" value="Country*" />
 
-                        <div class="UserGuides">     
-                            <h2 align="center" class="signup_header">More security for your data</h2>
-                            
-                                <p class="signup_contents">                               
-                                    The BiobankCloud provides 2-Factor authentication to ensure strong security. You can login using a Yubikey device or      
-                                    a 
-                                    <a 
-                                      href="register_mobile.xhtml">smartphone.
-                                    </a> 
-                                </p>
-                            
-                            <p class="signup_contents">                               
-                                    Yubikey authentication is an option for users who don't use mobile devices for authentication.
-                                    The Yubikey is a hardware authentication device that changes passwords every time it is used. 
-                                    For Yubikey login a hardware token called Yubikey will be sent to you.
-                                </p>  
+                <p:password id="password0" 
+                            value="#{userRegistration.password}" 
+                            required="true"
+                            autocomplete="off"
+                            requiredMessage="Enter password">
+                  <f:validator validatorId="passwordValidator" />
+                  <f:attribute name="confirmPassword" value="#{confirmPassword}" />
+                </p:password>
+                <p:watermark for="password0" value="Choose a password*" />
 
-                                <div align="center">
-                                    <p:graphicImage library="images" name="users/yubikey.jpg" height="75px;" width="90px;"></p:graphicImage>
-                                </div>
+                <p:password id="password" 
+                            value="#{userRegistration.passwordAgain}"
+                            requiredMessage="Re-enter password"
+                            autocomplete="off" 
+                            binding="#{confirmPassword}"
+                            required="true">
+                </p:password>
+                <p:watermark for="password" value="Repeat the password*" />
+              </h:panelGrid>
 
-                                <p class="signup_contents">
-                                    1. Insert the device into the USB port of your computer.
-                                </p>
+              <h:panelGrid columns="2" >			
 
-                                <p class="signup_contents">
-                                    2. When you login to the BiobankCloud you will be asked to enter your usual password (label 1) and 
-                                    a PIN code that is generated by pressing the Yubikey green button, as 
-                                    displayed in the image above (label 2).
-                                </p>
+                <p:selectOneMenu id="sec_question"
+                                 value="#{userRegistration.security_question}" 
+                                 required="true"
+                                 style="width: 508px; height: 30px; " 
+                                 requiredMessage="Select security question">
 
-                                <div align="center">
-                                    <p:graphicImage library="images" name="icons/yubiko.jpg" height="150px;" width="150px;"></p:graphicImage>
-                                </div>
+                  <f:selectItem itemLabel="Select security question for password recovery *" 
 
-                                <p class="signup_contents" >
-                                    3. Press the Yubikey button. Every time you press the Yubikey button, a new code will 
-                                    be generated in the Yubikey field (label 2). 
-                                    <div align="center">
-                                        <p:graphicImage library="images" name="users/yauth.png" 
-                                            style="width: 200px; height: 200px;" >
-                                        </p:graphicImage>
-                                    </div>
-                                </p>
-                            
-                                <p class="signup_contents" style="margin-bottom: 100px;">
-                                    4. The Yubikey device updates (label 2) and you will be authenticated.
-                                </p>
-                        </div>                    
-                    </h:panelGroup>
-                         
-                </h:panelGrid>
-            </div>
-        </h:body>
-    </f:view>
+                                itemValue="" />
+                  <f:selectItems value="#{userRegistration.questions}"/>
+                </p:selectOneMenu>  
+                <p:spacer></p:spacer>
+
+                <p:inputText id="answer"
+                             value="#{userRegistration.security_answer}"
+                             style="width: 508px"
+                             required="true"
+                             autocomplete="off"
+                             requiredMessage="Answer security question" />
+                <p:watermark for="answer" value="Security answer*" />
+
+                <!--
+                                                <p:captcha id ="captcha" 
+                                                           label="Captcha"
+                                                           required="true" 
+                                                           requiredMessage="Enter Captcha"/>
+                
+                                                <p:spacer></p:spacer>
+                -->
+                <h:panelGroup style="padding: 10">
+                  <p:selectBooleanCheckbox 
+                    value="#{userRegistration.tos}"> 
+                    <f:validator binding="#{tosCheckboxValidator}" />
+                  </p:selectBooleanCheckbox> 
+                  <p:spacer width="5"></p:spacer>
+                  <p:commandLink 
+                    action="tos.xhtml"
+                    ajax="false" 
+                    value=" I agree to the BiobankCloud Terms of Service (ToS)"
+                    immediate="true" target="_blank">
+                  </p:commandLink>
+                </h:panelGroup>
+              </h:panelGrid>
+              <p:messages id="messages" showDetail="false" autoUpdate="true" closable="true"/>
+
+              <div class="register_user">
+                <p:commandButton  
+                  type="submit"
+                  value="Register" 
+                  oncomplete="Recaptcha.reload();" 
+                  action="#{userRegistration.registerYubikey()}"
+                  ajax="false"
+                  update=":y_register_form"
+                  />
+
+                <p:spacer width="10"></p:spacer>
+
+                <p:commandButton  
+                  type="submit"
+                  value="Cancel" 
+                  action="welcome" 
+                  immediate="true" 
+                  ajax="false"
+                  />
+              </div>
+            </h:form> 
+          </h:panelGroup>
+
+
+          <h:panelGroup rendered="#{customAuthenticationSwitch.otpEnabled}" styleClass="registerPanel">
+
+            <div class="UserGuides">     
+              <h2 align="center" class="signup_header">More security for your data</h2>
+
+              <p class="signup_contents">                               
+                The BiobankCloud provides 2-Factor authentication to ensure strong security. You can login using a Yubikey device or      
+                a 
+                <a 
+                  href="register_mobile.xhtml">smartphone.
+                </a> 
+              </p>
+
+              <p class="signup_contents">                               
+                Yubikey authentication is an option for users who don't use mobile devices for authentication.
+                The Yubikey is a hardware authentication device that changes passwords every time it is used. 
+                For Yubikey login a hardware token called Yubikey will be sent to you.
+              </p>  
+
+              <div align="center">
+                <p:graphicImage library="images" name="users/yubikey.jpg" height="75px;" width="90px;"></p:graphicImage>
+              </div>
+
+              <p class="signup_contents">
+                1. Insert the device into the USB port of your computer.
+              </p>
+
+              <p class="signup_contents">
+                2. When you login to the BiobankCloud you will be asked to enter your usual password (label 1) and 
+                a PIN code that is generated by pressing the Yubikey green button, as 
+                displayed in the image above (label 2).
+              </p>
+
+              <div align="center">
+                <p:graphicImage library="images" name="icons/yubiko.jpg" height="150px;" width="150px;"></p:graphicImage>
+              </div>
+
+              <p class="signup_contents" >
+                3. Press the Yubikey button. Every time you press the Yubikey button, a new code will 
+                be generated in the Yubikey field (label 2). 
+                <div align="center">
+                  <p:graphicImage library="images" name="users/yauth.png" 
+                                  style="width: 200px; height: 200px;" >
+                  </p:graphicImage>
+                </div>
+              </p>
+
+              <p class="signup_contents" style="margin-bottom: 100px;">
+                4. The Yubikey device updates (label 2) and you will be authenticated.
+              </p>
+            </div>                    
+          </h:panelGroup>
+
+        </h:panelGrid>
+      </div>
+    </h:body>
+  </f:view>
 </html>

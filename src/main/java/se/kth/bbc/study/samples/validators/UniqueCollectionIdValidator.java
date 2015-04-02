@@ -16,20 +16,20 @@ import se.kth.bbc.study.samples.SamplecollectionFacade;
  */
 @ManagedBean
 @RequestScoped
-public class UniqueCollectionIdValidator implements Validator{
-  
+public class UniqueCollectionIdValidator implements Validator {
+
   @EJB
   private SamplecollectionFacade collectionFacade;
 
   @Override
   public void validate(FacesContext context, UIComponent component, Object value)
           throws ValidatorException {
-    if(collectionFacade.existsCollectionWithId(value.toString())){ 
-			FacesMessage msg = 
-				new FacesMessage(FacesMessage.SEVERITY_ERROR,"Non-unique id.", 
-						"A collection with this ID already exists.");
-			throw new ValidatorException(msg); 
-		}
+    if (collectionFacade.existsCollectionWithId(value.toString())) {
+      FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+              "Non-unique id.",
+              "A collection with this ID already exists.");
+      throw new ValidatorException(msg);
+    }
   }
-  
+
 }

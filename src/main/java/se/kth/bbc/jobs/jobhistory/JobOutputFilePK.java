@@ -13,6 +13,7 @@ import javax.validation.constraints.Size;
  */
 @Embeddable
 public class JobOutputFilePK implements Serializable {
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "job_id")
@@ -66,8 +67,8 @@ public class JobOutputFilePK implements Serializable {
     if (this.jobId != other.jobId) {
       return false;
     }
-    if ((this.name == null && other.name != null) ||
-            (this.name != null && !this.name.equals(other.name))) {
+    if ((this.name == null && other.name != null) || (this.name != null
+            && !this.name.equals(other.name))) {
       return false;
     }
     return true;
@@ -75,8 +76,8 @@ public class JobOutputFilePK implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.job.JobOutputFilePK[ jobId=" + jobId + ", name=" + name +
-            " ]";
+    return "se.kth.bbc.job.JobOutputFilePK[ jobId=" + jobId + ", name=" + name
+            + " ]";
   }
-  
+
 }

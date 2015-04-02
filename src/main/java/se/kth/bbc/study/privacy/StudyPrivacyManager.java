@@ -45,148 +45,157 @@ import se.kth.bbc.study.privacy.model.Consent;
 @Stateless
 public class StudyPrivacyManager {
 
-    @PersistenceContext(unitName = "hopsPU")
-    private EntityManager em;
+  @PersistenceContext(unitName = "hopsPU")
+  private EntityManager em;
 
-    @EJB
-    private ActivityController activityController;
+  @EJB
+  private ActivityController activityController;
 
-    @EJB
-    private StudyTeamFacade stc;
+  @EJB
+  private StudyTeamFacade stc;
 
-    @EJB
-    private UserManager mgr;
+  @EJB
+  private UserManager mgr;
 
-    @EJB
-    private EmailBean emailBean;
+  @EJB
+  private EmailBean emailBean;
 
-    private List<ActivityDetail> ad;
+  private List<ActivityDetail> ad;
 
-    // Constants ----------------------------------------------------------------------------------
-    private static final int DEFAULT_BUFFER_SIZE = 10240; // 10KB.
+  // Constants ----------------------------------------------------------------------------------
+  private static final int DEFAULT_BUFFER_SIZE = 10240; // 10KB.
 
+  protected EntityManager getEntityManager() {
+    return em;
+  }
 
- 
-    
-    protected EntityManager getEntityManager() {
-        return em;
+  public void onDateSelect(SelectEvent event) {
+    FacesContext facesContext = FacesContext.getCurrentInstance();
+    SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
+    facesContext.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
+            "Date Selected", format.format(event.getObject())));
+  }
+
+  public void click() {
+    RequestContext requestContext = RequestContext.getCurrentInstance();
+
+    requestContext.update("form:display");
+    requestContext.execute("PF('dlg').show()");
+  }
+
+  public boolean upload(Consent consent) {
+    em.persist(consent);
+    return true;
+  }
+
+  public Consent getConsentByStudyName(String studyname) throws ParseException {
+
+    TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName",
+            Consent.class);
+    q.setParameter("studyName", studyname);
+    List<Consent> consent = q.getResultList();
+    if (consent.size() > 0) {
+      return consent.get(0);
     }
+    return null;
 
-    public void onDateSelect(SelectEvent event) {
-        FacesContext facesContext = FacesContext.getCurrentInstance();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
-        facesContext.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Date Selected", format.format(event.getObject())));
+  }
+
+  public Consent getConsentByName(String name) throws ParseException {
+
+    TypedQuery<Consent> q = em.createNamedQuery("Consent.findByName",
+            Consent.class);
+    q.setParameter("name", name);
+    List<Consent> consent = q.getResultList();
+    if (consent.size() > 0) {
+      return consent.get(0);
     }
+    return null;
 
-    public void click() {
-        RequestContext requestContext = RequestContext.getCurrentInstance();
+  }
 
-        requestContext.update("form:display");
-        requestContext.execute("PF('dlg').show()");
+  public String getRoles(String study, String username) throws ParseException {
+    List<StudyTeam> list = stc.findCurrentRole(study, username);
+    return list.get(0).getTeamRole();
+  }
+
+  public List<ActivityDetail> getAllActivities(String studyName) {
+    List<ActivityDetail> ad = activityController.
+            activityDetailOnStudy(studyName);
+    return ad;
+  }
+
+  public Consent getActiveConsent(String studyName) {
+    return (Consent) em.createQuery(
+            "SELECT c FROM Consent c WHERE c.status ='APPROVED' AND c.studyName = '"
+            + studyName + "'").getSingleResult();
+
+  }
+
+  public List<Consent> getAllConsets(String studyName) {
+    TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName",
+            Consent.class);
+    q.setParameter("studyName", studyName);
+    return q.getResultList();
+
+  }
+
+  // Actions ------------------------------------------------------------------------------------
+  public void downloadPDF(Consent consent) throws IOException {
+
+    // Prepare.
+    FacesContext facesContext = FacesContext.getCurrentInstance();
+    ExternalContext externalContext = facesContext.getExternalContext();
+    HttpServletResponse response = (HttpServletResponse) externalContext.
+            getResponse();
+
+    StreamedContent input = null;
+    BufferedOutputStream output = null;
+
+    try {
+      // Open file.
+      input = new DefaultStreamedContent(new ByteArrayInputStream(consent.
+              getConsentForm()));
+
+      // Init servlet response.
+      response.reset();
+      response.setHeader("Content-Type", "application/pdf");
+      response.setHeader("Content-Length", String.valueOf(consent.
+              getConsentForm().length));
+      output = new BufferedOutputStream(response.getOutputStream(),
+              DEFAULT_BUFFER_SIZE);
+
+      // Write file contents to response.
+      byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+      int length;
+      while ((length = input.getStream().read(buffer)) > 0) {
+        output.write(buffer, 0, length);
+      }
+
+      // Finalize task.
+      output.flush();
+    } finally {
+      // Gently close streams.
+      close(output);
     }
-
-     
-    public boolean upload(Consent consent) {
-        em.persist(consent);
-        return true;
-    }
-    
-    public Consent getConsentByStudyName(String studyname) throws ParseException {
-
-        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
-        q.setParameter("studyName", studyname);
-        List<Consent> consent = q.getResultList();
-        if(consent.size()>0)
-            return consent.get(0);
-        return null;
-
-    }
-    
-       public Consent getConsentByName(String name) throws ParseException {
-
-        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByName", Consent.class);
-        q.setParameter("name", name);
-        List<Consent> consent = q.getResultList();
-        if(consent.size()>0)
-            return consent.get(0);
-        return null;
-
-    }
-
-    public String getRoles(String study, String username) throws ParseException {
-        List<StudyTeam> list = stc.findCurrentRole(study, username);
-        return list.get(0).getTeamRole();
-    }
-
-    public List<ActivityDetail> getAllActivities(String studyName) {
-        List<ActivityDetail> ad = activityController.activityDetailOnStudy(studyName);
-        return ad;
-    }
-
-     public Consent getActiveConsent(String studyName) {
-        return (Consent) em.createQuery("SELECT c FROM Consent c WHERE c.status ='APPROVED' AND c.studyName = '" + studyName + "'").getSingleResult();
-        
-    }
-
-    public List<Consent> getAllConsets(String studyName) {
-        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
-        q.setParameter("studyName", studyName);
-        return q.getResultList();
-    
-    }
-    
-    // Actions ------------------------------------------------------------------------------------
-    public void downloadPDF(Consent consent) throws IOException {
-
-        // Prepare.
-        FacesContext facesContext = FacesContext.getCurrentInstance();
-        ExternalContext externalContext = facesContext.getExternalContext();
-        HttpServletResponse response = (HttpServletResponse) externalContext.getResponse();
-  
-        StreamedContent input = null;
-        BufferedOutputStream output = null;
-
-        try {
-            // Open file.
-            input = new DefaultStreamedContent(new ByteArrayInputStream(consent.getConsentForm()));
-       
-            // Init servlet response.
-            response.reset();
-            response.setHeader("Content-Type", "application/pdf");
-            response.setHeader("Content-Length", String.valueOf(consent.getConsentForm().length));
-            output = new BufferedOutputStream(response.getOutputStream(), DEFAULT_BUFFER_SIZE);
-
-            // Write file contents to response.
-            byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-            int length;
-            while ((length = input.getStream().read(buffer)) > 0) {
-                output.write(buffer, 0, length);
-            }
-
-            // Finalize task.
-            output.flush();
-        } finally {
-            // Gently close streams.
-            close(output);
-        }
 
         // Inform JSF that it doesn't need to handle response.
-        // This is very important, otherwise you will get the following exception in the logs:
-        // java.lang.IllegalStateException: Cannot forward after response has been committed.
-        facesContext.responseComplete();
-    }
+    // This is very important, otherwise you will get the following exception in the logs:
+    // java.lang.IllegalStateException: Cannot forward after response has been committed.
+    facesContext.responseComplete();
+  }
 
-    // Helpers (can be refactored to public utility class) ----------------------------------------
-    private static void close(Closeable resource) {
-        if (resource != null) {
-            try {
-                resource.close();
-            } catch (IOException e) {
+  // Helpers (can be refactored to public utility class) ----------------------------------------
+  private static void close(Closeable resource) {
+    if (resource != null) {
+      try {
+        resource.close();
+      } catch (IOException e) {
                 // Do your thing with the exception. Print it, log it or mail it. It may be useful to 
-                // know that this will generally only be thrown when the client aborted the download.
-                e.printStackTrace();
-            }
-        }
+        // know that this will generally only be thrown when the client aborted the download.
+        e.printStackTrace();
+      }
     }
+  }
 
 }

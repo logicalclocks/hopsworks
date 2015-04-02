@@ -23,72 +23,74 @@ import org.primefaces.model.SortOrder;
  *
  * @author stig
  */
-public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements Serializable {
+public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements
+        Serializable {
 
-    private transient final ActivityDetailFacade activityDetailFacade;
-    private List<ActivityDetail> data;
-    private String filterStudy;
-    private int rowIndex;
+  private transient final ActivityDetailFacade activityDetailFacade;
+  private List<ActivityDetail> data;
+  private String filterStudy;
+  private int rowIndex;
 
-    public LazyActivityModel(ActivityDetailFacade ac) {
-        this(ac, null);
-    }
+  public LazyActivityModel(ActivityDetailFacade ac) {
+    this(ac, null);
+  }
 
-    public LazyActivityModel(ActivityDetailFacade ac, String filterStudy) {
-        super();
-        this.activityDetailFacade = ac;
-        this.filterStudy = filterStudy;
-        data = new ArrayList<>();
-    }
+  public LazyActivityModel(ActivityDetailFacade ac, String filterStudy) {
+    super();
+    this.activityDetailFacade = ac;
+    this.filterStudy = filterStudy;
+    data = new ArrayList<>();
+  }
 
-    @Override
-    public List<ActivityDetail> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> filters) {
+  @Override
+  public List<ActivityDetail> load(int first, int pageSize, String sortField,
+          SortOrder sortOrder, Map<String, Object> filters) {
 
-        List<ActivityDetail> retData;
-        
+    List<ActivityDetail> retData;
+
         // UNDO later: this gives an error while accessing indexPage from profile 
-        
-        if (filterStudy == null) {
-            retData = activityDetailFacade.getPaginatedActivityDetail(first, pageSize);
-            //TODO: add support for sorting, filtering
-        } else {
-            retData = activityDetailFacade.getPaginatedActivityDetailForStudy(first, pageSize, filterStudy);
-        }
-        if (first == 0) {
-            data = new ArrayList<>(retData);
-            return retData;
-        } else if (first >= data.size()) {
-            data.addAll(retData);
-            return retData;
-        } else {
-            return data.subList(first, Math.min(first + pageSize, data.size()));
-        }
+    if (filterStudy == null) {
+      retData = activityDetailFacade.getPaginatedActivityDetail(first, pageSize);
+      //TODO: add support for sorting, filtering
+    } else {
+      retData = activityDetailFacade.getPaginatedActivityDetailForStudy(first,
+              pageSize, filterStudy);
     }
+    if (first == 0) {
+      data = new ArrayList<>(retData);
+      return retData;
+    } else if (first >= data.size()) {
+      data.addAll(retData);
+      return retData;
+    } else {
+      return data.subList(first, Math.min(first + pageSize, data.size()));
+    }
+  }
 
-    @Override
-    public void setRowIndex(int index) {
-        if (index >= data.size()) {
-            index = -1;
-        }
-        this.rowIndex = index;
+  @Override
+  public void setRowIndex(int index) {
+    if (index >= data.size()) {
+      index = -1;
     }
+    this.rowIndex = index;
+  }
 
-    @Override
-    public ActivityDetail getRowData() {
-        return data.get(rowIndex);
-    }
+  @Override
+  public ActivityDetail getRowData() {
+    return data.get(rowIndex);
+  }
 
-    /**
-     * Overriden because default implementation checks super.data against null.
-     *
-     * @return
-     */
-    @Override
-    public boolean isRowAvailable() {
-        if (data == null) {
-            return false;
-        }
-        return rowIndex >= 0 && rowIndex < data.size();
+  /**
+   * Overriden because default implementation checks super.data against null.
+   *
+   * @return
+   */
+  @Override
+  public boolean isRowAvailable() {
+    if (data == null) {
+      return false;
     }
+    return rowIndex >= 0 && rowIndex < data.size();
+  }
 
 }

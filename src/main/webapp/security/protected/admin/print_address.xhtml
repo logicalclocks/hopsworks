@@ -1,52 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui">
-    <f:view contentType="text/html">
+  <f:view contentType="text/html">
 
-        <h:head>
-            <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+    <h:head>
+      <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
 
-        </h:head>
+    </h:head>
 
-        <h:body>
-            <ui:insert name="titleBar" >
-                <ui:include src="/bbc/lims/titleBar.xhtml" />       
-            </ui:insert>
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/bbc/lims/titleBar.xhtml" />       
+      </ui:insert>
 
-            <div class="GenericMenue" align="left">
+      <div class="GenericMenue" align="left">
 
-                <h:form id="address_sent" > 
+        <h:form id="address_sent" > 
 
-                    <h:panelGrid columns="1">			
+          <h:panelGrid columns="1">			
 
-                        <h3 >Recipient</h3>    
+            <h3 >Recipient</h3>    
 
-                        <h:outputLabel id="fname" value="#{peopleAministration.selectedYubikyUser.fname} #{peopleAministration.selectedYubikyUser.lname}" />
+            <h:outputLabel id="fname" value="#{peopleAministration.selectedYubikyUser.fname} #{peopleAministration.selectedYubikyUser.lname}" />
 
-                        <h:outputLabel id="co" value="#{peopleAministration.address.address1}"/>
+            <h:outputLabel id="co" value="#{peopleAministration.address.address1}"/>
 
-                        <h:outputLabel id="add1" value="#{peopleAministration.address.address2}"/>
+            <h:outputLabel id="add1" value="#{peopleAministration.address.address2}"/>
 
-                        <h:outputLabel id="city" 
-                                       value="#{peopleAministration.address.city},
-                                       #{peopleAministration.address.postalcode}"/>
+            <h:outputLabel id="city" 
+                           value="#{peopleAministration.address.city},
+                           #{peopleAministration.address.postalcode}"/>
 
-                        <h:outputLabel id="country" value="#{peopleAministration.address.country}"/>
-                    </h:panelGrid>
+            <h:outputLabel id="country" value="#{peopleAministration.address.country}"/>
+          </h:panelGrid>
 
-                </h:form>     
-            </div>
-            <p:separator></p:separator>
-            <div align="center">
-            <p:commandButton  type="submit" value="Finish" action="userMgmt" process="@this" />
-            </div>
-        </h:body>
-    </f:view>
+        </h:form>     
+      </div>
+      <p:separator></p:separator>
+      <div align="center">
+        <p:commandButton  type="submit" value="Finish" action="userMgmt" process="@this" />
+      </div>
+    </h:body>
+  </f:view>
 </html>

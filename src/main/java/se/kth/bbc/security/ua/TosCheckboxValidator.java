@@ -22,28 +22,28 @@ import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 @RequestScoped
 public class TosCheckboxValidator implements Validator {
 
-    public boolean check = false;
+  public boolean check = false;
 
-    public boolean isCheck() {
-        return check;
+  public boolean isCheck() {
+    return check;
+  }
+
+  public void setCheck(boolean check) {
+    this.check = check;
+  }
+
+  @Override
+  public void validate(FacesContext context, UIComponent component,
+          Object value) throws ValidatorException {
+
+    String cb = value.toString();
+
+    if (!cb.equals("true")) {
+      FacesMessage facesMsg = new FacesMessage(
+              AccountStatusErrorMessages.TOS_ERROR);
+      facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+      throw new ValidatorException(facesMsg);
     }
-
-    public void setCheck(boolean check) {
-        this.check = check;
-    }
-
-    @Override
-    public void validate(FacesContext context, UIComponent component,
-            Object value) throws ValidatorException {
-
-        String cb = value.toString();
-
-        if (!cb.equals("true")) {
-            FacesMessage facesMsg = new FacesMessage(
-                    AccountStatusErrorMessages.TOS_ERROR);
-            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-            throw new ValidatorException(facesMsg);
-        }
-    }
+  }
 
 }

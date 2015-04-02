@@ -8,37 +8,37 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:f="http://java.sun.com/jsf/core">
 
-    <h:head>
-        <title>BiobankCloud - Security Question</title>
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-    </h:head>
+  <h:head>
+    <title>BiobankCloud - Security Question</title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+  </h:head>
 
-    <h:body >
-        <ui:insert name="titleBar" >
-            <ui:include src="/bbc/lims/titleBar.xhtml" />       
-        </ui:insert>
+  <h:body >
+    <ui:insert name="titleBar" >
+      <ui:include src="/bbc/lims/titleBar.xhtml" />       
+    </ui:insert>
 
-        <h:form>
-            <p:growl id="messages" showDetail="false" autoUpdate="true" />
-            <div class="content" align="center" >
-                <p:selectOneRadio id="loginIssueRadio"  
-                                  value="#{recoverySelector.console}" 
-                                  layout="grid" columns="1" required="true" 
-                                  requiredMessage="Please select one option.">
-                    content<f:selectItem itemLabel="Forgot password" itemValue="Password" />
-                    <f:selectItem itemLabel="Lost mobile device" itemValue="Mobile" />
-                    <f:selectItem itemLabel="Lost Yubikey device" itemValue="Yubikey" />
-                </p:selectOneRadio>
-                <p:spacer height="10"></p:spacer>
-                <div class="register_actions">
-                    <p:commandButton id="submitButton" value="Continue"
-                                     action="#{recoverySelector.redirect()}" update="@form">
-                    </p:commandButton>
-                    <p:commandButton type="submit" value="Cancel" action="welcome" process="@this" />
-                </div>
-            </div>
-        </h:form>
+    <h:form>
+      <p:growl id="messages" showDetail="false" autoUpdate="true" />
+      <div class="content" align="center" >
+        <p:selectOneRadio id="loginIssueRadio"  
+                          value="#{recoverySelector.console}" 
+                          layout="grid" columns="1" required="true" 
+                          requiredMessage="Please select one option.">
+          content<f:selectItem itemLabel="Forgot password" itemValue="Password" />
+          <f:selectItem itemLabel="Lost mobile device" itemValue="Mobile" />
+          <f:selectItem itemLabel="Lost Yubikey device" itemValue="Yubikey" />
+        </p:selectOneRadio>
+        <p:spacer height="10"></p:spacer>
+        <div class="register_actions">
+          <p:commandButton id="submitButton" value="Continue"
+                           action="#{recoverySelector.redirect()}" update="@form">
+          </p:commandButton>
+          <p:commandButton type="submit" value="Cancel" action="welcome" process="@this" />
+        </div>
+      </div>
+    </h:form>
 
-    </h:body>
+  </h:body>
 </html>

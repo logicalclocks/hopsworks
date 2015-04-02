@@ -10,8 +10,8 @@ import javax.faces.convert.FacesConverter;
 @FacesConverter("collectionTypeEnumConverter")
 public class CollectionTypeEnumConverter extends EnumConverter {
 
-    public CollectionTypeEnumConverter() {
-        super(CollectionTypeStudyDesignEnum.class);
-    }
+  public CollectionTypeEnumConverter() {
+    super(CollectionTypeStudyDesignEnum.class);
+  }
 
 }

@@ -10,165 +10,165 @@ and open the template in the editor.
       xmlns:p="http://primefaces.org/ui"
       xmlns:f="http://java.sun.com/jsf/core"
       >
-    
-    <style>
-    
-    </style>
-  
-    <body>
 
-        <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
+  <style>
 
-        <h:form id="privacy" enctype="multipart/form-data">
-            <p:panelMenu>
-                <p:submenu   style="padding-bottom: 10px; border-color: white; border: 0px none;" label="Consent and Ethical Approval">
-                    <p:menuitem value=""
-                                ajax="false"
-                                icon="ui-icon-close">
-                        
-                        <h:panelGrid columns="3" style="padding-top: 20px;">         
+  </style>
 
-                            <h:panelGroup style="padding-right:50px;">
-                                Consent Status: #{studyManagedBean.ethicalStatus}
-                            </h:panelGroup>
-                            
-                            
-                            <h:panelGroup style="padding-right:50px;">
-                                Retention Period: #{studyManagedBean.retentionPeriod}
-                            </h:panelGroup>
-                            
-                            
-                            
-                            <h:panelGroup style="padding-right:50px;">
-                                <p:calendar id="cal"
-                                            style="padding-right: 10px;"
-                                            value="#{studyManagedBean.retentionPeriod}" 
-                                            showOn="button" >
+  <body>
 
-                                </p:calendar>  
-                            
-                                <p:commandButton  
-                                                  value="Update Period"  
-                                                  update="privacy"
-                                                  action="#{studyManagedBean.updateRetentionPeriod()}"
-                                                  rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-                            </h:panelGroup>
-                   
-                        </h:panelGrid>
-                      
-                        <p:separator></p:separator>
-                      
-                        <p:dataGrid 
-                            value="#{studyManagedBean.allConsent}"
-                            var="consent"
-                            >
-                            <h:panelGrid columns="1">
-                                <p:column>
-                                    <h:commandLink  action="#{studyManagedBean.showConsent(consent.name)}" 
-                                                        target="_blank"
-                                                        style="float:left;margin-right:10px">
+    <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
 
-                                    <h:graphicImage  library="images/icons" 
-                                                         name="consent.png" 
-                                                         width="30"
-                                                         height="30"/>
-                                    </h:commandLink>
-                                </p:column>
+    <h:form id="privacy" enctype="multipart/form-data">
+      <p:panelMenu>
+        <p:submenu   style="padding-bottom: 10px; border-color: white; border: 0px none;" label="Consent and Ethical Approval">
+          <p:menuitem value=""
+                      ajax="false"
+                      icon="ui-icon-close">
 
-                                <p:column>
-                                    <h:outputLabel value="#{consent.name}" />
-                                </p:column>
-                                
-                                <p:column>
-                                    <h:outputLabel value="#{consent.date}" />
-                                </p:column>
-                            </h:panelGrid>
-                        </p:dataGrid>
-                        
-                        
-                        <h:panelGrid id= "consent_menu" columns="3" style="padding-top: 80px;">
-                            
-                            <p:fileUpload 
-                                value="#{studyManagedBean.file}" 
-                                      label="Upload Consent Info" 
-                                      mode="advanced"
-                                      fileLimit="1" 
-                                       allowTypes="/(\.|\/)(pdf|PDF)$/"
-                                       oncomplete="PF('chooseFileDlg').hide()"
-                                       update="privacy"
-                                      fileUploadListener="#{studyManagedBean.uploadConsnet}"
-                                      rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
+            <h:panelGrid columns="3" style="padding-top: 20px;">         
+
+              <h:panelGroup style="padding-right:50px;">
+                Consent Status: #{studyManagedBean.ethicalStatus}
+              </h:panelGroup>
+
+
+              <h:panelGroup style="padding-right:50px;">
+                Retention Period: #{studyManagedBean.retentionPeriod}
+              </h:panelGroup>
+
+
+
+              <h:panelGroup style="padding-right:50px;">
+                <p:calendar id="cal"
+                            style="padding-right: 10px;"
+                            value="#{studyManagedBean.retentionPeriod}" 
+                            showOn="button" >
+
+                </p:calendar>  
+
+                <p:commandButton  
+                  value="Update Period"  
+                  update="privacy"
+                  action="#{studyManagedBean.updateRetentionPeriod()}"
+                  rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+              </h:panelGroup>
+
+            </h:panelGrid>
+
+            <p:separator></p:separator>
+
+            <p:dataGrid 
+              value="#{studyManagedBean.allConsent}"
+              var="consent"
+              >
+              <h:panelGrid columns="1">
+                <p:column>
+                  <h:commandLink  action="#{studyManagedBean.showConsent(consent.name)}" 
+                                  target="_blank"
+                                  style="float:left;margin-right:10px">
+
+                    <h:graphicImage  library="images/icons" 
+                                     name="consent.png" 
+                                     width="30"
+                                     height="30"/>
+                  </h:commandLink>
+                </p:column>
+
+                <p:column>
+                  <h:outputLabel value="#{consent.name}" />
+                </p:column>
+
+                <p:column>
+                  <h:outputLabel value="#{consent.date}" />
+                </p:column>
+              </h:panelGrid>
+            </p:dataGrid>
+
+
+            <h:panelGrid id= "consent_menu" columns="3" style="padding-top: 80px;">
+
+              <p:fileUpload 
+                value="#{studyManagedBean.file}" 
+                label="Upload Consent Info" 
+                mode="advanced"
+                fileLimit="1" 
+                allowTypes="/(\.|\/)(pdf|PDF)$/"
+                oncomplete="PF('chooseFileDlg').hide()"
+                update="privacy"
+                fileUploadListener="#{studyManagedBean.uploadConsnet}"
+                rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
+                />
+
+
+              <p:fileUpload value="#{studyManagedBean.file}" 
+                            label="Upload Ethical Approval"
+                            mode="advanced" 
+                            fileLimit="1" 
+                            allowTypes="/(\.|\/)(pdf|PDF)$/"
+                            oncomplete="PF('chooseFileDlg').hide()"
+                            fileUploadListener="#{studyManagedBean.uploadEthicalApproval}"
+                            rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
+                            update="privacy"
                             />
-                        
-                         
-                            <p:fileUpload value="#{studyManagedBean.file}" 
-                                      label="Upload Ethical Approval"
-                                      mode="advanced" 
-                                      fileLimit="1" 
-                                      allowTypes="/(\.|\/)(pdf|PDF)$/"
-                                      oncomplete="PF('chooseFileDlg').hide()"
-                                      fileUploadListener="#{studyManagedBean.uploadEthicalApproval}"
-                                      rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
-                                       update="privacy"
-                                      />
-                           
-                        
-                            <p:fileUpload value="#{studyManagedBean.file}" 
-                                      label="Upload Non-Consent Info"
-                                      mode="advanced" 
-                                      fileLimit="1" 
-                                      allowTypes="/(\.|\/)(pdf|PDF)$/"
-                                       update="privacy"
-                                      oncomplete="PF('chooseFileDlg').hide()"
-                                      fileUploadListener="#{studyManagedBean.uploadEthicaNonConsent}"
-                                      rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
-                                       />
-                         
-                        </h:panelGrid>
-                   
-                    </p:menuitem>
-                </p:submenu>
-            </p:panelMenu>
-
-        </h:form>
-
-        
-        <h:form id="audit">
-            <p:dataTable var="user"
-                         value="#{studyManagedBean.getAllActivities(studyManagedBean.studyName)}" 
-                         emptyMessage="No audit logs"
-                         scrollable="true">
-
-                <f:facet name="header" >Audit </f:facet>
-
-                <p:column id="lnameColumn" filterBy="#{user.performedByName}"
-                          headerText="Name"
-                          style="width:32%; font-size: 12px; text-align: left;">
-
-                    <h:outputText value="#{user.performedByName}" />
-                </p:column>
-
-                <p:column id="emailColumn" filterBy="#{user.performedByEmail}"
-                          headerText="Email" 
-                          style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="#{user.performedByEmail}" />
-                </p:column>
 
 
-                <p:column  filterBy="#{user.timestamp}"
-                           headerText="Action Date" 
-                           style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="#{user.timestamp}"/>
-                </p:column>
+              <p:fileUpload value="#{studyManagedBean.file}" 
+                            label="Upload Non-Consent Info"
+                            mode="advanced" 
+                            fileLimit="1" 
+                            allowTypes="/(\.|\/)(pdf|PDF)$/"
+                            update="privacy"
+                            oncomplete="PF('chooseFileDlg').hide()"
+                            fileUploadListener="#{studyManagedBean.uploadEthicaNonConsent}"
+                            rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
+                            />
 
-                <p:column  filterBy="#{user.description}"
-                           headerText="Action" 
-                           style="width:32%;font-size: 12px;text-align: left;">
-                    <h:outputText value="#{user.description}"/>
-                </p:column>
-            </p:dataTable>
-        </h:form>
+            </h:panelGrid>
+
+          </p:menuitem>
+        </p:submenu>
+      </p:panelMenu>
+
+    </h:form>
 
 
-    </body>
+    <h:form id="audit">
+      <p:dataTable var="user"
+                   value="#{studyManagedBean.getAllActivities(studyManagedBean.studyName)}" 
+                   emptyMessage="No audit logs"
+                   scrollable="true">
+
+        <f:facet name="header" >Audit </f:facet>
+
+        <p:column id="lnameColumn" filterBy="#{user.performedByName}"
+                  headerText="Name"
+                  style="width:32%; font-size: 12px; text-align: left;">
+
+          <h:outputText value="#{user.performedByName}" />
+        </p:column>
+
+        <p:column id="emailColumn" filterBy="#{user.performedByEmail}"
+                  headerText="Email" 
+                  style="width:32%;font-size: 12px;text-align: left;">
+          <h:outputText value="#{user.performedByEmail}" />
+        </p:column>
+
+
+        <p:column  filterBy="#{user.timestamp}"
+                   headerText="Action Date" 
+                   style="width:32%;font-size: 12px;text-align: left;">
+          <h:outputText value="#{user.timestamp}"/>
+        </p:column>
+
+        <p:column  filterBy="#{user.description}"
+                   headerText="Action" 
+                   style="width:32%;font-size: 12px;text-align: left;">
+          <h:outputText value="#{user.description}"/>
+        </p:column>
+      </p:dataTable>
+    </h:form>
+
+
+  </body>
 </html> 

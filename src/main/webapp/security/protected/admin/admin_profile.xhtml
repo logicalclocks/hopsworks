@@ -1,377 +1,377 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"   
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       >
-    <h:head>
-        <title><ui:insert name="title">BioBankCloud LIMS Profile</ui:insert></title>
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/profile.css']}" />
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-        <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
-
-    </h:head>
-
-    <h:body>
-        <ui:insert name="titleBar" >
-            <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
-        </ui:insert>
-        <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
-
-
-        <div align="center" class="UserProfile">
-            
-            <div class="PersonalInfo">
-                <h3 > Personal Info</h3>
-                <p:separator></p:separator>
-
-                <p:panelGrid columns="4" styleClass="PersonalIfo">
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel value="Name" />
-                          </h3> 
-                    </p:column>   
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                           #{adminProfileAministration.editingUser.title eq '-'?'':adminProfileAministration.editingUser.title} #{adminProfileAministration.editingUser.fname} #{adminProfileAministration.editingUser.lname} 
-                        </h3>
-                    </p:column>
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel value="Member Since" />
-                          </h3> 
-                    </p:column>   
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                            #{adminProfileAministration.editingUser.activated}
-                        </h3>
-                    </p:column>
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel  value="Email" />
-                          </h3> 
-                    </p:column>
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.email}  </h3>
-                    </p:column>
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel   value="Phone" />
-                          </h3> 
-                    </p:column>
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.mobile}  </h3>
-                    </p:column>
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel value="Organization" /></h3> 
-                    </p:column>
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.organization.orgName}  </h3>
-                    </p:column>
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel value="Orcid ID" /></h3> 
-                    </p:column>
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.orcid}  </h3>
-                    </p:column>
-
-                </p:panelGrid>
-            </div>
-
-            <br></br>
-            <div class="PersonalInfo">
-                <h3 > Contact Info</h3>
-                <p:separator></p:separator>
-
-                <p:panelGrid columns="2" styleClass="PersonalIfo">
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel value="C/O" /></h3> 
-                    </p:column>   
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                            #{adminProfileAministration.address.address1}
-                        </h3>
-                    </p:column>
-
-                    <p:column>
-                        <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                            <p:outputLabel value="Street and number" />
-                        </h3> 
-                    </p:column>   
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"  >
-                            
-                           #{adminProfileAministration.address.address2} #{adminProfileAministration.address.address3 eq '-'? '': adminProfileAministration.address.address3} 
-                        </h3>
-                    </p:column>
-
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel value="Postal Code/City" />
-                          </h3> 
-                    </p:column>   
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                            #{adminProfileAministration.address.postalcode} #{adminProfileAministration.address.city eq '-'? '': '/ '.concat(adminProfileAministration.address.city)} 
-                        </h3>
-                    </p:column>
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel value="State" />
-                          </h3> 
-                    </p:column>   
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                            #{adminProfileAministration.address.state} 
-                        </h3>
-                    </p:column>
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel   value="Organization Phone" />
-                          </h3> 
-                    </p:column>   
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                            #{adminProfileAministration.editingUser.organization.phone} 
-                        </h3>
-                    </p:column>
-                    
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel   value="Fax" />
-                          </h3> 
-                    </p:column>   
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                            #{adminProfileAministration.editingUser.organization.fax} 
-                        </h3>
-                    </p:column>
-
-                    
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel   value="Contact Person" />
-                          </h3> 
-                    </p:column>   
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
-                            #{adminProfileAministration.editingUser.organization.contactPerson} #{adminProfileAministration.editingUser.organization.contactEmail}
-                            
-                        </h3>
-                    </p:column>
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel value="Department" /></h3> 
-                    </p:column>
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.organization.department}  </h3>
-                    </p:column>
-
-                    
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel value="Website" /></h3> 
-                    </p:column>
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.organization.website}  </h3>
-                    </p:column>
-
-                    
-                    
-                </p:panelGrid>
-            </div>
-
-            <br></br>
-            <div class="PersonalInfo">
-                <h3 > Account Info</h3>
-
-                <p:separator></p:separator>
-
-                <p:panelGrid columns="2" styleClass="PersonalIfo" id="account_status">
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel value="Current User Status" />
-                          </h3> 
-                    </p:column>
-
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">#{adminProfileAministration.editStatus}</h3>
-
-                    </p:column>
-
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel   value="Account Type" />
-                          </h3> 
-                    </p:column>
-
-
-                    <p:column>
-
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                            #{adminProfileAministration.editingUser.yubikeyUser == '12' ? 'Mobile Account' : 'Yubikey Account'}
-                        </h3>
-
-                    </p:column>
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel   value="Current BiobankCloud Roles" />
-                          </h3> 
-                    </p:column>
-
-                    <p:column >
-
-                        <p:dataGrid  value="#{adminProfileAministration.currentGroups}" 
-                                     var="role" emptyMessage="No roles associated with this user."
-                                     >
-
-                            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-
-                                #{role}
-                            </h3>     
-                        </p:dataGrid>
-
-                    </p:column>   
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel value="Last Login" />
-                          </h3> 
-                    </p:column>
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                            #{adminProfileAministration.login.loginDate} from #{adminProfileAministration.login.ip} with #{adminProfileAministration.login.browser}
-                        </h3> 
-                    </p:column>
-
-                    <p:column>
-                          <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                              <p:outputLabel value="Last PasswordChange"/>
-                          </h3> 
-                    </p:column>
-
-                    <p:column>
-                        <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                            #{adminProfileAministration.editingUser.passwordChanged}
-                        </h3>      
-                    </p:column>
-                </p:panelGrid>
-
-            </div>
-
-            <br></br>
-
-            <div class="PersonalInfo">
-                <h3 >Change Settings</h3>
-
-                   <p:separator></p:separator>
-
-                   <br></br>
-                   
-                   <h:panelGrid columns="3" cellpadding="10px;" cellspacing="10px;">
-                       <h:form id="add_role" >
-                   <h:panelGrid columns="2" >
-                    
-                        <p:selectOneMenu id="addRole"
-                                         value="#{adminProfileAministration.new_group}" 
-                                         editable="false">
-
-                            <f:selectItem itemValue="#"
-                                          itemLabel="Add Role" 
-                                          />
-                            <f:selectItems value="#{adminProfileAministration.newGroups}" />
-                        </p:selectOneMenu>
-
-                        <p:commandButton  type="submit" 
-                                          value="Update"
-                                          update=":account_status :remove_role :add_role :user_stat"
-                                          action="#{adminProfileAministration.addRoleByAdmin()}"/> 
-                   </h:panelGrid>
-                       </h:form>        
-
-                
-                    <h:form id="remove_role">
-                        <h:panelGrid columns="2">
-   
-                        <p:selectOneMenu id="removeRole" 
-                                         value="#{adminProfileAministration.selectedGroup}">
-                            <f:selectItem itemValue="#" itemLabel="Remove Role" 
-                                          noSelectionOption="true"/>
-                            <f:selectItems value="#{adminProfileAministration.currentGroups}" />
-                        </p:selectOneMenu>
-
-                        <p:commandButton  type="submit" 
-                                          value="Update"
-                                          update=":account_status :add_role :remove_role :user_stat"
-                                          action="#{adminProfileAministration.removeRoleByAdmin()}"/> 
-                   </h:panelGrid>
-                    </h:form>
-            
-                    <h:form id="user_stat">
-                        <h:panelGrid columns="2">
-   
-                        <p:selectOneMenu id="statChoose" 
-                                         value="#{adminProfileAministration.selectedStatus}" 
-                                         >
-
-                            <f:selectItem itemLabel="Change Status"
-                                          itemValue="#"
-                                          />
-                            <f:selectItems value="#{adminProfileAministration.status}"/>                                       
-                        </p:selectOneMenu>
-                    
-                        <p:commandButton  type="submit" 
-                                          value="Update"
-                                          update=":account_status :user_stat"
-                                          action="#{adminProfileAministration.updateStatusByAdmin()}"/> 
-                        </h:panelGrid>
-                         </h:form>
-    </h:panelGrid>
-            </div>
-
-            <div align="left" style="margin-bottom: 5%">
-                <p:separator></p:separator>
-                <p:commandLink type="submit" value="Back to User Management Page" action="userMgmt" immediate="true"/>
-
-            </div>
-        </div>
-
-    </h:body>
+  <h:head>
+    <title><ui:insert name="title">BioBankCloud LIMS Profile</ui:insert></title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/profile.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+
+  </h:head>
+
+  <h:body>
+    <ui:insert name="titleBar" >
+      <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
+    </ui:insert>
+    <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
+
+
+    <div align="center" class="UserProfile">
+
+      <div class="PersonalInfo">
+        <h3 > Personal Info</h3>
+        <p:separator></p:separator>
+
+        <p:panelGrid columns="4" styleClass="PersonalIfo">
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="Name" />
+            </h3> 
+          </p:column>   
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+              #{adminProfileAministration.editingUser.title eq '-'?'':adminProfileAministration.editingUser.title} #{adminProfileAministration.editingUser.fname} #{adminProfileAministration.editingUser.lname} 
+            </h3>
+          </p:column>
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="Member Since" />
+            </h3> 
+          </p:column>   
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+              #{adminProfileAministration.editingUser.activated}
+            </h3>
+          </p:column>
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel  value="Email" />
+            </h3> 
+          </p:column>
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.email}  </h3>
+          </p:column>
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel   value="Phone" />
+            </h3> 
+          </p:column>
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.mobile}  </h3>
+          </p:column>
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="Organization" /></h3> 
+          </p:column>
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.organization.orgName}  </h3>
+          </p:column>
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="Orcid ID" /></h3> 
+          </p:column>
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.orcid}  </h3>
+          </p:column>
+
+        </p:panelGrid>
+      </div>
+
+      <br></br>
+      <div class="PersonalInfo">
+        <h3 > Contact Info</h3>
+        <p:separator></p:separator>
+
+        <p:panelGrid columns="2" styleClass="PersonalIfo">
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="C/O" /></h3> 
+          </p:column>   
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+              #{adminProfileAministration.address.address1}
+            </h3>
+          </p:column>
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="Street and number" />
+            </h3> 
+          </p:column>   
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"  >
+
+              #{adminProfileAministration.address.address2} #{adminProfileAministration.address.address3 eq '-'? '': adminProfileAministration.address.address3} 
+            </h3>
+          </p:column>
+
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="Postal Code/City" />
+            </h3> 
+          </p:column>   
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+              #{adminProfileAministration.address.postalcode} #{adminProfileAministration.address.city eq '-'? '': '/ '.concat(adminProfileAministration.address.city)} 
+            </h3>
+          </p:column>
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="State" />
+            </h3> 
+          </p:column>   
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+              #{adminProfileAministration.address.state} 
+            </h3>
+          </p:column>
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel   value="Organization Phone" />
+            </h3> 
+          </p:column>   
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+              #{adminProfileAministration.editingUser.organization.phone} 
+            </h3>
+          </p:column>
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel   value="Fax" />
+            </h3> 
+          </p:column>   
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+              #{adminProfileAministration.editingUser.organization.fax} 
+            </h3>
+          </p:column>
+
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel   value="Contact Person" />
+            </h3> 
+          </p:column>   
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> 
+              #{adminProfileAministration.editingUser.organization.contactPerson} #{adminProfileAministration.editingUser.organization.contactEmail}
+
+            </h3>
+          </p:column>
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="Department" /></h3> 
+          </p:column>
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.organization.department}  </h3>
+          </p:column>
+
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="Website" /></h3> 
+          </p:column>
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;"> #{adminProfileAministration.editingUser.organization.website}  </h3>
+          </p:column>
+
+
+
+        </p:panelGrid>
+      </div>
+
+      <br></br>
+      <div class="PersonalInfo">
+        <h3 > Account Info</h3>
+
+        <p:separator></p:separator>
+
+        <p:panelGrid columns="2" styleClass="PersonalIfo" id="account_status">
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="Current User Status" />
+            </h3> 
+          </p:column>
+
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">#{adminProfileAministration.editStatus}</h3>
+
+          </p:column>
+
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel   value="Account Type" />
+            </h3> 
+          </p:column>
+
+
+          <p:column>
+
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              #{adminProfileAministration.editingUser.yubikeyUser == '12' ? 'Mobile Account' : 'Yubikey Account'}
+            </h3>
+
+          </p:column>
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel   value="Current BiobankCloud Roles" />
+            </h3> 
+          </p:column>
+
+          <p:column >
+
+            <p:dataGrid  value="#{adminProfileAministration.currentGroups}" 
+                         var="role" emptyMessage="No roles associated with this user."
+                         >
+
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+
+                #{role}
+              </h3>     
+            </p:dataGrid>
+
+          </p:column>   
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="Last Login" />
+            </h3> 
+          </p:column>
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              #{adminProfileAministration.login.loginDate} from #{adminProfileAministration.login.ip} with #{adminProfileAministration.login.browser}
+            </h3> 
+          </p:column>
+
+          <p:column>
+            <h3  style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              <p:outputLabel value="Last PasswordChange"/>
+            </h3> 
+          </p:column>
+
+          <p:column>
+            <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+              #{adminProfileAministration.editingUser.passwordChanged}
+            </h3>      
+          </p:column>
+        </p:panelGrid>
+
+      </div>
+
+      <br></br>
+
+      <div class="PersonalInfo">
+        <h3 >Change Settings</h3>
+
+        <p:separator></p:separator>
+
+        <br></br>
+
+        <h:panelGrid columns="3" cellpadding="10px;" cellspacing="10px;">
+          <h:form id="add_role" >
+            <h:panelGrid columns="2" >
+
+              <p:selectOneMenu id="addRole"
+                               value="#{adminProfileAministration.new_group}" 
+                               editable="false">
+
+                <f:selectItem itemValue="#"
+                              itemLabel="Add Role" 
+                              />
+                <f:selectItems value="#{adminProfileAministration.newGroups}" />
+              </p:selectOneMenu>
+
+              <p:commandButton  type="submit" 
+                                value="Update"
+                                update=":account_status :remove_role :add_role :user_stat"
+                                action="#{adminProfileAministration.addRoleByAdmin()}"/> 
+            </h:panelGrid>
+          </h:form>        
+
+
+          <h:form id="remove_role">
+            <h:panelGrid columns="2">
+
+              <p:selectOneMenu id="removeRole" 
+                               value="#{adminProfileAministration.selectedGroup}">
+                <f:selectItem itemValue="#" itemLabel="Remove Role" 
+                              noSelectionOption="true"/>
+                <f:selectItems value="#{adminProfileAministration.currentGroups}" />
+              </p:selectOneMenu>
+
+              <p:commandButton  type="submit" 
+                                value="Update"
+                                update=":account_status :add_role :remove_role :user_stat"
+                                action="#{adminProfileAministration.removeRoleByAdmin()}"/> 
+            </h:panelGrid>
+          </h:form>
+
+          <h:form id="user_stat">
+            <h:panelGrid columns="2">
+
+              <p:selectOneMenu id="statChoose" 
+                               value="#{adminProfileAministration.selectedStatus}" 
+                               >
+
+                <f:selectItem itemLabel="Change Status"
+                              itemValue="#"
+                              />
+                <f:selectItems value="#{adminProfileAministration.status}"/>                                       
+              </p:selectOneMenu>
+
+              <p:commandButton  type="submit" 
+                                value="Update"
+                                update=":account_status :user_stat"
+                                action="#{adminProfileAministration.updateStatusByAdmin()}"/> 
+            </h:panelGrid>
+          </h:form>
+        </h:panelGrid>
+      </div>
+
+      <div align="left" style="margin-bottom: 5%">
+        <p:separator></p:separator>
+        <p:commandLink type="submit" value="Back to User Management Page" action="userMgmt" immediate="true"/>
+
+      </div>
+    </div>
+
+  </h:body>
 </html>
