@@ -333,7 +333,7 @@ public class UserRegistration implements Serializable {
               otpSecret,
               security_question,
               SecurityUtils.converToSHA256(security_answer),
-              PeopleAccountStatus.ACCOUNT_VARIFICATION.getValue(),
+              PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue(),
               PeopleAccountStatus.MOBILE_USER.getValue(),
               activationKey);
 
@@ -456,7 +456,7 @@ public class UserRegistration implements Serializable {
               SecurityUtils.converToSHA256(password),
               "-1",
               security_question, SecurityUtils.converToSHA256(security_answer),
-              PeopleAccountStatus.ACCOUNT_VARIFICATION.getValue(),
+              PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue(),
               PeopleAccountStatus.YUBIKEY_USER.getValue(),
               activationKey);
 

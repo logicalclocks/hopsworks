@@ -220,8 +220,8 @@ public class UserManager {
             getValue()
             + "' AND p.status!='"
             + PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()
-            + "' AND p.status!='" + PeopleAccountStatus.SPAM_ACCOUNTS.getValue()
-            + "' AND p.status!='" + PeopleAccountStatus.ACCOUNT_VARIFICATION.
+            + "' AND p.status!='" + PeopleAccountStatus.SPAM_ACCOUNT.getValue()
+            + "' AND p.status!='" + PeopleAccountStatus.ACCOUNT_VERIFICATION.
             getValue()
             + "'")
             .getResultList();

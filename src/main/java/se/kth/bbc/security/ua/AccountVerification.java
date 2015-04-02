@@ -45,7 +45,7 @@ public class AccountVerification {
   private boolean validateKey(String key) {
     User user = mgr.getUserByUsernmae(username);
 
-    if (user.getStatus() != PeopleAccountStatus.ACCOUNT_VARIFICATION.getValue()) {
+    if (user.getStatus() != PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()) {
       return false;
     }
 
@@ -70,7 +70,7 @@ public class AccountVerification {
 
     if (val > 5) {
       mgr.changeAccountStatus(user.getUid(), "SPAM Acccount",
-              PeopleAccountStatus.SPAM_ACCOUNTS.getValue());
+              PeopleAccountStatus.SPAM_ACCOUNT.getValue());
       mgr.resetKey(user.getUid());
       mgr.resetKey(user.getUid());
     }

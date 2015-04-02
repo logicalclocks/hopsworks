@@ -12,6 +12,9 @@ package se.kth.bbc.security.ua;
 public enum PeopleAccountStatus {
 
   // Status of new Yubikey users requests
+// Status of new Yubikey users requests
+// Status of new Yubikey users requests
+// Status of new Yubikey users requests
   YUBIKEY_ACCOUNT_INACTIVE(1),
 
   // Status of new Mobile users requests
@@ -40,10 +43,10 @@ public enum PeopleAccountStatus {
   ACCOUNT_DEACTIVATED(8),
 
   // For new account requestes where users should validate their account request
-  ACCOUNT_VARIFICATION(9),
+  ACCOUNT_VERIFICATION(9),
 
   // To mark an account as spam
-  SPAM_ACCOUNTS(10),
+  SPAM_ACCOUNT(10),
 
   YUBIKEY_USER(11),
 
