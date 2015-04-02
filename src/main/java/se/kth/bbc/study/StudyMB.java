@@ -514,11 +514,11 @@ public class StudyMB implements Serializable {
 
   public LazyDataModel<ActivityDetail> getSpecificLazyModel() {
     if (lazyModel == null) {
-      try{
-      lazyModel = new LazyActivityModel(activityDetailFacade, studyName);
-      lazyModel.setRowCount((int) activityFacade.getStudyCount(studyName));
-      }catch(IllegalArgumentException e){
-        logger.log(Level.SEVERE,"Error loading lazy model.",e);
+      try {
+        lazyModel = new LazyActivityModel(activityDetailFacade, studyName);
+        lazyModel.setRowCount((int) activityFacade.getStudyCount(studyName));
+      } catch (IllegalArgumentException e) {
+        logger.log(Level.SEVERE, "Error loading lazy model.", e);
         this.lazyModel = null;
       }
     }

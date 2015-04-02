@@ -24,7 +24,7 @@ public class LoginFilter implements Filter {
     HttpServletRequest request = (HttpServletRequest) req;
     HttpServletResponse response = (HttpServletResponse) res;
 
-        // If user is logged in redirect to LIMS first page 
+    // If user is logged in redirect to LIMS first page 
     // otherwise continue 
     if (request.getRemoteUser() != null) {
       String contextPath = ((HttpServletRequest) request).getContextPath();

@@ -179,7 +179,7 @@ public class StudyPrivacyManager {
       close(output);
     }
 
-        // Inform JSF that it doesn't need to handle response.
+    // Inform JSF that it doesn't need to handle response.
     // This is very important, otherwise you will get the following exception in the logs:
     // java.lang.IllegalStateException: Cannot forward after response has been committed.
     facesContext.responseComplete();
@@ -191,7 +191,7 @@ public class StudyPrivacyManager {
       try {
         resource.close();
       } catch (IOException e) {
-                // Do your thing with the exception. Print it, log it or mail it. It may be useful to 
+        // Do your thing with the exception. Print it, log it or mail it. It may be useful to 
         // know that this will generally only be thrown when the client aborted the download.
         e.printStackTrace();
       }

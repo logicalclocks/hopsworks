@@ -20,7 +20,7 @@ public enum PeopleAccountStatus {
   // Status of new Mobile users requests
   MOBILE_ACCOUNT_INACTIVE(2),
 
-    // Upon successful reset of passwords status of blocked will be changed to pending 
+  // Upon successful reset of passwords status of blocked will be changed to pending 
   // User will be able to reset the remporary password using the status
   // When user changed the password, pending state changes to active
   ACCOUNT_PENDING(3),
@@ -28,7 +28,7 @@ public enum PeopleAccountStatus {
   // When user is approved to use the platform
   ACCOUNT_ACTIVE(4),
 
-    // Blocked users can not user the resources. This can be due to suspicious behaviour of users. 
+  // Blocked users can not user the resources. This can be due to suspicious behaviour of users. 
   // For example. multiple false logings
   ACCOUNT_BLOCKED(5),
 
@@ -38,7 +38,7 @@ public enum PeopleAccountStatus {
   // For scenarios where Yubikey device is compromised/lost
   YUBIKEY_LOST(7),
 
-    // Users that are no longer granted to access the platform.
+  // Users that are no longer granted to access the platform.
   // Users with this state, can not login, change password even as guest users
   ACCOUNT_DEACTIVATED(8),
 
