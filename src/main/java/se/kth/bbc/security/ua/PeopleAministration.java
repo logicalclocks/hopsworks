@@ -246,9 +246,12 @@ public class PeopleAministration implements Serializable {
   public void initGroups() {
     groups = new ArrayList<>();
     status = new ArrayList<>();
+    // dont include BBCADMIN and BBCUSER roles for approving accounts as they are perstudy
     for (BBCGroup value : BBCGroup.values()) {
-      groups.add(value.name());
+        if(value!=BBCGroup.BBC_ADMIN && value!=BBCGroup.BBC_USER)
+            groups.add(value.name());
     }
+    
   }
 
   public List<String> getStatus() {
