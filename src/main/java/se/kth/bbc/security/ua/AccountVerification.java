@@ -10,6 +10,9 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.enterprise.context.RequestScoped;
+import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import se.kth.bbc.security.ua.model.User;
 
 /**
@@ -43,8 +46,26 @@ public class AccountVerification {
   }
 
   private boolean validateKey(String key) {
-    User user = mgr.getUserByUsernmae(username);
+    
+ 
+    // If user loged in invalidate session first  
+      
+    FacesContext ctx = FacesContext.getCurrentInstance();
+    HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().
+            getRequest();
 
+    if (req.getRemoteUser() != null) {
+      HttpSession session = (HttpSession) ctx.getExternalContext().getSession(false);
+      
+        if (null != session) {
+            session.invalidate();
+            return false;
+        }
+    }
+
+  
+    User user = mgr.getUserByUsernmae(username);
+    
     if (user.getStatus() != PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue()) {
       return false;
     }
