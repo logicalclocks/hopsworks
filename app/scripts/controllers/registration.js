@@ -25,7 +25,6 @@ angular.module('hopsWorksApp')
             }, function (error) {
                 self.errorMessage = error.data.msg;
             })
-
         };
 
 

@@ -8,12 +8,6 @@ angular.module('hopsWorksApp')
 
         self.isLoggedIn = AuthService.isLoggedIn;
 
-        // Check if the user is logged in when the application loads
-        // User Service will automatically update isLoggedIn after this call finishes
-        AuthService.session();
-        //self.userService.logout();
-
-
         self.logout = function () {
             console.log(self.user);
             AuthService.logout(self.user).then(function (success) {

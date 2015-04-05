@@ -1,7 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-    .controller('LoginCtrl', ['$location', '$rootScope', 'AuthService', function ($location, $rootScope, AuthService) {
+    .controller('LoginCtrl', ['$location', '$rootScope', 'AuthService','TransformRequest',
+        function ($location, $rootScope, AuthService, TransformRequest) {
 
 
         var self = this;
@@ -11,7 +12,7 @@ angular.module('hopsWorksApp')
 
         self.login = function () {
             console.log(self.user);
-            AuthService.login(self.user).then(function (success) {
+            AuthService.login(TransformRequest.jQueryStyle(self.user)).then(function (success) {
                 $location.path('/');
                 $rootScope.isLoggedIn = true;
             }, function (error) {

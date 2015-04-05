@@ -4,7 +4,7 @@ angular.module('hopsWorksApp')
   .factory('AuthInterceptorService', ['$q', '$location', function ($q, $location) {
     return {
       response: function (response) {
-        console.log('Response from server', response);
+        console.log('Response from server show it if the response is relevant to the user', response);
         // Return a promise
         return response || $q.when(response);
       },
@@ -15,9 +15,14 @@ angular.module('hopsWorksApp')
           console.log('Error in response ', responseRejection + 'Access forbidden, authenticating will make no difference');
         } else if (responseRejection.status === 401) {
           // Authorization issue, unauthorized, login required
-          console.log('Error in response ', responseRejection + 'Authorization issue, unauthorized, login required');
-          $location.url('/login');
-          $location.replace();
+          console.log('Error in response ', responseRejection + 'Authorization issue, unauthorized, login required ' + $location.url());
+            var url = $location.url();
+            if (url != '/login' && url != '/register') {
+                $location.url('/login');
+                $location.replace();
+            }
+        } else {
+            console.log('Error in response handel this error or show it to the user', responseRejection );
         }
         return $q.reject(responseRejection);
       }
