@@ -1,0 +1,8 @@
+<div ng-include="'nav.html'"></div>
+<div class="row">
+    <input type="button" ng-click="projectCtrl.read()" value="Read"/>
+    <input type="button" ng-click="projectCtrl.write()" value="Write"/>
+    <input type="button" ng-click="projectCtrl.doSomething()" value="Do it"/>
+</div>
+
+<textarea rows="3" class="input-xlarge">{{projectCtrl.response}}</textarea>

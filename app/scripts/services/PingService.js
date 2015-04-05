@@ -5,7 +5,7 @@ angular.module('hopsWorksApp')
     function ($http) {
       return {
         ping: function () {
-          return $http.post('/api/auth/ping');
+          return $http.get('/api/admin/ping');
         }
       };
     }]);
