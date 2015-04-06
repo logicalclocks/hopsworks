@@ -5,7 +5,14 @@
     padding: 0.2em 0;
 }
 
+.verticalLine {
+  border-left: thin solid #000;
+}
 
+.nopadding{
+  padding-left: 0px;
+  padding-right: 0px;
+}
 
 .panel-heading {
     padding: 5px 15px;

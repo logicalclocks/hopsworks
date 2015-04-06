@@ -1,47 +1,106 @@
 <div ng-include="'nav.html'"></div>
-<div class="well">
-    <ul class="nav nav-tabs">
-        <li class="active"><a href="#home" data-toggle="tab">Profile</a></li>
-        <li><a href="#profile" data-toggle="tab">Password</a></li>
-    </ul>
-    <div id="myTabContent" class="tab-content">
-        <div class="tab-pane active in" id="home">
-            <form id="profileForm" name="profileForm" ng-submit="profileCtrl.updateProfile()">
-                <label>Email</label>
-                <input type="text" name="email" ng-model="profileCtrl.user.email" class="input-xlarge" disabled="true">
-                <label>First Name</label>
-                <input type="text" name="firstName" ng-model="profileCtrl.user.firstName" class="input-xlarge" required>
-                <label>Last Name</label>
-                <input type="text" name="lastName" ng-model="profileCtrl.user.lastName" class="input-xlarge" required>
-                <label>Tel</label>
-                <input type="text" name="tel" ng-model="profileCtrl.user.telephoneNum" class="input-xlarge" required>
-                <label>Registered on</label>
-                <!--input type="text" name="registeredOn" ng-model="profileCtrl.user.registeredon" class="input-xlarge" disabled="true"-->
-                <span>{{profileCtrl.user.registeredon | date:'medium'}}</span>
-                <label>Address</label>
-            <textarea rows="3" class="input-xlarge">{{profileCtrl.user.firstName}}
 
-            </textarea>
-                <div class="row">
-                    <input type="button" ng-click="profileCtrl.reset()" value="Reset" ng-disabled="profileForm.$pristine"/>
+<div class="row">
+  <div class="col-md-8">
 
-                    <button type="submit" class="btn btn-primary" ng-disabled="profileForm.$pristine || profileForm.$invalid">Update</button>
-                </div>
-            </form>
+
+    <form method="post"
+          name="profileForm"
+          ng-submit="profileCtrl.updateProfile()"
+          style="background-color:#fff;font-size:14px;font-family:'Open Sans','Helvetica Neue','Helvetica',Arial,Verdana,sans-serif;color:#666666;"
+          class="formoid-metro-cyan"
+          novalidate="novalidate">
+      <div class="title">
+        <h2>My profile</h2>
+      </div>
+
+      <div class="row">
+        <div class="col-md-8">
+
+          <div class="element-name row">
+            <label class="title">Name</label>
+                 <span class="col-md-6 nopadding">
+                 <input type="text" size="8" ng-model="profileCtrl.user.firstName">
+                 <label class="subtitle">Firstname</label>
+                 </span>
+                 <span class="col-md-6" style="padding-right:0px;">
+                 <input type="text" size="14" ng-model="profileCtrl.user.lastName">
+                 <label class="subtitle">Lastname</label>
+                 </span>
+          </div>
+          <div class="element-number row">
+            <label class="title">Phone</label>
+            <input type="text" value="" name="number" max="100" min="0" class="large" ng-model="profileCtrl.user.telephoneNum">
+          </div>
+          <div class="element-address row">
+            <label class="title">Address</label>
+                 <span class="addr1">
+                 <input type="text" name="address[addr1]">
+                 </span>
+          </div>
+          <div class="element-name row" style="margin-top:20px;">
+                 <span class="col-md-6 nopadding">
+                 <input type="text" size="8">
+                 <label class="subtitle">Zip</label>
+                 </span>
+                 <span class="col-md-6" style="padding-right:0px;">
+                 <input type="text" size="14">
+                 <label class="subtitle">City</label>
+                 </span>
+          </div>
         </div>
-        <div class="tab-pane fade" id="profile">
-            <form id="passwordForm" name="passwordForm" ng-submit="profileCtrl.changeLoginCredentials()">
-                <label>Old Password</label>
-                <input type="password" name="oldPassword" class="input-xlarge" ng-model="profileCtrl.loginCredes.oldPassword" required>
-                <label>New Password</label>
-                <input type="password" name="newPassword" class="input-xlarge" ng-model="profileCtrl.loginCredes.newPassword" required>
-                <label>Confirm Password</label>
-                <input type="password" name="confirmedPassword" class="input-xlarge" ng-model="profileCtrl.loginCredes.confirmedPassword" required>
-                    <div>
-                        <button type="submit" class="btn btn-primary" ng-disabled="passwordForm.$invalid || passwordForm.$pristine">
-                            Update</button>
-                    </div>
-            </form>
+
+
+        <div class="col-md-4">
+          <label class="title">Photo</label>
+          <img alt="" class="img-thumbnail" style="" src="http://placehold.it/400x350" />
+
+          <input type="file" style="padding-top:10px;">
         </div>
-    </div>
+
+      </div>
+
+      <div class="submit">
+        <input type="button" ng-click="profileCtrl.reset()" value="Reset" ng-disabled="profileForm.$pristine" />
+
+        <input type="submit" value="Save" ng-disabled="profileForm.$pristine" />
+
+      </div>
+
+      <div id="formoid-form-footer">
+      </div>
+    </form>
+
+  </div>
+
+
+  <div class="col-md-4">
+    <form method="post"
+          style="background-color:#fff;font-size:14px;font-family:'Open Sans','Helvetica Neue','Helvetica',Arial,Verdana,sans-serif;color:#666666;"
+          class="formoid-metro-cyan"
+          novalidate="novalidate">
+      <div class="title">
+        <h2>Credentials</h2>
+      </div>
+      <div title="Email" class="element-input">
+        <label class="title">Email</label>
+        <input type="text" name="input" class="large" ng-model="profileCtrl.user.email" disabled>
+      </div>
+      <div title="Enter password" class="element-input">
+        <label class="title">Current password</label>
+        <input type="password" name="input" class="large">
+      </div>
+      <div title="New password" class="element-input" style="margin-top: 24px;">
+        <label class="title">New password</label>
+        <input type="password" name="input" class="large">
+      </div>
+      <div title="Repeat password" class="element-input">
+        <label class="title">Repeat password</label>
+        <input type="password" name="input" class="large">
+      </div>
+      <div class="submit"><input type="submit" value="Save"></div>
+      <div id="formoid-form-footer">
+      </div>
+    </form>
+  </div>
 </div>

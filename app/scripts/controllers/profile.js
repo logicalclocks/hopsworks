@@ -1,6 +1,5 @@
-/**
- * Created by Ermias on 2015-04-03.
- */
+'use strict'
+
 angular.module('hopsWorksApp')
     .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'TransformRequest',
         function (UserService, $location, $scope, TransformRequest) {
