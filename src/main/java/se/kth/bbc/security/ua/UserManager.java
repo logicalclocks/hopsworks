@@ -334,7 +334,6 @@ public class UserManager {
    * @param lname
    * @param email
    * @param title
-   * @param org
    * @param tel
    * @param orcid
    * @param uid
@@ -344,6 +343,7 @@ public class UserManager {
    * @param answer
    * @param status
    * @param yubikey
+   * @param validationKey
    * @return
    */
   public User register(String fname, String lname, String email, String title,
@@ -362,7 +362,6 @@ public class UserManager {
     user.setFname(fname);
     user.setLname(lname);
     user.setMobile(checkDefaultValue(tel));
-    user.setUid(uid);
     user.setOrcid(checkDefaultValue(orcid));
     user.setTitle(checkDefaultValue(title));
     user.setActivated(new Timestamp(new Date().getTime()));
@@ -378,6 +377,7 @@ public class UserManager {
     user.setPasswordChanged(new Timestamp(new Date().getTime()));
     user.setYubikeyUser(yubikey);
     em.persist(user);
+    em.flush();
     return user;
   }
 

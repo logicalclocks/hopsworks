@@ -53,7 +53,7 @@ CREATE TABLE `inodes` (
 
 
 CREATE TABLE `users` (
-    `uid` int(10) NOT NULL DEFAULT '1000',
+    `uid` int(10) NOT NULL AUTO_INCREMENT,
     `username` varchar(10)  NOT NULL,
     `password` varchar(128)  NOT NULL,
     `email` varchar(45)  DEFAULT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE `users` (
     PRIMARY KEY (`uid`),
     UNIQUE KEY `username` (`username`),
     UNIQUE KEY `email` (`email`)
-) ENGINE=ndbcluster;
+) ENGINE=ndbcluster AUTO_INCREMENT=10000;
 
 CREATE TABLE `yubikey` (
     `serial` varchar(10)  DEFAULT NULL,

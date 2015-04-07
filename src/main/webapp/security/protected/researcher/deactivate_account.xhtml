@@ -21,7 +21,8 @@
     <div align="center">
 
       <h:form style="margin-top: 75px;" >
-        <h:panelGrid columns="2" >
+        <h:panelGrid columns="1" >
+          <p:outputLabel value="Enter Password"> </p:outputLabel>  
           <p:password id="tcurp" 
                       value="#{resetPassword.current}"  
                       required="true"
@@ -29,12 +30,13 @@
                       requiredMessage="Enter password"/>
           <p:watermark for="tcurp" value="Enter you password" />
 
+          <p:outputLabel value="Deactivation Reason"> </p:outputLabel>  
           <p:inputTextarea id="notes"
                            rows="5" 
                            cols="35"
                            value="#{resetPassword.notes}"
                            required="true" 
-                           requiredMessage="Enter the deactivation reason"
+                           requiredMessage="Enter the deactivation reason ..."
                            >
           </p:inputTextarea>
           <p:watermark for="notes" value="Deactivation reason" />
