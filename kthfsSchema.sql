@@ -60,7 +60,6 @@ CREATE TABLE `users` (
     `fname` varchar(30)  DEFAULT NULL,
     `lname` varchar(30)  DEFAULT NULL,
     `activated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `home_org` varchar(100)  DEFAULT NULL,
     `title` varchar(10)  DEFAULT NULL,
     `orcid` varchar(20)  DEFAULT NULL,
     `false_login` int(11) NOT NULL DEFAULT '-1',

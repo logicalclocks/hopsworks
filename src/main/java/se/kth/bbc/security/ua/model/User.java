@@ -119,9 +119,6 @@ public class User implements Serializable {
   @Column(name = "activated")
   @Temporal(TemporalType.TIMESTAMP)
   private Date activated;
-  @Size(max = 100)
-  @Column(name = "home_org")
-  private String homeOrg;
   @Size(max = 10)
   @Column(name = "title")
   private String title;
@@ -259,13 +256,6 @@ public class User implements Serializable {
     this.activated = activated;
   }
 
-  public String getHomeOrg() {
-    return homeOrg;
-  }
-
-  public void setHomeOrg(String homeOrg) {
-    this.homeOrg = homeOrg;
-  }
 
   public String getTitle() {
     return title;
