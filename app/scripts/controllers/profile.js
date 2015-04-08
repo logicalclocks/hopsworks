@@ -38,7 +38,7 @@ angular.module('hopsWorksApp')
         self.changeLoginCredentials = function () {
             UserService.changeLoginCredentials(self.loginCredes).then(function (success){
                 console.log(success.status);
-            }, function (erroe){
+            }, function (error){
                 self.errorMsg = error.data.msg;
             })
         };
