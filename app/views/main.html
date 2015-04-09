@@ -115,7 +115,7 @@
                     </span>
 
       </div>
-      <a href="#" class="list-group-item" ng-repeat="project in projects | filter: searchProject:false">
+      <a href="#" class="list-group-item" ng-repeat="project in mainCtrl.projects | filter: searchProject:false">
         <div ng-if="project.private">
           <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-lock fa-2 pull-left"/>
         </div>
