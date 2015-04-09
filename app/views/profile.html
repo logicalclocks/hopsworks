@@ -53,9 +53,7 @@
 
         <div class="col-md-4">
           <label class="title">Photo</label>
-          <img alt="" class="img-thumbnail" style="" src="http://placehold.it/400x350" />
-
-          <input type="file" style="padding-top:10px;">
+          <img  class="img-thumbnail" ng-src="http://www.gravatar.com/avatar/{{ profileCtrl.emailHash + '?d=mm&s=300' }}"/>
         </div>
 
       </div>
@@ -95,7 +93,8 @@
       </div>
       <div title="Repeat password" class="element-input">
         <label class="title">Repeat password</label>
-        <input type="password" name="input" class="large" ng-model="profileCtrl.loginCredes.confirmedPassword" required>
+        <input type="password" name="input" class="large" ng-model="profileCtrl.loginCredes.confirmedPassword"
+               match="profileCtrl.loginCredes.newPassword" required>
       </div>
       <div class="submit">
           <input type="submit" value="Save" ng-disabled="passwordForm.$pristine || passwordForm.$invalid">

@@ -2,7 +2,7 @@
 
 angular.module('hopsWorksApp')
 
-  .factory('AuthService', ['$http', function ($http) {
+  .factory('AuthService', ['$http', 'TransformRequest', function ($http, TransformRequest) {
     var service = {
       isLoggedIn: false,
 
@@ -14,7 +14,7 @@ angular.module('hopsWorksApp')
           });
       },
       login: function (user) {
-        return $http.post('/api/auth/login', user)
+        return $http.post('/api/auth/login', TransformRequest.jQueryStyle(user))
           .then(function (response) {
             service.isLoggedIn = true;
             return response;
