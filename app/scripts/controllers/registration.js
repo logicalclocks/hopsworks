@@ -1,41 +1,31 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-    .controller('RegCtrl', ['AuthService', '$scope', '$location', function (AuthService, $scope, $location) {
+  .controller('RegCtrl', ['AuthService', '$location', function (AuthService, $location) {
 
-        var self = this;
+    var self = this;
 
-        self.newUser = {
-            firstName: '',
-            lastName: '',
-            email: '',
-            telephoneNum: '',
-            chosenPassword: '',
-            repeatedPassword: '',
-            securityQuestion: '',
-            securityAnswer: '',
-            ToS: ''
-        };
-
-
-        self.register = function () {
-            console.log(self.newUser);
-            AuthService.register(self.newUser).then(function (success) {
-                $location.path('/login');
-            }, function (error) {
-                self.errorMessage = error.data.msg;
-            })
-        };
+    self.newUser = {
+      firstName: '',
+      lastName: '',
+      email: '',
+      telephoneNum: '',
+      chosenPassword: '',
+      repeatedPassword: '',
+      securityQuestion: '',
+      securityAnswer: '',
+      ToS: ''
+    };
 
 
-        $scope.showModal = false;
-        $scope.toggleModal = function () {
-            $scope.showModal = !$scope.showModal;
-        };
+    self.register = function () {
+      console.log(self.newUser);
+      AuthService.register(self.newUser).then(
+        function (success) {
+          $location.path('/login');
+        }, function (error) {
+          self.errorMessage = error.data.msg;
+        })
+    };
 
-
-    }]);
-
-
-
-
+  }]);

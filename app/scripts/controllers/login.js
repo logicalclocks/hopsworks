@@ -1,24 +1,19 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-    .controller('LoginCtrl', ['$location', '$rootScope', 'AuthService',
-        function ($location, $rootScope, AuthService) {
+  .controller('LoginCtrl', ['$location', 'AuthService',
+    function ($location, AuthService) {
 
+      var self = this;
+      self.user = {email: '', password: ''};
 
-        var self = this;
-        self.user = {email: '', password: ''};
+      self.login = function () {
+        AuthService.login(self.user).then(
+          function (success) {
+            $location.path('/');
+        }, function (error) {
+            self.errorMessage = error.data.msg;
+        });
+      };
 
-        $rootScope.isLoggedIn = false;
-
-        self.login = function () {
-            console.log(self.user);
-            AuthService.login(self.user).then(function (success) {
-                $location.path('/');
-                $rootScope.isLoggedIn = true;
-            }, function (error) {
-                self.errorMessage = error.data.msg;
-                $rootScope.isLoggedIn = false;
-            })
-
-        };
     }]);

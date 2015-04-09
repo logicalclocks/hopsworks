@@ -1,7 +1,5 @@
 <div class="row" ng-controller="ProfileCtrl as profileCtrl">
   <div class="col-md-8">
-
-
     <form method="post"
           name="profileForm"
           ng-submit="profileCtrl.updateProfile()"
@@ -11,20 +9,18 @@
       <div class="title">
         <h2>My profile</h2>
       </div>
-
       <div class="row">
         <div class="col-md-8">
-
           <div class="element-name row">
             <label class="title">Name</label>
-                 <span class="col-md-6 nopadding">
-                 <input type="text" size="8" ng-model="profileCtrl.user.firstName">
-                 <label class="subtitle">First name</label>
-                 </span>
-                 <span class="col-md-6" style="padding-right:0px;">
-                 <input type="text" size="14" ng-model="profileCtrl.user.lastName">
-                 <label class="subtitle">Last name</label>
-                 </span>
+            <span class="col-md-6 nopadding">
+            <input type="text" size="8" ng-model="profileCtrl.user.firstName">
+            <label class="subtitle">First name</label>
+            </span>
+            <span class="col-md-6" style="padding-right:0px;">
+            <input type="text" size="14" ng-model="profileCtrl.user.lastName">
+            <label class="subtitle">Last name</label>
+            </span>
           </div>
           <div class="element-number row">
             <label class="title">Phone</label>
@@ -32,42 +28,32 @@
           </div>
           <div class="element-address row">
             <label class="title">Address</label>
-                 <span class="addr1">
-                 <input type="text" name="address[addr1]">
-                 </span>
+            <span class="addr1">
+            <input type="text" name="address[addr1]">
+            </span>
           </div>
           <div class="element-name row" style="margin-top:20px;">
-                 <span class="col-md-6 nopadding">
-                 <input type="text" size="8">
-                 <label class="subtitle">Zip</label>
-                 </span>
-                 <span class="col-md-6" style="padding-right:0px;">
-                 <input type="text" size="14">
-                 <label class="subtitle">City</label>
-                 </span>
+            <span class="col-md-6 nopadding">
+            <input type="text" size="8">
+            <label class="subtitle">Zip</label>
+            </span>
+            <span class="col-md-6" style="padding-right:0px;">
+            <input type="text" size="14">
+            <label class="subtitle">City</label>
+            </span>
           </div>
         </div>
-
-
         <div class="col-md-4">
           <label class="title">Photo</label>
           <img  class="img-thumbnail" ng-src="http://www.gravatar.com/avatar/{{ profileCtrl.emailHash + '?d=mm&s=300' }}"/>
         </div>
-
       </div>
-
       <div class="submit">
         <input type="button" ng-click="profileCtrl.reset()" value="Reset" ng-disabled="profileForm.$pristine" />
-
         <input type="submit" value="Save" ng-disabled="profileForm.$pristine" />
-
       </div>
-
     </form>
-
   </div>
-
-
   <div class="col-md-4">
     <form method="post"
           style="background-color:#fff;font-size:14px;font-family:'Open Sans','Helvetica Neue','Helvetica',Arial,Verdana,sans-serif;color:#666666;"
@@ -95,9 +81,8 @@
                match="profileCtrl.loginCredes.newPassword" required>
       </div>
       <div class="submit">
-          <input type="submit" value="Save" ng-disabled="passwordForm.$pristine || passwordForm.$invalid">
+        <input type="submit" value="Save" ng-disabled="passwordForm.$pristine || passwordForm.$invalid">
       </div>
-
     </form>
   </div>
 </div>
