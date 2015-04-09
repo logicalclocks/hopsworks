@@ -5,7 +5,7 @@ angular.module('hopsWorksApp')
 
     return {
       response: function (response) {
-        console.log('From server: ', response);
+        //console.log('From server: ', response);
 
         // Return a promise
         return response || $q.when(response);
