@@ -16,10 +16,6 @@ angular.module('hopsWorksApp')
             });
         };
 
-        self.profile = function () {
-            self.showProfile = !self.showProfile;
-        };
-
     // Load all projects
     self.projects = ProjectService.query();
 
