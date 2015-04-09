@@ -3,20 +3,22 @@
 angular.module('hopsWorksApp')
   .controller('MainCtrl', ['$scope', '$location', 'AuthService', 'ProjectService', function ($scope, $location, AuthService, ProjectService) {
 
-    var self = this;
+        var self = this;
+        self.authService = AuthService;
+        self.showProfile = false;
+        self.isLoggedIn = AuthService.isLoggedIn;
+        self.logout = function () {
+            console.log(self.user);
+            AuthService.logout(self.user).then(function (success) {
+                $location.url('/login');
+            }, function (error) {
+                self.errorMessage = error.data.msg;
+            });
+        };
 
-    self.authService = AuthService;
-
-    self.isLoggedIn = AuthService.isLoggedIn;
-
-    self.logout = function () {
-      console.log(self.user);
-      AuthService.logout(self.user).then(function (success) {
-        $location.url('/login');
-      }, function (error) {
-        self.errorMessage = error.data.msg;
-      });
-    };
+        self.profile = function () {
+            self.showProfile = !self.showProfile;
+        };
 
     // Load all projects
     self.projects = ProjectService.query();

@@ -1,6 +1,3 @@
-/**
- * Created by Ermias on 2015-04-03.
- */
 'use strict';
 
 angular.module('hopsWorksApp')
