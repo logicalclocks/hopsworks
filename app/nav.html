@@ -19,18 +19,9 @@
             <ul class="nav navbar-nav navbar-right" style="font-family: Varela Round; font-weight: bold;">
                 <li class="active"><a href="#/">Home <span class="sr-only">(current)</span></a></li>
                 <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"> Projects</a>
-                    <ul class="dropdown-menu" role="menu">
-                        <li><a href="#"><i class="fa fa-fw fa-folder-open"></i> FinanceProject</a></li>
-                        <li><a href="#"><i class="fa fa-fw fa-folder-open"></i>  HumanGenome</a></li>
-                    </ul>
-                </li>
-                <li class=""><a href="#/" data-target="#profileModal" data-toggle="modal"> Profile <span class="sr-only">(current)</span></a></li>
-                <li class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Settings <span class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu">
-                        <li><a href="#/" ng-click="mainCtrl.profile()">My profile</a></li>
-                        <li><a href="#">General</a></li>
+                        <li><a href="#/" data-target="#profileModal" data-toggle="modal">My profile</a></li>
                         <li class="divider"></li>
                         <li><a href="#" ng-click="mainCtrl.logout()">Logout</a></li>
                     </ul>
