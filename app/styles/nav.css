@@ -3,10 +3,25 @@ To change this license header, choose License Headers in Project Properties.
 To change this template file, choose Tools | Templates
 and open the template in the editor.
 */
-/* 
+/*
     Created on : 2015-mar-27, 11:41:22
     Author     : AMore
 */
+
+
+
+.nav .open > a, .nav .open > a:focus, .nav .open > a:hover {
+  background-color: transparent;
+  border-color: #337ab7;
+}
+
+.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:focus, .navbar-default .navbar-nav > .open > a:hover {
+  background-color: transparent;
+  color: #fff;
+}
+
+
+
 
 
 nav.navbar-sics { background: #028e9b; border-color: #ccc; box-shadow: 0 0 2px 0 #ccc; }
@@ -14,8 +29,8 @@ nav.navbar-sics a { color: #337ab7; }
 
 nav.navbar-sics ul.navbar-nav a {
     border-color: #fff;
-    border-style: solid;
-    border-width: 0 0 2px;
+    /*border-style: solid;*/
+    /*border-width: 0 0 2px;*/
     color: #fff;
     padding-left: 25px;
 }
@@ -23,8 +38,8 @@ nav.navbar-sics ul.navbar-nav a {
 nav.navbar-sics ul.navbar-nav a:hover,
 nav.navbar-sics ul.navbar-nav a:visited,
 nav.navbar-sics ul.navbar-nav a:focus,
-nav.navbar-sics ul.navbar-nav a:active { background: #fff; }
-nav.navbar-sics ul.navbar-nav a:hover { border-color: #337ab7; }
+nav.navbar-sics ul.navbar-nav a:active { /*background: #fff;*/ }
+nav.navbar-sics ul.navbar-nav a:hover {   color: white; text-decoration: underline; /*border-color: #337ab7;*/ }
 nav.navbar-sics li.divider { background: #ccc; }
 nav.navbar-sics button.navbar-toggle { background: #337ab7; border-radius: 2px; }
 nav.navbar-sics button.navbar-toggle:hover { background: #999; }

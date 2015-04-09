@@ -3,7 +3,7 @@ To change this license header, choose License Headers in Project Properties.
 To change this template file, choose Tools | Templates
 and open the template in the editor.
 */
-/* 
+/*
     Created on : 2015-mar-27, 17:31:38
     Author     : AMore
 */
@@ -924,22 +924,7 @@ and open the template in the editor.
     line-height: 100%;
     text-align: right;
 }
-footer {
-    background: none repeat scroll 0 0 #bfbfbf;
-    font-weight: normal;
-    height: 24px;
-    left: 0;
-    line-height: 24px;
-    padding: 5px 0;
-    position: absolute;
-    width: 100%;
-}
-footer .copyright {
-    color: #333333;
-    font-size: 11px;
-    padding-right: 10px;
-    text-align: right;
-}
+
 @media (min-width: 768px) and (max-width: 979px) {
 .hidden-desktop {
     display: inherit !important;

@@ -17,16 +17,40 @@
     </div>
     <div class="collapse navbar-collapse" id="navbar">
       <ul class="nav navbar-nav navbar-right" style="font-family: Varela Round; font-weight: bold;">
-        <li class="active"><a href="#/">Home <span class="sr-only">(current)</span></a></li>
+
+        <!--
         <li class="dropdown">
           <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Settings <span
             class="caret"></span></a>
+
           <ul class="dropdown-menu" role="menu">
             <li><a href="#/" data-target="#profileModal" data-toggle="modal">My profile</a></li>
             <li class="divider"></li>
             <li><a href="#" ng-click="mainCtrl.logout()">Logout</a></li>
           </ul>
+
         </li>
+        -->
+
+
+        <li class="dropdown">
+
+            <a class="dropdown-toggle" style="padding:7px 0 8px 10px;" data-toggle="dropdown" role="button" aria-expanded="false">
+
+            <img src="http://gravatar.com/avatar/f7b87f83afcba880c6300e1e4e4a8790" style="height: 35px; margin-right: 10px;border: 2px solid white;" class="profile-image img-circle"> amore@kth.se <b class="caret"></b></a>
+
+          <ul class="dropdown-menu">
+            <li><a href="#/" data-target="#profileModal" data-toggle="modal"><i class="fa fa-cog"></i> Account</a></li>
+            <li class="divider"></li>
+            <li><a href="#" ng-click="mainCtrl.logout()"><i class="fa fa-sign-out"></i> Sign out</a></li>
+          </ul>
+
+        </li>
+
+
+
+
+
       </ul>
 
 
