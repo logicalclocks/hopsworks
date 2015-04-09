@@ -5,9 +5,8 @@ angular.module('hopsWorksApp')
 
         var self = this;
         self.authService = AuthService;
-
+        self.showProfile = false;
         self.isLoggedIn = AuthService.isLoggedIn;
-
         self.logout = function () {
             console.log(self.user);
             AuthService.logout(self.user).then(function (success) {
@@ -17,6 +16,9 @@ angular.module('hopsWorksApp')
             });
         };
 
+        self.profile = function () {
+            self.showProfile = !self.showProfile;
+        }
 
         $scope.projects = [
             {name: 'HumanGenome', 'private': true},
