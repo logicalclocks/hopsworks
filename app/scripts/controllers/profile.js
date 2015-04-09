@@ -1,9 +1,10 @@
 'use strict'
 
 angular.module('hopsWorksApp')
-    .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'TransformRequest',
-        function (UserService, $location, $scope, TransformRequest) {
+    .controller('ProfileCtrl', ['UserService', '$location', '$scope', 'md5',
+        function (UserService, $location, $scope, md5) {
         var self = this;
+        self.emailHash = '';
         self.master = {};
         self.user = {firstName: '',
                      lastName: '',
@@ -17,6 +18,7 @@ angular.module('hopsWorksApp')
             UserService.profile().then(function (success) {
                 console.log('Response to profile:-' + success.data);
                 self.user = success.data;
+                self.emailHash =  md5.createHash(self.user.email || '');
                 self.master = angular.copy(self.user);
                 console.log('Response to profile:-' + self.user.firstName);
             }, function (error) {
