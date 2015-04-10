@@ -8,11 +8,8 @@ angular.module('hopsWorksApp', [
   'ngSanitize',
   'ngTouch',
   'angular-md5',
-<<<<<<< HEAD
-  'angular-growl'
-=======
+  'angular-growl',
   'ui.bootstrap'
->>>>>>> master
 ])
   .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
