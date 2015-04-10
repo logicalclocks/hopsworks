@@ -40,6 +40,7 @@ angular.module('hopsWorksApp')
       self.updateProfile = function () {
         UserService.UpdateProfile(self.user).then(
           function (success) {
+            self.user = success.data;
             self.master = angular.copy(self.user);
             $scope.profileForm.$setPristine();
           }, function (error) {
