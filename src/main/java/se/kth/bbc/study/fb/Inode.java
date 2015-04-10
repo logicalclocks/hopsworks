@@ -79,6 +79,7 @@ import org.eclipse.persistence.annotations.Converter;
           query
           = "SELECT i FROM Inode i WHERE i.inodePK.parentId = 1 AND i.inodePK.name = :name")})
 public class Inode implements Serializable {
+
   private static final long serialVersionUID = 1L;
   @EmbeddedId
   protected InodePK inodePK;
@@ -112,17 +113,20 @@ public class Inode implements Serializable {
   @Basic(optional = false)
   @NotNull
   @Column(name = "quota_enabled")
-  @Converter(name="byteConverter", converterClass=se.kth.bbc.study.fb.ByteConverter.class)
+  @Converter(name = "byteConverter",
+          converterClass = se.kth.bbc.study.fb.ByteConverter.class)
   @Convert("byteConverter")
   private Byte quotaEnabled;
   @Basic(optional = false)
   @NotNull
   @Column(name = "under_construction")
-  @Converter(name="byteConverter", converterClass=se.kth.bbc.study.fb.ByteConverter.class)
+  @Converter(name = "byteConverter",
+          converterClass = se.kth.bbc.study.fb.ByteConverter.class)
   @Convert("byteConverter")
   private Byte underConstruction;
   @Column(name = "subtree_locked")
-  @Converter(name="byteConverter", converterClass=se.kth.bbc.study.fb.ByteConverter.class)
+  @Converter(name = "byteConverter",
+          converterClass = se.kth.bbc.study.fb.ByteConverter.class)
   @Convert("byteConverter")
   private Byte subtreeLocked;
   @Column(name = "subtree_lock_owner")
@@ -281,8 +285,8 @@ public class Inode implements Serializable {
       return false;
     }
     Inode other = (Inode) object;
-    if ((this.inodePK == null && other.inodePK != null) ||
-            (this.inodePK != null && !this.inodePK.equals(other.inodePK))) {
+    if ((this.inodePK == null && other.inodePK != null) || (this.inodePK != null
+            && !this.inodePK.equals(other.inodePK))) {
       return false;
     }
     return true;
@@ -292,9 +296,9 @@ public class Inode implements Serializable {
   public String toString() {
     return "se.kth.bbc.study.fb.Inode[ inodePK=" + inodePK + " ]";
   }
-  
-  public boolean isDir(){
+
+  public boolean isDir() {
     return header.equals(BigInteger.ZERO);
   }
-  
+
 }

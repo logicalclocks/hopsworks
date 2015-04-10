@@ -18,15 +18,17 @@ import se.kth.bbc.lims.MessagesController;
  */
 @ManagedBean
 @ViewScoped
-public class StudyTeamController implements Serializable{
-  private static final Logger logger = Logger.getLogger(StudyTeamController.class.getName());
+public class StudyTeamController implements Serializable {
+
+  private static final Logger logger = Logger.getLogger(
+          StudyTeamController.class.getName());
 
   private String toRemoveEmail;
   private String toRemoveName;
 
   @EJB
   private StudyTeamFacade teamFacade;
-  
+
   @EJB
   private ActivityFacade activityFacade;
 
@@ -53,14 +55,19 @@ public class StudyTeamController implements Serializable{
 
   public synchronized void deleteMemberFromTeam() {
     try {
-      teamFacade.removeStudyTeam(sessionState.getActiveStudyname(), toRemoveEmail);
-      activityFacade.persistActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail, sessionState.getActiveStudyname(), sessionState.getLoggedInUsername());
+      teamFacade.removeStudyTeam(sessionState.getActiveStudyname(),
+              toRemoveEmail);
+      activityFacade.persistActivity(ActivityFacade.REMOVED_MEMBER
+              + toRemoveEmail, sessionState.getActiveStudyname(), sessionState.
+              getLoggedInUsername());
     } catch (EJBException ejb) {
       MessagesController.addErrorMessage("Deleting team member failed.");
-      logger.log(Level.WARNING,"Failed to remove team member "+toRemoveEmail+"from study "+sessionState.getActiveStudyname(),ejb);
+      logger.log(Level.WARNING, "Failed to remove team member " + toRemoveEmail
+              + "from study " + sessionState.getActiveStudyname(), ejb);
       return;
     }
-    MessagesController.addInfoMessage("Member removed", "Team member " + toRemoveEmail
+    MessagesController.addInfoMessage("Member removed", "Team member "
+            + toRemoveEmail
             + " deleted from study " + sessionState.getActiveStudyname());
     clearToRemove();
   }

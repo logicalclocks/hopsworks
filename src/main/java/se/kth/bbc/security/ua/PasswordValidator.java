@@ -23,67 +23,71 @@ import se.kth.bbc.security.auth.AccountStatusErrorMessages;
 @FacesValidator("passwordValidator")
 public class PasswordValidator implements Validator {
 
-    final String PASSWORD_PATTERNN = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=\\S+$).{6,}$";
+  final String PASSWORD_PATTERNN = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=\\S+$).{6,}$";
 
-    /**
-     * Ensure the password presented by user during registration is qualified.
-     *
-     * @param context
-     * @param component
-     * @param value
-     * @throws ValidatorException
-     */
-    @Override
-    public void validate(FacesContext context, UIComponent component,
-            Object value) throws ValidatorException {
+  /**
+   * Ensure the password presented by user during registration is qualified.
+   *
+   * @param context
+   * @param component
+   * @param value
+   * @throws ValidatorException
+   */
+  @Override
+  public void validate(FacesContext context, UIComponent component,
+          Object value) throws ValidatorException {
 
-        String password = value.toString();
+    String password = value.toString();
 
-        UIInput uiInputConfirmPassword = (UIInput) component.getAttributes()
-                .get("confirmPassword");
-        String confirmPassword = uiInputConfirmPassword.getSubmittedValue()
-                .toString();
+    UIInput uiInputConfirmPassword = (UIInput) component.getAttributes()
+            .get("confirmPassword");
+    String confirmPassword = uiInputConfirmPassword.getSubmittedValue()
+            .toString();
 
-        if (password == null || password.isEmpty() || confirmPassword == null
-                || confirmPassword.isEmpty()) {
+    if (password == null || password.isEmpty() || confirmPassword == null
+            || confirmPassword.isEmpty()) {
 
-            FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.PASSWORD_EMPTY);
-            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-            throw new ValidatorException(facesMsg);
-        }
-
-        if (password.length() < 6) {
-            uiInputConfirmPassword.setValid(false);
-            FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.PASSWORD_REQUIREMNTS);
-            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-            throw new ValidatorException(facesMsg);
-
-        }
-
-        if (!isAlphaNumeric(password)) {
-            uiInputConfirmPassword.setValid(false);
-            FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.PASSWORD_ALPAHNUMERIC);
-            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-            throw new ValidatorException(facesMsg);
-        }
-
-        if (!password.equals(confirmPassword)) {
-            uiInputConfirmPassword.setValid(false);
-            FacesMessage facesMsg = new FacesMessage(AccountStatusErrorMessages.PASSWORD_MISMATCH);
-            facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
-            throw new ValidatorException(facesMsg);
-        }
+      FacesMessage facesMsg = new FacesMessage(
+              AccountStatusErrorMessages.PASSWORD_EMPTY);
+      facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+      throw new ValidatorException(facesMsg);
     }
 
-    /**
-     * To check a string if it contains alphanumeric values: MyPassww132.
-     *
-     * @param s
-     * @return
-     */
-    public boolean isAlphaNumeric(String s) {
-        Pattern pattern = Pattern.compile(PASSWORD_PATTERNN);
-        Matcher matcher = pattern.matcher(s);
-        return matcher.matches();
+    if (password.length() < 6) {
+      uiInputConfirmPassword.setValid(false);
+      FacesMessage facesMsg = new FacesMessage(
+              AccountStatusErrorMessages.PASSWORD_REQUIREMNTS);
+      facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+      throw new ValidatorException(facesMsg);
+
     }
+
+    if (!isAlphaNumeric(password)) {
+      uiInputConfirmPassword.setValid(false);
+      FacesMessage facesMsg = new FacesMessage(
+              AccountStatusErrorMessages.PASSWORD_ALPAHNUMERIC);
+      facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+      throw new ValidatorException(facesMsg);
+    }
+
+    if (!password.equals(confirmPassword)) {
+      uiInputConfirmPassword.setValid(false);
+      FacesMessage facesMsg = new FacesMessage(
+              AccountStatusErrorMessages.PASSWORD_MISMATCH);
+      facesMsg.setSeverity(FacesMessage.SEVERITY_ERROR);
+      throw new ValidatorException(facesMsg);
+    }
+  }
+
+  /**
+   * To check a string if it contains alphanumeric values: MyPassww132.
+   *
+   * @param s
+   * @return
+   */
+  public boolean isAlphaNumeric(String s) {
+    Pattern pattern = Pattern.compile(PASSWORD_PATTERNN);
+    Matcher matcher = pattern.matcher(s);
+    return matcher.matches();
+  }
 }

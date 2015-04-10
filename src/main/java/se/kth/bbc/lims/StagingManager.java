@@ -8,27 +8,29 @@ import javax.ejb.Singleton;
 
 /**
  * Basically provides a temporary folder in which to stage uploaded files.
+ * <p>
  * @author stig
  */
 @Singleton
 public class StagingManager {
+
   private File stagingFolder;
-  
+
   @PostConstruct
-  public void init(){
+  public void init() {
     stagingFolder = Files.createTempDir();
   }
-  
-  public String getStagingPath(){
-    if(stagingFolder == null){
+
+  public String getStagingPath() {
+    if (stagingFolder == null) {
       stagingFolder = Files.createTempDir();
     }
     return stagingFolder.getAbsolutePath();
   }
-  
+
   @PreDestroy
-  public void removeTmpDir(){
-    if(stagingFolder != null){
+  public void removeTmpDir() {
+    if (stagingFolder != null) {
       stagingFolder.delete();
     }
   }

@@ -15,7 +15,6 @@ import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.Utils;
 
 //TODO: report errors to user!!! seems to be going wrong!
-
 /**
  * Managed bean for accessing operations on the file system. Downloading,
  * uploading, creating files and directories. Methods do not care about the
@@ -28,87 +27,97 @@ import se.kth.bbc.lims.Utils;
 @RequestScoped
 public class FileOperationsManagedBean implements Serializable {
 
-    @EJB
-    private FileOperations fileOps;
+  @EJB
+  private FileOperations fileOps;
 
-    private String newFolderName;
-    private static final Logger logger = Logger.getLogger(FileOperationsManagedBean.class.getName());
+  private String newFolderName;
+  private static final Logger logger = Logger.getLogger(
+          FileOperationsManagedBean.class.getName());
 
-    /**
-     * Download the file at the specified inode.
-     *
-     * @param inode The file to download.
-     * @return StreamedContent of the file to be downloaded.
-     */
-    public StreamedContent downloadFile(String path) {
+  /**
+   * Download the file at the specified inode.
+   *
+   * @param inode The file to download.
+   * @return StreamedContent of the file to be downloaded.
+   */
+  public StreamedContent downloadFile(String path) {
 
-        StreamedContent sc = null;
-        try {
-          //TODO: should convert to try-with-resources? or does that break streamedcontent?
-            InputStream is = fileOps.getInputStream(path);
-            String extension = Utils.getExtension(path);
-            String filename = Utils.getFileName(path);
+    StreamedContent sc = null;
+    try {
+      //TODO: should convert to try-with-resources? or does that break streamedcontent?
+      InputStream is = fileOps.getInputStream(path);
+      String extension = Utils.getExtension(path);
+      String filename = Utils.getFileName(path);
 
-            sc = new DefaultStreamedContent(is, extension, filename);
-            logger.log(Level.FINE, "File was downloaded from HDFS path: {0}", path);
-        } catch (IOException ex) {
-            Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
-            MessagesController.addErrorMessage(MessagesController.ERROR, "Download failed.");
-        }
-        return sc;
+      sc = new DefaultStreamedContent(is, extension, filename);
+      logger.log(Level.FINE, "File was downloaded from HDFS path: {0}", path);
+    } catch (IOException ex) {
+      Logger.getLogger(FileOperationsManagedBean.class.getName()).log(
+              Level.SEVERE, null, ex);
+      MessagesController.addErrorMessage(MessagesController.ERROR,
+              "Download failed.");
     }
+    return sc;
+  }
 
-    /**
-     * Create a new folder with the name newFolderName (class property) at the
-     * specified path. The path must NOT contain the new folder name. Set this
-     * using the <i>newFolderName</i> property.
-     *
-     * @param path Location at which to create the new folder, not including the
-     * name of the new folder.
-     */
-    public void mkDir(String path) {
-        String location;
-        if (path.endsWith(File.separator)) {
-            location = path + newFolderName;
-        } else {
-            location = path + File.separator + newFolderName;
-        }
-        try {
-            boolean success = fileOps.mkDir(location);
-            if (success) {
-                newFolderName = null;
-            } else {
-                MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to create folder.");
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, null, ex);
-            MessagesController.addErrorMessage(MessagesController.ERROR, "Failed to create folder.");
-        }
+  /**
+   * Create a new folder with the name newFolderName (class property) at the
+   * specified path. The path must NOT contain the new folder name. Set this
+   * using the <i>newFolderName</i> property.
+   *
+   * @param path Location at which to create the new folder, not including the
+   * name of the new folder.
+   */
+  public void mkDir(String path) {
+    String location;
+    if (path.endsWith(File.separator)) {
+      location = path + newFolderName;
+    } else {
+      location = path + File.separator + newFolderName;
     }
-
-    public void setNewFolderName(String s) {
-        newFolderName = s;
-    }
-
-    public String getNewFolderName() {
-        return newFolderName;
-    }
-
-    public void deleteFile(String path) {
-        try {
-            fileOps.rm(path);
-        } catch (IOException ex) {
-            Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, "Failed to remove file.", ex);
-            MessagesController.addErrorMessage(MessagesController.ERROR, "Remove failed.");
-        }
-    }
-    
-    public void deleteFolderRecursive(String path){
-      try{
-        fileOps.rmRecursive(path);
-      } catch (IOException ex){
-        Logger.getLogger(FileOperationsManagedBean.class.getName()).log(Level.SEVERE, "Failed to remove file.", ex);
-        MessagesController.addErrorMessage(MessagesController.ERROR, "Remove failed.");
+    try {
+      boolean success = fileOps.mkDir(location);
+      if (success) {
+        newFolderName = null;
+      } else {
+        MessagesController.addErrorMessage(MessagesController.ERROR,
+                "Failed to create folder.");
       }
+    } catch (IOException ex) {
+      Logger.getLogger(FileOperationsManagedBean.class.getName()).log(
+              Level.SEVERE, null, ex);
+      MessagesController.addErrorMessage(MessagesController.ERROR,
+              "Failed to create folder.");
     }
+  }
+
+  public void setNewFolderName(String s) {
+    newFolderName = s;
+  }
+
+  public String getNewFolderName() {
+    return newFolderName;
+  }
+
+  public void deleteFile(String path) {
+    try {
+      fileOps.rm(path);
+    } catch (IOException ex) {
+      Logger.getLogger(FileOperationsManagedBean.class.getName()).log(
+              Level.SEVERE, "Failed to remove file.", ex);
+      MessagesController.addErrorMessage(MessagesController.ERROR,
+              "Remove failed.");
+    }
+  }
+
+  public void deleteFolderRecursive(String path) {
+    try {
+      fileOps.rmRecursive(path);
+    } catch (IOException ex) {
+      Logger.getLogger(FileOperationsManagedBean.class.getName()).log(
+              Level.SEVERE, "Failed to remove file.", ex);
+      MessagesController.addErrorMessage(MessagesController.ERROR,
+              "Remove failed.");
+    }
+  }
 }

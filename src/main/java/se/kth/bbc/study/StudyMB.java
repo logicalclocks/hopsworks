@@ -51,7 +51,8 @@ public class StudyMB implements Serializable {
 
   private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
   private static final long serialVersionUID = 1L;
-  private static final int TAB_INDEX_ALL_STUDIES = 0, TAB_INDEX_MY_STUDIES=1, TAB_INDEX_JOINED_STUDIES = 2;
+  private static final int TAB_INDEX_ALL_STUDIES = 0, TAB_INDEX_MY_STUDIES = 1, TAB_INDEX_JOINED_STUDIES
+          = 2;
 
   @EJB
   private StudyFacade studyFacade;
@@ -315,7 +316,7 @@ public class StudyMB implements Serializable {
             getRequestParameterMap();
     String studyname = params.get("studyname");
     this.studyCreator = params.get("username");
-    if(!isStudyPresentInHdfs(studyname)){
+    if (!isStudyPresentInHdfs(studyname)) {
       return null;
     }
     return fetchStudy(studyname);
@@ -325,8 +326,10 @@ public class StudyMB implements Serializable {
     Inode root = inodes.getStudyRoot(studyname);
     if (root == null) {
       MessagesController.addErrorMessage("Study not found.",
-              "The study's root folder was not found in HDFS. You will be unable to access its contents.","loadError");
-      logger.log(Level.INFO, "Study folder not found in HDFS for study{0} .", studyname);
+              "The study's root folder was not found in HDFS. You will be unable to access its contents.",
+              "loadError");
+      logger.log(Level.INFO, "Study folder not found in HDFS for study{0} .",
+              studyname);
       return false;
     }
     return true;
@@ -411,9 +414,9 @@ public class StudyMB implements Serializable {
         break;
     }
   }
-  
-  public int getNumberOfDisplayedStudies(){
-    switch(tabIndex){
+
+  public int getNumberOfDisplayedStudies() {
+    switch (tabIndex) {
       case TAB_INDEX_ALL_STUDIES:
         return (int) countAllStudiesPerUser();
       case TAB_INDEX_JOINED_STUDIES:
@@ -421,19 +424,20 @@ public class StudyMB implements Serializable {
       case TAB_INDEX_MY_STUDIES:
         return countPersonalStudy();
       default:
-        throw new IllegalStateException("Tab index can only be contained in the set {0,1,2}.");
+        throw new IllegalStateException(
+                "Tab index can only be contained in the set {0,1,2}.");
     }
   }
-  
-  public boolean isAllStudyListEmpty(){
+
+  public boolean isAllStudyListEmpty() {
     return countAllStudiesPerUser() == 0;
   }
-  
-  public boolean isJoinedStudyListEmpty(){
+
+  public boolean isJoinedStudyListEmpty() {
     return countJoinedStudy() == 0;
   }
-  
-  public boolean isPersonalStudyListEmpty(){
+
+  public boolean isPersonalStudyListEmpty() {
     return countPersonalStudy() == 0;
   }
 

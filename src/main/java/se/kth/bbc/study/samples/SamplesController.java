@@ -29,7 +29,7 @@ import se.kth.bbc.study.metadata.CollectionTypeStudyDesignEnum;
  */
 @ManagedBean
 @ViewScoped
-public class SamplesController implements Serializable{
+public class SamplesController implements Serializable {
 
   private static final Logger logger = Logger.getLogger(SamplesController.class.
           getName());
@@ -59,7 +59,8 @@ public class SamplesController implements Serializable{
   private Samplecollection newCollection = new Samplecollection();
 
   public List<Samplecollection> getSamplecollection() {
-    return samplecollectionFacade.findByStudyname(sessionState.getActiveStudyname());
+    return samplecollectionFacade.findByStudyname(sessionState.
+            getActiveStudyname());
   }
 
   public void setSessionState(ClientSessionState sessionState) {
@@ -188,9 +189,9 @@ public class SamplesController implements Serializable{
   public void setMaterialTypeDualList(DualListModel<MaterialTypeEnum> duallist) {
     this.selectedSample.setMaterialTypeList(duallist.getTarget());
   }
-  
-  public DualListModel<MaterialTypeEnum> getNewSampleMaterialTypeDualList(){
-    if(newSample == null){
+
+  public DualListModel<MaterialTypeEnum> getNewSampleMaterialTypeDualList() {
+    if (newSample == null) {
       //should never happen, but better safe than sorry
       newSample = new Sample();
     }
@@ -198,8 +199,9 @@ public class SamplesController implements Serializable{
     List<MaterialTypeEnum> source = Arrays.asList(MaterialTypeEnum.values());
     return new DualListModel<>(source, target);
   }
-  
-  public void setNewSampleMaterialTypeDualList(DualListModel<MaterialTypeEnum> duallist){
+
+  public void setNewSampleMaterialTypeDualList(
+          DualListModel<MaterialTypeEnum> duallist) {
     this.newSample.setMaterialTypeList(duallist.getTarget());
   }
 
@@ -273,9 +275,9 @@ public class SamplesController implements Serializable{
   }
 
   /**
-     * Create a sample folder for the current study. Creates a sample folder and
-     * subfolders for various common file types.
-     */
+   * Create a sample folder for the current study. Creates a sample folder and
+   * subfolders for various common file types.
+   */
   private void createSampleDir(String sampleId) throws IOException {
     //Construct path
     String path = File.separator + Constants.DIR_ROOT

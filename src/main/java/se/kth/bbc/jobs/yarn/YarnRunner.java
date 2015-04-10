@@ -42,7 +42,7 @@ import se.kth.bbc.lims.Utils;
  *
  * @author stig
  */
-public class YarnRunner{
+public class YarnRunner {
 
   private static final Logger logger = Logger.getLogger(YarnRunner.class.
           getName());
@@ -147,19 +147,19 @@ public class YarnRunner{
     yarnClient.submitApplication(appContext);
 
     yarnClient.close();
-    
+
     // Create a new client for monitoring
     YarnClient newClient = YarnClient.createYarnClient();
     newClient.init(conf);
-    YarnMonitor monitor = new YarnMonitor(appId,newClient);
-    
+    YarnMonitor monitor = new YarnMonitor(appId, newClient);
+
     //Clean up some
     removeAllNecessary();
     yarnClient = null;
     conf = null;
     appId = null;
     appContext = null;
-    
+
     return monitor;
   }
 
@@ -327,7 +327,9 @@ public class YarnRunner{
       env.put(KEY_CLASSPATH, classPathEnv.toString());
     }
     //Put some environment vars in env
-    env.put(Constants.HADOOP_COMMON_HOME_KEY, Constants.HADOOP_COMMON_HOME_VALUE);
+    env.
+            put(Constants.HADOOP_COMMON_HOME_KEY,
+                    Constants.HADOOP_COMMON_HOME_VALUE);
     env.put(Constants.HADOOP_CONF_DIR_KEY, Constants.HADOOP_CONF_DIR_VALUE);
     env.put(Constants.HADOOP_HDFS_HOME_KEY, Constants.HADOOP_HDFS_HOME_VALUE);
     env.put(Constants.HADOOP_YARN_HOME_KEY, Constants.HADOOP_YARN_HOME_VALUE);
@@ -367,13 +369,13 @@ public class YarnRunner{
     amCommands.add(amcommand.toString());
     return amCommands;
   }
-  
-  private void removeAllNecessary() throws IOException{    
+
+  private void removeAllNecessary() throws IOException {
     FileSystem fs = FileSystem.get(conf);
-    for(String s:filesToRemove){
-      if(s.startsWith("hdfs:")){
+    for (String s : filesToRemove) {
+      if (s.startsWith("hdfs:")) {
         fs.delete(new Path(s), true);
-      }else{
+      } else {
         Files.deleteIfExists(Paths.get(s));
       }
     }
@@ -411,7 +413,6 @@ public class YarnRunner{
   //---------------------------------------------------------------------------
   //-------------------------- GETTERS ----------------------------------------
   //---------------------------------------------------------------------------
-
   public String getAmArgs() {
     return amArgs;
   }

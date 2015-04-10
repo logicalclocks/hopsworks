@@ -52,9 +52,11 @@ import se.kth.bbc.security.ua.model.User;
   @NamedQuery(name = "Samplecollection.findByDescription",
           query
           = "SELECT s FROM Samplecollection s WHERE s.description = :description"),
-  @NamedQuery(name = "Samplecollection.findByStudyname", query = 
-          "SELECT s FROM Samplecollection s WHERE s.study.name = :studyname")})
+  @NamedQuery(name = "Samplecollection.findByStudyname",
+          query
+          = "SELECT s FROM Samplecollection s WHERE s.study.name = :studyname")})
 public class Samplecollection implements Serializable {
+
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "samplecollectionId")
   private Collection<Sample> sampleCollection;
@@ -71,7 +73,8 @@ public class Samplecollection implements Serializable {
   @NotNull
   @Size(min = 1,
           max = 255)
-  @Column(name = "acronym",unique = true)
+  @Column(name = "acronym",
+          unique = true)
   private String acronym;
   @Basic(optional = false)
   @NotNull
@@ -185,7 +188,6 @@ public class Samplecollection implements Serializable {
           List<CollectionTypeStudyDesignEnum> collectionTypeList) {
     this.collectionTypeList = collectionTypeList;
   }
-  
 
   @Override
   public int hashCode() {

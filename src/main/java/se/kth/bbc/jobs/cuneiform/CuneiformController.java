@@ -274,7 +274,7 @@ public final class CuneiformController extends JobController {
     b.stdOutPath("/tmp/AppMaster.stdout");
     b.stdErrPath("/tmp/AppMaster.stderr");
     b.logPathsRelativeToResourcesPath(false);
-    
+
     b.addToAppMasterEnvironment("CLASSPATH", "/srv/hiway/lib/*:/srv/hiway/*");
 
     YarnRunner r;

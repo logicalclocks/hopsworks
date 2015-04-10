@@ -30,12 +30,12 @@ and open the template in the editor.
                        styleClass="ui_box browser_table"
                        headerClass="browser_header" rowClasses="browser_row" columnClasses=",,action_column">
 
-          <h:column>
+            <h:column>
               <f:facet name="header">Name</f:facet>
               <h:graphicImage class="browser s16" library="images/icons" name="#{inode.dir?'folder.png':'file.png'}" />
 
               <p:commandLink styleClass="dark" action="#{InodesMB.cdUp()}" update="@form" rendered="#{inode.parent}">
-                  <strong>#{inode.name}</strong>
+                <strong>#{inode.name}</strong>
               </p:commandLink>
 
               <p:commandLink styleClass="dark" action="#{InodesMB.cdDown(inode.name)}" update="@form" rendered="#{not inode.parent and inode.dir}">
@@ -50,7 +50,7 @@ and open the template in the editor.
 
             <h:column >
               <f:facet name="header">Last modified</f:facet>
-                  #{inode.parent?"":InodesMB.approximateTime(inode.modification)}
+                #{inode.parent?"":InodesMB.approximateTime(inode.modification)}
             </h:column>
 
             <h:column>

@@ -54,7 +54,7 @@ public class YarnJob extends HopsJob {
   }
 
   protected final JobState getFinalState() {
-    if(finalState == null){
+    if (finalState == null) {
       finalState = JobState.FAILED;
     }
     return finalState;

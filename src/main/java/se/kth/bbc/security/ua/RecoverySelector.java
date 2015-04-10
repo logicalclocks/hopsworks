@@ -27,242 +27,272 @@ import se.kth.bbc.security.ua.model.User;
 @SessionScoped
 public class RecoverySelector implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    @EJB
-    private UserManager um;
+  @EJB
+  private UserManager um;
 
-    @EJB
-    private EmailBean email;
+  @EJB
+  private EmailBean email;
 
-    private User people;
+  private User people;
 
-    private String console;
+  private String console;
 
-    // Quick response code URL
-    private String qrUrl = "Pass";
-    private StreamedContent qrCode;
+  // Quick response code URL
+  private String qrUrl = "Pass";
+  private StreamedContent qrCode;
 
-    //@ManagedProperty(value="#{recoverySelector.uname}")
-    private String uname;
-    private String tmpCode;
-    private String passwd;
+  //@ManagedProperty(value="#{recoverySelector.uname}")
+  private String uname;
+  private String tmpCode;
+  private String passwd;
 
-    public String getQrUrl() {
-        return qrUrl;
+  public String getQrUrl() {
+    return qrUrl;
+  }
+
+  public void setQrUrl(String qrUrl) {
+    this.qrUrl = qrUrl;
+  }
+
+  public StreamedContent getQrCode() {
+    return qrCode;
+  }
+
+  public void setQrCode(StreamedContent qrCode) {
+    this.qrCode = qrCode;
+  }
+
+  public String getUname() {
+    return uname;
+  }
+
+  public void setUname(String uname) {
+    this.uname = uname;
+  }
+
+  public String getTmpCode() {
+    return tmpCode;
+  }
+
+  public void setTmpCode(String tmpCode) {
+    this.tmpCode = tmpCode;
+  }
+
+  public String getPasswd() {
+    return passwd;
+  }
+
+  public void setPasswd(String passwd) {
+    this.passwd = passwd;
+  }
+
+  public String getConsole() {
+    return console;
+  }
+
+  public void setConsole(String console) {
+    this.console = console;
+  }
+
+  public String redirect() {
+
+    if (console.equals("Password")) {
+      return "sec_question";
     }
 
-    public void setQrUrl(String qrUrl) {
-        this.qrUrl = qrUrl;
+    if (console.equals("Mobile")) {
+      return "mobile_recovery";
     }
 
-    public StreamedContent getQrCode() {
-        return qrCode;
+    if (console.equals("Yubikey")) {
+      return "yubikey_recovery";
     }
 
-    public void setQrCode(StreamedContent qrCode) {
-        this.qrCode = qrCode;
+    return "";
+  }
+
+  public String sendQrCode() {
+
+    people = um.getUser(this.uname);
+
+    if (people == null) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.USER_NOT_FOUND);
+      return "";
     }
 
-    public String getUname() {
-        return uname;
+    // Check the status to see if user is not blocked or deactivate
+    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.BLOCKED_ACCOUNT);
+      return "";
     }
 
-    public void setUname(String uname) {
-        this.uname = uname;
+    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
+      return "";
     }
 
-    public String getTmpCode() {
-        return tmpCode;
+    if (people.getYubikeyUser() == 1) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.USER_NOT_FOUND);
+      return "";
     }
 
-    public void setTmpCode(String tmpCode) {
-        this.tmpCode = tmpCode;
-    }
+    try {
 
-    public String getPasswd() {
-        return passwd;
-    }
+      if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
 
-    public void setPasswd(String passwd) {
-        this.passwd = passwd;
-    }
+        String random = SecurityUtils.getRandomString();
+        um.updateSecret(people.getUid(), random);
+        String message = UserAccountsEmailMessages.buildTempResetMessage(random);
+        email.sendEmail(people.getEmail(),
+                UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
 
-    public String getConsole() {
-        return console;
-    }
-
-    public void setConsole(String console) {
-        this.console = console;
-    }
-
-    public String redirect() {
-
-        if (console.equals("Password")) {
-            return "sec_question";
-        }
-
-        if (console.equals("Mobile")) {
-            return "mobile_recovery";
-        }
-
-        if (console.equals("Yubikey")) {
-            return "yubikey_recovery";
-        }
+        return "validate_code";
+      } else {
+        MessagesController.addSecurityErrorMessage(
+                AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
 
         return "";
+      }
+    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
+            MessagingException ex) {
+      Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null,
+              ex);
     }
 
-    public String sendQrCode() {
+    return "";
+  }
 
-        people = um.getUser(this.uname);
+  public String validateTmpCode() {
 
-        if (people == null) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
-            return "";
-        }
+    people = um.getUser(this.uname);
 
-        // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
-            return "";
-        }
+    if (people == null) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.USER_NOT_FOUND);
+      return "";
+    }
 
-        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
-            return "";
-        }
+    // Check the status to see if user is not blocked or deactivate
+    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.BLOCKED_ACCOUNT);
+      return "";
+    }
 
-        if (people.getYubikeyUser() == 1) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
-            return "";
-        }
+    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
+      return "";
+    }
 
+    if (people.getSecret() == null ? tmpCode == null : people.getSecret().
+            equals(this.tmpCode)) {
+
+      try {
+        String otpSecret = SecurityUtils.calculateSecretKey();
+
+        um.updateSecret(people.getUid(), otpSecret);
+        qrCode = QRCodeGenerator.getQRCode(people.getEmail(),
+                CustomAuthentication.ISSUER, otpSecret);
+        return "qrcode";
+
+      } catch (IOException | WriterException ex) {
+        Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE,
+                null, ex);
+      }
+
+    } else {
+      int val = people.getFalseLogin();
+      um.increaseLockNum(people.getUid(), val + 1);
+      if (val > 5) {
+        um.deactivateUser(people.getUid());
         try {
-
-            if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
-
-                String random = SecurityUtils.getRandomString();
-                um.updateSecret(people.getUid(), random);
-                String message = UserAccountsEmailMessages.buildTempResetMessage(random);
-                email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET, message);
-
-                return "validate_code";
-            } else {
-                MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
-
-                return "";
-            }
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
-            Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
+          email.sendEmail(people.getEmail(),
+                  UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
+                  UserAccountsEmailMessages.accountBlockedMessage());
+        } catch (MessagingException ex1) {
+          Logger.getLogger(CustomAuthentication.class.getName()).log(
+                  Level.SEVERE, null, ex1);
         }
+      }
 
-        return "";
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.INCCORCT_TMP_PIN);
+
+      return "";
+    }
+    return "";
+  }
+
+  public String sendYubiReq() {
+
+    people = um.getUser(this.uname);
+
+    if (people == null) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.USER_NOT_FOUND);
+
+      return "";
     }
 
-    public String validateTmpCode() {
+    if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.BLOCKED_ACCOUNT);
 
-        people = um.getUser(this.uname);
-
-        if (people == null) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
-            return "";
-        }
-
-        // Check the status to see if user is not blocked or deactivate
-        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
-            return "";
-        }
-
-        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.DEACTIVATED_ACCOUNT);
-            return "";
-        }
-
-        if (people.getSecret() == null ? tmpCode == null : people.getSecret().equals(this.tmpCode)) {
-
-            try {
-                String otpSecret = SecurityUtils.calculateSecretKey();
-
-                um.updateSecret(people.getUid(), otpSecret);
-                qrCode = QRCodeGenerator.getQRCode(people.getEmail(), CustomAuthentication.ISSUER, otpSecret);
-                return "qrcode";
-
-            } catch (IOException | WriterException ex) {
-                Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-        } else {
-            int val = people.getFalseLogin();
-            um.increaseLockNum(people.getUid(), val + 1);
-            if (val > 5) {
-                um.deactivateUser(people.getUid());
-                try {
-                    email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
-                } catch (MessagingException ex1) {
-                    Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
-                }
-            }
-
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_TMP_PIN);
-
-            return "";
-        }
-        return "";
+      return "";
     }
 
-    public String sendYubiReq() {
-
-        people = um.getUser(this.uname);
-
-        if (people == null) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
-
-            return "";
-        }
-
-        if (people.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.BLOCKED_ACCOUNT);
-
-            return "";
-        }
-
-        if (people.getYubikeyUser() != 1) {
-            MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.USER_NOT_FOUND);
-            return "";
-        }
-
-        try {
-            if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
-
-                String message = UserAccountsEmailMessages.buildYubikeyRequestMessage();
-                email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT, message);
-                people.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
-                um.updatePeople(people);
-                return "yubico";
-            } else {
-
-                int val = people.getFalseLogin();
-                um.increaseLockNum(people.getUid(), val + 1);
-                if (val > 5) {
-                    um.deactivateUser(people.getUid());
-                    try {
-                        email.sendEmail(people.getEmail(), UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT, UserAccountsEmailMessages.accountBlockedMessage());
-                    } catch (MessagingException ex1) {
-                        Logger.getLogger(CustomAuthentication.class.getName()).log(Level.SEVERE, null, ex1);
-                    }
-                }
-
-                MessagesController.addSecurityErrorMessage(AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
-                return "";
-            }
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException | MessagingException ex) {
-            Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        return "";
-
+    if (people.getYubikeyUser() != 1) {
+      MessagesController.addSecurityErrorMessage(
+              AccountStatusErrorMessages.USER_NOT_FOUND);
+      return "";
     }
+
+    try {
+      if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
+
+        String message = UserAccountsEmailMessages.buildYubikeyRequestMessage();
+        email.sendEmail(people.getEmail(),
+                UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT, message);
+        people.
+                setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.
+                        getValue());
+        um.updatePeople(people);
+        return "yubico";
+      } else {
+
+        int val = people.getFalseLogin();
+        um.increaseLockNum(people.getUid(), val + 1);
+        if (val > 5) {
+          um.deactivateUser(people.getUid());
+          try {
+            email.sendEmail(people.getEmail(),
+                    UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
+                    UserAccountsEmailMessages.accountBlockedMessage());
+          } catch (MessagingException ex1) {
+            Logger.getLogger(CustomAuthentication.class.getName()).log(
+                    Level.SEVERE, null, ex1);
+          }
+        }
+
+        MessagesController.addSecurityErrorMessage(
+                AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
+        return "";
+      }
+    } catch (NoSuchAlgorithmException | UnsupportedEncodingException |
+            MessagingException ex) {
+      Logger.getLogger(RecoverySelector.class.getName()).log(Level.SEVERE, null,
+              ex);
+    }
+
+    return "";
+
+  }
 
 }

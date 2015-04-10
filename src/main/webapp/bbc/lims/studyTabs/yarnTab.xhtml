@@ -43,7 +43,7 @@
 
                   <h:outputLabel value="Uploaded file"/>
                   <h:outputLabel value="#{yarnController.appMasterName==null ? 'No file uploaded yet' : yarnController.appMasterName}"/>
-                  
+
                   <h:outputLabel value="Application Master main class" for="yarn_MC"/>
                   <h:inputText id="yarn_MC" value="#{yarnController.mainClass}" required="true"/>
 
@@ -51,7 +51,7 @@
                   <h:inputText id="yarn_Args" value="#{yarnController.args}"/>                
                 </h:panelGrid>
               </div>
-              
+
               <div>
                 <p:commandButton id="yarnExecuteButton" value="Execute" 
                                  action="#{yarnController.startJob()}" 

@@ -16,20 +16,20 @@ import se.kth.bbc.study.samples.SampleFacade;
  */
 @ManagedBean
 @RequestScoped
-public class UniqueSampleValidator implements Validator{
-  
+public class UniqueSampleValidator implements Validator {
+
   @EJB
   private SampleFacade sampleFacade;
 
   @Override
   public void validate(FacesContext context, UIComponent component, Object value)
           throws ValidatorException {
-    if(sampleFacade.existsSampleWithId(value.toString())){ 
-			FacesMessage msg = 
-				new FacesMessage(FacesMessage.SEVERITY_ERROR,"Non-unique id.", 
-						"A sample with this ID already exists.");
-			throw new ValidatorException(msg); 
-		}
+    if (sampleFacade.existsSampleWithId(value.toString())) {
+      FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+              "Non-unique id.",
+              "A sample with this ID already exists.");
+      throw new ValidatorException(msg);
+    }
   }
-  
+
 }

@@ -16,20 +16,20 @@ import se.kth.bbc.study.samples.SamplecollectionFacade;
  */
 @ManagedBean
 @RequestScoped
-public class UniqueCollectionAcronymValidator implements Validator{
-  
+public class UniqueCollectionAcronymValidator implements Validator {
+
   @EJB
   private SamplecollectionFacade collectionFacade;
 
   @Override
   public void validate(FacesContext context, UIComponent component, Object value)
           throws ValidatorException {
-    if(collectionFacade.existsCollectionWithAcronym(value.toString())){ 
-			FacesMessage msg = 
-				new FacesMessage(FacesMessage.SEVERITY_ERROR,"Non-unique acronym.", 
-						"A collection with this acronym already exists.");
-			throw new ValidatorException(msg); 
-		}
+    if (collectionFacade.existsCollectionWithAcronym(value.toString())) {
+      FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+              "Non-unique acronym.",
+              "A collection with this acronym already exists.");
+      throw new ValidatorException(msg);
+    }
   }
-  
+
 }

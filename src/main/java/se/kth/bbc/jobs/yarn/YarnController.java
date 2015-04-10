@@ -113,7 +113,7 @@ public class YarnController extends JobController {
     YarnJob job = new YarnJob(history, runner, fops);
     setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
             sessionState.getActiveStudyname(), JobType.YARN));
-    if(isJobSelected()){
+    if (isJobSelected()) {
       //Set log paths
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveStudyname())
@@ -131,7 +131,8 @@ public class YarnController extends JobController {
     } else {
       //No job Id has been selected: failed to allocate one. Abort execution.
       logger.
-              log(Level.SEVERE, "Failed to persist JobHistory. Aborting execution.");
+              log(Level.SEVERE,
+                      "Failed to persist JobHistory. Aborting execution.");
       MessagesController.addErrorMessage(
               "Failed to write job history. Aborting execution.");
       return;

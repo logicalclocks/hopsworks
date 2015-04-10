@@ -10,8 +10,8 @@ import javax.faces.convert.FacesConverter;
 @FacesConverter("inclusionCriteriumEnumConverter")
 public class InclusionCriteriumEnumConverter extends EnumConverter {
 
-    public InclusionCriteriumEnumConverter() {
-        super(InclusionCriteriumEnum.class);
-    }
+  public InclusionCriteriumEnumConverter() {
+    super(InclusionCriteriumEnum.class);
+  }
 
 }

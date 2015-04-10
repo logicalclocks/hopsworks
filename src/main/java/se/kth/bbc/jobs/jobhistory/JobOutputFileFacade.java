@@ -14,39 +14,41 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
  * @author stig
  */
 @Stateless
-public class JobOutputFileFacade extends AbstractFacade<JobOutputFile>{
-  
-    @PersistenceContext(unitName = "kthfsPU")
+public class JobOutputFileFacade extends AbstractFacade<JobOutputFile> {
+
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   @Override
   protected EntityManager getEntityManager() {
     return em;
   }
-  
-  public JobOutputFileFacade(){
+
+  public JobOutputFileFacade() {
     super(JobOutputFile.class);
   }
-  
-  public void persist(JobOutputFile file){
+
+  public void persist(JobOutputFile file) {
     em.persist(file);
   }
-  
-  public List<JobOutputFile> findOutputFilesForJobid(Long id){
-    TypedQuery<JobOutputFile> q = em.createNamedQuery("JobOutputFile.findByJobId", JobOutputFile.class);
+
+  public List<JobOutputFile> findOutputFilesForJobid(Long id) {
+    TypedQuery<JobOutputFile> q = em.createNamedQuery(
+            "JobOutputFile.findByJobId", JobOutputFile.class);
     q.setParameter("jobId", id);
     return q.getResultList();
   }
-  
-  public JobOutputFile findByNameAndJobId(String name, Long id){
-    TypedQuery<JobOutputFile> q = em.createNamedQuery("JobOutputFile.findByNameAndJobId", JobOutputFile.class);
+
+  public JobOutputFile findByNameAndJobId(String name, Long id) {
+    TypedQuery<JobOutputFile> q = em.createNamedQuery(
+            "JobOutputFile.findByNameAndJobId", JobOutputFile.class);
     q.setParameter("name", name);
     q.setParameter("jobId", id);
-    try{
+    try {
       return q.getSingleResult();
-    }catch(NoResultException|NonUniqueResultException e){
+    } catch (NoResultException | NonUniqueResultException e) {
       return null;
     }
   }
-  
+
 }

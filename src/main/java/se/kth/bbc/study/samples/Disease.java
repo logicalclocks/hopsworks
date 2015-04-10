@@ -43,6 +43,7 @@ import javax.xml.bind.annotation.XmlRootElement;
           query
           = "SELECT d FROM Disease d WHERE d.explanation = :explanation")})
 public class Disease implements Serializable {
+
   private static final long serialVersionUID = 1L;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -134,8 +135,8 @@ public class Disease implements Serializable {
       return false;
     }
     Disease other = (Disease) object;
-    if ((this.id == null && other.id != null) ||
-            (this.id != null && !this.id.equals(other.id))) {
+    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
+            equals(other.id))) {
       return false;
     }
     return true;
@@ -145,5 +146,5 @@ public class Disease implements Serializable {
   public String toString() {
     return "se.kth.bbc.study.samples.Disease[ id=" + id + " ]";
   }
-  
+
 }

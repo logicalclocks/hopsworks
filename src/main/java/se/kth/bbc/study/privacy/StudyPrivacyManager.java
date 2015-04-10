@@ -34,97 +34,102 @@ import se.kth.bbc.study.privacy.model.Consent;
 @RequestScoped
 public class StudyPrivacyManager {
 
-    @PersistenceContext(unitName = "kthfsPU")
-    private EntityManager em;
-    private Date date;
+  @PersistenceContext(unitName = "kthfsPU")
+  private EntityManager em;
+  private Date date;
 
-   @EJB
-    private ActivityController activityController;
+  @EJB
+  private ActivityController activityController;
 
-   @EJB
-    private StudyTeamFacade stc;
-   
-    private List <ActivityDetail> ad;
-     
-    protected EntityManager getEntityManager() {
-        return em;
-    }
+  @EJB
+  private StudyTeamFacade stc;
 
-    public void onDateSelect(SelectEvent event) {
-        FacesContext facesContext = FacesContext.getCurrentInstance();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
-        facesContext.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Date Selected", format.format(event.getObject())));
-    }
+  private List<ActivityDetail> ad;
 
-    public void click() {
-        RequestContext requestContext = RequestContext.getCurrentInstance();
+  protected EntityManager getEntityManager() {
+    return em;
+  }
 
-        requestContext.update("form:display");
-        requestContext.execute("PF('dlg').show()");
-    }
+  public void onDateSelect(SelectEvent event) {
+    FacesContext facesContext = FacesContext.getCurrentInstance();
+    SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
+    facesContext.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO,
+            "Date Selected", format.format(event.getObject())));
+  }
 
-    public void showConsent(String name) {
+  public void click() {
+    RequestContext requestContext = RequestContext.getCurrentInstance();
 
-    }
+    requestContext.update("form:display");
+    requestContext.execute("PF('dlg').show()");
+  }
 
-    public Date getDate() throws ParseException {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
+  public void showConsent(String name) {
 
-        this.date = format.parse(format.format(this.date));
-        return this.date;
-    }
+  }
 
-    public void setDate(Date date) {
-        this.date = date;
-    }
+  public Date getDate() throws ParseException {
+    SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
 
-    public boolean updateRetentionPeriod(String studyname) {
+    this.date = format.parse(format.format(this.date));
+    return this.date;
+  }
 
-        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
-        q.setParameter("studyName", studyname);
-        Consent consent = q.getSingleResult();
-        consent.setDate(date);
-        em.merge(consent);
-        return true;
+  public void setDate(Date date) {
+    this.date = date;
+  }
 
-    }
+  public boolean updateRetentionPeriod(String studyname) {
 
-    public Date getRetentionPeriod(String studyname) throws ParseException {
+    TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName",
+            Consent.class);
+    q.setParameter("studyName", studyname);
+    Consent consent = q.getSingleResult();
+    consent.setDate(date);
+    em.merge(consent);
+    return true;
 
-        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
-        q.setParameter("studyName", studyname);
-        Consent consent = q.getSingleResult();
-        this.date = consent.getRetentionPeriod();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
+  }
 
-        return format.parse(format.format(this.date));
+  public Date getRetentionPeriod(String studyname) throws ParseException {
 
-    }
+    TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName",
+            Consent.class);
+    q.setParameter("studyName", studyname);
+    Consent consent = q.getSingleResult();
+    this.date = consent.getRetentionPeriod();
+    SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
 
-    public String getConsentStatus(String studyname) throws ParseException {
+    return format.parse(format.format(this.date));
 
-        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
-        q.setParameter("studyName", studyname);
-        Consent consent = q.getSingleResult();
-        return consent.getStatus();
-    }
-    
-    
-    public String getConsentName(String studyname) throws ParseException {
+  }
 
-        TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName", Consent.class);
-        q.setParameter("studyName", studyname);
-        Consent consent = q.getSingleResult();
-        return consent.getName();
-    }   
-    
-    public String getRoles(String study, String username) throws ParseException {
-        List<StudyTeam> list = stc.findCurrentRole(study, username);
-        return list.get(0).getTeamRole();
-    }
-    
-    public List <ActivityDetail> getAllActivities(String studyName){
-        List<ActivityDetail> ad= activityController.activityDetailOnStudy(studyName);
-        return ad;
-    }
+  public String getConsentStatus(String studyname) throws ParseException {
+
+    TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName",
+            Consent.class);
+    q.setParameter("studyName", studyname);
+    Consent consent = q.getSingleResult();
+    return consent.getStatus();
+  }
+
+  public String getConsentName(String studyname) throws ParseException {
+
+    TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName",
+            Consent.class);
+    q.setParameter("studyName", studyname);
+    Consent consent = q.getSingleResult();
+    return consent.getName();
+  }
+
+  public String getRoles(String study, String username) throws ParseException {
+    List<StudyTeam> list = stc.findCurrentRole(study, username);
+    return list.get(0).getTeamRole();
+  }
+
+  public List<ActivityDetail> getAllActivities(String studyName) {
+    List<ActivityDetail> ad = activityController.
+            activityDetailOnStudy(studyName);
+    return ad;
+  }
 }

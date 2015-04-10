@@ -18,6 +18,7 @@ import javax.validation.constraints.Size;
  */
 @Embeddable
 public class InodePK implements Serializable {
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "parent_id")
@@ -71,8 +72,8 @@ public class InodePK implements Serializable {
     if (this.parentId != other.parentId) {
       return false;
     }
-    if ((this.name == null && other.name != null) ||
-            (this.name != null && !this.name.equals(other.name))) {
+    if ((this.name == null && other.name != null) || (this.name != null
+            && !this.name.equals(other.name))) {
       return false;
     }
     return true;
@@ -80,8 +81,8 @@ public class InodePK implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.study.fb.InodePK[ parentId=" + parentId + ", name=" + name +
-            " ]";
+    return "se.kth.bbc.study.fb.InodePK[ parentId=" + parentId + ", name="
+            + name + " ]";
   }
-  
+
 }

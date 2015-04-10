@@ -47,6 +47,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
           query
           = "SELECT a FROM AnatomicalPart a WHERE a.explanation = :explanation")})
 public class AnatomicalPart implements Serializable {
+
   @OneToMany(mappedBy = "anatomicalSite")
   private Collection<Sample> sampleCollection;
   private static final long serialVersionUID = 1L;
@@ -140,8 +141,8 @@ public class AnatomicalPart implements Serializable {
       return false;
     }
     AnatomicalPart other = (AnatomicalPart) object;
-    if ((this.id == null && other.id != null) ||
-            (this.id != null && !this.id.equals(other.id))) {
+    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
+            equals(other.id))) {
       return false;
     }
     return true;
@@ -161,5 +162,5 @@ public class AnatomicalPart implements Serializable {
   public void setSampleCollection(Collection<Sample> sampleCollection) {
     this.sampleCollection = sampleCollection;
   }
-  
+
 }

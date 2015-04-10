@@ -61,13 +61,16 @@ public class SparkYarnRunnerBuilder {
     builder.localResourcesBasePath(stagingPath);
 
     //Add Spark jar
-    builder.addLocalResource(Constants.SPARK_LOCRSC_SPARK_JAR,Constants.DEFAULT_SPARK_JAR_HDFS_PATH,false);
+    builder.addLocalResource(Constants.SPARK_LOCRSC_SPARK_JAR,
+            Constants.DEFAULT_SPARK_JAR_HDFS_PATH, false);
     //Add app jar
-    builder.addLocalResource(Constants.SPARK_LOCRSC_APP_JAR, appJarPath,!appJarPath.startsWith("hdfs:"));
+    builder.addLocalResource(Constants.SPARK_LOCRSC_APP_JAR, appJarPath,
+            !appJarPath.startsWith("hdfs:"));
 
     //Add extra files to local resources, use filename as key
     for (Map.Entry<String, String> k : extraFiles.entrySet()) {
-      builder.addLocalResource(k.getKey(), k.getValue(),!k.getValue().startsWith("hdfs:"));
+      builder.addLocalResource(k.getKey(), k.getValue(), !k.getValue().
+              startsWith("hdfs:"));
     }
 
     //Set Spark specific environment variables
@@ -235,8 +238,8 @@ public class SparkYarnRunnerBuilder {
   private String escapeForShell(String s) {
     if (s != null) {
       StringBuilder escaped = new StringBuilder("'");
-      for (int i=0;i<s.length();i++) {
-        switch(s.charAt(i)){
+      for (int i = 0; i < s.length(); i++) {
+        switch (s.charAt(i)) {
           case '$':
             escaped.append("\\$");
             break;
@@ -252,7 +255,7 @@ public class SparkYarnRunnerBuilder {
         }
       }
       return escaped.append("'").toString();
-    }else{
+    } else {
       return s;
     }
   }

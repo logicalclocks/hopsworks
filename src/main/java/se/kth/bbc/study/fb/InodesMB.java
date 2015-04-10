@@ -24,7 +24,9 @@ import se.kth.bbc.lims.Constants;
 @ManagedBean(name = "InodesMB")
 @SessionScoped
 public class InodesMB implements Serializable {
-  private static final Logger logger = Logger.getLogger(InodesMB.class.getName());
+
+  private static final Logger logger = Logger.
+          getLogger(InodesMB.class.getName());
 
   private Inode root;
   private Inode cwd;
@@ -55,14 +57,15 @@ public class InodesMB implements Serializable {
   }
 
   public List<InodeView> getChildren() {
-    if (!inodes.getStudyNameForInode(cwd).equals(sessionState.getActiveStudyname())) {
+    if (!inodes.getStudyNameForInode(cwd).equals(sessionState.
+            getActiveStudyname())) {
       init();
     }
     //get from DB and update Inode
     cwdChildren = inodes.findByParent(cwd);
     List<InodeView> kids = new ArrayList<>();
-    for(Inode i:cwdChildren){
-      kids.add(new InodeView(i,inodes.getPath(i)));
+    for (Inode i : cwdChildren) {
+      kids.add(new InodeView(i, inodes.getPath(i)));
     }
     if (!inodes.isStudyRoot(cwd)) { // root doesn't have a parent to show
       InodeView parent = InodeView.getParentInode(inodes.getPath(cwd));
@@ -81,7 +84,7 @@ public class InodesMB implements Serializable {
 
   public void cdDown(String name) {
     Inode kid = inodes.findByParentAndName(cwd, name);
-    if(kid != null && kid.isDir()){
+    if (kid != null && kid.isDir()) {
       cwdParent = cwd;
       cwd = kid;
       cwdChildren = inodes.getChildren(cwd);
@@ -150,7 +153,8 @@ public class InodesMB implements Serializable {
   }
 
   public List<NavigationPath> getCurrentPath() {
-    if (cwd == null || !inodes.getStudyNameForInode(cwd).equals(sessionState.getActiveStudyname())) {
+    if (cwd == null || !inodes.getStudyNameForInode(cwd).equals(sessionState.
+            getActiveStudyname())) {
       init();
     }
     return inodes.getConstituentsPath(cwd);

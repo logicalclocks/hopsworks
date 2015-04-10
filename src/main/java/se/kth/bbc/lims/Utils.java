@@ -1,6 +1,5 @@
 package se.kth.bbc.lims;
 
-
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,11 +60,11 @@ public final class Utils {
     }
     return machineUser;
   }
-  
-  public static String ensurePathEndsInSlash(String path){
-    if(!path.endsWith(File.separator)){
+
+  public static String ensurePathEndsInSlash(String path) {
+    if (!path.endsWith(File.separator)) {
       return path + File.separator;
-    }else{
+    } else {
       return path;
     }
   }

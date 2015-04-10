@@ -4,17 +4,20 @@ import java.util.Date;
 import java.util.Objects;
 
 /**
- * Simplified version of the Inode entity to allow for easier access through web interface.
+ * Simplified version of the Inode entity to allow for easier access through web
+ * interface.
+ * <p>
  * @author stig
  */
 public final class InodeView {
+
   private final String name;
   private final boolean dir;
   private final boolean parent;
   private final String path;
   private final Date modification;
-  
-  public InodeView(Inode i, String path){
+
+  public InodeView(Inode i, String path) {
     this.name = i.getInodePK().getName();
     this.dir = i.isDir();
     this.parent = false;
@@ -29,17 +32,17 @@ public final class InodeView {
     this.path = path;
     this.modification = null;
   }
-  
-  public static InodeView getParentInode(String path){
+
+  public static InodeView getParentInode(String path) {
     String name = "..";
     boolean dir = true;
     boolean parent = true;
     int lastSlash = path.lastIndexOf("/");
-    if(lastSlash == path.length()-1){
-      lastSlash = path.lastIndexOf("/", lastSlash-1);
+    if (lastSlash == path.length() - 1) {
+      lastSlash = path.lastIndexOf("/", lastSlash - 1);
     }
     path = path.substring(0, lastSlash);
-    return new InodeView(name,dir,parent,path);
+    return new InodeView(name, dir, parent, path);
   }
 
   public String getName() {
@@ -84,5 +87,5 @@ public final class InodeView {
     }
     return Objects.equals(this.path, other.path);
   }
-  
+
 }

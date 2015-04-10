@@ -51,13 +51,13 @@ public class AdamInvocationOption {
   public AdamOption getOpt() {
     return opt;
   }
-  
+
   @Override
-  public String toString(){
-    if(usesBoolean){
-      return "<"+opt+":"+booleanValue+">";
-    }else{
-      return "<"+opt+":"+stringValue+">";
+  public String toString() {
+    if (usesBoolean) {
+      return "<" + opt + ":" + booleanValue + ">";
+    } else {
+      return "<" + opt + ":" + stringValue + ">";
     }
   }
 

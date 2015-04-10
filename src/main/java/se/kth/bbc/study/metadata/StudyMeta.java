@@ -41,6 +41,7 @@ import se.kth.bbc.study.TrackStudy;
           query
           = "SELECT s FROM StudyMeta s WHERE s.description = :description")})
 public class StudyMeta implements Serializable {
+
   private static final long serialVersionUID = 1L;
   @Size(max = 128)
   @NotNull
@@ -64,13 +65,17 @@ public class StudyMeta implements Serializable {
   @OneToOne(optional = false)
   private TrackStudy trackStudy;
   @ElementCollection(targetClass = CollectionTypeStudyDesignEnum.class)
-  @CollectionTable(name="study_design",joinColumns=@JoinColumn(name="study_id",referencedColumnName = "id"))
-  @Column(name="design")
+  @CollectionTable(name = "study_design",
+          joinColumns = @JoinColumn(name = "study_id",
+                  referencedColumnName = "id"))
+  @Column(name = "design")
   @Enumerated(EnumType.STRING)
   private List<CollectionTypeStudyDesignEnum> studyDesignList;
-   @ElementCollection(targetClass = InclusionCriteriumEnum.class)
-  @CollectionTable(name="study_inclusion_criteria",joinColumns=@JoinColumn(name="study_id",referencedColumnName = "id"))
-  @Column(name="criterium")
+  @ElementCollection(targetClass = InclusionCriteriumEnum.class)
+  @CollectionTable(name = "study_inclusion_criteria",
+          joinColumns = @JoinColumn(name = "study_id",
+                  referencedColumnName = "id"))
+  @Column(name = "criterium")
   @Enumerated(EnumType.STRING)
   private List<InclusionCriteriumEnum> inclusionCriteriaList;
 
@@ -78,7 +83,8 @@ public class StudyMeta implements Serializable {
     return studyDesignList;
   }
 
-  public void setStudyDesignList(List<CollectionTypeStudyDesignEnum> studyDesignList) {
+  public void setStudyDesignList(
+          List<CollectionTypeStudyDesignEnum> studyDesignList) {
     this.studyDesignList = studyDesignList;
   }
 
@@ -144,8 +150,8 @@ public class StudyMeta implements Serializable {
       return false;
     }
     StudyMeta other = (StudyMeta) object;
-    if ((this.studyname == null && other.studyname != null) ||
-            (this.studyname != null && !this.studyname.equals(other.studyname))) {
+    if ((this.studyname == null && other.studyname != null) || (this.studyname
+            != null && !this.studyname.equals(other.studyname))) {
       return false;
     }
     return true;
@@ -155,5 +161,5 @@ public class StudyMeta implements Serializable {
   public String toString() {
     return "se.kth.bbc.study.metadata.StudyMeta[ studyname=" + studyname + " ]";
   }
-  
+
 }

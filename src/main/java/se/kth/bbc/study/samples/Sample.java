@@ -122,7 +122,8 @@ public class Sample implements Serializable {
     return childSamplesCollection;
   }
 
-  public void setChildSamplesCollection(Collection<Sample> childSamplesCollection) {
+  public void setChildSamplesCollection(
+          Collection<Sample> childSamplesCollection) {
     this.childSamplesCollection = childSamplesCollection;
   }
 

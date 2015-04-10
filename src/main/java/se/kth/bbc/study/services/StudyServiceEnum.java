@@ -1,12 +1,12 @@
 package se.kth.bbc.study.services;
 
 //TODO: change db def, no enum there, just string and map via @Enumerated
-
 /**
  *
  * @author stig
  */
 public enum StudyServiceEnum {
+
   CUNEIFORM,
   SAMPLES,
   STUDY_INFO,
@@ -16,10 +16,9 @@ public enum StudyServiceEnum {
   YARN,
   PRIVACY;
 
-  
   @Override
-  public String toString(){
-    switch(this){
+  public String toString() {
+    switch (this) {
       case CUNEIFORM:
         return "Cuneiform";
       case SAMPLES:
@@ -35,10 +34,10 @@ public enum StudyServiceEnum {
       case YARN:
         return "Yarn";
       case PRIVACY:
-          return "Privacy";
+        return "Privacy";
       default:
         throw new IllegalStateException("Illegal enum value.");
     }
-  }  
-  
+  }
+
 }

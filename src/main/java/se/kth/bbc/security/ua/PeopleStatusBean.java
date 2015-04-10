@@ -123,7 +123,7 @@ public class PeopleStatusBean implements Serializable {
    */
   public boolean checkForRequests() {
     if (isResearcher()) {
-            //return false if no requests
+      //return false if no requests
 
       open_reauests = !(userManager.findAllByStatus(
               PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()).isEmpty())

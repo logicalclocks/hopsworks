@@ -15,6 +15,7 @@ import javax.validation.constraints.Size;
  */
 @Embeddable
 public class StudyServicePK implements Serializable {
+
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -66,12 +67,12 @@ public class StudyServicePK implements Serializable {
       return false;
     }
     StudyServicePK other = (StudyServicePK) object;
-    if ((this.study == null && other.study != null) ||
-            (this.study != null && !this.study.equals(other.study))) {
+    if ((this.study == null && other.study != null) || (this.study != null
+            && !this.study.equals(other.study))) {
       return false;
     }
-    if ((this.service == null && other.service != null) ||
-            (this.service != null && this.service != other.service)) {
+    if ((this.service == null && other.service != null) || (this.service != null
+            && this.service != other.service)) {
       return false;
     }
     return true;
@@ -79,8 +80,8 @@ public class StudyServicePK implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.study.StudyServicePK[ study=" + study + ", service=" +
-            service + " ]";
+    return "se.kth.bbc.study.StudyServicePK[ study=" + study + ", service="
+            + service + " ]";
   }
-  
+
 }

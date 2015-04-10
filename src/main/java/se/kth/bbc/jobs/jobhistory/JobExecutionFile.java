@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
           query
           = "SELECT j FROM JobExecutionFile j WHERE j.path = :path")})
 public class JobExecutionFile implements Serializable {
+
   private static final long serialVersionUID = 1L;
   @EmbeddedId
   protected JobExecutionFilePK jobExecutionFilePK;
@@ -106,8 +107,9 @@ public class JobExecutionFile implements Serializable {
       return false;
     }
     JobExecutionFile other = (JobExecutionFile) object;
-    if ((this.jobExecutionFilePK == null && other.jobExecutionFilePK != null) ||
-            (this.jobExecutionFilePK != null && !this.jobExecutionFilePK.equals(other.jobExecutionFilePK))) {
+    if ((this.jobExecutionFilePK == null && other.jobExecutionFilePK != null)
+            || (this.jobExecutionFilePK != null && !this.jobExecutionFilePK.
+            equals(other.jobExecutionFilePK))) {
       return false;
     }
     return true;
@@ -115,8 +117,8 @@ public class JobExecutionFile implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.job.JobExecutionFile[ jobExecutionFilePK=" +
-            jobExecutionFilePK + " ]";
+    return "se.kth.bbc.job.JobExecutionFile[ jobExecutionFilePK="
+            + jobExecutionFilePK + " ]";
   }
-  
+
 }

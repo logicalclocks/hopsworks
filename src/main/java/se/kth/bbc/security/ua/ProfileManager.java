@@ -34,106 +34,109 @@ import se.kth.kthfsdashboard.user.Gravatar;
 @ViewScoped
 public class ProfileManager implements Serializable {
 
-    public static final String DEFAULT_GRAVATAR = "resources/images/icons/default-icon.jpg";
+  public static final String DEFAULT_GRAVATAR
+          = "resources/images/icons/default-icon.jpg";
 
-    private static final long serialVersionUID = 1L;
-    @EJB
-    private UserManager userManager;
+  private static final long serialVersionUID = 1L;
+  @EJB
+  private UserManager userManager;
 
-    private User user;
-    private Address address;
-    private Userlogins login;
+  private User user;
+  private Address address;
+  private Userlogins login;
 
-    private boolean editable;
+  private boolean editable;
 
-    public boolean isEditable() {
-        return editable;
+  public boolean isEditable() {
+    return editable;
+  }
+
+  public void setEditable(boolean editable) {
+    this.editable = editable;
+  }
+
+  public User getUser() {
+    if (user == null) {
+      try {
+        user = userManager.findByEmail(getLoginName());
+        address = user.getAddress();
+        login = userManager.getLastUserLoing(user.getUid());
+      } catch (IOException ex) {
+        Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null,
+                ex);
+
+        return null;
+      }
     }
 
-    public void setEditable(boolean editable) {
-        this.editable = editable;
+    return user;
+  }
+
+  public Userlogins getLogin() {
+    return login;
+  }
+
+  public void setLogin(Userlogins login) {
+    this.login = login;
+  }
+
+  public void setUser(User user) {
+    this.user = user;
+  }
+
+  public void setAddress(Address address) {
+    this.address = address;
+  }
+
+  public Address getAddress() {
+    return this.address;
+  }
+
+  public String getLoginName() throws IOException {
+    FacesContext context = FacesContext.getCurrentInstance();
+    HttpServletRequest request = (HttpServletRequest) context.
+            getExternalContext().getRequest();
+
+    Principal principal = request.getUserPrincipal();
+
+    try {
+      return principal.getName();
+    } catch (Exception ex) {
+      ExternalContext extContext = FacesContext.getCurrentInstance().
+              getExternalContext();
+      extContext.redirect(extContext.getRequestContextPath());
+      return null;
     }
-    
-    public User getUser() {
-        if (user == null) {
-            try {
-                user = userManager.findByEmail(getLoginName());
-                address = user.getAddress();
-                login = userManager.getLastUserLoing(user.getUid());
-            } catch (IOException ex) {
-                Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null, ex);
+  }
 
-                return null;
-            }
-        }
+  public List<String> getCurrentGroups() {
+    List<String> list = userManager.findGroups(user.getUid());
+    return list;
+  }
 
-        return user;
+  public void updateUserInfo() {
+
+    if (userManager.updatePeople(user)) {
+      MessagesController.addInfoMessage("Success",
+              "Profile updated successfully.");
+    } else {
+      FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+              "Failed to update", null);
+      FacesContext.getCurrentInstance().addMessage(null, msg);
+
+      return;
     }
+  }
 
-    public Userlogins getLogin() {
-        return login;
+  public void updateAddress() {
+
+    if (userManager.updateAddress(address)) {
+      MessagesController.addInfoMessage("Success",
+              "Address updated successfully.");
+    } else {
+      MessagesController.addSecurityErrorMessage("Update failed.");
+      return;
     }
+  }
 
-    public void setLogin(Userlogins login) {
-        this.login = login; 
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public void setAddress(Address address) {
-        this.address = address;
-    }
-
- 
-    public Address getAddress() {
-        return this.address;
-    }
-
-    public String getLoginName() throws IOException {
-        FacesContext context = FacesContext.getCurrentInstance();
-        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-
-        Principal principal = request.getUserPrincipal();
-
-        try {
-            return principal.getName();
-        } catch (Exception ex) {
-            ExternalContext extContext = FacesContext.getCurrentInstance().getExternalContext();
-            extContext.redirect(extContext.getRequestContextPath());
-            return null;
-        }
-    }
-
-    
-    public List<String> getCurrentGroups() {
-        List<String> list = userManager.findGroups(user.getUid());
-        return list;
-    }
-    
-       
-    public void updateUserInfo(){
-
-        if (userManager.updatePeople(user)) {
-            MessagesController.addInfoMessage("Success", "Profile updated successfully.");
-        } else {
-            FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Failed to update", null);
-            FacesContext.getCurrentInstance().addMessage(null, msg);
-
-            return;
-        }
-    }
-
-      public void updateAddress(){
-
-        if (userManager.updateAddress(address)) {
-            MessagesController.addInfoMessage("Success", "Address updated successfully.");
-        } else {
-            MessagesController.addSecurityErrorMessage("Update failed.");
-            return;
-        }
-    }
-
-      
 }

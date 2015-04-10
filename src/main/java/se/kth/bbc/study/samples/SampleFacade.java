@@ -55,20 +55,21 @@ public class SampleFacade extends AbstractFacade<Sample> {
     }
     em.persist(meta);
   }
-  
-  public void persist(Sample s){
-    if(s.getSampledTime() == null){
+
+  public void persist(Sample s) {
+    if (s.getSampledTime() == null) {
       s.setSampledTime(new Date());
     }
     em.persist(s);
   }
-  
+
   /**
    * Check if a sample with this id already exists.
+   * <p>
    * @param id
-   * @return 
+   * @return
    */
-  public boolean existsSampleWithId(String id){
+  public boolean existsSampleWithId(String id) {
     TypedQuery<Sample> q = em.createNamedQuery("Sample.findById", Sample.class);
     q.setParameter("id", id);
     return q.getResultList().size() > 0;

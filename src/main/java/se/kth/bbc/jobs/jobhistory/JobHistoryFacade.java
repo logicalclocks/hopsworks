@@ -66,7 +66,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
   public void update(Long id, JobState newState, long executionTime) {
     JobHistory jh = findById(id);
-    updateState(id,newState);
+    updateState(id, newState);
     jh.setExecutionDuration(BigInteger.valueOf(executionTime));
     em.merge(jh);
   }
@@ -74,7 +74,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   public void update(Long id, JobState newState,
           Collection<JobOutputFile> outputFiles) {
     JobHistory jh = findById(id);
-    updateState(id,newState);
+    updateState(id, newState);
     Collection<JobOutputFile> output = jh.getJobOutputFileCollection();
     output.addAll(output);
     jh.setJobOutputFileCollection(output);
@@ -88,13 +88,15 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     jh.setJobOutputFileCollection(output);
     em.merge(jh);
   }
-  
+
   /**
-   * Separate method to isolate the state updating transaction. Needed for remote updating.
+   * Separate method to isolate the state updating transaction. Needed for
+   * remote updating.
+   * <p>
    * @param jh
-   * @param state 
+   * @param state
    */
-  private void updateState(Long id, JobState state){
+  private void updateState(Long id, JobState state) {
     Query q = em.createNativeQuery("UPDATE jobhistory SET state=? WHERE id=?");
     q.setParameter(1, state.name());
     q.setParameter(2, id);
