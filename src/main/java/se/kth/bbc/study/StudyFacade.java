@@ -205,5 +205,4 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
     }
     em.merge(study);
   }
-
 }

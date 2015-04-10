@@ -45,10 +45,7 @@ public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements
   @Override
   public List<ActivityDetail> load(int first, int pageSize, String sortField,
           SortOrder sortOrder, Map<String, Object> filters) {
-
     List<ActivityDetail> retData;
-
-    // UNDO later: this gives an error while accessing indexPage from profile 
     if (filterStudy == null) {
       retData = activityDetailFacade.getPaginatedActivityDetail(first, pageSize);
       //TODO: add support for sorting, filtering

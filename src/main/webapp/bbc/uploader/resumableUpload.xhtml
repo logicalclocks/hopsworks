@@ -8,7 +8,7 @@
       >
   <f:view contentType="text/html">
     <h:head>
-      <title><ui:insert name="title">BioBankCloud LIMS</ui:insert></title>
+      <title><ui:insert name="title">HopsWorks</ui:insert></title>
       <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/uploader/resumable.css']}"/>
@@ -72,7 +72,7 @@
 
               <script>
                 var r = new Resumable({
-                  target: '/hop-dashboard/bbc/uploader',
+                  target: '/hopsworks/bbc/uploader',
                   chunkSize: 1 * 1024 * 1024,
                   simultaneousUploads: 4,
                   testChunks: true,

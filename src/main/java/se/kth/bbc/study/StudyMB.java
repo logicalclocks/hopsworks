@@ -661,5 +661,4 @@ public class StudyMB implements Serializable {
     }
     return study.getArchived();
   }
-
 }

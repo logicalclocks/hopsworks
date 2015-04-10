@@ -96,6 +96,7 @@ and open the template in the editor.
 }
 
 .ui-datatable .ui-widget{    
+  font-family: Arial,sans-serif;
   font-size: 12px;
 }
 
@@ -147,8 +148,9 @@ and open the template in the editor.
 
 .BbcMainLayoutUser .ui-widget-content {
   border-width: 0px;  
+  overflow-y: hidden;
+  overflow-x: hidden;
   //overflow-y: auto;
-  overflow-y: auto;
   //////////////////////
 }
 

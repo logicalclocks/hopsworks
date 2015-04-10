@@ -1,7 +1,6 @@
 body {
   margin: 5px;
   font-family: Arial,sans-serif;
-  //  background:#f4f4f4 ;
 }
 
 .MainButton {
@@ -144,7 +143,7 @@ body {
 #logo{
   height: 110px;
   margin-bottom: 8px;
-  background-image: url("/hop-dashboard/javax.faces.resource/logo/HOPS.png.xhtml");
+  background-image: url("/hopsworks/javax.faces.resource/logo/HOPS.png.xhtml");
   background-repeat: no-repeat;
 }
 
@@ -535,15 +534,15 @@ body {
 }
 
 .ui-icon-hadoop {
-  background-image: url("/hop-dashboard/javax.faces.resource/images/views/hop.png.xhtml") !important;
+  background-image: url("/hopsworks/javax.faces.resource/images/views/hop.png.xhtml") !important;
 }
 
 .ui-icon-wf {
-  background-image: url("/hop-dashboard/javax.faces.resource/images/views/wf.png.xhtml") !important;
+  background-image: url("/hopsworks/javax.faces.resource/images/views/wf.png.xhtml") !important;
 }
 
 .ui-icon-lims {
-  background-image: url("/hop-dashboard/javax.faces.resource/images/views/lims.png.xhtml") !important;
+  background-image: url("/hopsworks/javax.faces.resource/images/views/lims.png.xhtml") !important;
 }
 
 .ui-outputlabel{

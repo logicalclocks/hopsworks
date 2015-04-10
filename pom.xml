@@ -5,11 +5,11 @@
 
 
   <groupId>se.kth.hop</groupId>
-  <artifactId>hop-dashboard</artifactId>
+  <artifactId>hopsworks</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>war</packaging>
 
-  <name>Hop Dashboard</name>
+  <name>HopsWorks</name>
 
   <properties>
     <java.version>1.7</java.version>
@@ -17,7 +17,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <dependencies>       
+  <dependencies> 
     <dependency>
       <groupId>de.hu-berlin.wbi.cuneiform</groupId>
       <artifactId>cuneiform-core</artifactId>
@@ -37,7 +37,6 @@
       <groupId>org.eclipse.persistence</groupId>
       <artifactId>eclipselink</artifactId>
       <version>2.7.0-SNAPSHOT</version>
-      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>javax</groupId>

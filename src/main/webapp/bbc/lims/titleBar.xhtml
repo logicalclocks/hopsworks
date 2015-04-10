@@ -22,7 +22,6 @@ and open the template in the editor.
           <p:toolbarGroup align="left">              
           </p:toolbarGroup>  
 
-
           <p:toolbarGroup align="right" rendered="#{peopleStatusBean.loggedIn}">
 
             <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{peopleStatusBean.SYSAdmin}"/>
@@ -33,7 +32,6 @@ and open the template in the editor.
               <p:menuitem value="Logout" action='#{peopleStatusBean.logOut()}'/> 
             </p:menu>  
           </p:toolbarGroup>  
-
         </p:toolbar> 
       </h:form>
     </ui:composition>

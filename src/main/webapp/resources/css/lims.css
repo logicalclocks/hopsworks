@@ -100,26 +100,26 @@
   background-repeat:no-repeat;    
 }
 .sideMenuItem.Home {
-  background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/home-dark.png.xhtml");
+  background-image: url("/hopsworks/javax.faces.resource/images/bbc/home-dark.png.xhtml");
 }
 .sideMenuItem.Home:hover {
-  background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/home-light.png.xhtml");
+  background-image: url("/hopsworks/javax.faces.resource/images/bbc/home-light.png.xhtml");
 }
 .sideMenuItem.New {
-  background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/new-sc-dark.png.xhtml");
+  background-image: url("/hopsworks/javax.faces.resource/images/bbc/new-sc-dark.png.xhtml");
 }
 .sideMenuItem.New:hover {
-  background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/new-sc-light.png.xhtml");
+  background-image: url("/hopsworks/javax.faces.resource/images/bbc/new-sc-light.png.xhtml");
 }
 .sideMenuItem.Find {
-  background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/find-sc-dark.png.xhtml");
+  background-image: url("/hopsworks/javax.faces.resource/images/bbc/find-sc-dark.png.xhtml");
 }
 .sideMenuItem.Find:hover {
-  background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/find-sc-light.png.xhtml");
+  background-image: url("/hopsworks/javax.faces.resource/images/bbc/find-sc-light.png.xhtml");
 }
 
 .sideMenuItem.User {
-  background-image: url("/hop-dashboard/javax.faces.resource/images/bbc/new-sc-dark.png.xhtml");
+  background-image: url("/hopsworks/javax.faces.resource/images/bbc/new-sc-dark.png.xhtml");
 }
 
 
