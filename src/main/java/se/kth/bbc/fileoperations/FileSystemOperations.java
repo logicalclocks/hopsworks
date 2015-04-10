@@ -116,7 +116,7 @@ public class FileSystemOperations {
     if (!hadoopConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               hadoopConfFile);
-      throw new IllegalStateException("No hadoop conf file: hadoop-site.xml");
+      throw new IllegalStateException("No hadoop conf file: core-site.xml");
     }
     File yarnConfFile = new File(coreConfDir, "yarn-site.xml");
     if (!yarnConfFile.exists()) {

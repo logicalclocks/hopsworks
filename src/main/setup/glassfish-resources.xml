@@ -27,12 +27,12 @@
                         steady-pool-size="8" 
                         validate-atmost-once-period-in-seconds="0" 
                         wrap-jdbc-objects="false">
-    <property name="serverName" value="cloud1.sics.se"/>
-    <property name="portNumber" value="3307"/>
-    <property name="databaseName" value="kthfs_stig"/>
-    <property name="User" value="hop"/>
-    <property name="Password" value="hop"/>
-    <property name="URL" value="jdbc:mysql://cloud1.sics.se:3307/kthfs_stig?zeroDateTimeBehavior=convertToNull"/>
+    <property name="serverName" value="193.10.66.125"/>
+    <property name="portNumber" value="3306"/>
+    <property name="databaseName" value="kthfs"/>
+    <property name="User" value="kthfs"/>
+    <property name="Password" value="kthfs"/>
+    <property name="URL" value="jdbc:mysql://193.10.66.125:3306/kthfs"/>
     <property name="driverClass" value="com.mysql.jdbc.Driver"/>
   </jdbc-connection-pool>
   <jdbc-resource enabled="true" jndi-name="jdbc/kthfs" object-type="user" pool-name="kthfsPool"/>
@@ -62,12 +62,12 @@
                         steady-pool-size="8" 
                         validate-atmost-once-period-in-seconds="0" 
                         wrap-jdbc-objects="false">
-    <property name="serverName" value="cloud1.sics.se"/>
-    <property name="portNumber" value="3307"/>
-    <property name="databaseName" value="hop_stig"/>
-    <property name="User" value="hop"/>
-    <property name="Password" value="hop"/>
-    <property name="URL" value="jdbc:mysql://cloud1.sics.se:3307/hop_stig?zeroDateTimeBehavior=convertToNull"/>
+    <property name="serverName" value="193.10.66.125"/>
+    <property name="portNumber" value="3306"/>
+    <property name="databaseName" value="hops"/>
+    <property name="User" value="kthfs"/>
+    <property name="Password" value="kthfs"/>
+    <property name="URL" value="jdbc:mysql://193.10.66.125:3306/hops"/>
     <property name="driverClass" value="com.mysql.jdbc.Driver"/>
   </jdbc-connection-pool>
   <jdbc-resource enabled="true" jndi-name="jdbc/hops" object-type="user" pool-name="hopsPool"/>
