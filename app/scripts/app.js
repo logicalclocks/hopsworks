@@ -7,7 +7,8 @@ angular.module('hopsWorksApp', [
   'ngRoute',
   'ngSanitize',
   'ngTouch',
-  'angular-md5'
+  'angular-md5',
+  'angular-growl'
 ])
   .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
