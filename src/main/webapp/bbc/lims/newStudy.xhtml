@@ -7,67 +7,67 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       >
-    <f:view contentType="text/html">
+  <f:view contentType="text/html">
 
-        <h:head>
-            <title><ui:insert name="title">HopsWorks</ui:insert></title>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-        </h:head>
-
-
-        <h:body>
-            <ui:insert name="titleBar" >
-                <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
-            </ui:insert>
-
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
-
-                <p:layoutUnit position="center">
-                    <div class="container"> 
-                        <h:form id="frmNewStudy">   
-                            <ul class="main_menu"></ul>
-                            <div class="content_study">    
-                                <div class="study_new_holder">
-                                    <p:messages autoUpdate="true" closable="true" showDetail="true"/>
-                                    <h3 class="page_title" align="left">New Study</h3>
-                                    <br/>
-                                    <br/>
-                                    <!--        <h:form id="new_study" class="new_study">-->
-                                    <div style="margin:0;padding:0;display:inline"> </div>
-                                    <div class="clear_fix study_name_holder">
-                                        <label for="study_name" class="study_name" style="float: left; font-size: 16px;">Study name</label>
-                                        <div class="input">
-                                            <h:inputText styleClass="xxlarge createStudy" id="studyName" value="#{newStudyController.newStudyName}" >
-                                                <f:validator validatorId="newStudyNameValidator"/>
-                                            </h:inputText>
-                                            <p:selectOneMenu id="templateChooser" widgetVar="chooser" value="#{newStudyController.chosenTemplate}" immediate="true">
-                                                <f:selectItems value="#{newStudyController.studyTemplates}"/>
-                                                <p:ajax update="@form" process="@form"/>
-                                            </p:selectOneMenu>
-                                            <h:commandButton id="addStudy" class="styled-button" value="Create Study" type="submit" action="#{newStudyController.createStudy()}"/>
-                                        </div>
-                                    </div>
-                                    <hr/>
-                                    <p class="padded" align="left">
-                                        All created studies are private. You choose who can see the study and share it with others.
-                                    </p>
-                                    <p align="left">
-                                        <h:outputText value="Select services:" rendered="#{newStudyController.shouldShowSelector()}"/>
-                                    </p>
-                                    <p:selectManyCheckbox value="#{newStudyController.customServices}" id="serviceSelection" widgetVar="serviceSelector" rendered="#{newStudyController.shouldShowSelector()}" layout="grid" columns="3">
-                                        <f:converter converterId="studyServiceConverter"/>
-                                        <f:selectItems value="#{newStudyController.availableServices}"/>
-                                    </p:selectManyCheckbox>
-                                </div>
-                            </div>
+    <h:head>
+      <title><ui:insert name="title">HopsWorks</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+    </h:head>
 
 
-                        </h:form>
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
+      </ui:insert>
+
+      <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+
+        <p:layoutUnit position="center">
+          <div class="container"> 
+            <h:form id="frmNewStudy">   
+              <ul class="main_menu"></ul>
+              <div class="content_study">    
+                <div class="study_new_holder">
+                  <p:messages autoUpdate="true" closable="true" showDetail="true"/>
+                  <h3 class="page_title" align="left">New Study</h3>
+                  <br/>
+                  <br/>
+                  <!--        <h:form id="new_study" class="new_study">-->
+                  <div style="margin:0;padding:0;display:inline"> </div>
+                  <div class="clear_fix study_name_holder">
+                    <label for="study_name" class="study_name" style="float: left; font-size: 16px;">Study name</label>
+                    <div class="input">
+                      <h:inputText styleClass="xxlarge createStudy" id="studyName" value="#{newStudyController.newStudyName}" >
+                        <f:validator validatorId="newStudyNameValidator"/>
+                      </h:inputText>
+                      <p:selectOneMenu id="templateChooser" widgetVar="chooser" value="#{newStudyController.chosenTemplate}" immediate="true">
+                        <f:selectItems value="#{newStudyController.studyTemplates}"/>
+                        <p:ajax update="@form" process="@form"/>
+                      </p:selectOneMenu>
+                      <h:commandButton id="addStudy" class="styled-button" value="Create Study" type="submit" action="#{newStudyController.createStudy()}"/>
                     </div>
+                  </div>
+                  <hr/>
+                  <p class="padded" align="left">
+                    All created studies are private. You choose who can see the study and share it with others.
+                  </p>
+                  <p align="left">
+                    <h:outputText value="Select services:" rendered="#{newStudyController.shouldShowSelector()}"/>
+                  </p>
+                  <p:selectManyCheckbox value="#{newStudyController.customServices}" id="serviceSelection" widgetVar="serviceSelector" rendered="#{newStudyController.shouldShowSelector()}" layout="grid" columns="3">
+                    <f:converter converterId="studyServiceConverter"/>
+                    <f:selectItems value="#{newStudyController.availableServices}"/>
+                  </p:selectManyCheckbox>
+                </div>
+              </div>
 
-                </p:layoutUnit>
-            </p:layout>
-        </h:body>
-    </f:view>
+
+            </h:form>
+          </div>
+
+        </p:layoutUnit>
+      </p:layout>
+    </h:body>
+  </f:view>
 </html>

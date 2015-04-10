@@ -7,40 +7,40 @@
       xmlns:p="http://primefaces.org/ui"
       >
 
-    <ui:composition template="sauron/layout.xhtml">
+  <ui:composition template="sauron/layout.xhtml">
 
-        <ui:define name="title">
-            Test
-        </ui:define>
+    <ui:define name="title">
+      Test
+    </ui:define>
 
-        <ui:define name="content">
+    <ui:define name="content">
 
-            TEST
-
-
-            <p:panel header="Terminal" styleClass="TerminalPanel">
+      TEST
 
 
-                <h:form id="form1">
-                    <p:outputLabel value="#{terminalController2.a}"/>
-                </h:form>
-
-                <h:form id="form2">
-                    <p:commandButton value="Refresh" update=":formterm"/>
-                </h:form>                
-
-                <h:form id="formterm">  
-                    <p:focus for="terminal" />  
-                    <p:terminal id="terminal" widgetVar="term" prompt="#{terminalController2.prompt2}" 
-                                commandHandler="#{terminalController2.handleCommand}"
-                                welcomeMessage=""/>  
-
-                </h:form>                      
-            </p:panel>            
+      <p:panel header="Terminal" styleClass="TerminalPanel">
 
 
-        </ui:define>
+        <h:form id="form1">
+          <p:outputLabel value="#{terminalController2.a}"/>
+        </h:form>
 
-    </ui:composition>
+        <h:form id="form2">
+          <p:commandButton value="Refresh" update=":formterm"/>
+        </h:form>                
+
+        <h:form id="formterm">  
+          <p:focus for="terminal" />  
+          <p:terminal id="terminal" widgetVar="term" prompt="#{terminalController2.prompt2}" 
+                      commandHandler="#{terminalController2.handleCommand}"
+                      welcomeMessage=""/>  
+
+        </h:form>                      
+      </p:panel>            
+
+
+    </ui:define>
+
+  </ui:composition>
 
 </html>

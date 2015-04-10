@@ -7,72 +7,72 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       >
-    <f:view contentType="text/html">
+  <f:view contentType="text/html">
 
-        <h:head>
-            <title><ui:insert name="title">HopsWorks</ui:insert></title>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
-        </h:head>
+    <h:head>
+      <title><ui:insert name="title">HopsWorks</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+    </h:head>
 
-        <h:body>
-            <ui:insert name="titleBar" >
-                <ui:include src="/bbc/lims/titleBar.xhtml" />       
-            </ui:insert>
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/bbc/lims/titleBar.xhtml" />       
+      </ui:insert>
 
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser">  
+      <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser">  
 
-                <p:layoutUnit position="center">
-                    <div class="container">
-                        <ul class="main_menu"></ul>
-                        <div class="content">
+        <p:layoutUnit position="center">
+          <div class="container">
+            <ul class="main_menu"></ul>
+            <div class="content">
 
-                            <h3 class="page_title" align="left">
-                                Request account
-                            </h3>
-                            <hr/>
+              <h3 class="page_title" align="left">
+                Request account
+              </h3>
+              <hr/>
 
-                            <h:form id="frmUserData" class="new_user_content">
-                                <h:panelGrid id="grid" columns="3" style="font-size: 12px;">    
-                                    <h:outputLabel for="name" value="Name" style="font-weight:bold"/>					
-                                    <p:inputText id="name" required="true" label="Name" value="#{registrationController.user.name}" autocomplete="off" validatorMessage="Name cannot be empty">
-                                    </p:inputText>
-                                    <p:message for="name"/>
+              <h:form id="frmUserData" class="new_user_content">
+                <h:panelGrid id="grid" columns="3" style="font-size: 12px;">    
+                  <h:outputLabel for="name" value="Name" style="font-weight:bold"/>					
+                  <p:inputText id="name" required="true" label="Name" value="#{registrationController.user.name}" autocomplete="off" validatorMessage="Name cannot be empty">
+                  </p:inputText>
+                  <p:message for="name"/>
 
-                                    <h:outputLabel for="email" value="Email" style="font-weight:bold"/>					
-                                    <p:inputText id="email"  required="true" label="Email" value="#{registrationController.user.email}" autocomplete="off" validatorMessage="Not a valid email">
-                                        <f:validateRegex pattern="([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)" />
-                                    </p:inputText>
-                                    <p:message for="email" />
+                  <h:outputLabel for="email" value="Email" style="font-weight:bold"/>					
+                  <p:inputText id="email"  required="true" label="Email" value="#{registrationController.user.email}" autocomplete="off" validatorMessage="Not a valid email">
+                    <f:validateRegex pattern="([^.@]+)(\.[^.@]+)*@([^.@]+\.)+([^.@]+)" />
+                  </p:inputText>
+                  <p:message for="email" />
 
-                                    <h:outputLabel for="password" value="Password" style="font-weight:bold"/>					
-                                    <p:password id="password" label="Password" required="true" value="#{registrationController.user.password}" match="repeatPass" validatorMessage="Passwords must match" autocomplete="off">
-                                    </p:password>
-                                    <p:message for="password" />
+                  <h:outputLabel for="password" value="Password" style="font-weight:bold"/>					
+                  <p:password id="password" label="Password" required="true" value="#{registrationController.user.password}" match="repeatPass" validatorMessage="Passwords must match" autocomplete="off">
+                  </p:password>
+                  <p:message for="password" />
 
-                                    <h:outputLabel for="repeatPass" value="Repeat password" style="font-weight:bold"/>
-                                    <p:password id="repeatPass" label="Repeat" required="true" value="#{registrationController.user.password}" validatorMessage="Value should match Password" autocomplete="off">
-                                    </p:password>
-                                    <p:message for="repeatPass"/>
+                  <h:outputLabel for="repeatPass" value="Repeat password" style="font-weight:bold"/>
+                  <p:password id="repeatPass" label="Repeat" required="true" value="#{registrationController.user.password}" validatorMessage="Value should match Password" autocomplete="off">
+                  </p:password>
+                  <p:message for="repeatPass"/>
 
-                                    <h:outputLabel for="mobile" value="Mobile Number" style="font-weight:bold"/>					
-                                    <p:inputText id="mobile" label="Mobile Number" value="#{registrationController.user.mobileNum}" autocomplete="off" validatorMessage="Only Numbers (10 digits)">
-                                        <f:validateRegex pattern="[0-9]{1,10}"/>                                
-                                    </p:inputText>
-                                    <p:message for="mobile"/>
-                                </h:panelGrid>
+                  <h:outputLabel for="mobile" value="Mobile Number" style="font-weight:bold"/>					
+                  <p:inputText id="mobile" label="Mobile Number" value="#{registrationController.user.mobileNum}" autocomplete="off" validatorMessage="Only Numbers (10 digits)">
+                    <f:validateRegex pattern="[0-9]{1,10}"/>                                
+                  </p:inputText>
+                  <p:message for="mobile"/>
+                </h:panelGrid>
 
 
-                                <div class="register_actions">
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{registrationController.registerUser()}" validateClient="true" update="grid"/>
-                                    <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" style="margin-left: 55px"/>
-                                </div>
-                            </h:form>     
-                        </div>
-                    </div> 
-                </p:layoutUnit>
-            </p:layout>
-        </h:body>
-    </f:view>
+                <div class="register_actions">
+                  <p:commandButton styleClass="team_button button-save" type="submit" value="Save" action="#{registrationController.registerUser()}" validateClient="true" update="grid"/>
+                  <p:commandButton styleClass="team_button button-save" type="submit" value="Cancel" action="welcome" process="@this" style="margin-left: 55px"/>
+                </div>
+              </h:form>     
+            </div>
+          </div> 
+        </p:layoutUnit>
+      </p:layout>
+    </h:body>
+  </f:view>
 </html>

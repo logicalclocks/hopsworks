@@ -6,78 +6,78 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui">
 
-    <f:view contentType="text/html">
+  <f:view contentType="text/html">
 
-        <h:head>
-            <title><ui:insert name="title">HopsWorks</ui:insert></title>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}"/>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}"/>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/newTeamMem.css']}"/>
-        </h:head>
+    <h:head>
+      <title><ui:insert name="title">HopsWorks</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}"/>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}"/>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/newTeamMem.css']}"/>
+    </h:head>
 
-        <h:body>
-            <ui:insert name="titleBar" >
-                <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
-            </ui:insert>
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
+      </ui:insert>
 
 
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayout" rendered="#{studyManagedBean.renderComponentList() != null}">  
-                <p:layoutUnit position="center">
+      <p:layout id="bbcMainLayout" styleClass="BbcMainLayout" rendered="#{studyManagedBean.renderComponentList() != null}">  
+        <p:layoutUnit position="center">
 
-                    <div class="container">
-                        <ul class="main_menu"></ul>
-                        <div class="content">
-                            <!--                     <ul class="nav">
-                                                     <li class="active"><h:link id="show" outcome="studyPage" styleClass="activities_tab">
-                                                            <i class="icon_home"/>
-                                                            Show</h:link></li>
-                                                     <li class="active"><h:link id="team" outcome="teamPage" styleClass="activities_tab">Team</h:link></li>
-                                                </ul>-->
-                            <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs">
-                                <p:tab id="showTab" title="Team">
-                                    <h3 class="page_title" align="left">
-                                        New Team Member(s)
-                                    </h3>
-                                    <hr/>
-                                    <h:form class="new_member_content">
-                                        <p:messages autoUpdate="true" closable="true"/>
-                                        <h6 align="left">1. Choose people you want in the team</h6>
-                                        <div class="clearfix">
-                                            <label for="team_member_user_ids">People</label>
-                                            <p:autoComplete id="autoName" value="#{studyManagedBean.selectedUsernames}" completeMethod="#{studyManagedBean.completeUsername}" var="user"
-                                                            itemLabel="#{user.displayName}" itemValue="#{user}" multiple="true" forceSelection="true" 
-                                                            converter="nameConverter" dropdown="true" emptyMessage="Select users" cache="false" styleClass="input" 
-                                                            required="true" requiredMessage="Error: People field cannot be empty">
-                                            </p:autoComplete>
-                                        </div>
-                                        <h6 align="left">2. Set access level for them</h6>
-                                        <div class="clearfix">
-                                            <label for="team_member_user_ids">Study Access</label>
-                                            <div class="input">
-                                                <p:selectOneMenu value="#{studyManagedBean.studyTeamEntry.teamRole}" styleClass="study_role_assign" style="width:170px;">
-                                                    <f:selectItems value="#{studyManagedBean.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
-                                                </p:selectOneMenu>
-                                            </div>
-                                        </div>
-                                        <div class="actions">
-                                            <h:commandButton class="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addToTeam}"/>
-                                            <h:commandButton class="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href = 'studyPage.xhtml'"/>
-                                            <!--                                        <p:blockUI widgetVar="blockUIWidget1">  
-                                                                                        <h:panelGrid columns="2" style="display:none;">  
-                                                                                                    <p:graphicImage value="#{resource['/images/ajax-loader.GIF']}" style="vertical-align: middle; position: relative;"/>  
-                                                                                                    <h:outputText value="Please wait, new members are being added......" style="white-space: nowrap;"/>  
-                                                                                        </h:panelGrid>  
-                                                                                    </p:blockUI> -->
-                                        </div>
-                                    </h:form>     
-                                </p:tab>
-                            </p:tabView>
-                        </div>
-                    </div> 
+          <div class="container">
+            <ul class="main_menu"></ul>
+            <div class="content">
+              <!--                     <ul class="nav">
+                                       <li class="active"><h:link id="show" outcome="studyPage" styleClass="activities_tab">
+                                              <i class="icon_home"/>
+                                              Show</h:link></li>
+                                       <li class="active"><h:link id="team" outcome="teamPage" styleClass="activities_tab">Team</h:link></li>
+                                  </ul>-->
+              <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs">
+                <p:tab id="showTab" title="Team">
+                  <h3 class="page_title" align="left">
+                    New Team Member(s)
+                  </h3>
+                  <hr/>
+                  <h:form class="new_member_content">
+                    <p:messages autoUpdate="true" closable="true"/>
+                    <h6 align="left">1. Choose people you want in the team</h6>
+                    <div class="clearfix">
+                      <label for="team_member_user_ids">People</label>
+                      <p:autoComplete id="autoName" value="#{studyManagedBean.selectedUsernames}" completeMethod="#{studyManagedBean.completeUsername}" var="user"
+                                      itemLabel="#{user.displayName}" itemValue="#{user}" multiple="true" forceSelection="true" 
+                                      converter="nameConverter" dropdown="true" emptyMessage="Select users" cache="false" styleClass="input" 
+                                      required="true" requiredMessage="Error: People field cannot be empty">
+                      </p:autoComplete>
+                    </div>
+                    <h6 align="left">2. Set access level for them</h6>
+                    <div class="clearfix">
+                      <label for="team_member_user_ids">Study Access</label>
+                      <div class="input">
+                        <p:selectOneMenu value="#{studyManagedBean.studyTeamEntry.teamRole}" styleClass="study_role_assign" style="width:170px;">
+                          <f:selectItems value="#{studyManagedBean.team}" var="tm" itemLabel="#{tm.team}" itemValue="#{tm.team}"/>
+                        </p:selectOneMenu>
+                      </div>
+                    </div>
+                    <div class="actions">
+                      <h:commandButton class="team_button button-save" type="submit" value="Save" action="#{studyManagedBean.addToTeam}"/>
+                      <h:commandButton class="team_button button-cancel" type="button" value="Cancel" onclick="window.location.href = 'studyPage.xhtml'"/>
+                      <!--                                        <p:blockUI widgetVar="blockUIWidget1">  
+                                                                  <h:panelGrid columns="2" style="display:none;">  
+                                                                              <p:graphicImage value="#{resource['/images/ajax-loader.GIF']}" style="vertical-align: middle; position: relative;"/>  
+                                                                              <h:outputText value="Please wait, new members are being added......" style="white-space: nowrap;"/>  
+                                                                  </h:panelGrid>  
+                                                              </p:blockUI> -->
+                    </div>
+                  </h:form>     
+                </p:tab>
+              </p:tabView>
+            </div>
+          </div> 
 
-                </p:layoutUnit>
-            </p:layout>
-        </h:body>
-    </f:view>
+        </p:layoutUnit>
+      </p:layout>
+    </h:body>
+  </f:view>
 </html>
 

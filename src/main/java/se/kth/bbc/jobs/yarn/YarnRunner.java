@@ -515,6 +515,7 @@ public class YarnRunner {
 
     /**
      * Set the amount of memory allocated to the Application Master (in MB).
+     * <p>
      * @param amMem Memory in MB.
      */
     public Builder amMemory(int amMem) {
@@ -524,6 +525,7 @@ public class YarnRunner {
 
     /**
      * Set the amount of cores allocated to the Application Master.
+     * <p>
      * @param amVCores
      */
     public Builder amVCores(int amVCores) {

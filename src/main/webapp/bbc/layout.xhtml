@@ -7,58 +7,58 @@
       xmlns:p="http://primefaces.org/ui"
       xmlns:ui="http://java.sun.com/jsf/facelets">
 
-    <h:head>
-        <title><ui:insert name="title">Default title</ui:insert></title>
-        <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+  <h:head>
+    <title><ui:insert name="title">Default title</ui:insert></title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
 
-        <ui:insert name="css"> </ui:insert>
-    </h:head>
+    <ui:insert name="css"> </ui:insert>
+  </h:head>
 
-    <!--    moved hear from head-->
-    <ui:insert name="scripts"> </ui:insert>
+  <!--    moved hear from head-->
+  <ui:insert name="scripts"> </ui:insert>
 
-    <h:body>
+  <h:body>
 
-        <h:form class="stylelayout" id="formToolbar">  
-            <p:toolbar styleClass="MainToolbar">  
-                <p:toolbarGroup align="left">  
-                    <p:commandLink value="BiobankCloud" action="bbchome"/>
-                </p:toolbarGroup> 
+    <h:form class="stylelayout" id="formToolbar">  
+      <p:toolbar styleClass="MainToolbar">  
+        <p:toolbarGroup align="left">  
+          <p:commandLink value="BiobankCloud" action="bbchome"/>
+        </p:toolbarGroup> 
 
-                <p:toolbarGroup align="left">              
+        <p:toolbarGroup align="left">              
 
-                </p:toolbarGroup>  
+        </p:toolbarGroup>  
 
-                <p:toolbarGroup align="right">  
-                    <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
-                    <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
-                        <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" />  
-                        <p:menuitem value="BBC Services" action="userMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>
+        <p:toolbarGroup align="right">  
+          <p:commandButton id="userBtn" value=" #{userController.loginName}" type="button" icon="ui-icon-person"/>  
+          <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
+            <p:menuitem value="Change Password" actionListener='#{userController.changePassword()}' update=":formToolbar:messages" ajax="false" />  
+            <p:menuitem value="BBC Services" action="userMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>
 <!--                        <p:menuitem value="User Management" action="userMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/> 
-                       <p:menuitem value="Study Management" action="studyMgmt"  update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>
-                       <p:menuitem value="Data Management" action="dataMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>-->
-                        <p:separator/>
-                        <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
-                    </p:menu>  
-                </p:toolbarGroup>  
+           <p:menuitem value="Study Management" action="studyMgmt"  update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>
+           <p:menuitem value="Data Management" action="dataMgmt" update=":formToolbar:messages" ajax="false" rendered="#{userMB.anyAdminUser}"/>-->
+            <p:separator/>
+            <p:menuitem value="Logout" action='#{authBackingBean.logout}' update=":formToolbar:messages" ajax="false"/> 
+          </p:menu>  
+        </p:toolbarGroup>  
 
-            </p:toolbar> 
-            <p:messages autoUpdate="true"/>
-        </h:form>
+      </p:toolbar> 
+      <p:messages autoUpdate="true"/>
+    </h:form>
 
-        <p:spacer width="1" height="5" />
+    <p:spacer width="1" height="5" />
 
-        <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
-            <p:layoutUnit position="west" size="140">  
-                <ui:insert name="leftmenu">Side Menu</ui:insert>
-            </p:layoutUnit>  
+    <p:layout id="bbcMainLayout" styleClass="BbcMainLayout">  
+      <p:layoutUnit position="west" size="140">  
+        <ui:insert name="leftmenu">Side Menu</ui:insert>
+      </p:layoutUnit>  
 
-            <p:layoutUnit position="center">  
-                <ui:insert name="content">Default content</ui:insert> 
-            </p:layoutUnit>  
-        </p:layout>  
+      <p:layoutUnit position="center">  
+        <ui:insert name="content">Default content</ui:insert> 
+      </p:layoutUnit>  
+    </p:layout>  
 
-        <ui:insert name="dialogs"/>
-    </h:body>
+    <ui:insert name="dialogs"/>
+  </h:body>
 
 </html>

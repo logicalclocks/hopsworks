@@ -7,145 +7,145 @@
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       >
-    <f:view contentType="text/html">
+  <f:view contentType="text/html">
 
-        <h:head>
-            <title><ui:insert name="title">HopsWorks</ui:insert></title>
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-            <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
-            <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
-        </h:head>
+    <h:head>
+      <title><ui:insert name="title">HopsWorks</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/userMgmt.css']}" />
+      <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+    </h:head>
 
-        <h:body>
-            <ui:insert name="titleBar" >
-                <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
-            </ui:insert>
+    <h:body>
+      <ui:insert name="titleBar" >
+        <ui:include src="/bbc/lims/titleBar.xhtml"  /> 
+      </ui:insert>
 
-            <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser" rendered="#{userMB.adminUser}">  
+      <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutUser" rendered="#{userMB.adminUser}">  
 
-                <p:layoutUnit position="center">
-                    <div class="container">
-                        <h1>User management</h1>
-                        <div class="content">
-                            <p:tabView id="tabViewNew" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="userMgmtTabview">
-                                <p:tab title="Registered Users" id="Registered">
-                                    <h:form id="userdataForm">
-                                        <p:contextMenu for="userdataTable">
-                                            <p:menuitem value="View" update="userDetail" icon="ui-icon-search" oncomplete="PF('userDialog').show()"/>
-                                            <p:menuitem value="Delete" update="userdataTable" icon="ui-icon-close" actionListener="#{userController.deleteUser()}"/>
-                                        </p:contextMenu>
-                                        <p:growl id="growl" life="2000"/>
-                                        <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
-                                                     selectionMode="single" rowKey="#{user.email}" selection="#{userController.selectedUser}" style="table-layout: fixed" scrollable="false">
+        <p:layoutUnit position="center">
+          <div class="container">
+            <h1>User management</h1>
+            <div class="content">
+              <p:tabView id="tabViewNew" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="userMgmtTabview">
+                <p:tab title="Registered Users" id="Registered">
+                  <h:form id="userdataForm">
+                    <p:contextMenu for="userdataTable">
+                      <p:menuitem value="View" update="userDetail" icon="ui-icon-search" oncomplete="PF('userDialog').show()"/>
+                      <p:menuitem value="Delete" update="userdataTable" icon="ui-icon-close" actionListener="#{userController.deleteUser()}"/>
+                    </p:contextMenu>
+                    <p:growl id="growl" life="2000"/>
+                    <p:dataTable id="userdataTable" var="user" value="#{userController.allUsers}" filteredValue="#{userController.filteredUsers}" widgetVar="usersTable" emptyMessage="No users found with given criteria"
+                                 selectionMode="single" rowKey="#{user.email}" selection="#{userController.selectedUser}" style="table-layout: fixed" scrollable="false">
 
-                                            <p:column id="nameColumn" filterBy="name" headerText="Name" style="width:32%; font-size: 12px; text-align: left;">
-                                                <h:outputText value="#{user.name}" />
-                                            </p:column>
+                      <p:column id="nameColumn" filterBy="name" headerText="Name" style="width:32%; font-size: 12px; text-align: left;">
+                        <h:outputText value="#{user.name}" />
+                      </p:column>
 
-                                            <p:column id="emailColumn" filterBy="email" headerText="Email" style="width:32%;font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{user.email}" />
-                                            </p:column>
+                      <p:column id="emailColumn" filterBy="email" headerText="Email" style="width:32%;font-size: 12px;text-align: left;">
+                        <h:outputText value="#{user.email}" />
+                      </p:column>
 
-                                            <p:column id="mobileNumColumn" headerText="Mobile Number" style="width:32%;font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{user.mobileNum}" />
-                                            </p:column>
-
-
-                                            <p:column id="removeColumn" style="width:4%;">
-                                                <p:commandLink styleClass="ui-button-remove fa fa-minus"  value="" action="#{userController.deleteUser(user)}" update="@form">
-                                                    <p:confirm header="Remove user" message="Are you sure you want to remove this user?" icon="ui-icon-alert"/>
-                                                </p:commandLink>
-                                            </p:column>
-                                        </p:dataTable>
-
-                                        <p:dialog id="dialog" header="Selected User" widgetVar="userDialog" draggable="true" resizable="false" width="350" showEffect="clip" hideEffect="fold">
-                                            <p:outputPanel id="userDetail" style="text-align:center;">
-                                                <h:panelGrid id="display" columns="2" cellpadding="4">
-
-                                                    <h:outputText value="Name:" style="font-size: 12px;font-weight: bold;text-align: left;" />
-                                                    <h:outputText value="#{userController.selectedUser.name}" />
-
-                                                    <h:outputText value="Email:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
-                                                    <h:outputText value="#{userController.selectedUser.email}" />
-
-                                                    <h:outputText value="Registered On:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
-                                                    <h:outputText value="#{userController.selectedUser.registeredOn}" />
-
-                                                </h:panelGrid>
-                                            </p:outputPanel>                   
-                                        </p:dialog>
-                                        <p:confirmDialog global="true" severity="alert" showEffect="fade">
-                                            <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
-                                            <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
-                                        </p:confirmDialog>
+                      <p:column id="mobileNumColumn" headerText="Mobile Number" style="width:32%;font-size: 12px;text-align: left;">
+                        <h:outputText value="#{user.mobileNum}" />
+                      </p:column>
 
 
-                                    </h:form>   
-                                </p:tab>                 
+                      <p:column id="removeColumn" style="width:4%;">
+                        <p:commandLink styleClass="ui-button-remove fa fa-minus"  value="" action="#{userController.deleteUser(user)}" update="@form">
+                          <p:confirm header="Remove user" message="Are you sure you want to remove this user?" icon="ui-icon-alert"/>
+                        </p:commandLink>
+                      </p:column>
+                    </p:dataTable>
 
-                                <p:tab title="User requests" id="requests">
-                                    <h:form id="reqdataForm">
-                                        <p:dataTable id="userReqTable" var="req" value="#{userController.allRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
-                                                     rowKey="#{req.email}" selection="#{userController.selectedUsers}" editable="true" editMode="cell">
+                    <p:dialog id="dialog" header="Selected User" widgetVar="userDialog" draggable="true" resizable="false" width="350" showEffect="clip" hideEffect="fold">
+                      <p:outputPanel id="userDetail" style="text-align:center;">
+                        <h:panelGrid id="display" columns="2" cellpadding="4">
 
+                          <h:outputText value="Name:" style="font-size: 12px;font-weight: bold;text-align: left;" />
+                          <h:outputText value="#{userController.selectedUser.name}" />
 
-                                            <f:facet name="header" class="header-button-group">
-                                                <p:commandButton value="Allow selection" actionListener="#{userController.allowSelectedUsers}" update="@form"/>
-                                                <p:commandButton value="Reject selection" actionListener="#{userController.denySelectedUsers}" update="@form"/>
-                                            </f:facet>
+                          <h:outputText value="Email:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
+                          <h:outputText value="#{userController.selectedUser.email}" />
 
-                                            <p:column selectionMode="multiple" style="width:10px;" disabledSelection="false"/>
+                          <h:outputText value="Registered On:" style="font-size: 12px;font-weight: bold;text-align: left;"/>
+                          <h:outputText value="#{userController.selectedUser.registeredOn}" />
 
-                                            <p:column id="nameColumn" headerText="Name" style="font-size: 12px; text-align: left;">
-                                                <h:outputText value="#{req.name}" />
-                                            </p:column>
-
-                                            <p:column id="emailColumn" headerText="Email" style="font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{req.email}" />
-                                            </p:column>
-
-                                            <p:column id="mobileNumColumn" headerText="Mobile Number" style="font-size: 12px;text-align: left;">
-                                                <h:outputText value="#{req.mobileNum}" />
-                                            </p:column>
-
-                                            <p:column id="roleColumn" headerText="Role">
-                                                <p:selectOneMenu id="roleChoose" value="#{req.extraGroup}" editable="false">
-                                                    <f:selectItems value="#{userController.groups}"/>
-                                                </p:selectOneMenu>
-                                            </p:column>
-
-                                            <p:column id="actionColumn" headerText="Action">
-                                                <h:panelGrid columns="2" style="width: auto">                                                    
-                                                    <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{userController.rejectUser(req)}" update="@form">
-                                                        <p:confirm header="Reject user" message="Are you sure you want to reject this user?" icon="ui-icon-alert"/>
-                                                    </p:commandLink>
-                                                    <p:commandLink styleClass="ui-button-allow fa fa-check" actionListener="#{userController.allowUser(req)}" update="@form">
-                                                        <p:confirm header="Allow user" message="Allow selected user?" icon="ui-icon-alert"/>
-                                                    </p:commandLink>
-                                                </h:panelGrid>
-                                            </p:column>
-                                        </p:dataTable>
-
-                                        <p:confirmDialog global="true" severity="alert" showEffect="fade">
-                                            <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
-                                            <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
-                                        </p:confirmDialog>
+                        </h:panelGrid>
+                      </p:outputPanel>                   
+                    </p:dialog>
+                    <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                      <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                      <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+                    </p:confirmDialog>
 
 
-                                    </h:form>
+                  </h:form>   
+                </p:tab>                 
+
+                <p:tab title="User requests" id="requests">
+                  <h:form id="reqdataForm">
+                    <p:dataTable id="userReqTable" var="req" value="#{userController.allRequests}" widgetVar="reqsTable" emptyMessage="No open user requests"
+                                 rowKey="#{req.email}" selection="#{userController.selectedUsers}" editable="true" editMode="cell">
 
 
-                                </p:tab>
-                            </p:tabView>
+                      <f:facet name="header" class="header-button-group">
+                        <p:commandButton value="Allow selection" actionListener="#{userController.allowSelectedUsers}" update="@form"/>
+                        <p:commandButton value="Reject selection" actionListener="#{userController.denySelectedUsers}" update="@form"/>
+                      </f:facet>
 
-                            <script>
-                              userMgmtTabview.select(#{userController.tabIndex});
-                            </script>
-                        </div>
-                    </div> 
-                </p:layoutUnit>
-            </p:layout>
-        </h:body>
-    </f:view>
+                      <p:column selectionMode="multiple" style="width:10px;" disabledSelection="false"/>
+
+                      <p:column id="nameColumn" headerText="Name" style="font-size: 12px; text-align: left;">
+                        <h:outputText value="#{req.name}" />
+                      </p:column>
+
+                      <p:column id="emailColumn" headerText="Email" style="font-size: 12px;text-align: left;">
+                        <h:outputText value="#{req.email}" />
+                      </p:column>
+
+                      <p:column id="mobileNumColumn" headerText="Mobile Number" style="font-size: 12px;text-align: left;">
+                        <h:outputText value="#{req.mobileNum}" />
+                      </p:column>
+
+                      <p:column id="roleColumn" headerText="Role">
+                        <p:selectOneMenu id="roleChoose" value="#{req.extraGroup}" editable="false">
+                          <f:selectItems value="#{userController.groups}"/>
+                        </p:selectOneMenu>
+                      </p:column>
+
+                      <p:column id="actionColumn" headerText="Action">
+                        <h:panelGrid columns="2" style="width: auto">                                                    
+                          <p:commandLink styleClass="ui-button-remove fa fa-ban" action="#{userController.rejectUser(req)}" update="@form">
+                            <p:confirm header="Reject user" message="Are you sure you want to reject this user?" icon="ui-icon-alert"/>
+                          </p:commandLink>
+                          <p:commandLink styleClass="ui-button-allow fa fa-check" actionListener="#{userController.allowUser(req)}" update="@form">
+                            <p:confirm header="Allow user" message="Allow selected user?" icon="ui-icon-alert"/>
+                          </p:commandLink>
+                        </h:panelGrid>
+                      </p:column>
+                    </p:dataTable>
+
+                    <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                      <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                      <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+                    </p:confirmDialog>
+
+
+                  </h:form>
+
+
+                </p:tab>
+              </p:tabView>
+
+              <script>
+                userMgmtTabview.select(#{userController.tabIndex});
+              </script>
+            </div>
+          </div> 
+        </p:layoutUnit>
+      </p:layout>
+    </h:body>
+  </f:view>
 </html>

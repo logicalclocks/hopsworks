@@ -62,7 +62,7 @@ public class AuthBackingBean {
       return null;
     }
 
-        /////////////////////////
+    /////////////////////////
     // TODO: probably remove from here
     Username user = userFacade.findByEmail(username);
     if (user != null && user.getStatus() == Username.STATUS_REQUEST) {
@@ -73,7 +73,7 @@ public class AuthBackingBean {
       return "welcome";
     }
 
-        // TODO: probably remove up till here
+    // TODO: probably remove up till here
     /////////////////////////////
     try {
       if (request.getRemoteUser() != null) {
@@ -92,7 +92,7 @@ public class AuthBackingBean {
     log.log(Level.INFO, "Logging IN Authenticated user: {0}", principal.
             getName());
 
-        // delete from USERS_GROUPS where USER like principal.getName();
+    // delete from USERS_GROUPS where USER like principal.getName();
     // Remove the user from all groups.
     userGroupsController.clearGroups(principal.getName());
 

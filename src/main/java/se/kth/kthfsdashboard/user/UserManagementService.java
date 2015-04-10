@@ -111,7 +111,7 @@ public class UserManagementService {
     JsonResponse json = new JsonResponse();
     json.setData(newUser); //just return the date we received
 
-        //do some validation (in reality you would do some more validation...)
+    //do some validation (in reality you would do some more validation...)
     //by the way: i did not choose to use bean validation (JSR 303)
     if (newUser.getPassword1().length() == 0 || !newUser.getPassword1().equals(
             newUser.getPassword2())) {
@@ -127,7 +127,7 @@ public class UserManagementService {
     groups.add(Group.USER);
     user.setGroups(groups);
 
-        //this could cause a runtime exception, i.e. in case the user already exists
+    //this could cause a runtime exception, i.e. in case the user already exists
     //such exceptions will be caught by our ExceptionMapper, i.e. javax.transaction.RollbackException
     userBean.persist(user); // this would use the clients transaction which is committed after save() has finished
     req.getServletContext().log("successfully registered new user: '" + newUser.

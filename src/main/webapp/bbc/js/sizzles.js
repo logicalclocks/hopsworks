@@ -12242,7 +12242,7 @@ function issuesCheckChanged() {
                 break;
               m += 1
             }
-          / [ ^ \s] / .test(f) && (d = Math.min(m, d))
+          / [ ^ \s] /.test(f) && (d = Math.min(m, d))
         }
         for (var v = r.row + 1; v <= c.row; ++v) {
           var y = d;
