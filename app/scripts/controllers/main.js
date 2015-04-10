@@ -1,7 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('MainCtrl', ['$location', 'AuthService', 'ProjectService', function ($location, AuthService, ProjectService) {
+  .controller('MainCtrl', ['$location', 'AuthService', 'ProjectService', 'ModalService',
+        function ($location, AuthService, ProjectService, ModalService) {
 
         var self = this;
 
@@ -11,6 +12,14 @@ angular.module('hopsWorksApp')
                 $location.url('/login');
             }, function (error) {
                 self.errorMessage = error.data.msg;
+            });
+        };
+
+        self.proj = function(){
+            ModalService.confirm('', 'Title', 'msg').then(function(){
+                console.log("ok");
+            }, function(){
+                console.log("cancel");
             });
         };
 
