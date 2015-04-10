@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .factory("ProjectService", function ($resource) {
+  .factory("ProjectService", ['$resource',function ($resource) {
     return $resource(
       "/api/project/:id",
       {id: "@id"},
@@ -23,4 +23,4 @@ angular.module('hopsWorksApp')
         }
       }
     );
-  });
+  }]);
