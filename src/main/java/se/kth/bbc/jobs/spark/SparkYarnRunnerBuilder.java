@@ -48,6 +48,12 @@ public class SparkYarnRunnerBuilder {
     this.mainClass = mainClass;
   }
 
+  /**
+   * Get a YarnRunner instance that will launch a Spark job.
+   * <p>
+   * @return The YarnRunner instance to launch the Spark job on Yarn.
+   * @throws IOException If creation failed.
+   */
   public YarnRunner getYarnRunner() throws IOException {
 
     //TODO: inlclude driver memory as am memory
