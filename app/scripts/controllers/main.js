@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('MainCtrl', ['$location', '$cookieStore', 'AuthService', 'ProjectService',
-    function ($location, $cookieStore, AuthService, ProjectService) {
+  .controller('MainCtrl', ['$location', '$cookieStore', 'AuthService', 'ProjectService', 'ModalService',
+    function ($location, $cookieStore, AuthService, ProjectService, ModalService) {
 
       var self = this;
 
@@ -17,6 +17,12 @@ angular.module('hopsWorksApp')
             self.errorMessage = error.data.msg;
           });
       };
+
+      self.newProject = function(){
+        ModalService.project('lg', 'New project', 'My message here...');
+      }
+
+
 
       // Load all projects
       self.projects = ProjectService.query();
