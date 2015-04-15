@@ -1,8 +1,6 @@
 <div class="row" ng-controller="ProfileCtrl as profileCtrl">
 
-
   <div growl class="pull-right"></div>
-
 
   <div class="col-md-8">
     <form method="post"
@@ -29,7 +27,8 @@
           </div>
           <div class="element-number row">
             <label class="title">Phone</label>
-            <input type="text" value="" name="number" max="100" min="0" class="large" ng-model="profileCtrl.user.telephoneNum">
+            <input type="text" value="" name="number" max="100" min="0" class="large"
+                   ng-model="profileCtrl.user.telephoneNum">
           </div>
           <div class="element-address row">
             <label class="title">Address</label>
@@ -50,12 +49,13 @@
         </div>
         <div class="col-md-4">
           <label class="title">Photo</label>
-          <img  class="img-thumbnail" ng-src="http://www.gravatar.com/avatar/{{ profileCtrl.emailHash + '?d=mm&s=300' }}"/>
+          <img class="img-thumbnail"
+               ng-src="http://www.gravatar.com/avatar/{{ profileCtrl.emailHash + '?d=mm&s=300' }}"/>
         </div>
       </div>
       <div class="submit">
-        <input type="button" ng-click="profileCtrl.reset()" value="Reset" ng-disabled="profileForm.$pristine" />
-        <input type="submit" value="Save" ng-disabled="profileForm.$pristine" />
+        <input type="button" ng-click="profileCtrl.reset()" value="Reset" ng-disabled="profileForm.$pristine"/>
+        <input type="submit" value="Save" ng-disabled="profileForm.$pristine"/>
       </div>
     </form>
   </div>

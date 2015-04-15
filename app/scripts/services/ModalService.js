@@ -21,10 +21,10 @@ angular.module('hopsWorksApp')
         return modalInstance.result;
       },
 
-      project: function (size, title, msg) {
+      createProject: function (size, title, msg) {
         var modalInstance = $modal.open({
           templateUrl: 'views/projectModal.html',
-          controller: 'ModalCtrl as ctrl',
+          controller: 'ProjectCreatorCtrl as projectCreatorCtrl',
           size: size,
           resolve: {
             title: function () {
