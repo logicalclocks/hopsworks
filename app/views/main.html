@@ -72,7 +72,7 @@
         <span class="icon-bar"></span>
       </div>
       <span class="list-group-item active">
-      <span class="badge pull-left" style="margin-right: 10px;">4</span> Projects
+      <span class="badge pull-left" style="margin-right: 10px;">{{mainCtrl.projects.length}}</span> Projects
 
       <button class="btn btn-lightgrey pull-right" style="height: 30px; margin-top: -5px;padding: 0px 10px;" ng-click="mainCtrl.newProject()">
         <i class="fa fa-plus-circle"></i>
@@ -103,7 +103,7 @@
         </button>
         </span>
       </div>
-      <a href="#" class="list-group-item" ng-repeat="project in mainCtrl.projects | filter: searchProject:false">
+      <a href="#/project/{{project.id}}" class="list-group-item" ng-repeat="project in mainCtrl.projects | filter: searchProject:false">
         <div ng-if="project.status">
           <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-lock fa-2 pull-left"/>
         </div>

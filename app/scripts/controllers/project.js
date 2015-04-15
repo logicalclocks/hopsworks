@@ -8,7 +8,8 @@ angular.module('hopsWorksApp')
     self.card = {};
     self.cards = [];
     self.projectMembers = [];
-    self.projectTypes = ['Cuneiform', 'Spark', 'Yarn', 'Samples', 'Adam', 'Privacy', 'Study', 'MapReduce'];
+    // We could instead implement a service to get all the available types but this will do it for now
+    self.projectTypes = ['Cuneiform', 'Samples', 'Spark', 'Adam', 'Mapreduce', 'Yarn', 'Zeppelin'];
     self.selectionProjectTypes = [];
     self.projectName = '';
     self.projectDesc = '';
@@ -51,7 +52,7 @@ angular.module('hopsWorksApp')
         'description': self.projectDesc,
         'name': self.projectName,
         'status': 0,
-        'type': self.selectionProjectTypes.join(),
+        'types': self.selectionProjectTypes,
         'members': self.projectMembers
       };
 
