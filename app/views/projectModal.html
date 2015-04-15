@@ -1,4 +1,4 @@
-<div ng-controller="ProjectCtrl as projectCtrl">
+<div>
   <div class="modal-body">
 
     <div class="row">
@@ -14,7 +14,7 @@
             <label for="projectName" class="control-label">Project name</label>
 
             <div class="controls">
-              <input type="text" ng-model="projectCtrl.projectName" placeholder="Project name" class="form-control"
+              <input type="text" ng-model="projectCreatorCtrl.projectName" placeholder="Project name" class="form-control"
                      name="projectname" id="projectname">
             </div>
 
@@ -23,7 +23,7 @@
             <label for="projectname" class="control-label">Description</label>
 
             <div class="controls">
-              <textarea class="form-control" ng-model="projectCtrl.projectDesc" rows="3"></textarea>
+              <textarea class="form-control" ng-model="projectCreatorCtrl.projectDesc" rows="3"></textarea>
             </div>
 
 
@@ -31,13 +31,13 @@
 
             <div class="controls">
 
-              <ui-select ng-model="projectCtrl.card.selected" theme="select2" style="min-width: 300px;">
+              <ui-select ng-model="projectCreatorCtrl.card.selected" theme="select2" style="min-width: 300px;">
 
                 <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
                 <ui-select-choices
-                  repeat="card in projectCtrl.cards | cardFilter: {email: $select.search, firstname: $select.search, lastname: $select.search}">
+                  repeat="card in projectCreatorCtrl.cards | cardFilter: {email: $select.search, firstname: $select.search, lastname: $select.search}">
 
-                  <div ng-bind-html="projectCtrl.card.email | highlight: $select.search"></div>
+                  <div ng-bind-html="projectCreatorCtrl.card.email | highlight: $select.search"></div>
                   <small>
                     <i class="fa fa-user-plus"></i>
                     <span style="font-size: 14px;;" ng-bind-html="''+card.email | highlight: $select.search"></span>
@@ -51,7 +51,7 @@
               <div style="margin-top:10px; min-height:50px;" class="thumbnail ui-droppable">
 
                 <button class="animate-repeat btn btn-info" style="margin: 3px;"
-                        ng-repeat="member in projectCtrl.projectMembers" ng-click="projectCtrl.removeMember()">
+                        ng-repeat="member in projectCreatorCtrl.projectMembers" ng-click="projectCreatorCtrl.removeMember()">
                   <span style="margin-right:10px;"> {{member}}</span>
                   <span class="close">× </span>
                 </button>
@@ -76,13 +76,13 @@
 
           <div class="control-group col-md-offset-2">
 
-            <div ng-repeat="projectType in projectCtrl.projectTypes" class="checkbox checkbox-info">
+            <div ng-repeat="projectType in projectCreatorCtrl.projectTypes" class="checkbox checkbox-info">
               <input
                 type="checkbox"
                 value="{{projectType}}"
-                ng-checked="projectCtrl.selectionProjectTypes.indexOf(projectType) > -1"
-                ng-click="projectCtrl.toggleTypeSelection(projectType)"
-                > {{projectType}}
+                ng-checked="projectCreatorCtrl.selectionProjectTypes.indexOf(projectType) > -1"
+                ng-click="projectCreatorCtrl.toggleTypeSelection(projectType)">
+              {{projectType}}
             </div>
 
           </div>
@@ -96,8 +96,8 @@
 
 
   <div class="modal-footer">
-    <button class="btn btn-default" ng-click="projectCtrl.close()">Cancel</button>
-    <button class="btn btn-primary" ng-click="projectCtrl.createProject()">Save</button>
+    <button class="btn btn-default" ng-click="projectCreatorCtrl.close()">Cancel</button>
+    <button class="btn btn-primary" ng-click="projectCreatorCtrl.createProject()">Save</button>
   </div>
 
 </div>

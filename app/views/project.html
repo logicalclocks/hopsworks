@@ -1,8 +1,82 @@
-<div ng-include="'nav.html'"></div>
-<div class="row">
-    <input type="button" ng-click="projectCtrl.read()" value="Read"/>
-    <input type="button" ng-click="projectCtrl.write()" value="Write"/>
-    <input type="button" ng-click="projectCtrl.doSomething()" value="Do it"/>
+<div class="container-fluid">
+  <div ng-include="'nav.html'"></div>
+
+
+  <div class="row">
+    <div class="nav-side-menu" style="margin-top:50px;">
+      <div class="project">
+        {{projectCtrl.currentProject.name}}
+      </div>
+
+
+      <i class="fa fa-bars fa-2x toggle-btn" data-toggle="collapse" data-target="#/menu-content"></i>
+
+      <div class="menu-list">
+
+        <ul id="menu-content" class="menu-content collapse out">
+
+
+          <div ng-repeat="typeObject in projectCtrl.currentProject.projectTypeCollection">
+            <li data-toggle="collapse" data-target="#{{typeObject.type}}{{$index}}" class="collapsed">
+              <a href=""><i class="fa fa-globe fa-lg"></i> {{typeObject.type}} <span class="arrow"></span></a>
+            </li>
+
+            <ul class="sub-menu collapse" id="{{typeObject.type}}{{$index}}">
+              <li>{{typeObject.type}} 1</li>
+              <li>{{typeObject.type}} 2</li>
+              <li>{{typeObject.type}} 3</li>
+            </ul>
+          </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <li style="margin-top: 50px;">
+            <a href="#/">
+              <i class="fa fa-dashboard fa-lg"></i> Settings
+            </a>
+          </li>
+
+          <li>
+            <a href="#/">
+              <i class="fa fa-users fa-lg"></i> Users
+            </a>
+          </li>
+
+
+
+
+
+        </ul>
+      </div>
+    </div>
+
+
+    <div class="col-md-offset-2 col-md-10">
+    Stuff goes here...
+
+    </div>
+
+  </div>
+
+
+  <modal id="profileModal" title="Profile">
+    <div ng-include="'views/profile.html'"></div>
+  </modal>
+
 </div>
 
-<textarea rows="3" class="input-xlarge">{{projectCtrl.response}}</textarea>
+
+
+
+

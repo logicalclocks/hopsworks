@@ -77,7 +77,7 @@ angular.module('hopsWorksApp', [
             }]
         }
       })
-      .when('/project', {
+      .when('/project/:projectID', {
         templateUrl: 'views/project.html',
         controller: 'ProjectCtrl as projectCtrl',
         resolve: {

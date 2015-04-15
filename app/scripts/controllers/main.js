@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('MainCtrl', ['$location', '$cookieStore', 'AuthService', 'ProjectService', 'ModalService',
-    function ($location, $cookieStore, AuthService, ProjectService, ModalService) {
+  .controller('MainCtrl', ['$location', '$cookieStore', 'AuthService', 'ProjectService', 'ModalService', 'growl',
+    function ($location, $cookieStore, AuthService, ProjectService, ModalService, growl) {
 
       var self = this;
 
@@ -18,10 +18,16 @@ angular.module('hopsWorksApp')
           });
       };
 
-      self.newProject = function(){
-        ModalService.project('lg', 'New project', 'My message here...');
-      }
 
+      self.newProject = function () {
+        ModalService.createProject('lg', 'New project', '').then(
+          function (success) {
+            self.projects = ProjectService.query();
+            growl.success("Successfully created project: " + success.name, {title: 'Success', ttl: 5000});
+          }, function () {
+            growl.info("Closed project without saving.", {title: 'Info', ttl: 5000});
+          });
+      };
 
 
       // Load all projects
