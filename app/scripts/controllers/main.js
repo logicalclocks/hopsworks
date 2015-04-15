@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('MainCtrl', ['$location', '$cookieStore', 'AuthService', 'ProjectService', 'ModalService', 'growl',
-    function ($location, $cookieStore, AuthService, ProjectService, ModalService, growl) {
+  .controller('MainCtrl', ['$location', '$cookieStore', 'AuthService', 'ProjectService', 'ModalService', 'growl', 'md5',
+    function ($location, $cookieStore, AuthService, ProjectService, ModalService, growl, md5) {
 
       var self = this;
 
@@ -29,6 +29,7 @@ angular.module('hopsWorksApp')
           });
       };
 
+      self.emailHash = md5.createHash(self.email || '');
 
       // Load all projects
       self.projects = ProjectService.query();
