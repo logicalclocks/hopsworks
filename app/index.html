@@ -1,4 +1,4 @@
-<html>
+<html ng-app="hopsWorksApp">
 <head>
   <meta charset="utf-8">
   <title></title>
@@ -12,10 +12,11 @@
   <link rel="stylesheet" href="scripts/growl/angular-growl.css"/>
   <link rel="stylesheet" href="scripts/select/select.css"/>
   <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
-
+  <link rel="stylesheet" href="styles/nav.css">
+  <link href='http://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Varela+Round' rel='stylesheet' type='text/css'>
 </head>
-<body ng-app="hopsWorksApp">
-
+<body>
 
 <div class="container-fluid" style="margin-top:60px;">
   <div ng-view=""></div>
@@ -51,13 +52,14 @@
 <script src="scripts/directives/passwordMatch.js"></script>
 
 <!-- Controllers -->
-<script src="scripts/controllers/login.js"></script>
 <script src="scripts/controllers/main.js"></script>
+<script src="scripts/controllers/home.js"></script>
+<script src="scripts/controllers/login.js"></script>
 <script src="scripts/controllers/registration.js"></script>
 <script src="scripts/controllers/profile.js"></script>
 <script src="scripts/controllers/project.js"></script>
 <script src="scripts/controllers/projectCreator.js"></script>
-<script src="scripts/controllers/modalCtrl.js"></script>
+<script src="scripts/controllers/modal.js"></script>
 
 <!-- Services -->
 <script src="scripts/services/AuthInterceptorService.js"></script>
