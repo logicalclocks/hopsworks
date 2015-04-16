@@ -1,12 +1,19 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('ProjectCtrl', ['$scope','$routeParams', 'growl', 'ProjectService', 'UserService', function ($scope, $routeParams, growl, ProjectService, UserService) {
+  .controller('ProjectCtrl', ['$scope','$location', '$routeParams', 'growl', 'ProjectService', 'UserService',
+    function ($scope, $location, $routeParams, growl, ProjectService, UserService) {
 
     var self = this;
+    self.currentProject = [];
 
-
-    self.currentProject = ProjectService.get({}, {'id': $routeParams.projectID});
+    ProjectService.get({}, {'id': $routeParams.projectID}).$promise.then(
+      function(success){
+        self.currentProject = success;
+      }, function(error){
+        $location.path('/');
+      }
+    );
 
 
   }]);

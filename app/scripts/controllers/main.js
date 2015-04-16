@@ -1,37 +1,22 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('MainCtrl', ['$location', '$cookieStore', 'AuthService', 'ProjectService', 'ModalService', 'growl', 'md5',
-    function ($location, $cookieStore, AuthService, ProjectService, ModalService, growl, md5) {
+  .controller('MainCtrl',['$cookies', '$location', 'AuthService', 'md5',
+    function ($cookies, $location, AuthService, md5) {
 
       var self = this;
-
-      self.email = $cookieStore.get('email');
+      self.email = $cookies['email'];
+      self.emailHash = md5.createHash(self.email || '');
 
       self.logout = function () {
         AuthService.logout(self.user).then(
           function (success) {
             $location.url('/login');
-            $cookieStore.remove('email');
+            delete $cookies.email;
           }, function (error) {
             self.errorMessage = error.data.msg;
           });
       };
 
-
-      self.newProject = function () {
-        ModalService.createProject('lg', 'New project', '').then(
-          function (success) {
-            self.projects = ProjectService.query();
-            growl.success("Successfully created project: " + success.name, {title: 'Success', ttl: 5000});
-          }, function () {
-            growl.info("Closed project without saving.", {title: 'Info', ttl: 5000});
-          });
-      };
-
-      self.emailHash = md5.createHash(self.email || '');
-
-      // Load all projects
-      self.projects = ProjectService.query();
 
     }]);

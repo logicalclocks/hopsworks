@@ -26,8 +26,8 @@ angular.module('hopsWorksApp', [
 
     $routeProvider
       .when('/', {
-        templateUrl: 'views/main.html',
-        controller: 'MainCtrl as mainCtrl',
+        templateUrl: 'views/home.html',
+        controller: 'HomeCtrl as homeCtrl',
         resolve: {
           auth: ['$q', '$location', 'AuthService',
             function ($q, $location, AuthService) {
