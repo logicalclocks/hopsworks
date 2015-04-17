@@ -36,7 +36,25 @@ angular.module('hopsWorksApp')
           }
         });
         return modalInstance.result;
+      },
+
+      projectSettings: function (size, title, msg) {
+        var modalInstance = $modal.open({
+          templateUrl: 'views/projectSettingsModal.html',
+          controller: 'ProjectCtrl as projectCtrl',
+          size: size,
+          resolve: {
+            title: function () {
+              return title;
+            },
+            msg: function () {
+              return msg;
+            }
+          }
+        });
+        return modalInstance.result;
       }
+
     }
 
   }]);
