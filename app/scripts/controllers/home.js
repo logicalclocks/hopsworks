@@ -5,6 +5,7 @@ angular.module('hopsWorksApp')
     function (ProjectService, ModalService, growl) {
 
       var self = this;
+
       self.projects = [];
 
 
@@ -26,5 +27,8 @@ angular.module('hopsWorksApp')
             growl.info("Closed project without saving.", {title: 'Info', ttl: 5000});
           });
       };
+
+
+
 
     }]);

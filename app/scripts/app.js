@@ -10,7 +10,9 @@ angular.module('hopsWorksApp', [
   'angular-md5',
   'angular-growl',
   'ui.bootstrap',
-  'ui.select'
+  'ui.select',
+  'ngMaterial',
+  'ngMessages'
 ])
   .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
