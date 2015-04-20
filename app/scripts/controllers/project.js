@@ -56,7 +56,6 @@ angular.module('hopsWorksApp')
       };
 
 
-
       self.saveProject = function () {
         $scope.newProject = {
           'description': self.currentProject.description,
@@ -79,6 +78,13 @@ angular.module('hopsWorksApp')
       self.close = function () {
         $modalStack.dismissAll();
       };
+
+
+      $scope.showHamburger = $location.path().indexOf("project") > -1;
+
+
+
+
 
 
 

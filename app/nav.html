@@ -1,4 +1,38 @@
-<nav class="navbar navbar-default navbar-sics navbar-fixed-top">
+<script>
+  $(document).ready(function () {
+    var trigger = $('.hamburger'),
+      overlay = $('.overlay'),
+      isClosed = false;
+
+    trigger.click(function () {
+      hamburger_cross();
+    });
+
+    function hamburger_cross() {
+
+      if (isClosed == true) {
+        overlay.hide();
+        trigger.removeClass('is-open');
+        trigger.addClass('is-closed');
+        isClosed = false;
+      } else {
+        overlay.show();
+        trigger.removeClass('is-closed');
+        trigger.addClass('is-open');
+        isClosed = true;
+      }
+    }
+
+    $('[data-toggle="offcanvas"]').click(function () {
+      $('#wrapper').toggleClass('toggled');
+    });
+  });
+
+
+</script>
+
+
+<nav class="navbar navbar-default navbar-sics navbar-fixed-top" id="header_nav">
     <div class="container-fluid">
 
       <div growl class="pull-right"></div>
@@ -13,10 +47,14 @@
         <a class="navbar-brand" href="#/" style="font-family: Lobster; font-size: 30px; margin-left: 5px; color: #fff;">HopsWorks
           <img class="pull-right" style="margin-left:10px" width="30" src="http://www.mc-boden.se/hops.png"/>
         </a>
+
       </div>
+
+
       <div class="collapse navbar-collapse" id="navbar">
         <ul class="nav navbar-nav navbar-right"
             style="font-family: Varela Round; font-weight: bold; margin-right:10px;">
+
 
           <!--
           <li class="dropdown">
@@ -55,6 +93,19 @@
 
 
 
+
+        <div class="col-md-4 input-group" ng-show="showHamburger">
+
+          <button type="button" class="hamburger is-closed" style="color:white;" data-toggle="offcanvas">
+            <span class="hamb-top"></span>
+            <span class="hamb-middle"></span>
+            <span class="hamb-bottom"></span>
+          </button>
+
+        </div>
+
+
+
           <form class="navbar-form" role="search">
 
             <div class="col-md-offset-2 col-md-4 input-group">
@@ -82,6 +133,7 @@
   <modal id="profileModal" title="Profile">
     <div ng-include="'views/profile.html'"></div>
   </modal>
+
 
 
 

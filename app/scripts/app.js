@@ -12,7 +12,8 @@ angular.module('hopsWorksApp', [
   'ui.bootstrap',
   'ui.select',
   'ngMaterial',
-  'ngMessages'
+  'ngMessages',
+  'duScroll'
 ])
   .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
