@@ -14,7 +14,8 @@ angular.module('hopsWorksApp')
             $cookies.email = self.user.email;
             $location.path('/');
         }, function (error) {
-            self.errorMessage = error.data.msg;
+                self.errorMessage = error.data.errorMsg;
+                console.log(self.errorMessage);
         });
       };
 
