@@ -6,17 +6,11 @@ angular.module('hopsWorksApp')
     var service = {
 
       session: function () {
-        return $http.get('/api/auth/session')
-          .then(function (response) {
-            return response;
-          });
+        return $http.get('/api/auth/session');
       },
 
       login: function (user) {
-        return $http.post('/api/auth/login', TransformRequest.jQueryStyle(user))
-          .then(function (response) {
-            return response;
-          });
+        return $http.post('/api/auth/login', TransformRequest.jQueryStyle(user));
       },
 
       logout: function () {
@@ -24,6 +18,10 @@ angular.module('hopsWorksApp')
           .then(function (response) {
             return response;
           });
+      },
+
+      recover: function (user) {
+          return $http.post('/api/auth/forgotPassword', TransformRequest.jQueryStyle(user));
       },
 
       register: function (user) {
@@ -38,9 +36,7 @@ angular.module('hopsWorksApp')
         };
 
 
-        return $http(regReq).then(function (response) {
-          return response;
-        });
+        return $http(regReq);
       }
     };
     return service;

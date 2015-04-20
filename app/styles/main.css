@@ -142,3 +142,10 @@ body {
   filter: alpha(opacity=40);
   cursor: pointer;
 }
+
+
+
+
+.has-feedback .form-control {
+    padding-right: 43.75px;
+}
