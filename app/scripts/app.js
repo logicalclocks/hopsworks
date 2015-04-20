@@ -1,16 +1,19 @@
 'use strict';
 
 angular.module('hopsWorksApp', [
-    'ngAnimate',
-    'ngCookies',
-    'ngResource',
-    'ngRoute',
-    'ngSanitize',
-    'ngTouch',
-    'angular-md5',
-    'angular-growl',
-    'ui.bootstrap',
-    'ui.select'
+  'ngAnimate',
+  'ngCookies',
+  'ngResource',
+  'ngRoute',
+  'ngSanitize',
+  'ngTouch',
+  'angular-md5',
+  'angular-growl',
+  'ui.bootstrap',
+  'ui.select',
+  'ngMaterial',
+  'ngMessages',
+  'duScroll'
 ])
     .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 

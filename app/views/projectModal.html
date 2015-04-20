@@ -11,20 +11,24 @@
 
           <div class="control-group col-md-offset-1">
 
-            <label for="projectName" class="control-label">Project name</label>
+            <md-input-container>
+              <label for="projectname" style="color: black;">Name</label>
+              <input type="text" id="projectname"
+                     ng-model="projectCreatorCtrl.projectName"
+                     md-sidenav-focus>
+            </md-input-container>
 
-            <div class="controls">
-              <input type="text" ng-model="projectCreatorCtrl.projectName" placeholder="Project name" class="form-control"
-                     name="projectname" id="projectname">
-            </div>
+
 
             <p></p>
 
             <label for="projectname" class="control-label">Description</label>
 
             <div class="controls">
-              <textarea class="form-control" ng-model="projectCreatorCtrl.projectDesc" rows="3"></textarea>
+              <textarea class="form-control" style="resize:none;" ng-model="projectCreatorCtrl.projectDesc" rows="3"></textarea>
             </div>
+
+
 
 
             <label style="margin-top:20px;" for="projectname" class="control-label">Members</label>
@@ -51,7 +55,7 @@
               <div style="margin-top:10px; min-height:50px;" class="thumbnail ui-droppable">
 
                 <button class="animate-repeat btn btn-info" style="margin: 3px;"
-                        ng-repeat="member in projectCreatorCtrl.projectMembers" ng-click="projectCreatorCtrl.removeMember()">
+                        ng-repeat="member in projectCreatorCtrl.projectMembers" ng-click="projectCreatorCtrl.removeMember(member)">
                   <span style="margin-right:10px;"> {{member}}</span>
                   <span class="close">× </span>
                 </button>
@@ -75,16 +79,11 @@
           </legend>
 
           <div class="control-group col-md-offset-2">
-
-            <div ng-repeat="projectType in projectCreatorCtrl.projectTypes" class="checkbox checkbox-info">
-              <input
-                type="checkbox"
-                value="{{projectType}}"
-                ng-checked="projectCreatorCtrl.selectionProjectTypes.indexOf(projectType) > -1"
-                ng-click="projectCreatorCtrl.toggleTypeSelection(projectType)">
-              {{projectType}}
-            </div>
-
+            <md-checkbox class="md-primary"
+                         ng-repeat="projectType in projectCreatorCtrl.projectTypes"
+                         ng-click="projectCreatorCtrl.exists(projectType)">
+              {{ projectType }}
+            </md-checkbox>
           </div>
 
 
@@ -97,7 +96,7 @@
 
   <div class="modal-footer">
     <button class="btn btn-default" ng-click="projectCreatorCtrl.close()">Cancel</button>
-    <button class="btn btn-primary" ng-click="projectCreatorCtrl.createProject()">Save</button>
+    <button class="btn btn-primary" ng-click="projectCreatorCtrl.createProject()">Create</button>
   </div>
 
 </div>

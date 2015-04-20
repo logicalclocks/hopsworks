@@ -69,5 +69,7 @@ angular.module('hopsWorksApp')
           });
       };
 
-    }]);
 
+
+
+    }]);
