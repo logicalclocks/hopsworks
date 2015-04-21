@@ -213,11 +213,6 @@
       <redirect/>
     </navigation-case>
     <navigation-case>
-      <from-outcome>newSample</from-outcome>
-      <to-view-id>/bbc/lims/addSamples.xhtml</to-view-id>
-      <redirect/>
-    </navigation-case>
-    <navigation-case>
       <from-outcome>logout</from-outcome>
       <to-view-id>/index.xhtml</to-view-id>
       <redirect/>
