@@ -7,47 +7,16 @@
                 <div class="widget-body">
                     <div class="timeline clearfix">
                         <div class="mid-line"></div>
-                        <div class="time-header info" ng-if="homeCtrl.histories.today.length">
-                            Today
-                        </div>
-                        <div ng-repeat="historyObject in homeCtrl.histories.today">
-                            <div class="right">
-                                <div class="r-arrow"></div>
-                                <div class="about-task">
-                                    <div class="header">{{historyObject.projectID.name}}
-                                        <small class="muted">Last {{historyObject.op | lowercase}} {{historyObject.datestamp |
-                                            date:'medium'}}
-                                        </small>
-                                    </div>
-                                    <p class="no-margin">
-                                        {{historyObject.projectID.description}}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="time-header completed" ng-if="homeCtrl.histories.yesterday.length">
-                            Yesterday
-                        </div>
-                        <div ng-repeat="historyObject in homeCtrl.histories.yesterday">
-                            <div class="right">
-                                <div class="r-arrow"></div>
-                                <div class="about-task">
-                                    <div class="header">{{historyObject.projectID.name}}
-                                        <small class="muted">Last {{historyObject.op | lowercase}} {{historyObject.datestamp |
-                                            date:'medium'}}
-                                        </small>
-                                    </div>
-                                    <p class="no-margin">
-                                        {{historyObject.projectID.description}}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="time-header completed" ng-if="homeCtrl.histories.thisWeek.length">
-                            This week
-                        </div>
-                        <div ng-repeat="historyObject in homeCtrl.histories.thisWeek">
-                            <div class="right">
+
+                      <div ng-repeat="historyObject in homeCtrl.histories | startFrom:(homeCtrl.currentPage-1) * homeCtrl.pageSize | limitTo:homeCtrl.pageSize">
+
+                        <div class="time-header info" ng-if="historyObject.flag == 'older'">Older</div>
+                        <div class="time-header error" ng-if="historyObject.flag == 'lastweek'">Last week</div>
+                        <div class="time-header error" ng-if="historyObject.flag == 'thisweek'">This week</div>
+                        <div class="time-header completed" ng-if="historyObject.flag == 'yesterday'">Yesterday</div>
+                        <div class="time-header info" ng-if="historyObject.flag == 'today'" ng-model="">Today</div>
+
+                           <div class="right">
                                 <div class="r-arrow"></div>
                                 <div class="about-task">
                                     <div class="header">{{historyObject.projectID.name}}
@@ -62,42 +31,17 @@
                             </div>
                         </div>
 
-                        <div class="time-header error" ng-if="homeCtrl.histories.lastWeek.length">
-                            Last week
-                        </div>
-                        <div ng-repeat="historyObject in homeCtrl.histories.lastWeek">
-                            <div class="right">
-                                <div class="r-arrow"></div>
-                                <div class="about-task">
-                                    <div class="header">{{historyObject.projectID.name}}
-                                        <small class="muted">Last {{historyObject.op | lowercase }} {{historyObject.datestamp |
-                                            date:'medium'}}
-                                        </small>
-                                    </div>
-                                    <p class="no-margin">
-                                        {{historyObject.projectID.description}}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="time-header error" ng-if="homeCtrl.histories.older.length">
-                            Older
-                        </div>
-                        <div ng-repeat="historyObject in homeCtrl.histories.older">
-                            <div class="right">
-                                <div class="r-arrow"></div>
-                                <div class="about-task">
-                                    <div class="header">{{historyObject.projectID.name}}
-                                        <small class="muted">Last {{historyObject.op | lowercase}} {{historyObject.datestamp |
-                                            date:'medium'}}
-                                        </small>
-                                    </div>
-                                    <p class="no-margin">
-                                        {{historyObject.projectID.description}}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                      <pagination total-items="homeCtrl.totalItems"
+                                  ng-model="homeCtrl.currentPage"
+                                  max-size="homeCtrl.pageSize"
+                                  class="pagination-sm"
+                                  boundary-links="true"
+                                  rotate="false"
+                                  num-pages="homeCtrl.totalPages">
+                      </pagination>
+
+
+
                     </div>
                 </div>
             </div>

@@ -102,13 +102,22 @@ angular.module('hopsWorksApp', [
       });
   }])
 
+//We already have a limitTo filter built-in to angular,
+//let's make a startFrom filter
+  .filter('startFrom', function () {
+    return function (input, start) {
+      start = +start; //parse to int
+      return input.slice(start);
+    }
+  })
 
-  .filter('cardFilter', function() {
-    return function(items, props) {
+
+  .filter('cardFilter', function () {
+    return function (items, props) {
       var out = [];
 
       if (angular.isArray(items)) {
-        items.forEach(function(item) {
+        items.forEach(function (item) {
           var itemMatches = false;
 
           var keys = Object.keys(props);
@@ -132,4 +141,5 @@ angular.module('hopsWorksApp', [
 
       return out;
     }
-  });;
+  });
+;
