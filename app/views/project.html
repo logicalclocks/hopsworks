@@ -1,78 +1,80 @@
 <div ng-controller="MainCtrl as mainCtrl">
-  <div ng-include="'nav.html'"></div>
+    <div ng-include="'nav.html'"></div>
 
 
-  <div id="wrapper" style="margin-top:50px;" class="toggled">
-    <div class="overlay"></div>
+    <div id="wrapper" style="margin-top:50px;" class="toggled">
+        <div class="overlay"></div>
 
-    <!-- Sidebar -->
-    <nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation" style="margin-top:50px;">
-      <ul class="nav sidebar-nav">
+        <!-- Sidebar -->
+        <aside class="offsidebar">
+        <nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation"
+             style="margin-top:50px;">
+            <ul class="nav sidebar-nav">
 
-        <li>
-          <a href="#">
-            {{ projectCtrl.currentProject.name | limitTo: 17 }}{{projectCtrl.currentProject.name.length > 17 ? '...' : ''}}
-          </a>
-        </li>
-
-
-        <li ng-repeat="typeObject in projectCtrl.currentProject.projectTypeCollection">
-          <a href="" class="dropdown-toggle" data-toggle="dropdown">
-            {{typeObject.type}} <span class="sub_icon fa fa-globe fa-lg pull-right"></span>
-          </a>
-
-          <ul class="dropdown-menu" role="menu" id="{{typeObject.type}}{{$index}}">
-            <li><a style="text-indent: 10px; font-size:12px;" href="#">{{typeObject.type}} 1</a></li>
-            <li><a style="text-indent: 10px; font-size:12px;" href="#">{{typeObject.type}} 2</a></li>
-            <li><a style="text-indent: 10px; font-size:12px;" href="#">{{typeObject.type}} 3</a></li>
-          </ul>
-        </li>
+                <li>
+                    <a href="#">
+                        {{ projectCtrl.currentProject.name | limitTo: 17 }}{{projectCtrl.currentProject.name.length > 17
+                        ? '...' : ''}}
+                    </a>
+                </li>
 
 
-        <li ng-click="projectCtrl.projectSettingModal()" style="margin-top:40px;">
-          <a>
-            Settings <span class="sub_icon fa fa-dashboard fa-lg pull-right"></span>
-          </a>
-        </li>
+                <li ng-repeat="typeObject in projectCtrl.currentProject.projectTypeCollection">
+                    <a href="" class="dropdown-toggle" data-toggle="dropdown">
+                        {{typeObject.type}} <span class="sub_icon fa fa-globe fa-lg pull-right"></span>
+                    </a>
 
-        <li>
-          <a href="#/">
-            Users <span class="sub_icon fa fa-users fa-lg pull-right"></span>
-          </a>
-        </li>
-
-
-      </ul>
-    </nav>
-    <!-- /#sidebar-wrapper -->
+                    <ul class="dropdown-menu" role="menu" id="{{typeObject.type}}{{$index}}">
+                        <li><a style="text-indent: 10px; font-size:12px;" href="#">{{typeObject.type}} 1</a></li>
+                        <li><a style="text-indent: 10px; font-size:12px;" href="#">{{typeObject.type}} 2</a></li>
+                        <li><a style="text-indent: 10px; font-size:12px;" href="#">{{typeObject.type}} 3</a></li>
+                    </ul>
+                </li>
 
 
-    <!-- Page Content -->
-    <div id="page-content-wrapper">
+                <li ng-click="projectCtrl.projectSettingModal()" style="margin-top:40px;">
+                    <a>
+                        Settings <span class="sub_icon fa fa-dashboard fa-lg pull-right"></span>
+                    </a>
+                </li>
 
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-lg-12">
+                <li>
+                    <a href="#/">
+                        Users <span class="sub_icon fa fa-users fa-lg pull-right"></span>
+                    </a>
+                </li>
 
-            testar
 
-          </div>
-        </div>
-      </div>
+            </ul>
+        </nav>
+        </aside>
+        <!-- /#sidebar-wrapper -->
+
+        <section>
+            <div class="content-wrapper" autoscroll="false">
+                <h3>
+                    {{ projectCtrl.currentProject.name }}
+                </h3>
+
+                <!-- Page Content -->
+
+                <ul class="" ng-repeat="i in projectCtrl.items">
+                    <li><a style="text-indent: 10px; font-size:12px;" href="#"> {{i}}</a></li>
+                </ul>
+
+                <!-- /#page-content-wrapper -->
+            </div>
+
+
+        </section>
+
+
     </div>
-    <!-- /#page-content-wrapper -->
+    <!-- /#wrapper -->
 
-  </div>
-  <!-- /#wrapper -->
-
-
-  <modal id="profileModal" title="Profile">
-    <div ng-include="'views/profile.html'"></div>
-  </modal>
 
 </div>
 
 
-
-
+</div>
 

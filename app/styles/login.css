@@ -1,25 +1,5 @@
 @charset "UTF-8";
-@font-face {
-    font-family: 'Source Sans Pro';
-    font-style: normal;
-    font-weight: 300;
-    src: local('Source Sans Pro Light'), local('SourceSansPro-Light'), url(http://fonts.gstatic.com/s/sourcesanspro/v9/toadOcfmlt9b38dHJxOBGMw1o1eFRj7wYC6JbISqOjY.ttf) format('truetype')
-}
-
-@font-face {
-    font-family: 'Source Sans Pro';
-    font-style: normal;
-    font-weight: 400;
-    src: local('Source Sans Pro'), local('SourceSansPro-Regular'), url(http://fonts.gstatic.com/s/sourcesanspro/v9/ODelI1aHBYDBqgeIAH2zlNzbP97U9sKh0jjxbPbfOKg.ttf) format('truetype')
-}
-
-@font-face {
-    font-family: 'Source Sans Pro';
-    font-style: normal;
-    font-weight: 600;
-    src: local('Source Sans Pro Semibold'), local('SourceSansPro-Semibold'), url(http://fonts.gstatic.com/s/sourcesanspro/v9/toadOcfmlt9b38dHJxOBGNNE-IuDiR70wI4zXaKqWCM.ttf) format('truetype')
-}
-
+@import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro);
 .wd-xl {
     width: 320px;
 }
@@ -64,7 +44,7 @@ body {
 }
 
 .panel {
-    background-color: #fff;
+    background-color: #f5f7fa;
     border: 1px solid transparent;
     border-radius: 4px;
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
@@ -360,4 +340,40 @@ label +
 
 .alert-danger .alert-link {
     color: #e6e6e6
+}
+
+
+.modal-content {
+    background-color: #f5f7fa;
+}
+
+.content-wrapper {
+    border-top: 1px solid rgba(0, 0, 0, 0.15);
+    margin-top: -1px;
+    padding: 15px;
+    width: 100%;
+}
+.content-wrapper > .unwrap {
+    margin: -15px;
+}
+
+.content-wrapper>.content-heading, .content-wrapper>h3 {
+    font-family: inherit;
+    line-height: 0;
+    font-size: 24px;
+    color: #929292;
+    margin: -20px -20px 20px;
+    padding:20px;
+    font-weight: 400;
+    background-color: #fafbfc;
+    border-bottom: 1px solid #cfdbe2;
+}
+
+.wrapper>section {
+    background-color: #f5f7fa;
+    height: 100%;
+    margin-bottom: 60px !important;
+    margin-left: 0;
+    position: relative;
+    z-index: 111;
 }
