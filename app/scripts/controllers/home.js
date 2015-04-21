@@ -35,9 +35,7 @@ angular.module('hopsWorksApp')
                 } else {
                     self.histories.older.push(history);
                 }
-
             });
-            return timeLines;
         }
       var histories = [];
       ProjectHistoryService.getByUser().then(

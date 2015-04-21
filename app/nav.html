@@ -53,7 +53,7 @@
 
       <div class="collapse navbar-collapse" id="navbar">
         <ul class="nav navbar-nav navbar-right"
-            style="font-family: Varela Round; font-weight: bold; margin-right:10px;">
+            style="margin-right:10px;">
 
 
           <!--
@@ -81,7 +81,7 @@
               {{mainCtrl.email}} <b class="caret"></b></a>
 
             <ul class="dropdown-menu">
-              <li><a data-target="#profileModal" data-toggle="modal"><i class="fa fa-cog"></i> Account</a></li>
+              <li><a ng-click="mainCtrl.profileModal()"><i class="fa fa-cog"></i> Account</a></li>
               <li class="divider"></li>
               <li><a href="#/" ng-click="mainCtrl.logout()"><i class="fa fa-sign-out"></i> Sign out</a></li>
             </ul>
@@ -130,9 +130,9 @@
   </nav>
 
 
-  <modal id="profileModal" title="Profile">
+  <!--modal id="profileModal" title="Profile">
     <div ng-include="'views/profile.html'"></div>
-  </modal>
+  </modal-->
 
 
 
