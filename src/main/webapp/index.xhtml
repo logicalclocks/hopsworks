@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://java.sun.com/jsf/core">
+
+  <h:head>
+    <title>BiobankCloud - Sign in</title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+  </h:head>
+
+  <h:body>
+
+    <div align="center" class="banner">
+      Mobile Login
+    </div>    
+
+    <h:form id="login" class="Login">
+      <p:graphicImage 
+        value="/resources/images/users/avatar.png" 
+        styleClass="profile-img">
+      </p:graphicImage>
+
+      <p:inputText id="uname"
+                   value="#{customAuthentication.username}" 
+                   required="true" 
+                   autocomplete="on"
+                   requiredMessage="Enter Email"
+                   styleClass="Email"
+                   />
+      <p:watermark for="uname" value="Email" />
+
+      <p:password id="password"
+                  value="#{customAuthentication.password}" 
+                  required="true" 
+                  requiredMessage="Enter Password">
+      </p:password>
+      <p:watermark for="password" value="Password" />
+
+      <p:password id="otp" 
+                  value="#{customAuthentication.otpCode}" 
+                  required="true"  
+                  requiredMessage="Enter PIN"
+                  validatorMessage="PIN must be 6 digits"
+                  rendered="#{customAuthenticationSwitch.otpEnabled}">
+        <f:validateLength minimum="6" maximum="6"/> 
+      </p:password>   
+
+      <p:watermark for="otp" value="Mobile PIN Code"
+                   rendered="#{customAuthenticationSwitch.otpEnabled}"/>
+
+      <p:messages id="messages" 
+                  autoUpdate="true"
+                  showDetail="false" 
+                  closable="true"/>
+
+      <p:commandButton value="Log In" 
+                       action="#{customAuthentication.login()}" 
+                       type="submit"
+                       ajax="false"
+                       />
+    </h:form> 
+
+    <div align="center">        
+      <h:form id="accounts">
+        <p:commandLink  value="Sign up" action="register_mobile" />
+        <p:spacer width="10px"></p:spacer>
+        <p:commandLink value="Yubikey Login" action="yubikeylogin" />
+        <p:spacer width="10px"></p:spacer>
+        <p:commandLink  value="Can't login?" action="login_issue"/>
+      </h:form>
+    </div>  
+
+  </h:body>
+</html>

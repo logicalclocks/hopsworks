@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+  <f:view contentType="text/html">
+
+    <h:head>
+      <title><ui:insert name="title">BioBankCloud Registration</ui:insert></title>
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/signup.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+
+    </h:head>
+
+    <h:body >
+      <ui:insert name="titleBar" >
+        <ui:include src="/bbc/lims/titleBar.xhtml" />       
+      </ui:insert>
+
+      <div align="center">
+        <h:panelGrid 
+          columns="#{customAuthenticationSwitch.otpEnabled?2:1}" 
+          styleClass="registerContainer">
+
+
+          <h:panelGroup styleClass="Registation" >
+            <h2 styule="padding-top: 40px;">Create your BiobankCloud account</h2>
+            <h:form class="register_form"> 
+
+              <h:panelGrid columns="4" >			
+
+                <p:inputText id="fname" 
+                             value="#{userRegistration.fname}" 
+                             type="text"
+                             required="true"
+                             autocomplete="off"
+                             requiredMessage="Enter first name" />
+                <p:watermark for="fname" value="First name*" />
+
+
+                <p:inputText id="lname"
+                             value="#{userRegistration.lname}" 
+                             required="true"
+                             autocomplete="off"
+                             requiredMessage="Enter last name"/>
+                <p:watermark for="lname" value="Last name*" />
+
+                <p:inputText id="email"
+                             value="#{userRegistration.mail}" 
+                             required="true"
+                             autocomplete="off"
+                             requiredMessage="Enter email">
+                  <f:validator binding="#{usernameValidator}" />
+                </p:inputText>    
+                <p:watermark for="email" value="Email*" />
+
+                <p:inputText id="tel" 
+                             value="#{userRegistration.tel}" 
+                             autocomplete="off"
+                             validatorMessage="Invalid phone number">
+                  <f:validateRegex pattern="^([+]?[\d]+)?$" />
+                </p:inputText>
+                <p:watermark for="tel" value="Telephone number" />
+
+                <p:inputText id="org" 
+                             value="#{userRegistration.org}" 
+                             autocomplete="off"
+                             validatorMessage="Invalid organiztion name">
+                </p:inputText>
+                <p:watermark for="org" value="Organization" />
+
+                <p:inputText id="dept" 
+                             value="#{userRegistration.department}" 
+                             autocomplete="off"
+                             validatorMessage="Invalid department name">
+                </p:inputText>
+                <p:watermark for="dept" value="Department name" />
+
+                <p:password id="password0" 
+                            value="#{userRegistration.password}" 
+                            required="true"
+                            autocomplete="off"
+                            requiredMessage="Enter password">
+                  <f:validator validatorId="passwordValidator" />
+                  <f:attribute name="confirmPassword" value="#{confirmPassword}" />
+                </p:password>
+                <p:watermark for="password0" value="Choose a password*" />
+
+                <p:password id="password" 
+                            value="#{userRegistration.passwordAgain}"
+                            requiredMessage="Re-enter password*"
+                            autocomplete="off" 
+                            binding="#{confirmPassword}"
+                            required="true">
+                </p:password>
+                <p:watermark for="password" value="Repeat the password*" />
+
+              </h:panelGrid>
+
+              <h:panelGrid columns="2" >			
+
+                <p:selectOneMenu id="sec_question"
+                                 value="#{userRegistration.security_question}" 
+                                 required="true"
+                                 style="width: 508px; height: 30px; " 
+                                 requiredMessage="Select security question">
+
+                  <f:selectItem itemLabel="Select security question for password recovery *" 
+
+                                itemValue="" />
+                  <f:selectItems value="#{userRegistration.questions}" var="val" itemLabel="#{val.toString()}" itemValue="#{val}"/>
+                </p:selectOneMenu>  
+                <p:spacer></p:spacer>
+
+                <p:inputText id="answer"
+                             value="#{userRegistration.security_answer}"
+                             style="width: 508px"
+                             required="true"
+                             requiredMessage="Answer security question" />
+                <p:watermark for="answer" value="Security answer*" />
+
+                <!--
+                                                <p:captcha id ="captcha" 
+                                                           label="Captcha"
+                                                           required="true" 
+                                                           requiredMessage="Enter Captcha"/>
+                
+                                                <p:spacer></p:spacer>
+                -->
+                <h:panelGroup >
+                  <p:selectBooleanCheckbox 
+                    value="#{userRegistration.tos}"> 
+                    <f:validator binding="#{tosCheckboxValidator}" />
+                  </p:selectBooleanCheckbox> 
+                  <p:spacer width="5"></p:spacer>
+                  <p:commandLink 
+                    action="tos.xhtml"
+                    ajax="false" 
+                    value=" I agree to the BiobankCloud Terms of Service (ToS)"
+                    immediate="true" target="_blank">
+                  </p:commandLink>
+                </h:panelGroup>
+              </h:panelGrid>
+
+              <p:messages id="messages" showDetail="false" autoUpdate="true" closable="true"/>
+              <div class="register_user">
+                <p:commandButton  
+                  type="submit"
+                  value="Register" 
+                  oncomplete="Recaptcha.reload();" 
+                  action="#{userRegistration.registerMobileUser()}"
+                  ajax="false"
+                  update=":register_form"
+                  />
+
+                <p:spacer width="10"></p:spacer>
+
+                <p:commandButton  
+                  type="submit"
+                  value="Cancel" 
+                  action="welcome" 
+                  immediate="true"
+                  ajax="false"
+                  />
+              </div>
+
+            </h:form> 
+          </h:panelGroup>
+
+          <h:panelGroup rendered="#{customAuthenticationSwitch.otpEnabled}">
+
+            <div class="UserGuides">
+
+              <h2 align="center" class="signup_header">More security for your data</h2>
+
+              <p class="signup_contents">                               
+
+                The BiobankCloud provides 2-Factor authentication to ensure strong security. You can login using a smart      
+                phone or a 
+                <a 
+                  href="register_yubico.xhtml">Yubikey device.
+                </a> 
+              </p>
+
+              <p class="signup_contents">                               
+                1. Install Google Authenticator app in your smart phone
+                <a target="_blank" 
+                   href="user_guides.xhtml">(help to install the Authenticator app).
+                </a> 
+              </p>  
+
+              <p class="signup_contents" >
+                2. When you login to the BiobankCloud you will be asked to enter your password (label 1) and 
+                a 6-digit code that is generated by the Google Authenticator app (label 2).
+
+                <div align="center">
+                  <p:graphicImage library="images" name="users/2factorauth.png" 
+                                  style="width: 200px; height: 200px ;padding-bottom: 20px;" >
+                  </p:graphicImage>
+                </div>
+              </p>
+
+              <p class="signup_contents">
+                3. After filling in the information on the left menu and registering an account, you
+                will be asked to scan an image as following by the app in your mobile.
+                <div align="center">
+                  <p:graphicImage library="images" name="icons/qrcode.png" 
+                                  style="width: 480px; height: 100px; padding-bottom: 20px;" >
+                  </p:graphicImage>
+                </div>
+              </p>
+
+              <p class="signup_contents">
+                By scanning this image your BiobankCloud account will be setup and everytime you sign-in
+                you will need to check your app to get the 6-digit code. In the following example the code is: 671362
+              </p>
+
+              <p class="signup_contents">
+                <div align="center" >   
+                  <p:graphicImage library="images" name="icons/gauth.png" 
+                                  style="float: inside; width: 130px; height: 170px; padding-bottom: 20px;">
+                  </p:graphicImage>
+                </div>
+              </p>
+
+              <p class="signup_contents">
+                4. Enter your usual password in (label 1) and the write the code from the Authenticator app in (label 2).
+              </p>
+
+              <p class="signup_contents">
+                5. Press the login button.
+              </p>
+
+
+            </div>  
+
+          </h:panelGroup>
+        </h:panelGrid>
+      </div>   
+    </h:body>
+  </f:view>
+</html> 
