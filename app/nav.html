@@ -2,7 +2,7 @@
   $(document).ready(function () {
     var trigger = $('.hamburger'),
       overlay = $('.overlay'),
-      isClosed = false;
+      isClosed = true;
 
     trigger.click(function () {
       hamburger_cross();
@@ -96,7 +96,7 @@
 
         <div class="col-md-4 input-group" ng-show="showHamburger">
 
-          <button type="button" class="hamburger is-closed" style="color:white;" data-toggle="offcanvas">
+          <button type="button" class="hamburger is-open" style="color:white;" data-toggle="offcanvas">
             <span class="hamb-top"></span>
             <span class="hamb-middle"></span>
             <span class="hamb-bottom"></span>
