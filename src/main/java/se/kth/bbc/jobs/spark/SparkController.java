@@ -125,8 +125,9 @@ public final class SparkController extends JobController {
   }
 
   public void startJob() {
-    if(!isSparkJarAvailable()){
-      MessagesController.addErrorMessage("Failed to start application master.", "The Spark jar is not in HDFS and could not be copied over.");
+    if (!isSparkJarAvailable()) {
+      MessagesController.addErrorMessage("Failed to start application master.",
+              "The Spark jar is not in HDFS and could not be copied over.");
       return;
     }
     if (jobName == null || jobName.isEmpty()) {
