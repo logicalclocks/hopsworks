@@ -1,60 +1,48 @@
-<div class="container">
-  <div class="row">
-    <div class="col-md-12 text-center" style="padding:20px;">
-      <img width="90" src="https://dc.sics.se/pics/hops.png"/>
-      <h3 style="margin-top:0px; margin-left:30px;">HOPS</h3>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-sm-4 col-md-4 col-md-offset-4" ng-show="!isLoggedIn">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <strong> Sign in to continue</strong>
-        </div>
-        <div class="panel-body" style="padding:30px;">
-          <fieldset>
-            <div class="row">
-              <div class="col-sm-12 col-md-10  col-md-offset-1 ">
-                <div class="form-group">
-                  <div class="input-group">
-                    <span class="input-group-addon">
-                    <i class="glyphicon glyphicon-user"></i>
-                    </span>
-                    <input class="form-control"
-                           placeholder="Email"
-                           name="email"
-                           id="email"
-                           type="text"
-                           ng-model="loginCtrl.user.email"
-                           autofocus>
-                  </div>
+<div class="wrapper ng-scope" data-autoscroll="false" data-ui-view="">
+    <div class="ng-zoomBackDown ng-fluid ng-scope" autoscroll="false" ui-view="">
+        <div class="block-center mt-xl wd-xl">
+            <div class="panel panel-dark panel-flat">
+                <div class="panel-heading text-center">
+                    <a style="text-decoration:none; font-family: Lobster; font-size: 30px; margin-left: 5px; color: #fff;">HopsWorks
+                        <img class="block-center img-rounded" style="margin-left:10px" width="30" src="http://www.mc-boden.se/hops.png">
+                    </a>
                 </div>
-                <div class="form-group">
-                  <div class="input-group">
-                    <span class="input-group-addon">
-                    <i class="glyphicon glyphicon-lock"></i>
-                    </span>
-                    <input class="form-control"
-                           placeholder="Password"
-                           name="password"
-                           id="password"
-                           type="password"
-                           ng-model="loginCtrl.user.password"
-                           value="">
-                  </div>
+                <div class="panel-body">
+                    <p class="text-center pv">SIGN IN TO CONTINUE.</p>
+                    <form name="loginForm" ng-submit="loginCtrl.login()" role="form" class="form-validate">
+                        <div class="form-group has-feedback">
+                            <input id="login_inputEmail" class="form-control" type="email" required
+                                   ng-model="loginCtrl.user.email"
+                                   autocomplete="on"
+                                   placeholder="Email"
+                                   name="user_email">
+                        </div>
+                        <div class="form-group has-feedback">
+                            <input id="login_inputPassword" class="form-control" type="password" required
+                                   ng-model="loginCtrl.user.password"
+                                   placeholder="Password"
+                                   name="user_password">
+                        </div>
+                        <div class="clearfix">
+                            <div class="checkbox c-checkbox pull-left mt0">
+                                <label>
+                                    <input class="" type="checkbox" ng-model="user.remember" name="user_remember" value="">
+                                    <span class="fa fa-check"></span>
+                                    Remember Me
+                                </label>
+                            </div>
+                            <div class="pull-right">
+                                <a class="text-muted" href="#/recover">Forgot your password?</a>
+                            </div>
+                        </div>
+                        <button class="btn btn-block btn-primary mt-lg" type="submit" ng-disabled="loginForm.$invalid">Login</button>
+                    </form>
+                    <div class="alert alert-danger text-center ng-binding ng-hide" ng-show="loginCtrl.errorMessage">{{loginCtrl.errorMessage}}</div>
+                    <p class="pt-lg text-center">Need to Sign up?</p>
+                    <a class="btn btn-block btn-default" href="#/register">Register Now</a>
                 </div>
-                <div class="form-group">
-                  <input type="submit" class="btn btn-lg btn-primary btn-block" value="Sign in"
-                         ng-click="loginCtrl.login()">
-                </div>
-              </div>
             </div>
-          </fieldset>
+
         </div>
-        <div class="panel-footer ">
-          Don't have an account? <a href="#register" onClick=""> Sign Up Here </a>
-        </div>
-      </div>
     </div>
-  </div>
 </div>

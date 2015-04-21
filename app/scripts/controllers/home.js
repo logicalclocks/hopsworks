@@ -5,7 +5,6 @@ angular.module('hopsWorksApp')
     function (ProjectService, ModalService, growl, ProjectHistoryService) {
 
       var self = this;
-
       self.projects = [];
 
       // Load all projects

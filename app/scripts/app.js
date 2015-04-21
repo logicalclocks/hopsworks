@@ -80,6 +80,10 @@ angular.module('hopsWorksApp', [
             }]
         }
       })
+      .when('/recover', {
+        templateUrl: 'views/recover.html',
+        controller: 'RecoverCtrl as recoverCtrl'
+      })
       .when('/project/:projectID', {
         templateUrl: 'views/project.html',
         controller: 'ProjectCtrl as projectCtrl',
@@ -119,7 +123,6 @@ angular.module('hopsWorksApp', [
       if (angular.isArray(items)) {
         items.forEach(function (item) {
           var itemMatches = false;
-
           var keys = Object.keys(props);
           for (var i = 0; i < keys.length; i++) {
             var prop = keys[i];
@@ -139,7 +142,8 @@ angular.module('hopsWorksApp', [
         out = items;
       }
 
+
       return out;
     }
   });
-;
+
