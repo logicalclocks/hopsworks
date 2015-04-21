@@ -124,16 +124,6 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
     return q.getResultList();
   }
 
-  //TODO: remove this method and replace with findJoinedStudyDetails
-  public List<TrackStudy> findJoinedStudies(String user) {
-
-    Query query = em.createNativeQuery(
-            "select study.name, study.username from (study_team join study on study_team.name=study.name) join users on study.username=users.email where study.username not like ? and study_team.team_member like ?",
-            TrackStudy.class)
-            .setParameter(1, user).setParameter(2, user);
-    return query.getResultList();
-  }
-
   /**
    * Get all the studies this user has joined, but not created.
    * <p>
@@ -147,24 +137,6 @@ public class StudyFacade extends AbstractFacade<TrackStudy> {
             .setParameter(1, useremail).setParameter(2, useremail);
 
     return query.getResultList();
-  }
-
-  public List<TrackStudy> QueryForNonRegistered(String user) {
-
-    Query query = em.createNativeQuery(
-            "SELECT name, username FROM study WHERE name IN (SELECT name FROM study_team WHERE team_member=?)",
-            TrackStudy.class)
-            .setParameter(1, user);
-    return query.getResultList();
-  }
-
-  public boolean checkForStudyOwnership(String user) {
-
-    Query query = em.createNamedQuery("TrackStudy.countStudyByOwner",
-            TrackStudy.class).setParameter("username", user);
-    long res = (Long) query.getSingleResult();
-
-    return res > 0;
   }
 
   public void persistStudy(TrackStudy study) {

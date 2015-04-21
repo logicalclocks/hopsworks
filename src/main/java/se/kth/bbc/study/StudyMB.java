@@ -299,12 +299,7 @@ public class StudyMB implements Serializable {
   }
 
   private int countJoinedStudy() {
-    boolean check = studyFacade.checkForStudyOwnership(getUsername());
-    if (check) {
-      return studyFacade.findJoinedStudies(getUsername()).size();
-    } else {
-      return studyFacade.QueryForNonRegistered(getUsername()).size();
-    }
+    return studyFacade.findJoinedStudyDetails(getUsername()).size();
   }
 
   /**
