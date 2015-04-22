@@ -153,62 +153,6 @@ p {
     border-color: #5d9cec;
 }
 
-.c-checkbox input[type="radio"]:checked + span, .c-radio input[type="radio"]:checked + span {
-    background-color: #fff;
-}
-
-.c-checkbox input[type="radio"]:checked + span::before, .c-radio input[type="radio"]:checked + span::before {
-    color: #5d9cec;
-}
-
-.c-checkbox input[type="checkbox"]:disabled + span, .c-checkbox input[type="radio"]:disabled + span, .c-radio input[type="checkbox"]:disabled + span, .c-radio input[type="radio"]:disabled + span {
-    background-color: #ddd !important;
-    border-color: #ddd !important;
-}
-
-.c-checkbox input[type="radio"]:disabled + span, .c-radio input[type="radio"]:disabled + span {
-    background-color: #fff !important;
-}
-
-.c-checkbox input[type="radio"]:disabled + span::before, .c-radio input[type="radio"]:disabled + span::before {
-    color: #ddd;
-}
-
-.c-radio.c-radio-nofont span::before {
-    border-radius: 500px;
-    content: "";
-    height: 10px;
-    left: 50%;
-    margin-left: -5px;
-    margin-top: -5px;
-    top: 50%;
-    width: 10px;
-}
-
-.c-radio.c-radio-nofont input[type="radio"]:checked + span::before {
-    color: #fff;
-    opacity: 1;
-    transition: color 0.3s ease-out 0s;
-}
-
-.c-radio.c-radio-nofont input[type="radio"]:checked + span {
-    background-color: #fff;
-    border-color: #5d9cec;
-}
-
-.c-radio.c-radio-nofont input[type="radio"]:checked + span::before {
-    background-color: #5d9cec;
-}
-
-.c-radio.c-radio-nofont input[type="radio"]:disabled + span {
-    background-color: #fff !important;
-    border-color: #ddd !important;
-}
-
-.c-radio.c-radio-nofont input[type="radio"]:disabled + span::before {
-    background-color: #ddd;
-}
-
 .has-feedback .form-control {
     padding-right: 43.75px;
 }
@@ -350,7 +294,7 @@ label +
 .content-wrapper {
     border-top: 1px solid rgba(0, 0, 0, 0.15);
     margin-top: -1px;
-    padding: 15px;
+    padding: 20px;
     width: 100%;
 }
 .content-wrapper > .unwrap {
@@ -362,7 +306,7 @@ label +
     line-height: 0;
     font-size: 24px;
     color: #929292;
-    margin: -20px -20px 20px;
+    margin: -25px -20px 20px;
     padding:20px;
     font-weight: 400;
     background-color: #fafbfc;
@@ -376,4 +320,15 @@ label +
     margin-left: 0;
     position: relative;
     z-index: 111;
+}
+
+.modal-header {
+    background-color:  #2e353d;
+    color: #ffffff;
+}
+
+.modal-header .close {
+    margin-top: -2px;
+    color: #fff;
+    opacity: 0.5;
 }

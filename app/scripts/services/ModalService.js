@@ -21,53 +21,68 @@ angular.module('hopsWorksApp')
                 return modalInstance.result;
             },
 
-            createProject: function (size, title, msg) {
+            createProject: function (size) {
                 var modalInstance = $modal.open({
                     templateUrl: 'views/projectModal.html',
                     controller: 'ProjectCreatorCtrl as projectCreatorCtrl',
                     size: size,
                     resolve: {
-                        title: function () {
-                            return title;
-                        },
-                        msg: function () {
-                            return msg;
-                        }
+                        auth: ['$q', '$location', 'AuthService',
+                            function ($q, $location, AuthService) {
+                                return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                        $location.path('/login');
+                                        $location.replace();
+                                        return $q.reject(err);
+                                    });
+                            }]
                     }
                 });
                 return modalInstance.result;
             },
 
-            projectSettings: function (size, title, msg) {
+            projectSettings: function (size) {
                 var modalInstance = $modal.open({
                     templateUrl: 'views/projectSettingsModal.html',
                     controller: 'ProjectCtrl as projectCtrl',
                     size: size,
                     resolve: {
-                        title: function () {
-                            return title;
-                        },
-                        msg: function () {
-                            return msg;
-                        }
+                        auth: ['$q', '$location', 'AuthService',
+                            function ($q, $location, AuthService) {
+                                return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                        $location.path('/login');
+                                        $location.replace();
+                                        return $q.reject(err);
+                                    });
+                            }]
                     }
                 });
                 return modalInstance.result;
             },
 
 
-            profile: function (size, title, msg) {
+            profile: function (size) {
                 var modalInstance = $modal.open({
                     templateUrl: 'views/profile.html',
                     controller: 'ProfileCtrl as profileCtrl',
                     size: size,
                     resolve: {
-                        title: function () {
-                            return title;
-                        },
-                        msg: function () {
-                            return msg;
-                        }
+                        auth: ['$q', '$location', 'AuthService',
+                            function ($q, $location, AuthService) {
+                                return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                        $location.path('/login');
+                                        $location.replace();
+                                        return $q.reject(err);
+                                    });
+                            }]
                     }
                 });
                 return modalInstance.result;
