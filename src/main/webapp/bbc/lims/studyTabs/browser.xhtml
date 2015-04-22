@@ -33,7 +33,6 @@ and open the template in the editor.
             <h:column>
               <f:facet name="header">Name</f:facet>
               <h:graphicImage class="browser s16" library="images/icons" name="#{inode.dir?'folder.png':'file.png'}" />
-
               <p:commandLink styleClass="dark" action="#{InodesMB.cdUp()}" update="@form" rendered="#{inode.parent}">
                 <strong>#{inode.name}</strong>
               </p:commandLink>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core">
+
+  <h:head>
+    <title>BiobankCloud - Password reset</title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+  </h:head>
+  <h:body >
+    <ui:insert name="titleBar" >
+      <ui:include src="/bbc/lims/titleBar.xhtml" />       
+    </ui:insert>
+
+    <div class="container">
+      <div class="ForgotPassword">
+        <h:panelGroup layout="block" rendered="#{accountVerification.valid}">
+          <p>Your account is successfully activated!</p>
+          <p><h:link outcome="welcome">Go to home page</h:link></p>
+        </h:panelGroup>
+        <h:panelGroup layout="block" rendered="#{!accountVerification.valid}">
+          <p>Activation failed!</p> 
+          <p><h:link outcome="welcome">Back to login menu</h:link></p>
+        </h:panelGroup>
+      </div>
+    </div>
+  </h:body>  
+</html>

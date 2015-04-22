@@ -25,7 +25,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
-import se.kth.bbc.study.TrackStudy;
+import se.kth.bbc.study.Study;
 import se.kth.bbc.study.metadata.CollectionTypeStudyDesignEnum;
 import se.kth.bbc.security.ua.model.User;
 
@@ -88,9 +88,9 @@ public class Samplecollection implements Serializable {
   @JoinColumn(name = "study",
           referencedColumnName = "name")
   @ManyToOne
-  private TrackStudy study;
+  private Study study;
   @JoinColumn(name = "contact",
-          referencedColumnName = "EMAIL")
+          referencedColumnName = "email")
   @ManyToOne(optional = false)
   private User contact;
   @ManyToMany
@@ -156,11 +156,11 @@ public class Samplecollection implements Serializable {
     this.description = description;
   }
 
-  public TrackStudy getStudy() {
+  public Study getStudy() {
     return study;
   }
 
-  public void setStudy(TrackStudy study) {
+  public void setStudy(Study study) {
     this.study = study;
   }
 

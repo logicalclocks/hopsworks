@@ -18,13 +18,11 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
-import org.primefaces.event.CellEditEvent;
-import org.primefaces.event.RowEditEvent;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.model.Address;
+import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.ua.model.Userlogins;
-import se.kth.kthfsdashboard.user.Gravatar;
 
 /**
  *
@@ -44,6 +42,7 @@ public class ProfileManager implements Serializable {
   private User user;
   private Address address;
   private Userlogins login;
+  private Organization organization;
 
   private boolean editable;
 
@@ -60,6 +59,7 @@ public class ProfileManager implements Serializable {
       try {
         user = userManager.findByEmail(getLoginName());
         address = user.getAddress();
+        organization = user.getOrganization();
         login = userManager.getLastUserLoing(user.getUid());
       } catch (IOException ex) {
         Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null,
@@ -70,6 +70,14 @@ public class ProfileManager implements Serializable {
     }
 
     return user;
+  }
+
+  public Organization getOrganization() {
+    return organization;
+  }
+
+  public void setOrganization(Organization organization) {
+    this.organization = organization;
   }
 
   public Userlogins getLogin() {
@@ -117,6 +125,20 @@ public class ProfileManager implements Serializable {
   public void updateUserInfo() {
 
     if (userManager.updatePeople(user)) {
+      MessagesController.addInfoMessage("Success",
+              "Profile updated successfully.");
+    } else {
+      FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+              "Failed to update", null);
+      FacesContext.getCurrentInstance().addMessage(null, msg);
+
+      return;
+    }
+  }
+
+  public void updateUserOrg() {
+
+    if (userManager.updateOrganization(organization)) {
       MessagesController.addInfoMessage("Success",
               "Profile updated successfully.");
     } else {

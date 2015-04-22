@@ -28,7 +28,7 @@ import se.kth.bbc.security.ua.model.Userlogins;
  */
 @ManagedBean
 @ViewScoped
-public class AdminProfileAministration implements Serializable {
+public class AdminProfileAdministration implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -169,7 +169,8 @@ public class AdminProfileAministration implements Serializable {
 
   public String getEditStatus() {
 
-    int status = userManager.getUser(this.editingUser.getEmail()).getStatus();
+    int status = userManager.getUserByEmail(this.editingUser.getEmail()).
+            getStatus();
     this.editStatus = PeopleAccountStatus.values()[status - 1].name();
     return this.editStatus;
   }

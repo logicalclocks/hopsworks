@@ -46,7 +46,7 @@ import se.kth.bbc.security.ua.model.Yubikey;
  */
 @ManagedBean
 @SessionScoped
-public class PeopleAministration implements Serializable {
+public class PeopleAdministration implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
@@ -246,9 +246,12 @@ public class PeopleAministration implements Serializable {
   public void initGroups() {
     groups = new ArrayList<>();
     status = new ArrayList<>();
+    // dont include BBCADMIN and BBCUSER roles for approving accounts as they are perstudy
     for (BBCGroup value : BBCGroup.values()) {
-      groups.add(value.name());
+        if(value!=BBCGroup.BBC_ADMIN && value!=BBCGroup.BBC_USER)
+            groups.add(value.name());
     }
+    
   }
 
   public List<String> getStatus() {
@@ -307,7 +310,7 @@ public class PeopleAministration implements Serializable {
 
   /**
    * Reject users that are not validated.
-   * <p>
+   *
    * @param user1
    */
   public void rejectUser(User user1) {
@@ -322,7 +325,8 @@ public class PeopleAministration implements Serializable {
       // update the user request table
       if (removeByEmail) {
         allUsers.remove(user1);
-        if (user1.getYubikeyUser() == 1) {
+        if (user1.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.
+                getValue()) {
           yRequests.remove(user1);
         } else {
           requests.remove(user1);
@@ -338,7 +342,7 @@ public class PeopleAministration implements Serializable {
     } catch (EJBException ejb) {
       MessagesController.addSecurityErrorMessage("Rejection failed");
     } catch (MessagingException ex) {
-      Logger.getLogger(PeopleAministration.class.getName()).log(Level.SEVERE,
+      Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
               "Could not reject user.", ex);
     }
 
@@ -454,7 +458,7 @@ public class PeopleAministration implements Serializable {
             RollbackException | HeuristicMixedException |
             HeuristicRollbackException | SecurityException |
             IllegalStateException ex) {
-      Logger.getLogger(PeopleAministration.class.getName()).log(Level.SEVERE,
+      Logger.getLogger(PeopleAdministration.class.getName()).log(Level.SEVERE,
               null, ex);
     }
     requests.remove(user1);
@@ -462,7 +466,7 @@ public class PeopleAministration implements Serializable {
 
   public String modifyUser(User user1) {
     // Get the latest status
-    User newStatus = userManager.getUser(user1.getEmail());
+    User newStatus = userManager.getUserByEmail(user1.getEmail());
     FacesContext.getCurrentInstance().getExternalContext()
             .getSessionMap().put("editinguser", newStatus);
 
@@ -504,15 +508,14 @@ public class PeopleAministration implements Serializable {
     try {
       // parse the creds  1486433,vviehlefjvcb,01ec8ce3dea6,f1bda8c978766d50c25d48d72ed516e0,,2014-12-14T23:16:09,
 
-      if (this.selectedYubikyUser.getYubikeyUser() != 1) {
+      if (this.selectedYubikyUser.getYubikeyUser()
+              != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
         MessagesController.addSecurityErrorMessage(user.getEmail()
                 + " is not a Yubikey user");
         return "";
       }
 
       Yubikey yubi = this.selectedYubikyUser.getYubikey();
-
-      yubi.setStatus(1);
 
       // Trim the input
       yubi.setSerial(serial.replaceAll("\\s", ""));
@@ -529,11 +532,17 @@ public class PeopleAministration implements Serializable {
 
       userTransaction.begin();
 
-      userManager.updateYubikey(yubi);
+      if (this.selectedYubikyUser.getYubikey().getStatus()
+              == PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()) {
+        // Set stauts to active
+        yubi.setStatus(PeopleAccountStatus.ACCOUNT_ACTIVE.getValue());
 
-      if (!"#".equals(sgroup) && (!sgroup.equals(BBCGroup.BBC_GUEST.name()))) {
-        userManager.registerGroup(this.selectedYubikyUser, BBCGroup.valueOf(
-                sgroup).getValue());
+        userManager.updateYubikey(yubi);
+        if (!"#".equals(sgroup) || (!sgroup.equals(BBCGroup.BBC_GUEST.name()))) {
+
+          userManager.registerGroup(this.selectedYubikyUser, BBCGroup.valueOf(
+                  sgroup).getValue());
+        }
       }
 
       userManager.updateStatus(this.selectedYubikyUser,

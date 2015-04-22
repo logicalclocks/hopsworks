@@ -13,7 +13,7 @@
     <class>se.kth.bbc.study.StudyDetail</class>
     <class>se.kth.bbc.study.StudyGroups</class>
     <class>se.kth.bbc.study.StudyTeam</class>
-    <class>se.kth.bbc.study.TrackStudy</class>
+    <class>se.kth.bbc.study.Study</class>
     <class>se.kth.bbc.study.metadata.StudyMeta</class>
     <class>se.kth.bbc.study.samples.AnatomicalPart</class>
     <class>se.kth.bbc.study.samples.Disease</class>
@@ -28,6 +28,8 @@
     <class>se.kth.bbc.security.ua.model.Yubikey</class>
     <class>se.kth.bbc.study.fb.Inode</class>
     <class>se.kth.bbc.study.privacy.model.Consent</class>
+    <class>se.kth.bbc.security.ua.model.BBCGroup</class>
+    <class>se.kth.bbc.security.ua.model.Organization</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

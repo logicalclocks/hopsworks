@@ -9,6 +9,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.security.ua.model.Address;
+import se.kth.bbc.security.ua.model.Organization;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.security.ua.model.PeopleGroup;
 import se.kth.bbc.security.ua.model.PeopleGroupPK;
@@ -48,6 +49,7 @@ public class UserManager {
   /**
    * Register an address for new mobile users.
    *
+   * @param user
    * @return
    */
   public boolean registerAddress(User user) {
@@ -87,22 +89,20 @@ public class UserManager {
     return true;
   }
 
-  public boolean deactivateUser(int id) {
+  public boolean changeAccountStatus(int id, String note, int status) {
     User p = (User) em.find(User.class, id);
     if (p != null) {
-      p.setStatus(PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
+      p.setNotes(note);
+      p.setStatus(status);
       em.merge(p);
     }
     return true;
   }
 
-  public boolean closeUserAccount(int id, String note) {
+  public boolean resetKey(int id) {
     User p = (User) em.find(User.class, id);
-    if (p != null) {
-      p.setStatus(PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue());
-      p.setNotes(note);
-      em.merge(p);
-    }
+    p.setValidationKey(SecurityUtils.getRandomString(64));
+    em.merge(p);
     return true;
   }
 
@@ -154,6 +154,7 @@ public class UserManager {
   public boolean registerYubikey(User uid) {
     Yubikey yk = new Yubikey();
     yk.setUid(uid);
+    yk.setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue());
     em.persist(yk);
     return true;
   }
@@ -161,12 +162,25 @@ public class UserManager {
   /**
    * Find a user through email.
    *
-   * @param username
+   * @param email
    * @return
    */
-  public User getUser(String username) {
+  public User getUserByEmail(String email) {
     TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
-    query.setParameter("email", username);
+    query.setParameter("email", email);
+    List<User> list = query.getResultList();
+
+    if (list == null || list.isEmpty()) {
+      return null;
+    }
+
+    return list.get(0);
+  }
+
+  public User getUserByUsername(String username) {
+    TypedQuery<User> query = em.createNamedQuery("User.findByUsername",
+            User.class);
+    query.setParameter("username", username);
     List<User> list = query.getResultList();
 
     if (list == null || list.isEmpty()) {
@@ -178,7 +192,7 @@ public class UserManager {
 
   public boolean isUsernameTaken(String username) {
 
-    return (getUser(username) != null);
+    return (getUserByEmail(username) != null);
   }
 
   public boolean findYubikeyUsersByStatus(int status) {
@@ -199,13 +213,17 @@ public class UserManager {
   }
 
   public List<User> findAllUsers() {
-    //TypedQuery<User> query = em.createNamedQuery("User.findAll", User.class);
     List<User> query = em.createQuery(
             "SELECT p FROM User p WHERE p.status !='"
             + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()
             + "' AND p.status!='" + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.
-            getValue() + "' AND p.status!='"
-            + PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue() + "'")
+            getValue()
+            + "' AND p.status!='"
+            + PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()
+            + "' AND p.status!='" + PeopleAccountStatus.SPAM_ACCOUNT.getValue()
+            + "' AND p.status!='" + PeopleAccountStatus.ACCOUNT_VERIFICATION.
+            getValue()
+            + "'")
             .getResultList();
 
     return query;
@@ -298,7 +316,7 @@ public class UserManager {
 
   /**
    * Check the value and if empty set as '-'.
-   * <p>
+   *
    * @param var
    * @return
    */
@@ -316,7 +334,6 @@ public class UserManager {
    * @param lname
    * @param email
    * @param title
-   * @param org
    * @param tel
    * @param orcid
    * @param uid
@@ -326,12 +343,13 @@ public class UserManager {
    * @param answer
    * @param status
    * @param yubikey
+   * @param validationKey
    * @return
    */
   public User register(String fname, String lname, String email, String title,
-          String org,
           String tel, String orcid, int uid, String password, String otpSecret,
-          SecurityQuestion question, String answer, int status, short yubikey) {
+          SecurityQuestion question, String answer, int status, int yubikey,
+          String validationKey) {
 
     // assigne a username
     String uname = USERNAME_PREFIX + uid;
@@ -343,13 +361,12 @@ public class UserManager {
     user.setEmail(email);
     user.setFname(fname);
     user.setLname(lname);
-    user.setHomeOrg(checkDefaultValue(org));
     user.setMobile(checkDefaultValue(tel));
-    user.setUid(uid);
     user.setOrcid(checkDefaultValue(orcid));
     user.setTitle(checkDefaultValue(title));
     user.setActivated(new Timestamp(new Date().getTime()));
     user.setStatus(status);
+    user.setValidationKey(validationKey);
     /*
      * offline: -1
      * online: 1
@@ -359,8 +376,8 @@ public class UserManager {
     user.setSecurityAnswer(answer);
     user.setPasswordChanged(new Timestamp(new Date().getTime()));
     user.setYubikeyUser(yubikey);
-
     em.persist(user);
+    em.flush();
     return user;
   }
 
@@ -417,7 +434,7 @@ public class UserManager {
       em.remove(a);
       em.remove(p);
 
-      if (u.getYubikeyUser() == 1) {
+      if (u.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
         em.remove(u.getYubikey());
       }
 
@@ -463,4 +480,24 @@ public class UserManager {
 
   }
 
+  public boolean registerOrg(User uid, String org, String department) {
+
+    Organization organization = new Organization();
+    organization.setUid(uid);
+    organization.setOrgName(checkDefaultValue(org));
+    organization.setDepartment(checkDefaultValue(department));
+    organization.setContactEmail(checkDefaultValue(""));
+    organization.setContactPerson(checkDefaultValue(""));
+    organization.setWebsite(checkDefaultValue(""));
+    organization.setFax(checkDefaultValue(""));
+    organization.setPhone(checkDefaultValue(""));
+    em.persist(organization);
+    return true;
+
+  }
+
+  public boolean updateOrganization(Organization org) {
+    em.merge(org);
+    return true;
+  }
 }

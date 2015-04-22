@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
 
@@ -25,18 +27,26 @@ import org.primefaces.model.SortOrder;
  */
 public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements
         Serializable {
+  private static final Logger logger = Logger.getLogger(LazyActivityModel.class.getName());
 
   private transient final ActivityDetailFacade activityDetailFacade;
   private List<ActivityDetail> data;
   private String filterStudy;
   private int rowIndex;
 
-  public LazyActivityModel(ActivityDetailFacade ac) {
+  public LazyActivityModel(ActivityDetailFacade ac) throws
+          IllegalArgumentException {
     this(ac, null);
   }
 
-  public LazyActivityModel(ActivityDetailFacade ac, String filterStudy) {
+  public LazyActivityModel(ActivityDetailFacade ac, String filterStudy) throws
+          IllegalArgumentException {
     super();
+    if (ac == null) {
+      logger.log(Level.SEVERE,
+              "Constructing lazy activity model with a null ActivityDetailFacade. Aborting.");
+      throw new IllegalArgumentException("ActivityDetailFacade cannot be null.");
+    }
     this.activityDetailFacade = ac;
     this.filterStudy = filterStudy;
     data = new ArrayList<>();
@@ -45,7 +55,10 @@ public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements
   @Override
   public List<ActivityDetail> load(int first, int pageSize, String sortField,
           SortOrder sortOrder, Map<String, Object> filters) {
+
     List<ActivityDetail> retData;
+
+    // UNDO later: this gives an error while accessing indexPage from profile 
     if (filterStudy == null) {
       retData = activityDetailFacade.getPaginatedActivityDetail(first, pageSize);
       //TODO: add support for sorting, filtering

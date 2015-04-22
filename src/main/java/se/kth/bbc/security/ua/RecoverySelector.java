@@ -11,7 +11,6 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.mail.MessagingException;
-import javax.security.auth.login.AccountException;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.auth.AccountStatusErrorMessages;
@@ -47,6 +46,8 @@ public class RecoverySelector implements Serializable {
   private String uname;
   private String tmpCode;
   private String passwd;
+
+  private final int passwordLength = 6;
 
   public String getQrUrl() {
     return qrUrl;
@@ -97,25 +98,21 @@ public class RecoverySelector implements Serializable {
   }
 
   public String redirect() {
-
     if (console.equals("Password")) {
       return "sec_question";
     }
-
     if (console.equals("Mobile")) {
       return "mobile_recovery";
     }
-
     if (console.equals("Yubikey")) {
       return "yubikey_recovery";
     }
-
     return "";
   }
 
   public String sendQrCode() {
 
-    people = um.getUser(this.uname);
+    people = um.getUserByEmail(this.uname);
 
     if (people == null) {
       MessagesController.addSecurityErrorMessage(
@@ -136,7 +133,7 @@ public class RecoverySelector implements Serializable {
       return "";
     }
 
-    if (people.getYubikeyUser() == 1) {
+    if (people.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.USER_NOT_FOUND);
       return "";
@@ -146,7 +143,8 @@ public class RecoverySelector implements Serializable {
 
       if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
 
-        String random = SecurityUtils.getRandomString();
+        // generate a randome secret of legth 6
+        String random = SecurityUtils.getRandomString(passwordLength);
         um.updateSecret(people.getUid(), random);
         String message = UserAccountsEmailMessages.buildTempResetMessage(random);
         email.sendEmail(people.getEmail(),
@@ -170,7 +168,7 @@ public class RecoverySelector implements Serializable {
 
   public String validateTmpCode() {
 
-    people = um.getUser(this.uname);
+    people = um.getUserByEmail(this.uname);
 
     if (people == null) {
       MessagesController.addSecurityErrorMessage(
@@ -211,7 +209,8 @@ public class RecoverySelector implements Serializable {
       int val = people.getFalseLogin();
       um.increaseLockNum(people.getUid(), val + 1);
       if (val > 5) {
-        um.deactivateUser(people.getUid());
+        um.changeAccountStatus(people.getUid(), "",
+                PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
         try {
           email.sendEmail(people.getEmail(),
                   UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
@@ -232,7 +231,7 @@ public class RecoverySelector implements Serializable {
 
   public String sendYubiReq() {
 
-    people = um.getUser(this.uname);
+    people = um.getUserByEmail(this.uname);
 
     if (people == null) {
       MessagesController.addSecurityErrorMessage(
@@ -248,7 +247,7 @@ public class RecoverySelector implements Serializable {
       return "";
     }
 
-    if (people.getYubikeyUser() != 1) {
+    if (people.getYubikeyUser() != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
       MessagesController.addSecurityErrorMessage(
               AccountStatusErrorMessages.USER_NOT_FOUND);
       return "";
@@ -257,20 +256,23 @@ public class RecoverySelector implements Serializable {
     try {
       if (people.getPassword().equals(SecurityUtils.converToSHA256(passwd))) {
 
-        String message = UserAccountsEmailMessages.buildYubikeyRequestMessage();
-        email.sendEmail(people.getEmail(),
-                UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT, message);
+        String message = UserAccountsEmailMessages.buildYubikeyResetMessage();
         people.
                 setStatus(PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.
                         getValue());
+        people.getYubikey().setStatus(PeopleAccountStatus.YUBIKEY_LOST.
+                getValue());
         um.updatePeople(people);
+        email.sendEmail(people.getEmail(),
+                UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT, message);
         return "yubico";
       } else {
 
         int val = people.getFalseLogin();
         um.increaseLockNum(people.getUid(), val + 1);
         if (val > 5) {
-          um.deactivateUser(people.getUid());
+          um.changeAccountStatus(people.getUid(), "",
+                  PeopleAccountStatus.ACCOUNT_BLOCKED.getValue());
           try {
             email.sendEmail(people.getEmail(),
                     UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,

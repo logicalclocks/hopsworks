@@ -41,7 +41,7 @@ public class NewStudyController implements Serializable {
   private StudyServiceEnum[] customServices; // Services selected by user
   private String chosenTemplate; // Chosen template: if custom, customServices is used
   private String newStudyName; //The name of the new study
-  private TrackStudy study = null; //The study ultimately created
+  private Study study = null; //The study ultimately created
 
   private static final Logger logger = Logger.getLogger(
           NewStudyController.class.getName());
@@ -129,7 +129,7 @@ public class NewStudyController implements Serializable {
         //Create a new study object
         String username = sessionState.getLoggedInUsername();
         Date now = new Date();
-        study = new TrackStudy(newStudyName, username, now);
+        study = new Study(newStudyName, username, now);
         //create folder structure
         mkStudyDIR(study.getName());
         logger.log(Level.FINE, "{0} - study directory created successfully.",

@@ -192,6 +192,7 @@
       <to-view-id>/security/protected/admin/userManagement.xhtml</to-view-id>
       <redirect/>
     </navigation-case>
+
     <navigation-case>
       <from-outcome>newStudy</from-outcome>
       <to-view-id>/bbc/lims/newStudy.xhtml</to-view-id>

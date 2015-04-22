@@ -31,27 +31,31 @@ import se.kth.bbc.study.samples.Samplecollection;
 @Table(name = "study")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "TrackStudy.findAll",
-          query = "SELECT t FROM TrackStudy t"),
-  @NamedQuery(name = "TrackStudy.findByName",
-          query = "SELECT t FROM TrackStudy t WHERE t.name = :name"),
-  @NamedQuery(name = "TrackStudy.findByUsername",
-          query = "SELECT t FROM TrackStudy t WHERE t.username = :username"),
-  @NamedQuery(name = "TrackStudy.findByTimestamp",
-          query = "SELECT t FROM TrackStudy t WHERE t.timestamp = :timestamp"),
-  @NamedQuery(name = "TrackStudy.findOwner",
-          query = "SELECT t.username FROM TrackStudy t WHERE t.name = :name"),
-  @NamedQuery(name = "TrackStudy.countStudyByOwner",
+  @NamedQuery(name = "Study.findAll",
+          query = "SELECT t FROM Study t"),
+  @NamedQuery(name = "Study.findByName",
+          query = "SELECT t FROM Study t WHERE t.name = :name"),
+  @NamedQuery(name = "Study.findByUsername",
+          query = "SELECT t FROM Study t WHERE t.username = :username"),
+  @NamedQuery(name = "Study.findByCreated",
+          query = "SELECT t FROM Study t WHERE t.created = :created"),
+  @NamedQuery(name = "Study.findByEthicalStatus",
           query
-          = "SELECT count(t.name) FROM TrackStudy t WHERE t.username = :username")})
-public class TrackStudy implements Serializable {
+          = "SELECT t FROM Study t WHERE t.ethicalStatus = :ethicalStatus"),
+  @NamedQuery(name = "Study.findByRetentionPeriod",
+          query
+          = "SELECT t FROM Study t WHERE t.retentionPeriod = :retentionPeriod"),
+  @NamedQuery(name = "Study.findOwner",
+          query = "SELECT t.username FROM Study t WHERE t.name = :name"),
+  @NamedQuery(name = "Study.countStudyByOwner",
+          query
+          = "SELECT count(t.name) FROM Study t WHERE t.username = :username")})
+public class Study implements Serializable {
 
-  @Column(name = "archived")
-  private boolean archived;
   @OneToMany(mappedBy = "study")
   private Collection<Samplecollection> samplecollectionCollection;
   @OneToOne(cascade = CascadeType.ALL,
-          mappedBy = "trackStudy")
+          mappedBy = "study")
   private StudyMeta studyMeta;
   private static final long serialVersionUID = 1L;
   @Id
@@ -67,23 +71,49 @@ public class TrackStudy implements Serializable {
           max = 255)
   @Column(name = "username")
   private String username;
+  @Column(name = "retention_period")
+  @Temporal(TemporalType.DATE)
+  private Date retentionPeriod;
   @Basic(optional = false)
   @NotNull
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
-  private Date timestamp;
+  private Date created;
+  @NotNull
+  @Size(min = 1,
+          max = 30)
+  @Column(name = "ethical_status")
+  private String ethicalStatus;
+  @Column(name = "archived")
+  private boolean archived;
 
-  public TrackStudy() {
+  public Study() {
   }
 
-  public TrackStudy(String name) {
+  public Study(String name) {
     this.name = name;
   }
 
-  public TrackStudy(String name, String username, Date timestamp) {
+  public Study(String name, String username, Date timestamp) {
     this.name = name;
     this.username = username;
-    this.timestamp = timestamp;
+    this.created = timestamp;
+  }
+
+  public Date getCreated() {
+    return created;
+  }
+
+  public void setCreated(Date created) {
+    this.created = created;
+  }
+  
+  public String getEthicalStatus() {
+    return ethicalStatus;
+  }
+
+  public void setEthicalStatus(String ethicalStatus) {
+    this.ethicalStatus = ethicalStatus;
   }
 
   public String getName() {
@@ -102,14 +132,30 @@ public class TrackStudy implements Serializable {
     this.username = username;
   }
 
-  public Date getTimestamp() {
-    return timestamp;
+  public Date getRetentionPeriod() {
+    return retentionPeriod;
   }
 
-  public void setTimestamp(Date timestamp) {
-    this.timestamp = timestamp;
+  public void setRetentionPeriod(Date retentionPeriod) {
+    this.retentionPeriod = retentionPeriod;
   }
 
+  public StudyMeta getStudyMeta() {
+    return studyMeta;
+  }
+
+  public void setStudyMeta(StudyMeta studyMeta) {
+    this.studyMeta = studyMeta;
+  }
+
+  public boolean getArchived() {
+    return archived;
+  }
+
+  public void setArchived(boolean archived) {
+    this.archived = archived;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;
@@ -120,25 +166,17 @@ public class TrackStudy implements Serializable {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof TrackStudy)) {
+    if (!(object instanceof Study)) {
       return false;
     }
-    TrackStudy other = (TrackStudy) object;
+    Study other = (Study) object;
     return !((this.name == null && other.name != null) || (this.name != null
             && !this.name.equals(other.name)));
   }
 
   @Override
   public String toString() {
-    return "se.kth.bbc.study.TrackStudy[ name=" + name + " ]";
-  }
-
-  public StudyMeta getStudyMeta() {
-    return studyMeta;
-  }
-
-  public void setStudyMeta(StudyMeta studyMeta) {
-    this.studyMeta = studyMeta;
+    return "se.kth.bbc.study.Study[ name=" + name + " ]";
   }
 
   @XmlTransient
@@ -150,14 +188,6 @@ public class TrackStudy implements Serializable {
   public void setSamplecollectionCollection(
           Collection<Samplecollection> samplecollectionCollection) {
     this.samplecollectionCollection = samplecollectionCollection;
-  }
-
-  public Boolean getArchived() {
-    return archived;
-  }
-
-  public void setArchived(Boolean archived) {
-    this.archived = archived;
   }
 
 }

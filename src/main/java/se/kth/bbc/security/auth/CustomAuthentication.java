@@ -96,7 +96,7 @@ public class CustomAuthentication implements Serializable {
       return logout();
     }
 
-    user = mgr.getUser(username);
+    user = mgr.getUserByEmail(username);
 
     // Add padding if custom realm is disabled
     if (this.otpCode == null || this.otpCode.isEmpty()) {
@@ -111,7 +111,7 @@ public class CustomAuthentication implements Serializable {
     }
 
     // Retrun if user is not Mobile user     
-    if (user.getYubikeyUser() == 1) {
+    if (user.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
       MessagesController.addMessageToGrowl(
               AccountStatusErrorMessages.USER_NOT_FOUND);
       return ("");
@@ -158,7 +158,8 @@ public class CustomAuthentication implements Serializable {
       int val = user.getFalseLogin();
       mgr.increaseLockNum(userid, val + 1);
       if (val > 5) {
-        mgr.deactivateUser(userid);
+        mgr.changeAccountStatus(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.
+                getValue());
         try {
           emailBean.sendEmail(user.getEmail(),
                   UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,
@@ -203,7 +204,7 @@ public class CustomAuthentication implements Serializable {
 
     }
 
-    user = mgr.getUser(username);
+    user = mgr.getUserByEmail(username);
 
     // Return if username is wrong
     if (user == null) {
@@ -213,7 +214,7 @@ public class CustomAuthentication implements Serializable {
     }
 
     // Retrun if user is not Yubikey user     
-    if (user.getYubikeyUser() != 1) {
+    if (user.getYubikeyUser() != PeopleAccountStatus.YUBIKEY_USER.getValue()) {
       MessagesController.addMessageToGrowl(
               AccountStatusErrorMessages.USER_NOT_FOUND);
       return ("");
@@ -266,7 +267,8 @@ public class CustomAuthentication implements Serializable {
       int val = user.getFalseLogin();
       mgr.increaseLockNum(userid, val + 1);
       if (val > 5) {
-        mgr.deactivateUser(userid);
+        mgr.changeAccountStatus(userid, "", PeopleAccountStatus.ACCOUNT_BLOCKED.
+                getValue());
         try {
           emailBean.sendEmail(user.getEmail(),
                   UserAccountsEmailMessages.ACCOUNT_BLOCKED__SUBJECT,

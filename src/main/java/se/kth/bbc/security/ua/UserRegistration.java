@@ -4,12 +4,12 @@ import com.google.zxing.WriterException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.faces.FacesException;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
@@ -40,6 +40,7 @@ public class UserRegistration implements Serializable {
 
   @EJB
   private UserManager mgr;
+
   @EJB
   private EmailBean emailBean;
 
@@ -66,6 +67,15 @@ public class UserRegistration implements Serializable {
   private String country;
   private String postalcode;
   private boolean tos;
+  private String department;
+
+  public String getDepartment() {
+    return department;
+  }
+
+  public void setDepartment(String department) {
+    this.department = department;
+  }
 
   public SecurityQuestion[] getQuestions() {
     return SecurityQuestion.values();
@@ -304,7 +314,7 @@ public class UserRegistration implements Serializable {
     try {
 
       String otpSecret = SecurityUtils.calculateSecretKey();
-      short yubikey = -1;
+      String activationKey = SecurityUtils.getRandomString(64);
 
       // Generates a UNIX compliant account
       int uid = mgr.lastUserID() + 1;
@@ -312,18 +322,30 @@ public class UserRegistration implements Serializable {
       // Register the new request in the platform
       userTransaction.begin();
 
-      User user = mgr.register(fname, lname, mail, title, org, tel, orcid, uid,
-              SecurityUtils.converToSHA256(password), otpSecret,
+      User user = mgr.register(fname,
+              lname,
+              mail,
+              title,
+              tel,
+              orcid,
+              uid,
+              SecurityUtils.converToSHA256(password),
+              otpSecret,
               security_question,
               SecurityUtils.converToSHA256(security_answer),
-              PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue(), yubikey);
+              PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue(),
+              PeopleAccountStatus.MOBILE_USER.getValue(),
+              activationKey);
 
       username = user.getUsername();
+
       // Register group
       mgr.registerGroup(user, BBCGroup.BBC_GUEST.getValue());
 
       // Create address entry
       mgr.registerAddress(user);
+
+      mgr.registerOrg(user, org, department);
 
       if (userAgent.contains("MSIE")) {
         browser = "Internet Explorer";
@@ -352,7 +374,8 @@ public class UserRegistration implements Serializable {
       // Notify user about the request
       emailBean.sendEmail(mail,
               UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-              UserAccountsEmailMessages.buildMobileRequestMessage());
+              UserAccountsEmailMessages.buildMobileRequestMessage(
+                      getApplicationUri(), user.getUsername() + activationKey));
 
       // Reset the values
       fname = "";
@@ -360,6 +383,7 @@ public class UserRegistration implements Serializable {
       mail = "";
       title = "";
       org = "";
+      department = "";
       tel = "";
       orcid = "";
       security_answer = "";
@@ -413,26 +437,40 @@ public class UserRegistration implements Serializable {
     }
 
     try {
-
-      short yubikey = 1;
-
-      String otp = "-1";
-
       // Generates a UNIX compliant account
       int uid = mgr.lastUserID() + 1;
+
+      String activationKey = SecurityUtils.getRandomString(64);
 
       // Register the request in the platform
       userTransaction.begin();
 
-      User user = mgr.register(fname, lname, mail, title, org,
-              tel, orcid, uid, SecurityUtils.converToSHA256(password), otp,
+      User user = mgr.register(fname,
+              lname,
+              mail,
+              title,
+              tel,
+              orcid,
+              uid,
+              SecurityUtils.converToSHA256(password),
+              "-1",
               security_question, SecurityUtils.converToSHA256(security_answer),
-              PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue(), yubikey);
+              PeopleAccountStatus.ACCOUNT_VERIFICATION.getValue(),
+              PeopleAccountStatus.YUBIKEY_USER.getValue(),
+              activationKey);
 
       mgr.registerGroup(user, BBCGroup.BBC_GUEST.getValue());
 
-      mgr.registerAddress(user, address1, address2, address3, city, state,
-              country, postalcode);
+      mgr.registerAddress(user,
+              address1,
+              address2,
+              address3,
+              city,
+              state,
+              country,
+              postalcode);
+      mgr.registerOrg(user, org, department);
+
       mgr.registerYubikey(user);
 
       mgr.registerLoginInfo(user, "REGISTRATION", ip, browser);
@@ -442,7 +480,8 @@ public class UserRegistration implements Serializable {
       // Send email to the user to get notified about the account request
       emailBean.sendEmail(mail,
               UserAccountsEmailMessages.ACCOUNT_REQUEST_SUBJECT,
-              UserAccountsEmailMessages.buildYubikeyRequestMessage());
+              UserAccountsEmailMessages.buildYubikeyRequestMessage(
+                      getApplicationUri(), user.getUsername() + activationKey));
 
       // Reset the values
       fname = "";
@@ -464,6 +503,7 @@ public class UserRegistration implements Serializable {
       country = "";
       postalcode = "";
       tos = false;
+      department = "";
 
     } catch (NotSupportedException | SystemException | NoSuchAlgorithmException |
             UnsupportedEncodingException | MessagingException |
@@ -474,5 +514,18 @@ public class UserRegistration implements Serializable {
       return ("");
     }
     return ("yubico");
+  }
+
+  public String getApplicationUri() {
+    try {
+      FacesContext ctxt = FacesContext.getCurrentInstance();
+      ExternalContext ext = ctxt.getExternalContext();
+      URI uri = new URI(ext.getRequestScheme(),
+              null, ext.getRequestServerName(), ext.getRequestServerPort(),
+              ext.getRequestContextPath(), null, null);
+      return uri.toASCIIString();
+    } catch (URISyntaxException e) {
+      throw new FacesException(e);
+    }
   }
 }

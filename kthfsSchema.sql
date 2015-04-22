@@ -26,13 +26,13 @@ CREATE TABLE `bbc_group` (
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `diseases` (
-  `id` INT(16) NOT NULL AUTO_INCREMENT,
-  `ontology_name` VARCHAR(255) DEFAULT NULL,
-  `ontology_version` VARCHAR(255) DEFAULT NULL,
-  `ontology_code` VARCHAR(255) DEFAULT NULL,
-  `ontology_description` VARCHAR(1000) DEFAULT NULL,
-  `explanation` VARCHAR(1000) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+    `id` INT(16) NOT NULL AUTO_INCREMENT,
+    `ontology_name` VARCHAR(255) DEFAULT NULL,
+    `ontology_version` VARCHAR(255) DEFAULT NULL,
+    `ontology_code` VARCHAR(255) DEFAULT NULL,
+    `ontology_description` VARCHAR(1000) DEFAULT NULL,
+    `explanation` VARCHAR(1000) DEFAULT NULL,
+     PRIMARY KEY (`id`)
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `users` (
@@ -43,42 +43,43 @@ CREATE TABLE `users` (
   `fname` VARCHAR(30) DEFAULT NULL,
   `lname` VARCHAR(30) DEFAULT NULL,
   `activated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `home_org` VARCHAR(100) DEFAULT NULL,
-  `title` VARCHAR(10) DEFAULT NULL,
-  `orcid` VARCHAR(20) DEFAULT NULL,
-  `false_login` INT(11) NOT NULL DEFAULT '-1',
-  `isonline` TINYINT(1) NOT NULL DEFAULT '0',
-  `secret` VARCHAR(20) DEFAULT NULL,
-  `security_question` VARCHAR(20) DEFAULT NULL,
-  `security_answer` VARCHAR(128) DEFAULT NULL,
-  `yubikey_user` TINYINT(1) NOT NULL DEFAULT '0',
-  `password_changed` TIMESTAMP NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `notes` VARCHAR(500) DEFAULT NULL,
-  `mobile` VARCHAR(20) DEFAULT NULL,
-  `status` INT(11) NOT NULL DEFAULT '-1',
+  `title` varchar(10)  DEFAULT NULL,
+  `orcid` varchar(20)  DEFAULT NULL,
+  `false_login` int(11) NOT NULL DEFAULT '-1',
+  `isonline` tinyint(1) NOT NULL DEFAULT '0',
+  `secret` varchar(20)  DEFAULT NULL,
+  `validation_key` varchar(128)  DEFAULT NULL,
+  `security_question` varchar(20)  DEFAULT NULL,
+  `security_answer` varchar(128)  DEFAULT NULL,
+  `yubikey_user` int(11) NOT NULL DEFAULT '0',
+  `password_changed` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `notes` varchar(500)  DEFAULT NULL,
+  `mobile` varchar(20)  DEFAULT NULL,
+  `status` int(11) NOT NULL DEFAULT '-1',
   PRIMARY KEY (`uid`),
-  UNIQUE (`username`),
-  UNIQUE (`email`)
-) ENGINE=ndbcluster;
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=ndbcluster AUTO_INCREMENT=10000;
 
 CREATE TABLE `yubikey` (
-  `serial` VARCHAR(10) DEFAULT NULL,
-  `version` VARCHAR(15) DEFAULT NULL,
-  `notes` VARCHAR(100) DEFAULT NULL,
-  `counter` INT(11) DEFAULT NULL,
-  `low` INT(11) DEFAULT NULL,
-  `high` INT(11) DEFAULT NULL,
-  `session_use` INT(11) DEFAULT NULL,
-  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `aes_secret` VARCHAR(100) DEFAULT NULL,
-  `public_id` VARCHAR(40) DEFAULT NULL,
-  `accessed` TIMESTAMP NULL DEFAULT NULL,
-  `status` INT(11) DEFAULT '-1',
-  `yubidnum` INT(11) NOT NULL AUTO_INCREMENT,
-  `uid` INT(11) NOT NULL,
+  `serial` varchar(10)  DEFAULT NULL,
+  `version` varchar(15)  DEFAULT NULL,
+  `notes` varchar(100)  DEFAULT NULL,
+  `counter` int(11) DEFAULT NULL,
+  `low` int(11) DEFAULT NULL,
+  `high` int(11) DEFAULT NULL,
+  `session_use` int(11) DEFAULT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `aes_secret` varchar(100)  DEFAULT NULL,
+  `public_id` varchar(40)  DEFAULT NULL,
+  `accessed` timestamp NULL DEFAULT NULL,
+  `status` int(11) DEFAULT '-1',
+  `yubidnum` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL,
   PRIMARY KEY (`yubidnum`),
-  UNIQUE (`uid`),
-  UNIQUE (`serial`),
+  UNIQUE KEY `uid` (`uid`),
+  UNIQUE KEY `serial` (`serial`),
+  UNIQUE KEY `public_id` (`public_id`),
   UNIQUE (`public_id`),
   FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
@@ -106,9 +107,11 @@ CREATE TABLE `people_group` (
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `study` (
-  `name` VARCHAR(128) NOT NULL,
-  `username` VARCHAR(45) NOT NULL,
-  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `name` varchar(128) NOT NULL,
+  `username` varchar(45)NOT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `retention_period` date DEFAULT NULL,
+  `ethical_status` varchar(30) DEFAULT NULL,
   `archived` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`name`),
   FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -202,11 +205,11 @@ CREATE TABLE `samplecollection_type` (
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `samplecollection_disease` (
-  `collection_id` VARCHAR(255) NOT NULL,
-  `disease_id` INT(16) NOT NULL,
-  PRIMARY KEY (`collection_id`,`disease_id`),
-  FOREIGN KEY (`disease_id`) REFERENCES `diseases` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  FOREIGN KEY (`collection_id`) REFERENCES `samplecollections` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+    `collection_id` VARCHAR(255) NOT NULL,
+    `disease_id` INT(16) NOT NULL,
+    PRIMARY KEY (`collection_id`,`disease_id`),
+    FOREIGN KEY (`disease_id`) REFERENCES `diseases` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    FOREIGN KEY (`collection_id`) REFERENCES `samplecollections` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `study_design` (
@@ -271,17 +274,30 @@ CREATE TABLE `job_execution_files` (
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `consent` (
-  `id` INT(11) NOT NULL,
-  `added` date DEFAULT NULL,
-  `study_name` VARCHAR(128) DEFAULT NULL,
-  `retention_period` date DEFAULT NULL,
-  `consent_form` BLOB,
-  `status` VARCHAR(30) DEFAULT NULL,
-  `name` VARCHAR(80) DEFAULT NULL,
-  PRIMARY KEY (`id`),
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `date` date DEFAULT NULL,
+  `study_name` varchar(128) DEFAULT NULL,
+  `status` varchar(30) DEFAULT NULL,
+  `name` varchar(80) DEFAULT NULL,
+  `type` varchar(30) DEFAULT NULL,
+  `consent_form` longblob DEFAULT NULL,
+   PRIMARY KEY (`id`),
   FOREIGN KEY (`study_name`) REFERENCES `study` (`name`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
+CREATE TABLE `organization` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `uid` int(11) DEFAULT NULL,
+    `org_name` varchar(100) DEFAULT NULL,
+    `website` varchar(200) DEFAULT NULL,
+    `contact_person` varchar(100) DEFAULT NULL,
+    `contact_email` varchar(100) DEFAULT NULL,
+    `department` varchar(100) DEFAULT NULL,
+    `phone` varchar(20) DEFAULT NULL,
+    `fax` varchar(20) DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_Organization` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE
+) ENGINE=ndbcluster;
 CREATE TABLE `collection_type` (
   `collection_id` VARCHAR(255) NOT NULL,
   `type` VARCHAR(128) NOT NULL,

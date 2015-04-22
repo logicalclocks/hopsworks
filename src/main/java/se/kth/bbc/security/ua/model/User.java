@@ -14,6 +14,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -53,8 +55,6 @@ import se.kth.bbc.security.ua.SecurityQuestion;
           query = "SELECT u FROM User u WHERE u.lname = :lname"),
   @NamedQuery(name = "User.findByActivated",
           query = "SELECT u FROM User u WHERE u.activated = :activated"),
-  @NamedQuery(name = "User.findByHomeOrg",
-          query = "SELECT u FROM User u WHERE u.homeOrg = :homeOrg"),
   @NamedQuery(name = "User.findByTitle",
           query = "SELECT u FROM User u WHERE u.title = :title"),
   @NamedQuery(name = "User.findByMobile",
@@ -69,6 +69,8 @@ import se.kth.bbc.security.ua.SecurityQuestion;
           query = "SELECT u FROM User u WHERE u.isonline = :isonline"),
   @NamedQuery(name = "User.findBySecret",
           query = "SELECT u FROM User u WHERE u.secret = :secret"),
+  @NamedQuery(name = "User.findByValidationKey",
+          query = "SELECT u FROM User u WHERE u.validationKey = :validationKey"),
   @NamedQuery(name = "User.findBySecurityQuestion",
           query
           = "SELECT u FROM User u WHERE u.securityQuestion = :securityQuestion"),
@@ -84,10 +86,10 @@ import se.kth.bbc.security.ua.SecurityQuestion;
           query = "SELECT u FROM User u WHERE u.notes = :notes")})
 public class User implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;  
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
-  @NotNull
   @Column(name = "uid")
   private Integer uid;
   @Basic(optional = false)
@@ -117,9 +119,6 @@ public class User implements Serializable {
   @Column(name = "activated")
   @Temporal(TemporalType.TIMESTAMP)
   private Date activated;
-  @Size(max = 100)
-  @Column(name = "home_org")
-  private String homeOrg;
   @Size(max = 10)
   @Column(name = "title")
   private String title;
@@ -144,6 +143,9 @@ public class User implements Serializable {
   @Size(max = 20)
   @Column(name = "secret")
   private String secret;
+  @Size(max = 128)
+  @Column(name = "validation_key")
+  private String validationKey;
   @Size(max = 20)
   @Enumerated(EnumType.STRING)
   @Column(name = "security_question")
@@ -152,7 +154,7 @@ public class User implements Serializable {
   @Column(name = "security_answer")
   private String securityAnswer;
   @Column(name = "yubikey_user")
-  private Short yubikeyUser;
+  private int yubikeyUser;
   @Column(name = "password_changed")
   @Temporal(TemporalType.TIMESTAMP)
   private Date passwordChanged;
@@ -168,6 +170,9 @@ public class User implements Serializable {
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "user")
   private Collection<PeopleGroup> peopleGroupCollection;
+  @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "uid")
+  private Organization organization;
 
   public User() {
   }
@@ -185,6 +190,14 @@ public class User implements Serializable {
     this.falseLogin = falseLogin;
     this.status = status;
     this.isonline = isonline;
+  }
+
+  public String getValidationKey() {
+    return validationKey;
+  }
+
+  public void setValidationKey(String validationKey) {
+    this.validationKey = validationKey;
   }
 
   public Integer getUid() {
@@ -241,14 +254,6 @@ public class User implements Serializable {
 
   public void setActivated(Date activated) {
     this.activated = activated;
-  }
-
-  public String getHomeOrg() {
-    return homeOrg;
-  }
-
-  public void setHomeOrg(String homeOrg) {
-    this.homeOrg = homeOrg;
   }
 
   public String getTitle() {
@@ -323,11 +328,11 @@ public class User implements Serializable {
     this.securityAnswer = securityAnswer;
   }
 
-  public Short getYubikeyUser() {
+  public int getYubikeyUser() {
     return yubikeyUser;
   }
 
-  public void setYubikeyUser(Short yubikeyUser) {
+  public void setYubikeyUser(int yubikeyUser) {
     this.yubikeyUser = yubikeyUser;
   }
 
@@ -361,6 +366,14 @@ public class User implements Serializable {
 
   public void setAddress(Address address) {
     this.address = address;
+  }
+
+  public Organization getOrganization() {
+    return organization;
+  }
+
+  public void setOrganization(Organization organization) {
+    this.organization = organization;
   }
 
   @XmlTransient

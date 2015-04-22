@@ -5,10 +5,14 @@
  */
 package se.kth.bbc.security.ua;
 
+import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.swing.text.AbstractDocument;
+
 /**
  * This class contain the email messages that are sent to the users for account
  * management and registration.
- * <p>
+ *
  * @author Ali Gholmai <gholami@pdc.kth.se>
  */
 public class UserAccountsEmailMessages {
@@ -74,10 +78,12 @@ public class UserAccountsEmailMessages {
 
   /**
    * Build an email message for Yubikey users upon registration.
-   * <p>
+   *
+   * @param username
+   * @param key
    * @return
    */
-  public static String buildYubikeyRequestMessage() {
+  public static String buildYubikeyRequestMessage(String path, String key) {
 
     String message;
 
@@ -85,32 +91,43 @@ public class UserAccountsEmailMessages {
             + "We receieved your yubikey account request for the BiobankCloud.\n\n";
     String l2
             = "You will receive a Yubikey device within 48 hours at your address.\n\n\n";
-    String l3 = "If you have any questions please contact "
+
+    String url = path + "/security/validate_account.xhtml?key=" + key;
+
+    String l3 = "To confirm your email click " + url + " \n\n";
+
+    String l4 = "If you have any questions please contact "
             + BIOBANKCLOUD_SUPPORT_EMAIL;
 
-    message = l1 + l2 + l3;
+    message = l1 + l2 + l3 + l4;
 
     return message;
   }
 
   /**
    * Build an email message for mobile users upon registration.
-   * <p>
+   *
+   * @param username
+   * @param key
    * @return
    */
-  public static String buildMobileRequestMessage() {
+  public static String buildMobileRequestMessage(String path, String key) {
 
     String message;
 
     String l1 = GREETINGS_HEADER + ",\n\n"
             + "We received your mobile account request for the BiobankCloud.\n\n";
     String l2 = "Your account will be activated within "
-            + ACCOUNT_ACITVATION_PERIOD + " hours.\n\n\n";
-    String l3 = "If you have any questions please contact "
+            + ACCOUNT_ACITVATION_PERIOD
+            + " hours after validating your email address.\n\n\n";
+
+    String url = path + "/security/validate_account.xhtml?key=" + key;
+
+    String l3 = "To confirm your email click " + url + " \n\n";
+    String l4 = "If you have any questions please contact "
             + BIOBANKCLOUD_SUPPORT_EMAIL;
 
-    message = l1 + l2 + l3;
-
+    message = l1 + l2 + l3 + l4;
     return message;
   }
 
@@ -226,9 +243,21 @@ public class UserAccountsEmailMessages {
             + BIOBANKCLOUD_SUPPORT_EMAIL;
 
     message = l1 + tmp_pass + l2;
-
     return message;
-
   }
 
+  public static String buildYubikeyResetMessage() {
+    String message;
+
+    String l1 = GREETINGS_HEADER + ",\n\n"
+            + "We received your mobile account request for the BiobankCloud.\n\n";
+    String l2 = "Your account will be activated within "
+            + ACCOUNT_ACITVATION_PERIOD + " hours.\n\n\n";
+    String l3 = "If you have any questions please contact "
+            + BIOBANKCLOUD_SUPPORT_EMAIL;
+
+    message = l1 + l2 + l3;
+
+    return message;
+  }
 }
