@@ -25,6 +25,6 @@ angular.module('hopsWorksApp')
         return $http.post('/api/user/newProject', newProject);
       }
 
-
+      
     };
   }]);

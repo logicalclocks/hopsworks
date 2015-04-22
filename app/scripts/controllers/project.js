@@ -47,7 +47,7 @@ angular.module('hopsWorksApp')
 
 
       self.projectSettingModal = function () {
-        ModalService.projectSettings('md', 'Project settings', '').then(
+        ModalService.projectSettings('md').then(
           function (success) {
             growl.success("Successfully saved project: " + success.name, {title: 'Success', ttl: 5000});
           }, function () {
