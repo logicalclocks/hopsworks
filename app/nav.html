@@ -15,11 +15,17 @@
         trigger.removeClass('is-open');
         trigger.addClass('is-closed');
         isClosed = false;
+
+        $( "#projectBread" ).show( "slow" );
+
       } else {
         overlay.show();
         trigger.removeClass('is-closed');
         trigger.addClass('is-open');
         isClosed = true;
+
+        $( "#projectBread" ).hide( "slow" );
+
       }
     }
 
@@ -44,7 +50,7 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="#/" style="font-family: Lobster; font-size: 30px; margin-left: 5px; color: #fff;">HopsWorks
+        <a class="navbar-brand" href="#/" style="font-family: Lobster; font-size: 30px; color: #fff;">HopsWorks
           <img class="pull-right" style="margin-left:10px" width="30" src="http://www.mc-boden.se/hops.png"/>
         </a>
 
@@ -54,23 +60,6 @@
       <div class="collapse navbar-collapse" id="navbar">
         <ul class="nav navbar-nav navbar-right"
             style="margin-right:10px;">
-
-
-          <!--
-          <li class="dropdown">
-            <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Settings <span
-              class="caret"></span></a>
-
-            <ul class="dropdown-menu" role="menu">
-              <li><a href="#/" data-target="#profileModal" data-toggle="modal">My profile</a></li>
-              <li class="divider"></li>
-              <li><a href="#" ng-click="mainCtrl.logout()">Logout</a></li>
-            </ul>
-
-          </li>
-          -->
-
-
           <li class="dropdown">
 
             <a class="dropdown-toggle" style="padding:7px 0 8px 10px;" data-toggle="dropdown" role="button"
@@ -128,13 +117,6 @@
       </div>
     </div>
   </nav>
-
-
-  <!--modal id="profileModal" title="Profile">
-    <div ng-include="'views/profile.html'"></div>
-  </modal-->
-
-
 
 
 

@@ -360,10 +360,10 @@ label +
 .content-wrapper>.content-heading, .content-wrapper>h3 {
     font-family: inherit;
     line-height: 0;
-    font-size: 24px;
+    font-size: 16px;
     color: #929292;
     margin: -20px -20px 20px;
-    padding:20px;
+    padding: 27px 23px 22px;
     font-weight: 400;
     background-color: #fafbfc;
     border-bottom: 1px solid #cfdbe2;
