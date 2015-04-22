@@ -53,6 +53,7 @@
 /*-------------------------------*/
 
 .sidebar-nav {
+  font-family: 'Roboto', sans-serif;
   position: absolute;
   top: 0;
   width: 200px;
@@ -86,6 +87,9 @@
 .sidebar-nav li:first-child a {
   color: #fff;
   background-color: #1a1a1a;
+  line-height: 1;
+  padding: 10px 0px 10px 0px;
+  font-size: 20px;
 }
 .sidebar-nav li:nth-child(2):before {
   background-color: #ec1b5a;
@@ -138,6 +142,72 @@
   text-decoration: none;
   background-color: transparent;
 }
+
+.sidebar-nav li:nth-child(2) a:active,
+.sidebar-nav li:nth-child(2) a:focus,
+.sidebar-nav li:nth-child(2).open a:active,
+.sidebar-nav li:nth-child(2).open a:focus{
+  background-color: #ec1b5a;
+}
+
+
+.sidebar-nav li:nth-child(3) a:active,
+.sidebar-nav li:nth-child(3) a:focus,
+.sidebar-nav li:nth-child(3).open a:active,
+.sidebar-nav li:nth-child(3).open a:focus{
+  background-color: #79aefe;
+}
+
+
+.sidebar-nav li:nth-child(4) a:active,
+.sidebar-nav li:nth-child(4) a:focus,
+.sidebar-nav li:nth-child(4).open a:active,
+.sidebar-nav li:nth-child(4).open a:focus{
+  background-color: #314190;
+}
+
+
+.sidebar-nav li:nth-child(5) a:active,
+.sidebar-nav li:nth-child(5) a:focus,
+.sidebar-nav li:nth-child(5).open a:active,
+.sidebar-nav li:nth-child(5).open a:focus{
+  background-color: #279636;
+}
+
+
+.sidebar-nav li:nth-child(6) a:active,
+.sidebar-nav li:nth-child(6) a:focus,
+.sidebar-nav li:nth-child(6).open a:active,
+.sidebar-nav li:nth-child(6).open a:focus{
+  background-color: #7d5d81;
+}
+
+
+.sidebar-nav li:nth-child(7) a:active,
+.sidebar-nav li:nth-child(7) a:focus,
+.sidebar-nav li:nth-child(7).open a:active,
+.sidebar-nav li:nth-child(7).open a:focus{
+  background-color: #ead24c;
+}
+
+
+.sidebar-nav li:nth-child(8) a:active,
+.sidebar-nav li:nth-child(8) a:focus,
+.sidebar-nav li:nth-child(8).open a:active,
+.sidebar-nav li:nth-child(8).open a:focus{
+  background-color: #2d2366;
+}
+
+.sidebar-nav li:nth-child(9) a:active,
+.sidebar-nav li:nth-child(9) a:focus,
+.sidebar-nav li:nth-child(9).open a:active,
+.sidebar-nav li:nth-child(9).open a:focus{
+  background-color: #35acdf;
+}
+
+
+
+
 
 .sidebar-nav > .sidebar-brand {
   height: 65px;

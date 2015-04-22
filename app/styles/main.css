@@ -119,3 +119,10 @@ body {
     position: absolute;
     width: 100%;
 }
+
+
+a:focus {
+  outline: none;
+}
+
+

@@ -83,7 +83,7 @@ angular.module('hopsWorksApp')
       $scope.showHamburger = $location.path().indexOf("project") > -1;
 
         self.items = [];
-        for (var i=0; i < 100; i++){
+        for (var i=0; i < 40; i++){
             self.items.push(i);
         }
 
