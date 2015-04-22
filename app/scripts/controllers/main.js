@@ -19,7 +19,7 @@ angular.module('hopsWorksApp')
             };
 
             self.profileModal = function () {
-                ModalService.profile('md', 'Profile', '');
+                ModalService.profile('md');
             };
 
         }]);
