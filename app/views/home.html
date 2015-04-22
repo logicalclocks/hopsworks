@@ -1,5 +1,5 @@
 <link rel="stylesheet" href="styles/timeline.css">
-<div class="container" ng-controller="MainCtrl as mainCtrl" style="padding-top:10px;">
+<div class="container" ng-controller="MainCtrl as mainCtrl" style="padding-top:25px;">
     <div ng-include="'nav.html'"></div>
     <div class="row">
         <div class="col-md-8" style="padding-left:56px;">
@@ -55,16 +55,16 @@
       <span class="list-group-item active">
       <span class="badge pull-left" style="margin-right: 10px;">{{homeCtrl.projects.length}}</span> Projects
 
-      <button class="btn btn-lightgrey pull-right" style="height: 30px; margin-top: -5px;padding: 0px 10px;"
+      <button class="btn btn-lightgrey pull-right" style="height: 43px;margin-right: -16px;margin-top: -11px;width: 70px; border-radius: 0px;"
               ng-click="homeCtrl.newProject()">
-          <i class="fa fa-plus-circle"></i>
-          New
+          <i class="fa fa-plus-circle fa-lg"></i>
+          <span style="margin-left:3px;">New</span>
       </button>
 
       </span>
 
             <div class="list-group-item" style="background-color: #f5f5f5;">
-                <div class="input-group-btn search-panel pull-left" style="width: 87px;">
+                <div class="input-group-btn search-panel pull-left" style="width: 83px;">
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
                         <span id="search_concept">Filter by</span> <span class="caret"></span>
                     </button>
@@ -78,7 +78,7 @@
                 </div>
                 <input type="hidden" name="search_param" value="all" id="search_param">
                 <input type="text" class="form-control pull-left" ng-model="searchProject"
-                       style="width: 200px; border-radius: 0;"
+                       style="width: 205px; border-radius: 0;"
                        name="x" placeholder="Find project...">
         <span class="input-group-btn">
         <button class="btn btn-default" type="button" style="height:34px;">

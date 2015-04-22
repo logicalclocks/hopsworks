@@ -1,6 +1,6 @@
 
 /*-------------------------------*/
-/*           Wrappers            */
+/*           Sidebar Wrappers    */
 /*-------------------------------*/
 
 #wrapper {
@@ -206,9 +206,6 @@
 }
 
 
-
-
-
 .sidebar-nav > .sidebar-brand {
   height: 65px;
   font-size: 20px;
@@ -337,21 +334,4 @@
   display: block;
   -webkit-transform: translate3d(-100px,0,0);
   -webkit-transition: all .35s ease-in-out;
-}
-
-/*-------------------------------*/
-/*            Overlay            */
-/*-------------------------------*/
-
-.overlay {
-  position: fixed;
-  display: none;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /*background-color: rgba(250,250,250,.8);*/
-  z-index: 1;
 }
