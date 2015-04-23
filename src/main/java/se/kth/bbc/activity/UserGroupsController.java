@@ -46,7 +46,7 @@ public class UserGroupsController {
   /**
    * Deletes only GUEST role of a study from USERS_GROUPS table
    * <p>
-   * @param username
+   * @param email
    */
   public void clearGroups(String email) {
     em.createNamedQuery("UsersGroups.deleteGroupsForEmail", UsersGroups.class).

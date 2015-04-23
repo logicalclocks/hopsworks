@@ -31,6 +31,12 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "StudyDetail.findByCreator",
           query = "SELECT s FROM StudyDetail s WHERE s.creator = :creator")})
 public class StudyDetail implements Serializable {
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 128)
+  @Column(name = "studyname")
+  private String studyname;
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -85,6 +91,14 @@ public class StudyDetail implements Serializable {
 
   public void setCreator(String creator) {
     this.creator = creator;
+  }
+
+  public String getStudyname() {
+    return studyname;
+  }
+
+  public void setStudyname(String studyname) {
+    this.studyname = studyname;
   }
 
 }

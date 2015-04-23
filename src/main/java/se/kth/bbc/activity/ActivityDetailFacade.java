@@ -73,7 +73,7 @@ public class ActivityDetailFacade extends AbstractFacade<ActivityDetail> {
    * <p>
    * @param first
    * @param pageSize
-   * @param filterStudy
+   * @param studyName
    * @return
    */
   public List<ActivityDetail> getPaginatedActivityDetailForStudy(int first,

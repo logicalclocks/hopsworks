@@ -758,7 +758,7 @@ public class StudyMB implements Serializable {
     this.retentionPeriod = retentionPeriod;
   }
 
-  public void uploadConsnet(FileUploadEvent event) {
+  public void uploadConsent(FileUploadEvent event) {
     Consent consent = new Consent();
     consent.setType("CONSENT");
     try {
@@ -768,7 +768,7 @@ public class StudyMB implements Serializable {
       Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
     }
     consent.setDate(new Date());
-    consent.setStudyName(studyName);
+    consent.setStudy(sessionState.getActiveStudy());
     consent.setStatus("PENDING");
     consent.setName(event.getFile().getFileName());
 
@@ -802,7 +802,7 @@ public class StudyMB implements Serializable {
       Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
     }
     consent.setDate(new Date());
-    consent.setStudyName(studyName);
+    consent.setStudy(sessionState.getActiveStudy());
     consent.setStatus("PENDING");
     consent.setName(event.getFile().getFileName());
 
@@ -836,7 +836,7 @@ public class StudyMB implements Serializable {
       Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
     }
     consent.setDate(new Date());
-    consent.setStudyName(studyName);
+    consent.setStudy(sessionState.getActiveStudy());
     consent.setStatus("PENDING");
     consent.setName(event.getFile().getFileName());
 

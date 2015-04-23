@@ -2,11 +2,16 @@ package se.kth.bbc.activity;
 
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.study.Study;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -15,6 +20,9 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
  */
 @Stateless
 public class ActivityFacade extends AbstractFacade<UserActivity> {
+
+  private static final Logger logger = Logger.getLogger(ActivityFacade.class.
+          getName());
 
   // String constants
   public static final String NEW_STUDY = " created a new study ";
@@ -46,7 +54,7 @@ public class ActivityFacade extends AbstractFacade<UserActivity> {
     em.persist(activity);
   }
 
-  public void removetActivity(UserActivity activity) {
+  public void removeActivity(UserActivity activity) {
     em.remove(activity);
   }
 
@@ -56,10 +64,10 @@ public class ActivityFacade extends AbstractFacade<UserActivity> {
     return q.getSingleResult();
   }
 
-  public long getStudyCount(String studyName) {
-    TypedQuery<Long> q = em.createNamedQuery("UserActivity.countStudy",
+  public long getStudyCount(Study study) {
+    TypedQuery<Long> q = em.createNamedQuery("UserActivity.countPerStudy",
             Long.class);
-    q.setParameter("studyName", studyName);
+    q.setParameter("study", study);
     return q.getSingleResult();
   }
 
@@ -69,20 +77,93 @@ public class ActivityFacade extends AbstractFacade<UserActivity> {
     return query.getResultList();
   }
 
-  public List<UserActivity> lastActivityOnStudy(String name) {
-    Query query = em.createNativeQuery(
-            "SELECT * FROM activity WHERE activity_on=? ORDER BY created DESC LIMIT 1",
-            UserActivity.class).setParameter(1, name);
-    return query.getResultList();
+  public UserActivity lastActivityOnStudy(Study study) {
+    TypedQuery<UserActivity> query = em.createNamedQuery(
+            "UserActivity.findByStudy", UserActivity.class);
+    query.setParameter("study", study);
+    query.setMaxResults(1);
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      logger.log(Level.SEVERE, "No activity returned for study " + study
+              + ", while its creation should always be there!", e);
+      return null;
+    }
   }
 
-  public void persistActivity(String activity, String study, String user) {
+  public void persistActivity(String activity, Study study, User user) {
     UserActivity a = new UserActivity();
     a.setActivity(activity);
-    a.setActivityOn(study);
+    a.setStudy(study);
     a.setFlag(FLAG_STUDY);
-    a.setPerformedBy(user);
+    a.setUser(user);
     a.setTimestamp(new Date());
     em.persist(a);
+  }
+
+  /**
+   * Gets all activity information.
+   * <p>
+   * @return
+   */
+  public List<ActivityDetail> getAllActivityDetail() {
+    TypedQuery<ActivityDetail> q = em.createNamedQuery("ActivityDetail.findAll",
+            ActivityDetail.class);
+    return q.getResultList();
+  }
+
+  /**
+   * Get all the activities performed on study <i>study</i>.
+   * <p>
+   * @param study
+   * @return
+   */
+  public List<ActivityDetail> activityDetailOnStudy(Study study) {
+    TypedQuery<ActivityDetail> q = em.createNamedQuery(
+            "ActivityDetail.findByStudy", ActivityDetail.class);
+    q.setParameter("study", study);
+    return q.getResultList();
+  }
+
+  /**
+   * Returns all activity, but paginated. Items from <i>first</i> till
+   * <i>first+pageSize</i> are returned.
+   * <p>
+   * @param first
+   * @param pageSize
+   * @return
+   */
+  public List<ActivityDetail> getPaginatedActivityDetail(int first, int pageSize) {
+    TypedQuery<ActivityDetail> q = em.createNamedQuery("ActivityDetail.findAll",
+            ActivityDetail.class);
+    q.setFirstResult(first);
+    q.setMaxResults(pageSize);
+    return q.getResultList();
+  }
+
+  /**
+   * Returns all activities on study <i>studyName</i>, but paginated. Items from
+   * <i>first</i> till
+   * <i>first+pageSize</i> are returned.
+   * <p>
+   * @param first
+   * @param pageSize
+   * @param study
+   * @return
+   */
+  public List<ActivityDetail> getPaginatedActivityDetailForStudy(int first,
+          int pageSize, Study study) {
+    TypedQuery<ActivityDetail> q = em.createNamedQuery(
+            "ActivityDetail.findByStudy", ActivityDetail.class);
+    q.setParameter("study", study);
+    q.setFirstResult(first);
+    q.setMaxResults(pageSize);
+    return q.getResultList();
+  }
+
+  public List<UserActivity> findAllTeamActivity(String flag) {
+    Query query = em.createNamedQuery("UserActivity.findByFlag",
+            UserActivity.class).setParameter("flag", flag);
+    return query.getResultList();
   }
 }

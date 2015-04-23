@@ -8,10 +8,13 @@ package se.kth.bbc.study.services;
 import java.io.Serializable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.study.Study;
 
 /**
  *
@@ -34,6 +37,13 @@ import javax.xml.bind.annotation.XmlRootElement;
           query
           = "SELECT s FROM StudyServices s WHERE s.studyServicePK.service = :service")})
 public class StudyServices implements Serializable {
+  @JoinColumn(name = "study_id",
+          referencedColumnName = "id",
+          insertable = false,
+          updatable
+          = false)
+  @ManyToOne(optional = false)
+  private Study study;
 
   private static final long serialVersionUID = 1L;
   @EmbeddedId
@@ -84,6 +94,14 @@ public class StudyServices implements Serializable {
   public String toString() {
     return "se.kth.bbc.study.StudyService[ studyServicePK=" + studyServicePK
             + " ]";
+  }
+
+  public Study getStudy() {
+    return study;
+  }
+
+  public void setStudy(Study study) {
+    this.study = study;
   }
 
 }

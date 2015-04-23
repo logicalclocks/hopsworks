@@ -11,6 +11,8 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -18,6 +20,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *
@@ -60,6 +63,20 @@ import javax.xml.bind.annotation.XmlRootElement;
           = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name AND s.studyTeamPK.teamMember = :teamMember")})
 //    @NamedQuery(name = "StudyTeam.updateTeamRole", query = "UPDATE StudyTeam SET s.teamRole = :teamRole, s.timestamp = :timestamp WHERE s.studyTeamPK.name = :name AND s.studyTeamPK.teamMember = :teamMember")})
 public class StudyTeam implements Serializable {
+  @JoinColumn(name = "study_id",
+          referencedColumnName = "id",
+          insertable = false,
+          updatable
+          = false)
+  @ManyToOne(optional = false)
+  private Study study;
+  @JoinColumn(name = "team_member",
+          referencedColumnName = "email",
+          insertable
+          = false,
+          updatable = false)
+  @ManyToOne(optional = false)
+  private User user;
 
   private static final long serialVersionUID = 1L;
   @EmbeddedId
@@ -138,6 +155,22 @@ public class StudyTeam implements Serializable {
   @Override
   public String toString() {
     return "se.kth.bbc.study.StudyTeam[ studyTeamPK=" + studyTeamPK + " ]";
+  }
+
+  public Study getStudy() {
+    return study;
+  }
+
+  public void setStudy(Study study) {
+    this.study = study;
+  }
+
+  public User getUser() {
+    return user;
+  }
+
+  public void setUser(User user) {
+    this.user = user;
   }
 
 }

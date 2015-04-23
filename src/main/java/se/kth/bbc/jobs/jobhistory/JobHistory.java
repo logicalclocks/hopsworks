@@ -118,8 +118,8 @@ public class JobHistory implements Serializable {
           referencedColumnName = "EMAIL")
   @ManyToOne(optional = false)
   private User user;
-  @JoinColumn(name = "study",
-          referencedColumnName = "name")
+  @JoinColumn(name = "study_id",
+          referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Study study;
   @OneToMany(cascade = CascadeType.ALL,

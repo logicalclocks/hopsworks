@@ -8,6 +8,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -16,6 +18,8 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.study.Study;
 
 /**
  *
@@ -33,27 +37,21 @@ import javax.xml.bind.annotation.XmlRootElement;
           query = "SELECT u FROM UserActivity u WHERE u.flag = :flag"),
   @NamedQuery(name = "UserActivity.findByActivity",
           query = "SELECT u FROM UserActivity u WHERE u.activity = :activity"),
-  @NamedQuery(name = "UserActivity.findByPerformedBy",
+  @NamedQuery(name = "UserActivity.findByUser",
           query
-          = "SELECT u FROM UserActivity u WHERE u.performedBy = :performedBy"),
+          = "SELECT u FROM UserActivity u WHERE u.user = :user"),
   @NamedQuery(name = "UserActivity.findByTimestamp",
           query = "SELECT u FROM UserActivity u WHERE u.timestamp = :timestamp"),
-  @NamedQuery(name = "UserActivity.findByActivityOn",
+  @NamedQuery(name = "UserActivity.findByStudy",
           query
-          = "SELECT u FROM UserActivity u WHERE u.activityOn = :activityOn ORDER BY u.timestamp DESC"),
+          = "SELECT u FROM UserActivity u WHERE u.study = :study ORDER BY u.timestamp DESC"),
   @NamedQuery(name = "UserActivity.countAll",
           query = "SELECT COUNT(u) FROM UserActivity u"),
-  @NamedQuery(name = "UserActivity.countStudy",
+  @NamedQuery(name = "UserActivity.countPerStudy",
           query
-          = "SELECT COUNT(u) FROM UserActivity u WHERE u.activityOn = :studyName")})
+          = "SELECT COUNT(u) FROM UserActivity u WHERE u.study = :study")})
 public class UserActivity implements Serializable {
-
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 1,
-          max = 255)
-  @Column(name = "activity_on")
-  private String activityOn;
+  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -69,15 +67,20 @@ public class UserActivity implements Serializable {
   @Size(max = 128)
   @Column(name = "activity")
   private String activity;
-  @Size(max = 255)
-  @Column(name = "performed_By")
-  private String performedBy;
   @Basic(optional = false)
   @NotNull
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date timestamp;
-
+  @JoinColumn(name = "study_id",
+          referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private Study study;
+  @JoinColumn(name = "user_id",
+          referencedColumnName = "uid")
+  @ManyToOne(optional = false)
+  private User user;
+  
   public UserActivity() {
   }
 
@@ -104,14 +107,6 @@ public class UserActivity implements Serializable {
 
   public void setActivity(String activity) {
     this.activity = activity;
-  }
-
-  public String getPerformedBy() {
-    return performedBy;
-  }
-
-  public void setPerformedBy(String performedBy) {
-    this.performedBy = performedBy;
   }
 
   public Date getTimestamp() {
@@ -155,12 +150,20 @@ public class UserActivity implements Serializable {
     this.flag = flag;
   }
 
-  public String getActivityOn() {
-    return activityOn;
+  public Study getStudy() {
+    return study;
   }
 
-  public void setActivityOn(String activityOn) {
-    this.activityOn = activityOn;
+  public void setStudy(Study study) {
+    this.study = study;
+  }
+
+  public User getUser() {
+    return user;
+  }
+
+  public void setUser(User user) {
+    this.user = user;
   }
 
 }

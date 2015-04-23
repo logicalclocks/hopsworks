@@ -1,13 +1,3 @@
-CREATE TABLE `activity` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `activity` VARCHAR(128) NOT NULL,
-  `performed_by` VARCHAR(255) NOT NULL,
-  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `flag` VARCHAR(128) DEFAULT NULL,
-  `activity_on` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=ndbcluster;
-
 CREATE TABLE `anatomical_parts` (
   `id` INT(16) NOT NULL AUTO_INCREMENT,
   `ontology_name` VARCHAR(255) DEFAULT NULL,
@@ -43,18 +33,18 @@ CREATE TABLE `users` (
   `fname` VARCHAR(30) DEFAULT NULL,
   `lname` VARCHAR(30) DEFAULT NULL,
   `activated` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `title` varchar(10)  DEFAULT NULL,
-  `orcid` varchar(20)  DEFAULT NULL,
+  `title` VARCHAR(10)  DEFAULT NULL,
+  `orcid` VARCHAR(20)  DEFAULT NULL,
   `false_login` int(11) NOT NULL DEFAULT '-1',
   `isonline` tinyint(1) NOT NULL DEFAULT '0',
-  `secret` varchar(20)  DEFAULT NULL,
-  `validation_key` varchar(128)  DEFAULT NULL,
-  `security_question` varchar(20)  DEFAULT NULL,
-  `security_answer` varchar(128)  DEFAULT NULL,
+  `secret` VARCHAR(20)  DEFAULT NULL,
+  `validation_key` VARCHAR(128)  DEFAULT NULL,
+  `security_question` VARCHAR(20)  DEFAULT NULL,
+  `security_answer` VARCHAR(128)  DEFAULT NULL,
   `yubikey_user` int(11) NOT NULL DEFAULT '0',
   `password_changed` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `notes` varchar(500)  DEFAULT NULL,
-  `mobile` varchar(20)  DEFAULT NULL,
+  `notes` VARCHAR(500)  DEFAULT NULL,
+  `mobile` VARCHAR(20)  DEFAULT NULL,
   `status` int(11) NOT NULL DEFAULT '-1',
   PRIMARY KEY (`uid`),
   UNIQUE KEY `username` (`username`),
@@ -62,16 +52,16 @@ CREATE TABLE `users` (
 ) ENGINE=ndbcluster AUTO_INCREMENT=10000;
 
 CREATE TABLE `yubikey` (
-  `serial` varchar(10)  DEFAULT NULL,
-  `version` varchar(15)  DEFAULT NULL,
-  `notes` varchar(100)  DEFAULT NULL,
+  `serial` VARCHAR(10)  DEFAULT NULL,
+  `version` VARCHAR(15)  DEFAULT NULL,
+  `notes` VARCHAR(100)  DEFAULT NULL,
   `counter` int(11) DEFAULT NULL,
   `low` int(11) DEFAULT NULL,
   `high` int(11) DEFAULT NULL,
   `session_use` int(11) DEFAULT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `aes_secret` varchar(100)  DEFAULT NULL,
-  `public_id` varchar(40)  DEFAULT NULL,
+  `aes_secret` VARCHAR(100)  DEFAULT NULL,
+  `public_id` VARCHAR(40)  DEFAULT NULL,
   `accessed` timestamp NULL DEFAULT NULL,
   `status` int(11) DEFAULT '-1',
   `yubidnum` int(11) NOT NULL AUTO_INCREMENT,
@@ -107,39 +97,52 @@ CREATE TABLE `people_group` (
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `study` (
-  `name` varchar(128) NOT NULL,
-  `username` varchar(45)NOT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `studyname` VARCHAR(128) NOT NULL,
+  `username` VARCHAR(45) NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `retention_period` date DEFAULT NULL,
-  `ethical_status` varchar(30) DEFAULT NULL,
+  `ethical_status` VARCHAR(30) DEFAULT NULL,
   `archived` tinyint(1) DEFAULT '0',
-  PRIMARY KEY (`name`),
+  `deleted` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE (`username`,`studyname`),
   FOREIGN KEY (`username`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `study_meta` (
-  `id` VARCHAR(128) NOT NULL,
-  `studyname` VARCHAR(128) NOT NULL,
-  `description` VARCHAR(2000) DEFAULT NULL,
+CREATE TABLE `activity` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `activity` VARCHAR(128) NOT NULL,
+  `user_id` INT(10) NOT NULL,
+  `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `flag` VARCHAR(128) DEFAULT NULL,
+  `study_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE (`studyname`),
-  FOREIGN KEY (`studyname`) REFERENCES `study` (`name`) ON DELETE CASCADE ON UPDATE NO ACTION
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`uid`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  FOREIGN KEY (`study_id`) REFERENCES `study` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=ndbcluster;
+
+CREATE TABLE `study_meta` (
+  `study_id` INT NOT NULL,
+  `description` VARCHAR(2000) DEFAULT NULL,
+  PRIMARY KEY (`study_id`),
+  FOREIGN KEY (`study_id`) REFERENCES `study` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `study_services` (
-  `study` VARCHAR(128) NOT NULL,
+  `study_id` INT NOT NULL,
   `service` VARCHAR(32) NOT NULL,
-  PRIMARY KEY (`study`,`service`),
-  FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE CASCADE ON UPDATE NO ACTION
+  PRIMARY KEY (`study_id`,`service`),
+  FOREIGN KEY (`study_id`) REFERENCES `study` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `study_team` (
-  `name` VARCHAR(128) NOT NULL,
+  `study_id` INT NOT NULL,
   `team_member` VARCHAR(45) NOT NULL,
   `team_role` VARCHAR(32) NOT NULL,
   `added` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`name`,`team_member`),
-  FOREIGN KEY (`name`) REFERENCES `study` (`name`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  PRIMARY KEY (`study_id`,`team_member`),
+  FOREIGN KEY (`study_id`) REFERENCES `study` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   FOREIGN KEY (`team_member`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
@@ -159,9 +162,9 @@ CREATE TABLE `userlogins` (
 
 CREATE TABLE `zeppelin_notes` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `studyname` VARCHAR(128) DEFAULT NULL,
+  `study_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`studyname`) REFERENCES `study` (`name`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  FOREIGN KEY (`study_id`) REFERENCES `study` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `zeppelin_paragraph` (
@@ -178,10 +181,10 @@ CREATE TABLE `samplecollections` (
   `name` VARCHAR(1024) NOT NULL,
   `description` VARCHAR(2000) DEFAULT NULL,
   `contact` VARCHAR(45) NOT NULL,
-  `study` VARCHAR(128) DEFAULT NULL,
+  `study_id` INT NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE (`acronym`),
-  FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  FOREIGN KEY (`study_id`) REFERENCES `study` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   FOREIGN KEY (`contact`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
@@ -213,16 +216,17 @@ CREATE TABLE `samplecollection_disease` (
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `study_design` (
-  `study_id` VARCHAR(128) DEFAULT NULL,
+  `study_id` INT NOT NULL,
   `design` VARCHAR(128) DEFAULT NULL,
-  FOREIGN KEY (`study_id`) REFERENCES `study_meta` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+  PRIMARY KEY (`study_id`),
+  FOREIGN KEY (`study_id`) REFERENCES `study_meta` (`study_id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `study_inclusion_criteria` (
-  `study_id` VARCHAR(128) NOT NULL,
+  `study_id` INT NOT NULL,
   `criterium` VARCHAR(128) NOT NULL,
   PRIMARY KEY (`study_id`,`criterium`),
-  FOREIGN KEY (`study_id`) REFERENCES `study_meta` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+  FOREIGN KEY (`study_id`) REFERENCES `study_meta` (`study_id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `sample_material` (
@@ -236,7 +240,7 @@ CREATE TABLE `jobhistory` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(128) DEFAULT NULL,
   `submission_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `study` VARCHAR(128) NOT NULL,
+  `study_id` INT NOT NULL,
   `user` VARCHAR(45) NOT NULL,
   `state` VARCHAR(128) NOT NULL,
   `execution_duration` BIGINT(20) DEFAULT NULL,
@@ -245,7 +249,7 @@ CREATE TABLE `jobhistory` (
   `stderr_path` VARCHAR(255) DEFAULT NULL,
   `type` VARCHAR(128) NOT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`study`) REFERENCES `study` (`name`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  FOREIGN KEY (`study_id`) REFERENCES `study` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   FOREIGN KEY (`user`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
@@ -276,25 +280,25 @@ CREATE TABLE `job_execution_files` (
 CREATE TABLE `consent` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `date` date DEFAULT NULL,
-  `study_name` varchar(128) DEFAULT NULL,
-  `status` varchar(30) DEFAULT NULL,
-  `name` varchar(80) DEFAULT NULL,
-  `type` varchar(30) DEFAULT NULL,
+  `study_id` INT NOT NULL,
+  `status` VARCHAR(30) DEFAULT NULL,
+  `name` VARCHAR(80) DEFAULT NULL,
+  `type` VARCHAR(30) DEFAULT NULL,
   `consent_form` longblob DEFAULT NULL,
    PRIMARY KEY (`id`),
-  FOREIGN KEY (`study_name`) REFERENCES `study` (`name`) ON DELETE CASCADE ON UPDATE NO ACTION
+  FOREIGN KEY (`study_id`) REFERENCES `study` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=ndbcluster;
 
 CREATE TABLE `organization` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `uid` int(11) DEFAULT NULL,
-    `org_name` varchar(100) DEFAULT NULL,
-    `website` varchar(200) DEFAULT NULL,
-    `contact_person` varchar(100) DEFAULT NULL,
-    `contact_email` varchar(100) DEFAULT NULL,
-    `department` varchar(100) DEFAULT NULL,
-    `phone` varchar(20) DEFAULT NULL,
-    `fax` varchar(20) DEFAULT NULL,
+    `org_name` VARCHAR(100) DEFAULT NULL,
+    `website` VARCHAR(200) DEFAULT NULL,
+    `contact_person` VARCHAR(100) DEFAULT NULL,
+    `contact_email` VARCHAR(100) DEFAULT NULL,
+    `department` VARCHAR(100) DEFAULT NULL,
+    `phone` VARCHAR(20) DEFAULT NULL,
+    `fax` VARCHAR(20) DEFAULT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_Organization` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE
 ) ENGINE=ndbcluster;
@@ -307,22 +311,24 @@ CREATE TABLE `collection_type` (
 
 CREATE VIEW `activity_details` AS 
   select `activity`.`id` AS `id`,
-    `activity`.`performed_by` AS `performed_by_email`,
+    `users`.`email` AS `performed_by_email`,
     concat(`users`.`fname`,' ',`users`.`lname`) AS `performed_by_name`,
     `activity`.`activity` AS `description`,
-    `activity`.`activity_on` AS `studyname`,
+    `study`.`studyname` AS `studyname`,
     `activity`.`created` AS `created` 
   from 
-    (`activity` join `users` on((`activity`.`performed_by` = `users`.`email`)));
+    (`activity` join `users` on (`activity`.`user_id` = `users`.`uid`)) 
+    join
+    `study` on `activity`.`study_id` = `study`.`id`;
 
 CREATE VIEW `study_details` AS 
-  select `study`.`name` AS `studyname`,
+  select `study`.`studyname` AS `studyname`,
     `study`.`username` AS `email`,
     concat(`users`.`fname`,' ',`users`.`lname`) AS `creator` 
   from 
     (`study` join `users` on((`study`.`username` = `users`.`email`))) 
-  where `study`.`name` in 
-    (select `study_team`.`name` from `study_team`);
+  where `study`.`id` in 
+    (select `study_team`.`study_id` from `study_team`);
 
 CREATE VIEW `users_groups` AS 
   select `u`.`username` AS `username`,

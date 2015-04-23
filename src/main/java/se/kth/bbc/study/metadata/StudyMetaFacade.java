@@ -26,10 +26,10 @@ public class StudyMetaFacade extends AbstractFacade<StudyMeta> {
     super(StudyMeta.class);
   }
 
-  public StudyMeta findByStudyname(String studyname) {
-    TypedQuery<StudyMeta> q = em.createNamedQuery("StudyMeta.findByStudyname",
+  public StudyMeta findByStudyId(Integer id) {
+    TypedQuery<StudyMeta> q = em.createNamedQuery("StudyMeta.findByStudyId",
             StudyMeta.class);
-    q.setParameter("studyname", studyname);
+    q.setParameter("studyId", id);
     try {
       return q.getSingleResult();
     } catch (NoResultException e) {
@@ -46,7 +46,7 @@ public class StudyMetaFacade extends AbstractFacade<StudyMeta> {
    * I have not yet figured out why...
    */
   public void update(StudyMeta meta) {
-    StudyMeta old = findByStudyname(meta.getStudyname());
+    StudyMeta old = findByStudyId(meta.getStudyId());
     if (old != null) {
       em.remove(old);
       em.flush();

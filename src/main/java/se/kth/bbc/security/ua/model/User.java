@@ -412,5 +412,4 @@ public class User implements Serializable {
   public String toString() {
     return "se.kth.bbc.security.ua.model.User[ uid=" + uid + " ]";
   }
-
 }

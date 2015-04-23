@@ -56,6 +56,10 @@ import se.kth.bbc.security.ua.model.User;
           query
           = "SELECT s FROM Samplecollection s WHERE s.study.name = :studyname")})
 public class Samplecollection implements Serializable {
+  @JoinColumn(name = "study_id",
+          referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private Study studyId;
 
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "samplecollectionId")
@@ -223,6 +227,14 @@ public class Samplecollection implements Serializable {
 
   public void setSampleCollection(Collection<Sample> sampleCollection) {
     this.sampleCollection = sampleCollection;
+  }
+
+  public Study getStudyId() {
+    return studyId;
+  }
+
+  public void setStudyId(Study studyId) {
+    this.studyId = studyId;
   }
 
 }

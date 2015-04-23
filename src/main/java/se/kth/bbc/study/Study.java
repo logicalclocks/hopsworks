@@ -7,6 +7,8 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -51,19 +53,25 @@ import se.kth.bbc.study.samples.Samplecollection;
           query
           = "SELECT count(t.name) FROM Study t WHERE t.username = :username")})
 public class Study implements Serializable {
-
-  @OneToMany(mappedBy = "study")
+  
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Basic(optional = false)
+  @Column(name = "id")
+  private Integer id;
+  @Column(name = "deleted")
+  private Boolean deleted;
+  @OneToMany(mappedBy = "study_id")
   private Collection<Samplecollection> samplecollectionCollection;
   @OneToOne(cascade = CascadeType.ALL,
-          mappedBy = "study")
+          mappedBy = "study_id")
   private StudyMeta studyMeta;
   private static final long serialVersionUID = 1L;
-  @Id
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 128)
-  @Column(name = "name")
+  @Column(name = "studyname")
   private String name;
   @Basic(optional = false)
   @NotNull
@@ -151,27 +159,9 @@ public class Study implements Serializable {
   public boolean getArchived() {
     return archived;
   }
-
+  
   public void setArchived(boolean archived) {
     this.archived = archived;
-  }
-  
-  @Override
-  public int hashCode() {
-    int hash = 0;
-    hash += (name != null ? name.hashCode() : 0);
-    return hash;
-  }
-
-  @Override
-  public boolean equals(Object object) {
-    // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof Study)) {
-      return false;
-    }
-    Study other = (Study) object;
-    return !((this.name == null && other.name != null) || (this.name != null
-            && !this.name.equals(other.name)));
   }
 
   @Override
@@ -188,6 +178,52 @@ public class Study implements Serializable {
   public void setSamplecollectionCollection(
           Collection<Samplecollection> samplecollectionCollection) {
     this.samplecollectionCollection = samplecollectionCollection;
+  }
+
+  public Study(Integer id) {
+    this.id = id;
+  }
+
+  public Study(Integer id, String studyname) {
+    this.id = id;
+    this.name = studyname;
+  }
+
+  public Integer getId() {
+    return id;
+  }
+
+  public void setId(Integer id) {
+    this.id = id;
+  }
+
+  public Boolean getDeleted() {
+    return deleted;
+  }
+
+  public void setDeleted(Boolean deleted) {
+    this.deleted = deleted;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 0;
+    hash += (id != null ? id.hashCode() : 0);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object object) {
+    // TODO: Warning - this method won't work in the case the id fields are not set
+    if (!(object instanceof Study)) {
+      return false;
+    }
+    Study other = (Study) object;
+    if ((this.id == null && other.id != null) ||
+            (this.id != null && !this.id.equals(other.id))) {
+      return false;
+    }
+    return true;
   }
 
 }
