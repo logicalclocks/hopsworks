@@ -85,9 +85,19 @@ angular.module('hopsWorksApp')
         self.items = [];
         for (var i=0; i < 40; i++){
             self.items.push(i);
-        }
+        };
 
 
+
+
+
+      self.goToDatasets = function() {
+        $location.path($location.path() + '/datasets');
+      };
+
+      self.goToSpecificDataset = function(id) {
+        $location.path($location.path() + '/' + id);
+      };
 
 
 

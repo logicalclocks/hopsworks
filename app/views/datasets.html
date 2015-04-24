@@ -1,0 +1,168 @@
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+
+
+  <div id="wrapper" class="toggled" ng-controller="DatasetsCtrl as datasetsCtrl">
+    <div class="overlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="offsidebar">
+      <nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation"
+           style="margin-top:50px;">
+
+        <ul class="nav sidebar-nav">
+
+          <li style="background: #1a1a1a;">
+            <a class="text-center">
+              {{ projectCtrl.currentProject.name | limitTo: 17 }}{{projectCtrl.currentProject.name.length > 17
+              ? '...' : ''}}
+            </a>
+          </li>
+
+
+          <li ng-repeat="typeObject in projectCtrl.currentProject.projectTypeCollection">
+            <a href="">
+              {{typeObject.type}} <span class="sub_icon fa fa-globe fa-lg pull-right"></span>
+            </a>
+          </li>
+
+
+          <li>
+            <a>
+              DATASETS <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
+            </a>
+          </li>
+
+
+          <li ng-click="projectCtrl.projectSettingModal()" style="margin-top:40px;">
+            <a>
+              Settings <span class="sub_icon fa fa-dashboard fa-lg pull-right"></span>
+            </a>
+          </li>
+
+          <li>
+            <a href="#/">
+              Users <span class="sub_icon fa fa-users fa-lg pull-right"></span>
+            </a>
+          </li>
+
+
+        </ul>
+      </nav>
+    </aside>
+    <!-- /#sidebar-wrapper -->
+
+    <section>
+      <div class="content-wrapper">
+        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.name }} / Datasets</h3>
+
+
+        <div class="row">
+
+          <div class="col-lg-2">
+            <div class="ibox float-e-margins">
+              <div class="ibox-content">
+                <div class="file-manager">
+                  <h5 style="margin: 0px; font-weight: bold; color: #2e353d;">Filter: </h5>
+                  <a class="file-control active">All</a>
+                  <a class="file-control">Last month</a>
+                  <a class="file-control">Today</a>
+
+                  <div class="hr-line-dashed"></div>
+                  <button style="margin-top:15px;" class="btn btn-primary btn-block">New dataset</button>
+
+                  <!--<h5>Folders</h5>
+                  <ul style="padding: 0" class="folder-list">
+                    <li><a href=""><i class="fa fa-folder"></i> Files</a></li>
+                    <li><a href=""><i class="fa fa-folder"></i> Pictures</a></li>
+                    <li><a href=""><i class="fa fa-folder"></i> Web pages</a></li>
+                    <li><a href=""><i class="fa fa-folder"></i> Illustrations</a></li>
+                    <li><a href=""><i class="fa fa-folder"></i> Films</a></li>
+                    <li><a href=""><i class="fa fa-folder"></i> Books</a></li>
+                  </ul>
+                  <h5 class="tag-title">Tags</h5>
+                  <ul style="padding: 0" class="tag-list">
+                    <li><a href="">Family</a></li>
+                    <li><a href="">Work</a></li>
+                    <li><a href="">Home</a></li>
+                    <li><a href="">Children</a></li>
+                    <li><a href="">Holidays</a></li>
+                    <li><a href="">Music</a></li>
+                    <li><a href="">Photography</a></li>
+                    <li><a href="">Film</a></li>
+                  </ul>
+
+                  -->
+
+
+                </div>
+              </div>
+              <div class="ibox-content"></div>
+
+
+            </div>
+          </div>
+
+
+          <div class="col-lg-10">
+
+
+            <div ng-repeat="dataset in datasetsCtrl.datasets">
+
+              <div ng-if="($index % 5 == 0) && ($index !== 0)" class="row"></div>
+
+
+              <div ng-click="projectCtrl.goToSpecificDataset($index)"
+                   ng-init="(iscollapsed$index) = true"
+                   class="file-box"
+                   ng-mouseenter="(iscollapsed$index) = false"
+                   ng-mouseleave="(iscollapsed$index) = true">
+
+                <div class="file">
+                  <a>
+                    <span class="corner"></span>
+
+                    <div class="icon">
+                      <i class="fa fa-file"></i>
+                    </div>
+                    <div class="file-name">
+                      {{dataset}}
+                      <br>
+                      <small><b>Added:</b> April 24, 2015</small>
+                      <br/>
+
+                      <div collapse="(iscollapsed$index)" style="text-decoration: none;">
+                        <small><b>Modified:</b> April 24, 2015</small>
+                        <br/>
+                        <small><b>Created:</b> April 24, 2015</small>
+                        <br/>
+                        <small><b>Description:</b> Cool dataset that contains everything</small>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              </div>
+
+
+            </div>
+
+
+          </div>
+        </div>
+
+
+      </div>
+
+
+    </section>
+
+
+  </div>
+  <!-- /#wrapper -->
+
+
+</div>
+
+
+</div>
+

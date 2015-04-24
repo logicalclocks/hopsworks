@@ -12,7 +12,8 @@ angular.module('hopsWorksApp', [
   'ui.bootstrap',
   'ui.select',
   'ngMaterial',
-  'ngMessages'
+  'ngMessages',
+  'ui.sortable'
 ])
   .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
@@ -83,6 +84,8 @@ angular.module('hopsWorksApp', [
         templateUrl: 'views/recover.html',
         controller: 'RecoverCtrl as recoverCtrl'
       })
+
+
       .when('/project/:projectID', {
         templateUrl: 'views/project.html',
         controller: 'ProjectCtrl as projectCtrl',
@@ -100,6 +103,43 @@ angular.module('hopsWorksApp', [
             }]
         }
       })
+
+      .when('/project/:projectID/datasets', {
+        templateUrl: 'views/datasets.html',
+        controller: 'ProjectCtrl as projectCtrl',
+        resolve: {
+          auth: ['$q', '$location', 'AuthService',
+            function ($q, $location, AuthService) {
+              return AuthService.session().then(
+                function (success) {
+                },
+                function (err) {
+                  $location.path('/login');
+                  $location.replace();
+                  return $q.reject(err);
+                });
+            }]
+        }
+      })
+
+      .when('/project/:projectID/datasets/:datasetID', {
+        templateUrl: 'views/datasetsBrowser.html',
+        controller: 'ProjectCtrl as projectCtrl',
+        resolve: {
+          auth: ['$q', '$location', 'AuthService',
+            function ($q, $location, AuthService) {
+              return AuthService.session().then(
+                function (success) {
+                },
+                function (err) {
+                  $location.path('/login');
+                  $location.replace();
+                  return $q.reject(err);
+                });
+            }]
+        }
+      })
+
       .otherwise({
         redirectTo: '/'
       });
