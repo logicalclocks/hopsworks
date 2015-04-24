@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.study;
 
 import java.io.Serializable;
@@ -25,6 +20,7 @@ public class StudyTeamPK implements Serializable {
           max = 255)
   @Column(name = "name")
   private String name;
+  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,

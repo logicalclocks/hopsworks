@@ -27,7 +27,6 @@ import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.UploadedFile;
-import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.activity.ActivityDetail;
 import se.kth.bbc.activity.ActivityDetailFacade;
@@ -78,9 +77,6 @@ public class StudyMB implements Serializable {
 
   @EJB
   private ActivityDetailFacade activityDetailFacade;
-
-  @EJB
-  private ActivityController activityController;
 
   @EJB
   private FileOperations fileOps;
@@ -310,7 +306,7 @@ public class StudyMB implements Serializable {
   public String checkStudyOwner(String email) {
     List<Study> lst = studyTeamController.findStudyMaster(studyName);
     for (Study tr : lst) {
-      if (tr.getUsername().equals(email)) {
+      if (tr.getOwner().equals(email)) {
         return email;
       }
     }
@@ -433,7 +429,8 @@ public class StudyMB implements Serializable {
         logger.log(Level.FINE, "{0} - member added to study : {1}.",
                 new Object[]{t.getName(), studyName});
         activityFacade.persistActivity(ActivityFacade.NEW_MEMBER + t.getName()
-                + " ", studyName, sessionState.getLoggedInUsername());
+                + " ", sessionState.getActiveStudy(), sessionState.
+                getLoggedInUsername());
       }
       if (!getSelectedUsernames().isEmpty()) {
         getSelectedUsernames().clear();
@@ -513,8 +510,8 @@ public class StudyMB implements Serializable {
     boolean success = false;
     try {
       studyFacade.removeByName(studyName);
-      activityFacade.persistActivity(ActivityFacade.REMOVED_STUDY, studyName,
-              sessionState.getLoggedInUsername());
+      activityFacade.persistActivity(ActivityFacade.REMOVED_STUDY, sessionState.
+              getActiveStudy(), sessionState.getLoggedInUsername());
       if (deleteFilesOnRemove) {
         String path = File.separator + Constants.DIR_ROOT + File.separator
                 + studyName;
@@ -548,7 +545,8 @@ public class StudyMB implements Serializable {
     if (lazyModel == null) {
       try {
         lazyModel = new LazyActivityModel(activityDetailFacade, studyName);
-        lazyModel.setRowCount((int) activityFacade.getStudyCount(studyName));
+        lazyModel.setRowCount((int) activityFacade.getStudyCount(sessionState.
+                getActiveStudy()));
       } catch (IllegalArgumentException e) {
         logger.log(Level.SEVERE, "Error loading lazy model.", e);
         this.lazyModel = null;
@@ -568,6 +566,7 @@ public class StudyMB implements Serializable {
               "Failed to send redirect to uploader page.", ex);
     }
   }
+
   /**
    * Return a list of UserGroups, which contain the members of this study per
    * role type.
@@ -677,19 +676,19 @@ public class StudyMB implements Serializable {
     if (t == null) {
       return false;
     } else {
-      return t.getUsername().equalsIgnoreCase(email);
+      return t.getOwner().equalsIgnoreCase(email);
     }
   }
 
   public StudyServiceEnum[] getSelectedServices() {
     List<StudyServiceEnum> services = studyServices.findEnabledServicesForStudy(
-            studyName);
+            sessionState.getActiveStudy());
     StudyServiceEnum[] reArr = new StudyServiceEnum[services.size()];
     return services.toArray(reArr);
   }
 
   public boolean shouldDrawTab(String service) {
-    return studyServices.findEnabledServicesForStudy(studyName).contains(
+    return studyServices.findEnabledServicesForStudy(sessionState.getActiveStudy()).contains(
             StudyServiceEnum.valueOf(service));
   }
 
@@ -698,7 +697,7 @@ public class StudyMB implements Serializable {
   }
 
   public String updateServices() {
-    studyServices.persistServicesForStudy(studyName, selectedServices);
+    studyServices.persistServicesForStudy(sessionState.getActiveStudy(), selectedServices);
     return "studyPage";
   }
 
@@ -869,12 +868,6 @@ public class StudyMB implements Serializable {
 
     this.allConsent = privacyManager.getAllConsets(studyName);
     return this.allConsent;
-  }
-
-  public List<ActivityDetail> getAllActivities(String studyName) {
-    List<ActivityDetail> ad = activityController.
-            activityDetailOnStudy(studyName);
-    return ad;
   }
 
   public void showConsent(String consName) {

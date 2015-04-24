@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.study.services;
 
 import java.io.Serializable;
@@ -29,14 +24,18 @@ import se.kth.bbc.study.Study;
           = "SELECT s FROM StudyServices s"),
   @NamedQuery(name = "StudyServices.findByStudy",
           query
-          = "SELECT s FROM StudyServices s WHERE s.studyServicePK.study = :study"),
+          = "SELECT s FROM StudyServices s WHERE s.study = :study"),
   @NamedQuery(name = "StudyServices.findServicesByStudy",
           query
-          = "SELECT s.studyServicePK.service FROM StudyServices s WHERE s.studyServicePK.study = :study ORDER BY s.studyServicePK.service"),
+          = "SELECT s.studyServicePK.service FROM StudyServices s WHERE s.study = :study ORDER BY s.studyServicePK.service"),
   @NamedQuery(name = "StudyServices.findByService",
           query
           = "SELECT s FROM StudyServices s WHERE s.studyServicePK.service = :service")})
 public class StudyServices implements Serializable {
+
+  private static final long serialVersionUID = 1L;
+  @EmbeddedId
+  protected StudyServicePK studyServicePK;
   @JoinColumn(name = "study_id",
           referencedColumnName = "id",
           insertable = false,
@@ -45,27 +44,31 @@ public class StudyServices implements Serializable {
   @ManyToOne(optional = false)
   private Study study;
 
-  private static final long serialVersionUID = 1L;
-  @EmbeddedId
-  protected StudyServicePK studyServicePK;
-
   public StudyServices() {
   }
 
-  public StudyServices(StudyServicePK studyServicePK) {
-    this.studyServicePK = studyServicePK;
+  public StudyServices(StudyServicePK studyServicesPK) {
+    this.studyServicePK = studyServicesPK;
   }
 
-  public StudyServices(String study, StudyServiceEnum service) {
-    this.studyServicePK = new StudyServicePK(study, service);
+  public StudyServices(Study study, StudyServiceEnum service) {
+    this.studyServicePK = new StudyServicePK(study.getId(), service);
   }
 
-  public StudyServicePK getStudyServicePK() {
+  public StudyServicePK getStudyServicesPK() {
     return studyServicePK;
   }
 
-  public void setStudyServicePK(StudyServicePK studyServicePK) {
-    this.studyServicePK = studyServicePK;
+  public void setStudyServicesPK(StudyServicePK studyServicesPK) {
+    this.studyServicePK = studyServicesPK;
+  }
+
+  public Study getStudy() {
+    return study;
+  }
+
+  public void setStudy(Study study) {
+    this.study = study;
   }
 
   @Override
@@ -92,16 +95,7 @@ public class StudyServices implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.study.StudyService[ studyServicePK=" + studyServicePK
-            + " ]";
-  }
-
-  public Study getStudy() {
-    return study;
-  }
-
-  public void setStudy(Study study) {
-    this.study = study;
+    return "[" + study + "," + studyServicePK.getService() + " ]";
   }
 
 }

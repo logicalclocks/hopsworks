@@ -43,8 +43,8 @@ import se.kth.bbc.study.Study;
           query = "SELECT c FROM Consent c WHERE c.status = :status"),
   @NamedQuery(name = "Consent.findByName",
           query = "SELECT c FROM Consent c WHERE c.name = :name"),
-  @NamedQuery(name = "Consent.findByStudyId",
-          query = "SELECT c FROM Consent c WHERE c.studyId = :studyId"),
+  @NamedQuery(name = "Consent.findByStudy",
+          query = "SELECT c FROM Consent c WHERE c.study = :study"),
   @NamedQuery(name = "Consent.findByType",
           query = "SELECT c FROM Consent c WHERE c.type = :type")})
 public class Consent implements Serializable {

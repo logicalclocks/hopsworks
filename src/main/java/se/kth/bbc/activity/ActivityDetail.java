@@ -47,29 +47,35 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class ActivityDetail implements Serializable {
 
   private static final long serialVersionUID = 1L;
+  
   @Id
   @Basic(optional = false)
   @NotNull
   @Column(name = "id")
   private int id;
+  
   @Size(max = 255)
   @Column(name = "performed_by_email")
   private String performedByEmail;
+  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 255)
   @Column(name = "performed_by_name")
   private String performedByName;
+  
   @Size(max = 128)
   @Column(name = "description")
   private String description;
+  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 255)
   @Column(name = "studyname")
   private String studyname;
+  
   @Basic(optional = false)
   @NotNull
   @Column(name = "created")

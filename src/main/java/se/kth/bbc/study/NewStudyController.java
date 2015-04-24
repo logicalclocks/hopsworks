@@ -142,7 +142,7 @@ public class NewStudyController implements Serializable {
         persistServices();
         //Add the activity information
         activityFacade.
-                persistActivity(ActivityFacade.NEW_STUDY, study.getName(),
+                persistActivity(ActivityFacade.NEW_STUDY, study,
                         sessionState.getLoggedInUsername());
         //update role information in study
         addStudyMaster(study.getName());
@@ -220,13 +220,13 @@ public class NewStudyController implements Serializable {
   private void persistServices() {
     switch (chosenTemplate) {
       case TEMPLATE_BBC:
-        studyServices.persistServicesForStudy(newStudyName, SERVICES_BBC);
+        studyServices.persistServicesForStudy(study, SERVICES_BBC);
         break;
       case TEMPLATE_SPARK:
-        studyServices.persistServicesForStudy(newStudyName, SERVICES_SPARK);
+        studyServices.persistServicesForStudy(study, SERVICES_SPARK);
         break;
       case TEMPLATE_CUSTOM:
-        studyServices.persistServicesForStudy(newStudyName, customServices);
+        studyServices.persistServicesForStudy(study, customServices);
         break;
     }
   }

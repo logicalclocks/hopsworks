@@ -2,16 +2,12 @@ package se.kth.bbc.study;
 
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.activity.ActivityController;
-import se.kth.bbc.activity.ActivityDetail;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -80,7 +76,7 @@ public class StudyFacade extends AbstractFacade<Study> {
     List<Study> result = query.getResultList();
     if (result.iterator().hasNext()) {
       Study t = result.iterator().next();
-      return t.getUsername();
+      return t.getOwner();
     }
     return null;
   }

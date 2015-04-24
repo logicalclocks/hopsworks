@@ -50,7 +50,7 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
       studyTeamController.updateTeamRole(sessionState.getActiveStudyname(),
               email, role.getTeam());
       activityFacade.persistActivity(ActivityFacade.CHANGE_ROLE + email + " to "
-              + role, sessionState.getActiveStudyname(), sessionState.
+              + role, sessionState.getActiveStudy(), sessionState.
               getLoggedInUsername());
     } catch (Exception ejb) {
       //addErrorMessageToUserAction("Error: Update failed.");

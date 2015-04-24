@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.study;
 
 import java.io.Serializable;
@@ -30,39 +25,34 @@ import se.kth.bbc.security.ua.model.User;
 @Table(name = "study_team")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "StudyTeam.find",
+  @NamedQuery(name = "StudyTeam.findRoleForUserInStudy",
           query
-          = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :studyName AND s.studyTeamPK.teamMember = :username"),
+          = "SELECT s FROM StudyTeam s WHERE s.study = :study AND s.user = :user"),
   @NamedQuery(name = "StudyTeam.findAll",
           query = "SELECT s FROM StudyTeam s"),
-  @NamedQuery(name = "StudyTeam.findByName",
-          query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name"),
+  @NamedQuery(name = "StudyTeam.findByStudy",
+          query = "SELECT s FROM StudyTeam s WHERE s.study = :study"),
   @NamedQuery(name = "StudyTeam.findByTeamMember",
           query
-          = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.teamMember = :teamMember"),
+          = "SELECT s FROM StudyTeam s WHERE s.user = :user"),
   @NamedQuery(name = "StudyTeam.findByTeamRole",
           query = "SELECT s FROM StudyTeam s WHERE s.teamRole = :teamRole"),
-  @NamedQuery(name = "StudyTeam.findByTimestamp",
-          query = "SELECT s FROM StudyTeam s WHERE s.timestamp = :timestamp"),
   @NamedQuery(name = "StudyTeam.countStudiesByMember",
           query
-          = "SELECT COUNT(s) FROM StudyTeam s WHERE s.studyTeamPK.teamMember = :teamMember"),
-  @NamedQuery(name = "StudyTeam.countMastersByStudy",
+          = "SELECT COUNT(s) FROM StudyTeam s WHERE s.user = :user"),
+  @NamedQuery(name = "StudyTeam.countMembersForStudyAndRole",
           query
-          = "SELECT COUNT(DISTINCT s.studyTeamPK.teamMember) FROM StudyTeam s WHERE s.studyTeamPK.name=:name AND s.teamRole = :teamRole"),
-  @NamedQuery(name = "StudyTeam.countAllMembers",
+          = "SELECT COUNT(DISTINCT s.studyTeamPK.teamMember) FROM StudyTeam s WHERE s.study=:study AND s.teamRole = :teamRole"),
+  @NamedQuery(name = "StudyTeam.countAllMembersForStudy",
           query
-          = "SELECT s.studyTeamPK.teamMember FROM StudyTeam s WHERE s.studyTeamPK.name = :name"),
-  @NamedQuery(name = "StudyTeam.findMembersByRole",
+          = "SELECT COUNT(DISTINCT s.studyTeamPK.teamMember) FROM StudyTeam s WHERE s.study = :study"),
+  @NamedQuery(name = "StudyTeam.findMembersByRoleInStudy",
           query
-          = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name AND s.teamRole = :teamRole"),
-  @NamedQuery(name = "StudyTeam.findMembersByName",
-          query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name"),
-  @NamedQuery(name = "StudyTeam.findByNameAndTeamMember",
-          query
-          = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name AND s.studyTeamPK.teamMember = :teamMember")})
-//    @NamedQuery(name = "StudyTeam.updateTeamRole", query = "UPDATE StudyTeam SET s.teamRole = :teamRole, s.timestamp = :timestamp WHERE s.studyTeamPK.name = :name AND s.studyTeamPK.teamMember = :teamMember")})
+          = "SELECT s FROM StudyTeam s WHERE s.study = :study AND s.teamRole = :teamRole")})
 public class StudyTeam implements Serializable {
+  
+  private static final long serialVersionUID = 1L;
+  
   @JoinColumn(name = "study_id",
           referencedColumnName = "id",
           insertable = false,
@@ -70,6 +60,7 @@ public class StudyTeam implements Serializable {
           = false)
   @ManyToOne(optional = false)
   private Study study;
+  
   @JoinColumn(name = "team_member",
           referencedColumnName = "email",
           insertable
@@ -77,13 +68,13 @@ public class StudyTeam implements Serializable {
           updatable = false)
   @ManyToOne(optional = false)
   private User user;
-
-  private static final long serialVersionUID = 1L;
+  
   @EmbeddedId
   protected StudyTeamPK studyTeamPK;
-  //@Size(min = 1, max = 16)
+  
   @Column(name = "team_role")
   private String teamRole;
+  
   @Basic(optional = false)
   @NotNull
   @Column(name = "added")

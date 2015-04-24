@@ -52,30 +52,36 @@ import se.kth.bbc.study.Study;
           = "SELECT COUNT(u) FROM UserActivity u WHERE u.study = :study")})
 public class UserActivity implements Serializable {
   
+  private static final long serialVersionUID = 1L;
+  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 5)
   @Column(name = "flag")
   private String flag;
-  private static final long serialVersionUID = 1L;
+    
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
+  
   @Size(max = 128)
   @Column(name = "activity")
   private String activity;
+  
   @Basic(optional = false)
   @NotNull
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date timestamp;
+  
   @JoinColumn(name = "study_id",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Study study;
+  
   @JoinColumn(name = "user_id",
           referencedColumnName = "uid")
   @ManyToOne(optional = false)

@@ -37,8 +37,8 @@ import se.kth.bbc.study.samples.Samplecollection;
           query = "SELECT t FROM Study t"),
   @NamedQuery(name = "Study.findByName",
           query = "SELECT t FROM Study t WHERE t.name = :name"),
-  @NamedQuery(name = "Study.findByUsername",
-          query = "SELECT t FROM Study t WHERE t.username = :username"),
+  @NamedQuery(name = "Study.findByOwner",
+          query = "SELECT t FROM Study t WHERE t.owner = :owner"),
   @NamedQuery(name = "Study.findByCreated",
           query = "SELECT t FROM Study t WHERE t.created = :created"),
   @NamedQuery(name = "Study.findByEthicalStatus",
@@ -47,51 +47,59 @@ import se.kth.bbc.study.samples.Samplecollection;
   @NamedQuery(name = "Study.findByRetentionPeriod",
           query
           = "SELECT t FROM Study t WHERE t.retentionPeriod = :retentionPeriod"),
-  @NamedQuery(name = "Study.findOwner",
-          query = "SELECT t.username FROM Study t WHERE t.name = :name"),
   @NamedQuery(name = "Study.countStudyByOwner",
           query
-          = "SELECT count(t.name) FROM Study t WHERE t.username = :username")})
+          = "SELECT count(t) FROM Study t WHERE t.owner = :owner")})
 public class Study implements Serializable {
+  
+  private static final long serialVersionUID = 1L;
   
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
+  
   @Column(name = "deleted")
   private Boolean deleted;
+  
   @OneToMany(mappedBy = "study_id")
   private Collection<Samplecollection> samplecollectionCollection;
+  
   @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "study_id")
   private StudyMeta studyMeta;
-  private static final long serialVersionUID = 1L;
+  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 128)
   @Column(name = "studyname")
   private String name;
+  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 255)
   @Column(name = "username")
-  private String username;
+  private String owner;
+  
   @Column(name = "retention_period")
   @Temporal(TemporalType.DATE)
   private Date retentionPeriod;
+  
   @Basic(optional = false)
   @NotNull
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date created;
+  
   @NotNull
   @Size(min = 1,
           max = 30)
   @Column(name = "ethical_status")
   private String ethicalStatus;
+  
   @Column(name = "archived")
   private boolean archived;
 
@@ -104,7 +112,7 @@ public class Study implements Serializable {
 
   public Study(String name, String username, Date timestamp) {
     this.name = name;
-    this.username = username;
+    this.owner = username;
     this.created = timestamp;
   }
 
@@ -132,12 +140,12 @@ public class Study implements Serializable {
     this.name = name;
   }
 
-  public String getUsername() {
-    return username;
+  public String getOwner() {
+    return owner;
   }
 
-  public void setUsername(String username) {
-    this.username = username;
+  public void setOwner(String owner) {
+    this.owner = owner;
   }
 
   public Date getRetentionPeriod() {

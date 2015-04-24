@@ -31,22 +31,26 @@ import se.kth.bbc.study.Study;
   @NamedQuery(name = "StudyMeta.findAll",
           query
           = "SELECT s FROM StudyMeta s"),
-  @NamedQuery(name = "StudyMeta.findByStudyId",
+  @NamedQuery(name = "StudyMeta.findByStudy",
           query
-          = "SELECT s FROM StudyMeta s WHERE s.studyId = :studyId"),
+          = "SELECT s FROM StudyMeta s WHERE s.study = :study"),
   @NamedQuery(name = "StudyMeta.findByDescription",
           query
           = "SELECT s FROM StudyMeta s WHERE s.description = :description")})
 public class StudyMeta implements Serializable {
+  
+  private static final long serialVersionUID = 1L;
+  
   @Id
   @Basic(optional = false)
   @NotNull
   @Column(name = "study_id")
   private Integer studyId;
-  private static final long serialVersionUID = 1L;
+  
   @Size(max = 2000)
   @Column(name = "description")
   private String description;
+  
   @JoinColumn(name = "study_id",
           referencedColumnName = "id",
           insertable = false,
@@ -54,6 +58,7 @@ public class StudyMeta implements Serializable {
           = false)
   @OneToOne(optional = false)
   private Study study;
+  
   @ElementCollection(targetClass = CollectionTypeStudyDesignEnum.class)
   @CollectionTable(name = "study_design",
           joinColumns = @JoinColumn(name = "study_id",
@@ -61,6 +66,7 @@ public class StudyMeta implements Serializable {
   @Column(name = "design")
   @Enumerated(EnumType.STRING)
   private List<CollectionTypeStudyDesignEnum> studyDesignList;
+  
   @ElementCollection(targetClass = InclusionCriteriumEnum.class)
   @CollectionTable(name = "study_inclusion_criteria",
           joinColumns = @JoinColumn(name = "study_id",

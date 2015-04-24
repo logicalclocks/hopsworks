@@ -31,28 +31,24 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "StudyDetail.findByCreator",
           query = "SELECT s FROM StudyDetail s WHERE s.creator = :creator")})
 public class StudyDetail implements Serializable {
+
+  private static final long serialVersionUID = 1L;
+
+  @Id
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 128)
   @Column(name = "studyname")
   private String studyname;
-
-  private static final long serialVersionUID = 1L;
-  @Id
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 1,
-          max = 128)
-  @Column(name = "studyName")
-  private String studyName;
-  // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
+  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 255)
   @Column(name = "email")
   private String email;
+  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -65,16 +61,8 @@ public class StudyDetail implements Serializable {
 
   public StudyDetail(String studyName, String email, String creatorName) {
     this.creator = creatorName;
-    this.studyName = studyName;
+    this.studyname = studyName;
     this.email = email;
-  }
-
-  public String getStudyName() {
-    return studyName;
-  }
-
-  public void setStudyName(String studyName) {
-    this.studyName = studyName;
   }
 
   public String getEmail() {

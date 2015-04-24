@@ -100,6 +100,18 @@ public class ActivityFacade extends AbstractFacade<UserActivity> {
     a.setTimestamp(new Date());
     em.persist(a);
   }
+  
+  public void persistActivity(String activity, Study study, String email){
+    TypedQuery<User> userQuery = em.createNamedQuery("User.findByEmail", User.class);
+    userQuery.setParameter("email", email);
+    User user;
+    try{
+      user = userQuery.getSingleResult();
+    }catch(NoResultException e){
+      throw new IllegalArgumentException("No user found with email "+email+" when trying to persist activity for that user.",e);
+    }
+    persistActivity(activity, study, user);
+  }
 
   /**
    * Gets all activity information.

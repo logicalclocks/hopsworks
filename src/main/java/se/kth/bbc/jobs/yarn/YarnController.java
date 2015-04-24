@@ -137,7 +137,7 @@ public class YarnController extends JobController {
               "Failed to write job history. Aborting execution.");
       return;
     }
-    writeJobStartedActivity(sessionState.getActiveStudyname(), sessionState.
+    writeJobStartedActivity(sessionState.getActiveStudy(), sessionState.
             getLoggedInUsername());
   }
 
