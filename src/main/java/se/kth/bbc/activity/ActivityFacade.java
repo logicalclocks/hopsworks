@@ -132,8 +132,8 @@ public class ActivityFacade extends AbstractFacade<UserActivity> {
    */
   public List<ActivityDetail> activityDetailOnStudy(Study study) {
     TypedQuery<ActivityDetail> q = em.createNamedQuery(
-            "ActivityDetail.findByStudy", ActivityDetail.class);
-    q.setParameter("study", study);
+            "ActivityDetail.findByStudyname", ActivityDetail.class);
+    q.setParameter("studyname", study.getName());
     return q.getResultList();
   }
 
@@ -166,8 +166,8 @@ public class ActivityFacade extends AbstractFacade<UserActivity> {
   public List<ActivityDetail> getPaginatedActivityDetailForStudy(int first,
           int pageSize, Study study) {
     TypedQuery<ActivityDetail> q = em.createNamedQuery(
-            "ActivityDetail.findByStudy", ActivityDetail.class);
-    q.setParameter("study", study);
+            "ActivityDetail.findByStudyname", ActivityDetail.class);
+    q.setParameter("studyname", study.getName());
     q.setFirstResult(first);
     q.setMaxResults(pageSize);
     return q.getResultList();

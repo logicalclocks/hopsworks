@@ -204,14 +204,6 @@ public class UserManager {
     return (existing.size() > 0);
   }
 
-  public Yubikey findYubikey(int uid) {
-    TypedQuery<Yubikey> query = em.createNamedQuery("Yubikey.findByUid",
-            Yubikey.class);
-    query.setParameter("uid", uid);
-    return query.getSingleResult();
-
-  }
-
   public List<User> findAllUsers() {
     List<User> query = em.createQuery(
             "SELECT p FROM User p WHERE p.status !='"
@@ -239,13 +231,6 @@ public class UserManager {
   public User findByEmail(String email) {
     TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
     query.setParameter("email", email);
-    return query.getSingleResult();
-  }
-
-  public Address findAddress(int uid) {
-    TypedQuery<Address> query = em.createNamedQuery("Address.findByUid",
-            Address.class);
-    query.setParameter("uid", uid);
     return query.getSingleResult();
   }
 

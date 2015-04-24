@@ -172,7 +172,7 @@ public final class AdamController extends JobController {
 
     AdamJob job = new AdamJob(history, r, fops, args, opts);
     setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
-            sessionState.getActiveStudyname(), JobType.ADAM));
+            sessionState.getActiveStudy(), JobType.ADAM));
     if (isJobSelected()) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveStudyname())

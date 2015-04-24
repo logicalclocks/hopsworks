@@ -8,6 +8,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -36,60 +37,125 @@ public class StudyFacade extends AbstractFacade<Study> {
     return query.getResultList();
   }
 
-  public List<Study> findByUser(String username) {
+  /**
+   * Find all the studies for which the given user is owner. This implies that
+   * this user created all the returned studies.
+   * <p>
+   * @param user The user for whom studies are sought.
+   * @return List of all the studies that were created by this user.
+   */
+  public List<Study> findByUser(User user) {
     TypedQuery<Study> query = em.createNamedQuery(
-            "Study.findByUsername", Study.class).setParameter(
-                    "username", username);
+            "Study.findByOwner", Study.class).setParameter(
+                    "owner", user);
     return query.getResultList();
   }
 
-  public Study findByName(String studyname) {
-    TypedQuery<Study> query = em.createNamedQuery("Study.findByName",
-            Study.class).setParameter("name", studyname);
+  /**
+   * Find all the studies for which the user with given email is owner. This
+   * implies that this user created all the returned studies.
+   * <p>
+   * @param email The email of the user for whom studies are sought.
+   * @return List of all the studies that were created by this user.
+   * @deprecated use findByUser(User user) instead.
+   */
+  public List<Study> findByUser(String email) {
+    TypedQuery<User> query = em.createNamedQuery(
+            "User.findByEmail", User.class).setParameter(
+                    "email", email);
+    User user = query.getSingleResult();
+    return findByUser(user);
+  }
+
+  /**
+   * Get the study with the given name created by the given User.
+   * <p>
+   * @param studyname The name of the study.
+   * @param user The owner of the study.
+   * @return The study with given name created by given user, or null if such
+   * does not exist.
+   */
+  public Study findByNameAndOwner(String studyname, User user) {
+    TypedQuery<Study> query = em.createNamedQuery("Study.findBy",
+            Study.class).setParameter("name", studyname).setParameter("owner",
+                    user);
     try {
       return query.getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
   }
-
-  public int getAllStudy(String username) {
-    return ((Long) em.createNamedQuery("Study.countStudyByOwner").
-            setParameter("username", username).getSingleResult()).intValue();
+  
+   /**
+   * Get the study with the given name created by the User with given email.
+   * <p>
+   * @param studyname The name of the study.
+   * @param email The email of the owner of the study.
+   * @return The study with given name created by given user, or null if such
+   * does not exist.
+   * @deprecated use findByNameAndOwner(String studyname, User user) instead.
+   */
+  public Study findByNameAndOwnerEmail(String studyname, String email) {
+    TypedQuery<User> query = em.createNamedQuery("User.findByEmail",
+            User.class).setParameter("email", email);
+    User user = query.getSingleResult();
+    return findByNameAndOwner(studyname, user);
   }
 
-  public int getMembers(String name) {
-    return ((Long) em.createNamedQuery("Study.findMembers").setParameter(
-            "name", name).getSingleResult()).intValue();
+  /**
+   * Count the number of studies for which the given user is owner.
+   * <p>
+   * @param owner
+   * @return
+   */
+  public int countOwnedStudies(User owner) {
+    TypedQuery<Long> query = em.createNamedQuery("Study.countStudyByOwner",
+            Long.class);
+    query.setParameter("owner", owner);
+    return query.getSingleResult().intValue();
   }
 
-  public List<Study> filterPersonalStudy(String username) {
-    Query query = em.createNamedQuery("Study.findByUsername",
-            Study.class).setParameter("username", username);
+  /**
+   * Count the number of studies for which the owner has the given email.
+   * <p>
+   * @param email
+   * @return The number of studies.
+   * @deprecated Use countOwnedStudies(User owner) instead.
+   */
+  public int countOwnedStudies(String email) {
+    TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
+    query.setParameter("email", email);
+    //TODO: may throw an exception
+    User user = query.getSingleResult();
+    return countOwnedStudies(user);
+  }
+
+//  public int getMembers(Study study) {
+//    return ((Long) em.createNamedQuery("Study.findMembers").setParameter(
+//            "name", name).getSingleResult()).intValue();
+//  }
+  /**
+   * Find all the studies owned by the given user.
+   * <p>
+   * @param user
+   * @return
+   */
+  public List<Study> findOwnedStudies(User user) {
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByOwner",
+            Study.class);
+    query.setParameter("owner", user);
     return query.getResultList();
-  }
-
-  public String filterByName(String name) {
-    Query query
-            = em.createNamedQuery("Study.findByName", Study.class).
-            setParameter("name", name);
-    List<Study> result = query.getResultList();
-    if (result.iterator().hasNext()) {
-      Study t = result.iterator().next();
-      return t.getOwner();
-    }
-    return null;
   }
 
   /**
    * Get the owner of the given study.
-   * @param studyName: the name of the study
+   * <p>
+   * @param study The study for which to get the current owner.
    * @return The primary key of the owner of the study.
+   * @deprecated Use study.getOwner().getEmail(); instead.
    */
-  public String findOwner(String studyName) {
-    Query q = em.createNamedQuery("Study.findOwner", String.class).
-            setParameter("name", studyName);
-    return (String) q.getSingleResult();
+  public String findOwner(Study study) {
+    return study.getOwner();
   }
 
   public List<Study> findAllStudies(String user) {

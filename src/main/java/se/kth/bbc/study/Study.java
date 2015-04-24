@@ -49,7 +49,10 @@ import se.kth.bbc.study.samples.Samplecollection;
           = "SELECT t FROM Study t WHERE t.retentionPeriod = :retentionPeriod"),
   @NamedQuery(name = "Study.countStudyByOwner",
           query
-          = "SELECT count(t) FROM Study t WHERE t.owner = :owner")})
+          = "SELECT count(t) FROM Study t WHERE t.owner = :owner"),
+  @NamedQuery(name = "Study.findByOwnerAndName",
+          query
+          = "SELECT t FROM Study t WHERE t.owner = :owner AND t.name = :name")})
 public class Study implements Serializable {
   
   private static final long serialVersionUID = 1L;

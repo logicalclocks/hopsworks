@@ -10,7 +10,6 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
-import org.apache.hadoop.yarn.exceptions.YarnException;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
@@ -112,7 +111,7 @@ public class YarnController extends JobController {
     //Set up job
     YarnJob job = new YarnJob(history, runner, fops);
     setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
-            sessionState.getActiveStudyname(), JobType.YARN));
+            sessionState.getActiveStudy(), JobType.YARN));
     if (isJobSelected()) {
       //Set log paths
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.

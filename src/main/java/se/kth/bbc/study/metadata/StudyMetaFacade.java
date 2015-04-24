@@ -5,6 +5,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.study.Study;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -26,10 +27,15 @@ public class StudyMetaFacade extends AbstractFacade<StudyMeta> {
     super(StudyMeta.class);
   }
 
-  public StudyMeta findByStudyId(Integer id) {
-    TypedQuery<StudyMeta> q = em.createNamedQuery("StudyMeta.findByStudyId",
+  /**
+   * Find the StudyMeta object associated with the given Study.
+   * @param study
+   * @return The associated StudyMeta object, or null if there is none.
+   */
+  public StudyMeta findByStudy(Study study) {
+    TypedQuery<StudyMeta> q = em.createNamedQuery("StudyMeta.findByStudy",
             StudyMeta.class);
-    q.setParameter("studyId", id);
+    q.setParameter("study", study);
     try {
       return q.getSingleResult();
     } catch (NoResultException e) {
@@ -46,7 +52,7 @@ public class StudyMetaFacade extends AbstractFacade<StudyMeta> {
    * I have not yet figured out why...
    */
   public void update(StudyMeta meta) {
-    StudyMeta old = findByStudyId(meta.getStudyId());
+    StudyMeta old = findByStudy(meta.getStudy());
     if (old != null) {
       em.remove(old);
       em.flush();

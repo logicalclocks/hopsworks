@@ -14,7 +14,7 @@ and open the template in the editor.
   <body>
     <ui:composition>
       <h3 class="page_title" align="left">
-        Team Members (#{studyManagedBean.countAllMembersPerStudy()})
+        Team Members (#{studyManagedBean.countAllMembersInActiveStudy()})
         <span class="right_button">
           <h:form id="frmBtn">
             <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" action="newTeamMemb" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>

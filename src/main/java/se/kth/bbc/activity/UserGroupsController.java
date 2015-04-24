@@ -7,6 +7,8 @@ package se.kth.bbc.activity;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
@@ -49,18 +51,25 @@ public class UserGroupsController {
    * @param email
    */
   public void clearGroups(String email) {
-    em.createNamedQuery("UsersGroups.deleteGroupsForEmail", UsersGroups.class).
+    em.createNamedQuery("UsersGroups.deleteGuestForEmail", UsersGroups.class).
             setParameter("email", email).executeUpdate();
   }
 
-  public boolean checkForCurrentSession(String email) {
-    Query query = em.createNamedQuery("UsersGroups.findARecord",
+  /**
+   * Check if an entry exists in the UserGroups table for the given email.
+   * @param email
+   * @return True if one or more entries exists, false otherwise.
+   */
+  public boolean existsEntryForEmail(String email) {
+    Query query = em.createNamedQuery("UsersGroups.findByEmail",
             UsersGroups.class).setParameter("email", email);
-    long rec = (Long) query.getSingleResult();
-    if (rec > 0) {
+    try{
+      query.getSingleResult();
       return true;
-    } else {
+    }catch(NoResultException e){
       return false;
+    }catch (NonUniqueResultException e){
+      return true;
     }
   }
 

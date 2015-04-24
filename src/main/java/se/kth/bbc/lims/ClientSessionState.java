@@ -6,6 +6,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.study.StudyFacade;
 import se.kth.bbc.study.Study;
 
@@ -38,8 +39,8 @@ public class ClientSessionState implements Serializable {
     }
   }
 
-  public void setActiveStudyByName(String studyname) {
-    activeStudy = studyFacade.findByName(studyname);
+  public void setActiveStudyByUserAndName(User user, String studyname) {
+    activeStudy = studyFacade.findByNameAndOwner(studyname, user);
   }
 
   private HttpServletRequest getRequest() {

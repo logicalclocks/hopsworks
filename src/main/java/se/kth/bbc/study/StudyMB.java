@@ -148,8 +148,7 @@ public class StudyMB implements Serializable {
   }
 
   public String getEthicalStatus() {
-    this.ethicalStatus = studyFacade.findByName(studyName).
-            getEthicalStatus();
+    this.ethicalStatus = sessionState.getActiveStudy().getEthicalStatus();
     return this.ethicalStatus;
   }
 
@@ -209,31 +208,12 @@ public class StudyMB implements Serializable {
     this.studyTeamEntry = studyTeamEntry;
   }
 
-  public Study getStudy() {
-    if (study == null) {
-      study = studyFacade.findByName(studyName);
-    }
-    return study;
-  }
-
-  public void setStudy(Study study) {
-    this.study = study;
-  }
-
   public List<Study> getStudyList() {
     return studyFacade.findAll();
   }
 
   public List<StudyDetail> getPersonalStudy() {
     return studyFacade.findAllPersonalStudyDetails(getUsername());
-  }
-
-  public long getAllStudy() {
-    return studyFacade.getAllStudy(getUsername());
-  }
-
-  public int getNOfMembers() {
-    return studyFacade.getMembers(getStudyName());
   }
 
   public boolean isDeleteFilesOnRemove() {
@@ -299,8 +279,8 @@ public class StudyMB implements Serializable {
     return StudyRoleTypes.values();
   }
 
-  public int countAllMembersPerStudy() {
-    return studyTeamController.countMembersPerStudy(studyName).size();
+  public int countAllMembersInActiveStudy() {
+    return studyTeamController.countMembersInStudy(sessionState.getActiveStudy());
   }
 
   public String checkStudyOwner(String email) {
@@ -334,14 +314,6 @@ public class StudyMB implements Serializable {
     return null;
   }
 
-  public int getAllStudyUserTypesListSize() {
-    return studyTeamController.findMembersByStudy(studyName).size();
-  }
-
-  public List<StudyTeam> getAllStudyUserTypesList() {
-    return studyTeamController.findMembersByStudy(studyName);
-  }
-
   public List<StudyDetail> getAllStudiesPerUser() {
     return studyFacade.findAllStudyDetails(getUsername());
   }
@@ -350,12 +322,8 @@ public class StudyMB implements Serializable {
     return studyFacade.findJoinedStudyDetails(getUsername());
   }
 
-  public List<StudyTeam> getTeamList() {
-    return studyTeamController.findMembersByStudy(studyName);
-  }
-
   private long countAllStudiesPerUser() {
-    return studyTeamController.countByMember(getUsername());
+    return studyTeamController.countByMemberEmail(getUsername());
   }
 
   private int countPersonalStudy() {
@@ -396,14 +364,15 @@ public class StudyMB implements Serializable {
 
   public String fetchStudy(String studyname) {
     setStudyName(studyname);
-    sessionState.setActiveStudyByName(studyName);
+    Study s = studyFacade.findByNameAndOwnerEmail(studyname, sessionState.getLoggedInUsername());
+    sessionState.setActiveStudy(s);
     return checkAccess();
   }
 
   public String checkAccess() {
     boolean res = studyTeamController.findUserForActiveStudy(studyName,
             getUsername());
-    boolean rec = userGroupsController.checkForCurrentSession(getUsername());
+    boolean rec = userGroupsController.existsEntryForEmail(getUsername());
     if (!res) {
       if (!rec) {
         userGroupsController.persistUserGroups(new UsersGroups(
@@ -503,7 +472,7 @@ public class StudyMB implements Serializable {
 
   public boolean isCurrentOwner() {
     String email = getUsername();
-    return email.equals(studyFacade.findOwner(studyName));
+    return email.equals(studyFacade.findOwner(sessionState.getActiveStudy()));
   }
 
   public String removeByName() {
@@ -534,11 +503,6 @@ public class StudyMB implements Serializable {
       deleteFilesOnRemove = true;
     }
     return "indexPage";
-  }
-
-  public boolean isRemoved(String studyName) {
-    Study item = studyFacade.findByName(studyName);
-    return item == null;
   }
 
   public LazyDataModel<ActivityDetail> getSpecificLazyModel() {
@@ -598,7 +562,7 @@ public class StudyMB implements Serializable {
    * @return
    */
   public int countRoleUsers(String role) {
-    return studyTeamController.countStudyTeam(studyName, role);
+    return studyTeamController.countStudyTeam(sessionState.getActiveStudy(), role);
   }
 
   public class UserGroup {
@@ -672,12 +636,11 @@ public class StudyMB implements Serializable {
    * @return true if the study is owned by the user with given email
    */
   public boolean studyOwnedBy(String email) {
-    Study t = studyFacade.findByName(studyName);
-    if (t == null) {
+    Study currentStudy = sessionState.getActiveStudy();
+    if(currentStudy == null){
       return false;
-    } else {
-      return t.getOwner().equalsIgnoreCase(email);
     }
+    return currentStudy.getOwner().equalsIgnoreCase(email);
   }
 
   public StudyServiceEnum[] getSelectedServices() {
@@ -865,8 +828,7 @@ public class StudyMB implements Serializable {
   }
 
   public List<Consent> getAllConsent() {
-
-    this.allConsent = privacyManager.getAllConsets(studyName);
+    this.allConsent = privacyManager.getAllConsentsByStudy(sessionState.getActiveStudy());
     return this.allConsent;
   }
 
