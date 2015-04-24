@@ -71,9 +71,7 @@ public class AdamJob extends YarnJob {
     for (AdamInvocationArgument aia : invocationArguments) {
       if (aia.getArg().isOutputPath() && aia.getArg().isRequired()) {
         try {
-          boolean created = getFileOperations().createInodesIfNeeded(aia.
-                  getValue());
-          if (created) {
+          if (getFileOperations().exists(aia.getValue())) {
             getJobHistoryFacade().persist(new JobOutputFile(new JobOutputFilePK(
                     getJobId(), Utils.
                     getFileName(aia.getValue())), aia.getValue()));
@@ -89,9 +87,7 @@ public class AdamJob extends YarnJob {
       if (aio.getOpt().isOutputPath() && aio.getStringValue() != null && !aio.
               getStringValue().isEmpty()) {
         try {
-          boolean created = getFileOperations().createInodesIfNeeded(aio.
-                  getStringValue());
-          if (created) {
+          if (getFileOperations().exists(aio.getStringValue())) {
             getJobHistoryFacade().persist(new JobOutputFile(new JobOutputFilePK(
                     getJobId(), Utils.
                     getFileName(aio.getStringValue())), aio.getStringValue()));

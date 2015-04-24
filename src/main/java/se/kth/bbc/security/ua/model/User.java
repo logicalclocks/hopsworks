@@ -256,7 +256,6 @@ public class User implements Serializable {
     this.activated = activated;
   }
 
-
   public String getTitle() {
     return title;
   }

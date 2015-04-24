@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"  
-      xmlns:f="http://java.sun.com/jsf/core" 
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui">
@@ -32,8 +31,8 @@
             <div class="workflow-head">
               <div>
                 <h:panelGrid columns="2">
-                  <h:outputLabel for="JobName" value="Job name"/>
-                  <h:inputText id="JobName" value="#{sparkController.jobName}"/>
+                  <h:outputLabel for="spark_JobName" value="Job name"/>
+                  <h:inputText id="spark_JobName" value="#{sparkController.jobName}"/>
 
                   <h:outputLabel value="Upload job jar" for="sparkAppUploader"/>
                   <p:commandButton process="@this"
@@ -54,7 +53,8 @@
               </div>
 
               <div>
-                <p:commandButton id="sparkExecuteButton" value="Execute" action="#{sparkController.startJob()}" 
+                <p:commandButton id="sparkExecuteButton" value="Execute" 
+                                 action="#{sparkController.startJob()}" 
                                  update="@(.historyForm) @(.resultsForm) @(.runConfForm)"/>
               </div>
             </div>
@@ -65,9 +65,11 @@
             </h3>
             <h:panelGrid columns="2">
               <h:outputLabel value="Current state:" for="spark_curr_state"/>
-              <h:outputText id="spark_curr_state" value="#{sparkController.selectedJob.state}" styleClass="stateSpan"/>
+              <h:outputText id="spark_curr_state" value="#{sparkController.selectedJob.state}" 
+                            styleClass="stateSpan"/>
             </h:panelGrid>
-            <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{sparkController.selectedJobRunning}"/>
+            <h:graphicImage library="images" name="ajax-loader.GIF" 
+                            rendered="#{sparkController.selectedJobRunning}"/>
             <h:panelGroup rendered="#{sparkController.selectedJobHasFinished}" >
               <div>
                 <h:outputText value="Logs:"/>
@@ -75,13 +77,15 @@
               <div>
                 <p:commandLink ajax="false">
                   <strong>stdout.log</strong>
-                  <p:fileDownload value="#{sparkController.downloadStdout()}" rendered="#{sparkController.selectedJob.stdoutPath != null}"/>
+                  <p:fileDownload value="#{sparkController.downloadStdout()}" 
+                                  rendered="#{sparkController.selectedJob.stdoutPath != null}"/>
                 </p:commandLink>
               </div>
               <div>
                 <p:commandLink ajax="false">
                   <strong>stderr.log</strong>
-                  <p:fileDownload value="#{sparkController.downloadStderr()}" rendered="#{sparkController.selectedJob.stderrPath != null}"/>
+                  <p:fileDownload value="#{sparkController.downloadStderr()}" 
+                                  rendered="#{sparkController.selectedJob.stderrPath != null}"/>
                 </p:commandLink>
               </div>
             </h:panelGroup>

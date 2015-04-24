@@ -13,13 +13,17 @@ import javax.faces.bean.ViewScoped;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.FileSelectionController;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.JobControllerEvent;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.lims.ClientSessionState;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.StagingManager;
+import se.kth.bbc.lims.Utils;
 
 /**
  *
@@ -32,9 +36,8 @@ public class YarnController extends JobController {
   private static final Logger logger = Logger.getLogger(YarnController.class.
           getName());
 
-  private static final String KEY_APP_NAME = "appname";
-  private static final String KEY_ARGS = "args";
-  private static final String KEY_MAIN = "mainClassName";
+  //Variables for new job
+  private String jobName, mainClass, args, appMasterName;
 
   @ManagedProperty(value = "#{clientSessionState}")
   private transient ClientSessionState sessionState;
@@ -53,6 +56,9 @@ public class YarnController extends JobController {
 
   @EJB
   private ActivityFacade activityFacade;
+
+  @EJB
+  private AsynchronousJobExecutor submitter;
 
   @PostConstruct
   public void init() {
@@ -73,85 +79,66 @@ public class YarnController extends JobController {
     }
   }
 
-  public String getAppMasterJarPath() {
-    return getMainFilePath();
-  }
-
-  public void setAppName(String name) {
-    putVariable(KEY_APP_NAME, name);
-  }
-
-  public String getAppName() {
-    return getVariable(KEY_APP_NAME);
-  }
-
-  public String getArgs() {
-    return getVariable(KEY_ARGS);
-  }
-
-  public void setArgs(String args) {
-    putVariable(KEY_ARGS, args);
-  }
-
-  public void setMainClassName(String mainClass) {
-    putVariable(KEY_MAIN, mainClass);
-  }
-
-  public String getMainClassName() {
-    return getVariable(KEY_MAIN);
-  }
-
   @Override
   protected void registerMainFile(String filename,
           Map<String, String> attributes) {
-    //Nothing to do
+    appMasterName = filename;
   }
 
   @Override
   protected void registerExtraFile(String filename,
           Map<String, String> attributes) {
-    //Nothing to do
+    //TODO: allow for input file upload in YARN
   }
 
-  public void runJar() {
-    //TODO: fix this
-    Map<String, String> files = getExtraFiles();
-    String appMasterJar = getMainFilePath();
-    YarnRunner.Builder builder = new YarnRunner.Builder(appMasterJar,
-            "appMaster.jar");
-    if (!files.isEmpty()) {
-      //builder.addAllLocalResourcesPaths(files);
+  public void startJob() {
+    //TODO: add support for input files
+    if (jobName == null || jobName.isEmpty()) {
+      jobName = "Untitled YARN Job";
     }
-    builder.amArgs(getVariable(KEY_ARGS)).amMainClass(
-            getVariable(KEY_MAIN));
+    //Construct YarnRunner
+    YarnRunner.Builder builder = new YarnRunner.Builder(getMainFilePath(),
+            "appMaster.jar");
+    builder.amArgs(args).amMainClass(mainClass);
     YarnRunner runner;
     try {
       runner = builder.build();
-    } catch (IllegalStateException e) {
-      logger.log(Level.SEVERE, "Could not initialize YarnRunner.", e);
-      MessagesController.addErrorMessage("Failed to initialize Yarn client");
-      return;
-    } catch (IOException e) {
+    } catch (IllegalStateException | IOException e) {
       logger.log(Level.SEVERE, "Could not initialize YarnRunner.", e);
       MessagesController.addErrorMessage("Failed to initialize Yarn client.");
       return;
     }
-    try {
-      runner.startAppMaster();
-    } catch (IOException | YarnException e) {
+
+    //Set up job
+    YarnJob job = new YarnJob(history, runner, fops);
+    setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
+            sessionState.getActiveStudyname(), JobType.YARN));
+    if (isJobSelected()) {
+      //Set log paths
+      String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
+              getActiveStudyname())
+              + Constants.YARN_DEFAULT_OUTPUT_PATH + getJobId()
+              + File.separator + "stdout.log";
+      String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
+              getActiveStudyname())
+              + Constants.YARN_DEFAULT_OUTPUT_PATH + getJobId()
+              + File.separator + "stderr.log";
+      job.setStdOutFinalDestination(stdOutFinalDestination);
+      job.setStdErrFinalDestination(stdErrFinalDestination);
+      //Run job
+      submitter.startExecution(job);
+      MessagesController.addInfoMessage("Job submitted!");
+    } else {
+      //No job Id has been selected: failed to allocate one. Abort execution.
       logger.
-              log(Level.SEVERE, "Error while initializing Application Master.",
-                      e);
+              log(Level.SEVERE,
+                      "Failed to persist JobHistory. Aborting execution.");
       MessagesController.addErrorMessage(
-              "Failed to initialize Application Master.");
+              "Failed to write job history. Aborting execution.");
       return;
     }
     writeJobStartedActivity(sessionState.getActiveStudyname(), sessionState.
             getLoggedInUsername());
-  }
-
-  public void setSessionState(ClientSessionState sessionState) {
-    this.sessionState = sessionState;
   }
 
   @Override
@@ -176,8 +163,47 @@ public class YarnController extends JobController {
     }
   }
 
+  /*
+   * -------------------------------------------------------
+   *
+   * GETTERS AND SETTERS
+   *
+   * ---------------------------------------------------------
+   */
   public void setFileSelectionController(FileSelectionController fs) {
     this.fileSelectionController = fs;
+  }
+
+  public String getJobName() {
+    return jobName;
+  }
+
+  public void setJobName(String jobName) {
+    this.jobName = jobName;
+  }
+
+  public String getAppMasterName() {
+    return appMasterName;
+  }
+
+  public String getMainClass() {
+    return mainClass;
+  }
+
+  public void setMainClass(String mainClass) {
+    this.mainClass = mainClass;
+  }
+
+  public String getArgs() {
+    return args;
+  }
+
+  public void setArgs(String args) {
+    this.args = args;
+  }
+
+  public void setSessionState(ClientSessionState sessionState) {
+    this.sessionState = sessionState;
   }
 
 }

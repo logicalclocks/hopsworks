@@ -10,13 +10,10 @@ and open the template in the editor.
       xmlns:p="http://primefaces.org/ui"
       xmlns:f="http://java.sun.com/jsf/core"
       >
-
   <style>
-
   </style>
 
   <body>
-
     <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
 
     <h:form id="privacy" enctype="multipart/form-data">
@@ -140,7 +137,6 @@ and open the template in the editor.
                    scrollable="true">
 
         <f:facet name="header" >Audit </f:facet>
-
         <p:column id="lnameColumn" filterBy="#{user.performedByName}"
                   headerText="Name"
                   style="width:32%; font-size: 12px; text-align: left;">
@@ -153,7 +149,6 @@ and open the template in the editor.
                   style="width:32%;font-size: 12px;text-align: left;">
           <h:outputText value="#{user.performedByEmail}" />
         </p:column>
-
 
         <p:column  filterBy="#{user.timestamp}"
                    headerText="Action Date" 
@@ -168,7 +163,5 @@ and open the template in the editor.
         </p:column>
       </p:dataTable>
     </h:form>
-
-
   </body>
 </html> 

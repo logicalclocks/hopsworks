@@ -7,6 +7,7 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.HopsJob;
+import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobState;
 
@@ -14,7 +15,7 @@ import se.kth.bbc.jobs.jobhistory.JobState;
  *
  * @author stig
  */
-public abstract class YarnJob extends HopsJob {
+public class YarnJob extends HopsJob {
 
   private static final Logger logger = Logger.getLogger(YarnJob.class.getName());
 
@@ -53,6 +54,9 @@ public abstract class YarnJob extends HopsJob {
   }
 
   protected final JobState getFinalState() {
+    if (finalState == null) {
+      finalState = JobState.FAILED;
+    }
     return finalState;
   }
 
@@ -156,8 +160,7 @@ public abstract class YarnJob extends HopsJob {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
           fops.copyToHDFSFromPath(runner.getStdOutPath(),
-                  stdOutFinalDestination,
-                  null);
+                  stdOutFinalDestination);
           getJobHistoryFacade().updateStdOutPath(getJobId(),
                   stdOutFinalDestination);
         } else {
@@ -170,8 +173,7 @@ public abstract class YarnJob extends HopsJob {
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
           fops.copyToHDFSFromPath(runner.getStdErrPath(),
-                  stdErrFinalDestination,
-                  null);
+                  stdErrFinalDestination);
           getJobHistoryFacade().updateStdErrPath(getJobId(),
                   stdErrFinalDestination);
         } else {
@@ -185,5 +187,30 @@ public abstract class YarnJob extends HopsJob {
       logger.log(Level.SEVERE, "Exception while trying to write logs for job "
               + getJobId() + " to HDFS.", e);
     }
+  }
+
+  @Override
+  public HopsJob getInstance(JobHistory jh) throws IllegalArgumentException {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  }
+
+  @Override
+  protected void runJobInternal() {
+    //Update job history object
+    updateArgs();
+
+    //Keep track of time and start job
+    long startTime = System.currentTimeMillis();
+    // Try to start the AM
+    boolean proceed = startJob();
+
+    if (!proceed) {
+      return;
+    }
+    copyLogs();
+    long endTime = System.currentTimeMillis();
+    long duration = endTime - startTime;
+    getJobHistoryFacade().update(getJobId(), getFinalState(), duration);
+
   }
 }

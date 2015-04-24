@@ -125,6 +125,11 @@ public final class SparkController extends JobController {
   }
 
   public void startJob() {
+    if (!isSparkJarAvailable()) {
+      MessagesController.addErrorMessage("Failed to start application master.",
+              "The Spark jar is not in HDFS and could not be copied over.");
+      return;
+    }
     if (jobName == null || jobName.isEmpty()) {
       jobName = "Untitled Spark Job";
     }
@@ -134,16 +139,15 @@ public final class SparkController extends JobController {
     String[] jobArgs = args.trim().split(" ");
     runnerbuilder.addAllJobArgs(jobArgs);
     runnerbuilder.setExtraFiles(getExtraFiles());
-    //And that should be it!
 
     YarnRunner r;
     try {
       r = runnerbuilder.getYarnRunner();
     } catch (IOException e) {
       logger.log(Level.SEVERE,
-              "Unable to create temp directory for logs. Aborting execution.",
-              e);
-      MessagesController.addErrorMessage("Failed to start Yarn client.");
+              "Failed to create YarnRunner.", e);
+      MessagesController.addErrorMessage("Failed to start Yarn client.", e.
+              getLocalizedMessage());
       return;
     }
 
@@ -205,5 +209,37 @@ public final class SparkController extends JobController {
 
   public void setFileSelectionController(FileSelectionController fs) {
     this.fileSelectionController = fs;
+  }
+
+  /**
+   * Check if the Spark jar is in HDFS. If it's not, try and copy it there from
+   * the local filesystem. If it's still not there, then return false.
+   * <p>
+   * @return
+   */
+  private boolean isSparkJarAvailable() {
+    boolean isInHdfs;
+    try {
+      isInHdfs = fops.exists(Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
+    } catch (IOException e) {
+      //Can't connect to HDFS: return false
+      return false;
+    }
+    if (isInHdfs) {
+      return true;
+    }
+
+    File localSparkJar = new File(Constants.DEFAULT_SPARK_JAR_PATH);
+    if (localSparkJar.exists()) {
+      try {
+        fops.copyToHDFSFromPath(Constants.DEFAULT_SPARK_JAR_PATH,
+                Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
+      } catch (IOException e) {
+        return false;
+      }
+    } else {
+      return false;
+    }
+    return true;
   }
 }

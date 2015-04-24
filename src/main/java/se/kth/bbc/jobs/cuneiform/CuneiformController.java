@@ -271,9 +271,11 @@ public final class CuneiformController extends JobController {
     String wfPath = getMainFilePath();
     b.addFilePathToBeCopied(wfPath, !wfPath.startsWith("hdfs:"));
 
-    b.stdOutPath("AppMaster.stdout");
-    b.stdErrPath("AppMaster.stderr");
-    b.logPathsRelativeToResourcesPath(true);
+    b.stdOutPath("/tmp/AppMaster.stdout");
+    b.stdErrPath("/tmp/AppMaster.stderr");
+    b.logPathsRelativeToResourcesPath(false);
+
+    b.addToAppMasterEnvironment("CLASSPATH", "/srv/hiway/lib/*:/srv/hiway/*");
 
     YarnRunner r;
 

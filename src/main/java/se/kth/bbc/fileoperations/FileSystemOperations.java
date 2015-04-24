@@ -116,7 +116,7 @@ public class FileSystemOperations {
     if (!hadoopConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               hadoopConfFile);
-      throw new IllegalStateException("No hadoop conf file: hadoop-site.xml");
+      throw new IllegalStateException("No hadoop conf file: core-site.xml");
     }
     File yarnConfFile = new File(coreConfDir, "yarn-site.xml");
     if (!yarnConfFile.exists()) {
@@ -161,25 +161,8 @@ public class FileSystemOperations {
     fs.copyFromLocalFile(false, source, destination);
   }
 
-  public void moveWithinHdsf(Path source, Path destination) throws IOException {
+  public void moveWithinHdfs(Path source, Path destination) throws IOException {
     fs.rename(source, destination);
-  }
-
-  public boolean exists(Path path) throws IOException {
-    return fs.exists(path);
-  }
-
-  public boolean isDir(Path path) throws IOException {
-    return fs.isDirectory(path);
-  }
-
-  public List<Path> getChildren(Path path) throws IOException {
-    FileStatus[] stat = fs.listStatus(path);
-    List<Path> children = new ArrayList<>();
-    for (FileStatus s : stat) {
-      children.add(s.getPath());
-    }
-    return children;
   }
 
   /**

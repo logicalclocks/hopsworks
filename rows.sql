@@ -30,7 +30,7 @@ insert into people_group (uid,gid) values (10000,1005);
 /*
     adding a new address entry for admin user
 */
-insert into address (uid, address1,address2,address3,city,state,country,postalcode) values (10000, 'Admin Office','Teknikringen 14', 'Vallhalevägen', 'Stockholm län', 'Stockholm', 'Svergie', '10044');
+insert into address (uid, address1,address2,address3,city,state,country,postalcode) values (10000, 'Admin Office','Teknikringen 14', 'Vallhalevägen', 'Stockholm län', 'Stockholm', 'Sverige', '10044');
 
 /*
    Adding organizational information for users

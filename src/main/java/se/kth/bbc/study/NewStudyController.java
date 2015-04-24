@@ -125,7 +125,7 @@ public class NewStudyController implements Serializable {
   public String createStudy() {
     //TODO: make this method into one big transaction!
     try {
-      if (!studyFacade.findStudy(newStudyName)) {
+      if (!studyFacade.studyExists(newStudyName)) {
         //Create a new study object
         String username = sessionState.getLoggedInUsername();
         Date now = new Date();

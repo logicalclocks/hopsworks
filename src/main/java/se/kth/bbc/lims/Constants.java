@@ -21,8 +21,10 @@ public class Constants {
   public static final String CUNEIFORM_DEFAULT_INPUT_PATH = "Cuneiform/Input/";
 
   //Default configuration locations
-  public static final String DEFAULT_HADOOP_CONF_DIR = "/srv/hadoop/etc/hadoop/";
-  public static final String DEFAULT_YARN_CONF_DIR = "/srv/hadoop/etc/hadoop/";
+  public static final String DEFAULT_HADOOP_CONF_DIR
+          = "/srv/hadoop/etc/hadoop/";
+  public static final String DEFAULT_YARN_CONF_DIR
+          = "/srv/hadoop/etc/hadoop/";
 
   //Default configuration file names
   public static final String DEFAULT_YARN_CONFFILE_NAME = "yarn-site.xml";
@@ -32,6 +34,21 @@ public class Constants {
   //Environment variable keys
   public static final String ENV_KEY_YARN_CONF_DIR = "YARN_CONF_DIR";
   public static final String ENV_KEY_HADOOP_CONF_DIR = "HADOOP_CONF_DIR";
+
+  //YARN constants
+  public static final String YARN_DEFAULT_OUTPUT_PATH = "Yarn/Output/";
+  public static final String HADOOP_COMMON_HOME_KEY = "HADOOP_COMMON_HOME";
+  public static final String HADOOP_COMMON_HOME_VALUE
+          = "/srv/hadoop";
+  public static final String HADOOP_HDFS_HOME_KEY = "HADOOP_HDFS_HOME";
+  public static final String HADOOP_HDFS_HOME_VALUE
+          = "/srv/hadoop";
+  public static final String HADOOP_YARN_HOME_KEY = "HADOOP_YARN_HOME";
+  public static final String HADOOP_YARN_HOME_VALUE
+          = "/srv/hadoop";
+  public static final String HADOOP_CONF_DIR_KEY = "HADOOP_CONF_DIR";
+  public static final String HADOOP_CONF_DIR_VALUE
+          = "/srv/hadoop/etc/hadoop";
 
   //Spark constants
   public static final String SPARK_VERSION = "1.2.1";

@@ -441,3 +441,8 @@ h1 {
   padding-left: 0px;
   padding-right: 20px;
 }
+
+.archivedWarning {
+  clear: both;
+  font-size: 20px;
+}

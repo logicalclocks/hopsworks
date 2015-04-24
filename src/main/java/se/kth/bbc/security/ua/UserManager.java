@@ -23,7 +23,7 @@ import se.kth.bbc.security.ua.model.Yubikey;
 @Stateless
 public class UserManager {
 
-  @PersistenceContext(unitName = "hopsPU")
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   // Strating user id from 1000 to create a POSIX compliant username: meb1000
@@ -162,12 +162,12 @@ public class UserManager {
   /**
    * Find a user through email.
    *
-   * @param username
+   * @param email
    * @return
    */
-  public User getUserByEmail(String username) {
+  public User getUserByEmail(String email) {
     TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
-    query.setParameter("email", username);
+    query.setParameter("email", email);
     List<User> list = query.getResultList();
 
     if (list == null || list.isEmpty()) {
@@ -177,7 +177,7 @@ public class UserManager {
     return list.get(0);
   }
 
-  public User getUserByUsernmae(String username) {
+  public User getUserByUsername(String username) {
     TypedQuery<User> query = em.createNamedQuery("User.findByUsername",
             User.class);
     query.setParameter("username", username);
@@ -500,5 +500,4 @@ public class UserManager {
     em.merge(org);
     return true;
   }
-
 }

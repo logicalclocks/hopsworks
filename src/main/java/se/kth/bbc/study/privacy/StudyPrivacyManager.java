@@ -9,12 +9,9 @@ package se.kth.bbc.study.privacy;
  *
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -28,16 +25,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.commons.io.IOUtils;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
-import org.primefaces.model.UploadedFile;
 import se.kth.bbc.activity.ActivityController;
 import se.kth.bbc.activity.ActivityDetail;
-import se.kth.bbc.security.ua.EmailBean;
-import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.study.StudyTeam;
 import se.kth.bbc.study.StudyTeamFacade;
 import se.kth.bbc.study.privacy.model.Consent;
@@ -45,7 +38,7 @@ import se.kth.bbc.study.privacy.model.Consent;
 @Stateless
 public class StudyPrivacyManager {
 
-  @PersistenceContext(unitName = "hopsPU")
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   @EJB
@@ -53,14 +46,6 @@ public class StudyPrivacyManager {
 
   @EJB
   private StudyTeamFacade stc;
-
-  @EJB
-  private UserManager mgr;
-
-  @EJB
-  private EmailBean emailBean;
-
-  private List<ActivityDetail> ad;
 
   // Constants ----------------------------------------------------------------------------------
   private static final int DEFAULT_BUFFER_SIZE = 10240; // 10KB.
@@ -197,5 +182,4 @@ public class StudyPrivacyManager {
       }
     }
   }
-
 }

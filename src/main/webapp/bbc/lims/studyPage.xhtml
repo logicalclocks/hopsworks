@@ -26,11 +26,16 @@
             <h:form>
               <p:commandButton id="toolsBtn" value="Study..." type="button" rendered="#{studyManagedBean.currentOwner}" style="float:right;margin-top: 26px;"/>  
               <p:menu overlay="true" trigger="toolsBtn" my="left top" at="left bottom" >  
-                <p:menuitem value="Edit services" onclick="PF('editServicesDlg').show()"/> 
+                <p:menuitem value="Edit services" onclick="PF('editServicesDlg').show()" rendered="#{not studyManagedBean.studyArchived}"/> 
                 <p:separator/>
+                <p:menuitem value="Archive" onclick="PF('archiveStudyDlg').show()" rendered="#{not studyManagedBean.studyArchived}"/>
+                <p:menuitem value="Unarchive" onclick="PF('unarchiveStudyDlg').show()" rendered="#{studyManagedBean.studyArchived}"/>
                 <p:menuitem value="Remove" onclick="PF('removeStudyDlg').show();"/> 
               </p:menu> 
             </h:form>
+            <div class="archivedWarning">
+              <h:outputText value="This study has been archived. To have full access to its functionality and data, you should unarchive it." rendered="#{studyManagedBean.studyArchived}"/>
+            </div>
             <div class="content"> 
               <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="studyTabs">
                 <p:tab id="showTab" title="Show">
@@ -38,55 +43,54 @@
                     <ui:include src="/bbc/lims/studyTabs/studyShowTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="teamTab" title="Team" rendered="#{studyManagedBean.renderComponentList() != null}">
+                <p:tab id="teamTab" title="Team" rendered="#{studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="teamTab">
                     <ui:include src="/bbc/lims/studyTabs/teamTab.xhtml"/>
                   </ui:insert>                                    
                 </p:tab>
-                <p:tab id="browser" title="Browser" rendered="#{studyManagedBean.renderComponentList() != null}">
+                <p:tab id="browser" title="Browser" rendered="#{studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="browserTab">
                     <ui:include src="/bbc/lims/studyTabs/browser.xhtml"/>
                   </ui:insert>
                 </p:tab>
                 <!-- TODO: figure out how to do this with a loop?-->
-                <p:tab id="cuneiform" title="Cuneiform" rendered="#{studyManagedBean.shouldDrawTab('CUNEIFORM') and studyManagedBean.renderComponentList() != null}">
+                <p:tab id="cuneiform" title="Cuneiform" rendered="#{studyManagedBean.shouldDrawTab('CUNEIFORM') and studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="workflowsTab">
                     <ui:include src="/bbc/lims/studyTabs/cuneiformTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="yarn" title="Yarn" rendered="#{studyManagedBean.shouldDrawTab('YARN') and studyManagedBean.renderComponentList() != null}">
+                <p:tab id="yarn" title="Yarn" rendered="#{studyManagedBean.shouldDrawTab('YARN') and studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="yarn">
                     <ui:include src="/bbc/lims/studyTabs/yarnTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="studyinfo" title="Study info" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO') and studyManagedBean.renderComponentList() != null}">
+                <p:tab id="studyinfo" title="Study info" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO') and studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="studyinfo">
                     <ui:include src="/bbc/lims/studyTabs/studyInfoTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="samples" title="Samples" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES') and studyManagedBean.renderComponentList() != null}">
+                <p:tab id="samples" title="Samples" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES') and studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="samples">
                     <ui:include src="/bbc/lims/studyTabs/samplesTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
 
-                <p:tab id="spark" title="Spark" rendered="#{studyManagedBean.shouldDrawTab('SPARK') and studyManagedBean.renderComponentList() != null}">
+                <p:tab id="spark" title="Spark" rendered="#{studyManagedBean.shouldDrawTab('SPARK') and studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="spark">
                     <ui:include src="/bbc/lims/studyTabs/sparkTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="adam" title="ADAM" rendered="#{studyManagedBean.shouldDrawTab('ADAM') and studyManagedBean.renderComponentList() != null}">
+                <p:tab id="adam" title="ADAM" rendered="#{studyManagedBean.shouldDrawTab('ADAM') and studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="adam">
                     <ui:include src="/bbc/lims/studyTabs/adamTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
 
-                <p:tab title="Privacy" rendered="#{studyManagedBean.shouldDrawTab('PRIVACY') and studyManagedBean.renderComponentList() eq 'Master' }">
+                <p:tab title="Privacy" rendered="#{studyManagedBean.shouldDrawTab('PRIVACY') and studyManagedBean.renderComponentList() eq 'Master' and not studyManagedBean.studyArchived}">
                   <ui:insert name="privacyTab">
                     <ui:include src="/bbc/lims/studyTabs/privacyTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-
               </p:tabView>
             </div>
           </div>
@@ -97,7 +101,6 @@
       <h:form>
         <p:poll interval="10" update="@(.historyForm) @(.resultsForm)"/>
       </h:form>
-
 
       <!-- In case Study has not been set: user navigated to the page manually. -->
       <p:layout id="bbcMainLayoutAlt" styleClass="BbcMainLayoutStudy" rendered="#{studyManagedBean.studyName == null}">  
@@ -110,8 +113,28 @@
         </p:layoutUnit>
       </p:layout>
 
+      <!-- Archive study dialog -->
+      <p:dialog widgetVar="archiveStudyDlg" styleClass="archiveStudyDialog" closable="true" draggable="false" resizable="false" header="Archive study?" modal="true" style="width: auto;">
+        <h:form class="dialogForm">
+          <h:outputText value="Do you want to archive this study? You will still be able to see its activity log, but its data will be unaccessible as long as it is archived. You will be able to unarchive the project at any time." style="width: auto;"/>
+          <h:panelGroup styleClass="dialogButtonGroup">
+            <p:commandButton value="Archive" action="#{studyManagedBean.archiveStudy()}" onstart="PF('archiveStudyDlg').hide()" type="submit" ajax="false"/>
+            <p:commandButton value="Cancel" oncomplete="PF('archiveStudyDlg').hide()" type="button"/>
+          </h:panelGroup>  
+        </h:form>
+      </p:dialog>
 
-      <!-- TODO: fix location of dialogs with appendTo attribute -->
+      <!-- Unarchive study dialog -->
+      <p:dialog widgetVar="unarchiveStudyDlg" styleClass="unarchiveStudyDialog" closable="true" draggable="false" resizable="false" header="Archive study?" modal="true" style="width: auto;">
+        <h:form class="dialogForm">
+          <h:outputText value="Do you want to unarchive this study? The operation will take a while." style="width: auto;"/>
+          <h:panelGroup styleClass="dialogButtonGroup">
+            <p:commandButton value="Unarchive" action="#{studyManagedBean.unarchiveStudy()}" onstart="PF('unarchiveStudyDlg').hide()" type="submit" ajax="false"/>
+            <p:commandButton value="Cancel" oncomplete="PF('unarchiveStudyDlg').hide()" type="button"/>
+          </h:panelGroup>  
+        </h:form>
+      </p:dialog>
+
       <!-- Remove study dialog -->
       <p:dialog widgetVar="removeStudyDlg" styleClass="studyDialog" closable="true" draggable="false" resizable="false" header="Remove study?" modal="true" style="width: auto;">
         <h:form class="dialogForm">
@@ -264,6 +287,7 @@
           </h:panelGroup>
         </h:form>
       </p:dialog>
+
       <!-- Choose file dialog-->
       <p:dialog id="chooseFileDialog" styleClass="studyDialog" widgetVar="chooseFileDlg" closable="false" draggable="false" modal="true" resizable="false" header="Choose file" rendered="#{studyManagedBean.renderComponentList() != null}">
         <h:form class="dialogForm">
@@ -296,7 +320,6 @@
 
               <p:commandLink styleClass="dark" 
                              rendered="#{not inode.dir}"
-                             disabled="#{inode.status != 'available'}" 
                              action="#{fileSelectionController.setSelectedPath(inode.path)}"
                              update="@form">
                 <strong>#{inode.name}</strong>

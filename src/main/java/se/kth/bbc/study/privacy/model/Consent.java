@@ -55,16 +55,22 @@ public class Consent implements Serializable {
   @Column(name = "date")
   @Temporal(TemporalType.DATE)
   private Date date;
+  @Size(max = 80)
+  @Column(name = "study_name")
+  private String studyName;
+  @Lob
+  @Column(name = "consent_form")
+  private byte[] consentForm;
   @Size(max = 30)
   @Column(name = "status")
   private String status;
   @Size(max = 80)
   @Column(name = "name")
   private String name;
-  @Size(max = 80)
-  @Column(name = "study_name")
-  private String studyName;
-
+  @Size(max = 20)
+  @Column(name = "type")
+  private String type;
+  
   public String getStudyName() {
     return studyName;
   }
@@ -72,13 +78,7 @@ public class Consent implements Serializable {
   public void setStudyName(String studyName) {
     this.studyName = studyName;
   }
-  @Lob
-  @Column(name = "consent_form")
-  private byte[] consentForm;
-  @Size(max = 20)
-  @Column(name = "type")
-  private String type;
-
+  
   public Consent() {
   }
 
@@ -159,5 +159,4 @@ public class Consent implements Serializable {
   public String toString() {
     return "se.kth.bbc.study.privacy.model.Consent[ id=" + id + " ]";
   }
-
 }

@@ -90,7 +90,7 @@ public class Samplecollection implements Serializable {
   @ManyToOne
   private Study study;
   @JoinColumn(name = "contact",
-          referencedColumnName = "EMAIL")
+          referencedColumnName = "email")
   @ManyToOne(optional = false)
   private User contact;
   @ManyToMany

@@ -27,7 +27,7 @@ public class ActivityController {
   // Flag constants
   public static final String FLAG_STUDY = "STUDY";
 
-  @PersistenceContext(unitName = "hopsPU")
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   protected EntityManager getEntityManager() {

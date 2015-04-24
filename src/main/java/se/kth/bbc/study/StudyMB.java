@@ -3,8 +3,6 @@ package se.kth.bbc.study;
 import se.kth.bbc.study.services.StudyServiceFacade;
 import se.kth.bbc.study.services.StudyServiceEnum;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.text.ParseException;
@@ -17,7 +15,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
@@ -42,9 +39,10 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
-import se.kth.bbc.security.ua.EmailBean;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.study.fb.Inode;
+import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.study.privacy.StudyPrivacyManager;
 import se.kth.bbc.study.privacy.model.Consent;
 
@@ -60,9 +58,11 @@ public class StudyMB implements Serializable {
 
   private static final Logger logger = Logger.getLogger(StudyMB.class.getName());
   private static final long serialVersionUID = 1L;
+  private static final int TAB_INDEX_ALL_STUDIES = 0, TAB_INDEX_MY_STUDIES = 1, TAB_INDEX_JOINED_STUDIES
+          = 2;
 
   @EJB
-  private StudyFacade studyController;
+  private StudyFacade studyFacade;
 
   @EJB
   private StudyTeamFacade studyTeamController;
@@ -80,10 +80,16 @@ public class StudyMB implements Serializable {
   private ActivityDetailFacade activityDetailFacade;
 
   @EJB
+  private ActivityController activityController;
+
+  @EJB
   private FileOperations fileOps;
 
   @EJB
   private StudyServiceFacade studyServices;
+
+  @EJB
+  private InodeFacade inodes;
 
   @EJB
   private StudyPrivacyManager privacyManager;
@@ -91,15 +97,13 @@ public class StudyMB implements Serializable {
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
 
-  @EJB
-  private ActivityController activityController;
-
-  private Study study;
   private List<User> usernames;
   private StudyTeam studyTeamEntry;
   private List<Theme> selectedUsernames;
   private List<Theme> themes;
   private String sample_Id;
+
+  private Study study;
 
   private String studyName;
   private String studyCreator;
@@ -148,8 +152,7 @@ public class StudyMB implements Serializable {
   }
 
   public String getEthicalStatus() {
-
-    this.ethicalStatus = studyController.findByName(studyName).
+    this.ethicalStatus = studyFacade.findByName(studyName).
             getEthicalStatus();
     return this.ethicalStatus;
   }
@@ -199,17 +202,6 @@ public class StudyMB implements Serializable {
     this.sample_Id = sample_Id;
   }
 
-  public Study getStudy() {
-    if (study == null) {
-      study = studyController.findByName(studyName);
-    }
-    return study;
-  }
-
-  public void setStudy(Study study) {
-    this.study = study;
-  }
-
   public StudyTeam getStudyTeamEntry() {
     if (studyTeamEntry == null) {
       studyTeamEntry = new StudyTeam();
@@ -221,20 +213,31 @@ public class StudyMB implements Serializable {
     this.studyTeamEntry = studyTeamEntry;
   }
 
+  public Study getStudy() {
+    if (study == null) {
+      study = studyFacade.findByName(studyName);
+    }
+    return study;
+  }
+
+  public void setStudy(Study study) {
+    this.study = study;
+  }
+
   public List<Study> getStudyList() {
-    return studyController.findAll();
+    return studyFacade.findAll();
   }
 
   public List<StudyDetail> getPersonalStudy() {
-    return studyController.findAllPersonalStudyDetails(getUsername());
+    return studyFacade.findAllPersonalStudyDetails(getUsername());
   }
 
   public long getAllStudy() {
-    return studyController.getAllStudy(getUsername());
+    return studyFacade.getAllStudy(getUsername());
   }
 
   public int getNOfMembers() {
-    return studyController.getMembers(getStudyName());
+    return studyFacade.getMembers(getStudyName());
   }
 
   public boolean isDeleteFilesOnRemove() {
@@ -243,14 +246,6 @@ public class StudyMB implements Serializable {
 
   public void setDeleteFilesOnRemove(boolean deleteFilesOnRemove) {
     this.deleteFilesOnRemove = deleteFilesOnRemove;
-  }
-
-  public List<Study> getPersonalStudyList() {
-    return studyController.filterPersonalStudy(getUsername());
-  }
-
-  public int getLatestStudyListSize() {
-    return studyController.filterPersonalStudy(getUsername()).size();
   }
 
   public List<Theme> addThemes() {
@@ -352,32 +347,27 @@ public class StudyMB implements Serializable {
   }
 
   public List<StudyDetail> getAllStudiesPerUser() {
-    return studyController.findAllStudyDetails(getUsername());
+    return studyFacade.findAllStudyDetails(getUsername());
   }
 
   public List<StudyDetail> getJoinedStudies() {
-    return studyController.findJoinedStudyDetails(getUsername());
+    return studyFacade.findJoinedStudyDetails(getUsername());
   }
 
   public List<StudyTeam> getTeamList() {
     return studyTeamController.findMembersByStudy(studyName);
   }
 
-  public long countAllStudiesPerUser() {
+  private long countAllStudiesPerUser() {
     return studyTeamController.countByMember(getUsername());
   }
 
-  public int countPersonalStudy() {
-    return studyController.findByUser(getUsername()).size();
+  private int countPersonalStudy() {
+    return studyFacade.findByUser(getUsername()).size();
   }
 
-  public int countJoinedStudy() {
-    boolean check = studyController.checkForStudyOwnership(getUsername());
-    if (check) {
-      return studyController.findJoinedStudies(getUsername()).size();
-    } else {
-      return studyController.QueryForNonRegistered(getUsername()).size();
-    }
+  private int countJoinedStudy() {
+    return studyFacade.findJoinedStudyDetails(getUsername()).size();
   }
 
   /**
@@ -389,7 +379,23 @@ public class StudyMB implements Serializable {
             getRequestParameterMap();
     String studyname = params.get("studyname");
     this.studyCreator = params.get("username");
+    if (!isStudyPresentInHdfs(studyname)) {
+      return null;
+    }
     return fetchStudy(studyname);
+  }
+
+  private boolean isStudyPresentInHdfs(String studyname) {
+    Inode root = inodes.getStudyRoot(studyname);
+    if (root == null) {
+      MessagesController.addErrorMessage("Study not found.",
+              "The study's root folder was not found in HDFS. You will be unable to access its contents.",
+              "loadError");
+      logger.log(Level.INFO, "Study folder not found in HDFS for study{0} .",
+              studyname);
+      return false;
+    }
+    return true;
   }
 
   public String fetchStudy(String studyname) {
@@ -459,28 +465,54 @@ public class StudyMB implements Serializable {
   public void onTabChange(TabChangeEvent event) {
     switch (event.getTab().getTitle()) {
       case "All":
-        setTabIndex(0);
+        setTabIndex(TAB_INDEX_ALL_STUDIES);
         break;
       case "Personal":
-        setTabIndex(1);
+        setTabIndex(TAB_INDEX_MY_STUDIES);
         break;
       case "Joined":
-        setTabIndex(2);
+        setTabIndex(TAB_INDEX_JOINED_STUDIES);
         break;
       default:
         break;
     }
   }
 
+  public int getNumberOfDisplayedStudies() {
+    switch (tabIndex) {
+      case TAB_INDEX_ALL_STUDIES:
+        return (int) countAllStudiesPerUser();
+      case TAB_INDEX_JOINED_STUDIES:
+        return countJoinedStudy();
+      case TAB_INDEX_MY_STUDIES:
+        return countPersonalStudy();
+      default:
+        throw new IllegalStateException(
+                "Tab index can only be contained in the set {0,1,2}.");
+    }
+  }
+
+  public boolean isAllStudyListEmpty() {
+    return countAllStudiesPerUser() == 0;
+  }
+
+  public boolean isJoinedStudyListEmpty() {
+    return countJoinedStudy() == 0;
+  }
+
+  public boolean isPersonalStudyListEmpty() {
+    return countPersonalStudy() == 0;
+  }
+
   public boolean isCurrentOwner() {
     String email = getUsername();
-    return email.equals(studyController.findOwner(studyName));
+    return email.equals(studyFacade.findOwner(studyName));
   }
 
   public String removeByName() {
     boolean success = false;
     try {
-      studyController.removeByName(studyName);
+      studyFacade.removeByName(studyName);
       activityFacade.persistActivity(ActivityFacade.REMOVED_STUDY, studyName,
               sessionState.getLoggedInUsername());
       if (deleteFilesOnRemove) {
@@ -508,7 +540,7 @@ public class StudyMB implements Serializable {
   }
 
   public boolean isRemoved(String studyName) {
-    Study item = studyController.findByName(studyName);
+    Study item = studyFacade.findByName(studyName);
     return item == null;
   }
 
@@ -532,11 +564,10 @@ public class StudyMB implements Serializable {
               + "/bbc/uploader/sampleUploader.jsp");
       FacesContext.getCurrentInstance().responseComplete();
     } catch (IOException ex) {
-      //TODO: make redirect better...
-      Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE, null, ex);
+      Logger.getLogger(StudyMB.class.getName()).log(Level.SEVERE,
+              "Failed to send redirect to uploader page.", ex);
     }
   }
-
   /**
    * Return a list of UserGroups, which contain the members of this study per
    * role type.
@@ -642,7 +673,7 @@ public class StudyMB implements Serializable {
    * @return true if the study is owned by the user with given email
    */
   public boolean studyOwnedBy(String email) {
-    Study t = studyController.findByName(studyName);
+    Study t = studyFacade.findByName(studyName);
     if (t == null) {
       return false;
     } else {
@@ -671,8 +702,35 @@ public class StudyMB implements Serializable {
     return "studyPage";
   }
 
+  public void archiveStudy() {
+    //archive the study
+    boolean success = true;
+    if (success) {
+      studyFacade.archiveStudy(studyName);
+    }
+  }
+
+  public void unarchiveStudy() {
+    //unarchive study
+    boolean success = true;
+    if (success) {
+      studyFacade.unarchiveStudy(studyName);
+    }
+  }
+
+  public boolean isStudyArchived() {
+    Study study = sessionState.getActiveStudy();
+    if (study == null) {
+      logger.log(Level.SEVERE,
+              "Trying to call if study is archived, but has not been set.");
+      throw new IllegalStateException(
+              "Cannot check on StudyMB if study is archived if it has not been set.");
+    }
+    return study.getArchived();
+  }
+
   public void updateRetentionPeriod() {
-    if (studyController.updateRetentionPeriod(studyName, this.retentionPeriod)) {
+    if (studyFacade.updateRetentionPeriod(studyName, this.retentionPeriod)) {
 
       MessagesController.addInfoMessage("Success: Updated retention period.");
 
@@ -692,7 +750,7 @@ public class StudyMB implements Serializable {
   }
 
   public Date getRetentionPeriod() {
-    this.retentionPeriod = studyController.getRetentionPeriod(studyName);
+    this.retentionPeriod = studyFacade.getRetentionPeriod(studyName);
     return this.retentionPeriod;
   }
 
@@ -829,5 +887,4 @@ public class StudyMB implements Serializable {
     }
 
   }
-
 }

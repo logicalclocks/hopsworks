@@ -21,7 +21,7 @@ import se.kth.bbc.security.ua.model.User;
 @Stateless
 public class StudyTeamFacade {
 
-  @PersistenceContext(unitName = "hopsPU")
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   protected EntityManager getEntityManager() {
@@ -140,25 +140,15 @@ public class StudyTeamFacade {
   }
 
   public boolean findUserForActiveStudy(String studyname, String username) {
-    // TODO
-//        Query query = em.createNamedQuery("StudyTeam.findByNameAndTeamMember", StudyTeam.class).setParameter("name", studyname).setParameter("teamMember", username);
+    // TODO: use named query
     Query query = em.createNativeQuery(
             "SELECT * FROM study_team WHERE name =? AND team_member=?",
             StudyTeam.class).setParameter(1, studyname).
             setParameter(2, username);
-    //List<StudyTeam> res = query.getResultList();
     if (query.getResultList().size() > 0) {
       return true;
     }
-
     return false;
-//        //System.out.println("Returned " + res.size() + " answers!!");
-//        if (res.iterator().hasNext()) {
-//            StudyTeam t = res.iterator().next();
-//                //em.createQuery("insert into USERS_GROUPS values('" + username + "'," + t.getTeamRole() + ")").executeUpdate();
-//                  Query update = em.createNativeQuery("INSERT INTO USERS_GROUPS VALUES(?,?)", UsersGroups.class).setParameter(1, t.studyTeamPK.getTeamMember()).setParameter(2, t.getTeamRole());
-//                  em.persist(update);
-//        }
   }
 
   /**

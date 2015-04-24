@@ -84,14 +84,8 @@ public class Study implements Serializable {
           max = 30)
   @Column(name = "ethical_status")
   private String ethicalStatus;
-
-  public Date getCreated() {
-    return created;
-  }
-
-  public void setCreated(Date created) {
-    this.created = created;
-  }
+  @Column(name = "archived")
+  private boolean archived;
 
   public Study() {
   }
@@ -106,6 +100,14 @@ public class Study implements Serializable {
     this.created = timestamp;
   }
 
+  public Date getCreated() {
+    return created;
+  }
+
+  public void setCreated(Date created) {
+    this.created = created;
+  }
+  
   public String getEthicalStatus() {
     return ethicalStatus;
   }
@@ -138,6 +140,22 @@ public class Study implements Serializable {
     this.retentionPeriod = retentionPeriod;
   }
 
+  public StudyMeta getStudyMeta() {
+    return studyMeta;
+  }
+
+  public void setStudyMeta(StudyMeta studyMeta) {
+    this.studyMeta = studyMeta;
+  }
+
+  public boolean getArchived() {
+    return archived;
+  }
+
+  public void setArchived(boolean archived) {
+    this.archived = archived;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;
@@ -159,14 +177,6 @@ public class Study implements Serializable {
   @Override
   public String toString() {
     return "se.kth.bbc.study.Study[ name=" + name + " ]";
-  }
-
-  public StudyMeta getStudyMeta() {
-    return studyMeta;
-  }
-
-  public void setStudyMeta(StudyMeta studyMeta) {
-    this.studyMeta = studyMeta;
   }
 
   @XmlTransient

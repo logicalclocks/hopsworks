@@ -128,7 +128,6 @@ public class UserAccountsEmailMessages {
             + BIOBANKCLOUD_SUPPORT_EMAIL;
 
     message = l1 + l2 + l3 + l4;
-
     return message;
   }
 
@@ -244,9 +243,7 @@ public class UserAccountsEmailMessages {
             + BIOBANKCLOUD_SUPPORT_EMAIL;
 
     message = l1 + tmp_pass + l2;
-
     return message;
-
   }
 
   public static String buildYubikeyResetMessage() {
@@ -263,5 +260,4 @@ public class UserAccountsEmailMessages {
 
     return message;
   }
-
 }

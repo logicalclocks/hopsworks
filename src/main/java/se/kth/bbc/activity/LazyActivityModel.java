@@ -27,9 +27,7 @@ import org.primefaces.model.SortOrder;
  */
 public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements
         Serializable {
-
-  private static final Logger logger = Logger.getLogger(LazyActivityModel.class.
-          getName());
+  private static final Logger logger = Logger.getLogger(LazyActivityModel.class.getName());
 
   private transient final ActivityDetailFacade activityDetailFacade;
   private List<ActivityDetail> data;
