@@ -1,0 +1,36 @@
+<div class="wrapper ng-scope" data-autoscroll="false" data-ui-view="">
+    <div class="" autoscroll="false" ui-view="">
+        <div class="block-center mt-xl wd-xl">
+            <div class="panel panel-dark panel-flat">
+                <div class="panel-body">
+                    <p class="text-center pv">Sign in to unlock.</p>
+
+                    <form name="loginForm" ng-submit="loginCtrl.unlock()" role="form" class="form-validate">
+                        <div class="form-group has-feedback">
+                            <input id="login_inputPassword" class="form-control" type="password"
+                                   ng-model="loginCtrl.user.password"
+                                   placeholder="Password"
+                                   name="user_password">
+                        </div>
+                        <div class="clearfix">
+                            <div class="pull-right mt0">
+                                <button class="btn btn-block btn-primary" type="submit">Unlock</button>
+                            </div>
+                            <div class="pull-left">
+                                <a class="btn btn-danger btn-block" href="#/login">Sign out</a>
+                            </div>
+
+                        </div>
+                    </form>
+                    <div class="alert alert-danger text-center ng-binding ng-hide" ng-show="loginCtrl.errorMessage">
+                        {{loginCtrl.errorMessage}}
+                    </div>
+                    <div class="pull-right">
+                        <a class="text-muted" ui-sref="page.recover" href="#/recover">Forgot your password?</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

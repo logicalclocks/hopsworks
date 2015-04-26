@@ -1,0 +1,57 @@
+<div class="modal-header">
+    <button class="close" ng-click="projectCtrl.close()" data-dismiss="modal" aria-hidden="true"
+            type="button">&times;</button>
+    <h2 class="modal-title">Project settings</h2>
+</div>
+
+<div class="modal-body" id="testmodal">
+
+    <div class="row">
+        <div class="col-md-11">
+            <fieldset>
+                <div class="control-group col-md-offset-1">
+                    <md-input-container>
+                        <label for="projectname" style="color: black;">Name</label>
+                        <input type="text" id="projectname"
+                               ng-model="projectCtrl.currentProject.name"
+                               md-sidenav-focus>
+                    </md-input-container>
+                    <p></p>
+                    <label for="projectname" class="control-label">Description</label>
+                    <div class="controls">
+                        <textarea class="form-control" style="resize:none;" ng-model="projectCtrl.currentProject.description"
+                            rows="3">
+                        </textarea>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <!--
+              <div class="col-md-4">
+                <fieldset>
+                  <legend>
+                    Custom services
+                  </legend>
+
+
+                  <div class="col-md-offset-2" >
+                    <md-checkbox ng-repeat="projectType in projectCtrl.projectTypes"
+                           type="checkbox"
+                           class="md-primary"
+                           ng-model="projectCtrl.exists(projectType)"
+                           ng-click="projectCtrl.toggle(projectType)">
+                      {{projectType}}
+                    </md-checkbox>
+                  </div>
+
+
+                </fieldset>
+              </div>
+              -->
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" ng-click="projectCtrl.close()">Cancel</button>
+    <button class="btn btn-primary" ng-click="projectCtrl.saveProject()">Save</button>
+</div>
+

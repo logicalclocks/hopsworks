@@ -1,0 +1,11 @@
+<div class="modal-header">
+    <button type="button" class="close" ng-click="ctrl.cancel()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <h3 class="modal-title">{{ctrl.title}}</h3>
+</div>
+<div class="modal-body">
+    {{ctrl.msg}}
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" ng-click="ctrl.cancel()">Cancel</button>
+    <button class="btn btn-primary" ng-click="ctrl.ok()">OK</button>
+</div>
