@@ -63,16 +63,6 @@ public class Study implements Serializable {
   @Column(name = "id")
   private Integer id;
   
-  @Column(name = "deleted")
-  private Boolean deleted;
-  
-  @OneToMany(mappedBy = "study_id")
-  private Collection<Samplecollection> samplecollectionCollection;
-  
-  @OneToOne(cascade = CascadeType.ALL,
-          mappedBy = "study_id")
-  private StudyMeta studyMeta;
-  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -87,15 +77,15 @@ public class Study implements Serializable {
   @Column(name = "username")
   private String owner;
   
-  @Column(name = "retention_period")
-  @Temporal(TemporalType.DATE)
-  private Date retentionPeriod;
-  
   @Basic(optional = false)
   @NotNull
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date created;
+  
+  @Column(name = "retention_period")
+  @Temporal(TemporalType.DATE)
+  private Date retentionPeriod;
   
   @NotNull
   @Size(min = 1,
@@ -106,6 +96,16 @@ public class Study implements Serializable {
   @Column(name = "archived")
   private boolean archived;
 
+  @Column(name = "deleted")
+  private Boolean deleted;
+  
+  @OneToMany(mappedBy = "study_id")
+  private Collection<Samplecollection> samplecollectionCollection;
+  
+  @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "study_id")
+  private StudyMeta studyMeta;
+    
   public Study() {
   }
 

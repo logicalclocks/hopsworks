@@ -60,7 +60,7 @@ public class ActivityMB implements Serializable {
 
   public String findLastActivity(int id) {
 
-    Iterator<UserActivity> itr = activityFacade.activityOnID(id).
+    Iterator<Activity> itr = activityFacade.activityOnID(id).
             listIterator();
     long currentTime = new Date().getTime();
     while (itr.hasNext()) {
@@ -105,7 +105,7 @@ public class ActivityMB implements Serializable {
 
   public String findLastActivityOnStudy(Study study) {
 
-    UserActivity itr = activityFacade.lastActivityOnStudy(study);
+    Activity itr = activityFacade.lastActivityOnStudy(study);
     long currentTime = new Date().getTime();
 
     long getLastUpdate = itr.getTimestamp().getTime();

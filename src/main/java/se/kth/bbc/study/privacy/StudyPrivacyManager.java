@@ -17,7 +17,6 @@ import javax.faces.application.FacesMessage;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.servlet.http.HttpServletResponse;
@@ -26,7 +25,6 @@ import org.primefaces.event.SelectEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.study.Study;
-import se.kth.bbc.study.StudyTeam;
 import se.kth.bbc.study.StudyTeamFacade;
 import se.kth.bbc.study.privacy.model.Consent;
 

@@ -4,7 +4,6 @@
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>jdbc/kthfs</jta-data-source>
     <class>se.kth.bbc.activity.ActivityDetail</class>
-    <class>se.kth.bbc.activity.UserActivity</class>
     <class>se.kth.bbc.activity.UsersGroups</class>
     <class>se.kth.bbc.jobs.jobhistory.JobExecutionFile</class>
     <class>se.kth.bbc.jobs.jobhistory.JobHistory</class>
@@ -27,6 +26,7 @@
     <class>se.kth.bbc.study.privacy.model.Consent</class>
     <class>se.kth.bbc.security.ua.model.BBCGroup</class>
     <class>se.kth.bbc.security.ua.model.Organization</class>
+    <class>se.kth.bbc.activity.Activity</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

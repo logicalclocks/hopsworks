@@ -19,7 +19,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
  * @author roshan
  */
 @Stateless
-public class ActivityFacade extends AbstractFacade<UserActivity> {
+public class ActivityFacade extends AbstractFacade<Activity> {
 
   private static final Logger logger = Logger.getLogger(ActivityFacade.class.
           getName());
@@ -47,39 +47,38 @@ public class ActivityFacade extends AbstractFacade<UserActivity> {
   }
 
   public ActivityFacade() {
-    super(UserActivity.class);
+    super(Activity.class);
   }
 
-  public void persistActivity(UserActivity activity) {
+  public void persistActivity(Activity activity) {
     em.persist(activity);
   }
 
-  public void removeActivity(UserActivity activity) {
+  public void removeActivity(Activity activity) {
     em.remove(activity);
   }
 
   public long getTotalCount() {
     TypedQuery<Long> q = em.
-            createNamedQuery("UserActivity.countAll", Long.class);
+            createNamedQuery("Activity.countAll", Long.class);
     return q.getSingleResult();
   }
 
   public long getStudyCount(Study study) {
-    TypedQuery<Long> q = em.createNamedQuery("UserActivity.countPerStudy",
+    TypedQuery<Long> q = em.createNamedQuery("Activity.countPerStudy",
             Long.class);
     q.setParameter("study", study);
     return q.getSingleResult();
   }
 
-  public List<UserActivity> activityOnID(int id) {
-    Query query = em.createNamedQuery("UserActivity.findById",
-            UserActivity.class).setParameter("id", id);
+  public List<Activity> activityOnID(int id) {
+    Query query = em.createNamedQuery("Activity.findById",
+            Activity.class).setParameter("id", id);
     return query.getResultList();
   }
 
-  public UserActivity lastActivityOnStudy(Study study) {
-    TypedQuery<UserActivity> query = em.createNamedQuery(
-            "UserActivity.findByStudy", UserActivity.class);
+  public Activity lastActivityOnStudy(Study study) {
+    TypedQuery<Activity> query = em.createNamedQuery("Activity.findByStudy", Activity.class);
     query.setParameter("study", study);
     query.setMaxResults(1);
     try {
@@ -92,7 +91,7 @@ public class ActivityFacade extends AbstractFacade<UserActivity> {
   }
 
   public void persistActivity(String activity, Study study, User user) {
-    UserActivity a = new UserActivity();
+    Activity a = new Activity();
     a.setActivity(activity);
     a.setStudy(study);
     a.setFlag(FLAG_STUDY);
@@ -173,9 +172,9 @@ public class ActivityFacade extends AbstractFacade<UserActivity> {
     return q.getResultList();
   }
 
-  public List<UserActivity> findAllTeamActivity(String flag) {
-    Query query = em.createNamedQuery("UserActivity.findByFlag",
-            UserActivity.class).setParameter("flag", flag);
+  public List<Activity> findAllTeamActivity(String flag) {
+    Query query = em.createNamedQuery("Activity.findByFlag",
+            Activity.class).setParameter("flag", flag);
     return query.getResultList();
   }
 }

@@ -29,28 +29,28 @@ import se.kth.bbc.study.Study;
 @Table(name = "activity")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "UserActivity.findAll",
-          query = "SELECT u FROM UserActivity u ORDER BY u.timestamp DESC"),
-  @NamedQuery(name = "UserActivity.findById",
-          query = "SELECT u FROM UserActivity u WHERE u.id = :id"),
-  @NamedQuery(name = "UserActivity.findByFlag",
-          query = "SELECT u FROM UserActivity u WHERE u.flag = :flag"),
-  @NamedQuery(name = "UserActivity.findByActivity",
-          query = "SELECT u FROM UserActivity u WHERE u.activity = :activity"),
-  @NamedQuery(name = "UserActivity.findByUser",
+  @NamedQuery(name = "Activity.findAll",
+          query = "SELECT u FROM Activity u ORDER BY u.timestamp DESC"),
+  @NamedQuery(name = "Activity.findById",
+          query = "SELECT u FROM Activity u WHERE u.id = :id"),
+  @NamedQuery(name = "Activity.findByFlag",
+          query = "SELECT u FROM Activity u WHERE u.flag = :flag"),
+  @NamedQuery(name = "Activity.findByActivity",
+          query = "SELECT u FROM Activity u WHERE u.activity = :activity"),
+  @NamedQuery(name = "Activity.findByUser",
           query
-          = "SELECT u FROM UserActivity u WHERE u.user = :user"),
-  @NamedQuery(name = "UserActivity.findByTimestamp",
-          query = "SELECT u FROM UserActivity u WHERE u.timestamp = :timestamp"),
-  @NamedQuery(name = "UserActivity.findByStudy",
+          = "SELECT u FROM Activity u WHERE u.user = :user"),
+  @NamedQuery(name = "Activity.findByTimestamp",
+          query = "SELECT u FROM Activity u WHERE u.timestamp = :timestamp"),
+  @NamedQuery(name = "Activity.findByStudy",
           query
-          = "SELECT u FROM UserActivity u WHERE u.study = :study ORDER BY u.timestamp DESC"),
-  @NamedQuery(name = "UserActivity.countAll",
-          query = "SELECT COUNT(u) FROM UserActivity u"),
-  @NamedQuery(name = "UserActivity.countPerStudy",
+          = "SELECT u FROM Activity u WHERE u.study = :study ORDER BY u.timestamp DESC"),
+  @NamedQuery(name = "Activity.countAll",
+          query = "SELECT COUNT(u) FROM Activity u"),
+  @NamedQuery(name = "Activity.countPerStudy",
           query
-          = "SELECT COUNT(u) FROM UserActivity u WHERE u.study = :study")})
-public class UserActivity implements Serializable {
+          = "SELECT COUNT(u) FROM Activity u WHERE u.study = :study")})
+public class Activity implements Serializable {
   
   private static final long serialVersionUID = 1L;
   
@@ -87,14 +87,14 @@ public class UserActivity implements Serializable {
   @ManyToOne(optional = false)
   private User user;
   
-  public UserActivity() {
+  public Activity() {
   }
 
-  public UserActivity(Integer id) {
+  public Activity(Integer id) {
     this.id = id;
   }
 
-  public UserActivity(Integer id, Date timestamp) {
+  public Activity(Integer id, Date timestamp) {
     this.id = id;
     this.timestamp = timestamp;
   }
@@ -132,10 +132,10 @@ public class UserActivity implements Serializable {
 
   @Override
   public boolean equals(Object object) {
-    if (!(object instanceof UserActivity)) {
+    if (!(object instanceof Activity)) {
       return false;
     }
-    UserActivity other = (UserActivity) object;
+    Activity other = (Activity) object;
     if ((this.id == null && other.id != null) || (this.id != null && !this.id.
             equals(other.id))) {
       return false;
@@ -145,7 +145,7 @@ public class UserActivity implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.activity.UserActivity[ id=" + id + " ]";
+    return "se.kth.bbc.activity.Activity[ id=" + id + " ]";
   }
 
   public String getFlag() {
