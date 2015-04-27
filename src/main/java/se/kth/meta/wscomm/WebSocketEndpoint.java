@@ -1,10 +1,11 @@
-
 package se.kth.meta.wscomm;
 
 import se.kth.meta.db.Dbao;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.websocket.EncodeException;
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
@@ -14,6 +15,7 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+import se.kth.meta.listener.ApplicationListener;
 import se.kth.meta.wscomm.message.Message;
 import se.kth.meta.wscomm.message.TextMessage;
 
@@ -26,6 +28,8 @@ import se.kth.meta.wscomm.message.TextMessage;
         decoders = MessageDecoder.class,
         configurator = ServletAwareConfig.class)
 public class WebSocketEndpoint {
+
+    private static final Logger logger = Logger.getLogger(WebSocketEndpoint.class.getName());
 
     private Set<Session> sessions = new HashSet<>();
     private Session mySession;
@@ -44,7 +48,7 @@ public class WebSocketEndpoint {
         this.sender = sender;
         this.mySession = session;
 
-        System.err.println("CONNECTED USER " + sender);
+        logger.log(Level.SEVERE, "CONNECTED USER {0}", sender);
 
         //keep track of each new client session
         this.addSession(session);
@@ -57,14 +61,14 @@ public class WebSocketEndpoint {
         //query string is the client I want to communicate with
         String receiver = session.getQueryString();
 
-        System.err.println("METAHOPS: QUERY STRING " + session.getQueryString());
-        System.err.println("RECEIVED MESSAGE: " + msg.toString());
+        logger.log(Level.SEVERE, "HOPSWORKS: QUERY STRING {0}", session.getQueryString());
+        logger.log(Level.SEVERE, "RECEIVED MESSAGE: {0}", msg.toString());
 
-        if(!authenticate(receiver)){
+        if (!authenticate(receiver)) {
             this.sendError(session, "You are not logged in the system");
             return;
         }
-        
+
         try {
             Message response = this.protocol.GFR(msg);
 
@@ -74,7 +78,7 @@ public class WebSocketEndpoint {
             }
         } catch (NullPointerException | EncodeException | IOException e) {
 
-            System.err.println("WebSocketEndpoint.java: " + e.getMessage());
+            logger.log(Level.SEVERE, e.getMessage(), e);
             this.sendError(session, e.getMessage());
         }
     }
@@ -86,8 +90,8 @@ public class WebSocketEndpoint {
             // remove connection
             this.sessions.remove(session);
 
-            System.err.println("METAHOPS: USER " + sender + " "
-                    + "SESSION DESTROYED sessions " + this.sessions.size());
+            logger.log(Level.SEVERE, "HOPSWORKS: USER {0} SESSION DESTROYED sessions {1}", 
+                    new Object[]{sender, this.sessions.size()});
 
             this.broadcast(new TextMessage(this.sender, "Left"));
         }
@@ -111,21 +115,21 @@ public class WebSocketEndpoint {
     @OnError
     public void error(Session session, Throwable t) {
         //t.printStackTrace();
-        System.err.println("WebSocketEndpoint.java: " + t.getMessage());
+        logger.log(Level.SEVERE, t.getMessage(), t);
     }
 
     private void sendClient(Session session, Message message) {
         try {
             session.getBasicRemote().sendObject(message);
         } catch (IOException | EncodeException e) {
-            System.err.println("WebSocketEndpoint.java: " + e.getMessage());
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 
     private void addSession(Session session) {
         this.sessions.add(session);
-        System.err.println("METAHOPS: USER " + sender + " CONNECTED sessid " + session.getId());
-        System.err.println("METAHOPS: CONNECTED USERS " + this.sessions.size());
+        logger.log(Level.SEVERE, "HOPSWORKS: USER {0} CONNECTED sessid {1}", new Object[]{sender, session.getId()});
+        logger.log(Level.SEVERE, "HOPSWORKS: CONNECTED USERS {0}", this.sessions.size());
     }
 
     private void removeSession(Session session) {
@@ -139,11 +143,11 @@ public class WebSocketEndpoint {
         this.sendClient(session, message);
     }
 
-    private boolean authenticate(String username){
+    private boolean authenticate(String username) {
 //        HttpSession session = this.auth.getSession();
 //        System.err.println("SESSSSSSION NULLL " + session == null);
 //        System.err.println("SESSSSSSION ID " + session.getId());
-        
+
         return true;
 //        return session != null && auth.getUsername().equals(username);
     }

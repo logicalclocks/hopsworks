@@ -49,9 +49,9 @@ public class ApplicationListener implements ServletContextListener,
             //initialize the WebSockets Endpoint
             serverContainer.addEndpoint(WebSocketEndpoint.class);
             
-            logger.log(Level.SEVERE, "METAHOPS WS INITIALIZED");
+            logger.log(Level.SEVERE, "HOPSWORKS WS INITIALIZED");
         } catch (DatabaseException e) {
-            logger.log(Level.SEVERE, "METAHOPS WAS NOT INITIALIZED ", e);
+            logger.log(Level.SEVERE, "HOPSWORKS WAS NOT INITIALIZED ", e);
         } catch (DeploymentException ex) {
             Logger.getLogger(ApplicationListener.class.getName()).log(Level.SEVERE, null, ex);
         }
