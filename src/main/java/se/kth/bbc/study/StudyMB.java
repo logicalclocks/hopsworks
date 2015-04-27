@@ -208,8 +208,8 @@ public class StudyMB implements Serializable {
     return studyFacade.findAll();
   }
 
-  public List<StudyDetail> getPersonalStudy() {
-    return studyFacade.findAllPersonalStudyDetails(getUsername());
+  public List<Study> getPersonalStudy() {
+    return studyFacade.findAllPersonalStudies(sessionState.getLoggedInUser());
   }
 
   public boolean isDeleteFilesOnRemove() {
@@ -301,24 +301,24 @@ public class StudyMB implements Serializable {
             getUsername());
   }
 
-  public List<StudyDetail> getAllStudiesPerUser() {
-    return studyFacade.findAllStudyDetails(getUsername());
+  public List<Study> getAllStudiesPerUser() {
+    return studyFacade.findAllMemberStudies(sessionState.getLoggedInUser());
   }
 
-  public List<StudyDetail> getJoinedStudies() {
-    return studyFacade.findJoinedStudyDetails(getUsername());
+  public List<Study> getJoinedStudies() {
+    return studyFacade.findAllJoinedStudies(sessionState.getLoggedInUser());
   }
 
   private long countAllStudiesPerUser() {
-    return studyTeamController.countByMemberEmail(getUsername());
+    return studyTeamController.countByMember(sessionState.getLoggedInUser());
   }
 
   private int countPersonalStudy() {
-    return studyFacade.findByUser(getUsername()).size();
+    return studyFacade.findByUser(sessionState.getLoggedInUser()).size();
   }
 
   private int countJoinedStudy() {
-    return studyFacade.findJoinedStudyDetails(getUsername()).size();
+    return studyFacade.findAllJoinedStudies(sessionState.getLoggedInUser()).size();
   }
 
   //TODO: change this method to include the Study directly.

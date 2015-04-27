@@ -48,7 +48,13 @@ import se.kth.bbc.security.ua.model.User;
           = "SELECT COUNT(DISTINCT s.studyTeamPK.teamMember) FROM StudyTeam s WHERE s.study = :study"),
   @NamedQuery(name = "StudyTeam.findMembersByRoleInStudy",
           query
-          = "SELECT s FROM StudyTeam s WHERE s.study = :study AND s.teamRole = :teamRole")})
+          = "SELECT s FROM StudyTeam s WHERE s.study = :study AND s.teamRole = :teamRole"),
+  @NamedQuery(name = "StudyTeam.findAllMemberStudiesForUser",
+          query
+          = "SELECT st.study from StudyTeam st WHERE st.user = :user"),
+  @NamedQuery(name = "StudyTeam.findAllJoinedStudiesForUser",
+          query
+          = "SELECT st.study from StudyTeam st WHERE st.user = :user AND NOT st.study.owner = :user")})
 public class StudyTeam implements Serializable {
   
   private static final long serialVersionUID = 1L;

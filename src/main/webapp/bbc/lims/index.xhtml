@@ -78,13 +78,13 @@
                           <ui:repeat var="study" value="#{studyManagedBean.allStudiesPerUser}">
                             <li class="ui-tabs-panel">
                               <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                                <span class="tiny">#{study.creator}</span> / <strong>#{study.studyName}</strong>
-                                <f:param name="studyname" value="#{study.studyName}"/>
-                                <f:param name="username" value="#{study.email}"/>
+                                <span class="tiny">#{study.owner.fname} #{study.owner.lname}</span> / <strong>#{study.name}</strong>
+                                <f:param name="studyname" value="#{study.name}"/>
+                                <f:param name="username" value="#{study.owner.email}"/>
                               </p:commandLink>
                               <span class="last_activity">
                                 <strong style="font-size: 12px;color: #666;">Last activity:</strong>
-                                <span>#{activityBean.findLastActivityOnStudy(study.studyName)}</span>
+                                <span>#{activityBean.findLastActivityOnStudy(study)}</span>
                               </span>
                             </li>
                           </ui:repeat>
@@ -96,13 +96,13 @@
                           <ui:repeat var="study" value="#{studyManagedBean.personalStudy}">
                             <li class="ui-tabs-panel">
                               <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                                <span class="tiny">#{study.creator}</span> / <strong>#{study.studyName}</strong>
-                                <f:param name="studyname" value="#{study.studyName}"/>
-                                <f:param name="username" value="#{study.email}"/>
+                                <span class="tiny">#{study.owner.fname} #{study.owner.lname}</span> / <strong>#{study.name}</strong>
+                                <f:param name="studyname" value="#{study.name}"/>
+                                <f:param name="username" value="#{study.owner.email}"/>
                               </p:commandLink>
                               <span class="last_activity">
                                 <strong style="font-size: 12px;color: #666;">Last activity:</strong>
-                                <span>#{activityBean.findLastActivityOnStudy(study.studyName)}</span>
+                                <span>#{activityBean.findLastActivityOnStudy(study)}</span>
                               </span>
                             </li>
                           </ui:repeat>
@@ -114,13 +114,13 @@
                           <ui:repeat var="study" value="#{studyManagedBean.joinedStudies}">
                             <li class="ui-tabs-panel">
                               <p:commandLink action="#{studyManagedBean.fetchStudy()}">
-                                <span class="tiny">#{study.creator}</span> / <strong>#{study.studyName}</strong>
-                                <f:param name="studyname" value="#{study.studyName}"/>
-                                <f:param name="username" value="#{study.email}"/>
+                                <span class="tiny">#{study.owner.fname} #{study.owner.lname}</span> / <strong>#{study.name}</strong>
+                                <f:param name="studyname" value="#{study.name}"/>
+                                <f:param name="username" value="#{study.owner.email}"/>
                               </p:commandLink>
                               <span class="last_activity">
                                 <strong style="font-size: 12px;color: #666;">Last activity:</strong>
-                                <span>#{activityBean.findLastActivityOnStudy(study.studyName)}</span>
+                                <span>#{activityBean.findLastActivityOnStudy(study)}</span>
                               </span>
                             </li>
                           </ui:repeat>

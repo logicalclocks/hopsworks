@@ -309,15 +309,6 @@ CREATE TABLE `collection_type` (
   FOREIGN KEY (`collection_id`) REFERENCES `samplecollections` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
-CREATE VIEW `study_details` AS 
-  select `study`.`studyname` AS `studyname`,
-    `study`.`username` AS `email`,
-    concat(`users`.`fname`,' ',`users`.`lname`) AS `creator` 
-  from 
-    (`study` join `users` on((`study`.`username` = `users`.`email`))) 
-  where `study`.`id` in 
-    (select `study_team`.`study_id` from `study_team`);
-
 CREATE VIEW `users_groups` AS 
   select `u`.`username` AS `username`,
   `u`.`password` AS `password`,

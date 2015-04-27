@@ -85,8 +85,8 @@ public class StudyFacade extends AbstractFacade<Study> {
       return null;
     }
   }
-  
-   /**
+
+  /**
    * Get the study with the given name created by the User with given email.
    * <p>
    * @param studyname The name of the study.
@@ -159,44 +159,40 @@ public class StudyFacade extends AbstractFacade<Study> {
   }
 
   /**
-   * Find details about all the studies a user has joined.
+   * Find all the studies the given user is a member of.
    * <p>
-   * @param useremail
+   * @param user
    * @return
    */
-  public List<StudyDetail> findAllStudyDetails(String useremail) {
-    Query query = em.createNativeQuery(
-            "SELECT * FROM study_details WHERE studyname IN (SELECT name FROM study_team WHERE team_member=?)",
-            StudyDetail.class)
-            .setParameter(1, useremail);
+  public List<Study> findAllMemberStudies(User user) {
+    TypedQuery<Study> query = em.createNamedQuery("StudyTeam.findAllMemberStudiesForUser",
+            Study.class);
+    query.setParameter("user", user);
     return query.getResultList();
   }
 
   /**
    * Find all studies created (and owned) by this user.
    * <p>
-   * @param useremail
+   * @param user
    * @return
    */
-  public List<StudyDetail> findAllPersonalStudyDetails(String useremail) {
-    TypedQuery<StudyDetail> q = em.createNamedQuery("StudyDetail.findByEmail",
-            StudyDetail.class);
-    q.setParameter("email", useremail);
-    return q.getResultList();
+  public List<Study> findAllPersonalStudies(User user) {
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByOwner",Study.class);
+    query.setParameter("owner", user);
+    return query.getResultList();
   }
 
   /**
    * Get all the studies this user has joined, but not created.
    * <p>
-   * @param useremail
+   * @param user
    * @return
    */
-  public List<StudyDetail> findJoinedStudyDetails(String useremail) {
-    Query query = em.createNativeQuery(
-            "SELECT * FROM study_details WHERE studyname IN (SELECT name FROM study_team WHERE team_member=?) AND email NOT LIKE ?",
-            StudyDetail.class)
-            .setParameter(1, useremail).setParameter(2, useremail);
-
+  public List<Study> findAllJoinedStudies(User user) {
+    TypedQuery<Study> query = em.createNamedQuery("StudyTeam.findAllJoinedStudiesForUser",
+            Study.class);
+    query.setParameter("user", user);
     return query.getResultList();
   }
 
