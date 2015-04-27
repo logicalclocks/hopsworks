@@ -10,7 +10,7 @@ angular.module('metaUI')
             var callbacks = [];
 
             //generic
-            var ws = $websocket("ws://" + $location.host() + ":19931/hop-dashboard/wspoint/test?evsav");
+            var ws = $websocket("ws://" + $location.host() + ":19931/hopsworks/wspoint/test?evsav");
 
             //to work with the ethernet adapter
             //var ws = $websocket("ws://193.10.67.226:19931/MetaHops/metahops/test?evsav");
@@ -18,10 +18,6 @@ angular.module('metaUI')
 
             //to work with the wireless adapter
             //var ws = $websocket("ws://169.254.67.177:19931/MetaHops/metahops/test?evsav");
-
-            //to work at home
-            //var ws = $websocket("ws://192.168.1.42:19931/MetaHops/metahops/test?evsav");
-            //var ws = $websocket("ws://192.168.1.42:19931/hop-dashboard/wspoint/test?evsav");
 
             var collection = [];
 
@@ -87,8 +83,8 @@ angular.module('metaUI')
                 host: 'http://127.0.0.1:9200'
             });
         })
-        .run(['$rootScope', 'WSComm', 'BoardDataFactory', 'BoardService', '$q',
-            function ($rootScope, WSComm, BoardDataFactory, BoardService, $q) {
+        .run(['$rootScope', 'WSComm', 'BoardService', '$q',
+            function ($rootScope, WSComm, BoardService, $q) {
 
                 //initialize the main screen
                 BoardService.fetchTemplates()

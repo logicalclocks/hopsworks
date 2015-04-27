@@ -9,7 +9,6 @@ angular.module('metaUI', [
     'ngResource',
     'ngWebSocket',
     'elasticsearch',
-    'infinite-scroll',
     'ui.sortable',
     'ui.bootstrap',
     'dialogs.main',
@@ -75,25 +74,25 @@ angular.module('metaUI', [
                     return $q.reject(rejection);
                 }
             };
-        })
+        });
 
-        .run(['$http', function($http){
-                
-            $http({
-                url: 'http://localhost:8383/MetadataUI/metaEngine/index.html#/meta/3',
-                method: "GET",
-                transformError: true,
-                responseType: null,
-                headers :{sessionid: "whatever"},
-                params: {user_id: 1}
-            })
-            .then(function (data) {
-                //success, resolve your promise here
-                console.log("SUCCESS");
-            }, function(response) {
-                console.log("AJAX CALL FAILED " + JSON.stringify(response));
-            });
-        }]);
+//        .run(['$http', function($http){
+//                
+//            $http({
+//                url: 'http://localhost:8383/MetadataUI/metaEngine/index.html#/meta/3',
+//                method: "GET",
+//                transformError: true,
+//                responseType: null,
+//                headers :{sessionid: "whatever"},
+//                params: {user_id: 1}
+//            })
+//            .then(function (data) {
+//                //success, resolve your promise here
+//                console.log("SUCCESS");
+//            }, function(response) {
+//                console.log("AJAX CALL FAILED " + JSON.stringify(response));
+//            });
+//        }]);
 
 //    .controller('demoController', ['$scope', '$rootScope', '$location', function ($scope, $rootScope, $location) {
 //        $rootScope.$on('event:auth-loginRequired', function () {
