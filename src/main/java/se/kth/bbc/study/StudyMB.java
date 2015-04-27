@@ -359,6 +359,12 @@ public class StudyMB implements Serializable {
     sessionState.setActiveStudy(s);
     return checkAccess();
   }
+  
+  public String fetchStudy(Study study){
+    setStudyName(study.getName());
+    sessionState.setActiveStudy(study);
+    return checkAccess();
+  }
 
   public String checkAccess() {
     boolean res = studyTeamController.isUserMemberOfStudy(sessionState.
@@ -880,6 +886,11 @@ public class StudyMB implements Serializable {
     this.allConsent = privacyManager.getAllConsentsByStudy(sessionState.
             getActiveStudy());
     return this.allConsent;
+  }
+  
+  public List<Activity> getAllActivitiesOnStudy() {
+    List<Activity> ad = activityFacade.getAllActivityOnStudy(sessionState.getActiveStudy());
+    return ad;
   }
 
   public void showConsent(String consName) {

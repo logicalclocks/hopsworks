@@ -68,6 +68,7 @@ public class StudyMetaController implements Serializable {
             findByStudy(sessionState.getActiveStudy());
     if (metadata == null) {
       metadata = new StudyMeta(sessionState.getActiveStudy().getId());
+      metadata.setStudy(sessionState.getActiveStudy());
     }
 
     //create study design model

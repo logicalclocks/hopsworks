@@ -139,8 +139,8 @@ public class ActivityMB implements Serializable {
     }
   }
 
-  public String getGravatar(User user, int size) {
-    return Gravatar.getUrl(user.getEmail(), size);
+  public String getGravatar(String email, int size) {
+    return Gravatar.getUrl(email, size);
   }
 
 }

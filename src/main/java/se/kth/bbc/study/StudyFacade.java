@@ -6,7 +6,6 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.kthfsdashboard.user.AbstractFacade;
@@ -76,7 +75,7 @@ public class StudyFacade extends AbstractFacade<Study> {
    * does not exist.
    */
   public Study findByNameAndOwner(String studyname, User user) {
-    TypedQuery<Study> query = em.createNamedQuery("Study.findBy",
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByOwnerAndName",
             Study.class).setParameter("name", studyname).setParameter("owner",
                     user);
     try {
@@ -130,10 +129,6 @@ public class StudyFacade extends AbstractFacade<Study> {
     return countOwnedStudies(user);
   }
 
-//  public int getMembers(Study study) {
-//    return ((Long) em.createNamedQuery("Study.findMembers").setParameter(
-//            "name", name).getSingleResult()).intValue();
-//  }
   /**
    * Find all the studies owned by the given user.
    * <p>
@@ -209,13 +204,19 @@ public class StudyFacade extends AbstractFacade<Study> {
     em.merge(study);
   }
 
+  /**
+   * Check if a study with this name already exists.
+   * @param name
+   * @return 
+   */
   public boolean studyExists(String name) {
-    Study study = em.find(Study.class, name);
-    return study != null;
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByName",Study.class);
+    query.setParameter("name", name);
+    return !query.getResultList().isEmpty();
   }
 
   public void archiveStudy(String studyname) {
-    Study study = em.find(Study.class, studyname);
+    Study study = findByName(studyname);
     if (study != null) {
       study.setArchived(true);
     }
@@ -223,7 +224,7 @@ public class StudyFacade extends AbstractFacade<Study> {
   }
 
   public void unarchiveStudy(String studyname) {
-    Study study = em.find(Study.class, studyname);
+        Study study = findByName(studyname);
     if (study != null) {
       study.setArchived(false);
     }
@@ -231,7 +232,7 @@ public class StudyFacade extends AbstractFacade<Study> {
   }
 
   public boolean updateRetentionPeriod(String name, Date date) {
-    Study study = em.find(Study.class, name);
+        Study study = findByName(name);
     if (study != null) {
       study.setRetentionPeriod(date);
       em.merge(study);
@@ -241,10 +242,20 @@ public class StudyFacade extends AbstractFacade<Study> {
   }
 
   public Date getRetentionPeriod(String name) {
-    Study study = em.find(Study.class, name);
+    Study study = findByName(name);
     if (study != null) {
       return study.getRetentionPeriod();
     }
     return null;
+  }
+  
+  private Study findByName(String name){
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByName",Study.class);
+    query.setParameter("name", name);
+    try{
+      return query.getSingleResult();
+    }catch(NoResultException e){
+      return null;
+    }
   }
 }

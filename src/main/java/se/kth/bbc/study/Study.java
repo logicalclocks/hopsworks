@@ -75,7 +75,7 @@ public class Study implements Serializable {
   private String name;
   
   @ManyToOne(fetch=FetchType.LAZY)
-  @JoinColumn(name="username")
+  @JoinColumn(name="username", referencedColumnName = "email")
   private User owner;
   
   @Basic(optional = false)
