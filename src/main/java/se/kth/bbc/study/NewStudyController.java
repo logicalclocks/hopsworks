@@ -127,9 +127,8 @@ public class NewStudyController implements Serializable {
     try {
       if (!studyFacade.studyExists(newStudyName)) {
         //Create a new study object
-        String username = sessionState.getLoggedInUsername();
         Date now = new Date();
-        study = new Study(newStudyName, username, now);
+        study = new Study(newStudyName, sessionState.getLoggedInUser(), now);
         //create folder structure
         mkStudyDIR(study.getName());
         logger.log(Level.FINE, "{0} - study directory created successfully.",

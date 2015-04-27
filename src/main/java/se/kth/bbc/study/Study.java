@@ -7,9 +7,12 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -22,6 +25,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.study.metadata.StudyMeta;
 import se.kth.bbc.study.samples.Samplecollection;
 
@@ -70,12 +74,9 @@ public class Study implements Serializable {
   @Column(name = "studyname")
   private String name;
   
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 1,
-          max = 255)
-  @Column(name = "username")
-  private String owner;
+  @ManyToOne(fetch=FetchType.LAZY)
+  @JoinColumn(name="username")
+  private User owner;
   
   @Basic(optional = false)
   @NotNull
@@ -113,9 +114,9 @@ public class Study implements Serializable {
     this.name = name;
   }
 
-  public Study(String name, String username, Date timestamp) {
+  public Study(String name, User owner, Date timestamp) {
     this.name = name;
-    this.owner = username;
+    this.owner = owner;
     this.created = timestamp;
   }
 
@@ -143,11 +144,11 @@ public class Study implements Serializable {
     this.name = name;
   }
 
-  public String getOwner() {
+  public User getOwner() {
     return owner;
   }
 
-  public void setOwner(String owner) {
+  public void setOwner(User owner) {
     this.owner = owner;
   }
 
@@ -167,13 +168,6 @@ public class Study implements Serializable {
     this.studyMeta = studyMeta;
   }
 
-  public boolean getArchived() {
-    return archived;
-  }
-  
-  public void setArchived(boolean archived) {
-    this.archived = archived;
-  }
 
   @Override
   public String toString() {
@@ -235,6 +229,14 @@ public class Study implements Serializable {
       return false;
     }
     return true;
+  }
+
+  public Boolean getArchived() {
+    return archived;
+  }
+
+  public void setArchived(Boolean archived) {
+    this.archived = archived;
   }
 
 }

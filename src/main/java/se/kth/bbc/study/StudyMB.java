@@ -630,7 +630,7 @@ public class StudyMB implements Serializable {
     if (currentStudy == null) {
       return false;
     }
-    return currentStudy.getOwner().equalsIgnoreCase(email);
+    return currentStudy.getOwner().getEmail().equalsIgnoreCase(email);
   }
 
   public StudyServiceEnum[] getSelectedServices() {

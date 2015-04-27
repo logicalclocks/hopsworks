@@ -155,7 +155,7 @@ public class StudyFacade extends AbstractFacade<Study> {
    * @deprecated Use study.getOwner().getEmail(); instead.
    */
   public String findOwner(Study study) {
-    return study.getOwner();
+    return study.getOwner().getEmail();
   }
 
   /**

@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.security.ua.SecurityQuestion;
+import se.kth.bbc.study.Study;
 
 /**
  *
@@ -170,6 +171,9 @@ public class User implements Serializable {
   @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "uid")
   private Organization organization;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "owner")
+  private Collection<Study> studyCollection;
 
   public User() {
   }
@@ -408,5 +412,15 @@ public class User implements Serializable {
   @Override
   public String toString() {
     return "se.kth.bbc.security.ua.model.User[ uid=" + uid + " ]";
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<Study> getStudyCollection() {
+    return studyCollection;
+  }
+
+  public void setStudyCollection(Collection<Study> studyCollection) {
+    this.studyCollection = studyCollection;
   }
 }
