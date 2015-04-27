@@ -96,11 +96,6 @@ public class StudyPrivacyManager {
 
   }
 
-  public String getRoles(String study, String username) throws ParseException {
-    List<StudyTeam> list = stc.findCurrentRole(study, username);
-    return list.get(0).getTeamRole();
-  }
-
   public Consent getActiveConsent(String studyName) {
     return (Consent) em.createQuery(
             "SELECT c FROM Consent c WHERE c.status ='APPROVED' AND c.studyName = '"

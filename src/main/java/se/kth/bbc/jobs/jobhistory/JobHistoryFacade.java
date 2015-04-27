@@ -101,6 +101,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
    * <p>
    * @param jh
    * @param state
+   * @deprecated Need to fix this.
    */
   private void updateState(Long id, JobState state) {
     Query q = em.createNativeQuery("UPDATE jobhistory SET state=? WHERE id=?");

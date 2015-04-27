@@ -225,7 +225,8 @@ public class StudyMB implements Serializable {
   }
 
   public List<Theme> addThemes() {
-    List<User> list = userMgr.filterUsersBasedOnStudy(getStudyName());
+    List<User> list = userMgr.filterUsersBasedOnStudy(sessionState.
+            getActiveStudy());
     themes = new ArrayList<>();
     int i = 0;
     for (User user : list) {
@@ -280,17 +281,8 @@ public class StudyMB implements Serializable {
   }
 
   public int countAllMembersInActiveStudy() {
-    return studyTeamController.countMembersInStudy(sessionState.getActiveStudy());
-  }
-
-  public String checkStudyOwner(String email) {
-    List<Study> lst = studyTeamController.findStudyMaster(studyName);
-    for (Study tr : lst) {
-      if (tr.getOwner().equals(email)) {
-        return email;
-      }
-    }
-    return null;
+    return studyTeamController.
+            countMembersInStudy(sessionState.getActiveStudy());
   }
 
   public boolean checkOwnerForSamples() {
@@ -304,14 +296,13 @@ public class StudyMB implements Serializable {
     return null;
   }
 
-  public String renderComponentList() {
-    List<StudyTeam> st = studyTeamController.findCurrentRole(studyName,
+  /**
+   * Get the current role of the logged in user in the current study.
+   * @return 
+   */
+  public String currentRoleInStudy() {
+    return studyTeamController.findCurrentRole(sessionState.getActiveStudy(),
             getUsername());
-    if (st.iterator().hasNext()) {
-      StudyTeam t = st.iterator().next();
-      return t.getTeamRole();
-    }
-    return null;
   }
 
   public List<StudyDetail> getAllStudiesPerUser() {
@@ -364,13 +355,14 @@ public class StudyMB implements Serializable {
 
   public String fetchStudy(String studyname) {
     setStudyName(studyname);
-    Study s = studyFacade.findByNameAndOwnerEmail(studyname, sessionState.getLoggedInUsername());
+    Study s = studyFacade.findByNameAndOwnerEmail(studyname, sessionState.
+            getLoggedInUsername());
     sessionState.setActiveStudy(s);
     return checkAccess();
   }
 
   public String checkAccess() {
-    boolean res = studyTeamController.findUserForActiveStudy(studyName,
+    boolean res = studyTeamController.isUserMemberOfStudy(sessionState.getActiveStudy(),
             getUsername());
     boolean rec = userGroupsController.existsEntryForEmail(getUsername());
     if (!res) {
@@ -541,7 +533,7 @@ public class StudyMB implements Serializable {
     List<UserGroup> groupedUsers = new ArrayList<>();
     StudyRoleTypes[] roles = StudyRoleTypes.values();
     for (StudyRoleTypes role : roles) {
-      List<User> mems = studyTeamController.findTeamMembersByName(studyName,
+      List<User> mems = studyTeamController.findTeamMembersByStudy(sessionState.getActiveStudy(),
               role.getTeam());
       if (!mems.isEmpty()) {
         List<RoledUser> roleMems = new ArrayList<>();
@@ -562,7 +554,8 @@ public class StudyMB implements Serializable {
    * @return
    */
   public int countRoleUsers(String role) {
-    return studyTeamController.countStudyTeam(sessionState.getActiveStudy(), role);
+    return studyTeamController.countStudyTeam(sessionState.getActiveStudy(),
+            role);
   }
 
   public class UserGroup {
@@ -637,7 +630,7 @@ public class StudyMB implements Serializable {
    */
   public boolean studyOwnedBy(String email) {
     Study currentStudy = sessionState.getActiveStudy();
-    if(currentStudy == null){
+    if (currentStudy == null) {
       return false;
     }
     return currentStudy.getOwner().equalsIgnoreCase(email);
@@ -651,8 +644,9 @@ public class StudyMB implements Serializable {
   }
 
   public boolean shouldDrawTab(String service) {
-    return studyServices.findEnabledServicesForStudy(sessionState.getActiveStudy()).contains(
-            StudyServiceEnum.valueOf(service));
+    return studyServices.findEnabledServicesForStudy(sessionState.
+            getActiveStudy()).contains(
+                    StudyServiceEnum.valueOf(service));
   }
 
   public void setSelectedServices(StudyServiceEnum[] selectedServices) {
@@ -660,7 +654,8 @@ public class StudyMB implements Serializable {
   }
 
   public String updateServices() {
-    studyServices.persistServicesForStudy(sessionState.getActiveStudy(), selectedServices);
+    studyServices.persistServicesForStudy(sessionState.getActiveStudy(),
+            selectedServices);
     return "studyPage";
   }
 
@@ -828,7 +823,8 @@ public class StudyMB implements Serializable {
   }
 
   public List<Consent> getAllConsent() {
-    this.allConsent = privacyManager.getAllConsentsByStudy(sessionState.getActiveStudy());
+    this.allConsent = privacyManager.getAllConsentsByStudy(sessionState.
+            getActiveStudy());
     return this.allConsent;
   }
 

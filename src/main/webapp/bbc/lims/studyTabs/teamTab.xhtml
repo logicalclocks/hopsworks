@@ -17,7 +17,7 @@ and open the template in the editor.
         Team Members (#{studyManagedBean.countAllMembersInActiveStudy()})
         <span class="right_button">
           <h:form id="frmBtn">
-            <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" action="newTeamMemb" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+            <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" action="newTeamMemb" rendered="#{studyManagedBean.currentRoleInStudy() == 'Master'}"/>
           </h:form>
         </span>
       </h3>
@@ -55,7 +55,7 @@ and open the template in the editor.
                                                styleClass="study_role_assign" 
                                                disabled="#{studyManagedBean.studyOwnedBy(usr.email)}" 
                                                style="width:170px;" 
-                                               rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
+                                               rendered="#{studyManagedBean.currentRoleInStudy() == 'Master'}">
                                 <p:ajax update="@form" process="@all"
                                         listener="#{valueChangeMB.updateStudyTeamRole(usr.email,usr.role)}"/>
                                 <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
@@ -68,7 +68,7 @@ and open the template in the editor.
                           <h:commandButton class="button-success" value="Owner" disabled="true" rendered="#{studyManagedBean.studyOwnedBy(usr.email)}"/>
                           <p:commandLink styleClass="ui-button fa fa-minus"  
                                          value="" 
-                                         rendered="#{studyManagedBean.renderComponentList() == 'Master' and not studyManagedBean.studyOwnedBy(usr.email)}" 
+                                         rendered="#{studyManagedBean.currentRoleInStudy() == 'Master' and not studyManagedBean.studyOwnedBy(usr.email)}" 
                                          action="#{studyTeamController.setToRemove(usr.email, usr.name)}"
                                          update=":#{p:component('remTeamMemForm')}" oncomplete="PF('remTeamMemDlg').show()">
                           </p:commandLink>

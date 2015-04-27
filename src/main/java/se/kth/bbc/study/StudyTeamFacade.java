@@ -5,6 +5,7 @@
  */
 package se.kth.bbc.study;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
@@ -63,31 +64,48 @@ public class StudyTeamFacade {
   /**
    * Find all team members in study 'name' with role 'role'.
    * <p>
-   * @param name
+   * @param study
    * @param role
-   * @return
+   * @return A list of User entities that have the role <i>role</i> in Study <i>study</i>.
    */
-  public List<User> findTeamMembersByName(String name, String role) {
-    Query query = em.createNativeQuery(
-            "SELECT fname,lname,email,uid FROM users WHERE email IN (SELECT team_member FROM study_team WHERE name=? AND team_role=?)",
-            User.class)
-            .setParameter(1, name).setParameter(2, role);
-    return query.getResultList();
-
+  public List<User> findTeamMembersByStudy(Study study, String role) {
+    List<StudyTeam> results = findStudyTeamByStudyAndRole(study, role);
+    ArrayList<User> retList = new ArrayList<>(results.size());
+    for(StudyTeam st : results){
+      retList.add(st.getUser());
+    }
+    return retList;
+  }
+  
+  /**
+   * Get all the StudyTeam entries for users in the role <i>role</i> in Study <i>study</i>.
+   * @param study
+   * @param role
+   * @return 
+   */
+  public List<StudyTeam> findStudyTeamByStudyAndRole(Study study, String role){
+    TypedQuery<StudyTeam> q = em.createNamedQuery("StudyTeam.findMembersByRoleInStudy",StudyTeam.class);
+    q.setParameter("study", study);
+    q.setParameter("teamRole",role);
+    return q.getResultList();
   }
 
-  public List<StudyTeam> findResearchMembersByName(String name) {
-    Query query = em.createNativeQuery(
-            "SELECT * FROM study_team WHERE name =? AND team_role=?",
-            StudyTeam.class).setParameter(1, name).setParameter(2, "Researcher");
-    return query.getResultList();
+  /**
+   * Find all the StudyTeam entries for members in Study <i>study</i> that have the role Researcher.
+   * @param study
+   * @return 
+   */
+  public List<StudyTeam> findResearchMembersByName(Study study) {
+    return findStudyTeamByStudyAndRole(study, "Researcher");
   }
 
-  public List<StudyTeam> findGuestMembersByName(String name) {
-    Query query = em.createNativeQuery(
-            "SELECT * FROM study_team WHERE name =? AND team_role=?",
-            StudyTeam.class).setParameter(1, name).setParameter(2, "Guest");
-    return query.getResultList();
+  /**
+   * Find all the StudyTeam entries for members in Study <i>study</i> that have the role Guest.
+   * @param study
+   * @return 
+   */
+  public List<StudyTeam> findGuestMembersByName(Study study) {
+    return findStudyTeamByStudyAndRole(study, "Guest");
   }
 
   /**
@@ -100,13 +118,6 @@ public class StudyTeamFacade {
     TypedQuery<StudyTeam> query = em.createNamedQuery("StudyTeam.findByStudy",
             StudyTeam.class);
     query.setParameter("study", study);
-    return query.getResultList();
-  }
-
-  public List<Study> findStudyMaster(String name) {
-    Query query = em.createNativeQuery(
-            "SELECT * FROM study WHERE name IN (SELECT name FROM study_team WHERE name=?)",
-            Study.class).setParameter(1, name);
     return query.getResultList();
   }
 
@@ -151,11 +162,35 @@ public class StudyTeamFacade {
     return countByMember(user);
   }
 
-  public List<StudyTeam> findCurrentRole(String name, String username) {
-    Query query = em.createNativeQuery(
-            "SELECT * FROM study_team where name=? AND team_member=?",
-            StudyTeam.class).setParameter(1, name).setParameter(2, username);
-    return query.getResultList();
+  /**
+   * Get the current role of User <i>user</i> in Study <i>study</i>.
+   * @param study
+   * @param user
+   * @return The current role of the user in the study, or null if the user is not in it.
+   */
+  public String findCurrentRole(Study study, User user) {
+    TypedQuery<StudyTeam> q = em.createNamedQuery("StudyTeam.findRoleForUserInStudy", StudyTeam.class);
+    q.setParameter("study",study);
+    q.setParameter("user", user);
+    try{
+      return q.getSingleResult().getTeamRole();
+    }catch(NoResultException e){
+      return null;
+    }
+  }
+  
+  /**
+   * Get the current role of User <i>user</i> in Study <i>study</i>.
+   * @param study
+   * @param user
+   * @return The current role of the user in the study, or null if the user is not in it.
+   * @deprecated use findCurrentRole(Study study, User user) instead.
+   */
+  public String findCurrentRole(Study study, String user) {
+    TypedQuery<User> q = em.createNamedQuery("User.findByEmail",User.class);
+    q.setParameter("email", user);
+    User u = q.getSingleResult();
+    return findCurrentRole(study,u);
   }
 
   public void persistStudyTeam(StudyTeam team) {
@@ -183,17 +218,32 @@ public class StudyTeamFacade {
             getStudyTeamPK());
   }
 
-  public boolean findUserForActiveStudy(String studyname, String username) {
-    // TODO: use named query
-    Query query = em.createNativeQuery(
-            "SELECT * FROM study_team WHERE name =? AND team_member=?",
-            StudyTeam.class).setParameter(1, studyname).
-            setParameter(2, username);
-    if (query.getResultList().size() > 0) {
-      return true;
-    }
-    return false;
+  /**
+   * Check if the User <i>user</i> is a member of the Study <i>study</i>.
+   * @param study
+   * @param user
+   * @return 
+   */
+  public boolean isUserMemberOfStudy(Study study, User user) {
+    TypedQuery<StudyTeam> q = em.createNamedQuery("StudyTeam.findRoleForUserInStudy",StudyTeam.class);
+    q.setParameter("study", study);
+    q.setParameter("user", user);
+    return q.getResultList().size() > 0;
   }
+ 
+  /**
+   * Check if the User <i>user</i> is a member of the Study <i>study</i>.
+   * @param study
+   * @param user
+   * @return 
+   * @deprecated use isUserMemberOfStudy(Study study,User user) instead.
+   */
+  public boolean isUserMemberOfStudy(Study study, String user) {
+    TypedQuery<User> q = em.createNamedQuery("User.findByEmail", User.class);
+    q.setParameter("email", user);
+    return isUserMemberOfStudy(study, q.getSingleResult());
+  }
+  
 
   /**
    * Find the StudyTeam entry for the given study and user.

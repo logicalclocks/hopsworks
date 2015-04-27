@@ -48,7 +48,7 @@ and open the template in the editor.
                   value="Update Period"  
                   update="privacy"
                   action="#{studyManagedBean.updateRetentionPeriod()}"
-                  rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+                  rendered="#{studyManagedBean.currentRoleInStudy() == 'Master'}"/>
               </h:panelGroup>
 
             </h:panelGrid>
@@ -94,7 +94,7 @@ and open the template in the editor.
                 oncomplete="PF('chooseFileDlg').hide()"
                 update="privacy"
                 fileUploadListener="#{studyManagedBean.uploadConsent}"
-                rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
+                rendered="#{studyManagedBean.currentRoleInStudy() == 'Master'}"
                 />
 
 
@@ -105,7 +105,7 @@ and open the template in the editor.
                             allowTypes="/(\.|\/)(pdf|PDF)$/"
                             oncomplete="PF('chooseFileDlg').hide()"
                             fileUploadListener="#{studyManagedBean.uploadEthicalApproval}"
-                            rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
+                            rendered="#{studyManagedBean.currentRoleInStudy() == 'Master'}"
                             update="privacy"
                             />
 
@@ -118,7 +118,7 @@ and open the template in the editor.
                             update="privacy"
                             oncomplete="PF('chooseFileDlg').hide()"
                             fileUploadListener="#{studyManagedBean.uploadEthicaNonConsent}"
-                            rendered="#{studyManagedBean.renderComponentList() == 'Master'}"
+                            rendered="#{studyManagedBean.currentRoleInStudy() == 'Master'}"
                             />
 
             </h:panelGrid>

@@ -470,7 +470,7 @@ public class PeopleAdministration implements Serializable {
     FacesContext.getCurrentInstance().getExternalContext()
             .getSessionMap().put("editinguser", newStatus);
 
-    Userlogins login = userManager.getLastUserLoing(user1.getUid());
+    Userlogins login = userManager.getLastUserLogin(user1.getUid());
 
     FacesContext.getCurrentInstance().getExternalContext()
             .getSessionMap().put("editinguser_logins", login);

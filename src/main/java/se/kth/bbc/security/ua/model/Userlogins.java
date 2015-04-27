@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.ua.model;
 
 import java.io.Serializable;
@@ -44,7 +39,7 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "Userlogins.findByOutcome",
           query = "SELECT u FROM Userlogins u WHERE u.outcome = :outcome"),
   @NamedQuery(name = "Userlogins.findByUid",
-          query = "SELECT u FROM Userlogins u WHERE u.uid = :uid"),
+          query = "SELECT u FROM Userlogins u WHERE u.uid = :uid ORDER BY u.loginDate DESC"),
   @NamedQuery(name = "Userlogins.findByLoginDate",
           query = "SELECT u FROM Userlogins u WHERE u.loginDate = :loginDate")})
 public class Userlogins implements Serializable {

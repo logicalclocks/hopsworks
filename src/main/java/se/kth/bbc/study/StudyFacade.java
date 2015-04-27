@@ -158,14 +158,6 @@ public class StudyFacade extends AbstractFacade<Study> {
     return study.getOwner();
   }
 
-  public List<Study> findAllStudies(String user) {
-    Query query = em.createNativeQuery(
-            "SELECT name, username FROM study WHERE username=? UNION SELECT name, username FROM study WHERE name IN (SELECT name FROM study_team WHERE team_member=?)",
-            Study.class)
-            .setParameter(1, user).setParameter(2, user);
-    return query.getResultList();
-  }
-
   /**
    * Find details about all the studies a user has joined.
    * <p>
