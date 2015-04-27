@@ -144,7 +144,7 @@
             <f:selectItem itemLabel="Remove study, but keep data." itemValue="false" />
           </p:selectOneRadio>
           <h:panelGroup styleClass="dialogButtonGroup">
-            <p:commandButton value="Remove" action="#{studyManagedBean.removeByName()}" onstart="PF('removeStudyDlg').hide()" type="submit"/>
+            <p:commandButton value="Remove" action="#{studyManagedBean.removeCurrentStudy()}" onstart="PF('removeStudyDlg').hide()" type="submit"/>
             <p:commandButton value="Cancel" oncomplete="PF('removeStudyDlg').hide()"/>
           </h:panelGroup>  
         </h:form>

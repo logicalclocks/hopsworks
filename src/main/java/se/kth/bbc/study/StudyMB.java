@@ -294,7 +294,8 @@ public class StudyMB implements Serializable {
 
   /**
    * Get the current role of the logged in user in the current study.
-   * @return 
+   * <p>
+   * @return
    */
   public String currentRoleInStudy() {
     return studyTeamController.findCurrentRole(sessionState.getActiveStudy(),
@@ -318,7 +319,8 @@ public class StudyMB implements Serializable {
   }
 
   private int countJoinedStudy() {
-    return studyFacade.findAllJoinedStudies(sessionState.getLoggedInUser()).size();
+    return studyFacade.findAllJoinedStudies(sessionState.getLoggedInUser()).
+            size();
   }
 
   //TODO: change this method to include the Study directly.
@@ -359,7 +361,8 @@ public class StudyMB implements Serializable {
   }
 
   public String checkAccess() {
-    boolean res = studyTeamController.isUserMemberOfStudy(sessionState.getActiveStudy(),
+    boolean res = studyTeamController.isUserMemberOfStudy(sessionState.
+            getActiveStudy(),
             getUsername());
     boolean rec = userGroupsController.existsEntryForEmail(getUsername());
     if (!res) {
@@ -464,12 +467,17 @@ public class StudyMB implements Serializable {
     return email.equals(studyFacade.findOwner(sessionState.getActiveStudy()));
   }
 
-  public String removeByName() {
+  /**
+   * Remove the currently active study.
+   * <p>
+   * @return
+   */
+  public String removeCurrentStudy() {
     boolean success = false;
     try {
-      studyFacade.removeByName(studyName);
+      studyFacade.removeStudy(sessionState.getActiveStudy());
       activityFacade.persistActivity(ActivityFacade.REMOVED_STUDY, sessionState.
-              getActiveStudy(), sessionState.getLoggedInUsername());
+              getActiveStudy(), sessionState.getLoggedInUser());
       if (deleteFilesOnRemove) {
         String path = File.separator + Constants.DIR_ROOT + File.separator
                 + studyName;
@@ -481,6 +489,8 @@ public class StudyMB implements Serializable {
       }
       logger.log(Level.FINE, "{0} - study removed.", studyName);
     } catch (IOException e) {
+      logger.log(Level.WARNING, "Failed to remove study " + sessionState.
+              getActiveStudy().getName() + ".", e);
       MessagesController.addErrorMessage("Error: Study wasn't removed.");
       return null;
     }
@@ -494,10 +504,16 @@ public class StudyMB implements Serializable {
     return "indexPage";
   }
 
+  /**
+   * Get a lazy datamodel containing activity on the current study.
+   * <p>
+   * @return
+   */
   public LazyDataModel<Activity> getSpecificLazyModel() {
     if (lazyModel == null) {
       try {
-        lazyModel = new LazyActivityModel(activityFacade, sessionState.getActiveStudy());
+        lazyModel = new LazyActivityModel(activityFacade, sessionState.
+                getActiveStudy());
         lazyModel.setRowCount((int) activityFacade.getStudyCount(sessionState.
                 getActiveStudy()));
       } catch (IllegalArgumentException e) {
@@ -508,6 +524,9 @@ public class StudyMB implements Serializable {
     return lazyModel;
   }
 
+  /**
+   * Redirect the user to the upload page.
+   */
   public void redirectToUploader() {
     try {
       setLoginName(getUsername());
@@ -530,7 +549,8 @@ public class StudyMB implements Serializable {
     List<UserGroup> groupedUsers = new ArrayList<>();
     StudyRoleTypes[] roles = StudyRoleTypes.values();
     for (StudyRoleTypes role : roles) {
-      List<User> mems = studyTeamController.findTeamMembersByStudy(sessionState.getActiveStudy(),
+      List<User> mems = studyTeamController.findTeamMembersByStudy(sessionState.
+              getActiveStudy(),
               role.getTeam());
       if (!mems.isEmpty()) {
         List<RoledUser> roleMems = new ArrayList<>();
@@ -633,6 +653,11 @@ public class StudyMB implements Serializable {
     return currentStudy.getOwner().getEmail().equalsIgnoreCase(email);
   }
 
+  /**
+   * Get an array of the services selected for the current study.
+   * <p>
+   * @return
+   */
   public StudyServiceEnum[] getSelectedServices() {
     List<StudyServiceEnum> services = studyServices.findEnabledServicesForStudy(
             sessionState.getActiveStudy());
@@ -640,22 +665,42 @@ public class StudyMB implements Serializable {
     return services.toArray(reArr);
   }
 
+  /**
+   * Check if the tab for the given study should be drawn.
+   * <p>
+   * @param service
+   * @return
+   */
   public boolean shouldDrawTab(String service) {
     return studyServices.findEnabledServicesForStudy(sessionState.
             getActiveStudy()).contains(
                     StudyServiceEnum.valueOf(service));
   }
 
+  /**
+   * Set the extra services that have been selected for the current study.
+   * <p>
+   * @param selectedServices
+   */
   public void setSelectedServices(StudyServiceEnum[] selectedServices) {
     this.selectedServices = selectedServices;
   }
 
+  /**
+   * Persist the new selection of study services.
+   * <p>
+   * @return
+   */
   public String updateServices() {
     studyServices.persistServicesForStudy(sessionState.getActiveStudy(),
             selectedServices);
     return "studyPage";
   }
 
+  /**
+   * Archive the current study. Should implement erasure coding on the study
+   * folder.
+   */
   public void archiveStudy() {
     //archive the study
     boolean success = true;
@@ -664,6 +709,9 @@ public class StudyMB implements Serializable {
     }
   }
 
+  /**
+   * Unarchive the current study.
+   */
   public void unarchiveStudy() {
     //unarchive study
     boolean success = true;
@@ -672,6 +720,12 @@ public class StudyMB implements Serializable {
     }
   }
 
+  /**
+   * Check if the current study has been archived, in which case its
+   * functionality is not available.
+   * <p>
+   * @return
+   */
   public boolean isStudyArchived() {
     Study study = sessionState.getActiveStudy();
     if (study == null) {
@@ -814,7 +868,7 @@ public class StudyMB implements Serializable {
     }
   }
 
-  public Consent getActiveConent() {
+  public Consent getActiveConsent() {
     this.activeConset = privacyManager.getActiveConsent(studyName);
     return this.activeConset;
   }

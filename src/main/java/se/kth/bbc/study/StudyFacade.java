@@ -199,19 +199,14 @@ public class StudyFacade extends AbstractFacade<Study> {
   public void persistStudy(Study study) {
     em.persist(study);
   }
-
-  public void removeStudy(String name) {
-    Study study = em.find(Study.class, name);
-    if (study != null) {
-      em.remove(study);
-    }
-  }
-
-  public synchronized void removeByName(String studyname) {
-    Study study = em.find(Study.class, studyname);
-    if (study != null) {
-      em.remove(study);
-    }
+  
+  /**
+   * Mark the study <i>study</i> as deleted.
+   * @param study 
+   */
+  public void removeStudy(Study study){
+    study.setDeleted(Boolean.TRUE);
+    em.merge(study);
   }
 
   public boolean studyExists(String name) {
