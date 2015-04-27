@@ -26,7 +26,7 @@ import se.kth.bbc.lims.Constants;
 public class InodesMB implements Serializable {
 
   Inode root;
-  Inode cwd;
+  Inode cwd; 
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
