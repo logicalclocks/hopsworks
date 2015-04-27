@@ -27,9 +27,8 @@ import org.primefaces.event.SelectEvent;
 import org.primefaces.event.TabChangeEvent;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.UploadedFile;
+import se.kth.bbc.activity.Activity;
 import se.kth.bbc.activity.ActivityFacade;
-import se.kth.bbc.activity.ActivityDetail;
-import se.kth.bbc.activity.ActivityDetailFacade;
 import se.kth.bbc.activity.LazyActivityModel;
 import se.kth.bbc.activity.UserGroupsController;
 import se.kth.bbc.activity.UsersGroups;
@@ -74,9 +73,6 @@ public class StudyMB implements Serializable {
 
   @EJB
   private ActivityFacade activityFacade;
-
-  @EJB
-  private ActivityDetailFacade activityDetailFacade;
 
   @EJB
   private FileOperations fileOps;
@@ -325,6 +321,7 @@ public class StudyMB implements Serializable {
     return studyFacade.findJoinedStudyDetails(getUsername()).size();
   }
 
+  //TODO: change this method to include the Study directly.
   /**
    * @return
    */
@@ -497,10 +494,10 @@ public class StudyMB implements Serializable {
     return "indexPage";
   }
 
-  public LazyDataModel<ActivityDetail> getSpecificLazyModel() {
+  public LazyDataModel<Activity> getSpecificLazyModel() {
     if (lazyModel == null) {
       try {
-        lazyModel = new LazyActivityModel(activityDetailFacade, studyName);
+        lazyModel = new LazyActivityModel(activityFacade, sessionState.getActiveStudy());
         lazyModel.setRowCount((int) activityFacade.getStudyCount(sessionState.
                 getActiveStudy()));
       } catch (IllegalArgumentException e) {

@@ -11,6 +11,7 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import org.primefaces.model.LazyDataModel;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.study.Study;
 import se.kth.kthfsdashboard.user.Gravatar;
 
@@ -29,15 +30,12 @@ public class ActivityMB implements Serializable {
   @EJB
   private ActivityFacade activityFacade;
 
-  @EJB
-  private ActivityDetailFacade activityDetailFacade;
-
-  private LazyDataModel<ActivityDetail> allLazyModel;
+  private LazyDataModel<Activity> allLazyModel;
 
   @PostConstruct
   public void init() {
     try {
-      this.allLazyModel = new LazyActivityModel(activityDetailFacade);
+      this.allLazyModel = new LazyActivityModel(activityFacade);
       int cnt = (int) activityFacade.getTotalCount();
       allLazyModel.setRowCount(cnt);
     } catch (IllegalArgumentException e) {
@@ -46,16 +44,12 @@ public class ActivityMB implements Serializable {
     }
   }
 
-  public LazyDataModel<ActivityDetail> getAllLazyModel() {
+  /**
+   * Get a Lazy data model containing all activities.
+   * @return 
+   */
+  public LazyDataModel<Activity> getAllLazyModel() {
     return allLazyModel;
-  }
-
-  public List<ActivityDetail> getActivityDetailList() {
-    return activityDetailFacade.getAllActivityDetail();
-  }
-
-  public List<ActivityDetail> getActivityDetailOnStudy(String studyName) {
-    return activityDetailFacade.activityDetailOnStudy(studyName);
   }
 
   public String findLastActivity(int id) {
@@ -145,8 +139,8 @@ public class ActivityMB implements Serializable {
     }
   }
 
-  public String getGravatar(String email, int size) {
-    return Gravatar.getUrl(email, size);
+  public String getGravatar(User user, int size) {
+    return Gravatar.getUrl(user.getEmail(), size);
   }
 
 }

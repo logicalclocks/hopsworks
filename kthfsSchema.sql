@@ -309,18 +309,6 @@ CREATE TABLE `collection_type` (
   FOREIGN KEY (`collection_id`) REFERENCES `samplecollections` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
-CREATE VIEW `activity_details` AS 
-  select `activity`.`id` AS `id`,
-    `users`.`email` AS `performed_by_email`,
-    concat(`users`.`fname`,' ',`users`.`lname`) AS `performed_by_name`,
-    `activity`.`activity` AS `description`,
-    `study`.`studyname` AS `studyname`,
-    `activity`.`created` AS `created` 
-  from 
-    (`activity` join `users` on (`activity`.`user_id` = `users`.`uid`)) 
-    join
-    `study` on `activity`.`study_id` = `study`.`id`;
-
 CREATE VIEW `study_details` AS 
   select `study`.`studyname` AS `studyname`,
     `study`.`username` AS `email`,

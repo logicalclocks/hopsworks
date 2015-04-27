@@ -117,9 +117,9 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * <p>
    * @return
    */
-  public List<ActivityDetail> getAllActivityDetail() {
-    TypedQuery<ActivityDetail> q = em.createNamedQuery("ActivityDetail.findAll",
-            ActivityDetail.class);
+  public List<Activity> getAllActivities() {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findAll",
+            Activity.class);
     return q.getResultList();
   }
 
@@ -129,10 +129,10 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @param study
    * @return
    */
-  public List<ActivityDetail> activityDetailOnStudy(Study study) {
-    TypedQuery<ActivityDetail> q = em.createNamedQuery(
-            "ActivityDetail.findByStudyname", ActivityDetail.class);
-    q.setParameter("studyname", study.getName());
+  public List<Activity> getAllActivityOnStudy(Study study) {
+    TypedQuery<Activity> q = em.createNamedQuery(
+            "Activity.findByStudy",Activity.class);
+    q.setParameter("study", study);
     return q.getResultList();
   }
 
@@ -144,9 +144,9 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @param pageSize
    * @return
    */
-  public List<ActivityDetail> getPaginatedActivityDetail(int first, int pageSize) {
-    TypedQuery<ActivityDetail> q = em.createNamedQuery("ActivityDetail.findAll",
-            ActivityDetail.class);
+  public List<Activity> getPaginatedActivity(int first, int pageSize) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findAll",
+            Activity.class);
     q.setFirstResult(first);
     q.setMaxResults(pageSize);
     return q.getResultList();
@@ -162,11 +162,11 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    * @param study
    * @return
    */
-  public List<ActivityDetail> getPaginatedActivityDetailForStudy(int first,
+  public List<Activity> getPaginatedActivityForStudy(int first,
           int pageSize, Study study) {
-    TypedQuery<ActivityDetail> q = em.createNamedQuery(
-            "ActivityDetail.findByStudyname", ActivityDetail.class);
-    q.setParameter("studyname", study.getName());
+    TypedQuery<Activity> q = em.createNamedQuery(
+            "Activity.findByStudy", Activity.class);
+    q.setParameter("study", study);
     q.setFirstResult(first);
     q.setMaxResults(pageSize);
     return q.getResultList();
