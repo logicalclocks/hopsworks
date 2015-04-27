@@ -4,8 +4,8 @@
 'use strict';
 
 var mainModule = angular.module('metaUI').controller('MetadataDesignController',
-        ['$scope', '$rootScope', 'BoardService', 'DialogService', 'toaster', 'BoardDataFactory', 'WSComm', '$location', '$sce',
-            function ($scope, $rootScope, BoardService, DialogService, toaster, BoardDataFactory, WSComm, $location, $sce) {
+        ['$scope', '$rootScope', 'BoardService', 'DialogService', 'toaster', 'WSComm', '$location', '$sce',
+            function ($scope, $rootScope, BoardService, DialogService, toaster, WSComm, $location, $sce) {
 
                 $scope.$on('event:auth-loginRequired', function () {
                     $location.path('/error');
