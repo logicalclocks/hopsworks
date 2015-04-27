@@ -1,0 +1,53 @@
+<div ng-model="tabs" id="board" ng-controller="MetadataController">
+    <p>Associating metadata to: <a ng-href="{{returnnUrl}}"><b>'{{fileName}}'</b></a></p>
+
+    <tabset justified="false">
+        <tab ng-repeat="tab in tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
+             disabled="tab.disabled">
+
+            <form name="{{tab.title}}{{$index}}" ng-submit="submit(data)">
+
+                <ul class="cards card-list" as-sortable="sortOptions" ng-model="column.cards">
+                    <!--<li class="card" ng-repeat="card in tab.cards" as-sortable-item-->
+                    <!--ng-include="'views/partials/fillinCard.html'">-->
+
+                    <li class="card" ng-repeat="card in tab.cards">
+                        <div>
+                            <div class="row">
+                                <table>
+                                    <tr>
+                                        <td width="20%">
+                                            <div class="col-sm-10">
+                                                <span class="card-title"
+                                                      class=" removeCard pull-left btn btn-xs">{{card.title}}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <input size="10" value="" class="fillInMetadataInput" id="sizeFieldInput"
+                                                       ng-show="true"
+                                                       ng-model="data[card.id]"/>
+                                                <!--ng-model="data[tab.title + '|' + card.title + '|' + card.id]"/>-->
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+                <hr/>
+                <!--<input type="submit" value="submit data"/>-->
+                <button class="btn btn-default">
+                    <i class="glyphicon glyphicon-floppy-save"></i>
+                    Save
+                </button>
+                <button class="btn btn-default" type="button" ng-click="Return()">
+                    <i class="glyphicon glyphicon-chevron-left"></i>
+                    Back
+                </button>
+            </form>
+        </tab>
+    </tabset>
+
+</div>
