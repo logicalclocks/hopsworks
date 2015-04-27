@@ -100,11 +100,11 @@ public class Study implements Serializable {
   @Column(name = "deleted")
   private Boolean deleted;
   
-  @OneToMany(mappedBy = "study_id")
+  @OneToMany(mappedBy = "study")
   private Collection<Samplecollection> samplecollectionCollection;
   
   @OneToOne(cascade = CascadeType.ALL,
-          mappedBy = "study_id")
+          mappedBy = "study")
   private StudyMeta studyMeta;
     
   public Study() {
