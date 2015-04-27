@@ -99,8 +99,8 @@ public class StudyTeam implements Serializable {
     this.timestamp = timestamp;
   }
 
-  public StudyTeam(String name, String teamMember) {
-    this.studyTeamPK = new StudyTeamPK(name, teamMember);
+  public StudyTeam(Study study, User user) {
+    this.studyTeamPK = new StudyTeamPK(study.getId(), user.getEmail());
   }
 
   public StudyTeamPK getStudyTeamPK() {

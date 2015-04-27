@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.study;
 
 import java.util.ArrayList;
@@ -197,24 +192,65 @@ public class StudyTeamFacade {
     em.persist(team);
   }
 
-  public void removeStudyTeam(String name, String email) {
-    StudyTeam team = findByPrimaryKey(name, email);
+  /**
+   * Remove the StudyTeam entry for User <i>user</i> in Study <i>study</i>.
+   * @param study
+   * @param user 
+   */
+  public void removeStudyTeam(Study study, User user) {
+    StudyTeam team = findByPrimaryKey(study, user);
     if (team != null) {
       em.remove(team);
     }
   }
+  
+  /**
+   * Remove the StudyTeam entry for the User with email <i>email</i> in Study <i>study</i>.
+   * @param study
+   * @param email 
+   * @deprecated Use removeStudyTeam(Study study, User user) instead.
+   */
+  public void removeStudyTeam(Study study, String email) {
+    TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
+    query.setParameter("email", email);
+    removeStudyTeam(study, query.getSingleResult());
+  }
 
-  public void updateTeamRole(String name, String email, String teamRole) {
-    StudyTeam team = findByPrimaryKey(name, email);
+  /**
+   * Update the team role of User <i>user</i> in Study <i>study</i>.
+   * @param study
+   * @param user
+   * @param teamRole 
+   */
+  public void updateTeamRole(Study study, User user, String teamRole) {
+    StudyTeam team = findByPrimaryKey(study, user);
     if (team != null) {
       team.setTeamRole(teamRole);
       team.setTimestamp(new Date());
       em.merge(team);
     }
   }
+  
+  /**
+   * Update the team role of the User with email <i>email</i> in Study <i>study</i>.
+   * @param study
+   * @param email
+   * @param teamRole 
+   */
+  public void updateTeamRole(Study study, String email, String teamRole) {
+    TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
+    query.setParameter("email", email);
+    updateTeamRole(study,query.getSingleResult(),teamRole);
+  }
 
-  public StudyTeam findByPrimaryKey(String name, String email) {
-    return em.find(StudyTeam.class, new StudyTeam(new StudyTeamPK(name, email)).
+  /**
+   * Find the StudyTeam entry for Study <i>study</i> and User <i>user</i>.
+   * @param study
+   * @param user
+   * @return 
+   */
+  public StudyTeam findByPrimaryKey(Study study, User user) {
+    return em.find(StudyTeam.class, new StudyTeam(study, user).
             getStudyTeamPK());
   }
 

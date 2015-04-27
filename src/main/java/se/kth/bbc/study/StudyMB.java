@@ -376,13 +376,16 @@ public class StudyMB implements Serializable {
     return "studyPage";
   }
 
-  //add members to a team - bulk persist 
+  /**
+   * Add 
+   * @return 
+   */
   public synchronized String addToTeam() {
     try {
       Iterator<Theme> itr = getSelectedUsernames().listIterator();
       while (itr.hasNext()) {
         Theme t = itr.next();
-        StudyTeamPK stp = new StudyTeamPK(studyName, t.getName());
+        StudyTeamPK stp = new StudyTeamPK(sessionState.getActiveStudy().getId(), t.getName());
         StudyTeam st = new StudyTeam(stp);
         st.setTimestamp(new Date());
         st.setTeamRole(studyTeamEntry.getTeamRole());

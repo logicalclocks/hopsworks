@@ -174,7 +174,7 @@ public class NewStudyController implements Serializable {
   //Set the study owner as study master in StudyTeam table
   private void addStudyMaster(String study_name) {
 
-    StudyTeamPK stp = new StudyTeamPK(study_name, sessionState.
+    StudyTeamPK stp = new StudyTeamPK(sessionState.getActiveStudy().getId(), sessionState.
             getLoggedInUsername());
     StudyTeam st = new StudyTeam(stp);
     st.setTeamRole("Master");
