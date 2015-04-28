@@ -27,6 +27,8 @@
     <class>se.kth.bbc.security.ua.model.BBCGroup</class>
     <class>se.kth.bbc.security.ua.model.Organization</class>
     <class>se.kth.bbc.activity.Activity</class>
+    <class>se.kth.hopsworks.user.model.BbcGroup</class>
+    <class>se.kth.hopsworks.user.model.Users</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
