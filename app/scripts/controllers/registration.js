@@ -1,9 +1,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('RegCtrl', ['AuthService', '$location','$scope', function (AuthService, $location, $scope) {
+  .controller('RegCtrl', ['AuthService', '$location','$scope', 'SecurityQuestions', function (AuthService, $location, $scope, SecurityQuestions) {
 
     var self = this;
+    self.securityQuestions = SecurityQuestions.getQuestions();
 
     self.newUser = {
       firstName: '',
@@ -25,9 +26,7 @@ angular.module('hopsWorksApp')
                 function (success) {
                     self.user = angular.copy(empty);
                     $scope.registerForm.$setPristine();
-                    self.successMessage = 'You have successfully created an account, ' +
-                    'but you might need to wait until your account is activated ' +
-                    'before you can login. ';
+                    self.successMessage = success.data.successMessage;
                     //$location.path('/login');
                 }, function (error) {
                     self.errorMessage = error.data.errorMsg;

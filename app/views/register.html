@@ -40,19 +40,20 @@
                             <label class="text-muted">Phone Number</label>
                             <input name="phone_number" placeholder="Phone" autocomplete="on"
                                    ng-model="regCtrl.newUser.telephoneNum"
-                                   ng-pattern="/^\+?\d{2}[- ]?\d{3}[- ]?\d{6}$/"
+                                   ng-pattern="/^[+ 0]?\d{2}[- ]?\d{3}[- ]?\d{6}$/"
                                    class="form-control "
                                    type="text">
                             <span ng-show="registerForm.phone_number.$dirty &amp;&amp; registerForm.phone_number.$error.pattern"
-                                  class="text-danger ng-hide">Phone number should be in (+00-000-000000) format.</span>
+                                  class="text-danger ng-hide">Phone number should be in (000-000-000000) format.</span>
                         </div>
                         <div class="form-group has-feedback">
                             <label class="text-muted">Security question</label>
-                            <input name="sec_question" placeholder="Security question"
-                                   autocomplete="off"
+                            <select name="sec_question" placeholder="Security question"
                                    ng-model="regCtrl.newUser.securityQuestion" required
-                                   class="form-control "
-                                   type="text">
+                                   class="form-control ">
+                                <option value="">Select security question</option>
+                                <option ng-repeat="question in regCtrl.securityQuestions" value="{{question}}">{{question}}</option>
+                            </select>
                                     <span ng-show="(registerForm.$submitted ||registerForm.sec_question.$dirty) &amp;&amp; registerForm.sec_question.$error.required"
                                           class="text-danger ng-hide">This field is required</span>
                         </div>

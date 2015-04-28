@@ -42,7 +42,7 @@
                     <label class="text-muted">Phone Number</label>
                     <input name="phone_number" placeholder="Phone" autocomplete="on"
                            ng-model="profileCtrl.user.telephoneNum"
-                           ng-pattern="/^\+?\d{2}[- ]?\d{3}[- ]?\d{6}$/"
+                           ng-pattern="/^[+ 0]?\d{2}[- ]?\d{3}[- ]?\d{6}$/"
                            class="form-control "
                            type="text">
                             <span ng-show="profileForm.phone_number.$dirty &amp;&amp; profileForm.phone_number.$error.pattern"
@@ -80,7 +80,7 @@
             <input name="user_email" placeholder="Email" autocomplete="off"
                    ng-model="profileCtrl.user.email" required
                    class="form-control"
-                   type="email">
+                   type="email" ng-disabled="true">
             <span class="fa fa-envelope form-control-feedback text-muted"></span>
                             <span ng-show="(credentialsForm.$submitted ||credentialsForm.user_email.$dirty) &amp;&amp; credentialsForm.user_email.$error.required"
                                   class="text-danger ng-hide">This field is required</span>

@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('HomeCtrl', ['ProjectService', 'ModalService', 'growl', 'ProjectHistoryService',
-    function (ProjectService, ModalService, growl, ProjectHistoryService) {
+  .controller('HomeCtrl', ['ProjectService', 'ModalService', 'growl', 'ActivityService',
+    function (ProjectService, ModalService, growl, ActivityService) {
 
       var self = this;
       self.projects = [];
@@ -31,7 +31,7 @@ angular.module('hopsWorksApp')
       self.histories = [];
       var histories = [];
 
-      ProjectHistoryService.getByUser().then(
+        ActivityService.getByUser().then(
         function (success) {
           histories = success;
           var today = new Date();
