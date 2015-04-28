@@ -49,7 +49,7 @@ public class FieldTypes implements Serializable, EntityIntf {
     @Column(name = "description")
     private String description;
 
-    @OneToMany(mappedBy = "field_types", targetEntity = Fields.class,
+    @OneToMany(mappedBy = "fieldTypes", targetEntity = Fields.class,
             fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
     private List<Fields> fields;
 
