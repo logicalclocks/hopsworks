@@ -93,10 +93,11 @@ public class FieldsMessage extends ContentMessage {
         boolean searchable = obj.getBoolean("searchable");
         boolean required = obj.getBoolean("required");
         String description = obj.getString("description");
+        int fieldtypeid = obj.getInt("fieldtypeid");
         
         Fields field = new Fields(fieldId, tableId, name, type,
                 Integer.parseInt(maxsize), (short) ((searchable) ? 1 : 0), 
-                (short) ((required) ? 1 : 0), description);
+                (short) ((required) ? 1 : 0), description, fieldtypeid);
         field.setForceDelete(forceDelete);
 
         Tables table = new Tables(tableId, tableName);

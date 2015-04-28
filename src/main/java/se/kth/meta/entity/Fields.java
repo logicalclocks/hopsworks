@@ -58,6 +58,11 @@ public class Fields implements Serializable, EntityIntf {
             fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
     private List<RawData> raw;
 
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "fieldtypeid")
+    private int fieldtypeid;
+    
     @ManyToOne(optional = false)
     @PrimaryKeyJoinColumn(name = "fieldtypeid", referencedColumnName = "fieldtypeid")
     private FieldTypes fieldTypes;
@@ -110,7 +115,7 @@ public class Fields implements Serializable, EntityIntf {
     }
 
     public Fields(Integer id, int tableid, String name, String type, int maxsize,
-            short searchable, short required, String description) {
+            short searchable, short required, String description, int fieldtypeid) {
         this.id = id;
         this.tableid = tableid;
         this.name = name;
@@ -119,6 +124,7 @@ public class Fields implements Serializable, EntityIntf {
         this.searchable = searchable;
         this.required = required;
         this.description = description;
+        this.fieldtypeid = fieldtypeid;
         this.raw = new LinkedList<>();
     }
 
@@ -135,6 +141,7 @@ public class Fields implements Serializable, EntityIntf {
         this.required = f.getRequired() ? (short) 1 : (short) 0;
         this.raw = f.getRawData();
         this.description = f.getDescription();
+        this.fieldtypeid = f.getFieldTypeId();
     }
 
     @Override
@@ -155,6 +162,14 @@ public class Fields implements Serializable, EntityIntf {
         this.tableid = tableid;
     }
 
+    public int getFieldTypeId(){
+        return this.fieldtypeid;
+    }
+    
+    public void setFieldTypeId(int fieldtypeid){
+        this.fieldtypeid = fieldtypeid;
+    }
+    
     /* get and set the parent entities */
     public Tables getTables() {
         return this.tables;
