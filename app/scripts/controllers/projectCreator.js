@@ -8,9 +8,14 @@ angular.module('hopsWorksApp')
 
       self.card = {};
       self.cards = [];
+
       self.projectMembers = [];
+      self.projectTeam = [];
       // We could instead implement a service to get all the available types but this will do it for now
-      self.projectTypes = ['Cuneiform', 'Spark', 'Adam', 'Mapreduce', 'Zeppelin'];
+      self.projectTypes = ['CUNEIFORM','SAMPLES','STUDY_INFO', 'SPARK', 'ADAM', 'MAPREDUCE', 'YARN', 'Zeppelin'];
+
+
+
       self.selectionProjectTypes = [];
       self.projectName = '';
       self.projectDesc = '';
@@ -26,9 +31,14 @@ angular.module('hopsWorksApp')
 
 
       $scope.$watch('projectCreatorCtrl.card.selected', function (selected) {
+        var studyTeamPK = {'name':"", 'teamMember':""};
+        var studyTeam = {'studyTeamPK': studyTeamPK, 'teamRole':"Researcher"};
         if (selected !== undefined) {
+            studyTeamPK.name= self.projectName;
+            studyTeamPK.teamMember=selected.email;
           if (self.projectMembers.indexOf(selected.email) == -1) {
             self.projectMembers.push(selected.email);
+            self.projectTeam.push(studyTeam);
           }
           self.card.selected = undefined;
         }
@@ -54,11 +64,12 @@ angular.module('hopsWorksApp')
       self.createProject = function () {
 
         $scope.newProject = {
+          'projectName': self.projectName,
           'description': self.projectDesc,
-          'name': self.projectName,
+          'retentionPeriod':"",
           'status': 0,
-          'types': self.selectionProjectTypes,
-          'members': self.projectMembers
+          'services': self.selectionProjectTypes,
+          'projectTeam': self.projectTeam
         };
 
         ProjectService.save($scope.newProject).$promise.then(
