@@ -1,4 +1,3 @@
-
 package se.kth.meta.entity;
 
 import java.io.Serializable;
@@ -56,8 +55,12 @@ public class Fields implements Serializable, EntityIntf {
     private Tables tables;
 
     @OneToMany(mappedBy = "fields", targetEntity = RawData.class,
-            fetch = FetchType.LAZY, cascade = {CascadeType.ALL}) 
+            fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
     private List<RawData> raw;
+
+    @ManyToOne(optional = false)
+    @PrimaryKeyJoinColumn(name = "fieldtypeid", referencedColumnName = "fieldtypeid")
+    private FieldTypes fieldTypes;
 
     @Basic(optional = false)
     @NotNull
@@ -85,12 +88,12 @@ public class Fields implements Serializable, EntityIntf {
     @NotNull
     @Column(name = "required")
     private short required;
-    
+
     @Basic(optional = false)
     @NotNull
     @Column(name = "description")
     private String description;
-    
+
     /*
      * indicates whether a field associated with raw data should be deleted along 
      * with its data or not
@@ -106,7 +109,7 @@ public class Fields implements Serializable, EntityIntf {
         this.raw = new LinkedList<>();
     }
 
-    public Fields(Integer id, int tableid, String name, String type, int maxsize, 
+    public Fields(Integer id, int tableid, String name, String type, int maxsize,
             short searchable, short required, String description) {
         this.id = id;
         this.tableid = tableid;
@@ -151,41 +154,51 @@ public class Fields implements Serializable, EntityIntf {
     public void setTableid(int tableid) {
         this.tableid = tableid;
     }
-    
-    /* get and set the parent entity */
-    public Tables getTables(){
+
+    /* get and set the parent entities */
+    public Tables getTables() {
         return this.tables;
     }
-    
-    public void setTables(Tables tables){
+
+    public void setTables(Tables tables) {
         this.tables = tables;
+    }
+    
+    public FieldTypes getFieldTypes() {
+        return this.fieldTypes;
+    }
+
+    public void setFieldTypes(FieldTypes fieldTypes) {
+        this.fieldTypes = fieldTypes;
     }
     /*-------------------------------*/
     
+    /*-------------------------------*/
+
     /* get and set the child entities */
-    public List<RawData> getRawData(){
+    public List<RawData> getRawData() {
         return this.raw;
     }
-    
-    public void setRawData(List<RawData> raw){
+
+    public void setRawData(List<RawData> raw) {
         this.raw = raw;
     }
-    
-    public void addRawData(RawData raw){
+
+    public void addRawData(RawData raw) {
         this.raw.add(raw);
-        if(raw != null){
+        if (raw != null) {
             raw.setFields(this);
         }
     }
-    
-    public void removeRawData(RawData raw){
+
+    public void removeRawData(RawData raw) {
         this.raw.remove(raw);
-        if(raw != null){
+        if (raw != null) {
             raw.setFields(null);
         }
     }
     /*-------------------------------*/
-    
+
     public String getName() {
         return name;
     }
@@ -218,14 +231,14 @@ public class Fields implements Serializable, EntityIntf {
         this.searchable = searchable;
     }
 
-    public void setDescription(String description){
+    public void setDescription(String description) {
         this.description = description;
     }
-    
-    public String getDescription(){
+
+    public String getDescription() {
         return this.description;
     }
-    
+
     public boolean getRequired() {
         return required == 1;
     }
@@ -234,14 +247,14 @@ public class Fields implements Serializable, EntityIntf {
         this.required = required;
     }
 
-    public void setForceDelete(boolean delete){
+    public void setForceDelete(boolean delete) {
         this.forceDelete = delete;
     }
-    
-    public boolean forceDelete(){
+
+    public boolean forceDelete() {
         return this.forceDelete;
     }
-    
+
     @Override
     public int hashCode() {
         int hash = 0;
