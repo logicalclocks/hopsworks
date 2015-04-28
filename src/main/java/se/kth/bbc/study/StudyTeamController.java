@@ -55,7 +55,7 @@ public class StudyTeamController implements Serializable {
 
   public synchronized void deleteMemberFromTeam() {
     try {
-      teamFacade.removeStudyTeam(sessionState.getActiveStudy().getName(), toRemoveEmail);
+      teamFacade.removeStudyTeam(sessionState.getActiveStudy(), toRemoveEmail);
       activityFacade.persistActivity(ActivityFacade.REMOVED_MEMBER
               + toRemoveEmail, sessionState.getActiveStudy(), sessionState.
               getLoggedInUsername());
