@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.study;
 
 import java.io.Serializable;
@@ -22,11 +17,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class StudyTeamPK implements Serializable {
 
   @Basic(optional = false)
-  @NotNull
-  @Size(min = 1,
-          max = 255)
-  @Column(name = "name")
-  private String name;
+  @Column(name = "study_id")
+  private Integer studyId;
+  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -37,17 +30,17 @@ public class StudyTeamPK implements Serializable {
   public StudyTeamPK() {
   }
 
-  public StudyTeamPK(String name, String teamMember) {
-    this.name = name;
+  public StudyTeamPK(Integer studyId, String teamMember) {
+    this.studyId = studyId;
     this.teamMember = teamMember;
   }
 
-  public String getName() {
-    return name;
+  public Integer getStudyId() {
+    return studyId;
   }
 
-  public void setName(String name) {
-    this.name = name;
+  public void setStudyId(Integer studyId) {
+    this.studyId = studyId;
   }
 
   public String getTeamMember() {
@@ -61,7 +54,7 @@ public class StudyTeamPK implements Serializable {
   @Override
   public int hashCode() {
     int hash = 0;
-    hash += (name != null ? name.hashCode() : 0);
+    hash += (studyId != null ? studyId.hashCode() : 0);
     hash += (teamMember != null ? teamMember.hashCode() : 0);
     return hash;
   }
@@ -73,8 +66,8 @@ public class StudyTeamPK implements Serializable {
       return false;
     }
     StudyTeamPK other = (StudyTeamPK) object;
-    if ((this.name == null && other.name != null) || (this.name != null
-            && !this.name.equals(other.name))) {
+    if ((this.studyId == null && other.studyId != null) || (this.studyId != null
+            && !this.studyId.equals(other.studyId))) {
       return false;
     }
     if ((this.teamMember == null && other.teamMember != null)
@@ -87,7 +80,7 @@ public class StudyTeamPK implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.study.StudyTeamPK[ name=" + name + ", teamMember="
+    return "se.kth.bbc.study.StudyTeamPK[ studyId=" + studyId + ", teamMember="
             + teamMember + " ]";
   }
 

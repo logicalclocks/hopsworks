@@ -18,11 +18,11 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.Response;
-import se.kth.bbc.activity.ActivityDetailFacade;
+import se.kth.bbc.activity.Activity;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.Constants;
-import se.kth.bbc.lims.MessagesController;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.study.Study;
 import se.kth.bbc.study.StudyFacade;
 import se.kth.bbc.study.StudyTeam;
@@ -33,7 +33,6 @@ import se.kth.bbc.study.fb.InodeFacade;
 import se.kth.bbc.study.privacy.StudyPrivacyManager;
 import se.kth.bbc.study.services.StudyServiceEnum;
 import se.kth.bbc.study.services.StudyServiceFacade;
-import se.kth.bbc.study.services.StudyServices;
 import se.kth.hopsworks.rest.AppException;
 
 /**
@@ -51,8 +50,6 @@ public class ProjectController {
     @EJB
     private ActivityFacade activityFacade;
     @EJB
-    private ActivityDetailFacade activityDetailFacade;
-    @EJB
     private se.kth.bbc.activity.ActivityController activityController;
     @EJB
     private FileOperations fileOps;
@@ -68,7 +65,7 @@ public class ProjectController {
      * the project, and the master of the project.
      *
      * @param newStudyName the name of the new project(study)
-     * @param username the user that owns the project
+     * @param user the user that owns the project
      * @param services the services associated with the new project to be
      * created.
      * @throws AppException if the project name already exists.
@@ -76,11 +73,11 @@ public class ProjectController {
      * created. For whatever reason.
      */
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void createStudy(String newStudyName, String username, List<StudyServiceEnum> services) throws AppException, IOException {
+    public void createStudy(String newStudyName, User user, List<StudyServiceEnum> services) throws AppException, IOException {
         if (!studyFacade.studyExists(newStudyName)) {
             //Create a new study object
             Date now = new Date();
-            Study study = new Study(newStudyName, username, now);
+            Study study = new Study(newStudyName, user, now);
             //create folder structure
             //mkStudyDIR(study.getName());
             logger.log(Level.FINE, "{0} - study directory created successfully.",
@@ -90,13 +87,19 @@ public class ProjectController {
             studyFacade.persistStudy(study);
             //Add the desired services
             for (StudyServiceEnum se : services) {
-                studyServicesFacade.addServiceForStudy(newStudyName, se);
+                studyServicesFacade.addServiceForStudy(study, se);
             }
             //Add the activity information
-            activityFacade.persistActivity(ActivityFacade.NEW_STUDY, study.getName(),
-                    username);
+            Activity activity = new Activity();
+            activity.setFlag(ActivityFacade.NEW_STUDY);
+            activity.setUser(user);
+            activity.setStudy(study);
+            activity.setTimestamp(now);
+            
+            activityFacade.persistActivity(activity);
+            
             //update role information in study
-            addStudyMaster(study.getName(), study.getUsername());
+            addStudyMaster(study.getId(), user.getEmail());
             logger.log(Level.FINE, "{0} - study created successfully.", study.getName());
 
         } else {
@@ -108,8 +111,8 @@ public class ProjectController {
     }
 
     //Set the study owner as study master in StudyTeam table
-    private void addStudyMaster(String study_name, String userName) {
-        StudyTeamPK stp = new StudyTeamPK(study_name, userName);
+    private void addStudyMaster(Integer study_id, String userName) {
+        StudyTeamPK stp = new StudyTeamPK(study_id, userName);
         StudyTeam st = new StudyTeam(stp);
         st.setTeamRole("Master");
         st.setTimestamp(new Date());
@@ -137,23 +140,34 @@ public class ProjectController {
     /**
      * Remove a study and optionally all associated files.
      *
-     * @param studyName to be removed
-     * @param userName the user performing the operation
+     * @param studyID to be removed
+     * @param user the user performing the operation
      * @param deleteFilesOnRemove if the associated files should be deleted
      * @return true if the study and the associated files are removed
      * successfully, and false if the associated files could not be removed.
      * @throws IOException if the hole operation failed. i.e the study is not
      * removed.
      */
-    public boolean removeByName(String studyName, String userName, boolean deleteFilesOnRemove) throws IOException {
+    public boolean removeByName(Integer studyID, User user, boolean deleteFilesOnRemove) throws IOException {
         boolean success = !deleteFilesOnRemove;
-        studyFacade.removeByName(studyName);
-        activityFacade.persistActivity(ActivityFacade.REMOVED_STUDY, studyName, userName);
+        
+        Study study = studyFacade.find(studyID);
+        studyFacade.remove(study);
+        Date now = new Date();
+        
+        Activity activity = new Activity();
+        activity.setFlag(ActivityFacade.REMOVED_STUDY);
+        activity.setStudy(study);
+        activity.setTimestamp(now);
+        activity.setUser(user);
+                
+        activityFacade.persistActivity(activity);
+        
         if (deleteFilesOnRemove) {
-            String path = File.separator + Constants.DIR_ROOT + File.separator + studyName;
+            String path = File.separator + Constants.DIR_ROOT + File.separator + study.getName();
             success = fileOps.rmRecursive(path);
         }
-        logger.log(Level.FINE, "{0} - study removed.", studyName);
+        logger.log(Level.FINE, "{0} - study removed.", study.getName());
 
         return success;
     }
@@ -161,23 +175,32 @@ public class ProjectController {
     /**
      * Adds new team members to a project(study) - bulk persist
      *
-     * @param studyName the project(study) that new members are going to be
+     * @param studyID the project(study) that new members are going to be
      * added to.
      * @param user that is adding the team members.
-     * @param studyTeams
+     * @param studyTeams 
      * @return a list of user names that could not be added to the project team
      * list.
      */
-    public List<String> addMembers(String studyName, String user, List<StudyTeam> studyTeams) {
+    public List<String> addMembers(Integer studyID, User user, List<StudyTeam> studyTeams) {
         List<String> failedList = new ArrayList<>();
+        Study study = studyFacade.find(studyID);
+        
         for (StudyTeam studyTeam : studyTeams) {
             try {
                 if (!studyTeam.getStudyTeamPK().getTeamMember().equals(user)) {
                     studyTeamFacade.persistStudyTeam(studyTeam);
-                    logger.log(Level.FINE, "{0} - member added to study : {1}.",
-                            new Object[]{studyTeam.getStudyTeamPK().getTeamMember(), studyName});
-                    activityFacade.persistActivity(ActivityFacade.NEW_MEMBER + studyTeam.getStudyTeamPK().getTeamMember()
-                            + " ", studyName, user);
+                    logger.log(Level.FINE, "{0} - member added to study : {1}.", new Object[]{studyTeam.getStudyTeamPK().getTeamMember(), study.getName()});
+                    
+                    Activity activity = new Activity();
+                    Date now = new Date();
+                    
+                    activity.setFlag(ActivityFacade.NEW_MEMBER);
+                    activity.setStudy(study);
+                    activity.setTimestamp(now);
+                    activity.setUser(user);
+                    
+                    activityFacade.persistActivity(activity);
                 }
             } catch (EJBException ejb) {
                 failedList.add(studyTeam.getStudyTeamPK().getTeamMember());
@@ -201,17 +224,17 @@ public class ProjectController {
 
     /**
      *
-     * @param name of the project
+     * @param studyID of the project
      * @return project DTO that contains team members and services
      */
-    public ProjectDTO getProjectByName(String name) throws AppException {
-        Study study = studyFacade.findByName(name);
+    public ProjectDTO getStudyByID(Integer studyID) throws AppException {
+        Study study = studyFacade.find(studyID);
         if (study == null) {
             throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                     ResponseMessages.PROJECT_NOT_FOUND);
         }
-        List<StudyTeam> studyTeam = studyTeamFacade.findByStudyName(name);
-        List<StudyServiceEnum> studyServices = studyServicesFacade.findEnabledServicesForStudy(name);
+        List<StudyTeam> studyTeam = studyTeamFacade.findMembersByStudy(study);
+        List<StudyServiceEnum> studyServices = studyServicesFacade.findEnabledServicesForStudy(study);
         List<String> services = new ArrayList<>();
         for (StudyServiceEnum s : studyServices) {
             services.add(s.toString());
@@ -222,12 +245,20 @@ public class ProjectController {
     /**
      * Deletes a member from a project
      *
-     * @param studyName
+     * @param study
      * @param user
      * @param toRemoveEmail
      */
-    public void deleteMemberFromTeam(String studyName, String user, String toRemoveEmail) {
-        studyTeamFacade.removeStudyTeam(studyName, toRemoveEmail);
-        activityFacade.persistActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail, studyName, user);
+    public void deleteMemberFromTeam(Study study, User user, String toRemoveEmail) {
+        studyTeamFacade.removeStudyTeam(study.getName(), toRemoveEmail);
+        
+        Date now = new Date();
+        Activity activity = new Activity();
+        activity.setFlag(ActivityFacade.REMOVED_MEMBER + toRemoveEmail);
+        activity.setStudy(study);
+        activity.setTimestamp(now);
+        activity.setUser(user);
+        
+        activityFacade.persistActivity(activity);
     }
 }

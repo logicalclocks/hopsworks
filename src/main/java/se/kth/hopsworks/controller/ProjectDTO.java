@@ -39,7 +39,7 @@ public class ProjectDTO {
 
     public ProjectDTO(Study study, List<String> services, List<StudyTeam> projectTeam) {
         this.projectName = study.getName();
-        this.owner = study.getUsername();
+        this.owner = study.getOwner().getEmail();
         this.retentionPeriod = study.getRetentionPeriod();
         this.created = study.getCreated();
         this.ethicalStatus = study.getEthicalStatus();

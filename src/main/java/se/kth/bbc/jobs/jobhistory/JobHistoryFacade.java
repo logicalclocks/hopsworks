@@ -48,11 +48,17 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     return em;
   }
 
-  public List<JobHistory> findForStudyByType(String studyname, JobType type) {
+  /**
+   * Find all the JobHistory entries for the given study and type.
+   * @param study
+   * @param type
+   * @return List of JobHistory objects.
+   */
+  public List<JobHistory> findForStudyByType(Study study, JobType type) {
     TypedQuery<JobHistory> q = em.createNamedQuery(
             "JobHistory.findByStudyAndType", JobHistory.class);
     q.setParameter("type", type);
-    q.setParameter("studyname", studyname);
+    q.setParameter("study", study);
     return q.getResultList();
   }
 
@@ -95,6 +101,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
    * <p>
    * @param jh
    * @param state
+   * @deprecated Need to fix this.
    */
   private void updateState(Long id, JobState state) {
     Query q = em.createNativeQuery("UPDATE jobhistory SET state=? WHERE id=?");
@@ -125,13 +132,12 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     }
   }
 
-  public Long create(String jobname, String userEmail, String studyname,
+  public Long create(String jobname, String userEmail, Study study,
           JobType type,
           String args, JobState state, String stdOutPath, String stdErrPath,
           Collection<JobExecutionFile> execFiles,
           Collection<JobInputFile> inputFiles) {
     User user = users.findByEmail(userEmail);
-    Study study = studies.findByName(studyname);
     Date submission = new Date(); //now
     if (state == null) {
       state = JobState.INITIALIZING;

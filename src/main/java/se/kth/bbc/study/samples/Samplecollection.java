@@ -52,14 +52,10 @@ import se.kth.bbc.security.ua.model.User;
   @NamedQuery(name = "Samplecollection.findByDescription",
           query
           = "SELECT s FROM Samplecollection s WHERE s.description = :description"),
-  @NamedQuery(name = "Samplecollection.findByStudyname",
+  @NamedQuery(name = "Samplecollection.findByStudy",
           query
-          = "SELECT s FROM Samplecollection s WHERE s.study.name = :studyname")})
+          = "SELECT s FROM Samplecollection s WHERE s.study = :study")})
 public class Samplecollection implements Serializable {
-
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "samplecollectionId")
-  private Collection<Sample> sampleCollection;
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -85,9 +81,9 @@ public class Samplecollection implements Serializable {
   @Size(max = 2000)
   @Column(name = "description")
   private String description;
-  @JoinColumn(name = "study",
-          referencedColumnName = "name")
-  @ManyToOne
+  @JoinColumn(name = "study_id",
+          referencedColumnName = "id")
+  @ManyToOne(optional = false)
   private Study study;
   @JoinColumn(name = "contact",
           referencedColumnName = "email")
@@ -110,6 +106,9 @@ public class Samplecollection implements Serializable {
   @Column(name = "type")
   @Enumerated(EnumType.STRING)
   private List<CollectionTypeStudyDesignEnum> collectionTypeList;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "samplecollectionId")
+  private Collection<Sample> sampleCollection;
 
   public Samplecollection() {
   }
@@ -188,6 +187,16 @@ public class Samplecollection implements Serializable {
           List<CollectionTypeStudyDesignEnum> collectionTypeList) {
     this.collectionTypeList = collectionTypeList;
   }
+    
+  @XmlTransient
+  @JsonIgnore
+  public Collection<Sample> getSampleCollection() {
+    return sampleCollection;
+  }
+
+  public void setSampleCollection(Collection<Sample> sampleCollection) {
+    this.sampleCollection = sampleCollection;
+  }
 
   @Override
   public int hashCode() {
@@ -213,16 +222,6 @@ public class Samplecollection implements Serializable {
   @Override
   public String toString() {
     return "se.kth.bbc.study.samples.Samplecollection[ id=" + id + " ]";
-  }
-
-  @XmlTransient
-  @JsonIgnore
-  public Collection<Sample> getSampleCollection() {
-    return sampleCollection;
-  }
-
-  public void setSampleCollection(Collection<Sample> sampleCollection) {
-    this.sampleCollection = sampleCollection;
   }
 
 }

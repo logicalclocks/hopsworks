@@ -15,12 +15,8 @@
         <h:form id="studyInfoForm">
           <p:growl autoUpdate="true" showDetail="true" for="updateMessage"/>
           <h:panelGrid columns="3" columnClasses="firstColumn,secondColumn,thirdColumn">
-            <h:outputLabel value="Id" for="studyId"/>
-            <h:inputText value="#{studyMetaController.metadata.id}" id="studyId" required="true" requiredMessage="An id is required to save data."/>
-            <p:message for="studyId"/>
-
             <h:outputLabel value="Name" for="studyName"/>
-            <h:inputText value="#{studyMetaController.metadata.studyname}" id="studyName" readonly="true" />
+            <h:inputText value="#{studyMetaController.metadata.study.name}" id="studyName" readonly="true" />
             <p:message for="studyName"/>
 
             <h:outputLabel value="Description" for="description"/>

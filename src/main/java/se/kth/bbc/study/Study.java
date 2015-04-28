@@ -7,7 +7,12 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -20,6 +25,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.study.metadata.StudyMeta;
 import se.kth.bbc.study.samples.Samplecollection;
 
@@ -35,8 +41,8 @@ import se.kth.bbc.study.samples.Samplecollection;
           query = "SELECT t FROM Study t"),
   @NamedQuery(name = "Study.findByName",
           query = "SELECT t FROM Study t WHERE t.name = :name"),
-  @NamedQuery(name = "Study.findByUsername",
-          query = "SELECT t FROM Study t WHERE t.username = :username"),
+  @NamedQuery(name = "Study.findByOwner",
+          query = "SELECT t FROM Study t WHERE t.owner = :owner"),
   @NamedQuery(name = "Study.findByCreated",
           query = "SELECT t FROM Study t WHERE t.created = :created"),
   @NamedQuery(name = "Study.findByEthicalStatus",
@@ -45,48 +51,62 @@ import se.kth.bbc.study.samples.Samplecollection;
   @NamedQuery(name = "Study.findByRetentionPeriod",
           query
           = "SELECT t FROM Study t WHERE t.retentionPeriod = :retentionPeriod"),
-  @NamedQuery(name = "Study.findOwner",
-          query = "SELECT t.username FROM Study t WHERE t.name = :name"),
   @NamedQuery(name = "Study.countStudyByOwner",
           query
-          = "SELECT count(t.name) FROM Study t WHERE t.username = :username")})
+          = "SELECT count(t) FROM Study t WHERE t.owner = :owner"),
+  @NamedQuery(name = "Study.findByOwnerAndName",
+          query
+          = "SELECT t FROM Study t WHERE t.owner = :owner AND t.name = :name")})
 public class Study implements Serializable {
-
-  @OneToMany(mappedBy = "study")
-  private Collection<Samplecollection> samplecollectionCollection;
-  @OneToOne(cascade = CascadeType.ALL,
-          mappedBy = "study")
-  private StudyMeta studyMeta;
+  
   private static final long serialVersionUID = 1L;
+  
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Basic(optional = false)
+  @Column(name = "id")
+  private Integer id;
+  
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 128)
-  @Column(name = "name")
+  @Column(name = "studyname")
   private String name;
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 1,
-          max = 255)
-  @Column(name = "username")
-  private String username;
-  @Column(name = "retention_period")
-  @Temporal(TemporalType.DATE)
-  private Date retentionPeriod;
+  
+  @ManyToOne(fetch=FetchType.LAZY)
+  @JoinColumn(name="username", referencedColumnName = "email")
+  private User owner;
+  
   @Basic(optional = false)
   @NotNull
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date created;
+  
+  @Column(name = "retention_period")
+  @Temporal(TemporalType.DATE)
+  private Date retentionPeriod;
+  
   @NotNull
   @Size(min = 1,
           max = 30)
   @Column(name = "ethical_status")
   private String ethicalStatus;
+  
   @Column(name = "archived")
   private boolean archived;
 
+  @Column(name = "deleted")
+  private Boolean deleted;
+  
+  @OneToMany(mappedBy = "study")
+  private Collection<Samplecollection> samplecollectionCollection;
+  
+  @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "study")
+  private StudyMeta studyMeta;
+    
   public Study() {
   }
 
@@ -94,9 +114,9 @@ public class Study implements Serializable {
     this.name = name;
   }
 
-  public Study(String name, String username, Date timestamp) {
+  public Study(String name, User owner, Date timestamp) {
     this.name = name;
-    this.username = username;
+    this.owner = owner;
     this.created = timestamp;
   }
 
@@ -124,12 +144,12 @@ public class Study implements Serializable {
     this.name = name;
   }
 
-  public String getUsername() {
-    return username;
+  public User getOwner() {
+    return owner;
   }
 
-  public void setUsername(String username) {
-    this.username = username;
+  public void setOwner(User owner) {
+    this.owner = owner;
   }
 
   public Date getRetentionPeriod() {
@@ -148,31 +168,6 @@ public class Study implements Serializable {
     this.studyMeta = studyMeta;
   }
 
-  public boolean getArchived() {
-    return archived;
-  }
-
-  public void setArchived(boolean archived) {
-    this.archived = archived;
-  }
-  
-  @Override
-  public int hashCode() {
-    int hash = 0;
-    hash += (name != null ? name.hashCode() : 0);
-    return hash;
-  }
-
-  @Override
-  public boolean equals(Object object) {
-    // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof Study)) {
-      return false;
-    }
-    Study other = (Study) object;
-    return !((this.name == null && other.name != null) || (this.name != null
-            && !this.name.equals(other.name)));
-  }
 
   @Override
   public String toString() {
@@ -188,6 +183,60 @@ public class Study implements Serializable {
   public void setSamplecollectionCollection(
           Collection<Samplecollection> samplecollectionCollection) {
     this.samplecollectionCollection = samplecollectionCollection;
+  }
+
+  public Study(Integer id) {
+    this.id = id;
+  }
+
+  public Study(Integer id, String studyname) {
+    this.id = id;
+    this.name = studyname;
+  }
+
+  public Integer getId() {
+    return id;
+  }
+
+  public void setId(Integer id) {
+    this.id = id;
+  }
+
+  public Boolean getDeleted() {
+    return deleted;
+  }
+
+  public void setDeleted(Boolean deleted) {
+    this.deleted = deleted;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 0;
+    hash += (id != null ? id.hashCode() : 0);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object object) {
+    // TODO: Warning - this method won't work in the case the id fields are not set
+    if (!(object instanceof Study)) {
+      return false;
+    }
+    Study other = (Study) object;
+    if ((this.id == null && other.id != null) ||
+            (this.id != null && !this.id.equals(other.id))) {
+      return false;
+    }
+    return true;
+  }
+
+  public Boolean getArchived() {
+    return archived;
+  }
+
+  public void setArchived(Boolean archived) {
+    this.archived = archived;
   }
 
 }

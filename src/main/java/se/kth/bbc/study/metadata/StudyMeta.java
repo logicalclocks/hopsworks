@@ -31,50 +31,46 @@ import se.kth.bbc.study.Study;
   @NamedQuery(name = "StudyMeta.findAll",
           query
           = "SELECT s FROM StudyMeta s"),
-  @NamedQuery(name = "StudyMeta.findById",
+  @NamedQuery(name = "StudyMeta.findByStudy",
           query
-          = "SELECT s FROM StudyMeta s WHERE s.id = :id"),
-  @NamedQuery(name = "StudyMeta.findByStudyname",
-          query
-          = "SELECT s FROM StudyMeta s WHERE s.studyname = :studyname"),
+          = "SELECT s FROM StudyMeta s WHERE s.study = :study"),
   @NamedQuery(name = "StudyMeta.findByDescription",
           query
           = "SELECT s FROM StudyMeta s WHERE s.description = :description")})
 public class StudyMeta implements Serializable {
-
+  
   private static final long serialVersionUID = 1L;
-  @Size(max = 128)
-  @NotNull
-  @Column(name = "id")
-  private String id;
+  
   @Id
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-          max = 128)
-  @Column(name = "studyname")
-  private String studyname;
+  @Column(name = "study_id")
+  private Integer studyId;
+  
   @Size(max = 2000)
   @Column(name = "description")
   private String description;
-  @JoinColumn(name = "studyname",
-          referencedColumnName = "name",
-          insertable
-          = false,
-          updatable = false)
+  
+  @JoinColumn(name = "study_id",
+          referencedColumnName = "id",
+          insertable = false,
+          updatable
+          = false)
   @OneToOne(optional = false)
   private Study study;
+  
   @ElementCollection(targetClass = CollectionTypeStudyDesignEnum.class)
   @CollectionTable(name = "study_design",
           joinColumns = @JoinColumn(name = "study_id",
-                  referencedColumnName = "id"))
+                  referencedColumnName = "study_id"))
   @Column(name = "design")
   @Enumerated(EnumType.STRING)
   private List<CollectionTypeStudyDesignEnum> studyDesignList;
+  
   @ElementCollection(targetClass = InclusionCriteriumEnum.class)
   @CollectionTable(name = "study_inclusion_criteria",
           joinColumns = @JoinColumn(name = "study_id",
-                  referencedColumnName = "id"))
+                  referencedColumnName = "study_id"))
   @Column(name = "criterium")
   @Enumerated(EnumType.STRING)
   private List<InclusionCriteriumEnum> inclusionCriteriaList;
@@ -100,26 +96,6 @@ public class StudyMeta implements Serializable {
   public StudyMeta() {
   }
 
-  public StudyMeta(String studyname) {
-    this.studyname = studyname;
-  }
-
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
-  }
-
-  public String getStudyname() {
-    return studyname;
-  }
-
-  public void setStudyname(String studyname) {
-    this.studyname = studyname;
-  }
-
   public String getDescription() {
     return description;
   }
@@ -136,10 +112,22 @@ public class StudyMeta implements Serializable {
     this.study = study;
   }
 
+  public StudyMeta(Integer studyId) {
+    this.studyId = studyId;
+  }
+
+  public Integer getStudyId() {
+    return studyId;
+  }
+
+  public void setStudyId(Integer studyId) {
+    this.studyId = studyId;
+  }
+
   @Override
   public int hashCode() {
     int hash = 0;
-    hash += (studyname != null ? studyname.hashCode() : 0);
+    hash += (studyId != null ? studyId.hashCode() : 0);
     return hash;
   }
 
@@ -150,8 +138,8 @@ public class StudyMeta implements Serializable {
       return false;
     }
     StudyMeta other = (StudyMeta) object;
-    if ((this.studyname == null && other.studyname != null) || (this.studyname
-            != null && !this.studyname.equals(other.studyname))) {
+    if ((this.studyId == null && other.studyId != null) ||
+            (this.studyId != null && !this.studyId.equals(other.studyId))) {
       return false;
     }
     return true;
@@ -159,7 +147,7 @@ public class StudyMeta implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.study.metadata.StudyMeta[ studyname=" + studyname + " ]";
+    return "se.kth.bbc.study.metadata.StudyMeta[ studyId=" + studyId + " ]";
   }
 
 }

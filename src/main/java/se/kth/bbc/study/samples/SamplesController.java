@@ -59,8 +59,7 @@ public class SamplesController implements Serializable {
   private Samplecollection newCollection = new Samplecollection();
 
   public List<Samplecollection> getSamplecollection() {
-    return samplecollectionFacade.findByStudyname(sessionState.
-            getActiveStudyname());
+    return samplecollectionFacade.findByStudy(sessionState.getActiveStudy());
   }
 
   public void setSessionState(ClientSessionState sessionState) {

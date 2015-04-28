@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.ua.model;
 
 import java.io.Serializable;
@@ -30,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.security.ua.SecurityQuestion;
+import se.kth.bbc.study.Study;
 
 /**
  *
@@ -83,10 +79,12 @@ import se.kth.bbc.security.ua.SecurityQuestion;
           query
           = "SELECT u FROM User u WHERE u.passwordChanged = :passwordChanged"),
   @NamedQuery(name = "User.findByNotes",
-          query = "SELECT u FROM User u WHERE u.notes = :notes")})
+          query = "SELECT u FROM User u WHERE u.notes = :notes"),
+  @NamedQuery(name = "User.findMaxUid",
+          query = "SELECT MAX(u.uid) FROM User u")})
 public class User implements Serializable {
 
-  private static final long serialVersionUID = 1L;  
+  private static final long serialVersionUID = 1L;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
@@ -173,6 +171,9 @@ public class User implements Serializable {
   @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "uid")
   private Organization organization;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "owner")
+  private Collection<Study> studyCollection;
 
   public User() {
   }
@@ -413,4 +414,13 @@ public class User implements Serializable {
     return "se.kth.bbc.security.ua.model.User[ uid=" + uid + " ]";
   }
 
+  @XmlTransient
+  @JsonIgnore
+  public Collection<Study> getStudyCollection() {
+    return studyCollection;
+  }
+
+  public void setStudyCollection(Collection<Study> studyCollection) {
+    this.studyCollection = studyCollection;
+  }
 }

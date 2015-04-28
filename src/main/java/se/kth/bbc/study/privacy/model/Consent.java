@@ -13,7 +13,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -21,6 +23,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.study.Study;
 
 /**
  *
@@ -40,12 +43,16 @@ import javax.xml.bind.annotation.XmlRootElement;
           query = "SELECT c FROM Consent c WHERE c.status = :status"),
   @NamedQuery(name = "Consent.findByName",
           query = "SELECT c FROM Consent c WHERE c.name = :name"),
-  @NamedQuery(name = "Consent.findByStudyName",
-          query = "SELECT c FROM Consent c WHERE c.studyName = :studyName"),
+  @NamedQuery(name = "Consent.findByStudy",
+          query = "SELECT c FROM Consent c WHERE c.study = :study"),
   @NamedQuery(name = "Consent.findByType",
           query = "SELECT c FROM Consent c WHERE c.type = :type")})
 public class Consent implements Serializable {
-
+  
+  @JoinColumn(name = "study_id",
+          referencedColumnName = "id")
+  @ManyToOne(optional = false)
+  private Study study;
   private static final long serialVersionUID = 1L;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,9 +62,6 @@ public class Consent implements Serializable {
   @Column(name = "date")
   @Temporal(TemporalType.DATE)
   private Date date;
-  @Size(max = 80)
-  @Column(name = "study_name")
-  private String studyName;
   @Lob
   @Column(name = "consent_form")
   private byte[] consentForm;
@@ -70,14 +74,6 @@ public class Consent implements Serializable {
   @Size(max = 20)
   @Column(name = "type")
   private String type;
-  
-  public String getStudyName() {
-    return studyName;
-  }
-
-  public void setStudyName(String studyName) {
-    this.studyName = studyName;
-  }
   
   public Consent() {
   }
@@ -158,5 +154,13 @@ public class Consent implements Serializable {
   @Override
   public String toString() {
     return "se.kth.bbc.study.privacy.model.Consent[ id=" + id + " ]";
+  }
+
+  public Study getStudy() {
+    return study;
+  }
+
+  public void setStudy(Study study) {
+    this.study = study;
   }
 }

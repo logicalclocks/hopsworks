@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.study.privacy;
 
 /**
@@ -29,9 +24,7 @@ import org.primefaces.context.RequestContext;
 import org.primefaces.event.SelectEvent;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
-import se.kth.bbc.activity.ActivityController;
-import se.kth.bbc.activity.ActivityDetail;
-import se.kth.bbc.study.StudyTeam;
+import se.kth.bbc.study.Study;
 import se.kth.bbc.study.StudyTeamFacade;
 import se.kth.bbc.study.privacy.model.Consent;
 
@@ -40,9 +33,6 @@ public class StudyPrivacyManager {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-
-  @EJB
-  private ActivityController activityController;
 
   @EJB
   private StudyTeamFacade stc;
@@ -72,22 +62,27 @@ public class StudyPrivacyManager {
     em.persist(consent);
     return true;
   }
-
-  public Consent getConsentByStudyName(String studyname) throws ParseException {
-
-    TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName",
+  
+   /**
+   * Get all the Consents for the given Study.
+   * @param study
+   * @return The Consent object, or null if none has been found.
+   */
+  public List<Consent> getAllConsentsByStudy(Study study){
+    TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudy",
             Consent.class);
-    q.setParameter("studyName", studyname);
-    List<Consent> consent = q.getResultList();
-    if (consent.size() > 0) {
-      return consent.get(0);
-    }
-    return null;
-
+    q.setParameter("study", study);
+    return q.getResultList();
   }
 
+  //TODO: this method is very badly designed. Not sure if it's supposed to count the number of consents, or ...?
+  /**
+   * Get the consent by its name.
+   * @param name
+   * @return The Consent object, or null if none has been found.
+   * @throws ParseException 
+   */
   public Consent getConsentByName(String name) throws ParseException {
-
     TypedQuery<Consent> q = em.createNamedQuery("Consent.findByName",
             Consent.class);
     q.setParameter("name", name);
@@ -99,29 +94,10 @@ public class StudyPrivacyManager {
 
   }
 
-  public String getRoles(String study, String username) throws ParseException {
-    List<StudyTeam> list = stc.findCurrentRole(study, username);
-    return list.get(0).getTeamRole();
-  }
-
-  public List<ActivityDetail> getAllActivities(String studyName) {
-    List<ActivityDetail> ad = activityController.
-            activityDetailOnStudy(studyName);
-    return ad;
-  }
-
   public Consent getActiveConsent(String studyName) {
     return (Consent) em.createQuery(
             "SELECT c FROM Consent c WHERE c.status ='APPROVED' AND c.studyName = '"
             + studyName + "'").getSingleResult();
-
-  }
-
-  public List<Consent> getAllConsets(String studyName) {
-    TypedQuery<Consent> q = em.createNamedQuery("Consent.findByStudyName",
-            Consent.class);
-    q.setParameter("studyName", studyName);
-    return q.getResultList();
 
   }
 

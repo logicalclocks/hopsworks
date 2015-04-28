@@ -127,9 +127,8 @@ public class NewStudyController implements Serializable {
     try {
       if (!studyFacade.studyExists(newStudyName)) {
         //Create a new study object
-        String username = sessionState.getLoggedInUsername();
         Date now = new Date();
-        study = new Study(newStudyName, username, now);
+        study = new Study(newStudyName, sessionState.getLoggedInUser(), now);
         //create folder structure
         mkStudyDIR(study.getName());
         logger.log(Level.FINE, "{0} - study directory created successfully.",
@@ -142,14 +141,14 @@ public class NewStudyController implements Serializable {
         persistServices();
         //Add the activity information
         activityFacade.
-                persistActivity(ActivityFacade.NEW_STUDY, study.getName(),
+                persistActivity(ActivityFacade.NEW_STUDY, study,
                         sessionState.getLoggedInUsername());
         //update role information in study
-        addStudyMaster(study.getName());
+        addStudyMaster(study.getId());
         logger.log(Level.FINE, "{0} - study created successfully.", study.
                 getName());
 
-        return loadNewStudy();
+        return loadNewStudy(study);
       } else {
         MessagesController.addErrorMessage(
                 "A study with this name already exists!");
@@ -165,17 +164,16 @@ public class NewStudyController implements Serializable {
       return null;
     } catch (EJBException ex) {
       MessagesController.addErrorMessage(
-              "Study Inode could not be created in DB.");
-      logger.log(Level.SEVERE, "Error creating study Inode in DB.", ex);
+              "Study could not be created in DB.");
+      logger.log(Level.SEVERE, "Error creating study in DB.", ex);
       return null;
     }
 
   }
 
   //Set the study owner as study master in StudyTeam table
-  private void addStudyMaster(String study_name) {
-
-    StudyTeamPK stp = new StudyTeamPK(study_name, sessionState.
+  private void addStudyMaster(Integer studyId) {
+    StudyTeamPK stp = new StudyTeamPK(studyId, sessionState.
             getLoggedInUsername());
     StudyTeam st = new StudyTeam(stp);
     st.setTeamRole("Master");
@@ -191,7 +189,6 @@ public class NewStudyController implements Serializable {
               "{0} - adding the study owner as a master failed.", ejb.
               getMessage());
     }
-
   }
 
   //create study on HDFS
@@ -213,20 +210,20 @@ public class NewStudyController implements Serializable {
   }
 
   //load the necessary information for displaying the study page
-  private String loadNewStudy() {
-    return studies.fetchStudy(newStudyName);
+  private String loadNewStudy(Study study) {
+    return studies.fetchStudy(study);
   }
 
   private void persistServices() {
     switch (chosenTemplate) {
       case TEMPLATE_BBC:
-        studyServices.persistServicesForStudy(newStudyName, SERVICES_BBC);
+        studyServices.persistServicesForStudy(study, SERVICES_BBC);
         break;
       case TEMPLATE_SPARK:
-        studyServices.persistServicesForStudy(newStudyName, SERVICES_SPARK);
+        studyServices.persistServicesForStudy(study, SERVICES_SPARK);
         break;
       case TEMPLATE_CUSTOM:
-        studyServices.persistServicesForStudy(newStudyName, customServices);
+        studyServices.persistServicesForStudy(study, customServices);
         break;
     }
   }
