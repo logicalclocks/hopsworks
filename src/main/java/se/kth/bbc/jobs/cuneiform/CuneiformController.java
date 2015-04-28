@@ -294,7 +294,7 @@ public final class CuneiformController extends JobController {
 
     //TODO: include input and execution files
     setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
-            sessionState.getActiveStudyname(), JobType.CUNEIFORM));
+            sessionState.getActiveStudy(), JobType.CUNEIFORM));
     if (isJobSelected()) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveStudyname())
@@ -316,7 +316,7 @@ public final class CuneiformController extends JobController {
               "Failed to write job history. Aborting execution.");
       return;
     }
-    writeJobStartedActivity(sessionState.getActiveStudyname(), sessionState.
+    writeJobStartedActivity(sessionState.getActiveStudy(), sessionState.
             getLoggedInUsername());
   }
 

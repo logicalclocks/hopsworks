@@ -2,16 +2,12 @@ package se.kth.bbc.study;
 
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.activity.ActivityController;
-import se.kth.bbc.activity.ActivityDetail;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -40,16 +36,48 @@ public class StudyFacade extends AbstractFacade<Study> {
     return query.getResultList();
   }
 
-  public List<Study> findByUser(String username) {
+  /**
+   * Find all the studies for which the given user is owner. This implies that
+   * this user created all the returned studies.
+   * <p>
+   * @param user The user for whom studies are sought.
+   * @return List of all the studies that were created by this user.
+   */
+  public List<Study> findByUser(User user) {
     TypedQuery<Study> query = em.createNamedQuery(
-            "Study.findByUsername", Study.class).setParameter(
-                    "username", username);
+            "Study.findByOwner", Study.class).setParameter(
+                    "owner", user);
     return query.getResultList();
   }
 
-  public Study findByName(String studyname) {
-    TypedQuery<Study> query = em.createNamedQuery("Study.findByName",
-            Study.class).setParameter("name", studyname);
+  /**
+   * Find all the studies for which the user with given email is owner. This
+   * implies that this user created all the returned studies.
+   * <p>
+   * @param email The email of the user for whom studies are sought.
+   * @return List of all the studies that were created by this user.
+   * @deprecated use findByUser(User user) instead.
+   */
+  public List<Study> findByUser(String email) {
+    TypedQuery<User> query = em.createNamedQuery(
+            "User.findByEmail", User.class).setParameter(
+                    "email", email);
+    User user = query.getSingleResult();
+    return findByUser(user);
+  }
+
+  /**
+   * Get the study with the given name created by the given User.
+   * <p>
+   * @param studyname The name of the study.
+   * @param user The owner of the study.
+   * @return The study with given name created by given user, or null if such
+   * does not exist.
+   */
+  public Study findByNameAndOwner(String studyname, User user) {
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByOwnerAndName",
+            Study.class).setParameter("name", studyname).setParameter("owner",
+                    user);
     try {
       return query.getSingleResult();
     } catch (NoResultException e) {
@@ -57,120 +85,138 @@ public class StudyFacade extends AbstractFacade<Study> {
     }
   }
 
-  public int getAllStudy(String username) {
-    return ((Long) em.createNamedQuery("Study.countStudyByOwner").
-            setParameter("username", username).getSingleResult()).intValue();
+  /**
+   * Get the study with the given name created by the User with given email.
+   * <p>
+   * @param studyname The name of the study.
+   * @param email The email of the owner of the study.
+   * @return The study with given name created by given user, or null if such
+   * does not exist.
+   * @deprecated use findByNameAndOwner(String studyname, User user) instead.
+   */
+  public Study findByNameAndOwnerEmail(String studyname, String email) {
+    TypedQuery<User> query = em.createNamedQuery("User.findByEmail",
+            User.class).setParameter("email", email);
+    User user = query.getSingleResult();
+    return findByNameAndOwner(studyname, user);
   }
 
-  public int getMembers(String name) {
-    return ((Long) em.createNamedQuery("Study.findMembers").setParameter(
-            "name", name).getSingleResult()).intValue();
+  /**
+   * Count the number of studies for which the given user is owner.
+   * <p>
+   * @param owner
+   * @return
+   */
+  public int countOwnedStudies(User owner) {
+    TypedQuery<Long> query = em.createNamedQuery("Study.countStudyByOwner",
+            Long.class);
+    query.setParameter("owner", owner);
+    return query.getSingleResult().intValue();
   }
 
-  public List<Study> filterPersonalStudy(String username) {
-    Query query = em.createNamedQuery("Study.findByUsername",
-            Study.class).setParameter("username", username);
+  /**
+   * Count the number of studies for which the owner has the given email.
+   * <p>
+   * @param email
+   * @return The number of studies.
+   * @deprecated Use countOwnedStudies(User owner) instead.
+   */
+  public int countOwnedStudies(String email) {
+    TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
+    query.setParameter("email", email);
+    //TODO: may throw an exception
+    User user = query.getSingleResult();
+    return countOwnedStudies(user);
+  }
+
+  /**
+   * Find all the studies owned by the given user.
+   * <p>
+   * @param user
+   * @return
+   */
+  public List<Study> findOwnedStudies(User user) {
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByOwner",
+            Study.class);
+    query.setParameter("owner", user);
     return query.getResultList();
-  }
-
-  public String filterByName(String name) {
-    Query query
-            = em.createNamedQuery("Study.findByName", Study.class).
-            setParameter("name", name);
-    List<Study> result = query.getResultList();
-    if (result.iterator().hasNext()) {
-      Study t = result.iterator().next();
-      return t.getUsername();
-    }
-    return null;
   }
 
   /**
    * Get the owner of the given study.
-   * @param studyName: the name of the study
+   * <p>
+   * @param study The study for which to get the current owner.
    * @return The primary key of the owner of the study.
+   * @deprecated Use study.getOwner().getEmail(); instead.
    */
-  public String findOwner(String studyName) {
-    Query q = em.createNamedQuery("Study.findOwner", String.class).
-            setParameter("name", studyName);
-    return (String) q.getSingleResult();
-  }
-
-  public List<Study> findAllStudies(String user) {
-    Query query = em.createNativeQuery(
-            "SELECT name, username FROM study WHERE username=? UNION SELECT name, username FROM study WHERE name IN (SELECT name FROM study_team WHERE team_member=?)",
-            Study.class)
-            .setParameter(1, user).setParameter(2, user);
-    return query.getResultList();
+  public String findOwner(Study study) {
+    return study.getOwner().getEmail();
   }
 
   /**
-   * Find details about all the studies a user has joined.
+   * Find all the studies the given user is a member of.
    * <p>
-   * @param useremail
+   * @param user
    * @return
    */
-  public List<StudyDetail> findAllStudyDetails(String useremail) {
-    Query query = em.createNativeQuery(
-            "SELECT * FROM study_details WHERE studyname IN (SELECT name FROM study_team WHERE team_member=?)",
-            StudyDetail.class)
-            .setParameter(1, useremail);
+  public List<Study> findAllMemberStudies(User user) {
+    TypedQuery<Study> query = em.createNamedQuery("StudyTeam.findAllMemberStudiesForUser",
+            Study.class);
+    query.setParameter("user", user);
     return query.getResultList();
   }
 
   /**
    * Find all studies created (and owned) by this user.
    * <p>
-   * @param useremail
+   * @param user
    * @return
    */
-  public List<StudyDetail> findAllPersonalStudyDetails(String useremail) {
-    TypedQuery<StudyDetail> q = em.createNamedQuery("StudyDetail.findByEmail",
-            StudyDetail.class);
-    q.setParameter("email", useremail);
-    return q.getResultList();
+  public List<Study> findAllPersonalStudies(User user) {
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByOwner",Study.class);
+    query.setParameter("owner", user);
+    return query.getResultList();
   }
 
   /**
    * Get all the studies this user has joined, but not created.
    * <p>
-   * @param useremail
+   * @param user
    * @return
    */
-  public List<StudyDetail> findJoinedStudyDetails(String useremail) {
-    Query query = em.createNativeQuery(
-            "SELECT * FROM study_details WHERE studyname IN (SELECT name FROM study_team WHERE team_member=?) AND email NOT LIKE ?",
-            StudyDetail.class)
-            .setParameter(1, useremail).setParameter(2, useremail);
-
+  public List<Study> findAllJoinedStudies(User user) {
+    TypedQuery<Study> query = em.createNamedQuery("StudyTeam.findAllJoinedStudiesForUser",
+            Study.class);
+    query.setParameter("user", user);
     return query.getResultList();
   }
 
   public void persistStudy(Study study) {
     em.persist(study);
   }
-
-  public void removeStudy(String name) {
-    Study study = em.find(Study.class, name);
-    if (study != null) {
-      em.remove(study);
-    }
+  
+  /**
+   * Mark the study <i>study</i> as deleted.
+   * @param study 
+   */
+  public void removeStudy(Study study){
+    study.setDeleted(Boolean.TRUE);
+    em.merge(study);
   }
 
-  public synchronized void removeByName(String studyname) {
-    Study study = em.find(Study.class, studyname);
-    if (study != null) {
-      em.remove(study);
-    }
-  }
-
+  /**
+   * Check if a study with this name already exists.
+   * @param name
+   * @return 
+   */
   public boolean studyExists(String name) {
-    Study study = em.find(Study.class, name);
-    return study != null;
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByName",Study.class);
+    query.setParameter("name", name);
+    return !query.getResultList().isEmpty();
   }
 
   public void archiveStudy(String studyname) {
-    Study study = em.find(Study.class, studyname);
+    Study study = findByName(studyname);
     if (study != null) {
       study.setArchived(true);
     }
@@ -178,7 +224,7 @@ public class StudyFacade extends AbstractFacade<Study> {
   }
 
   public void unarchiveStudy(String studyname) {
-    Study study = em.find(Study.class, studyname);
+        Study study = findByName(studyname);
     if (study != null) {
       study.setArchived(false);
     }
@@ -186,7 +232,7 @@ public class StudyFacade extends AbstractFacade<Study> {
   }
 
   public boolean updateRetentionPeriod(String name, Date date) {
-    Study study = em.find(Study.class, name);
+        Study study = findByName(name);
     if (study != null) {
       study.setRetentionPeriod(date);
       em.merge(study);
@@ -196,10 +242,20 @@ public class StudyFacade extends AbstractFacade<Study> {
   }
 
   public Date getRetentionPeriod(String name) {
-    Study study = em.find(Study.class, name);
+    Study study = findByName(name);
     if (study != null) {
       return study.getRetentionPeriod();
     }
     return null;
+  }
+  
+  private Study findByName(String name){
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByName",Study.class);
+    query.setParameter("name", name);
+    try{
+      return query.getSingleResult();
+    }catch(NoResultException e){
+      return null;
+    }
   }
 }

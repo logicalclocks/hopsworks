@@ -43,50 +43,50 @@
                     <ui:include src="/bbc/lims/studyTabs/studyShowTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="teamTab" title="Team" rendered="#{studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="teamTab" title="Team" rendered="#{studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="teamTab">
                     <ui:include src="/bbc/lims/studyTabs/teamTab.xhtml"/>
                   </ui:insert>                                    
                 </p:tab>
-                <p:tab id="browser" title="Browser" rendered="#{studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="browser" title="Browser" rendered="#{studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="browserTab">
                     <ui:include src="/bbc/lims/studyTabs/browser.xhtml"/>
                   </ui:insert>
                 </p:tab>
                 <!-- TODO: figure out how to do this with a loop?-->
-                <p:tab id="cuneiform" title="Cuneiform" rendered="#{studyManagedBean.shouldDrawTab('CUNEIFORM') and studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="cuneiform" title="Cuneiform" rendered="#{studyManagedBean.shouldDrawTab('CUNEIFORM') and studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="workflowsTab">
                     <ui:include src="/bbc/lims/studyTabs/cuneiformTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="yarn" title="Yarn" rendered="#{studyManagedBean.shouldDrawTab('YARN') and studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="yarn" title="Yarn" rendered="#{studyManagedBean.shouldDrawTab('YARN') and studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="yarn">
                     <ui:include src="/bbc/lims/studyTabs/yarnTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="studyinfo" title="Study info" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO') and studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="studyinfo" title="Study info" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO') and studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="studyinfo">
                     <ui:include src="/bbc/lims/studyTabs/studyInfoTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="samples" title="Samples" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES') and studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="samples" title="Samples" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES') and studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="samples">
                     <ui:include src="/bbc/lims/studyTabs/samplesTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
 
-                <p:tab id="spark" title="Spark" rendered="#{studyManagedBean.shouldDrawTab('SPARK') and studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="spark" title="Spark" rendered="#{studyManagedBean.shouldDrawTab('SPARK') and studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="spark">
                     <ui:include src="/bbc/lims/studyTabs/sparkTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="adam" title="ADAM" rendered="#{studyManagedBean.shouldDrawTab('ADAM') and studyManagedBean.renderComponentList() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="adam" title="ADAM" rendered="#{studyManagedBean.shouldDrawTab('ADAM') and studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
                   <ui:insert name="adam">
                     <ui:include src="/bbc/lims/studyTabs/adamTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
 
-                <p:tab title="Privacy" rendered="#{studyManagedBean.shouldDrawTab('PRIVACY') and studyManagedBean.renderComponentList() eq 'Master' and not studyManagedBean.studyArchived}">
+                <p:tab title="Privacy" rendered="#{studyManagedBean.shouldDrawTab('PRIVACY') and studyManagedBean.currentRoleInStudy() eq 'Master' and not studyManagedBean.studyArchived}">
                   <ui:insert name="privacyTab">
                     <ui:include src="/bbc/lims/studyTabs/privacyTab.xhtml"/>
                   </ui:insert>
@@ -144,7 +144,7 @@
             <f:selectItem itemLabel="Remove study, but keep data." itemValue="false" />
           </p:selectOneRadio>
           <h:panelGroup styleClass="dialogButtonGroup">
-            <p:commandButton value="Remove" action="#{studyManagedBean.removeByName()}" onstart="PF('removeStudyDlg').hide()" type="submit"/>
+            <p:commandButton value="Remove" action="#{studyManagedBean.removeCurrentStudy()}" onstart="PF('removeStudyDlg').hide()" type="submit"/>
             <p:commandButton value="Cancel" oncomplete="PF('removeStudyDlg').hide()"/>
           </h:panelGroup>  
         </h:form>
@@ -289,7 +289,7 @@
       </p:dialog>
 
       <!-- Choose file dialog-->
-      <p:dialog id="chooseFileDialog" styleClass="studyDialog" widgetVar="chooseFileDlg" closable="false" draggable="false" modal="true" resizable="false" header="Choose file" rendered="#{studyManagedBean.renderComponentList() != null}">
+      <p:dialog id="chooseFileDialog" styleClass="studyDialog" widgetVar="chooseFileDlg" closable="false" draggable="false" modal="true" resizable="false" header="Choose file" rendered="#{studyManagedBean.currentRoleInStudy() != null}">
         <h:form class="dialogForm">
           <ui:repeat var="node" value="#{InodesMB.currentPath}">
             <p:commandLink action="#{InodesMB.cdBrowse(node.path)}" update="@form">

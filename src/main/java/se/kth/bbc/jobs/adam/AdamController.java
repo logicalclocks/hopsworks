@@ -172,7 +172,7 @@ public final class AdamController extends JobController {
 
     AdamJob job = new AdamJob(history, r, fops, args, opts);
     setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
-            sessionState.getActiveStudyname(), JobType.ADAM));
+            sessionState.getActiveStudy(), JobType.ADAM));
     if (isJobSelected()) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveStudyname())
@@ -194,7 +194,7 @@ public final class AdamController extends JobController {
               "Failed to write job history. Aborting execution.");
       return;
     }
-    writeJobStartedActivity(sessionState.getActiveStudyname(), sessionState.
+    writeJobStartedActivity(sessionState.getActiveStudy(), sessionState.
             getLoggedInUsername());
   }
 

@@ -6,6 +6,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.study.Study;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -27,11 +28,11 @@ public class SamplecollectionFacade extends AbstractFacade<Samplecollection> {
     super(Samplecollection.class);
   }
 
-  public List<Samplecollection> findByStudyname(String studyname) {
+  public List<Samplecollection> findByStudy(Study study) {
     TypedQuery<Samplecollection> q = em.createNamedQuery(
-            "Samplecollection.findByStudyname",
+            "Samplecollection.findByStudy",
             Samplecollection.class);
-    q.setParameter("studyname", studyname);
+    q.setParameter("study", study);
     return q.getResultList();
   }
 
@@ -68,6 +69,8 @@ public class SamplecollectionFacade extends AbstractFacade<Samplecollection> {
     em.persist(s);
   }
 
+  //TODO: make the queries here more efficient: do not fetch an entire list!
+  
   /**
    * Check if a collection with this id already exists.
    * <p>

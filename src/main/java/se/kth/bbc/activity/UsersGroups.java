@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.activity;
 
 import java.io.Serializable;
@@ -28,27 +23,26 @@ import se.kth.bbc.security.ua.model.User;
           query = "SELECT u FROM UsersGroups u"),
   @NamedQuery(name = "UsersGroups.findByEmail",
           query
-          = "SELECT u FROM UsersGroups u WHERE u.usersGroupsPK.email = :email"),
+          = "SELECT u FROM UsersGroups u WHERE u.user.email = :email"),
   @NamedQuery(name = "UsersGroups.findByGroupname",
           query
           = "SELECT u FROM UsersGroups u WHERE u.usersGroupsPK.groupname = :groupname"),
-  @NamedQuery(name = "UsersGroups.deleteGroupsForEmail",
+  @NamedQuery(name = "UsersGroups.deleteGuestForEmail",
           query
-          = "DELETE FROM UsersGroups u WHERE u.usersGroupsPK.email = :email AND u.usersGroupsPK.groupname = 'GUEST'"),
-  @NamedQuery(name = "UsersGroups.findARecord",
-          query
-          = "SELECT COUNT(u.usersGroupsPK.email) FROM UsersGroups u WHERE u.usersGroupsPK.email = :email")})
+          = "DELETE FROM UsersGroups u WHERE u.user.email = :email AND u.usersGroupsPK.groupname = 'GUEST'")})
 public class UsersGroups implements Serializable {
 
   private static final long serialVersionUID = 1L;
+  
   @EmbeddedId
   protected UsersGroupsPK usersGroupsPK;
+  
   @JoinColumn(name = "email",
           referencedColumnName = "EMAIL",
           insertable = false,
           updatable = false)
   @ManyToOne(optional = false)
-  private User username;
+  private User user;
 
   public UsersGroups() {
   }
@@ -69,12 +63,12 @@ public class UsersGroups implements Serializable {
     this.usersGroupsPK = usersGroupsPK;
   }
 
-  public User getUsername() {
-    return username;
+  public User getUser() {
+    return user;
   }
 
-  public void setUsername(User username) {
-    this.username = username;
+  public void setUser(User user) {
+    this.user = user;
   }
 
   @Override

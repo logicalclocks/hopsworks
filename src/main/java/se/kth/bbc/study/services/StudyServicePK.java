@@ -7,7 +7,6 @@ import javax.persistence.Embeddable;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 /**
  *
@@ -15,13 +14,10 @@ import javax.validation.constraints.Size;
  */
 @Embeddable
 public class StudyServicePK implements Serializable {
-
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-          max = 128)
-  @Column(name = "study")
-  private String study;
+  @Column(name = "study_id")
+  private int studyId;
   @Basic(optional = false)
   @NotNull
   @Enumerated(EnumType.STRING)
@@ -31,17 +27,17 @@ public class StudyServicePK implements Serializable {
   public StudyServicePK() {
   }
 
-  public StudyServicePK(String study, StudyServiceEnum service) {
-    this.study = study;
+  public StudyServicePK(int studyId, StudyServiceEnum service) {
+    this.studyId = studyId;
     this.service = service;
   }
 
-  public String getStudy() {
-    return study;
+  public int getStudyId() {
+    return studyId;
   }
 
-  public void setStudy(String study) {
-    this.study = study;
+  public void setStudyId(int studyId) {
+    this.studyId = studyId;
   }
 
   public StudyServiceEnum getService() {
@@ -55,7 +51,7 @@ public class StudyServicePK implements Serializable {
   @Override
   public int hashCode() {
     int hash = 0;
-    hash += (study != null ? study.hashCode() : 0);
+    hash += (int) studyId;
     hash += (service != null ? service.hashCode() : 0);
     return hash;
   }
@@ -67,12 +63,11 @@ public class StudyServicePK implements Serializable {
       return false;
     }
     StudyServicePK other = (StudyServicePK) object;
-    if ((this.study == null && other.study != null) || (this.study != null
-            && !this.study.equals(other.study))) {
+    if (this.studyId != other.studyId) {
       return false;
     }
-    if ((this.service == null && other.service != null) || (this.service != null
-            && this.service != other.service)) {
+    if ((this.service == null && other.service != null) ||
+            (this.service != null && !this.service.equals(other.service))) {
       return false;
     }
     return true;
@@ -80,8 +75,7 @@ public class StudyServicePK implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.study.StudyServicePK[ study=" + study + ", service="
-            + service + " ]";
+    return "["+studyId+","+service+"]";
   }
-
+  
 }

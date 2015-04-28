@@ -154,7 +154,7 @@ public final class SparkController extends JobController {
     SparkJob job = new SparkJob(history, r, fops);
 
     setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
-            sessionState.getActiveStudyname(), JobType.SPARK));
+            sessionState.getActiveStudy(), JobType.SPARK));
     if (isJobSelected()) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveStudyname())
@@ -175,7 +175,7 @@ public final class SparkController extends JobController {
               "Failed to write job history. Aborting execution.");
       return;
     }
-    writeJobStartedActivity(sessionState.getActiveStudyname(), sessionState.
+    writeJobStartedActivity(sessionState.getActiveStudy(), sessionState.
             getLoggedInUsername());
   }
 

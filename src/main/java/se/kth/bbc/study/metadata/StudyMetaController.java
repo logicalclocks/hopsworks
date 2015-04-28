@@ -65,10 +65,10 @@ public class StudyMetaController implements Serializable {
   @PostConstruct
   public void init() {
     metadata = studyMetaFacade.
-            findByStudyname(sessionState.getActiveStudyname());
+            findByStudy(sessionState.getActiveStudy());
     if (metadata == null) {
-      metadata = new StudyMeta();
-      metadata.setStudyname(sessionState.getActiveStudyname());
+      metadata = new StudyMeta(sessionState.getActiveStudy().getId());
+      metadata.setStudy(sessionState.getActiveStudy());
     }
 
     //create study design model

@@ -4,14 +4,12 @@
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>jdbc/kthfs</jta-data-source>
     <class>se.kth.bbc.activity.ActivityDetail</class>
-    <class>se.kth.bbc.activity.UserActivity</class>
     <class>se.kth.bbc.activity.UsersGroups</class>
     <class>se.kth.bbc.jobs.jobhistory.JobExecutionFile</class>
     <class>se.kth.bbc.jobs.jobhistory.JobHistory</class>
     <class>se.kth.bbc.jobs.jobhistory.JobInputFile</class>
     <class>se.kth.bbc.jobs.jobhistory.JobOutputFile</class>
     <class>se.kth.bbc.study.StudyDetail</class>
-    <class>se.kth.bbc.study.StudyGroups</class>
     <class>se.kth.bbc.study.StudyTeam</class>
     <class>se.kth.bbc.study.Study</class>
     <class>se.kth.bbc.study.metadata.StudyMeta</class>
@@ -20,21 +18,22 @@
     <class>se.kth.bbc.study.samples.Sample</class>
     <class>se.kth.bbc.study.samples.Samplecollection</class>
     <class>se.kth.bbc.study.services.StudyServices</class>
-    <class>se.kth.kthfsdashboard.user.Username</class>
     <class>se.kth.bbc.security.ua.model.Address</class>
     <class>se.kth.bbc.security.ua.model.PeopleGroup</class>
     <class>se.kth.bbc.security.ua.model.User</class>
     <class>se.kth.bbc.security.ua.model.Userlogins</class>
     <class>se.kth.bbc.security.ua.model.Yubikey</class>
-    <class>se.kth.bbc.study.fb.Inode</class>
     <class>se.kth.bbc.study.privacy.model.Consent</class>
     <class>se.kth.bbc.security.ua.model.BBCGroup</class>
     <class>se.kth.bbc.security.ua.model.Organization</class>
+    <class>se.kth.bbc.activity.Activity</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
     <properties>
       <property name="eclipselink.target-database" value="MYSQL"/>
+      <property name="eclipselink.logging.level" value="INFO"/>
+      <property name="eclipselink.logging.parameters" value="true"/>
     </properties>
   </persistence-unit>
   <persistence-unit name="hopsPU" transaction-type="JTA">

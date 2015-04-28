@@ -60,7 +60,7 @@ public class ProfileManager implements Serializable {
         user = userManager.findByEmail(getLoginName());
         address = user.getAddress();
         organization = user.getOrganization();
-        login = userManager.getLastUserLoing(user.getUid());
+        login = userManager.getLastUserLogin(user.getUid());
       } catch (IOException ex) {
         Logger.getLogger(ProfileManager.class.getName()).log(Level.SEVERE, null,
                 ex);

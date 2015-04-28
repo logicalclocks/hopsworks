@@ -43,7 +43,7 @@ and open the template in the editor.
 
               <p:commandLink styleClass="dark" rendered="#{not inode.dir}" ajax="false">
                 <strong>#{inode.name}</strong>
-                <p:fileDownload value="#{fileOperationsMB.downloadFile(inode.path)}" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+                <p:fileDownload value="#{fileOperationsMB.downloadFile(inode.path)}" rendered="#{studyManagedBean.currentRoleInStudy() == 'Master'}"/>
               </p:commandLink>
             </h:column>
 
@@ -54,12 +54,12 @@ and open the template in the editor.
 
             <h:column>
               <p:commandLink styleClass="ui-button fa fa-trash remove_data_button"  
-                             value="" rendered="#{studyManagedBean.renderComponentList() == 'Master' and not inode.dir}" 
+                             value="" rendered="#{studyManagedBean.currentRoleInStudy() == 'Master' and not inode.dir}" 
                              update="@form" action="#{fileOperationsMB.deleteFile(inode.path)}">
                 <p:confirm header="Remove file?" message="Are you sure you want to remove this file?" icon="ui-icon-alert"/>
               </p:commandLink>
               <p:commandLink styleClass="ui-button fa fa-trash remove_data_button"  
-                             value="" rendered="#{studyManagedBean.renderComponentList() == 'Master' and inode.dir and not inode.parent}" 
+                             value="" rendered="#{studyManagedBean.currentRoleInStudy() == 'Master' and inode.dir and not inode.parent}" 
                              update="@form" action="#{fileOperationsMB.deleteFolderRecursive(inode.path)}">
                 <p:confirm header="Remove folder?" message="Are you sure you want to remove this folder and all its contents?" icon="ui-icon-alert"/>
               </p:commandLink>
@@ -69,8 +69,8 @@ and open the template in the editor.
               </p:confirmDialog>
             </h:column>
             <f:facet name="footer">
-              <p:commandButton value="Upload file" action="#{studyManagedBean.redirectToUploader()}" ajax="false" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
-              <p:commandButton value="Create folder" type="button" onclick="PF('createFolderDlg').show()" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+              <p:commandButton value="Upload file" action="#{studyManagedBean.redirectToUploader()}" ajax="false" rendered="#{studyManagedBean.currentRoleInStudy() == 'Master'}"/>
+              <p:commandButton value="Create folder" type="button" onclick="PF('createFolderDlg').show()" rendered="#{studyManagedBean.currentRoleInStudy() == 'Master'}"/>
             </f:facet>
           </h:dataTable>
         </h:form>

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.study;
 
 import java.io.Serializable;
@@ -11,6 +6,8 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -18,6 +15,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *
@@ -27,46 +25,62 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "study_team")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "StudyTeam.find",
+  @NamedQuery(name = "StudyTeam.findRoleForUserInStudy",
           query
-          = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :studyName AND s.studyTeamPK.teamMember = :username"),
+          = "SELECT s FROM StudyTeam s WHERE s.study = :study AND s.user = :user"),
   @NamedQuery(name = "StudyTeam.findAll",
           query = "SELECT s FROM StudyTeam s"),
-  @NamedQuery(name = "StudyTeam.findByName",
-          query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name"),
+  @NamedQuery(name = "StudyTeam.findByStudy",
+          query = "SELECT s FROM StudyTeam s WHERE s.study = :study"),
   @NamedQuery(name = "StudyTeam.findByTeamMember",
           query
-          = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.teamMember = :teamMember"),
+          = "SELECT s FROM StudyTeam s WHERE s.user = :user"),
   @NamedQuery(name = "StudyTeam.findByTeamRole",
           query = "SELECT s FROM StudyTeam s WHERE s.teamRole = :teamRole"),
-  @NamedQuery(name = "StudyTeam.findByTimestamp",
-          query = "SELECT s FROM StudyTeam s WHERE s.timestamp = :timestamp"),
   @NamedQuery(name = "StudyTeam.countStudiesByMember",
           query
-          = "SELECT COUNT(s) FROM StudyTeam s WHERE s.studyTeamPK.teamMember = :teamMember"),
-  @NamedQuery(name = "StudyTeam.countMastersByStudy",
+          = "SELECT COUNT(s) FROM StudyTeam s WHERE s.user = :user"),
+  @NamedQuery(name = "StudyTeam.countMembersForStudyAndRole",
           query
-          = "SELECT COUNT(DISTINCT s.studyTeamPK.teamMember) FROM StudyTeam s WHERE s.studyTeamPK.name=:name AND s.teamRole = :teamRole"),
-  @NamedQuery(name = "StudyTeam.countAllMembers",
+          = "SELECT COUNT(DISTINCT s.studyTeamPK.teamMember) FROM StudyTeam s WHERE s.study=:study AND s.teamRole = :teamRole"),
+  @NamedQuery(name = "StudyTeam.countAllMembersForStudy",
           query
-          = "SELECT s.studyTeamPK.teamMember FROM StudyTeam s WHERE s.studyTeamPK.name = :name"),
-  @NamedQuery(name = "StudyTeam.findMembersByRole",
+          = "SELECT COUNT(DISTINCT s.studyTeamPK.teamMember) FROM StudyTeam s WHERE s.study = :study"),
+  @NamedQuery(name = "StudyTeam.findMembersByRoleInStudy",
           query
-          = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name AND s.teamRole = :teamRole"),
-  @NamedQuery(name = "StudyTeam.findMembersByName",
-          query = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name"),
-  @NamedQuery(name = "StudyTeam.findByNameAndTeamMember",
+          = "SELECT s FROM StudyTeam s WHERE s.study = :study AND s.teamRole = :teamRole"),
+  @NamedQuery(name = "StudyTeam.findAllMemberStudiesForUser",
           query
-          = "SELECT s FROM StudyTeam s WHERE s.studyTeamPK.name = :name AND s.studyTeamPK.teamMember = :teamMember")})
-//    @NamedQuery(name = "StudyTeam.updateTeamRole", query = "UPDATE StudyTeam SET s.teamRole = :teamRole, s.timestamp = :timestamp WHERE s.studyTeamPK.name = :name AND s.studyTeamPK.teamMember = :teamMember")})
+          = "SELECT st.study from StudyTeam st WHERE st.user = :user"),
+  @NamedQuery(name = "StudyTeam.findAllJoinedStudiesForUser",
+          query
+          = "SELECT st.study from StudyTeam st WHERE st.user = :user AND NOT st.study.owner = :user")})
 public class StudyTeam implements Serializable {
-
+  
   private static final long serialVersionUID = 1L;
+  
+  @JoinColumn(name = "study_id",
+          referencedColumnName = "id",
+          insertable = false,
+          updatable
+          = false)
+  @ManyToOne(optional = false)
+  private Study study;
+  
+  @JoinColumn(name = "team_member",
+          referencedColumnName = "email",
+          insertable
+          = false,
+          updatable = false)
+  @ManyToOne(optional = false)
+  private User user;
+  
   @EmbeddedId
   protected StudyTeamPK studyTeamPK;
-  //@Size(min = 1, max = 16)
+  
   @Column(name = "team_role")
   private String teamRole;
+  
   @Basic(optional = false)
   @NotNull
   @Column(name = "added")
@@ -85,8 +99,8 @@ public class StudyTeam implements Serializable {
     this.timestamp = timestamp;
   }
 
-  public StudyTeam(String name, String teamMember) {
-    this.studyTeamPK = new StudyTeamPK(name, teamMember);
+  public StudyTeam(Study study, User user) {
+    this.studyTeamPK = new StudyTeamPK(study.getId(), user.getEmail());
   }
 
   public StudyTeamPK getStudyTeamPK() {
@@ -138,6 +152,22 @@ public class StudyTeam implements Serializable {
   @Override
   public String toString() {
     return "se.kth.bbc.study.StudyTeam[ studyTeamPK=" + studyTeamPK + " ]";
+  }
+
+  public Study getStudy() {
+    return study;
+  }
+
+  public void setStudy(Study study) {
+    this.study = study;
+  }
+
+  public User getUser() {
+    return user;
+  }
+
+  public void setUser(User user) {
+    this.user = user;
   }
 
 }

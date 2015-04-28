@@ -30,7 +30,7 @@ public class UsersGroupsPK implements Serializable {
   @NotNull
   @Size(min = 1,
           max = 64)
-  @Column(name = "groupname")
+  @Column(name = "group_name")
   private String groupname;
 
   public UsersGroupsPK() {
