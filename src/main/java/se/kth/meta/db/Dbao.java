@@ -21,6 +21,7 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
+import se.kth.meta.entity.FieldTypes;
 import se.kth.meta.entity.Templates;
 import se.kth.meta.entity.TupleToFile;
 
@@ -33,6 +34,8 @@ import se.kth.meta.entity.TupleToFile;
 @Resource(type = javax.transaction.UserTransaction.class, name = "UserTransaction")
 public class Dbao {
 
+    private static final Logger logger = Logger.getLogger(Dbao.class.getName());
+    
     private Tables table;
     private Context ic;
     private EntityManager em;
@@ -45,13 +48,13 @@ public class Dbao {
             this.em = (EntityManager) ic.lookup("java:comp/env/persistence/em");
             this.utx = (UserTransaction) ic.lookup("java:comp/env/UserTransaction");
 
-            System.err.println("Database initialized.\n");
+            logger.log(Level.SEVERE, "Database initialized.\n");
 
 //            Fields field = this.em.find(Fields.class, 10);
 //            field.setForceDelete(true);
 //            this.deleteField(field);
         } catch (NamingException | IllegalStateException | SecurityException ex) {
-            Logger.getLogger(Dbao.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             throw new DatabaseException(Dbao.class.getName(), ex.getMessage());
         }
     }
@@ -154,7 +157,7 @@ public class Dbao {
         } catch (NotSupportedException | SystemException | RollbackException |
                 HeuristicMixedException | HeuristicRollbackException |
                 SecurityException | IllegalStateException ex) {
-            Logger.getLogger(Dbao.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             throw new DatabaseException(Dbao.class.getName(), "Could not delete table " + ex.getMessage());
         }
     }
@@ -193,7 +196,7 @@ public class Dbao {
             }
             this.utx.commit();
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
-            Logger.getLogger(Dbao.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             throw new DatabaseException(Dbao.class.getName(), "Could not remove template " + ex.getMessage());
         }
     }
@@ -252,7 +255,7 @@ public class Dbao {
                 HeuristicMixedException | HeuristicRollbackException | SystemException |
                 NotSupportedException ex) {
 
-            Logger.getLogger(Dbao.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             throw new DatabaseException(Dbao.class.getName(), "Could not delete field " + ex.getMessage());
         }
     }
@@ -317,6 +320,14 @@ public class Dbao {
         //this.em.clear();
         Query query = this.em.createNamedQuery(queryString);
         query.setParameter("templateid", templateId);
+        return query.getResultList();
+    }
+    
+    public List<FieldTypes> loadFieldTypes(){
+        
+        String queryString = "FieldTypes.findAll";
+        Query query = this.em.createNamedQuery(queryString);
+        
         return query.getResultList();
     }
 

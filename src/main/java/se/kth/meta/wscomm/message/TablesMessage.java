@@ -17,8 +17,7 @@ import javax.json.JsonObject;
  */
 public class TablesMessage extends ContentMessage {
 
-    private static final Logger logger = Logger.getLogger(
-            TablesMessage.class.getName());
+    private static final Logger logger = Logger.getLogger(TablesMessage.class.getName());
 
     private final String TYPE = "TablesMessage";
     private String sender;
@@ -70,7 +69,7 @@ public class TablesMessage extends ContentMessage {
 
         try {
             forceDelete = obj.getBoolean("forceDelete");
-            System.err.println("FORCE DELETE ON TABLE " + forceDelete);
+            logger.log(Level.SEVERE, "FORCE DELETE ON TABLE {0}", forceDelete);
         } catch (NullPointerException e) {
         }
 

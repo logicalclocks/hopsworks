@@ -24,6 +24,8 @@ public enum Command {
     //
     FETCH_METADATA,
     //
+    FETCH_FIELD_TYPES,
+    //
     DELETE_TABLE,
     //
     DELETE_FIELD,

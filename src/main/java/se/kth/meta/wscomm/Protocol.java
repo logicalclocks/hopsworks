@@ -10,6 +10,7 @@ import se.kth.meta.exception.ApplicationException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import se.kth.meta.entity.FieldTypes;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.Templates;
 import se.kth.meta.entity.TupleToFile;
@@ -17,6 +18,7 @@ import se.kth.meta.exception.DatabaseException;
 import se.kth.meta.wscomm.message.Command;
 import se.kth.meta.wscomm.message.ContentMessage;
 import se.kth.meta.wscomm.message.ErrorMessage;
+import se.kth.meta.wscomm.message.FieldTypesMessage;
 import se.kth.meta.wscomm.message.Message;
 import se.kth.meta.wscomm.message.MetadataMessage;
 import se.kth.meta.wscomm.message.TextMessage;
@@ -84,7 +86,6 @@ public class Protocol {
                 return this.createSchema(message);
 
             case FETCH_TEMPLATES:
-
                 return this.fetchTemplates(message);
 
             case DELETE_TABLE:
@@ -102,7 +103,10 @@ public class Protocol {
             case FETCH_METADATA:
                 table = (Tables) message.parseSchema().get(0);
                 return this.fetchTableMetadata(table);
-
+                
+            case FETCH_FIELD_TYPES:
+                return this.fetchFieldTypes(message);
+                
             //saves the actual metadata
             case STORE_METADATA:
                 List<EntityIntf> schema = message.parseSchema();
@@ -152,6 +156,20 @@ public class Protocol {
         return message;
     }
 
+    private Message fetchFieldTypes(Message message){
+        
+        List<FieldTypes> ftypes = this.db.loadFieldTypes();
+        
+        FieldTypesMessage newMsg = new FieldTypesMessage();
+        
+        String jsonMsg = newMsg.buildSchema((List<EntityIntf>) (List<?>) ftypes);
+        
+        newMsg.setSender(message.getSender());
+        newMsg.setMessage(jsonMsg);
+        
+        return newMsg;
+    }
+    
     private Message createSchema(Message message) {
 
         ContentMessage cmsg = (ContentMessage) message;

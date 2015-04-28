@@ -24,8 +24,7 @@ import se.kth.meta.exception.ApplicationException;
  */
 public class TemplateMessage extends ContentMessage {
 
-    private static final Logger logger = Logger.getLogger(
-            TemplateMessage.class.getName());
+    private static final Logger logger = Logger.getLogger(TemplateMessage.class.getName());
 
     private final String TYPE = "TemplateMessage";
     private String sender;
