@@ -86,6 +86,11 @@ public class Fields implements Serializable, EntityIntf {
     @Column(name = "required")
     private short required;
     
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "description")
+    private String description;
+    
     /*
      * indicates whether a field associated with raw data should be deleted along 
      * with its data or not
@@ -101,7 +106,8 @@ public class Fields implements Serializable, EntityIntf {
         this.raw = new LinkedList<>();
     }
 
-    public Fields(Integer id, int tableid, String name, String type, int maxsize, short searchable, short required) {
+    public Fields(Integer id, int tableid, String name, String type, int maxsize, 
+            short searchable, short required, String description) {
         this.id = id;
         this.tableid = tableid;
         this.name = name;
@@ -109,6 +115,7 @@ public class Fields implements Serializable, EntityIntf {
         this.maxsize = maxsize;
         this.searchable = searchable;
         this.required = required;
+        this.description = description;
         this.raw = new LinkedList<>();
     }
 
@@ -124,6 +131,7 @@ public class Fields implements Serializable, EntityIntf {
         this.searchable = f.getSearchable() ? (short) 1 : (short) 0;
         this.required = f.getRequired() ? (short) 1 : (short) 0;
         this.raw = f.getRawData();
+        this.description = f.getDescription();
     }
 
     @Override
@@ -210,6 +218,14 @@ public class Fields implements Serializable, EntityIntf {
         this.searchable = searchable;
     }
 
+    public void setDescription(String description){
+        this.description = description;
+    }
+    
+    public String getDescription(){
+        return this.description;
+    }
+    
     public boolean getRequired() {
         return required == 1;
     }

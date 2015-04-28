@@ -136,6 +136,7 @@ public class TemplateMessage extends ContentMessage {
             boolean searchable = false;
             boolean required = false;
             String maxsize = "";
+            String description = "";
 
             //retrieve the table fields/attributes
             for (int j = 0; j < fields.size(); j++) {
@@ -147,6 +148,7 @@ public class TemplateMessage extends ContentMessage {
                     searchable = field.getBoolean("find");
                     required = field.getBoolean("required");
                     maxsize = field.getJsonObject("sizefield").getString("value");
+                    description = field.getString("description");
 
 //                    System.out.println("FIELDNAME  " + fieldName);
 //                    System.out.println("SEARCHABLE  " + searchable);
@@ -169,7 +171,7 @@ public class TemplateMessage extends ContentMessage {
 
                 Fields f = new Fields(fieldId, tableId, fieldName,
                         "VARCHAR(50)", Integer.parseInt(maxsize),
-                        (short) ((searchable) ? 1 : 0), (short) ((required) ? 1 : 0));
+                        (short) ((searchable) ? 1 : 0), (short) ((required) ? 1 : 0), description);
 
                 table.addField(f);
             }

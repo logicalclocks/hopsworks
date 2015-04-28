@@ -3,6 +3,8 @@ package se.kth.meta.wscomm;
 
 import se.kth.meta.exception.ApplicationException;
 import java.io.StringReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.websocket.DecodeException;
@@ -16,6 +18,8 @@ import se.kth.meta.wscomm.message.Message;
  */
 public class MessageDecoder implements Decoder.Text<Message> {
 
+    private static final Logger logger = Logger.getLogger(MessageDecoder.class.getName());
+    
     @Override
     public Message decode(String textMessage) throws DecodeException {
 
@@ -27,7 +31,7 @@ public class MessageDecoder implements Decoder.Text<Message> {
             msg = helper.getMessage();
             msg.init(obj);
         } catch (ApplicationException e) {
-            System.err.println("MessageDecoder.java: " + e.getMessage());
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
         return msg;
     }

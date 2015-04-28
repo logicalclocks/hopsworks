@@ -18,8 +18,7 @@ import javax.json.JsonObject;
  */
 public class FieldsMessage extends ContentMessage {
 
-    private static final Logger logger = Logger.getLogger(
-            FieldsMessage.class.getName());
+    private static final Logger logger = Logger.getLogger(FieldsMessage.class.getName());
 
     private final String TYPE = "FieldsMessage";
     private String sender;
@@ -81,7 +80,7 @@ public class FieldsMessage extends ContentMessage {
         boolean forceDelete = false;
         try {
             forceDelete = obj.getBoolean("forceDelete");
-            System.err.println("FORCE DELETE ON THE FIELD " + forceDelete);
+            logger.log(Level.SEVERE, "FORCE DELETE ON THE FIELD {0}", forceDelete);
         } catch (NullPointerException e) {
         }
         try {
@@ -93,9 +92,11 @@ public class FieldsMessage extends ContentMessage {
         }
         boolean searchable = obj.getBoolean("searchable");
         boolean required = obj.getBoolean("required");
-
+        String description = obj.getString("description");
+        
         Fields field = new Fields(fieldId, tableId, name, type,
-                Integer.parseInt(maxsize), (short) ((searchable) ? 1 : 0), (short) ((required) ? 1 : 0));
+                Integer.parseInt(maxsize), (short) ((searchable) ? 1 : 0), 
+                (short) ((required) ? 1 : 0), description);
         field.setForceDelete(forceDelete);
 
         Tables table = new Tables(tableId, tableName);
