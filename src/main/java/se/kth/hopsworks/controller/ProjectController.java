@@ -93,7 +93,7 @@ public class ProjectController {
       studyFacade.flushEm();//flushing it to get study id
       //Add the activity information     
       logActivity(ActivityFacade.NEW_STUDY,
-            ActivityFacade.FLAG_STUDY, user, study);
+              ActivityFacade.FLAG_STUDY, user, study);
       //update role information in study
       addStudyMaster(study.getId(), user.getEmail());
       logger.log(Level.FINE, "{0} - study created successfully.", study.
@@ -187,6 +187,7 @@ public class ProjectController {
    * @return a list of user names that could not be added to the project team
    * list.
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<String> addMembers(Study study, String email,
           List<StudyTeam> studyTeams) {
     List<String> failedList = new ArrayList<>();
@@ -202,14 +203,14 @@ public class ProjectController {
                   new Object[]{studyTeam.getStudyTeamPK().getTeamMember(),
                     study.getName()});
 
-          logActivity(ActivityFacade.NEW_MEMBER,
-            ActivityFacade.FLAG_STUDY, user, study);
+          logActivity(ActivityFacade.NEW_MEMBER + studyTeam.
+                  getStudyTeamPK().getTeamMember(),
+                  ActivityFacade.FLAG_STUDY, user, study);
         }
       } catch (EJBException ejb) {
         failedList.add(studyTeam.getStudyTeamPK().getTeamMember());
-        logger.log(Level.SEVERE, "Adding  team member {0} to study failed",
+        logger.log(Level.SEVERE, "Adding  team member {0} to member failed",
                 studyTeam.getStudyTeamPK().getTeamMember());
-        return null;
       }
     }
     return failedList;
