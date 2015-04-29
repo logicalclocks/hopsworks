@@ -8,23 +8,26 @@ angular.module('hopsWorksApp')
       self.projects = [];
 
       // Load all projects
-      ProjectService.query().$promise.then(
-        function (success) {
-          self.projects = success;
-            console.log(self.projects);
-        }, function (error) {
-          console.log('Error: ' + error);
-        }
-      );
+      var loadProjects = function (){
+          ProjectService.query().$promise.then(
+              function (success) {
+                  self.projects = success;
+                  console.log(self.projects);
+              }, function (error) {
+                  console.log('Error: ' + error);
+              }
+          );
+      }
+
+      loadProjects();
 
       // Create a new project
       self.newProject = function () {
         ModalService.createProject('lg', 'New project', '').then(
-          function (success) {
-            self.projects = ProjectService.query();
-            growl.success("Successfully created project: " + success.name, {title: 'Success', ttl: 5000});
+          function () {
+              loadProjects();
           }, function () {
-            growl.info("Closed project without saving.", {title: 'Info', ttl: 5000});
+                growl.info("Closed project without saving.", {title: 'Info', ttl: 5000});
           });
       };
 

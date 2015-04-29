@@ -75,10 +75,19 @@ angular.module('hopsWorksApp')
         ProjectService.save($scope.newProject).$promise.then(
           function (success) {
               console.log(success)
-              growl.success(success.data.successMessage , {title: 'Success', ttl: 5000});
+              growl.success(success.successMessage , {title: 'Success', ttl: 15000});
+              if (success.errorMsg){
+                  growl.warning(success.errorMsg, {title: 'Error', ttl: 15000});
+              }
+              if(success.fieldErrors.length > 0) {
+                  success.fieldErrors.forEach(function(entry) {
+                      growl.warning(entry + ' could not be added', {title: 'Error', ttl: 15000});
+                  });
+
+              }
             $modalInstance.close($scope.newProject);
           }, function (error) {
-                growl.success(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
             console.log('Error: ' + error)
           }
         );
