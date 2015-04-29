@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('ProjectCreatorCtrl', ['$modalInstance', '$scope', 'ProjectService', 'UserService',
-    function ($modalInstance, $scope, ProjectService, UserService) {
+  .controller('ProjectCreatorCtrl', ['$modalInstance', '$scope', 'ProjectService', 'UserService', 'growl',
+    function ($modalInstance, $scope, ProjectService, UserService, growl) {
 
       var self = this;
 
@@ -12,7 +12,7 @@ angular.module('hopsWorksApp')
       self.projectMembers = [];
       self.projectTeam = [];
       // We could instead implement a service to get all the available types but this will do it for now
-      self.projectTypes = ['CUNEIFORM','SAMPLES','STUDY_INFO', 'SPARK', 'ADAM', 'MAPREDUCE', 'YARN', 'Zeppelin'];
+      self.projectTypes = ['CUNEIFORM','SAMPLES','STUDY_INFO', 'SPARK', 'ADAM', 'MAPREDUCE', 'YARN', 'ZEPPELIN'];
 
 
 
@@ -32,7 +32,7 @@ angular.module('hopsWorksApp')
 
       $scope.$watch('projectCreatorCtrl.card.selected', function (selected) {
         var studyTeamPK = {'name':"", 'teamMember':""};
-        var studyTeam = {'studyTeamPK': studyTeamPK, 'teamRole':"Researcher"};
+        var studyTeam = {'studyTeamPK': studyTeamPK};
         if (selected !== undefined) {
             studyTeamPK.name= self.projectName;
             studyTeamPK.teamMember=selected.email;
@@ -74,8 +74,11 @@ angular.module('hopsWorksApp')
 
         ProjectService.save($scope.newProject).$promise.then(
           function (success) {
+              console.log(success)
+              growl.success(success.data.successMessage , {title: 'Success', ttl: 5000});
             $modalInstance.close($scope.newProject);
           }, function (error) {
+                growl.success(error.data.errorMsg, {title: 'Error', ttl: 5000});
             console.log('Error: ' + error)
           }
         );

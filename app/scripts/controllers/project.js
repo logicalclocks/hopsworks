@@ -1,11 +1,13 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams', 'growl', 'ProjectService', 'ModalService',
-    function ($scope, $modalStack, $location, $routeParams, growl, ProjectService, ModalService) {
+  .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams'
+                            , 'growl', 'ProjectService', 'ModalService','ActivityService',
+    function ($scope, $modalStack, $location, $routeParams, growl, ProjectService, ModalService, ActivityService) {
 
       var self = this;
       self.currentProject = [];
+      self.activities = [];
 
       self.card = {};
       self.cards = [];
@@ -14,14 +16,14 @@ angular.module('hopsWorksApp')
       // We could instead implement a service to get all the available types but this will do it for now
       self.projectTypes = ['CUNEIFORM', 'SPARK', 'ADAM', 'MAPREDUCE', 'ZEPPELIN'];
       self.selectionProjectTypes = [];
+      self.pId = $routeParams.projectID;
 
-
-      ProjectService.get({}, {'id': $routeParams.projectID}).$promise.then(
+      ProjectService.get({}, {'id': self.pId}).$promise.then(
         function (success) {
           self.currentProject = success;
-
-          self.currentProject.projectTypeCollection.forEach(function(entry) {
-            self.selectionProjectTypes.push(entry.type);
+          self.projectMembers = self.currentProject.projectTeam;
+          self.currentProject.services.forEach(function(entry) {
+            self.selectionProjectTypes.push(entry);
           });
 
         }, function (error) {
@@ -29,6 +31,17 @@ angular.module('hopsWorksApp')
         }
       );
 
+      ActivityService.getByProjectId(self.pId).then(function(success){
+          self.activities =success.data;
+          console.log(self.activities);
+          self.pageSize = 10;
+          self.totalPages = Math.floor(self.activities.length / self.pageSize);
+          self.totalItems = self.activities.length;
+      }, function(error){
+
+      });
+
+      self.currentPage = 1;
 
       self.exists = function (item) {
         return self.selectionProjectTypes.indexOf(item) > -1;
@@ -81,15 +94,6 @@ angular.module('hopsWorksApp')
 
 
       $scope.showHamburger = $location.path().indexOf("project") > -1;
-
-        self.items = [];
-        for (var i=0; i < 40; i++){
-            self.items.push(i);
-        };
-
-
-
-
 
       self.goToDatasets = function() {
         $location.path($location.path() + '/datasets');

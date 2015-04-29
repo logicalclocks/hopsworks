@@ -14,18 +14,18 @@
                         <div class="time-header error" ng-if="historyObject.flag == 'lastweek'">Last week</div>
                         <div class="time-header error" ng-if="historyObject.flag == 'thisweek'">This week</div>
                         <div class="time-header completed" ng-if="historyObject.flag == 'yesterday'">Yesterday</div>
-                        <div class="time-header info" ng-if="historyObject.flag == 'today'" ng-model="">Today</div>
+                        <div class="time-header info" ng-if="historyObject.flag == 'today'">Today</div>
 
                            <div class="right">
                                 <div class="r-arrow"></div>
                                 <div class="about-task">
-                                    <div class="header">{{historyObject.projectID.name}}
-                                        <small class="muted">Last {{historyObject.op | lowercase}} {{historyObject.datestamp |
+                                    <div class="header">{{historyObject.study.name}}
+                                        <small class="muted">{{historyObject.timestamp |
                                             date:'medium'}}
                                         </small>
                                     </div>
                                     <p class="no-margin">
-                                        {{historyObject.projectID.description}}
+                                        {{historyObject.user.fname}} {{historyObject.activity}}
                                     </p>
                                 </div>
                             </div>
@@ -87,16 +87,15 @@
         </span>
             </div>
 
-
-            <a href="#/project/{{project.id}}" class="list-group-item"
+            <a href="#/project/{{project.study.id}}" class="list-group-item"
                ng-repeat="project in homeCtrl.projects | filter: searchProject:false">
-                <div ng-if="project.status">
+                <div ng-if="project.teamRole =='Researcher' ">
                     <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-lock fa-2 pull-left"/>
                 </div>
-                <div ng-if="!project.status">
+                <div ng-if="project.teamRole =='Master'">
                     <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-unlock fa-2 pull-left"/>
                 </div>
-                {{project.name}}
+                {{project.study.name}}
             </a>
         </div>
 
