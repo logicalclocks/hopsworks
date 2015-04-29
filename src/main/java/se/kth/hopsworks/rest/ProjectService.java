@@ -98,14 +98,29 @@ public class ProjectService {
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response updateProject(
           ProjectDTO projectDTO,
-          @PathParam("id") String id,
+          @PathParam("id") Integer id,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
+    System.out.println(projectDTO);
+
     JsonResponse json = new JsonResponse();
 
+    System.out.println("projectDTO.getServices(): " + projectDTO.getServices());
+    List<StudyServiceEnum> studyServices = new ArrayList<>();
+    for (String s : projectDTO.getServices()) {
+      StudyServiceEnum se = StudyServiceEnum.valueOf(s.toUpperCase());
+      se.toString();
+      studyServices.add(se);
+    }
+
+    Study study = projectController.findStudyById(id);
+
+    //add the services for the project
+    projectController.addServices(study, studyServices);
+
     return noCacheResponse.getNoCacheResponseBuilder(
-            Response.Status.NOT_IMPLEMENTED).entity(json).build();
+            Response.Status.CREATED).entity(json).build();
   }
 
   @POST
@@ -147,15 +162,18 @@ public class ProjectService {
     } catch (IllegalArgumentException iex) {
       Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
               ResponseMessages.PROJECT_SERVICE_NOT_FOUND, iex);
-      json.setErrorMsg(ResponseMessages.PROJECT_SERVICE_NOT_FOUND +"\n"+ json.getErrorMsg());
+      json.setErrorMsg(ResponseMessages.PROJECT_SERVICE_NOT_FOUND + "\n" + json.
+              getErrorMsg());
     } catch (EJBException ex) {
       Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
               ResponseMessages.PROJECT_INODE_NOT_CREATED, ex);
-      json.setErrorMsg(ResponseMessages.PROJECT_INODE_NOT_CREATED +"\n"+ json.getErrorMsg());
+      json.setErrorMsg(ResponseMessages.PROJECT_INODE_NOT_CREATED + "\n" + json.
+              getErrorMsg());
     }
 
     json.setStatus("201");// Created  
-    json.setSuccessMessage(ResponseMessages.PROJECT_CREATED +"\n"+ json.getErrorMsg());
+    json.setSuccessMessage(ResponseMessages.PROJECT_CREATED + "\n" + json.
+            getErrorMsg());
     if (failedMembers != null) {
       json.setFieldErrors(failedMembers);
     }

@@ -6,42 +6,39 @@
 package se.kth.hopsworks.user.model;
 
 /**
-  * @author André<amore@kth.se>
+ * @author André<amore@kth.se>
  * @author Ermias<ermiasg@kth.se>
  */
 public enum SecurityQuestions {
 
-    HISTORY("Who is your favorite historical figure?"),
-    TEACHER("What is the name of your favorite teacher?"),
-    PHONE("What is your first phone number?"),
-    FRIEND("What is the name of your favorite childhood friend?"),
-    FIRST("What was the make and model of your first car?"),
-    EDUCATION("What school did you attend for sixth grade?"),
-    WORK("In what town was your first job?");
+  HISTORY("Who is your favorite historical figure?"),
+  TEACHER("What is the name of your favorite teacher?"),
+  PHONE("What is your first phone number?"),
+  FRIEND("What is the name of your favorite childhood friend?");
 
-    private final String value;
+  private final String value;
 
-    private SecurityQuestions(String value) {
-        this.value = value;
-    }
+  private SecurityQuestions(String value) {
+    this.value = value;
+  }
 
-    public String getValue() {
-        return value;
-    }
+  public String getValue() {
+    return value;
+  }
 
-    public static SecurityQuestions getQuestion(String text) {
-        if (text != null) {
-            for (SecurityQuestions b : SecurityQuestions.values()) {
-                if (text.equalsIgnoreCase(b.value)) {
-                    return b;
-                }
-            }
+  public static SecurityQuestions getQuestion(String text) {
+    if (text != null) {
+      for (SecurityQuestions b : SecurityQuestions.values()) {
+        if (text.equalsIgnoreCase(b.value)) {
+          return b;
         }
-        return null;
+      }
     }
+    return null;
+  }
 
-    @Override
-    public String toString() {
-        return value;
-    }
+  @Override
+  public String toString() {
+    return value;
+  }
 }

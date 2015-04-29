@@ -107,6 +107,22 @@ public class ProjectController {
     }
 
   }
+  
+  /**
+   *
+   * @param id study id
+   * @return Study
+   */
+  public Study findStudyById(Integer id) throws AppException {
+    
+    Study study = studyFacade.find(id);
+     if( study != null){
+       return study;
+     } else {
+     throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              ResponseMessages.PROJECT_NOT_FOUND);
+     }
+  }
 
   public void addServices(Study study, List<StudyServiceEnum> services) {
     //Add the desired services
