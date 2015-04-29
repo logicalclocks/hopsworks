@@ -35,6 +35,10 @@ public class StudyFacade extends AbstractFacade<Study> {
             Study.class);
     return query.getResultList();
   }
+  
+  public Study find(Integer id){
+    return em.find(Study.class, id);
+  }
 
   /**
    * Find all the studies for which the given user is owner. This implies that
@@ -195,6 +199,10 @@ public class StudyFacade extends AbstractFacade<Study> {
     em.persist(study);
   }
   
+  public void flushEm(){
+    em.flush();
+  }
+  
   /**
    * Mark the study <i>study</i> as deleted.
    * @param study 
@@ -215,6 +223,18 @@ public class StudyFacade extends AbstractFacade<Study> {
     return !query.getResultList().isEmpty();
   }
 
+  /**
+   * Check if a study with this name already exists for a user.
+   * @param name
+   * @param owner
+   * @return 
+   */
+  public boolean studyExistsForOwner(String name, User owner) {
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByOwnerAndName",Study.class);
+    query.setParameter("owner", owner).setParameter("name", name);
+    return !query.getResultList().isEmpty();
+  }
+  
   public void archiveStudy(String studyname) {
     Study study = findByName(studyname);
     if (study != null) {

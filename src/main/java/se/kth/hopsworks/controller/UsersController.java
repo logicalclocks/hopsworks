@@ -34,6 +34,9 @@ import se.kth.hopsworks.user.model.Users;
  * @author Ermias<ermiasg@kth.se>
  */
 @Stateless
+//the operations in this method does not need any transaction
+//the acctual persisting will in the facades transaction.
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class UsersController {
     @EJB
     private UserFacade userBean;
@@ -44,7 +47,6 @@ public class UsersController {
     @EJB
     private BbcGroupFacade groupBean;
     
-    @TransactionAttribute(TransactionAttributeType.NEVER)
     public void registerUser(UserDTO newUser) throws AppException{
         if (userValidator.isValidEmail(newUser.getEmail())
                 && userValidator.isValidPassword(newUser.getChosenPassword(),
@@ -77,11 +79,10 @@ public class UsersController {
             user.setSecurityAnswer(DigestUtils.sha256Hex(newUser.getSecurityAnswer()));
             user.setBbcGroupCollection(groups);
 
-            userBean.persist(user);// this would use the clients transaction which is committed after save() has finished
+            userBean.persist(user);
         }
     }
     
-    @TransactionAttribute(TransactionAttributeType.NEVER)
     public void recoverPassword(String email, String securityQuestion, String securityAnswer) throws AppException {
         if (userValidator.isValidEmail(email) && 
             userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
@@ -112,7 +113,6 @@ public class UsersController {
         }
     }
     
-    @TransactionAttribute(TransactionAttributeType.NEVER)
     public void changePassword(String email, String oldPassword, String newPassword, String confirmedPassword) throws AppException {
         Users user = userBean.findByEmail(email);
 
@@ -130,7 +130,6 @@ public class UsersController {
         }
     }
     
-    @TransactionAttribute(TransactionAttributeType.NEVER)
     public void changeSecQA(String email, String oldPassword, String securityQuestion, String securityAnswer) throws AppException {
         Users user = userBean.findByEmail(email);
 
@@ -150,7 +149,6 @@ public class UsersController {
         }
     }
     
-    @TransactionAttribute(TransactionAttributeType.NEVER)
     public UserDTO updateProfile(String email, String firstName, String lastName, String telephoneNum) throws AppException {
         Users user = userBean.findByEmail(email);
 

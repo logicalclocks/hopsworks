@@ -15,56 +15,67 @@ import se.kth.bbc.study.StudyRoleTypes;
  */
 @XmlRootElement
 public class ProjectTeamDTO {
-    private String projectName;
-    private String userName;
-    private StudyRoleTypes role;
-    private Date added;
 
-    public ProjectTeamDTO() {
-    }
+  private Integer projectId;
+  private String projectName;
+  private String userName;
+  private StudyRoleTypes role;
+  private Date added;
 
-    public ProjectTeamDTO(String userName, StudyRoleTypes role) {
-        this.userName = userName;
-        this.role = role;
-    }
+  public ProjectTeamDTO() {
+  }
 
-    public ProjectTeamDTO(String projectName, String userName, StudyRoleTypes role) {
-        this.projectName = projectName;
-        this.userName = userName;
-        this.role = role;
-    }
+  public ProjectTeamDTO(Integer projectId, String userName, StudyRoleTypes role) {
+    this.userName = userName;
+    this.role = role;
+  }
 
-    public String getProjectName() {
-        return projectName;
-    }
+  public ProjectTeamDTO(Integer projectId, String projectName, String userName,
+          StudyRoleTypes role) {
+    this.projectId = projectId;
+    this.projectName = projectName;
+    this.userName = userName;
+    this.role = role;
+  }
 
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
-    }
+  public Integer getProjectId() {
+    return projectId;
+  }
 
-    public String getUserName() {
-        return userName;
-    }
+  public void setProjectId(Integer projectId) {
+    this.projectId = projectId;
+  }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
+  public String getProjectName() {
+    return projectName;
+  }
 
-    public StudyRoleTypes getRole() {
-        return role;
-    }
+  public void setProjectName(String projectName) {
+    this.projectName = projectName;
+  }
 
-    public void setRole(StudyRoleTypes role) {
-        this.role = role;
-    }
+  public String getUserName() {
+    return userName;
+  }
 
-    public Date getAdded() {
-        return added;
-    }
+  public void setUserName(String userName) {
+    this.userName = userName;
+  }
 
-    public void setAdded(Date added) {
-        this.added = added;
-    }
-    
-    
+  public StudyRoleTypes getRole() {
+    return role;
+  }
+
+  public void setRole(StudyRoleTypes role) {
+    this.role = role;
+  }
+
+  public Date getAdded() {
+    return added;
+  }
+
+  public void setAdded(Date added) {
+    this.added = added;
+  }
+
 }

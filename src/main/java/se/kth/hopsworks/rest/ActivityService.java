@@ -9,6 +9,8 @@ import java.util.List;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -20,11 +22,13 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.bbc.activity.ActivityController;
-import se.kth.bbc.activity.ActivityDetail;
+import se.kth.bbc.activity.Activity;
+import se.kth.bbc.activity.ActivityFacade;
+import se.kth.bbc.security.ua.UserManager;
+import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.study.Study;
+import se.kth.bbc.study.StudyFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.user.model.Users;
-import se.kth.hopsworks.users.UserFacade;
 
 /**
  * @author André<amore@kth.se>
@@ -34,50 +38,83 @@ import se.kth.hopsworks.users.UserFacade;
 @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class ActivityService {
-    @EJB
-    private ActivityController activityBean;
-    @EJB
-    private UserFacade userBean;
-    @EJB
-    private NoCacheResponse noCacheResponse;
-    
-    
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response findAllByUser(@Context SecurityContext sc, @Context HttpServletRequest req) {
-        Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
-        List<ActivityDetail> activityDetails = activityBean.activityDetailOnUser(user.getEmail());
-        GenericEntity<List<ActivityDetail>> projectActivities = new GenericEntity<List<ActivityDetail>>(activityDetails) {
-        };
-        
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectActivities).build();
-    }
-    
-    @GET
-    @Path("/query")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response findPaginatedByUser(@QueryParam("from") int from,
-		                        @QueryParam("to") int to,
-                                        @Context SecurityContext sc, 
-                                        @Context HttpServletRequest req) {
-        Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
-        List<ActivityDetail> activityDetails = activityBean.getPaginatedActivityDetailForUser(from, to, user.getEmail());
-        GenericEntity<List<ActivityDetail>> projectActivities = new GenericEntity<List<ActivityDetail>>(activityDetails) {
-        };
-        
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectActivities).build();
-    }
-    
-    @GET
-    @Path("{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-    public Response findAllByProject(@PathParam("id") String id, @Context SecurityContext sc, @Context HttpServletRequest req) {             
-        List<ActivityDetail> activityDetails = activityBean.activityDetailOnStudy(id);
-        GenericEntity<List<ActivityDetail>> projectActivities = new GenericEntity<List<ActivityDetail>>(activityDetails) {
-        };
-        
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectActivities).build();
-    }
+
+  @EJB
+  private ActivityFacade activityBean;
+  @EJB
+  private UserManager userBean;
+  @EJB
+  private StudyFacade studyFacade;
+  @EJB
+  private NoCacheResponse noCacheResponse;
+
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response findAllByUser(@Context SecurityContext sc,
+          @Context HttpServletRequest req) {
+    User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    List<Activity> activityDetails = activityBean.getAllActivityByUser(user);
+    GenericEntity<List<Activity>> projectActivities
+            = new GenericEntity<List<Activity>>(activityDetails) {
+            };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            projectActivities).build();
+  }
+
+  @GET
+  @Path("/query")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response findPaginatedByUser(@QueryParam("from") int from,
+          @QueryParam("to") int to,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) {
+    User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
+    List<Activity> activityDetails = activityBean.
+            getPaginatedActivityByUser(from, to, user);
+    GenericEntity<List<Activity>> projectActivities
+            = new GenericEntity<List<Activity>>(activityDetails) {
+            };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            projectActivities).build();
+  }
+
+  @GET
+  @Path("{id}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response findAllByProject(@PathParam("id") Integer id,
+          @Context SecurityContext sc, @Context HttpServletRequest req) {
+    Study study = studyFacade.find(id);
+    List<Activity> activityDetails = activityBean.
+            getAllActivityOnStudy(study);
+    GenericEntity<List<Activity>> projectActivities
+            = new GenericEntity<List<Activity>>(activityDetails) {
+            };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            projectActivities).build();
+  }
+
+  @GET
+  @Path("{id}/query")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response findPaginatedByProject(@PathParam("id") Integer id,
+          @QueryParam("from") int from,
+          @QueryParam("to") int to,
+          @Context SecurityContext sc, @Context HttpServletRequest req) {
+    Study study = studyFacade.find(id);
+    List<Activity> activityDetails = activityBean.
+            getPaginatedActivityForStudy(from, to, study);
+    GenericEntity<List<Activity>> projectActivities
+            = new GenericEntity<List<Activity>>(activityDetails) {
+            };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            projectActivities).build();
+  }
 }
