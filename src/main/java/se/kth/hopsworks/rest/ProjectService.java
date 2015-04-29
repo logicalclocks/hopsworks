@@ -28,14 +28,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.study.Study;
-import se.kth.bbc.study.StudyFacade;
+import se.kth.bbc.study.StudyTeam;
 import se.kth.bbc.study.services.StudyServiceEnum;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ProjectDTO;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.users.UserFacade;
-import se.kth.hopsworks.user.model.Users;
 
 /**
  * @author André<amore@kth.se>
@@ -45,142 +44,154 @@ import se.kth.hopsworks.user.model.Users;
 @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectService {
 
-    @EJB
-    private StudyFacade projectBean;
-    @EJB
-    private ProjectController projectController;
-    @EJB
-    private UserFacade userBean;
-    @EJB
-    private NoCacheResponse noCacheResponse;
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private UserFacade userBean;
+  @EJB
+  private NoCacheResponse noCacheResponse;
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.ALL})
-    public Response findAllByUser(@Context SecurityContext sc, @Context HttpServletRequest req) {
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response findAllByUser(@Context SecurityContext sc,
+          @Context HttpServletRequest req) {
 
-        // Get the user according to current session and then get all its projects
-        Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
-        List<Study> list = projectBean.findByUser(user.getEmail());
-        GenericEntity<List<Study>> projects = new GenericEntity<List<Study>>(list) {
-        };
+    // Get the user according to current session and then get all its projects
+    String eamil = sc.getUserPrincipal().getName();
+    List<StudyTeam> list = projectController.findStudyByUser(eamil);
+    GenericEntity<List<StudyTeam>> projects
+            = new GenericEntity<List<StudyTeam>>(list) {
+            };
 
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projects).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            projects).build();
+  }
+
+  @GET
+  @Path("{id}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response findByProjectID(
+          @PathParam("id") Integer id,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    // Get a specific project based on the id, Annotated so that 
+    // only the user with the allowed role is able to see it 
+    ProjectDTO proj = projectController.getStudyByID(id);
+
+    GenericEntity<ProjectDTO> projs = new GenericEntity<ProjectDTO>(proj) {
+    };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            proj).build();
+  }
+
+  @PUT
+  @Path("{id}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response updateProject(
+          ProjectDTO projectDTO,
+          @PathParam("id") String id,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    JsonResponse json = new JsonResponse();
+
+    return noCacheResponse.getNoCacheResponseBuilder(
+            Response.Status.NOT_IMPLEMENTED).entity(json).build();
+  }
+
+  @POST
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.ALL})
+  public Response createProject(
+          ProjectDTO projectDTO,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+
+    JsonResponse json = new JsonResponse();
+    List<String> failedMembers = null;
+
+    Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+            projectDTO.toString());
+    String owner = sc.getUserPrincipal().getName();
+    try {
+      List<StudyServiceEnum> studyServices = new ArrayList<>();
+      for (String s : projectDTO.getServices()) {
+        StudyServiceEnum se = StudyServiceEnum.valueOf(s);
+        se.toString();
+        studyServices.add(se);
+      }
+      projectDTO.setOwner(owner);
+      projectDTO.setCreated(new Date());
+      //save the project
+      Study study = projectController.createStudy(projectDTO.getProjectName(),
+              owner);
+      //add the services for the project
+      projectController.addServices(study, studyServices);
+      //add members of the project
+      failedMembers = projectController.addMembers(study, owner, projectDTO.
+              getProjectTeam());
+    } catch (IOException ex) {
+      Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+              ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);
+      json.setErrorMsg(ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
+    } catch (IllegalArgumentException iex) {
+      Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+              ResponseMessages.PROJECT_SERVICE_NOT_FOUND, iex);
+      json.setErrorMsg(ResponseMessages.PROJECT_SERVICE_NOT_FOUND +"\n"+ json.getErrorMsg());
+    } catch (EJBException ex) {
+      Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+              ResponseMessages.PROJECT_INODE_NOT_CREATED, ex);
+      json.setErrorMsg(ResponseMessages.PROJECT_INODE_NOT_CREATED +"\n"+ json.getErrorMsg());
     }
 
-    @GET
-    @Path("{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-    public Response findByProjectID(
-            @PathParam("id") String id,
-            @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException {
+    json.setStatus("201");// Created  
+    json.setSuccessMessage(ResponseMessages.PROJECT_CREATED +"\n"+ json.getErrorMsg());
+    if (failedMembers != null) {
+      json.setFieldErrors(failedMembers);
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
+            entity(json).build();
+  }
 
-        // Get a specific project based on the id, Annotated so that 
-        // only the user with the allowed role is able to see it 
-        ProjectDTO proj = projectController.getProjectByName(id);
-
-        GenericEntity<ProjectDTO> projs = new GenericEntity<ProjectDTO>(proj) {};
-        
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projs).build();
+  @DELETE
+  @Path("{id}/query")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response removeProjectAndFiles(
+          @PathParam("id") Integer id,
+          @QueryParam("wipeData") boolean wipeData,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    String user = sc.getUserPrincipal().getName();
+    JsonResponse json = new JsonResponse();
+    boolean success = !wipeData;
+    try {
+      success = projectController.removeByName(id, user, wipeData);
+    } catch (IOException ex) {
+      Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+              ResponseMessages.PROJECT_FOLDER_NOT_REMOVED, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
+    }
+    json.setStatus("OK");
+    if (success) {
+      json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED);
+    } else {
+      json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED_NOT_FOLDER);
     }
 
-    @PUT
-    @Path("{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-    @TransactionAttribute(TransactionAttributeType.NEVER)
-    public Response updateByProject(
-            Study updatedProject,
-            @PathParam("id") String id,
-            @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException {
-
-        JsonResponse json = new JsonResponse();
-        
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_IMPLEMENTED).entity(json).build();
-    }
-
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.ALL})
-    public Response createProject(
-            ProjectDTO projectDTO,
-            @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException {
-
-        JsonResponse json = new JsonResponse();
-
-        Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE, projectDTO.toString());
-        String owner = sc.getUserPrincipal().getName();
-        try {
-            List<StudyServiceEnum> studyServices = new ArrayList<>();
-            for(String s : projectDTO.getServices()){
-                StudyServiceEnum se = StudyServiceEnum.valueOf(s);
-                se.toString();
-                studyServices.add(se);
-            }
-            projectDTO.setOwner(owner);
-            projectDTO.setCreated(new Date());
-            projectController.createStudy(projectDTO.getProjectName(), owner, studyServices);
-            projectController.addMembers(projectDTO.getProjectName(), owner, projectDTO.getProjectTeam());
-        } catch (IOException ex) {
-            Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE, ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
-        } catch (IllegalStateException iex) {
-            Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE, "Error finding service", iex);
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
-        }catch (EJBException ex) {
-            Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE, "Error creating study Inode in DB.", ex);
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    ResponseMessages.PROJECT_INODE_NOT_CREATED);
-        }
-
-        List<String> failedMembers = projectController.addMembers(projectDTO.getProjectName(),
-                projectDTO.getOwner(), projectDTO.getProjectTeam());
-
-        json.setStatus("201");// Created  
-        json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
-        if (!failedMembers.isEmpty()) {
-            json.setFieldErrors(failedMembers);
-        }
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(json).build();
-    }
-
-    @DELETE
-    @Path("{id}/query")
-    @Produces(MediaType.APPLICATION_JSON)
-    @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-    public Response removeProjectAndFiles(
-            @PathParam("id") String id,
-            @QueryParam("wipeData") boolean wipeData,
-            @Context SecurityContext sc,
-            @Context HttpServletRequest req) throws AppException {
-        String user = sc.getUserPrincipal().getName();
-        JsonResponse json = new JsonResponse();
-        boolean success = !wipeData;
-        try {
-            success = projectController.removeByName(id, user, wipeData);
-        } catch (IOException ex) {
-            Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE, ResponseMessages.PROJECT_FOLDER_NOT_REMOVED, ex);
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
-        }
-        json.setStatus("OK");
-        if (success) {
-            json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED);
-        } else {
-            json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED_NOT_FOLDER);
-        }
-
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
+  }
 
 }

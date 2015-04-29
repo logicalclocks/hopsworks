@@ -13,11 +13,10 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
+import se.kth.bbc.study.Study;
 import se.kth.bbc.study.StudyFacade;
-import se.kth.bbc.study.StudyTeam;
 import se.kth.bbc.study.StudyTeamFacade;
 import se.kth.hopsworks.rest.JsonResponse;
-import se.kth.hopsworks.users.UserFacade;
 
 /**
  * @author André<amore@kth.se>
@@ -31,7 +30,10 @@ import se.kth.hopsworks.users.UserFacade;
 public class RequestAuthFilter implements ContainerRequestFilter {
 
     @EJB
-    private StudyTeamFacade projectTeamBean;
+    private StudyTeamFacade studyTeamBean;
+    
+    @EJB
+    private StudyFacade studyBean;
 
     @Context
     private ResourceInfo resourceInfo;
@@ -44,12 +46,13 @@ public class RequestAuthFilter implements ContainerRequestFilter {
         String path = requestContext.getUriInfo().getPath();
 
         Method method = resourceInfo.getResourceMethod();
-        log.log(Level.INFO, "Filtering request path: {0}", path);
+        
         String[] pathParts = path.split("/");
+        log.log(Level.INFO, "Filtering request path: {0}", pathParts[0]);
         //intercepted method must be a project operations on a specific project
         //with an id (/project/name/... or /activity/name/...). Project creation will have time stamp so
         //we do not need to sotre that here
-        if (pathParts.length > 2 && (pathParts[1].equalsIgnoreCase("project") || pathParts[0].equalsIgnoreCase("activity"))) {
+        if (pathParts.length > 1 && (pathParts[0].equalsIgnoreCase("project") || pathParts[0].equalsIgnoreCase("activity"))) {
 
             JsonResponse json = new JsonResponse();
 
@@ -74,14 +77,12 @@ public class RequestAuthFilter implements ContainerRequestFilter {
             //if the resource is only allowed for some roles check if the user have the requierd role for the resource.
             String userEmail = requestContext.getSecurityContext().getUserPrincipal().getName();
 
-            String projectname;
+            Integer projectId;
             String userRole = null;
-            projectname = pathParts[2];
-            StudyTeam projectTeam = projectTeamBean.findByPrimaryKey(projectname, userEmail);
+            projectId = Integer.valueOf(pathParts[1]);
+            Study study = studyBean.find(projectId);
 
-            if (projectTeam != null) {
-                userRole = projectTeam.getTeamRole();
-            }
+            userRole = studyTeamBean.findCurrentRole(study, userEmail);
 
             if (userRole == null || userRole.isEmpty()) {
                 log.log(Level.INFO, "Trying to access resource, but you dont have any role in this project");

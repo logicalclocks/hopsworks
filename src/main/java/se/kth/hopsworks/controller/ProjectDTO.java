@@ -10,7 +10,6 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.study.Study;
 import se.kth.bbc.study.StudyTeam;
-import se.kth.bbc.study.services.StudyServiceEnum;
 
 /**
  *
@@ -19,134 +18,142 @@ import se.kth.bbc.study.services.StudyServiceEnum;
 @XmlRootElement
 public class ProjectDTO {
 
-    private String projectName;
-    private String owner;
-    private String description;
-    private Date retentionPeriod;
-    private Date created;
-    private String ethicalStatus;
-    private boolean archived;
-    private List<String> services;
-    private List<StudyTeam> projectTeam;
+  private Integer projectId;
+  private String projectName;
+  private String owner;
+  private String description;
+  private Date retentionPeriod;
+  private Date created;
+  private String ethicalStatus;
+  private boolean archived;
+  private List<String> services;
+  private List<StudyTeam> projectTeam;
 
-    public ProjectDTO() {
-    }
+  public ProjectDTO() {
+  }
 
-    public ProjectDTO(String projectName, String owner) {
-        this.projectName = projectName;
-        this.owner = owner;
-    }
+  public ProjectDTO(Integer projectId, String projectName, String owner) {
+    this.projectId = projectId;
+    this.projectName = projectName;
+    this.owner = owner;
+  }
 
-    public ProjectDTO(Study study, List<String> services, List<StudyTeam> projectTeam) {
-        this.projectName = study.getName();
-        this.owner = study.getOwner().getEmail();
-        this.retentionPeriod = study.getRetentionPeriod();
-        this.created = study.getCreated();
-        this.ethicalStatus = study.getEthicalStatus();
-        this.archived = study.getArchived();
-        this.services = services;
-        this.projectTeam = projectTeam;
-    }
-    
-    
+  public ProjectDTO(Study study, List<String> services,
+          List<StudyTeam> projectTeam) {
+    this.projectId = study.getId();
+    this.projectName = study.getName();
+    this.owner = study.getOwner().getEmail();
+    this.retentionPeriod = study.getRetentionPeriod();
+    this.created = study.getCreated();
+    this.ethicalStatus = study.getEthicalStatus();
+    this.archived = study.getArchived();
+    this.services = services;
+    this.projectTeam = projectTeam;
+  }
 
-    public ProjectDTO(String projectName, String owner, 
-            Date retentionPeriod, Date created, 
-            String ethicalStatus, boolean archived, 
-            List<String> services, 
-            List<StudyTeam> projectTeam) {
-        this.projectName = projectName;
-        this.owner = owner;
-        this.retentionPeriod = retentionPeriod;
-        this.created = created;
-        this.ethicalStatus = ethicalStatus;
-        this.archived = archived;
-        this.services = services;
-        this.projectTeam = projectTeam;
-    }
-    
-    
+  public ProjectDTO(Integer projectId, String projectName, String owner,
+          Date retentionPeriod, Date created,
+          String ethicalStatus, boolean archived,
+          List<String> services,
+          List<StudyTeam> projectTeam) {
+    this.projectId = projectId;
+    this.projectName = projectName;
+    this.owner = owner;
+    this.retentionPeriod = retentionPeriod;
+    this.created = created;
+    this.ethicalStatus = ethicalStatus;
+    this.archived = archived;
+    this.services = services;
+    this.projectTeam = projectTeam;
+  }
 
-    
+  public Integer getProjectId() {
+    return projectId;
+  }
 
-    public String getProjectName() {
-        return projectName;
-    }
+  public void setProjectId(Integer projectId) {
+    this.projectId = projectId;
+  }
 
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
-    }
+  public String getProjectName() {
+    return projectName;
+  }
 
-    public String getOwner() {
-        return owner;
-    }
+  public void setProjectName(String projectName) {
+    this.projectName = projectName;
+  }
 
-    public void setOwner(String owner) {
-        this.owner = owner;
-    }
+  public String getOwner() {
+    return owner;
+  }
 
-    public Date getRetentionPeriod() {
-        return retentionPeriod;
-    }
+  public void setOwner(String owner) {
+    this.owner = owner;
+  }
 
-    public void setRetentionPeriod(Date retentionPeriod) {
-        this.retentionPeriod = retentionPeriod;
-    }
+  public Date getRetentionPeriod() {
+    return retentionPeriod;
+  }
 
-    public Date getCreated() {
-        return created;
-    }
+  public void setRetentionPeriod(Date retentionPeriod) {
+    this.retentionPeriod = retentionPeriod;
+  }
 
-    public void setCreated(Date created) {
-        this.created = created;
-    }
+  public Date getCreated() {
+    return created;
+  }
 
-    public String getEthicalStatus() {
-        return ethicalStatus;
-    }
+  public void setCreated(Date created) {
+    this.created = created;
+  }
 
-    public void setEthicalStatus(String ethicalStatus) {
-        this.ethicalStatus = ethicalStatus;
-    }
+  public String getEthicalStatus() {
+    return ethicalStatus;
+  }
 
-    public boolean isArchived() {
-        return archived;
-    }
+  public void setEthicalStatus(String ethicalStatus) {
+    this.ethicalStatus = ethicalStatus;
+  }
 
-    public void setArchived(boolean archived) {
-        this.archived = archived;
-    }
+  public boolean isArchived() {
+    return archived;
+  }
 
-    public List<String> getServices() {
-        return services;
-    }
+  public void setArchived(boolean archived) {
+    this.archived = archived;
+  }
 
-    public void setServices(List<String> services) {
-        this.services = services;
-    }
+  public List<String> getServices() {
+    return services;
+  }
 
-    public List<StudyTeam> getProjectTeam() {
-        return projectTeam;
-    }
+  public void setServices(List<String> services) {
+    this.services = services;
+  }
 
-    public void setProjectTeam(List<StudyTeam> projectTeams) {
-        this.projectTeam = projectTeams;
-    }
+  public List<StudyTeam> getProjectTeam() {
+    return projectTeam;
+  }
 
-    public String getDescription() {
-        return description;
-    }
+  public void setProjectTeam(List<StudyTeam> projectTeams) {
+    this.projectTeam = projectTeams;
+  }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+  public String getDescription() {
+    return description;
+  }
 
-    @Override
-    public String toString() {
-        return "ProjectDTO{" + "projectName=" + projectName + ", owner=" + owner + ", description=" + description + ", retentionPeriod=" + retentionPeriod + ", created=" + created + ", ethicalStatus=" + ethicalStatus + ", archived=" + archived + ", services=" + services + ", projectTeam=" + projectTeam + '}';
-    }
-    
-    
-    
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  @Override
+  public String toString() {
+    return "ProjectDTO{" + "projectName=" + projectName + ", owner=" + owner
+            + ", description=" + description + ", retentionPeriod="
+            + retentionPeriod + ", created=" + created + ", ethicalStatus="
+            + ethicalStatus + ", archived=" + archived + ", services="
+            + services + ", projectTeam=" + projectTeam + '}';
+  }
 
 }

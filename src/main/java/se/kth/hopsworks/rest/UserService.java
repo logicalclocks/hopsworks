@@ -33,6 +33,7 @@ import se.kth.hopsworks.users.UserFacade;
 @Path("/user")
 @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class UserService {
 
     @EJB
@@ -65,7 +66,6 @@ public class UserService {
     @GET
     @Path("profile")
     @Produces(MediaType.APPLICATION_JSON)
-    @TransactionAttribute(TransactionAttributeType.NEVER)
     public Response getUserProfile(@Context SecurityContext sc) throws AppException {
         Users user = userBean.findByEmail(sc.getUserPrincipal().getName());
 
@@ -95,7 +95,7 @@ public class UserService {
         json.setSuccessMessage(ResponseMessages.PROFILE_UPDATED);
         json.setData(userDTO);
 
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(userDTO).build();
     }
 
     @POST

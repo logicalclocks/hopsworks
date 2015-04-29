@@ -135,6 +135,39 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     q.setParameter("study", study);
     return q.getResultList();
   }
+  
+  /**
+   * Get all the activities performed on by user <i>user</i>.
+   * <p>
+   * @param user
+   * @return
+   */
+  public List<Activity> getAllActivityByUser(User user) {
+    TypedQuery<Activity> q = em.createNamedQuery(
+            "Activity.findByUser",Activity.class);
+    q.setParameter("user", user);
+    return q.getResultList();
+  }
+  
+  /**
+   * Get all the activities performed on by user <i>user</i>.but paginated.Items from
+   * <i>first</i> till
+   * <i>first+pageSize</i> are returned.
+   * <p>
+   * @param first
+   * @param pageSize
+   * @param user
+   * @return
+   */
+  public List<Activity> getPaginatedActivityByUser(int first,
+          int pageSize, User user) {
+    TypedQuery<Activity> q = em.createNamedQuery(
+            "Activity.findByUser",Activity.class);
+    q.setParameter("user", user);
+    q.setFirstResult(first);
+    q.setMaxResults(pageSize);
+    return q.getResultList();
+  }
 
   /**
    * Returns all activity, but paginated. Items from <i>first</i> till
