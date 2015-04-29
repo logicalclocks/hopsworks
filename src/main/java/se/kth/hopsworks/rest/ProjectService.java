@@ -50,8 +50,6 @@ public class ProjectService {
   @EJB
   private ProjectController projectController;
   @EJB
-  private UserFacade userBean;
-  @EJB
   private NoCacheResponse noCacheResponse;
 
   @GET
@@ -83,9 +81,6 @@ public class ProjectService {
     // Get a specific project based on the id, Annotated so that 
     // only the user with the allowed role is able to see it 
     ProjectDTO proj = projectController.getStudyByID(id);
-
-    GenericEntity<ProjectDTO> projs = new GenericEntity<ProjectDTO>(proj) {
-    };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             proj).build();
@@ -119,43 +114,53 @@ public class ProjectService {
 
     JsonResponse json = new JsonResponse();
     List<String> failedMembers = null;
+    Study study = null;
 
     Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
             projectDTO.toString());
     String owner = sc.getUserPrincipal().getName();
-    try {
-      List<StudyServiceEnum> studyServices = new ArrayList<>();
-      for (String s : projectDTO.getServices()) {
+    List<StudyServiceEnum> studyServices = new ArrayList<>();
+
+    for (String s : projectDTO.getServices()) {
+      try {
         StudyServiceEnum se = StudyServiceEnum.valueOf(s);
         se.toString();
         studyServices.add(se);
+      } catch (IllegalArgumentException iex) {
+        Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+                ResponseMessages.PROJECT_SERVICE_NOT_FOUND, iex);
+        json.setErrorMsg(s + ResponseMessages.PROJECT_SERVICE_NOT_FOUND + "\n "
+                + json.getErrorMsg());
       }
-      projectDTO.setOwner(owner);
-      projectDTO.setCreated(new Date());
+    }
+
+    projectDTO.setOwner(owner);
+    projectDTO.setCreated(new Date());
+    try {
       //save the project
-      Study study = projectController.createStudy(projectDTO.getProjectName(),
+      study = projectController.createStudy(projectDTO.getProjectName(),
               owner);
+    } catch (IOException ex) {
+      Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+              ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);
+      json.setErrorMsg(ResponseMessages.PROJECT_FOLDER_NOT_CREATED + "\n "
+              + json.getErrorMsg());
+    } catch (EJBException ex) {
+      Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+              ResponseMessages.PROJECT_INODE_NOT_CREATED, ex);
+      json.setErrorMsg(ResponseMessages.PROJECT_INODE_NOT_CREATED + "\n "
+              + json.getErrorMsg());
+    }
+    if (study != null) {
       //add the services for the project
       projectController.addServices(study, studyServices);
       //add members of the project
       failedMembers = projectController.addMembers(study, owner, projectDTO.
               getProjectTeam());
-    } catch (IOException ex) {
-      Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
-              ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);
-      json.setErrorMsg(ResponseMessages.PROJECT_FOLDER_NOT_CREATED);
-    } catch (IllegalArgumentException iex) {
-      Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
-              ResponseMessages.PROJECT_SERVICE_NOT_FOUND, iex);
-      json.setErrorMsg(ResponseMessages.PROJECT_SERVICE_NOT_FOUND +"\n"+ json.getErrorMsg());
-    } catch (EJBException ex) {
-      Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
-              ResponseMessages.PROJECT_INODE_NOT_CREATED, ex);
-      json.setErrorMsg(ResponseMessages.PROJECT_INODE_NOT_CREATED +"\n"+ json.getErrorMsg());
     }
 
     json.setStatus("201");// Created  
-    json.setSuccessMessage(ResponseMessages.PROJECT_CREATED +"\n"+ json.getErrorMsg());
+    json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
     if (failedMembers != null) {
       json.setFieldErrors(failedMembers);
     }
