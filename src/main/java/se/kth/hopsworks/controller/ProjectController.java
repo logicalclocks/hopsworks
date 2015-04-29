@@ -78,6 +78,7 @@ public class ProjectController {
   public Study createStudy(String newStudyName, String email) throws
           AppException, IOException {
     User user = userBean.getUserByEmail(email);
+    //if there is no project by the same name for this user
     if (!studyFacade.studyExistsForOwner(newStudyName, user)) {
       //Create a new study object
       Date now = new Date();
@@ -89,18 +90,10 @@ public class ProjectController {
 
       //Persist study object
       studyFacade.persistStudy(study);
-      studyFacade.flushEm();
-      logger.log(Level.FINE, " Study id -------------> {0}", study.getId());
-      //Add the activity information
-      Activity activity = new Activity();
-      activity.setActivity(ActivityFacade.NEW_STUDY);
-      activity.setFlag(ActivityFacade.FLAG_STUDY);
-      activity.setUser(user);
-      activity.setStudy(study);
-      activity.setTimestamp(now);
-
-      activityFacade.persistActivity(activity);
-
+      studyFacade.flushEm();//flushing it to get study id
+      //Add the activity information     
+      logActivity(ActivityFacade.NEW_STUDY,
+            ActivityFacade.FLAG_STUDY, user, study);
       //update role information in study
       addStudyMaster(study.getId(), user.getEmail());
       logger.log(Level.FINE, "{0} - study created successfully.", study.
@@ -171,16 +164,9 @@ public class ProjectController {
               ResponseMessages.PROJECT_NOT_FOUND);
     }
     studyFacade.remove(study);
-    Date now = new Date();
 
-    Activity activity = new Activity();
-    activity.setActivity(ActivityFacade.REMOVED_STUDY);
-    activity.setFlag(ActivityFacade.FLAG_STUDY);
-    activity.setStudy(study);
-    activity.setTimestamp(now);
-    activity.setUser(user);
-
-    activityFacade.persistActivity(activity);
+    logActivity(ActivityFacade.REMOVED_STUDY,
+            ActivityFacade.FLAG_STUDY, user, study);
 
     if (deleteFilesOnRemove) {
       String path = File.separator + Constants.DIR_ROOT + File.separator
@@ -216,15 +202,8 @@ public class ProjectController {
                   new Object[]{studyTeam.getStudyTeamPK().getTeamMember(),
                     study.getName()});
 
-          Activity activity = new Activity();
-          Date now = new Date();
-          activity.setActivity(ActivityFacade.NEW_MEMBER);
-          activity.setFlag(ActivityFacade.FLAG_STUDY);
-          activity.setStudy(study);
-          activity.setTimestamp(now);
-          activity.setUser(user);
-
-          activityFacade.persistActivity(activity);
+          logActivity(ActivityFacade.NEW_MEMBER,
+            ActivityFacade.FLAG_STUDY, user, study);
         }
       } catch (EJBException ejb) {
         failedList.add(studyTeam.getStudyTeamPK().getTeamMember());
@@ -280,15 +259,8 @@ public class ProjectController {
           String toRemoveEmail) {
     studyTeamFacade.removeStudyTeam(study, toRemoveEmail);
     User user = userBean.getUserByEmail(email);
-    Date now = new Date();
-    Activity activity = new Activity();
-    activity.setActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail);
-    activity.setFlag(ActivityFacade.FLAG_STUDY);
-    activity.setStudy(study);
-    activity.setTimestamp(now);
-    activity.setUser(user);
-
-    activityFacade.persistActivity(activity);
+    logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
+            ActivityFacade.FLAG_STUDY, user, study);
   }
 
   /**
@@ -300,5 +272,26 @@ public class ProjectController {
   public List<StudyTeam> findStudyByUser(String email) {
     User user = userBean.getUserByEmail(email);
     return studyTeamFacade.findByMember(user);
+  }
+
+  /**
+   * Logs activity
+   * <p>
+   * @param activityPerformed the description of the operation performed
+   * @param flag on what the operation was performed(FLAG_STUDY, FLAG_USER)
+   * @param performedBy the user that performed the operation
+   * @param performedOn the project the operation was performed on.
+   */
+  public void logActivity(String activityPerformed, String flag,
+          User performedBy, Study performedOn) {
+    Date now = new Date();
+    Activity activity = new Activity();
+    activity.setActivity(activityPerformed);
+    activity.setFlag(flag);
+    activity.setStudy(performedOn);
+    activity.setTimestamp(now);
+    activity.setUser(performedBy);
+
+    activityFacade.persistActivity(activity);
   }
 }
