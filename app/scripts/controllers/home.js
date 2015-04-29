@@ -11,6 +11,7 @@ angular.module('hopsWorksApp')
       ProjectService.query().$promise.then(
         function (success) {
           self.projects = success;
+            console.log(self.projects);
         }, function (error) {
           console.log('Error: ' + error);
         }
@@ -34,6 +35,7 @@ angular.module('hopsWorksApp')
         ActivityService.getByUser().then(
         function (success) {
           histories = success;
+            console.log(histories);
           var today = new Date();
           var day = today.getDate();
           var yesterday = new Date(new Date().setDate(day - 1));
@@ -53,8 +55,8 @@ angular.module('hopsWorksApp')
 
           var i = 0;
 
-          histories.data.slice().reverse().forEach(function (history) {
-            var historyDate = new Date(history.datestamp);
+          histories.data.slice().forEach(function (history) {
+            var historyDate = new Date(history.timestamp);
             historyDate.setHours(0, 0, 0, 0);
 
             if (+historyDate === +today) {

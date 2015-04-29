@@ -8,7 +8,7 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/activity');
             },
             getByProjectId: function (id) {
-                return $http.get('/api/activity/:id');
+                return $http.get('/api/activity/'+ id);
             }
         };
         return service;

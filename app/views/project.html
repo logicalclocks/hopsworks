@@ -14,15 +14,15 @@
 
           <li style="background: #1a1a1a;">
             <a class="text-center">
-              {{ projectCtrl.currentProject.name | limitTo: 17 }}{{projectCtrl.currentProject.name.length > 17
+              {{ projectCtrl.currentProject.projectName | limitTo: 17 }}{{projectCtrl.currentProject.projectName.length > 17
               ? '...' : ''}}
             </a>
           </li>
 
 
-          <li ng-repeat="typeObject in projectCtrl.currentProject.projectTypeCollection">
+          <li ng-repeat="typeObject in projectCtrl.selectionProjectTypes">
             <a href="">
-              {{typeObject.type}} <span class="sub_icon fa fa-globe fa-lg pull-right"></span>
+              {{typeObject}} <span class="sub_icon fa fa-globe fa-lg pull-right"></span>
             </a>
           </li>
 
@@ -54,13 +54,46 @@
 
     <section>
       <div class="content-wrapper">
-        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.name }} / Start</h3>
+        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName }} / Start</h3>
 
         <!-- Page Content -->
 
-        <ul class="" ng-repeat="i in projectCtrl.items">
-          <li><a style="text-indent: 10px; font-size:12px;" href="#"> {{i}}</a></li>
-        </ul>
+              <div class="widget-body">
+                  <div class="timeline clearfix">
+                      <div class="mid-line"></div>
+
+                      <div ng-repeat="activity in projectCtrl.activities | startFrom:(projectCtrl.currentPage-1) * projectCtrl.pageSize | limitTo:projectCtrl.pageSize">
+
+                          <div class="right">
+                              <div class="r-arrow"></div>
+                              <div class="about-task">
+                                  <div class="header">{{activity.user.fname }} {{activity.user.lname}} {{activity.activity}}
+                                      <small class="muted">On {{activity.timestamp |
+                                          date:'medium'}}
+                                      </small>
+                                  </div>
+                                  <p class="no-margin">
+                                      Project name: {{activity.study.name}} Owner: {{activity.study.owner.fname}}
+                                      Created on: {{activity.study.created | date:'medium'}}
+                                  </p>
+                              </div>
+                          </div>
+                      </div>
+
+                      <pagination ng-if="projectCtrl.totalPages > 10"
+                                  total-items="projectCtrl.totalItems"
+                                  ng-model="projectCtrl.currentPage"
+                                  max-size="projectCtrl.pageSize"
+                                  class="pagination-sm"
+                                  boundary-links="true"
+                                  rotate="false"
+                                  num-pages="projectCtrl.totalPages" >
+                      </pagination>
+
+
+
+                  </div>
+              </div>
 
         <!-- /#page-content-wrapper -->
       </div>
