@@ -30,24 +30,6 @@ angular.module('metaUI').controller('MetadataController',
                 $scope.returnnUrl = $routeParams.returnn;
                 $scope.inodeid = $routeParams.inodeid;
 
-//                console.log("ADMIN PARAMETER " + $routeParams.admin);
-//
-//                if (angular.isUndefined($routeParams.admin)) {
-//
-//                    if (angular.isUndefined($scope.fileName) ||
-//                            angular.isUndefined($scope.returnnUrl) || angular.isUndefined($scope.inodeid)) {
-//                        $location.path('/error');
-//                        return;
-//                    }
-//
-//                    console.log("broadcasting hide menus");
-//                    $rootScope.$broadcast('hideMenuItems');
-//                }
-//                else if (!angular.equals($routeParams.admin, 'qwerty')) {
-//                    $location.path('/error');
-//                    return;
-//                }
-
                 refresh();
                 $scope.sortOptions = {
                     //disable card movement completely
