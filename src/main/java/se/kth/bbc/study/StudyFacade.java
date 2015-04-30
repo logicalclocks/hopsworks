@@ -35,8 +35,8 @@ public class StudyFacade extends AbstractFacade<Study> {
             Study.class);
     return query.getResultList();
   }
-  
-  public Study find(Integer id){
+
+  public Study find(Integer id) {
     return em.find(Study.class, id);
   }
 
@@ -164,7 +164,8 @@ public class StudyFacade extends AbstractFacade<Study> {
    * @return
    */
   public List<Study> findAllMemberStudies(User user) {
-    TypedQuery<Study> query = em.createNamedQuery("StudyTeam.findAllMemberStudiesForUser",
+    TypedQuery<Study> query = em.createNamedQuery(
+            "StudyTeam.findAllMemberStudiesForUser",
             Study.class);
     query.setParameter("user", user);
     return query.getResultList();
@@ -177,7 +178,8 @@ public class StudyFacade extends AbstractFacade<Study> {
    * @return
    */
   public List<Study> findAllPersonalStudies(User user) {
-    TypedQuery<Study> query = em.createNamedQuery("Study.findByOwner",Study.class);
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByOwner",
+            Study.class);
     query.setParameter("owner", user);
     return query.getResultList();
   }
@@ -189,7 +191,8 @@ public class StudyFacade extends AbstractFacade<Study> {
    * @return
    */
   public List<Study> findAllJoinedStudies(User user) {
-    TypedQuery<Study> query = em.createNamedQuery("StudyTeam.findAllJoinedStudiesForUser",
+    TypedQuery<Study> query = em.createNamedQuery(
+            "StudyTeam.findAllJoinedStudiesForUser",
             Study.class);
     query.setParameter("user", user);
     return query.getResultList();
@@ -198,43 +201,57 @@ public class StudyFacade extends AbstractFacade<Study> {
   public void persistStudy(Study study) {
     em.persist(study);
   }
-  
-  public void flushEm(){
+
+  public void flushEm() {
     em.flush();
   }
-  
+
   /**
    * Mark the study <i>study</i> as deleted.
-   * @param study 
+   * <p>
+   * @param study
    */
-  public void removeStudy(Study study){
+  public void removeStudy(Study study) {
     study.setDeleted(Boolean.TRUE);
     em.merge(study);
   }
 
   /**
    * Check if a study with this name already exists.
+   * <p>
    * @param name
-   * @return 
+   * @return
    */
   public boolean studyExists(String name) {
-    TypedQuery<Study> query = em.createNamedQuery("Study.findByName",Study.class);
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByName",
+            Study.class);
     query.setParameter("name", name);
     return !query.getResultList().isEmpty();
   }
 
   /**
    * Check if a study with this name already exists for a user.
+   * <p>
    * @param name
    * @param owner
-   * @return 
+   * @return
    */
   public boolean studyExistsForOwner(String name, User owner) {
-    TypedQuery<Study> query = em.createNamedQuery("Study.findByOwnerAndName",Study.class);
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByOwnerAndName",
+            Study.class);
     query.setParameter("owner", owner).setParameter("name", name);
     return !query.getResultList().isEmpty();
   }
-  
+
+  /**
+   * Merge the new study.
+   * <p>
+   * @param newStudy
+   */
+  public void mergeStudy(Study newStudy) {
+    em.merge(newStudy);
+  }
+
   public void archiveStudy(String studyname) {
     Study study = findByName(studyname);
     if (study != null) {
@@ -244,7 +261,7 @@ public class StudyFacade extends AbstractFacade<Study> {
   }
 
   public void unarchiveStudy(String studyname) {
-        Study study = findByName(studyname);
+    Study study = findByName(studyname);
     if (study != null) {
       study.setArchived(false);
     }
@@ -252,7 +269,7 @@ public class StudyFacade extends AbstractFacade<Study> {
   }
 
   public boolean updateRetentionPeriod(String name, Date date) {
-        Study study = findByName(name);
+    Study study = findByName(name);
     if (study != null) {
       study.setRetentionPeriod(date);
       em.merge(study);
@@ -268,13 +285,14 @@ public class StudyFacade extends AbstractFacade<Study> {
     }
     return null;
   }
-  
-  private Study findByName(String name){
-    TypedQuery<Study> query = em.createNamedQuery("Study.findByName",Study.class);
+
+  private Study findByName(String name) {
+    TypedQuery<Study> query = em.createNamedQuery("Study.findByName",
+            Study.class);
     query.setParameter("name", name);
-    try{
+    try {
       return query.getSingleResult();
-    }catch(NoResultException e){
+    } catch (NoResultException e) {
       return null;
     }
   }

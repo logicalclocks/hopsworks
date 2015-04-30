@@ -56,6 +56,7 @@ public class ResponseMessages {
     public final static String PROJECT_MEMBER_NOT_REMOVED = "Failed to remove team member.";
     public final static String PROJECT_INODE_NOT_CREATED = "Project Inode could not be created in DB.";
     public final static String PROJECT_SERVICE_NOT_FOUND = "Some project services were not found";
+    public final static String PROJECT_NAME_NOT_SET = "The project name is not set";
     
     //project success messages
     public final static String PROJECT_CREATED = "Project created successfully.";

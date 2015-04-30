@@ -93,7 +93,7 @@ public class ProjectController {
       studyFacade.flushEm();//flushing it to get study id
       //Add the activity information     
       logActivity(ActivityFacade.NEW_STUDY,
-            ActivityFacade.FLAG_STUDY, user, study);
+              ActivityFacade.FLAG_STUDY, user, study);
       //update role information in study
       addStudyMaster(study.getId(), user.getEmail());
       logger.log(Level.FINE, "{0} - study created successfully.", study.
@@ -107,28 +107,52 @@ public class ProjectController {
     }
 
   }
-  
+
   /**
-   *
-   * @param id study id
+   * Returns a Study
+   * <p>
+   * @param id the identifier for a Study
    * @return Study
+   * @throws se.kth.hopsworks.rest.AppException if the study could not be found.
    */
   public Study findStudyById(Integer id) throws AppException {
-    
+
     Study study = studyFacade.find(id);
-     if( study != null){
-       return study;
-     } else {
-     throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+    if (study != null) {
+      return study;
+    } else {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
-     }
+    }
   }
 
-  public void addServices(Study study, List<StudyServiceEnum> services) {
+  public void addServices(Study study, List<StudyServiceEnum> services,
+          String userEmail) {
     //Add the desired services
     for (StudyServiceEnum se : services) {
       studyServicesFacade.addServiceForStudy(study, se);
     }
+
+    User user = userBean.getUserByEmail(userEmail);
+
+    logActivity(ActivityFacade.ADDED_SERVICES, ActivityFacade.FLAG_STUDY,
+            user, study);
+  }
+
+  public void mergeStudy(Study study, String userEmail) throws AppException {
+    User user = userBean.getUserByEmail(userEmail);
+
+    boolean nameExists = studyFacade.studyExistsForOwner(study.getName(), user);
+
+    if(nameExists){
+       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NAME_EXIST);
+    }
+    
+    studyFacade.mergeStudy(study);
+
+    logActivity(ActivityFacade.STUDY_NAME_CHANGED, ActivityFacade.FLAG_STUDY,
+            user, study);
   }
 
   //Set the study owner as study master in StudyTeam table
@@ -219,7 +243,7 @@ public class ProjectController {
                     study.getName()});
 
           logActivity(ActivityFacade.NEW_MEMBER,
-            ActivityFacade.FLAG_STUDY, user, study);
+                  ActivityFacade.FLAG_STUDY, user, study);
         }
       } catch (EJBException ejb) {
         failedList.add(studyTeam.getStudyTeamPK().getTeamMember());

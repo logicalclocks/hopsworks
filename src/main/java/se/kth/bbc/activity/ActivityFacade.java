@@ -35,6 +35,8 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String REMOVED_FILE = " removed a file ";
   public static final String REMOVED_STUDY = " removed study ";
   public static final String RAN_JOB = " ran a job ";
+  public static final String ADDED_SERVICES = " added new services ";
+  public static final String STUDY_NAME_CHANGED = " changed studyname ";
   // Flag constants
   public static final String FLAG_STUDY = "STUDY";
 

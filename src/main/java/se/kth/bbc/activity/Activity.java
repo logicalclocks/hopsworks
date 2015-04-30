@@ -39,7 +39,7 @@ import se.kth.bbc.study.Study;
           query = "SELECT u FROM Activity u WHERE u.activity = :activity"),
   @NamedQuery(name = "Activity.findByUser",
           query
-          = "SELECT u FROM Activity u WHERE u.user = :user"),
+          = "SELECT u FROM Activity u WHERE u.user = :user ORDER BY u.timestamp DESC" ),
   @NamedQuery(name = "Activity.findByTimestamp",
           query = "SELECT u FROM Activity u WHERE u.timestamp = :timestamp"),
   @NamedQuery(name = "Activity.findByStudy",
@@ -51,42 +51,42 @@ import se.kth.bbc.study.Study;
           query
           = "SELECT COUNT(u) FROM Activity u WHERE u.study = :study")})
 public class Activity implements Serializable {
-  
+
   private static final long serialVersionUID = 1L;
-  
+
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 5)
   @Column(name = "flag")
   private String flag;
-    
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
-  
+
   @Size(max = 128)
   @Column(name = "activity")
   private String activity;
-  
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date timestamp;
-  
+
   @JoinColumn(name = "study_id",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Study study;
-  
+
   @JoinColumn(name = "user_id",
           referencedColumnName = "uid")
   @ManyToOne(optional = false)
   private User user;
-  
+
   public Activity() {
   }
 
