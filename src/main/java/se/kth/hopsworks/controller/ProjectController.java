@@ -227,6 +227,7 @@ public class ProjectController {
    * @return a list of user names that could not be added to the project team
    * list.
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<String> addMembers(Study study, String email,
           List<StudyTeam> studyTeams) {
     List<String> failedList = new ArrayList<>();
@@ -242,14 +243,15 @@ public class ProjectController {
                   new Object[]{studyTeam.getStudyTeamPK().getTeamMember(),
                     study.getName()});
 
-          logActivity(ActivityFacade.NEW_MEMBER,
+
+          logActivity(ActivityFacade.NEW_MEMBER + studyTeam.
+                  getStudyTeamPK().getTeamMember(),
                   ActivityFacade.FLAG_STUDY, user, study);
         }
       } catch (EJBException ejb) {
         failedList.add(studyTeam.getStudyTeamPK().getTeamMember());
-        logger.log(Level.SEVERE, "Adding  team member {0} to study failed",
+        logger.log(Level.SEVERE, "Adding  team member {0} to member failed",
                 studyTeam.getStudyTeamPK().getTeamMember());
-        return null;
       }
     }
     return failedList;
