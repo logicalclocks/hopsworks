@@ -34,7 +34,6 @@ import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ProjectDTO;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
-import se.kth.hopsworks.users.UserFacade;
 
 /**
  * @author André<amore@kth.se>
@@ -51,6 +50,9 @@ public class ProjectService {
   private ProjectController projectController;
   @EJB
   private NoCacheResponse noCacheResponse;
+
+  private final static Logger logger = Logger.getLogger(ProjectService.class.
+          getName());
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -120,8 +122,8 @@ public class ProjectService {
       se.toString();
       studyServices.add(se);
     }
-    
-    if(!studyServices.isEmpty()){
+
+    if (!studyServices.isEmpty()) {
       projectController.addServices(study, studyServices, userEmail);
     }
 
@@ -143,7 +145,7 @@ public class ProjectService {
     List<String> failedMembers = null;
     Study study = null;
 
-    Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+    logger.log(Level.SEVERE,
             projectDTO.toString());
     String owner = sc.getUserPrincipal().getName();
     List<StudyServiceEnum> studyServices = new ArrayList<>();
@@ -154,7 +156,7 @@ public class ProjectService {
         se.toString();
         studyServices.add(se);
       } catch (IllegalArgumentException iex) {
-        Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+        logger.log(Level.SEVERE,
                 ResponseMessages.PROJECT_SERVICE_NOT_FOUND, iex);
         json.setErrorMsg(s + ResponseMessages.PROJECT_SERVICE_NOT_FOUND + "\n "
                 + json.getErrorMsg());
@@ -168,17 +170,17 @@ public class ProjectService {
       study = projectController.createStudy(projectDTO.getProjectName(),
               owner);
     } catch (IOException ex) {
-      Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+      logger.log(Level.SEVERE,
               ResponseMessages.PROJECT_FOLDER_NOT_CREATED, ex);
       json.setErrorMsg(ResponseMessages.PROJECT_FOLDER_NOT_CREATED + "\n "
               + json.getErrorMsg());
     } catch (EJBException ex) {
-      Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+      logger.log(Level.SEVERE,
               ResponseMessages.PROJECT_INODE_NOT_CREATED, ex);
       json.setErrorMsg(ResponseMessages.PROJECT_INODE_NOT_CREATED + "\n "
               + json.getErrorMsg());
     }
-    
+
     if (study != null) {
       //add the services for the project
       projectController.addServices(study, studyServices, owner);
@@ -189,7 +191,7 @@ public class ProjectService {
 
     json.setStatus("201");// Created  
     json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
-    
+
     if (failedMembers != null) {
       json.setFieldErrors(failedMembers);
     }
@@ -212,7 +214,7 @@ public class ProjectService {
     try {
       success = projectController.removeByName(id, user, wipeData);
     } catch (IOException ex) {
-      Logger.getLogger(ProjectService.class.getName()).log(Level.SEVERE,
+      logger.log(Level.SEVERE,
               ResponseMessages.PROJECT_FOLDER_NOT_REMOVED, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
