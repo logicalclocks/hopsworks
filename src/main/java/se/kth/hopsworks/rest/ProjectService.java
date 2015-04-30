@@ -90,17 +90,44 @@ public class ProjectService {
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response updateProject(
           ProjectDTO projectDTO,
-          @PathParam("id") String id,
+          @PathParam("id") Integer id,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-
     JsonResponse json = new JsonResponse();
 
+    Study study = projectController.findStudyById(id);
+    String userEmail = sc.getUserPrincipal().getName();
+
+    // Update the name
+    if (!projectDTO.getProjectName().isEmpty()
+            && projectDTO.getProjectName() != null
+            && !study.getName().equals(projectDTO.getProjectName())) {
+
+      study.setName(projectDTO.getProjectName());
+      projectController.mergeStudy(study, userEmail);
+    } else {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NAME_NOT_SET);
+    }
+
+    // Add all the new services
+    List<StudyServiceEnum> studyServices = new ArrayList<>();
+    for (String s : projectDTO.getServices()) {
+      StudyServiceEnum se = StudyServiceEnum.valueOf(s.toUpperCase());
+      se.toString();
+      studyServices.add(se);
+    }
+    
+    if(!studyServices.isEmpty()){
+      projectController.addServices(study, studyServices, userEmail);
+    }
+
+    json.setData("Project updated");
     return noCacheResponse.getNoCacheResponseBuilder(
-            Response.Status.NOT_IMPLEMENTED).entity(json).build();
+            Response.Status.CREATED).entity(json).build();
   }
 
   @POST
@@ -151,9 +178,10 @@ public class ProjectService {
       json.setErrorMsg(ResponseMessages.PROJECT_INODE_NOT_CREATED + "\n "
               + json.getErrorMsg());
     }
+    
     if (study != null) {
       //add the services for the project
-      projectController.addServices(study, studyServices);
+      projectController.addServices(study, studyServices, owner);
       //add members of the project
       failedMembers = projectController.addMembers(study, owner, projectDTO.
               getProjectTeam());
@@ -161,6 +189,7 @@ public class ProjectService {
 
     json.setStatus("201");// Created  
     json.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
+    
     if (failedMembers != null) {
       json.setFieldErrors(failedMembers);
     }

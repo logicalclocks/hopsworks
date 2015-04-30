@@ -108,11 +108,51 @@ public class ProjectController {
 
   }
 
-  public void addServices(Study study, List<StudyServiceEnum> services) {
+  /**
+   * Returns a Study
+   * <p>
+   * @param id the identifier for a Study
+   * @return Study
+   * @throws se.kth.hopsworks.rest.AppException if the study could not be found.
+   */
+  public Study findStudyById(Integer id) throws AppException {
+
+    Study study = studyFacade.find(id);
+    if (study != null) {
+      return study;
+    } else {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              ResponseMessages.PROJECT_NOT_FOUND);
+    }
+  }
+
+  public void addServices(Study study, List<StudyServiceEnum> services,
+          String userEmail) {
     //Add the desired services
     for (StudyServiceEnum se : services) {
       studyServicesFacade.addServiceForStudy(study, se);
     }
+
+    User user = userBean.getUserByEmail(userEmail);
+
+    logActivity(ActivityFacade.ADDED_SERVICES, ActivityFacade.FLAG_STUDY,
+            user, study);
+  }
+
+  public void mergeStudy(Study study, String userEmail) throws AppException {
+    User user = userBean.getUserByEmail(userEmail);
+
+    boolean nameExists = studyFacade.studyExistsForOwner(study.getName(), user);
+
+    if(nameExists){
+       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NAME_EXIST);
+    }
+    
+    studyFacade.mergeStudy(study);
+
+    logActivity(ActivityFacade.STUDY_NAME_CHANGED, ActivityFacade.FLAG_STUDY,
+            user, study);
   }
 
   //Set the study owner as study master in StudyTeam table
@@ -202,6 +242,7 @@ public class ProjectController {
           logger.log(Level.FINE, "{0} - member added to study : {1}.",
                   new Object[]{studyTeam.getStudyTeamPK().getTeamMember(),
                     study.getName()});
+
 
           logActivity(ActivityFacade.NEW_MEMBER + studyTeam.
                   getStudyTeamPK().getTeamMember(),
