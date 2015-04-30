@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="styles/timeline.css">
+
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
 
@@ -5,52 +7,7 @@
   <div id="wrapper" class="toggled">
     <div class="overlay"></div>
 
-    <!-- Sidebar -->
-    <aside class="offsidebar">
-      <nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation"
-           style="margin-top:50px;">
-
-        <ul class="nav sidebar-nav">
-
-          <li style="background: #1a1a1a;">
-            <a class="text-center">
-              {{ projectCtrl.currentProject.projectName | limitTo: 17 }}{{projectCtrl.currentProject.projectName.length > 17
-              ? '...' : ''}}
-            </a>
-          </li>
-
-
-          <li ng-repeat="typeObject in projectCtrl.selectionProjectTypes">
-            <a href="">
-              {{typeObject}} <span class="sub_icon fa fa-globe fa-lg pull-right"></span>
-            </a>
-          </li>
-
-
-          <li>
-            <a ng-click="projectCtrl.goToDatasets()">
-              DATASETS <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
-            </a>
-          </li>
-
-
-          <li ng-click="projectCtrl.projectSettingModal()" style="margin-top:40px;">
-            <a>
-              Settings <span class="sub_icon fa fa-dashboard fa-lg pull-right"></span>
-            </a>
-          </li>
-
-          <li>
-            <a href="#/">
-              Users <span class="sub_icon fa fa-users fa-lg pull-right"></span>
-            </a>
-          </li>
-
-
-        </ul>
-      </nav>
-    </aside>
-    <!-- /#sidebar-wrapper -->
+    <div ng-include="'navProject.html'"></div>
 
     <section>
       <div class="content-wrapper">
@@ -58,42 +15,62 @@
 
         <!-- Page Content -->
 
-              <div class="widget-body">
-                  <div class="timeline clearfix">
-                      <div class="mid-line"></div>
+        <div class="widget-body col-md-6">
+          <div class="timeline clearfix">
+            <div class="mid-line"></div>
 
-                      <div ng-repeat="activity in projectCtrl.activities | startFrom:(projectCtrl.currentPage-1) * projectCtrl.pageSize | limitTo:projectCtrl.pageSize">
+            <div ng-repeat="activity in projectCtrl.activities | startFrom:(projectCtrl.currentPage-1) * projectCtrl.pageSize | limitTo:projectCtrl.pageSize">
 
-                          <div class="right">
-                              <div class="r-arrow"></div>
-                              <div class="about-task">
-                                  <div class="header">{{activity.user.fname }} {{activity.user.lname}} {{activity.activity}}
-                                      <small class="muted">On {{activity.timestamp |
-                                          date:'medium'}}
-                                      </small>
-                                  </div>
-                                  <p class="no-margin">
-                                      Project name: {{activity.study.name}} Owner: {{activity.study.owner.fname}}
-                                      Created on: {{activity.study.created | date:'medium'}}
-                                  </p>
-                              </div>
-                          </div>
-                      </div>
-
-                      <pagination ng-if="projectCtrl.totalPages > 10"
-                                  total-items="projectCtrl.totalItems"
-                                  ng-model="projectCtrl.currentPage"
-                                  max-size="projectCtrl.pageSize"
-                                  class="pagination-sm"
-                                  boundary-links="true"
-                                  rotate="false"
-                                  num-pages="projectCtrl.totalPages" >
-                      </pagination>
-
-
-
+              <div class="right">
+                <div class="r-arrow"></div>
+                <div class="about-task">
+                  <div class="header">{{activity.user.fname }} {{activity.user.lname}} {{activity.activity}}
+                    <small class="muted">On {{activity.timestamp |
+                      date:'medium'}}
+                    </small>
                   </div>
+                  <p class="no-margin">
+                    Project name: {{activity.study.name}} Owner: {{activity.study.owner.fname}}
+                    Created on: {{activity.study.created | date:'medium'}}
+                  </p>
+                </div>
               </div>
+            </div>
+
+            <pagination ng-if="projectCtrl.totalPages > 1"
+                        total-items="projectCtrl.totalItems"
+                        ng-model="projectCtrl.currentPage"
+                        max-size="projectCtrl.pageSize"
+                        class="pagination-sm"
+                        boundary-links="true"
+                        rotate="false"
+                        num-pages="projectCtrl.totalPages" >
+            </pagination>
+
+
+
+          </div>
+        </div>
+
+        <div class="widget-body col-md-6">
+          <div class="timeline clearfix">
+
+            <canvas id="radar" class="chart chart-radar" data="data"
+                    labels="labels">
+            </canvas>
+
+            <p></p>
+
+            <canvas id="line" class="chart chart-line" data="data2"
+                    labels="labels2" legend="true" series="series"
+                    click="onClick">
+            </canvas>
+
+
+          </div>
+        </div>
+
+
 
         <!-- /#page-content-wrapper -->
       </div>

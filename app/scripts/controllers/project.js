@@ -2,146 +2,148 @@
 
 angular.module('hopsWorksApp')
   .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams'
-                            , 'growl', 'ProjectService', 'ModalService','ActivityService',
+    , 'growl', 'ProjectService', 'ModalService', 'ActivityService',
     function ($scope, $modalStack, $location, $routeParams, growl, ProjectService, ModalService, ActivityService) {
 
       var self = this;
       self.currentProject = [];
       self.activities = [];
+      self.currentPage = 1;
 
       self.card = {};
       self.cards = [];
       self.projectMembers = [];
 
       // We could instead implement a service to get all the available types but this will do it for now
-      self.projectTypes = ['CUNEIFORM', 'SPARK', 'ADAM', 'MAPREDUCE', 'ZEPPELIN'];
+      self.projectTypes = ['CUNEIFORM', 'SAMPLES', 'STUDY_INFO', 'SPARK', 'ADAM', 'MAPREDUCE', 'YARN', 'ZEPPELIN'];
+      self.alreadyChoosenServices = [];
       self.selectionProjectTypes = [];
       self.pId = $routeParams.projectID;
 
-      ProjectService.get({}, {'id': self.pId}).$promise.then(
-        function (success) {
-          self.currentProject = success;
-          self.projectMembers = self.currentProject.projectTeam;
-          self.currentProject.services.forEach(function(entry) {
-            self.selectionProjectTypes.push(entry);
-          });
 
-        }, function (error) {
-          $location.path('/');
-        }
-      );
+      var getCurrentProject = function () {
+        ProjectService.get({}, {'id': self.pId}).$promise.then(
+          function (success) {
+            self.currentProject = success;
+            self.projectMembers = self.currentProject.projectTeam;
+            self.alreadyChoosenServices = [];
+            self.currentProject.services.forEach(function (entry) {
+              self.alreadyChoosenServices.push(entry);
+            });
 
-      ActivityService.getByProjectId(self.pId).then(function(success){
-          self.activities =success.data;
-          console.log(self.activities);
+            // Remove already choosen services from the service selection
+            self.alreadyChoosenServices.forEach(function (entry) {
+              var index = self.projectTypes.indexOf(entry.toUpperCase());
+              self.projectTypes.splice(index, 1);
+            });
+
+          }, function (error) {
+            $location.path('/');
+          }
+        );
+      };
+
+
+      var getAllActivities = function () {
+        ActivityService.getByProjectId(self.pId).then(function (success) {
+          self.activities = success.data;
           self.pageSize = 10;
           self.totalPages = Math.floor(self.activities.length / self.pageSize);
           self.totalItems = self.activities.length;
-      }, function(error){
+        }, function (error) {
 
-      });
-
-      self.currentPage = 1;
-
-      self.exists = function (item) {
-        return self.selectionProjectTypes.indexOf(item) > -1;
+        });
       };
 
+      getAllActivities();
+      getCurrentProject();
 
-      self.toggle = function toggle(item) {
-        var idx = self.selectionProjectTypes.indexOf(item);
 
-        if (idx > -1) self.selectionProjectTypes.splice(idx, 1);
-        else self.selectionProjectTypes.push(item);
-
-        console.log(self.selectionProjectTypes);
+      // Check if the service exists and otherwise add it or remove it depending on the previous choice
+      self.exists = function (projectType) {
+        var idx = self.selectionProjectTypes.indexOf(projectType);
+        if (idx > -1) {
+          self.selectionProjectTypes.splice(idx, 1);
+        } else {
+          self.selectionProjectTypes.push(projectType);
+        }
       };
-
 
 
       self.projectSettingModal = function () {
-        ModalService.projectSettings('md').then(
+        ModalService.projectSettings('lg').then(
           function (success) {
-            growl.success("Successfully saved project: " + success.name, {title: 'Success', ttl: 5000});
-          }, function () {
-            growl.success("Successfully saved project.", {title: 'Success', ttl: 5000});
+            getAllActivities();
+            getCurrentProject();
+          }, function (error) {
+            growl.info("You closed without saving.", {title: 'Info', ttl: 5000});
           });
       };
 
 
       self.saveProject = function () {
+
         $scope.newProject = {
-          'description': self.currentProject.description,
-          'name': self.currentProject.name,
-          'status': 0,
-          'types': self.selectionProjectTypes
+          'projectName': self.currentProject.projectName,
+          'description': self.currentProject.projectDesc,
+          'services': self.selectionProjectTypes
         };
 
-        ProjectService.update({id:self.currentProject.id}, $scope.newProject).$promise.then(
-          function(success){
-            $modalStack.dismissAll();
-          }, function(error){
-            console.log('Error: ' + error)
+        ProjectService.update({id: self.currentProject.projectId}, $scope.newProject)
+          .$promise.then(
+          function (success) {
+            growl.success("Success: " + success.data.value, {title: 'Success', ttl: 5000});
+            $modalStack.getTop().key.close();
+          }, function (error) {
+            growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
           }
         );
-
       };
-
 
       self.close = function () {
-        $modalStack.dismissAll();
+        $modalStack.getTop().key.dismiss();
       };
-
 
       $scope.showHamburger = $location.path().indexOf("project") > -1;
 
-      self.goToDatasets = function() {
-        $location.path($location.path() + '/datasets');
+      self.goToDatasets = function () {
+        $location.path('project/' + self.pId + '/datasets');
       };
 
-      self.goToSpecificDataset = function(id) {
+      self.goToSpecificDataset = function (id) {
         $location.path($location.path() + '/' + id);
       };
 
 
+      self.saveAllowed = function(){
+        if(self.currentProject.projectName.length == 0){
+          return true;
+        }
+      };
 
+
+
+
+      // Dummy data
+      $scope.labels =["Adam", "Spark", "Yaml", "MapReduce", "Samples", "Zeppelin", "Cuneiform"];
+
+      $scope.data = [
+        [65, 59, 90, 81, 56, 55, 40],
+        [28, 48, 40, 19, 96, 27, 100]
+      ];
+
+      $scope.labels2 = ["January", "February", "March", "April", "May", "June", "July"];
+      $scope.series = ['Fileoperations', 'Querys'];
+      $scope.data2 = [
+        [65, 59, 80, 81, 56, 55, 40],
+        [28, 48, 40, 19, 86, 27, 90]
+      ];
+      $scope.onClick = function (points, evt) {
+        console.log(points, evt);
+      };
 
 
     }]);
-
-
-/*******************************/
-/* TESTING ALL CRUD OPERATIONS */
-/*******************************/
-
-// GET /api/project/
-// $scope.projects = ProjectService.query();
-// console.log($scope.projects);
-
-// GET /api/project/1
-// $scope.specificProject = ProjectService.get({}, {'id': 1});
-
-// PUT /api/project/1
-// $scope.specificProject.description = 'TESTING TO CHANGE VALUE';
-// ProjectService.update({ id:$scope.specificProject.id }, $scope.specificProject );
-
-// POST /api/project/
-/*
- $scope.newProject = {
- 'description':'Created a new project',
- 'name':'TestProject',
- 'status':0,
- 'type':'Spark'
- }
- */
-
-// POST /api/project/
-// ProjectService.save($scope.newProject);
-
-// DELETE /api/project/ THELATEST id
-// ProjectService.delete({}, {'id': 35 });
-
-
 
 
 

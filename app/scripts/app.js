@@ -13,7 +13,8 @@ angular.module('hopsWorksApp', [
   'ui.select',
   'ngMaterial',
   'ngMessages',
-  'ui.sortable'
+  'ui.sortable',
+  'chart.js'
 ])
   .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
