@@ -11,47 +11,38 @@
       <div class="content-wrapper">
         <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.name }} / Datasets</h3>
 
-
         <div class="row">
+          <div class="col-lg-2" style="margin-top: 13px;">
 
-          <div class="col-lg-2">
             <table id="mytable" class="table table-bordred table-striped" style="margin-bottom:0px;">
-
               <thead>
-
-              <th>Datasets</th>
+              <th style="border-bottom: 1px solid #e7eaec; color: #2e353d; font-size: 24px"><i class="fa fa-folder" style="padding-right: 6px;"></i>MedicalDataset</th>
               </thead>
             </table>
 
-            <div class="ibox float-e-margins">
-              <div class="" style="">
-                <div class="file-manager">
-
-                  <div class="col-md-6" style="padding-left: 0px;">
-                    <button style="margin-top:15px;margin-bottom:15px;" class="btn btn-info">Upload file</button>
-                  </div>
-                  <div class="col-md-6">
-                    <button style="margin-top:15px;margin-bottom:15px;" class="btn btn-primary">New folder</button>
-                  </div>
-
-
-                </div>
-              </div>
-              <div class="ibox-content"></div>
-
-
+            <div class="btn-group" style="width: 100%;">
+              <button style="margin-top:15px;width: 100%;" class="btn btn-warning dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                New
+              </button>
+              <ul class="dropdown-menu" role="menu" style="width: 100%;">
+                <li><a><i class="fa fa-plus-circle" style="width: 28px;"></i> Folder</a></li>
+                <li><a><i class="fa fa-cloud-upload" style="width: 28px;"></i> File upload</a></li>
+                <li class="divider"></li>
+                <li><a><i class="fa fa-link" style="width: 28px;"></i>Symbolic link</a></li>
+              </ul>
             </div>
+
+
+            <div class="ibox-content" style="margin-top:15px;"></div>
+
+
           </div>
 
 
           <div class="col-lg-7">
 
-
-            <div class="">
               <div class="row">
-
-
-                <div class="col-md-12">
+                <div class="col-md-12" style="margin-top: 25px;">
 
                   <div class="table-responsive">
 
@@ -71,7 +62,8 @@
                       <tr ng-repeat="file in datasetsCtrl.files" class="file" style="cursor: move;">
                         <td>{{file.name}}</td>
                         <td>{{file.owner}}</td>
-                        <td style="width: 140px;">{{file.modified}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span></td>
+                        <td style="width: 140px;">{{file.modified}} <span
+                          style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span></td>
                         <td>{{file.filesize}}</td>
                         <td style="width: 5px;">
                           <p data-placement="top" data-toggle="tooltip" title="Edit">
@@ -92,24 +84,9 @@
 
                     </table>
 
-                    <!--
-                    <div class="clearfix"></div>
-                    <ul class="pagination pull-right">
-                      <li class="disabled"><a href="#"><span class="glyphicon glyphicon-chevron-left"></span></a></li>
-                      <li class="active"><a href="#">1</a></li>
-                      <li><a href="#">2</a></li>
-                      <li><a href="#">3</a></li>
-                      <li><a href="#">4</a></li>
-                      <li><a href="#">5</a></li>
-                      <li><a href="#"><span class="glyphicon glyphicon-chevron-right"></span></a></li>
-                    </ul>
-                    -->
-
                   </div>
-
                 </div>
               </div>
-            </div>
 
 
             <div class="modal fade" id="edit" tabindex="-1" role="dialog" aria-labelledby="edit" aria-hidden="true">
@@ -173,46 +150,119 @@
           </div>
 
 
-          <div class="col-lg-3">
+
+
+
+          <div class="col-lg-3" style="border-left: 1px dashed lightgrey; padding-left: 0px;">
             <div class="ibox float-e-margins">
               <div class="file-manager">
 
-                <table id="mytable" class="table table-bordred table-striped">
 
-                  <thead>
+                <div>
+                  <md-content class="md-padding" style="padding-top: 0px;">
+                    <md-tabs md-dynamic-height md-border-bottom>
+                      <md-tab label="Details">
+                        <md-content>
+                          <table id="mytable" class="table table-bordred table-striped" style="margin-top: 16px;">
+                            <tr style="background-color: #fafafa">
+                              <td style="color:lightgrey;">Size</td>
+                              <td style="color: grey;">234 Kb</td>
+                            </tr>
 
-                  <th>Information</th>
-                  <th></th>
+                            <tr style="background-color: #fafafa">
+                              <td style="color:lightgrey;">Description</td>
+                              <td style="color: grey;">Nice file we got here</td>
+                            </tr>
 
-                  <tr style="background-color: #fafafa">
-                    <td style="color:lightgrey;">Size</td>
-                    <td style="color: grey;">234 Kb</td>
-                  </tr>
+                            <tr style="background-color: #fafafa">
+                              <td style="color: lightgrey;">Type</td>
+                              <td style="color: grey;">text/html</td>
+                            </tr>
 
-                  <tr style="background-color: #fafafa">
-                    <td style="color:lightgrey;">Description</td>
-                    <td style="color: grey;">Nice file we got here</td>
-                  </tr>
+                            <tr style="background-color: #fafafa">
+                              <td style="color:lightgrey;">Last changed</td>
+                              <td style="color: grey;">04/05/2015</td>
+                            </tr>
 
-                  <tr style="background-color: #fafafa">
-                    <td style="color: lightgrey;">Type</td>
-                    <td style="color: grey;">text/html</td>
-                  </tr>
+                            <tr style="background-color: #fafafa">
+                              <td style="color:lightgrey;">Owner</td>
+                              <td style="color: grey;">André More</td>
+                            </tr>
+                          </table>
 
-                  <tr style="background-color: #fafafa">
-                    <td style="color:lightgrey;">Last changed</td>
-                    <td style="color: grey;">04/05/2015</td>
-                  </tr>
-
-                  <tr style="background-color: #fafafa">
-                    <td style="color:lightgrey;">Owner</td>
-                    <td style="color: grey;">André More</td>
-                  </tr>
+                          </p>
+                        </md-content>
+                      </md-tab>
+                      <md-tab label="Activity">
+                        <md-content class="md-padding" style="padding-left: 20px;padding-right: 20px;">
 
 
-                  </tbody>
+                          <div class="row">
 
-                </table>
+                            <span style="color: #444;font-size: 11px; margin-bottom: 10px;padding: 16px 6px 6px;text-transform: uppercase;">
+                              LAST WEEK
+                            </span>
+
+                            <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center" style="border-radius: 3px; margin-top:10px;">
+                              <div class="col-md-2" style="margin-top: -45px;">
+                                <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;" src="http://gravatar.com/avatar/4b43f0e86b038f246887dde7f399a5a3?d=mm">
+                              </div>
+                              <div class="col-md-10" style="margin-top: 12px;padding-left:20px;">
+                                <b>You</b> uploaded an item
+                                </br>
+                                <span style="color:#444; font-size: 11px;">Apr 30</span>
+                                <p style="margin-top: 20px; color:#444;">
+                                  SICSEngineering.pdf
+                                </p>
+                              </div>
+                            </md-whiteframe>
+
+                            <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center" style="border-radius: 3px; margin-top:20px; margin-bottom: 20px;">
+                              <div class="col-md-2" style="margin-top: -45px;">
+                                <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;" src="http://gravatar.com/avatar/4b43f0e86b038f246887dde7f399a5a3?d=mm">
+                              </div>
+                              <div class="col-md-10" style="margin-top: 12px;padding-left:20px;">
+                                <b>André</b> uploaded an item
+                                </br>
+                                <span style="color:#444; font-size: 11px;">Apr 11</span>
+                                <p style="margin-top: 20px; color:#444;">
+                                  AndreSecretFile.rsa
+                                </p>
+                              </div>
+                            </md-whiteframe>
+
+                            <span style="color: #444;font-size: 11px; margin-bottom: 10px;padding: 16px 6px 6px;text-transform: uppercase;">
+                              EARLIER THIS MONTH
+                            </span>
+
+
+                            <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center" style="border-radius: 3px; margin-top:10px;">
+                              <div class="col-md-2" style="margin-top: -45px;">
+                                <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;" src="http://gravatar.com/avatar/f7b87f83afcba880c6300e1e4e4a8790?d=mm">
+                              </div>
+                              <div class="col-md-10" style="margin-top: 12px;padding-left:20px;">
+                                <b>Ermias</b> uploaded an item
+                                </br>
+                                <span style="color:#444; font-size: 11px;">Apr 07</span>
+                                <p style="margin-top: 20px; color:#444;">
+                                  happy_birthday.cake
+                                </p>
+                              </div>
+                            </md-whiteframe>
+                          </div>
+                        </md-content>
+                      </md-tab>
+
+                    </md-tabs>
+                  </md-content>
+                </div>
+
+
+
+                <!--
+
+
+                -->
 
 
               </div>
@@ -238,27 +288,3 @@
 
 
 </div>
-
-
-<!--<h5>Folders</h5>
-<ul style="padding: 0" class="folder-list">
-  <li><a href=""><i class="fa fa-folder"></i> Files</a></li>
-  <li><a href=""><i class="fa fa-folder"></i> Pictures</a></li>
-  <li><a href=""><i class="fa fa-folder"></i> Web pages</a></li>
-  <li><a href=""><i class="fa fa-folder"></i> Illustrations</a></li>
-  <li><a href=""><i class="fa fa-folder"></i> Films</a></li>
-  <li><a href=""><i class="fa fa-folder"></i> Books</a></li>
-</ul>
-<h5 class="tag-title">Tags</h5>
-<ul style="padding: 0" class="tag-list">
-  <li><a href="">Family</a></li>
-  <li><a href="">Work</a></li>
-  <li><a href="">Home</a></li>
-  <li><a href="">Children</a></li>
-  <li><a href="">Holidays</a></li>
-  <li><a href="">Music</a></li>
-  <li><a href="">Photography</a></li>
-  <li><a href="">Film</a></li>
-</ul>
-
--->
