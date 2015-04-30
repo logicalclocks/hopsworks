@@ -107,6 +107,7 @@ angular.module('metaUI')
                                         $rootScope.mainBoard = BoardService.mainBoard(JSON.parse(response.board));
                                         $rootScope.tabs = [];
 
+                                        //console.log("TEMPLATE FETCHED " + JSON.stringify($rootScope.mainBoard));
                                         //LOAD STATIC BOARD
                                         //$rootScope.mainBoard = BoardService.mainBoard(BoardDataFactory.kanban);
                                         //console.log($rootScope.mainBoard);

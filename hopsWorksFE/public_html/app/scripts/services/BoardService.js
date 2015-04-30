@@ -38,7 +38,7 @@ angular.module('metaUI').service('BoardService',
                         angular.forEach(column.cards, function (card) {
 
                             BoardManipulator.addCardToColumn(mainBoard, column, card.id, card.title, card.details,
-                                    card.editing, card.find, card.required, card.sizefield);
+                                    card.editing, card.find, card.required, card.sizefield, card.description, card.fieldtypeid);
                         });
                     });
 
@@ -296,6 +296,19 @@ angular.module('metaUI').service('BoardService',
                         return defer.promise;
                     },
                     
+                    fetchFieldTypes: function(){
+                        var defer = $q.defer();
+
+                        BoardManipulator.fetchFieldTypes()
+                            .then(function (response) {
+                                
+                                var fieldTypes = JSON.parse(response.board);
+                                defer.resolve(fieldTypes);
+                            });
+
+                        return defer.promise;
+                    },
+                    
                     /* *** SCHEMA HANDLING FUNCTIONS *** */
                     storeCard: function (card) {
                         return BoardManipulator.storeCard(card);
@@ -348,9 +361,9 @@ angular.module('metaUI').service('BoardService',
                             BoardManipulator.addColumn(mainBoard, column.id, column.name);
 
                             angular.forEach(column.cards, function (card) {
-
                                 BoardManipulator.addCardToColumn(mainBoard, column, card.id, card.title, card.details,
-                                        card.editing, card.find, card.required, card.sizefield);
+                                        card.editing, card.find, card.required, card.sizefield, 
+                                        card.description, card.fieldtypeid, card.fieldtypeContent);
                             });
                         });
 

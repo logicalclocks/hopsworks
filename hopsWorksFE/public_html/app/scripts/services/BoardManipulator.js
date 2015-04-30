@@ -73,12 +73,16 @@ angular.module('metaUI').factory('BoardManipulator', function (WSComm) {
         },
         
         /* CREATES ALL CARD OBJECTS AND ADDS THEM INTO THE CORRESPONDING LIST ARRAY */
-        addCardToColumn: function (board, column, cardId, cardTitle, details, editing, find, required, sizefield) {
+        addCardToColumn: function (board, column, cardId, cardTitle, details, 
+                                        editing, find, required, sizefield, 
+                                        description, fieldtypeid, fieldtypeContent) {
             angular.forEach(board.columns, function (col) {
                 if (col.name === column.name) {
 
                     /* CREATES ALL CARD OBJECTS AND ADDS THEM INTO THE CORRESPONDING LIST ARRAY */
-                    col.cards.push(new Card(cardId, cardTitle, column.name, details, editing, find, required, sizefield));
+                    col.cards.push(new Card(cardId, cardTitle, column.name, details, 
+                                            editing, find, required, sizefield, 
+                                            description, fieldtypeid, fieldtypeContent));
                 }
             });
         },
@@ -182,7 +186,6 @@ angular.module('metaUI').factory('BoardManipulator', function (WSComm) {
         },
         
         storeCard: function (templateId, column, card) {
-
             return WSComm.send({
                 sender: 'evsav',
                 type: 'FieldsMessage',
@@ -196,13 +199,16 @@ angular.module('metaUI').factory('BoardManipulator', function (WSComm) {
                     type: 'VARCHAR(50)',
                     searchable: card.find,
                     required: card.required,
-                    sizefield: card.sizefield
+                    sizefield: card.sizefield,
+                    description: card.description,
+                    fieldtypeid: card.fieldtypeid,
+                    fieldtypeContent: card.fieldtypeContent
                 })
             });
         },
         
         deleteCard: function (templateId, column, card) {
-
+            
             return WSComm.send({
                 sender: 'evsav',
                 type: 'FieldsMessage',
@@ -217,7 +223,10 @@ angular.module('metaUI').factory('BoardManipulator', function (WSComm) {
                     sizefield: card.sizefield,
                     searchable: card.find,
                     required: card.required,
-                    forceDelete: card.forceDelete
+                    forceDelete: card.forceDelete,
+                    description: card.description,
+                    fieldtypeid: card.fieldtypeid,
+                    fieldtypeContent: card.fieldtypeContent
                 })
             });
         },
@@ -237,6 +246,15 @@ angular.module('metaUI').factory('BoardManipulator', function (WSComm) {
                 type: 'MetadataMessage',
                 action: 'fetch_metadata',
                 message: JSON.stringify({tableid: tableId})
+            });
+        },
+        
+        fetchFieldTypes: function(){
+            return WSComm.send({
+                sender: 'evsav',
+                type: 'FieldTypesMessage',
+                action: 'fetch_field_types',
+                message: 'null'
             });
         }
     };

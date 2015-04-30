@@ -33,7 +33,8 @@ function Phase(name) {
   };
 }
 
-function Card(id, title, list, details, editing, find, required, sizefield) {
+function Card(id, title, list, details, editing, 
+        find, required, sizefield, description, fieldtypeid, fieldtypeContent) {
   this.id = id;
   this.title = title;
   this.list = list;
@@ -42,5 +43,8 @@ function Card(id, title, list, details, editing, find, required, sizefield) {
   this.find = find;
   this.required = required;
   this.sizefield = sizefield;
+  this.description = description;
+  this.fieldtypeid = fieldtypeid;
+  this.fieldtypeContent = fieldtypeContent;
   return this;
 }

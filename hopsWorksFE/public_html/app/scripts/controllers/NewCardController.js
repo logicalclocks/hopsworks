@@ -11,6 +11,8 @@ angular.module('metaUI')
                     scope.columnName = column.name;
                     scope.column = column;
                     scope.title = '';
+                    scope.description = '';
+                    scope.type = '';
                     scope.details = '';
                     scope.editing = false;
                     scope.find = false;
