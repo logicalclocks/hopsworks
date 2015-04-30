@@ -8,22 +8,33 @@
     <div class="modal-body">
         <div class="form-group">
             <label class="control-label" for="newCardTitle">Card title</label>
-
             <div>
                 <input type="text" id="newCardTitle" placeholder="Title on a card" ng-model="title" required
                        focus-me class="cardInputs form-control" ng-keyup="hitEnter($event)"/>
             </div>
+
+            <label class="control-label" for="newCardDescription">Field Description</label>
+            <div>
+                <input type="text" id="newCardDescription" placeholder="Description of a card" ng-model="description" required
+                       focus-me class="cardInputs form-control"/>
+            </div>
+
+            <label class="control-label" for="newCardType">Card Type</label>
+            <div>
+                <select ng-model="selectedItem" ng-change="update()" ng-options="item as item.name for item in items"></select>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label class="control-label" for="newCardDetails">More details
-                <small>(optional)</small>
-            </label>
+        <div class="">
+            <fieldset  data-ng-repeat="choice in fieldSelectItems">
+                <input type="text" ng-model="choice.value" name="" placeholder="Enter a value">
+                <button class="glyphicon glyphicon-plus" ng-show="$last" ng-click="addNewSelectChoice()"></button>
+                <button class="glyphicon glyphicon-minus" ng-show="$last" ng-click="removeSelectChoice()"></button>   
+            </fieldset>
 
-            <div>
-                <textarea id="newCardDetails" ng-model="details" class="cardInputs form-control" rows="7">
-                </textarea>
-            </div>
+            <fieldset  data-ng-repeat="choice in yesNoItems">
+                <input type="text" ng-model="choice.value" name="" placeholder="Enter a yes/no choice">
+            </fieldset>
         </div>
     </div>
     <div class="modal-footer">
