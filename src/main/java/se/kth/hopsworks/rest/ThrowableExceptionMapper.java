@@ -24,7 +24,7 @@ public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
         log.log(Level.INFO, "ThrowableExceptionMapper: {0}", ex.getClass());
         JsonResponse json = new JsonResponse();
         setHttpStatus(ex, json);
-        json.setErrorMsg("Ops! somthing went wrong :(" + ex.getMessage());
+        json.setErrorMsg("Ops! somthing went wrong :(");
         ex.printStackTrace();
         return Response.status(json.getStatusCode())
                 .entity(json)
