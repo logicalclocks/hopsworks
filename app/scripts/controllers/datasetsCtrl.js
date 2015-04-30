@@ -26,25 +26,25 @@ angular.module('hopsWorksApp')
 
 
 
-      file = {name: 'Folder', type: 'Folder', changed: '15/03/2015'}
+      file = {name: 'Folder', owner: 'André', modified: 'Mar 23', filesize: '4 MB'}
       self.files.push(file);
-      file = {name: 'index.html', type: 'text/html', changed: '11/06/2015'}
+      file = {name: 'index.html', owner: 'André', modified: 'Mar 29', filesize: '465 KB'}
       self.files.push(file);
-      file = {name: 'AndrePage.html', type: 'text/html', changed: '17/05/2015'}
+      file = {name: 'AndrePage.html', owner: 'André', modified: 'Jan 10', filesize: '33 KB'}
       self.files.push(file);
-      file = {name: 'image3.jpg', type: 'JPG', changed: '14/04/2015'}
+      file = {name: 'image3.jpg', owner: 'Ermias', modified: 'Apr 7', filesize: '8 MB'}
       self.files.push(file);
-      file = {name: 'dump34.sql', type: 'SQL', changed: '11/04/2015'}
+      file = {name: 'dump34.sql', owner: 'André', modified: 'Mar 2', filesize: '37 KB'}
       self.files.push(file);
-      file = {name: 'Yarn.yml', type: 'YML', changed: '06/04/2015'}
+      file = {name: 'Yarn.yml', owner: 'André', modified: 'Feb 25', filesize: '6 MB'}
       self.files.push(file);
-      file = {name: 'Yarn2.yml', type: 'YML', changed: '06/04/2015'}
+      file = {name: 'Yarn2.yml', owner: 'André', modified: 'Apr 3', filesize: '17 MB'}
       self.files.push(file);
-      file = {name: 'Yarn3.yml', type: 'YML', changed: '06/04/2015'}
+      file = {name: 'Yarn3.yml', owner: 'Ermias', modified: 'Jun 2', filesize: '198 KB'}
       self.files.push(file);
-      file = {name: 'Yarn4.yml', type: 'YML', changed: '06/04/2015'}
+      file = {name: 'Yarn4.yml', owner: 'André', modified: 'Oct 23', filesize: '32 MB'}
       self.files.push(file);
-      file = {name: 'Yar5.yml', type: 'YML', changed: '06/04/2015'}
+      file = {name: 'Yar5.yml', owner: 'Ermias', modified: 'Dec 34', filesize: '2 GB'}
       self.files.push(file);
 
 

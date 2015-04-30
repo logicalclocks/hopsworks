@@ -1,3 +1,6 @@
+<div growl></div>
+
+
 <div class="modal-header">
   <button class="close" ng-click="projectCtrl.close()" data-dismiss="modal" aria-hidden="true"
           type="button">&times;</button>
@@ -49,6 +52,6 @@
 </div>
 <div class="modal-footer">
   <button class="btn btn-default" ng-click="projectCtrl.close()">Cancel</button>
-  <button class="btn btn-primary" ng-click="projectCtrl.saveProject()">Save</button>
+  <button class="btn btn-primary" ng-click="projectCtrl.saveProject()" ng-disabled="projectCtrl.saveAllowed()">Save</button>
 </div>
 

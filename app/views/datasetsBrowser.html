@@ -5,52 +5,7 @@
   <div id="wrapper" class="toggled" ng-controller="DatasetsCtrl as datasetsCtrl">
     <div class="overlay"></div>
 
-    <!-- Sidebar -->
-    <aside class="offsidebar">
-      <nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation"
-           style="margin-top:50px;">
-
-        <ul class="nav sidebar-nav">
-
-          <li style="background: #1a1a1a;">
-            <a class="text-center">
-              {{ projectCtrl.currentProject.name | limitTo: 17 }}{{projectCtrl.currentProject.name.length > 17
-              ? '...' : ''}}
-            </a>
-          </li>
-
-
-          <li ng-repeat="typeObject in projectCtrl.currentProject.projectTypeCollection">
-            <a href="">
-              {{typeObject.type}} <span class="sub_icon fa fa-globe fa-lg pull-right"></span>
-            </a>
-          </li>
-
-
-          <li>
-            <a>
-              DATASETS <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
-            </a>
-          </li>
-
-
-          <li ng-click="projectCtrl.projectSettingModal()" style="margin-top:40px;">
-            <a>
-              Settings <span class="sub_icon fa fa-dashboard fa-lg pull-right"></span>
-            </a>
-          </li>
-
-          <li>
-            <a href="#/">
-              Users <span class="sub_icon fa fa-users fa-lg pull-right"></span>
-            </a>
-          </li>
-
-
-        </ul>
-      </nav>
-    </aside>
-    <!-- /#sidebar-wrapper -->
+    <div ng-include="'navProject.html'"></div>
 
     <section>
       <div class="content-wrapper">
@@ -60,7 +15,7 @@
         <div class="row">
 
           <div class="col-lg-2">
-            <table id="mytable" class="table table-bordred table-striped">
+            <table id="mytable" class="table table-bordred table-striped" style="margin-bottom:0px;">
 
               <thead>
 
@@ -69,12 +24,15 @@
             </table>
 
             <div class="ibox float-e-margins">
-              <div class="ibox-content" style="margin-top:40px;">
+              <div class="" style="">
                 <div class="file-manager">
 
-                  <button style="margin-top:15px;" class="btn btn-info btn-block">Upload file</button>
-                  <div class="hr-line-dashed"></div>
-                  <button style="margin-top:15px;" class="btn btn-primary btn-block">New folder</button>
+                  <div class="col-md-6" style="padding-left: 0px;">
+                    <button style="margin-top:15px;margin-bottom:15px;" class="btn btn-info">Upload file</button>
+                  </div>
+                  <div class="col-md-6">
+                    <button style="margin-top:15px;margin-bottom:15px;" class="btn btn-primary">New folder</button>
+                  </div>
 
 
                 </div>
@@ -101,46 +59,33 @@
 
                       <thead>
 
-                      <th></th>
                       <th>Name</th>
-                      <th>Type</th>
-                      <th>Last updated</th>
+                      <th>Owner</th>
+                      <th>Last modified</th>
+                      <th>File size</th>
                       <th></th>
                       <th></th>
                       </thead>
                       <tbody ui-sortable ng-model="datasetsCtrl.files">
 
                       <tr ng-repeat="file in datasetsCtrl.files" class="file" style="cursor: move;">
-
-                        <td ng-if="file.type == 'text/html'" style="width: 5px;">
-                          <i class="fa fa-file-code-o"></i>
-                        </td>
-
-                        <td ng-if="file.type == 'Folder'" style="width: 5px;">
-                          <i class="fa fa-folder-o"></i>
-                        </td>
-
-                        <td ng-if="file.type == 'JPG'" style="width: 5px;">
-                          <i class="fa fa-file-image-o"></i>
-                        </td>
-
-                        <td ng-if="file.type == 'SQL'" style="width: 5px;">
-                          <i class="fa fa-file-text-o"></i>
-                        </td>
-
-                        <td ng-if="file.type == 'YML'" style="width: 5px;">
-                          <i class="fa fa-file-o"></i>
-                        </td>
-
-
                         <td>{{file.name}}</td>
-                        <td>{{file.type}}</td>
-                        <td>{{file.changed}}</td>
-                        <td style="width: 5px;"><p data-placement="top" data-toggle="tooltip" title="Edit"><button class="btn btn-primary btn-xs" data-title="Edit" data-toggle="modal" data-target="#edit" ><span class="glyphicon glyphicon-pencil"></span></button></p></td>
-                        <td style="width: 5px;"><p data-placement="top" data-toggle="tooltip" title="Delete"><button class="btn btn-danger btn-xs" data-title="Delete" data-toggle="modal" data-target="#delete" ><span class="glyphicon glyphicon-trash"></span></button></p></td>
+                        <td>{{file.owner}}</td>
+                        <td style="width: 140px;">{{file.modified}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span></td>
+                        <td>{{file.filesize}}</td>
+                        <td style="width: 5px;">
+                          <p data-placement="top" data-toggle="tooltip" title="Edit">
+                            <button class="btn btn-primary btn-xs" data-title="Edit" data-toggle="modal"
+                                    data-target="#edit"><span class="glyphicon glyphicon-pencil"></span></button>
+                          </p>
+                        </td>
+                        <td style="width: 5px;">
+                          <p data-placement="top" data-toggle="tooltip" title="Delete">
+                            <button class="btn btn-danger btn-xs" data-title="Delete" data-toggle="modal"
+                                    data-target="#delete"><span class="glyphicon glyphicon-trash"></span></button>
+                          </p>
+                        </td>
                       </tr>
-
-
 
 
                       </tbody>
@@ -171,7 +116,8 @@
               <div class="modal-dialog">
                 <div class="modal-content">
                   <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><span
+                      class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
                     <h4 class="modal-title custom_align" id="Heading">Edit file</h4>
                   </div>
                   <div class="modal-body">
@@ -185,7 +131,9 @@
 
                   </div>
                   <div class="modal-footer ">
-                    <button type="button" class="btn btn-warning btn-lg" style="width: 100%;"><span class="glyphicon glyphicon-ok-sign"></span> Update</button>
+                    <button type="button" class="btn btn-warning btn-lg" style="width: 100%;"><span
+                      class="glyphicon glyphicon-ok-sign"></span> Update
+                    </button>
                   </div>
                 </div>
                 <!-- /.modal-content -->
@@ -194,22 +142,27 @@
             </div>
 
 
-
             <div class="modal fade" id="delete" tabindex="-1" role="dialog" aria-labelledby="edit" aria-hidden="true">
               <div class="modal-dialog">
                 <div class="modal-content">
                   <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><span
+                      class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
                     <h4 class="modal-title custom_align" id="Heading">Delete</h4>
                   </div>
                   <div class="modal-body">
 
-                    <div class="alert alert-danger"><span class="glyphicon glyphicon-warning-sign"></span> Are you sure you want to delete this File?</div>
+                    <div class="alert alert-danger"><span class="glyphicon glyphicon-warning-sign"></span> Are you sure
+                      you want to delete this File?
+                    </div>
 
                   </div>
                   <div class="modal-footer ">
-                    <button type="button" class="btn btn-success" ><span class="glyphicon glyphicon-ok-sign"></span> Yes</button>
-                    <button type="button" class="btn btn-default" data-dismiss="modal"><span class="glyphicon glyphicon-remove"></span> No</button>
+                    <button type="button" class="btn btn-success"><span class="glyphicon glyphicon-ok-sign"></span> Yes
+                    </button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal"><span
+                      class="glyphicon glyphicon-remove"></span> No
+                    </button>
                   </div>
                 </div>
                 <!-- /.modal-content -->
@@ -222,63 +175,56 @@
 
           <div class="col-lg-3">
             <div class="ibox float-e-margins">
-                <div class="file-manager">
+              <div class="file-manager">
 
-                  <table id="mytable" class="table table-bordred table-striped">
+                <table id="mytable" class="table table-bordred table-striped">
 
-                    <thead>
+                  <thead>
 
-                    <th>Information</th>
-                    <th></th>
+                  <th>Information</th>
+                  <th></th>
 
-                    <tr style="background-color: #fafafa">
-                      <td style="color:lightgrey;">Size</td>
-                      <td style="color: grey;">234 Kb</td>
-                    </tr>
+                  <tr style="background-color: #fafafa">
+                    <td style="color:lightgrey;">Size</td>
+                    <td style="color: grey;">234 Kb</td>
+                  </tr>
 
-                    <tr style="background-color: #fafafa">
-                      <td style="color:lightgrey;">Description</td>
-                      <td style="color: grey;">Nice file we got here</td>
-                    </tr>
+                  <tr style="background-color: #fafafa">
+                    <td style="color:lightgrey;">Description</td>
+                    <td style="color: grey;">Nice file we got here</td>
+                  </tr>
 
-                    <tr style="background-color: #fafafa">
-                      <td style="color: lightgrey;">Type</td>
-                      <td style="color: grey;">text/html</td>
-                    </tr>
+                  <tr style="background-color: #fafafa">
+                    <td style="color: lightgrey;">Type</td>
+                    <td style="color: grey;">text/html</td>
+                  </tr>
 
-                    <tr style="background-color: #fafafa">
-                      <td style="color:lightgrey;">Last changed</td>
-                      <td style="color: grey;">04/05/2015</td>
-                    </tr>
+                  <tr style="background-color: #fafafa">
+                    <td style="color:lightgrey;">Last changed</td>
+                    <td style="color: grey;">04/05/2015</td>
+                  </tr>
 
-                    <tr style="background-color: #fafafa">
-                      <td style="color:lightgrey;">Owner</td>
-                      <td style="color: grey;">André More</td>
-                    </tr>
-
-
-                    </tbody>
-
-                  </table>
+                  <tr style="background-color: #fafafa">
+                    <td style="color:lightgrey;">Owner</td>
+                    <td style="color: grey;">André More</td>
+                  </tr>
 
 
+                  </tbody>
+
+                </table>
 
 
-                </div>
+              </div>
+
+
+            </div>
 
 
           </div>
 
 
-
-
-
-
-
         </div>
-
-
-      </div>
 
 
     </section>
@@ -292,9 +238,6 @@
 
 
 </div>
-
-
-
 
 
 <!--<h5>Folders</h5>
