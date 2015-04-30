@@ -1,4 +1,3 @@
-
 package se.kth.meta.db;
 
 import se.kth.meta.entity.Fields;
@@ -21,6 +20,7 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
+import se.kth.meta.entity.FieldPredefinedValues;
 import se.kth.meta.entity.FieldTypes;
 import se.kth.meta.entity.Templates;
 import se.kth.meta.entity.TupleToFile;
@@ -35,7 +35,7 @@ import se.kth.meta.entity.TupleToFile;
 public class Dbao {
 
     private static final Logger logger = Logger.getLogger(Dbao.class.getName());
-    
+
     private Tables table;
     private Context ic;
     private EntityManager em;
@@ -103,11 +103,63 @@ public class Dbao {
         }
     }
 
+    /**
+     * adds a new record into 'fields' table. Each record represents a table
+     * column with its attributes (searchable, required, maxsize) and it is
+     * associated with the relevant table.
+     *
+     * @param field the field with its corresponding attributes
+     * @return 
+     * @throws se.kth.meta.exception.DatabaseException
+     */
+    public int addField(Fields field) throws DatabaseException {
+
+        try {
+            this.utx.begin();
+            Fields f = getField(field.getId());
+            if (f != null) {
+                f.copy(field);
+                this.em.merge(f);
+            } else {
+                f = field;
+                f.resetFieldPredefinedValues();
+                this.em.persist(f);
+            }
+
+            this.utx.commit();
+            
+            return f.getId();
+        } catch (IllegalStateException | SecurityException | HeuristicMixedException |
+                HeuristicRollbackException | NotSupportedException | RollbackException |
+                SystemException e) {
+
+            throw new DatabaseException(Dbao.class.getName(), "Could not add field " + e.getMessage());
+        }
+    }
+    
+    public void addFieldPredefinedValue(FieldPredefinedValues value) throws DatabaseException {
+        try{
+            this.utx.begin();
+            this.em.persist(value);
+            this.utx.commit();
+        }catch (IllegalStateException | SecurityException | HeuristicMixedException |
+                HeuristicRollbackException | NotSupportedException | RollbackException |
+                SystemException e) {
+
+            throw new DatabaseException(Dbao.class.getName(), "Could not add predefined value " + e.getMessage());
+        }
+    }
+
     public Tables getTable(int tableid) throws DatabaseException {
 
         return this.em.find(Tables.class, tableid);
     }
 
+    public Fields getField(int fieldid) throws DatabaseException {
+        
+        return this.em.find(Fields.class, fieldid);
+    }
+    
     public TupleToFile getTupletofile(int tupleid) throws DatabaseException {
 
         String query = "TupleToFile.findByTupleid";
@@ -178,7 +230,7 @@ public class Dbao {
                 HeuristicRollbackException | NotSupportedException | RollbackException |
                 SystemException e) {
 
-            throw new DatabaseException(Dbao.class.getName(), "Could not add template "+ e.getMessage());
+            throw new DatabaseException(Dbao.class.getName(), "Could not add template " + e.getMessage());
         }
     }
 
@@ -198,28 +250,6 @@ public class Dbao {
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
             logger.log(Level.SEVERE, null, ex);
             throw new DatabaseException(Dbao.class.getName(), "Could not remove template " + ex.getMessage());
-        }
-    }
-
-    /**
-     * adds a new record into 'fields' table. Each record represents a table
-     * column with its attributes (searchable, required, maxsize) and it is
-     * associated with the relevant table.
-     *
-     * @param field the field with its corresponding attributes
-     * @throws se.kth.meta.exception.DatabaseException
-     */
-    public void addField(Fields field) throws DatabaseException {
-
-        try {
-            this.utx.begin();
-            this.em.persist(field);
-            this.utx.commit();
-        } catch (IllegalStateException | SecurityException | HeuristicMixedException |
-                HeuristicRollbackException | NotSupportedException | RollbackException |
-                SystemException e) {
-
-            throw new DatabaseException(Dbao.class.getName(), "Could not add field " + e.getMessage());
         }
     }
 
@@ -293,7 +323,7 @@ public class Dbao {
                 HeuristicRollbackException | NotSupportedException | RollbackException |
                 SystemException e) {
 
-            throw new DatabaseException(Dbao.class.getName(), "Could not associate metadata to file "  + e.getMessage());
+            throw new DatabaseException(Dbao.class.getName(), "Could not associate metadata to file " + e.getMessage());
         }
     }
 
@@ -322,12 +352,12 @@ public class Dbao {
         query.setParameter("templateid", templateId);
         return query.getResultList();
     }
-    
-    public List<FieldTypes> loadFieldTypes(){
-        
+
+    public List<FieldTypes> loadFieldTypes() {
+
         String queryString = "FieldTypes.findAll";
         Query query = this.em.createNamedQuery(queryString);
-        
+
         return query.getResultList();
     }
 
@@ -371,7 +401,6 @@ public class Dbao {
 //            }
 //        }
 //    }
-    
     public void shutdown() throws DatabaseException {
         this.em.clear();
         //this.em.close();

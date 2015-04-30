@@ -6,6 +6,7 @@
 package se.kth.meta.entity;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -50,7 +51,7 @@ public class FieldTypes implements Serializable, EntityIntf {
     private String description;
 
     @OneToMany(mappedBy = "fieldTypes", targetEntity = Fields.class,
-            fetch = FetchType.LAZY, cascade = {CascadeType.ALL})
+            fetch = FetchType.LAZY, cascade = CascadeType.ALL) //cascade type all updates the child entities
     private List<Fields> fields;
 
     public FieldTypes() {
@@ -58,11 +59,13 @@ public class FieldTypes implements Serializable, EntityIntf {
 
     public FieldTypes(Integer id) {
         this.id = id;
+        this.fields = new LinkedList<>();
     }
 
     public FieldTypes(Integer id, String description) {
         this.id = id;
         this.description = description;
+        this.fields = new LinkedList<>();
     }
 
     @Override
@@ -83,12 +86,11 @@ public class FieldTypes implements Serializable, EntityIntf {
         this.description = description;
     }
 
-    /* get and set the child entities */
     public List<Fields> getFields() {
         return this.fields;
     }
 
-    public void setFields(List<Fields> raw) {
+    public void setFields(List<Fields> fields) {
         this.fields = fields;
     }
 

@@ -1,6 +1,6 @@
-
 package se.kth.meta.wscomm;
 
+import java.util.LinkedList;
 import se.kth.meta.db.Dbao;
 import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.Fields;
@@ -11,6 +11,7 @@ import se.kth.meta.exception.DatabaseException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import se.kth.meta.entity.FieldPredefinedValues;
 import se.kth.meta.entity.Templates;
 import se.kth.meta.entity.TupleToFile;
 
@@ -20,6 +21,8 @@ import se.kth.meta.entity.TupleToFile;
  */
 public class Utils {
 
+    private static final Logger logger = Logger.getLogger(Utils.class.getName());
+    
     private Dbao db;
 
     public Utils(Dbao db) {
@@ -37,9 +40,9 @@ public class Utils {
     }
 
     public void removeTemplate(Templates template) throws ApplicationException {
-        try{
+        try {
             this.db.removeTemplate(template);
-        }catch(DatabaseException e){
+        } catch (DatabaseException e) {
             throw new ApplicationException("Could not remove template " + template.getName() + ""
                     + " " + e.getMessage());
         }
@@ -50,35 +53,54 @@ public class Utils {
         for (EntityIntf entry : list) {
             Tables t = (Tables) entry;
             String tableName = t.getName();
-            int tid = t.getId();
-            List<Fields> tableFields = t.getFields();
+
+            List<Fields> tableFields = new LinkedList<>(t.getFields());
+            t.resetFields();
 
             try {
+                //persist the parent
                 int tableId = this.db.addTable(t);
 
-                System.out.println("TABLE: " + tableName);
-                //if the table is new, persist the fields manually so that they get an id
-                if (tid == -1) {
-                    for (Fields field : tableFields) {
-                        field.setTableid(tableId);
-                        //t.addField(field);
-                        this.db.addField(field);
-                    }
+                logger.log(Level.INFO, "TABLE: {0}", tableName);
+
+                for (Fields field : tableFields) {
+                    //associate each field(child) with the table(parent) it belongs to
+                    field.setTableid(tableId);
+
+                    List<EntityIntf> predef = new LinkedList<>((List<EntityIntf>) (List<?>) field.getFieldPredefinedValues());
+
+                    field.resetFieldPredefinedValues();
+                    //persist the child
+                    int fieldid = this.db.addField(field);
+                    this.addFieldsPredefinedValues(predef, fieldid);
                 }
             } catch (DatabaseException ex) {
-                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
                 throw new ApplicationException("Could not add table " + t.getName() + " " + ex.getMessage());
             }
         }
     }
 
-    public void addFields(List<EntityIntf> list) throws ApplicationException {
+    private void addFieldsPredefinedValues(List<EntityIntf> list, int fieldId) throws ApplicationException {
 
+        try {
+            for (EntityIntf entry : list) {
+                FieldPredefinedValues predefval = (FieldPredefinedValues) entry;
+                
+                //associate each child with its parent
+                predefval.setFieldid(fieldId);
+                //persist the entity
+                this.db.addFieldPredefinedValue(predefval);
+            }
+        } catch (DatabaseException e) {
+            logger.log(Level.SEVERE, null, e);
+            throw new ApplicationException("Could not add predefined value " + e.getMessage());
+        }
     }
 
     public void deleteTable(Tables table) throws ApplicationException {
         try {
-            System.err.println("DELETING TABLE " + table.getName());
+            logger.log(Level.SEVERE, "DELETING TABLE {0} ", table.getName());
             this.db.deleteTable(table);
         } catch (DatabaseException e) {
             throw new ApplicationException("Utils.java: method deleteTable "
@@ -89,7 +111,7 @@ public class Utils {
     public void deleteField(Fields field) throws ApplicationException {
 
         try {
-            System.err.println("DELETING FIELD " + field);
+            logger.log(Level.SEVERE, "DELETING FIELD {0} ", field);
             this.db.deleteField(field);
         } catch (DatabaseException e) {
             throw new ApplicationException("Utils.java: method deleteField "
@@ -111,7 +133,7 @@ public class Utils {
                 r.setTupleid(tupleid);
                 inodeid = r.getInodeid();
 
-                System.out.println(r);
+                logger.log(Level.INFO, r.toString());
                 ((Dbao) this.db).addRawData(r);
             }
 

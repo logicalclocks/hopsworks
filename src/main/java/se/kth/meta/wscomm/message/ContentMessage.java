@@ -6,6 +6,7 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import se.kth.meta.entity.EntityIntf;
+import se.kth.meta.entity.FieldPredefinedValues;
 import se.kth.meta.entity.Fields;
 import se.kth.meta.entity.Tables;
 import se.kth.meta.entity.Templates;
@@ -125,12 +126,25 @@ public abstract class ContentMessage implements Message {
                 card.add("title", c.getName());
                 card.add("find", c.getSearchable());
                 card.add("required", c.getRequired());
+                card.add("description", c.getDescription());
+                card.add("fieldtypeid", c.getFieldTypeId());
 
+                //"fieldtypeContent":[{"id":-1,"fieldid":-1,"value":"cc"},{"id":-1,"fieldid":-1,"value":"ccc"},{"id":-1,"fieldid":-1,"value":"cccc"}]
                 JsonObjectBuilder temp = Json.createObjectBuilder();
                 temp.add("showing", false);
                 temp.add("value", String.valueOf(c.getMaxsize()));
                 card.add("sizefield", temp);
-
+                
+                JsonArrayBuilder arr = Json.createArrayBuilder();
+                for(FieldPredefinedValues value: c.getFieldPredefinedValues()){
+                    JsonObjectBuilder obj = Json.createObjectBuilder();
+                    obj.add("id", value.getId());
+                    obj.add("fieldid", value.getFieldid());
+                    obj.add("value", value.getValue());
+                    arr.add(obj);
+                }
+                
+                card.add("fieldtypeContent", arr);
                 cards.add(card);
             }
             //add the cards to the column

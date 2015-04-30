@@ -1,4 +1,3 @@
-
 package se.kth.meta.wscomm.message;
 
 import se.kth.meta.entity.EntityIntf;
@@ -10,7 +9,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.json.JsonValue;
+import se.kth.meta.entity.FieldPredefinedValues;
+import se.kth.meta.entity.FieldTypes;
 
 /**
  *
@@ -94,16 +97,33 @@ public class FieldsMessage extends ContentMessage {
         boolean required = obj.getBoolean("required");
         String description = obj.getString("description");
         int fieldtypeid = obj.getInt("fieldtypeid");
-        
+
         Fields field = new Fields(fieldId, tableId, name, type,
-                Integer.parseInt(maxsize), (short) ((searchable) ? 1 : 0), 
+                Integer.parseInt(maxsize), (short) ((searchable) ? 1 : 0),
                 (short) ((required) ? 1 : 0), description, fieldtypeid);
         field.setForceDelete(forceDelete);
+        field.setFieldTypes(new FieldTypes(fieldtypeid));
 
+        //get the predefined values of the field (if it is a yes/no field or a dropdown list field
+        JsonArray predefinedFieldValues = obj.getJsonArray("fieldtypeContent");
+        List<FieldPredefinedValues> ll = new LinkedList<>();
+        
+        for (JsonValue predefinedFieldValue : predefinedFieldValues) {
+            JsonObject defaultt = Json.createReader(new StringReader(predefinedFieldValue.toString())).readObject();
+            String defaultValue = defaultt.getString("value");
+
+            FieldPredefinedValues predefValue = new FieldPredefinedValues(-1, field.getId(), defaultValue);
+            //predefValue.setFields(field);
+            ll.add(predefValue);
+        }
+
+        field.setFieldPredefinedValues(ll);
+        
         Tables table = new Tables(tableId, tableName);
         table.setTemplateid(super.getTemplateid());
+        //field.setTables(table);
         table.addField(field);
-
+        
         List<EntityIntf> list = new LinkedList<>();
         list.add(table);
 

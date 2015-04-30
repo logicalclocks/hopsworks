@@ -35,7 +35,8 @@ import javax.validation.constraints.Size;
     @NamedQuery(name = "Fields.findByType", query = "SELECT f FROM Fields f WHERE f.type = :type"),
     @NamedQuery(name = "Fields.findByMaxsize", query = "SELECT f FROM Fields f WHERE f.maxsize = :maxsize"),
     @NamedQuery(name = "Fields.findBySearchable", query = "SELECT f FROM Fields f WHERE f.searchable = :searchable"),
-    @NamedQuery(name = "Fields.findByRequired", query = "SELECT f FROM Fields f WHERE f.required = :required")})
+    @NamedQuery(name = "Fields.findByRequired", query = "SELECT f FROM Fields f WHERE f.required = :required"),
+    @NamedQuery(name = "Fields.findByFieldTypeId", query = "SELECT f FROM Fields f WHERE f.fieldtypeid = :fieldtypeid")})
 public class Fields implements Serializable, EntityIntf {
 
     private static final long serialVersionUID = 1L;
@@ -62,10 +63,14 @@ public class Fields implements Serializable, EntityIntf {
     @NotNull
     @Column(name = "fieldtypeid")
     private int fieldtypeid;
-    
+
     @ManyToOne(optional = false)
-    @PrimaryKeyJoinColumn(name = "fieldtypeid", referencedColumnName = "fieldtypeid")
+    @PrimaryKeyJoinColumn(name = "fieldtypeid", referencedColumnName = "id")
     private FieldTypes fieldTypes;
+
+    @OneToMany(mappedBy = "fields", targetEntity = FieldPredefinedValues.class,
+            fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<FieldPredefinedValues> fieldPredefinedValues;
 
     @Basic(optional = false)
     @NotNull
@@ -126,6 +131,7 @@ public class Fields implements Serializable, EntityIntf {
         this.description = description;
         this.fieldtypeid = fieldtypeid;
         this.raw = new LinkedList<>();
+        this.fieldPredefinedValues = new LinkedList<>();
     }
 
     @Override
@@ -142,6 +148,7 @@ public class Fields implements Serializable, EntityIntf {
         this.raw = f.getRawData();
         this.description = f.getDescription();
         this.fieldtypeid = f.getFieldTypeId();
+        this.fieldPredefinedValues = f.getFieldPredefinedValues();
     }
 
     @Override
@@ -162,14 +169,14 @@ public class Fields implements Serializable, EntityIntf {
         this.tableid = tableid;
     }
 
-    public int getFieldTypeId(){
+    public int getFieldTypeId() {
         return this.fieldtypeid;
     }
-    
-    public void setFieldTypeId(int fieldtypeid){
+
+    public void setFieldTypeId(int fieldtypeid) {
         this.fieldtypeid = fieldtypeid;
     }
-    
+
     /* get and set the parent entities */
     public Tables getTables() {
         return this.tables;
@@ -178,7 +185,7 @@ public class Fields implements Serializable, EntityIntf {
     public void setTables(Tables tables) {
         this.tables = tables;
     }
-    
+
     public FieldTypes getFieldTypes() {
         return this.fieldTypes;
     }
@@ -187,7 +194,6 @@ public class Fields implements Serializable, EntityIntf {
         this.fieldTypes = fieldTypes;
     }
     /*-------------------------------*/
-    
     /*-------------------------------*/
 
     /* get and set the child entities */
@@ -199,6 +205,32 @@ public class Fields implements Serializable, EntityIntf {
         this.raw = raw;
     }
 
+    public List<FieldPredefinedValues> getFieldPredefinedValues() {
+        return this.fieldPredefinedValues;
+    }
+
+    public void setFieldPredefinedValues(List<FieldPredefinedValues> pValues) {
+        this.fieldPredefinedValues = pValues;
+    }
+    
+    public void resetFieldPredefinedValues(){
+        this.fieldPredefinedValues.clear();
+    }
+    
+    public void addPredefinedValue(FieldPredefinedValues value){
+        this.fieldPredefinedValues.add(value);
+        if(value != null){
+            value.setFields(this);
+        }
+    }
+    
+    public void removePredefinedValue(FieldPredefinedValues value){
+        this.fieldPredefinedValues.remove(value);
+        if(value != null){
+            value.setFields(null);
+        }
+    }
+    
     public void addRawData(RawData raw) {
         this.raw.add(raw);
         if (raw != null) {
