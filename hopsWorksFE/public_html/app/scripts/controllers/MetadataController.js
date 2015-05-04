@@ -10,7 +10,7 @@ angular.module('metaUI').controller('MetadataController',
                 $scope.mainBoard = $rootScope.mainBoard;
                 $scope.tabs = $rootScope.tabs;
 
-                console.log("QUERY PARAMS " + JSON.stringify($routeParams));
+                console.log("QUERY PARAMS " + JSON.stringify($routeParams)); 
                 var refresh = function () {
                     setTimeout(function () {
                         //reinitialization of the tabs and refresh the page just to allow the tabs to appear
@@ -31,6 +31,7 @@ angular.module('metaUI').controller('MetadataController',
                 $scope.inodeid = $routeParams.inodeid;
 
                 refresh();
+                                
                 $scope.sortOptions = {
                     //disable card movement completely
                     accept: function (sourceItemHandleScope, destSortableScope) {
@@ -90,14 +91,6 @@ angular.module('metaUI').controller('MetadataController',
                 $scope.Return = function () {
 
                     console.log("going back " + $scope.returnnUrl);
-
-                    //change url but don't add it to the history stack (local redirection)
-//                    $location.path(backUrl);
-//                    $location.replace();
-
-                    //change url and add it to the history stack (local redirection)
-//                    $location.path(backUrl);
-//                    $scope.$apply();
 
                     $window.location.href = $scope.returnnUrl;
                 };
