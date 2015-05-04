@@ -107,23 +107,26 @@ public class FieldsMessage extends ContentMessage {
         //get the predefined values of the field (if it is a yes/no field or a dropdown list field
         JsonArray predefinedFieldValues = obj.getJsonArray("fieldtypeContent");
         List<FieldPredefinedValues> ll = new LinkedList<>();
-        
-        for (JsonValue predefinedFieldValue : predefinedFieldValues) {
-            JsonObject defaultt = Json.createReader(new StringReader(predefinedFieldValue.toString())).readObject();
-            String defaultValue = defaultt.getString("value");
 
-            FieldPredefinedValues predefValue = new FieldPredefinedValues(-1, field.getId(), defaultValue);
-            //predefValue.setFields(field);
-            ll.add(predefValue);
+        for (JsonValue predefinedFieldValue : predefinedFieldValues) {
+            //no need for predefined values if this is a text field
+            if (fieldtypeid != 1) {
+                JsonObject defaultt = Json.createReader(new StringReader(predefinedFieldValue.toString())).readObject();
+                String defaultValue = defaultt.getString("value");
+
+                FieldPredefinedValues predefValue = new FieldPredefinedValues(-1, field.getId(), defaultValue);
+                //predefValue.setFields(field);
+                ll.add(predefValue);
+            }
         }
 
         field.setFieldPredefinedValues(ll);
-        
+
         Tables table = new Tables(tableId, tableName);
         table.setTemplateid(super.getTemplateid());
         //field.setTables(table);
         table.addField(field);
-        
+
         List<EntityIntf> list = new LinkedList<>();
         list.add(table);
 
