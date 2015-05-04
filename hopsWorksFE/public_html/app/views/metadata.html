@@ -16,7 +16,7 @@
                             <div class="row">
                                 <table>
                                     <tr>
-                                        <td width="20%">
+                                        <td width="50em">
                                             <div class="col-sm-10">
                                                 <span class="card-title"
                                                       class=" removeCard pull-left btn btn-xs">{{card.title}}</span>
@@ -32,12 +32,17 @@
                                             </div>
                                             <!--select list input type-->
                                             <div ng-if="card.fieldtypeid === 2">
-                                                <select ng-model="data[card.id]" ng-options="item.value as item.value for item in card.fieldtypeContent"></select>
+                                                <select ng-model="data[card.id]" 
+                                                        ng-options="item.value as item.value for item in card.fieldtypeContent"
+                                                        required>
+                                                    <option value="">Select default value</option> 
+                                                </select>
                                             </div>
                                             <!--yes/no input type-->
                                             <div ng-if="card.fieldtypeid === 3">
                                                 {{card.fieldtypeContent[0].value}} / {{card.fieldtypeContent[1].value}}
-                                                <input type="checkbox" ng-model="data[card.id]"/>
+                                                <input type="checkbox" ng-model="data[card.id]"
+                                                       ng-true-value="'{{card.fieldtypeContent[0].value}}'" ng-false-value="'{{card.fieldtypeContent[1].value}}'"/>
                                             </div>
                                         </td>
                                     </tr>
