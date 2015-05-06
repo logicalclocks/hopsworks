@@ -16,19 +16,22 @@
 
             <table id="mytable" class="table table-bordred table-striped" style="margin-bottom:0px;">
               <thead>
-              <th style="border-bottom: 1px solid #e7eaec; color: #2e353d; font-size: 24px"><i class="fa fa-folder" style="padding-right: 6px;"></i>MedicalDataset</th>
+              <th style="border-bottom: 1px solid #e7eaec; color: #2e353d; font-size: 22px">
+                <i class="fa fa-folder" style="padding-right: 5px;"></i>MedicalDataset
+              </th>
               </thead>
             </table>
 
             <div class="btn-group" style="width: 100%;">
-              <button style="margin-top:15px;width: 100%;" class="btn btn-warning dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+              <button style="margin-top:15px;width: 100%;" class="btn btn-warning dropdown-toggle"
+                      data-toggle="dropdown" aria-expanded="false">
                 New
               </button>
               <ul class="dropdown-menu" role="menu" style="width: 100%;">
                 <li><a><i class="fa fa-plus-circle" style="width: 28px;"></i> Folder</a></li>
-                <li><a><i class="fa fa-cloud-upload" style="width: 28px;"></i> File upload</a></li>
+                <li><a><i class="fa fa-cloud-upload" style="width: 28px;"></i> Upload file</a></li>
                 <li class="divider"></li>
-                <li><a><i class="fa fa-link" style="width: 28px;"></i>Symbolic link</a></li>
+                <li><a><i class="fa fa-info-circle" style="width: 28px;"></i>Metadata</a></li>
               </ul>
             </div>
 
@@ -41,83 +44,45 @@
 
           <div class="col-lg-7">
 
-              <div class="row">
-                <div class="col-md-12" style="margin-top: 25px;">
+            <div class="row">
+              <div class="col-md-12" style="margin-top: 25px;">
 
-                  <div class="table-responsive" style="overflow: hidden;">
+                <div class="table-responsive" style="overflow: hidden;">
 
-                    <table class="table table-bordred table-striped">
+                  <table class="table table-bordred table-hover">
 
-                      <thead>
+                    <thead>
+                    <th>Name</th>
+                    <th>Owner</th>
+                    <th>Last modified</th>
+                    <th>File size</th>
+                    <th></th>
+                    </thead>
 
-                      <th>Name</th>
-                      <th>Owner</th>
-                      <th>Last modified</th>
-                      <th>File size</th>
-                      <th></th>
-                      <th></th>
-                      </thead>
-                      <tbody ui-sortable ng-model="datasetsCtrl.files">
+                    <tbody ui-sortable ng-model="datasetsCtrl.files">
 
-                      <tr ng-repeat="file in datasetsCtrl.files" class="file" style="cursor: move;">
-                        <td>{{file.name}}</td>
-                        <td>{{file.owner}}</td>
-                        <td>{{file.modified}} <span
-                          style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span></td>
-                        <td>{{file.filesize}}</td>
-                        <td style="width: 5px;">
-                          <p data-placement="top" data-toggle="tooltip" title="Edit">
-                            <button class="btn btn-primary btn-xs" data-title="Edit" data-toggle="modal"
-                                    data-target="#edit"><span class="glyphicon glyphicon-pencil"></span></button>
-                          </p>
-                        </td>
-                        <td style="width: 5px;">
-                          <p data-placement="top" data-toggle="tooltip" title="Delete">
-                            <button class="btn btn-danger btn-xs" data-title="Delete" data-toggle="modal"
-                                    data-target="#delete"><span class="glyphicon glyphicon-trash"></span></button>
-                          </p>
-                        </td>
-                      </tr>
+                    <tr ng-repeat="file in datasetsCtrl.files">
+                      <td>{{file.name}}</td>
+                      <td>{{file.owner}}</td>
+                      <td>{{file.modified}} <span
+                        style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span></td>
+                      <td>{{file.filesize}}</td>
+                      <td style="width: 5px;">
+                        <p data-placement="top" data-toggle="tooltip" title="Delete" style="margin-bottom: 0px;">
+                          <button class="btn btn-danger btn-xs" data-title="Delete" data-toggle="modal"
+                                  data-target="#delete" style="border-radius: 20px; padding: 5px 5px; font-size: 15px;">
+                            <span class="glyphicon glyphicon-trash"></span>
+                          </button>
+                        </p>
+                      </td>
+                    </tr>
 
+                    </tbody>
+                  </table>
 
-                      </tbody>
-
-                    </table>
-
-                  </div>
                 </div>
               </div>
-
-
-            <div class="modal fade" id="edit" tabindex="-1" role="dialog" aria-labelledby="edit" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><span
-                      class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
-                    <h4 class="modal-title custom_align" id="Heading">Edit file</h4>
-                  </div>
-                  <div class="modal-body">
-                    <div class="form-group">
-                      <input class="form-control " type="text" placeholder="Filename">
-                    </div>
-                    <div class="form-group">
-
-                      <input class="form-control " type="text" placeholder="Description">
-                    </div>
-
-                  </div>
-                  <div class="modal-footer ">
-                    <button type="button" class="btn btn-warning btn-lg" style="width: 100%;"><span
-                      class="glyphicon glyphicon-ok-sign"></span> Update
-                    </button>
-                  </div>
-                </div>
-                <!-- /.modal-content -->
-              </div>
-              <!-- /.modal-dialog -->
             </div>
-
 
             <div class="modal fade" id="delete" tabindex="-1" role="dialog" aria-labelledby="edit" aria-hidden="true">
               <div class="modal-dialog">
@@ -148,9 +113,6 @@
             </div>
 
           </div>
-
-
-
 
 
           <div class="col-lg-3" style="border-left: 1px dashed lightgrey; padding-left: 0px;">
@@ -192,6 +154,16 @@
 
                           </p>
                         </md-content>
+
+
+                        <div class="ibox-content" id="hoverable">
+                          <span class="pull-left" style="font-size: 16px; margin-top:-2px;">Add metadata</span> <i class="fa fa-pencil-square-o pull-right" style="font-size: 20px;"></i>
+                        </div>
+
+
+
+
+
                       </md-tab>
                       <md-tab label="Activity">
                         <md-content class="md-padding" style="padding-left: 20px;padding-right: 20px;">
@@ -199,51 +171,62 @@
 
                           <div class="row">
 
-                            <span style="color: #444;font-size: 11px; margin-bottom: 10px;padding: 16px 6px 6px;text-transform: uppercase;">
+                            <span
+                              style="color: #444;font-size: 11px; margin-bottom: 10px;padding: 16px 6px 6px;text-transform: uppercase;">
                               LAST WEEK
                             </span>
 
-                            <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center" style="border-radius: 3px; margin-top:10px;">
+                            <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center"
+                                           style="border-radius: 3px; margin-top:10px;">
                               <div class="col-md-2" style="margin-top: -45px;">
-                                <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;" src="http://gravatar.com/avatar/4b43f0e86b038f246887dde7f399a5a3?d=mm">
+                                <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;"
+                                     src="http://gravatar.com/avatar/4b43f0e86b038f246887dde7f399a5a3?d=mm">
                               </div>
                               <div class="col-md-10" style="margin-top: 12px;padding-left:20px;">
                                 <b>You</b> uploaded an item
                                 </br>
                                 <span style="color:#444; font-size: 11px;">Apr 30</span>
+
                                 <p style="margin-top: 20px; color:#444;">
                                   SICSEngineering.pdf
                                 </p>
                               </div>
                             </md-whiteframe>
 
-                            <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center" style="border-radius: 3px; margin-top:20px; margin-bottom: 20px;">
+                            <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center"
+                                           style="border-radius: 3px; margin-top:20px; margin-bottom: 20px;">
                               <div class="col-md-2" style="margin-top: -45px;">
-                                <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;" src="http://gravatar.com/avatar/4b43f0e86b038f246887dde7f399a5a3?d=mm">
+                                <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;"
+                                     src="http://gravatar.com/avatar/4b43f0e86b038f246887dde7f399a5a3?d=mm">
                               </div>
                               <div class="col-md-10" style="margin-top: 12px;padding-left:20px;">
                                 <b>André</b> uploaded an item
                                 </br>
                                 <span style="color:#444; font-size: 11px;">Apr 11</span>
+
                                 <p style="margin-top: 20px; color:#444;">
                                   AndreSecretFile.rsa
                                 </p>
                               </div>
                             </md-whiteframe>
 
-                            <span style="color: #444;font-size: 11px; margin-bottom: 10px;padding: 16px 6px 6px;text-transform: uppercase;">
+                            <span
+                              style="color: #444;font-size: 11px; margin-bottom: 10px;padding: 16px 6px 6px;text-transform: uppercase;">
                               EARLIER THIS MONTH
                             </span>
 
 
-                            <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center" style="border-radius: 3px; margin-top:10px;">
+                            <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center"
+                                           style="border-radius: 3px; margin-top:10px;">
                               <div class="col-md-2" style="margin-top: -45px;">
-                                <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;" src="http://gravatar.com/avatar/f7b87f83afcba880c6300e1e4e4a8790?d=mm">
+                                <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;"
+                                     src="http://gravatar.com/avatar/f7b87f83afcba880c6300e1e4e4a8790?d=mm">
                               </div>
                               <div class="col-md-10" style="margin-top: 12px;padding-left:20px;">
                                 <b>Ermias</b> uploaded an item
                                 </br>
                                 <span style="color:#444; font-size: 11px;">Apr 07</span>
+
                                 <p style="margin-top: 20px; color:#444;">
                                   happy_birthday.cake
                                 </p>
@@ -256,7 +239,6 @@
                     </md-tabs>
                   </md-content>
                 </div>
-
 
 
                 <!--
