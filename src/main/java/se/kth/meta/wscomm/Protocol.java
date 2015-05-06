@@ -76,6 +76,7 @@ public class Protocol {
             case REMOVE_TEMPLATE:
                 return this.removeTemplate(message);
             case STORE_FIELD:
+            case EXTEND_TEMPLATE:
             case STORE_TEMPLATE:
                 this.storeSchema(message);
                 //create and send the new schema back to everyone

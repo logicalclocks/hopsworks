@@ -64,6 +64,7 @@ public abstract class ContentMessage implements Message {
             case DELETE_FIELD:
             case DELETE_TABLE:
             case STORE_TEMPLATE:
+            case EXTEND_TEMPLATE:
             case FETCH_TEMPLATE:
                 return this.templateContents(entities);
             case ADD_NEW_TEMPLATE:

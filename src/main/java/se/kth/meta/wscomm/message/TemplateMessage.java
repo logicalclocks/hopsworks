@@ -1,4 +1,3 @@
-
 package se.kth.meta.wscomm.message;
 
 import se.kth.meta.entity.EntityIntf;
@@ -14,6 +13,9 @@ import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.json.JsonValue;
+import se.kth.meta.entity.FieldPredefinedValues;
+import se.kth.meta.entity.FieldTypes;
 import se.kth.meta.entity.Templates;
 import se.kth.meta.exception.ApplicationException;
 
@@ -85,7 +87,7 @@ public class TemplateMessage extends ContentMessage {
     public Templates getTemplate() throws ApplicationException {
         Templates temp = null;
         JsonObject object = Json.createReader(new StringReader(this.message)).readObject();
-        
+
         try {
             switch (Command.valueOf(this.action.toUpperCase())) {
                 case ADD_NEW_TEMPLATE:
@@ -101,7 +103,7 @@ public class TemplateMessage extends ContentMessage {
             logger.log(Level.SEVERE, "Error while retrieving the template attributes.");
             throw new ApplicationException("Error while retrieving the template attributes.");
         }
-        
+
         return temp;
     }
 
@@ -124,6 +126,14 @@ public class TemplateMessage extends ContentMessage {
             String tableName = item.getString("name");
             int tableId = item.getInt("id");
 
+            /*
+             * if a template is being extended, cancel the table id so that they are 
+             * reinserted and attached to the new template
+             */
+            if (Command.valueOf(this.action.toUpperCase()) == Command.EXTEND_TEMPLATE) {
+                tableId = -1;
+            }
+
             Tables table = new Tables(tableId, tableName);
             table.setTemplateid(super.getTemplateid());
 
@@ -145,40 +155,64 @@ public class TemplateMessage extends ContentMessage {
                 try {
                     JsonObject field = fields.getJsonObject(j);
                     fieldId = field.getInt("id");
+
+                    /*
+                     * if a template is being extended, cancel the field id so that they are 
+                     * reinserted and attached to the new template
+                     */
+                    if (Command.valueOf(this.action.toUpperCase()) == Command.EXTEND_TEMPLATE) {
+                        fieldId = -1;
+                    }
+
                     fieldName = field.getString("title");
                     searchable = field.getBoolean("find");
                     required = field.getBoolean("required");
                     maxsize = field.getJsonObject("sizefield").getString("value");
                     description = field.getString("description");
                     fieldtypeid = field.getInt("fieldtypeid");
+
+                    try {
+                        //just in case the user has entered shit
+                        Double.parseDouble(maxsize);
+                        //sanitize fucking maxsize
+                        maxsize = (!"".equals(maxsize)) ? maxsize : "0";
+                    } catch (NumberFormatException e) {
+                        maxsize = "0";
+                    }
+
+                    Fields f = new Fields(fieldId, tableId, fieldName,
+                            "VARCHAR(50)", Integer.parseInt(maxsize),
+                            (short) ((searchable) ? 1 : 0), (short) ((required) ? 1 : 0),
+                            description, fieldtypeid);
+                    f.setFieldTypes(new FieldTypes(fieldtypeid));
+
+                    //get the predefined values of the field if it is a yes/no field or a dropdown list field
+                    if (fieldtypeid != 1) {
+
+                        JsonArray predefinedFieldValues = field.getJsonArray("fieldtypeContent");
+                        List<FieldPredefinedValues> ll = new LinkedList<>();
+
+                        for (JsonValue predefinedFieldValue : predefinedFieldValues) {
+
+                            JsonObject defaultt = Json.createReader(new StringReader(predefinedFieldValue.toString())).readObject();
+                            String defaultValue = defaultt.getString("value");
+
+                            FieldPredefinedValues predefValue = new FieldPredefinedValues(-1, f.getId(), defaultValue);
+                            //predefValue.setFields(field);
+                            ll.add(predefValue);
+                        }
+
+                        f.setFieldPredefinedValues(ll);
+                    }
                     
-//                    System.out.println("FIELDNAME  " + fieldName);
-//                    System.out.println("SEARCHABLE  " + searchable);
-//                    System.out.println("REQUIRED  " + required);
-//                    System.out.println("MAXSIZE  " + maxsize);
+                    table.addField(f);
+                    
                 } catch (NullPointerException e) {
                     System.err.println("-- find is null mapping to " + (false));
                     searchable = false;
                     required = false;
                 }
-
-                try {
-                    //just in case the user has entered shit
-                    Double.parseDouble(maxsize);
-                    //sanitize fucking maxsize
-                    maxsize = (!"".equals(maxsize)) ? maxsize : "0";
-                } catch (NumberFormatException e) {
-                    maxsize = "0";
-                }
-
-                Fields f = new Fields(fieldId, tableId, fieldName,
-                        "VARCHAR(50)", Integer.parseInt(maxsize),
-                        (short) ((searchable) ? 1 : 0), (short) ((required) ? 1 : 0),
-                        description, fieldtypeid);
-
-                table.addField(f);
             }
-
             tlist.add(table);
         }
         return tlist;

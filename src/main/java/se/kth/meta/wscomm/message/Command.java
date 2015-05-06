@@ -12,6 +12,8 @@ public enum Command {
     //
     STORE_TEMPLATE,
     //
+    EXTEND_TEMPLATE,
+    //
     STORE_METADATA,
     //
     ADD_NEW_TEMPLATE,

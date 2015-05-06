@@ -106,8 +106,6 @@ public class MetadataMessage implements Message {
         Set<Entry<String, JsonValue>> set = obj.entrySet();
 
         for (Entry<String, JsonValue> entry : set) {
-            System.out.println("Key: " + entry.getKey());
-            System.out.println("Value: " + entry.getValue());
             RawData raw = new RawData();
 
             //avoid the inodeid field as it has been accessed previously

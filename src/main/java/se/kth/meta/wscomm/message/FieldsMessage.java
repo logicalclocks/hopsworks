@@ -104,13 +104,14 @@ public class FieldsMessage extends ContentMessage {
         field.setForceDelete(forceDelete);
         field.setFieldTypes(new FieldTypes(fieldtypeid));
 
-        //get the predefined values of the field (if it is a yes/no field or a dropdown list field
-        JsonArray predefinedFieldValues = obj.getJsonArray("fieldtypeContent");
-        List<FieldPredefinedValues> ll = new LinkedList<>();
+        //get the predefined values of the field if it is a yes/no field or a dropdown list field
+        if (fieldtypeid != 1) {
+            
+            JsonArray predefinedFieldValues = obj.getJsonArray("fieldtypeContent");
+            List<FieldPredefinedValues> ll = new LinkedList<>();
 
-        for (JsonValue predefinedFieldValue : predefinedFieldValues) {
-            //no need for predefined values if this is a text field
-            if (fieldtypeid != 1) {
+            for (JsonValue predefinedFieldValue : predefinedFieldValues) {
+
                 JsonObject defaultt = Json.createReader(new StringReader(predefinedFieldValue.toString())).readObject();
                 String defaultValue = defaultt.getString("value");
 
@@ -118,9 +119,9 @@ public class FieldsMessage extends ContentMessage {
                 //predefValue.setFields(field);
                 ll.add(predefValue);
             }
-        }
 
-        field.setFieldPredefinedValues(ll);
+            field.setFieldPredefinedValues(ll);
+        }
 
         Tables table = new Tables(tableId, tableName);
         table.setTemplateid(super.getTemplateid());

@@ -103,8 +103,8 @@ public class Utils {
             logger.log(Level.SEVERE, "DELETING TABLE {0} ", table.getName());
             this.db.deleteTable(table);
         } catch (DatabaseException e) {
-            throw new ApplicationException("Utils.java: method deleteTable "
-                    + "encountered a problem", e.getMessage());
+            throw new ApplicationException(e.getMessage(), "Utils.java: method deleteTable "
+                    + "encountered a problem");
         }
     }
 
@@ -114,8 +114,8 @@ public class Utils {
             logger.log(Level.SEVERE, "DELETING FIELD {0} ", field);
             this.db.deleteField(field);
         } catch (DatabaseException e) {
-            throw new ApplicationException("Utils.java: method deleteField "
-                    + "encountered a problem", e.getMessage());
+            throw new ApplicationException(e.getMessage(), "Utils.java: method deleteField "
+                    + "encountered a problem");
         }
     }
 
@@ -141,8 +141,8 @@ public class Utils {
             ((Dbao) this.db).addTupleToFile(ttf);
 
         } catch (DatabaseException e) {
-            throw new ApplicationException("Utils.java: storeMetadata(List<?> list) "
-                    + "encountered a problem", e.getMessage());
+            throw new ApplicationException(e.getMessage(), "Utils.java: storeMetadata(List<?> list) "
+                    + "encountered a problem");
         }
     }
 
