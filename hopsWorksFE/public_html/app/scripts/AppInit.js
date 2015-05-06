@@ -93,14 +93,17 @@ angular.module('metaUI')
                             var data = JSON.parse(data.board);
                             $rootScope.templates = data.templates;
 
-                            if ($rootScope.templates.length === 0)
+                            if ($rootScope.templates.length === 0){
+                                $rootScope.templates = [];
                                 return;
+                            }
 
+                            console.log("TEMPLATES RETRIEVED " + JSON.stringify($rootScope.templates));
+                            
                             var templateid = $rootScope.templates[0].id;
                             $rootScope.templateId = templateid;
                             $rootScope.templateName = $rootScope.templates[0].name;
 
-                            console.log("TEMPLATES RETRIEVED " + JSON.stringify($rootScope.templates));
                             BoardService.fetchTemplate(templateid)
                                     .then(function (response) {
 

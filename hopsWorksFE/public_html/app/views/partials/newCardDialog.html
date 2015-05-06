@@ -21,7 +21,7 @@
 
             <label class="control-label" for="newCardType">Card Type</label>
             <div>
-                <select ng-model="selectedItem" ng-change="update()" ng-options="item as item.name for item in items"></select>
+                <select id="newCardType" ng-model="selectedItem" ng-change="update()" ng-options="item as item.name for item in items"></select>
             </div>
         </div>
 

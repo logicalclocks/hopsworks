@@ -13,19 +13,25 @@ var mainModule = angular.module('metaUI').controller('MetadataDesignController',
 
                 $scope.$on('refreshApp', function (event, data) {
 
-                    //data is the name of the side menu that was clicked
+                    //data is the name of the side menu item that was clicked
                     angular.forEach($scope.templates, function (value, key) {
                         if(angular.equals(value.name, data)){
 
                             BoardService.fetchTemplate(value.id)
                                 .then(function(response){
                                     $rootScope.mainBoard = BoardService.mainBoard(JSON.parse(response.board));
+                            
                                     $scope.templateId = value.id;
                                     $rootScope.templateId = value.id;
                                     $rootScope.templateName = value.name;
                             });
                         }
                     });
+                    refresh();
+                });
+                
+                $scope.$on('refreshWhenExtendedTemplate', function(data){
+                    
                     refresh();
                 });
 

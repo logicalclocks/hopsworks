@@ -4,31 +4,51 @@
 'use strict';
 
 angular.module('metaUI').service('BoardService',
-        ['$rootScope', '$location', 'DialogService', 'BoardManipulator', 'WSComm', '$q',
-            function ($rootScope, $location, DialogService, BoardManipulator, WSComm, $q) {
- 
-                var refreshApp = function(board){
+        ['$rootScope', '$location', 'DialogService', 'BoardManipulator', '$q',
+            function ($rootScope, $location, DialogService, BoardManipulator, $q) {
 
-                    if(board.templates.length !== 0){
-                         $rootScope.templates = board.templates;
-                         var templateid = $rootScope.templates[0].id;
-                         var templateName = $rootScope.templates[0].name;
-                         
-                         //need to update the mainBoard
-                         BoardManipulator.fetchTemplate(templateid)
-                            .then(function (response) {
-                                $rootScope.mainBoard = mainBoardLocal(JSON.parse(response.board));
-                                $rootScope.templateId = templateid;
-                                $rootScope.templateName = templateName;
-                                $rootScope.tabs = [];
-                            });
-                    }else if(board.templates.length === 0 || angular.isUndefined($rootScope.mainBoard)){
-                         $rootScope.mainBoard = [];
-                         $rootScope.templates = [];
+                var refreshApp = function (templates) {
+
+                    if (templates.length !== 0) {
+                        $rootScope.templates = templates;
+
+                        var templateid = $rootScope.templates[0].id;
+                        var templateName = $rootScope.templates[0].name;
+
+                        $rootScope.templateId = templateid;
+                        $rootScope.templateName = templateName;
+
+                        console.log("NEW TEMPLATE ID " + $rootScope.templateId);
+                        console.log("NEW TEMPLATE NAME " + $rootScope.templateName);
+
+
+                        //need to update the mainBoard
+                        BoardManipulator.fetchTemplate(templateid)
+                                .then(function (response) {
+                                    $rootScope.mainBoard = mainBoardLocal(JSON.parse(response.board));
+                                    $rootScope.tabs = [];
+                                });
+                    } else if (templates.length === 0 || angular.isUndefined($rootScope.mainBoard)) {
+                        $rootScope.mainBoard = [];
+                        $rootScope.templates = [];
                     }
-                    $rootScope.$broadcast('refreshApp');
+                    $rootScope.$broadcast('refreshApp', $rootScope.mainBoard);
                 };
-                 
+
+                var refreshAfterExtend = function (currentTemplate) {
+                    var templateid = currentTemplate.id;
+                    var templateName = currentTemplate.name;
+                    $rootScope.templateId = templateid;
+                    $rootScope.templateName = templateName;
+
+                    BoardManipulator.fetchTemplates()
+                            .then(function (response) {
+                                $rootScope.templates = JSON.parse(response.board).templates;
+                                console.log("TEMPLATES RERERER " + JSON.stringify($rootScope.templates));
+                            });
+                    $rootScope.$broadcast('refreshWhenExtendedTemplate', $rootScope.mainBoard);
+                };
+
                 var mainBoardLocal = function (board) {
                     var mainBoard = new Board(board.name, board.numberOfColumns);
 
@@ -44,9 +64,8 @@ angular.module('metaUI').service('BoardService',
 
                     return mainBoard;
                 };
-                          
+
                 return {
-                    
                     /*
                      ADDED FUNCTIONALITY TO ALLOW EDITING THE TEXT OF A COMPONENT
                      */
@@ -54,51 +73,43 @@ angular.module('metaUI').service('BoardService',
                         //alert('editing the card: BoardService');
                         BoardManipulator.startCardEditing(scope, card);
                     },
-                    
                     editColumnText: function (scope, column) {
                         BoardManipulator.startColumnEditing(scope, column);
                     },
-                    
                     doneEditing: function (scope, item) {
                         BoardManipulator.doneEditing(scope, item);
                     },
-                    
                     /* MAKES A CARD SEARCHABLE */
                     makeSearchable: function (scope, card) {
                         //if(confirm('Do you really want to make this card searchable?')){
                         BoardManipulator.makeSearchable(scope, card);
                         //}
                     },
-                    
                     makeRequired: function (scope, card) {
                         BoardManipulator.makeRequired(scope, card);
                     },
-                    
                     editSizeField: function (scope, card) {
                         BoardManipulator.editSizeField(scope, card);
                     },
-                    
                     doneEditingSizeField: function (scope, card) {
                         BoardManipulator.doneEditingSizeField(scope, card);
                     },
-                    
                     fetchTemplates: function () {
                         var defer = $q.defer();
 
                         BoardManipulator.fetchTemplates()
-                            .then(function (response) {
-                                $rootScope.templates = JSON.parse(response.board);
-                                //pass along to the caller the response string
-                                defer.resolve(response);
-                            });
+                                .then(function (response) {
+                                    $rootScope.templates = JSON.parse(response.board).templates;
+
+                                    //pass along to the caller the response string
+                                    defer.resolve(response);
+                                });
 
                         return defer.promise;
                     },
-                    
                     fetchTemplate: function (templateId) {
                         return BoardManipulator.fetchTemplate(templateId);
                     },
-                    
                     viewMetadata: function (tableid) {
                         var defer = $q.defer();
 
@@ -112,7 +123,6 @@ angular.module('metaUI').service('BoardService',
 
                         return defer.promise;
                     },
-                    
                     /*
                      * Adds a new list to the board
                      */
@@ -140,52 +150,50 @@ angular.module('metaUI').service('BoardService',
 
                         return defer.promise;
                     },
-                    
                     removeList: function (templateId, column) {
                         var defer = $q.defer();
                         var content = {header: 'List delete',
                             body: 'Are you sure you want to delete table \'' + column.name + '\'?'};
 
                         DialogService.launch('confirm', content)
-                            .result.then(function (response) {
+                                .result.then(function (response) {
 
-                            column.forceDelete = false;
-                            BoardManipulator.deleteList(templateId, column)
-                            .then(function (response) {
-                                var status = response.status;
-                                if (angular.equals(status, "ERROR")) {
-                                    console.log("Could not delete table. " + response.board);
-                                    DialogService.launch('confirm', {
-                                        header: 'Table delete problem',
-                                        body: 'Could not delete \'' + column.name + '\': ' + response.board + '.' +
-                                                '<br>Do you want to remove the associated fields as well?'
-                                    })
-                                    .result.then(function (bttn) {
-                                        console.log('You confirmed "YES."');
-                                        column.forceDelete = true;
+                                    column.forceDelete = false;
+                                    BoardManipulator.deleteList(templateId, column)
+                                            .then(function (response) {
+                                                var status = response.status;
+                                                if (angular.equals(status, "ERROR")) {
+                                                    console.log("Could not delete table. " + response.board);
+                                                    DialogService.launch('confirm', {
+                                                        header: 'Table delete problem',
+                                                        body: 'Could not delete \'' + column.name + '\': ' + response.board + '.' +
+                                                                '<br>Do you want to remove the associated fields as well?'
+                                                    })
+                                                            .result.then(function (bttn) {
+                                                                console.log('You confirmed "YES."');
+                                                                column.forceDelete = true;
 
-                                        BoardManipulator.deleteList(templateId, column)
-                                                .then(function (resp) {
-                                                    $rootScope.mainBoard = JSON.parse(resp.board);
-                                                    defer.resolve({response: "OK"});
-                                                });
-                                        });
-                                    return;
-                                }
-                                console.log("RESPONSE " + JSON.stringify(response.board));
-                                $rootScope.mainBoard = JSON.parse(response.board);
-                                //time to let the controller refresh the view
-                                defer.resolve({response: "OK"});
-                            });
-                        }, function (btn) {
-                            //handle the no answer
-                            console.log('You confirmed "No."');
-                            defer.resolve({response: 'negative'});
-                        });
+                                                                BoardManipulator.deleteList(templateId, column)
+                                                                        .then(function (resp) {
+                                                                            $rootScope.mainBoard = JSON.parse(resp.board);
+                                                                            defer.resolve({response: "OK"});
+                                                                        });
+                                                            });
+                                                    return;
+                                                }
+                                                console.log("RESPONSE " + JSON.stringify(response.board));
+                                                $rootScope.mainBoard = JSON.parse(response.board);
+                                                //time to let the controller refresh the view
+                                                defer.resolve({response: "OK"});
+                                            });
+                                }, function (btn) {
+                                    //handle the no answer
+                                    console.log('You confirmed "No."');
+                                    defer.resolve({response: 'negative'});
+                                });
 
                         return defer.promise;
                     },
-                    
                     /*
                      * Adds a new card to a list
                      */
@@ -212,7 +220,6 @@ angular.module('metaUI').service('BoardService',
 
                         return defer.promise;
                     },
-                    
                     /*
                      * removes a card (or field) from a list (or table), using the promise api. This way
                      * the calling controller knows when an action has completed and so when to refresh the view
@@ -225,107 +232,131 @@ angular.module('metaUI').service('BoardService',
                             body: 'Are you sure you want to delete card \'' + card.title + '\'?'};
 
                         DialogService.launch('confirm', content)
-                        .result.then(function (btn) {
-                            //handle the answer 'yes'
-                            card.forceDelete = false;
-                            BoardManipulator.deleteCard(templateId, column, card)
-                            .then(function (response) {
-                                var status = response.status;
-                                if (status === "ERROR") {
-                                    console.log("Could not delete card. " + response.board);
-                                    DialogService.launch('confirm', {
-                                        header: 'Card delete problem',
-                                        body: 'Could not delete \'' + card.title + '\': ' + response.board + '.' +
-                                                '<br>Do you want to remove the associated data as well?'
-                                    })
-                                    .result.then(function (bttn) {
-                                        console.log('You confirmed "YES."');
-                                        card.forceDelete = true;
+                                .result.then(function (btn) {
+                                    //handle the answer 'yes'
+                                    card.forceDelete = false;
+                                    BoardManipulator.deleteCard(templateId, column, card)
+                                            .then(function (response) {
+                                                var status = response.status;
+                                                if (status === "ERROR") {
+                                                    console.log("Could not delete card. " + response.board);
+                                                    DialogService.launch('confirm', {
+                                                        header: 'Card delete problem',
+                                                        body: 'Could not delete \'' + card.title + '\': ' + response.board + '.' +
+                                                                '<br>Do you want to remove the associated data as well?'
+                                                    })
+                                                            .result.then(function (bttn) {
+                                                                console.log('You confirmed "YES."');
+                                                                card.forceDelete = true;
 
-                                        BoardManipulator.deleteCard(templateId, column, card)
-                                                .then(function (resp) {
-                                                    $rootScope.mainBoard = JSON.parse(resp.board);
-                                                    defer.resolve({response: "OK"});
-                                                });
+                                                                BoardManipulator.deleteCard(templateId, column, card)
+                                                                        .then(function (resp) {
+                                                                            $rootScope.mainBoard = JSON.parse(resp.board);
+                                                                            defer.resolve({response: "OK"});
+                                                                        });
+                                                            });
+                                                    return;
+                                                }
+                                                console.log("RESPONSE " + JSON.stringify(response.board));
+                                                $rootScope.mainBoard = JSON.parse(response.board);
+                                                //time to let the controller refresh the view
+                                                defer.resolve({response: "OK"});
                                             });
-                                    return;
-                                }
-                                console.log("RESPONSE " + JSON.stringify(response.board));
-                                $rootScope.mainBoard = JSON.parse(response.board);
-                                //time to let the controller refresh the view
-                                defer.resolve({response: "OK"});
-                            });
-                        }, function (btn) {
-                            //handle the no answer
-                            console.log('You confirmed "No."');
-                            defer.resolve({response: 'peanuts'});
-                        });
+                                }, function (btn) {
+                                    //handle the no answer
+                                    console.log('You confirmed "No."');
+                                    defer.resolve({response: 'peanuts'});
+                                });
                         return defer.promise;
                     },
-                    
                     removeCardFromBoard: function (board, column, card) {
                         BoardManipulator.removeCardFromColumn(board, column, card);
                     },
-                    
                     //TEMPLATE HANDLING FUNCTIONS
                     addNewTemplate: function (templateName) {
                         var defer = $q.defer();
 
                         BoardManipulator.addNewTemplate(templateName)
-                            .then(function (response) {
-                                var board = JSON.parse(response.board);
-                                refreshApp(board);
-                                
-                                defer.resolve(response.board);
-                            });
+                                .then(function (response) {
+                                    var board = JSON.parse(response.board);
+                                    refreshApp(board.templates);
+
+                                    defer.resolve(response.board);
+                                });
 
                         return defer.promise;
                     },
-                    
                     removeTemplate: function (templateId) {
                         var defer = $q.defer();
 
                         BoardManipulator.removeTemplate(templateId)
-                            .then(function (response) {
-                                var board = JSON.parse(response.board);
-                                refreshApp(board);
-                                
-                                defer.resolve(response.board);
-                        });
+                                .then(function (response) {
+                                    var board = JSON.parse(response.board);
+                                    refreshApp(board.templates);
+
+                                    defer.resolve(response.board);
+                                });
 
                         return defer.promise;
                     },
-                    
-                    fetchFieldTypes: function(){
+                    extendTemplate: function () {
+                        var defer = $q.defer();
+
+                        var content = {view: 'views/partials/extendTemplateDialog.html',
+                            controller: 'ExtendTemplateController'};
+
+                        DialogService.launch('custom', content)
+                                .result.then(function (dialogResponse) {
+                                    var template = dialogResponse.template;
+                                    var templateBoard = dialogResponse.selectedTemplateBoard;
+
+                                    /*
+                                     * when the dialog is dismissed I have the new template object and the existing template board
+                                     * so its time to save the new template with the existing board
+                                     */
+                                    BoardManipulator.extendTemplate(template.id, templateBoard)
+                                            .then(function (response) {
+                                                console.log("Template saved successfully " + response.status);
+                                                //got the new template back so update the view
+                                                $rootScope.mainBoard = JSON.parse(response.board);
+
+                                                defer.resolve({response: "OK"});
+                                                console.log("REFRESHING " + JSON.stringify(template));
+                                                console.log("Board " + JSON.stringify($rootScope.mainBoard));
+                                                refreshAfterExtend(template);
+                                            });
+                                }, function () {
+                                    console.log("don't extend");
+                                    defer.resolve({response: 'could not extend existing template'});
+                                });
+
+                        return defer.promise;
+                    },
+                    fetchFieldTypes: function () {
                         var defer = $q.defer();
 
                         BoardManipulator.fetchFieldTypes()
-                            .then(function (response) {
-                                
-                                var fieldTypes = JSON.parse(response.board);
-                                defer.resolve(fieldTypes);
-                            });
+                                .then(function (response) {
+
+                                    var fieldTypes = JSON.parse(response.board);
+                                    defer.resolve(fieldTypes);
+                                });
 
                         return defer.promise;
                     },
-                    
                     /* *** SCHEMA HANDLING FUNCTIONS *** */
                     storeCard: function (card) {
                         return BoardManipulator.storeCard(card);
                     },
-                    
                     deleteCard: function (card) {
                         return BoardManipulator.deleteCard(card);
                     },
-                    
                     storeTemplate: function (templateId, board) {
                         return BoardManipulator.storeTemplate(templateId, board);
                     },
-                    
                     storeMetadata: function (metadata) {
                         return BoardManipulator.storeMetadata(metadata);
                     },
-                                        
                     refreshMetadataTabs: function () {
                         $rootScope.tabs = [];
                         angular.forEach($rootScope.mainBoard.columns, function (value, key) {
@@ -333,23 +364,21 @@ angular.module('metaUI').service('BoardService',
                             $rootScope.tabs.push({title: value.name, cards: value.cards});
                         });
                     },
-                    
                     getBoard: function () {
                         return $rootScope.mainBoard;
                     },
-                    
                     getMetadata: function () {
                         return $rootScope.metadata;
                     },
-                    
                     getTemplates: function () {
                         return $rootScope.templates;
                     },
-                    
                     getTemplateId: function () {
                         return $rootScope.templateId;
                     },
-                                                            
+                    getTemplateName: function () {
+                        return $rootScope.templateName;
+                    },
                     /**
                      * Constructor that initializes the kanban board creating all the corresponding card columns
                      * @param board is a json object containing all the columns and their cards
@@ -362,14 +391,13 @@ angular.module('metaUI').service('BoardService',
 
                             angular.forEach(column.cards, function (card) {
                                 BoardManipulator.addCardToColumn(mainBoard, column, card.id, card.title, card.details,
-                                        card.editing, card.find, card.required, card.sizefield, 
+                                        card.editing, card.find, card.required, card.sizefield,
                                         card.description, card.fieldtypeid, card.fieldtypeContent);
                             });
                         });
 
                         return mainBoard;
                     },
-                    
                     /**
                      * Constructor that initializes the sprint board page creating all the corresponding card columns
                      */

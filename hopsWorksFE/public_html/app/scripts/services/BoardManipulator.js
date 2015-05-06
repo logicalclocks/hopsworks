@@ -153,6 +153,15 @@ angular.module('metaUI').factory('BoardManipulator', function (WSComm) {
             });
         },
         
+        extendTemplate: function(templateId, board){
+            return WSComm.send({
+                sender: 'evsav',
+                type: 'TemplateMessage',
+                action: 'extend_template',
+                message: JSON.stringify({tempid: templateId, bd: board})
+            });
+        },
+        
         addNewTemplate: function(templateName){
             return WSComm.send({
                 sender: 'evsav',

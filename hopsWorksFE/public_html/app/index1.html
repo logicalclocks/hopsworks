@@ -73,6 +73,7 @@
         <script type="text/javascript" src="scripts/controllers/MetadataDesignController.js"></script>
         <script type="text/javascript" src="scripts/controllers/NewCardController.js"></script>
         <script type="text/javascript" src="scripts/controllers/NewCardDialogController.js"></script>
+        <script type="text/javascript" src="scripts/controllers/ExtendTemplateController.js"></script>
         <script type="text/javascript" src="scripts/controllers/ListController.js"></script>
         <script type="text/javascript" src="scripts/controllers/NewlistController.js"></script>
         <script type="text/javascript" src="scripts/controllers/MetadataController.js"></script>
@@ -88,16 +89,6 @@
             <div class="container-fluid">
                 <div class="board-header">
                     <ul class="nav nav-tabs nav-justified">
-
-                        <!--ng-click is not working as submit is defined in another scope-->
-                        <!--                <li><a href="#/save" ng-class="{active: isActive('#/save')}" title="create tables from template"
-                                               ng-click="submit('ooooooo')">
-                                            <i class="glyphicon glyphicon-floppy-save">&nbspSave Template</i></a></li>-->
-
-                        <!--                        <li><a href="#/list" ng-class="{active: isActive('#/list')}" title="add new table"
-                                                       ng-click="counter = 1;showing = true">
-                        
-                                                        <i class="addList glyphicon glyphicon-plus"></i></a></li>-->
 
                         <li><a href="#" ng-click="showLeft($event)">Change Template (current is: <b>{{templateName}}</b>)</a></li>
                         <li ng-show="{{showBoard}}"><a href="#/metaDesign" ng-class="{active: isActive('#/metaDesign')}">Metadata Design</a></li>

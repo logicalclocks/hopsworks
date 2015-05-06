@@ -7,11 +7,7 @@
             <div class="column">
                 <div class="columnHeader">
                     <div align="right">
-                        <!--<button class="btn btn-default btn-sm" title="Removes the list" ng-click="removeList(column)"><i-->
-                        <!--class="glyphicon glyphicon-minus removeList"></i></button>-->
-                        <!--<button class="btn btn-default btn-sm" title="Add card to column" ng-click="addNewCard(column)"><i-->
-                        <!--class="glyphicon glyphicon-plus addNewCard"></i></button>-->
-
+                        
                         <a title="View metadata" ng-click="viewMetadata(column)">
                             <i class="glyphicon glyphicon-eye-open"></i></a>
                         <a title="Add card to table" ng-click="addNewCard(column)">
@@ -50,7 +46,7 @@
         <!--SIDE MENU-->
         <menu ng-model="templates" visible="leftVisible" id="slidingmenu" alignment="left" ng-class="active">
             <menu-item ng-repeat="template in templates" align="left">
-                <div>   
+                <div>
                     <i class="glyphicon glyphicon-remove removeList" id="removeTemplate" ng-click="removeTemplate(template)"></i>
                     <b>{{template.name}}</b>
                 </div>
@@ -59,13 +55,14 @@
                     <input type="text" placeholder="Template name" required id="templateInputName"
                            focus-me class="form-control templateNameInput"/>
             </menu-item>
-            <button type="button" class="btn btn-default" ng-click="addTemplate()">
+            <button type="button" class="btn btn-default" id="addTemplate" ng-click="addTemplate()">
                 <i class="glyphicon glyphicon-plus"></i>
                 New Template
             </button>
+            <button type="button" class="btn btn-default" id="extendTemplate" ng-click="extendTemplate()">
+                <i class="glyphicon glyphicon-plus"></i>
+                Extend Template
+            </button>
         </menu>
-
-        <!--        <button class="btn btn-danger" ng-click="launch('notify', {header: 'Problem', body: 'error'})">Error Dialog
-                </button>-->
     </div>
 </div>

@@ -34,6 +34,12 @@ var app = angular.module('metaUI')
                 ['$scope', '$route', '$location', '$rootScope', 'DialogService', 'BoardService',
                     function ($scope, $route, $location, $rootScope, DialogService, BoardService) {
 
+                        $scope.$on('refreshApp', function () {
+
+                            $rootScope.templateName = BoardService.getTemplateName();
+                            console.log("GOT TEMPLATE NAME " + $rootScope.templateName);
+                        });
+
                         //Sliding menu handling
                         $scope.showBoard = true;
                         $scope.additionalTemplates = [];
@@ -69,6 +75,7 @@ var app = angular.module('metaUI')
                                     .then(function (response) {
                                         var resp = JSON.parse(response);
                                         $rootScope.templates = resp.templates;
+                                        $scope.templates = $rootScope.templates;
                                         $scope.additionalTemplates = [];
                                     });
                         };
@@ -87,6 +94,16 @@ var app = angular.module('metaUI')
                                                     $rootScope.templates = resp.templates;
                                                     $scope.additionalTemplates = [];
                                                 });
+                                    });
+                        };
+
+                        $scope.extendTemplate = function () {
+
+                            $scope.additionalTemplates = [];
+
+                            BoardService.extendTemplate()
+                                    .then(function (response) {
+                                        console.log("template extended " + JSON.stringify(response));
                                     });
                         };
 
@@ -158,8 +175,6 @@ app.directive("input", function () {
                     if (!angular.isUndefined(scope.saveTemplate)) {
                         console.log("value to save " + element.val());
                         scope.saveTemplate(element.val());
-                        //$('#slidingmenu').click();
-                        //element.blur();
                     }
                 }
             });

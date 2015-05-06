@@ -33,16 +33,36 @@ angular.module('metaUI', [
             $httpProvider.interceptors.push('sessionInjector');
         })
 
+        //sort an array in descending manner
+        .filter('sortArray', function () {
+            return function (input, attribute) {
+                if (!angular.isObject(input))
+                    return input;
+
+                var array = [];
+                for (var objectKey in input) {
+                    array.push(input[objectKey]);
+                }
+
+                array.sort(function (a, b) {
+                    a = parseInt(a[attribute]);
+                    b = parseInt(b[attribute]);
+                    return b - a;
+                });
+                return array;
+            };
+        })
+        
         .factory('sessionInjector', function ($q, $location, $routeParams) {
             var defer = $q.defer();
             return {
                 request: function (config) {
                     //console.log("request made " + JSON.stringify(config));
                     config.timeout = defer.promise;
-                    
+
                     //console.log(JSON.stringify(config));
                     //console.log(JSON.stringify($routeParams));
-                    
+
 //                    if (!config.headers['sessionid']) {
 //
 //                        config.headers['STATUS'] = "BACK OFF";
