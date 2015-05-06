@@ -3,7 +3,11 @@ André More & Ermias Gebremeskel
 
 ## Build & development
 
-Run `grunt` for building and `grunt serve` for preview.
+This application needs to run on the same port as the backend.
+
+To accomplish this, you need to copy the folder 'app' to GlassFish docroot folder.
+
+To access the application you simply go to http://localhost:8080/app.
 
 ## Testing
 
