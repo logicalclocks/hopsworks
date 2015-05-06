@@ -193,6 +193,8 @@ public class User implements Serializable {
     this.isonline = isonline;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public String getValidationKey() {
     return validationKey;
   }
@@ -217,6 +219,8 @@ public class User implements Serializable {
     this.username = username;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public String getPassword() {
     return password;
   }
@@ -249,6 +253,8 @@ public class User implements Serializable {
     this.lname = lname;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public Date getActivated() {
     return activated;
   }
@@ -273,6 +279,8 @@ public class User implements Serializable {
     this.mobile = mobile;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public String getOrcid() {
     return orcid;
   }
@@ -281,6 +289,8 @@ public class User implements Serializable {
     this.orcid = orcid;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public int getFalseLogin() {
     return falseLogin;
   }
@@ -289,6 +299,8 @@ public class User implements Serializable {
     this.falseLogin = falseLogin;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public int getStatus() {
     return status;
   }
@@ -305,6 +317,8 @@ public class User implements Serializable {
     this.isonline = isonline;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public String getSecret() {
     return secret;
   }
@@ -313,6 +327,8 @@ public class User implements Serializable {
     this.secret = secret;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public SecurityQuestion getSecurityQuestion() {
     return securityQuestion;
   }
@@ -321,6 +337,8 @@ public class User implements Serializable {
     this.securityQuestion = securityQuestion;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public String getSecurityAnswer() {
     return securityAnswer;
   }
@@ -329,6 +347,8 @@ public class User implements Serializable {
     this.securityAnswer = securityAnswer;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public int getYubikeyUser() {
     return yubikeyUser;
   }
@@ -353,6 +373,8 @@ public class User implements Serializable {
     this.notes = notes;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public Yubikey getYubikey() {
     return yubikey;
   }
@@ -361,6 +383,8 @@ public class User implements Serializable {
     this.yubikey = yubikey;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public Address getAddress() {
     return address;
   }
@@ -369,6 +393,8 @@ public class User implements Serializable {
     this.address = address;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public Organization getOrganization() {
     return organization;
   }

@@ -15,6 +15,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.security.ua.model.User;
 
 /**
@@ -56,9 +58,9 @@ import se.kth.bbc.security.ua.model.User;
           query
           = "SELECT st.study from StudyTeam st WHERE st.user = :user AND NOT st.study.owner = :user")})
 public class StudyTeam implements Serializable {
-  
+
   private static final long serialVersionUID = 1L;
-  
+
   @JoinColumn(name = "study_id",
           referencedColumnName = "id",
           insertable = false,
@@ -66,7 +68,7 @@ public class StudyTeam implements Serializable {
           = false)
   @ManyToOne(optional = false)
   private Study study;
-  
+
   @JoinColumn(name = "team_member",
           referencedColumnName = "email",
           insertable
@@ -74,13 +76,13 @@ public class StudyTeam implements Serializable {
           updatable = false)
   @ManyToOne(optional = false)
   private User user;
-  
+
   @EmbeddedId
   protected StudyTeamPK studyTeamPK;
-  
+
   @Column(name = "team_role")
   private String teamRole;
-  
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "added")
@@ -162,6 +164,8 @@ public class StudyTeam implements Serializable {
     this.study = study;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public User getUser() {
     return user;
   }
