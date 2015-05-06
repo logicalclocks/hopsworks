@@ -253,3 +253,21 @@ body.rtls .file-box {
   margin-bottom: 15px;
   margin-top: 15px;
 }
+
+
+.table-hover > tbody > tr:hover {
+  background-color: #4285f4;
+  color:white;
+}
+
+#hoverable{
+  border-style: solid;
+  color: #666;
+  margin-top: 15px;
+  padding: 15px 20px 35px;
+}
+
+#hoverable:hover{
+  background-color: #f1f1f1;
+  color:grey;
+}
