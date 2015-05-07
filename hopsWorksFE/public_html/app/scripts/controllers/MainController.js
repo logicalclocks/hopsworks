@@ -37,7 +37,6 @@ var app = angular.module('metaUI')
                         $scope.$on('refreshApp', function () {
 
                             $rootScope.templateName = BoardService.getTemplateName();
-                            console.log("GOT TEMPLATE NAME " + $rootScope.templateName);
                         });
 
                         //Sliding menu handling
@@ -49,7 +48,6 @@ var app = angular.module('metaUI')
                         }
 
                         $rootScope.$on('hideMenuItems', function () {
-                            console.log("hiding menu items");
                             $scope.showBoard = false;
                         });
 
@@ -75,7 +73,6 @@ var app = angular.module('metaUI')
                                     .then(function (response) {
                                         var resp = JSON.parse(response);
                                         $rootScope.templates = resp.templates;
-                                        $scope.templates = $rootScope.templates;
                                         $scope.additionalTemplates = [];
                                     });
                         };
@@ -103,7 +100,9 @@ var app = angular.module('metaUI')
 
                             BoardService.extendTemplate()
                                     .then(function (response) {
-                                        console.log("template extended " + JSON.stringify(response));
+
+                                        $rootScope.templates = response.templates;
+                                        $rootScope.$broadcast("refreshWhenExtendedTemplate");
                                     });
                         };
 
@@ -190,6 +189,21 @@ app.directive("i", function () {
             element.bind('click', function (e) {
                 //apply the directive only on the i element of the menu
                 if (angular.equals(angular.element(element).attr("id"), "removeTemplate")) {
+                    e.stopPropagation();
+                }
+            });
+        }
+    };
+});
+
+app.directive("select", function () {
+    return {
+        restrict: 'E',
+        multiElement: true,
+        link: function (scope, element, attr) {
+            element.bind('click', function (e) {
+                //apply the directive only on the i element of the menu
+                if (angular.equals(angular.element(element).attr("id"), "existingTemplates")) {
                     e.stopPropagation();
                 }
             });

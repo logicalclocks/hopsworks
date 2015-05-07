@@ -49,6 +49,9 @@ var mainModule = angular.module('metaUI').controller('MetadataDesignController',
                         //$scope.templates = BoardService.getTemplates();
                         $scope.templateId = BoardService.getTemplateId();
                         
+                        $rootScope.templates = BoardService.getTemplates();
+                        
+                        console.log("TEMPLATES " + JSON.stringify($rootScope.templates));
                         console.log("TEMPLATE ID " + $scope.templateId);
                         $scope.$apply();
                     }, 70);

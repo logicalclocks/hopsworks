@@ -10,6 +10,7 @@ angular.module('metaUI').controller('ExtendTemplateController',
 
                 $scope.templates = {};
                 $scope.selectedBoard = {};
+                $scope.dialogResponse = {};
                 $scope.templateName = "";
                 $scope.selectedTemplate = "";
                 $scope.availableTemplates = false;
@@ -24,10 +25,13 @@ angular.module('metaUI').controller('ExtendTemplateController',
                             if ($scope.templates.length === 0) {
                                 $scope.availableTemplates = true;
                             }
+                            
+                            $scope.dialogResponse = {template: $scope.templates[0], 
+                                    selectedTemplateBoard: $scope.selectedBoard, templates: $scope.templates};
                         });
 
                 $scope.cancel = function () {
-                    $modalInstance.dismiss('Canceled');
+                    $modalInstance.dismiss($scope.dialogResponse);
                 };
 
                 $scope.createTemplate = function () {
@@ -40,18 +44,22 @@ angular.module('metaUI').controller('ExtendTemplateController',
                                 
                                 var resp = JSON.parse(response);
                                 $scope.templates = resp.templates;
-
+                                
                                 //get the newly added template. It has the largest id
                                 var result = $filter('sortArray')($scope.templates, "id");
                                 var newTemplate = result[0];
 
                                 $scope.templateId = newTemplate.id;
                                 $rootScope.templateId = $scope.templateId;
-                                $modalInstance.close({template: newTemplate, selectedTemplateBoard: $scope.selectedBoard});
+                                $scope.dialogResponse = {template: newTemplate, 
+                                    selectedTemplateBoard: $scope.selectedBoard, templates: $scope.templates}
                             }, function () {
                                 console.log("don't extend");
-                                $modalInstance.close({template: "no template created"});
+                                //if the user closes the dialog just pass along the default values
+                                $scope.dialogResponse = {template: $scope.templates[0], 
+                                    selectedTemplateBoard: $scope.selectedBoard, templates: $scope.templates};
                             });
+                            $modalInstance.close($scope.dialogResponse);
                 };
 
                 $scope.hitEnter = function (evt) {

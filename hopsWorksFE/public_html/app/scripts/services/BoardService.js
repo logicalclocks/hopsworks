@@ -18,10 +18,6 @@ angular.module('metaUI').service('BoardService',
                         $rootScope.templateId = templateid;
                         $rootScope.templateName = templateName;
 
-                        console.log("NEW TEMPLATE ID " + $rootScope.templateId);
-                        console.log("NEW TEMPLATE NAME " + $rootScope.templateName);
-
-
                         //need to update the mainBoard
                         BoardManipulator.fetchTemplate(templateid)
                                 .then(function (response) {
@@ -44,7 +40,6 @@ angular.module('metaUI').service('BoardService',
                     BoardManipulator.fetchTemplates()
                             .then(function (response) {
                                 $rootScope.templates = JSON.parse(response.board).templates;
-                                console.log("TEMPLATES RERERER " + JSON.stringify($rootScope.templates));
                             });
                     $rootScope.$broadcast('refreshWhenExtendedTemplate', $rootScope.mainBoard);
                 };
@@ -319,15 +314,14 @@ angular.module('metaUI').service('BoardService',
                                                 console.log("Template saved successfully " + response.status);
                                                 //got the new template back so update the view
                                                 $rootScope.mainBoard = JSON.parse(response.board);
-
-                                                defer.resolve({response: "OK"});
-                                                console.log("REFRESHING " + JSON.stringify(template));
-                                                console.log("Board " + JSON.stringify($rootScope.mainBoard));
+                                                $rootScope.templates = dialogResponse.templates;
+                                                
+                                                defer.resolve(dialogResponse);
                                                 refreshAfterExtend(template);
                                             });
-                                }, function () {
-                                    console.log("don't extend");
-                                    defer.resolve({response: 'could not extend existing template'});
+                                }, function (dialogResponse) {
+                                    console.log("don't extend " + JSON.stringify(dialogResponse));
+                                    defer.resolve(dialogResponse);
                                 });
 
                         return defer.promise;

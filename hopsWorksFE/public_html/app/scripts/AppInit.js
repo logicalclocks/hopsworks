@@ -12,13 +12,6 @@ angular.module('metaUI')
             //generic
             var ws = $websocket("ws://" + $location.host() + ":19931/hopsworks/wspoint/test?evsav");
 
-            //to work with the ethernet adapter
-            //var ws = $websocket("ws://193.10.67.226:19931/MetaHops/metahops/test?evsav");
-            //var ws = $websocket("ws://193.10.67.226:19931/hop-dashboard/wspoint/test?evsav");
-
-            //to work with the wireless adapter
-            //var ws = $websocket("ws://169.254.67.177:19931/MetaHops/metahops/test?evsav");
-
             var collection = [];
 
             ws.onMessage(function (event) {
@@ -83,8 +76,8 @@ angular.module('metaUI')
                 host: 'http://127.0.0.1:9200'
             });
         })
-        .run(['$rootScope', 'WSComm', 'BoardService', '$q',
-            function ($rootScope, WSComm, BoardService, $q) {
+        .run(['$rootScope', 'BoardService', '$q',
+            function ($rootScope, BoardService, $q) {
 
                 //initialize the main screen
                 BoardService.fetchTemplates()
@@ -97,8 +90,6 @@ angular.module('metaUI')
                                 $rootScope.templates = [];
                                 return;
                             }
-
-                            console.log("TEMPLATES RETRIEVED " + JSON.stringify($rootScope.templates));
                             
                             var templateid = $rootScope.templates[0].id;
                             $rootScope.templateId = templateid;
@@ -109,11 +100,6 @@ angular.module('metaUI')
 
                                         $rootScope.mainBoard = BoardService.mainBoard(JSON.parse(response.board));
                                         $rootScope.tabs = [];
-
-                                        //console.log("TEMPLATE FETCHED " + JSON.stringify($rootScope.mainBoard));
-                                        //LOAD STATIC BOARD
-                                        //$rootScope.mainBoard = BoardService.mainBoard(BoardDataFactory.kanban);
-                                        //console.log($rootScope.mainBoard);
                                     });
                         });
             }]);
