@@ -52,14 +52,17 @@ angular.module('metaUI').controller('ExtendTemplateController',
                                 $scope.templateId = newTemplate.id;
                                 $rootScope.templateId = $scope.templateId;
                                 $scope.dialogResponse = {template: newTemplate, 
-                                    selectedTemplateBoard: $scope.selectedBoard, templates: $scope.templates}
+                                    selectedTemplateBoard: $scope.selectedBoard, templates: $scope.templates};
+                                
+                                $modalInstance.close($scope.dialogResponse);
                             }, function () {
                                 console.log("don't extend");
                                 //if the user closes the dialog just pass along the default values
                                 $scope.dialogResponse = {template: $scope.templates[0], 
                                     selectedTemplateBoard: $scope.selectedBoard, templates: $scope.templates};
+                                $modalInstance.close($scope.dialogResponse);
                             });
-                            $modalInstance.close($scope.dialogResponse);
+                            
                 };
 
                 $scope.hitEnter = function (evt) {

@@ -41,7 +41,7 @@ angular.module('metaUI').service('BoardService',
                             .then(function (response) {
                                 $rootScope.templates = JSON.parse(response.board).templates;
                             });
-                    $rootScope.$broadcast('refreshWhenExtendedTemplate', $rootScope.mainBoard);
+                    //$rootScope.$broadcast('refreshWhenExtendedTemplate', $rootScope.mainBoard);
                 };
 
                 var mainBoardLocal = function (board) {
@@ -316,11 +316,13 @@ angular.module('metaUI').service('BoardService',
                                                 $rootScope.mainBoard = JSON.parse(response.board);
                                                 $rootScope.templates = dialogResponse.templates;
                                                 
+                                                //hand off the control back to the caller
                                                 defer.resolve(dialogResponse);
                                                 refreshAfterExtend(template);
                                             });
                                 }, function (dialogResponse) {
                                     console.log("don't extend " + JSON.stringify(dialogResponse));
+                                    //hand off the control back to the caller 
                                     defer.resolve(dialogResponse);
                                 });
 

@@ -46,13 +46,12 @@ var mainModule = angular.module('metaUI').controller('MetadataDesignController',
                         //reinitialization of the mainBoard and refresh the page just to allow the board to appear
                         //$scope.mainBoard = $rootScope.mainBoard;
                         $scope.mainBoard = BoardService.getBoard();
-                        //$scope.templates = BoardService.getTemplates();
                         $scope.templateId = BoardService.getTemplateId();
                         
                         $rootScope.templates = BoardService.getTemplates();
                         
-                        console.log("TEMPLATES " + JSON.stringify($rootScope.templates));
-                        console.log("TEMPLATE ID " + $scope.templateId);
+                        //console.log("TEMPLATES " + JSON.stringify($rootScope.templates));
+                        console.log("TEMPLATE ID " + $rootScope.templateId);
                         $scope.$apply();
                     }, 70);
                 };
