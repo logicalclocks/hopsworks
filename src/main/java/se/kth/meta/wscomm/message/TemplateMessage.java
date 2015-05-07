@@ -111,15 +111,20 @@ public class TemplateMessage extends ContentMessage {
     public List<EntityIntf> parseSchema() {
 
         JsonObject obj = Json.createReader(new StringReader(this.message)).readObject();
-
         JsonObject board = obj.getJsonObject("bd");
-
-        //get the prospective tables
-        JsonArray tables = board.getJsonArray("columns");
-        int noofTables = tables.size();
 
         Map<String, String[][]> schema = new HashMap<>();
         List<EntityIntf> tlist = new LinkedList<>();
+        
+        //get the prospective tables
+        JsonArray tables = board.getJsonArray("columns");
+        
+        //there is the case of the empty template
+        if(tables == null){
+            return tlist;
+        }
+        
+        int noofTables = tables.size();
 
         for (int i = 0; i < noofTables; i++) {
             JsonObject item = tables.getJsonObject(i);
@@ -142,12 +147,12 @@ public class TemplateMessage extends ContentMessage {
             int noofFields = fields.size();
 
             int fieldId = -1;
-            String fieldName = "";
+            String fieldName;
             boolean searchable = false;
             boolean required = false;
-            String maxsize = "";
-            String description = "";
-            int fieldtypeid = -1;
+            String maxsize;
+            String description;
+            int fieldtypeid;
 
             //retrieve the table fields/attributes
             for (int j = 0; j < fields.size(); j++) {
