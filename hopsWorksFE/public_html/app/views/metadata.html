@@ -26,6 +26,7 @@
                                             <!--text input field type-->
                                             <div ng-if="card.fieldtypeid === 1">
                                                 <input size="10" value="" class="fillInMetadataInput" id="sizeFieldInput"
+                                                       tooltips title="{{card.description}}"
                                                        ng-show="true"
                                                        ng-model="data[card.id]"/>
                                                 <!--ng-model="data[tab.title + '|' + card.title + '|' + card.id]"/>-->
@@ -34,6 +35,7 @@
                                             <div ng-if="card.fieldtypeid === 2">
                                                 <select ng-model="data[card.id]" 
                                                         ng-options="item.value as item.value for item in card.fieldtypeContent"
+                                                        tooltips title="{{card.description}}"
                                                         required>
                                                     <option value="">Select default value</option> 
                                                 </select>
@@ -42,6 +44,7 @@
                                             <div ng-if="card.fieldtypeid === 3">
                                                 {{card.fieldtypeContent[0].value}} / {{card.fieldtypeContent[1].value}}
                                                 <input type="checkbox" ng-model="data[card.id]"
+                                                       tooltips title="{{card.description}}"
                                                        ng-true-value="'{{card.fieldtypeContent[0].value}}'" ng-false-value="'{{card.fieldtypeContent[1].value}}'"/>
                                             </div>
                                         </td>

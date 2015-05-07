@@ -14,7 +14,8 @@ angular.module('metaUI', [
     'dialogs.main',
     'pascalprecht.translate',
     'dialogs.default-translations',
-    'toaster'
+    'toaster',
+    '720kb.tooltips'
 ])
         .config(['$routeProvider', function ($routeProvider) {
                 $routeProvider.when('/', {templateUrl: 'views/metadataDesign.html'});
