@@ -4,8 +4,8 @@
 'use strict';
 
 var mainModule = angular.module('metaUI').controller('MetadataDesignController',
-        ['$scope', '$rootScope', 'BoardService', 'DialogService', 'toaster', 'WSComm', '$location', '$sce',
-            function ($scope, $rootScope, BoardService, DialogService, toaster, WSComm, $location, $sce) {
+        ['$scope', '$rootScope', 'BoardService', 'DialogService', 'toaster', '$location',
+            function ($scope, $rootScope, BoardService, DialogService, toaster, $location) {
 
                 $scope.$on('event:auth-loginRequired', function () {
                     $location.path('/error');
@@ -166,15 +166,23 @@ var mainModule = angular.module('metaUI').controller('MetadataDesignController',
                     DialogService.launch(type, message);
                 };
 
+                $scope.modifyField = function(column, card){
+
+                    BoardService.modifyField(column, card)
+                            .then(function(response){
+                                console.log("modifying done");
+                    });
+                };
+                
                 $scope.submit = function () {
 
                     BoardService.storeTemplate($scope.templateId, $rootScope.mainBoard)
-                            .then(function (response) {
-                                console.log("Template saved successfully " + response.status);
-                                //got the new template back so update the view
-                                $rootScope.mainBoard = JSON.parse(response.board);
-                                refresh();
-                            });
+                        .then(function (response) {
+                            console.log("Template saved successfully " + response.status);
+                            //got the new template back so update the view
+                            $rootScope.mainBoard = JSON.parse(response.board);
+                            refresh();
+                        });
                 };
             }]);
 

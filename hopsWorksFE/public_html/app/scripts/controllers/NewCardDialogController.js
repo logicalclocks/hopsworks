@@ -46,19 +46,20 @@ angular.module('metaUI').controller('NewCardDialogController',
                     }
 
                     var fieldTypeContent = [];
-                    if($scope.selectedItem.id === 1){
-                        fieldTypeContent = [{id: -1, fieldid: -1, value: ""}];
+                    switch($scope.selectedItem.id) {
+                        case 1:
+                            fieldTypeContent = [{id: -1, fieldid: -1, value: ""}];
+                            break;
+                        case 2:
+                            fieldTypeContent = $scope.fieldSelectItems;
+                            break;
+                        case 3:
+                            fieldTypeContent = $scope.yesNoItems;
                     }
-                    else if($scope.selectedItem.id === 2){
-                        fieldTypeContent = $scope.fieldSelectItems;
-                    }
-                    else if($scope.selectedItem.id === 3){
-                        fieldTypeContent = $scope.yesNoItems;
-                    }
-                    
+
                     $modalInstance.close({id: this.id, title: this.title, details: this.details,
                         editing: this.editing, find: this.find, required: this.required,
-                        sizefield: this.sizefield, description: this.description, 
+                        sizefield: this.sizefield, description: this.description,
                         fieldtypeid: this.selectedItem.id, fieldtypeContent: fieldTypeContent});
                 };
 
@@ -68,13 +69,19 @@ angular.module('metaUI').controller('NewCardDialogController',
                 };
 
                 $scope.update = function () {
-                    if ($scope.selectedItem.id === 2) {
-                        $scope.yesNoItems = [];
-                        $scope.addNewSelectChoice();
-                    }
-                    else if($scope.selectedItem.id === 3){
-                        $scope.fieldSelectItems = [];
-                        $scope.addYesnoChoice();
+
+                    switch ($scope.selectedItem.id) {
+                        case 1:
+                            $scope.yesNoItems = [];
+                            $scope.fieldSelectItems = [];
+                            break;
+                        case 2:
+                            $scope.yesNoItems = [];
+                            $scope.addNewSelectChoice();
+                            break;
+                        case 3:
+                            $scope.fieldSelectItems = [];
+                            $scope.addYesnoChoice();
                     }
                 };
 
@@ -89,8 +96,8 @@ angular.module('metaUI').controller('NewCardDialogController',
                     //$scope.choices.splice(lastItem);
                     $scope.fieldSelectItems.splice(lastItem);
                 };
-                
-                $scope.addYesnoChoice = function(){
+
+                $scope.addYesnoChoice = function () {
                     $scope.yesNoItems.push({id: -1, fieldid: -1, value: ""});
                     $scope.yesNoItems.push({id: -1, fieldid: -1, value: ""});
                 };

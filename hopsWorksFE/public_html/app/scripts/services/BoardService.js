@@ -315,7 +315,7 @@ angular.module('metaUI').service('BoardService',
                                                 //got the new template back so update the view
                                                 $rootScope.mainBoard = JSON.parse(response.board);
                                                 $rootScope.templates = dialogResponse.templates;
-                                                
+
                                                 //hand off the control back to the caller
                                                 defer.resolve(dialogResponse);
                                                 refreshAfterExtend(template);
@@ -328,6 +328,33 @@ angular.module('metaUI').service('BoardService',
 
                         return defer.promise;
                     },
+                    
+                    modifyField: function (column, field) {
+                        var defer = $q.defer();
+
+                        var content = {view: 'views/partials/modifyFieldDialog.html',
+                            controller: 'ModifyFieldController',
+                            data: {table: column.id, field: field}};
+
+                        DialogService.launch('custom', content)
+                                .result.then(function (dialogResponse) {
+                            
+                                    //PERSIST THE CARD TO THE DATABASE - dialogResponse is the modified field
+                                    BoardManipulator.storeCard($rootScope.templateId, column, dialogResponse)
+                                            .then(function (response) {
+                                                $rootScope.mainBoard = JSON.parse(response.board);
+
+                                                defer.resolve($rootScope.mainBoard);
+                                                $rootScope.$broadcast('refreshApp', $rootScope.mainBoard);
+                                            });
+                                }, function (dialogResponse) {
+                                    console.log("don't modify " + JSON.stringify(dialogResponse));
+                                    //hand off the control back to the caller 
+                                });
+
+                        return defer.promise;
+                    },
+                    
                     fetchFieldTypes: function () {
                         var defer = $q.defer();
 
