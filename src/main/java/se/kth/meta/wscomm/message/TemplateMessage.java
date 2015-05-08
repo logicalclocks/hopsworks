@@ -123,7 +123,7 @@ public class TemplateMessage extends ContentMessage {
         if(tables == null){
             return tlist;
         }
-        
+         
         int noofTables = tables.size();
 
         for (int i = 0; i < noofTables; i++) {

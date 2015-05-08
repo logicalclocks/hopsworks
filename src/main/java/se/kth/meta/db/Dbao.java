@@ -109,7 +109,7 @@ public class Dbao {
      * associated with the relevant table.
      *
      * @param field the field with its corresponding attributes
-     * @return 
+     * @return
      * @throws se.kth.meta.exception.DatabaseException
      */
     public int addField(Fields field) throws DatabaseException {
@@ -127,7 +127,7 @@ public class Dbao {
             }
 
             this.utx.commit();
-            
+
             return f.getId();
         } catch (IllegalStateException | SecurityException | HeuristicMixedException |
                 HeuristicRollbackException | NotSupportedException | RollbackException |
@@ -136,13 +136,13 @@ public class Dbao {
             throw new DatabaseException(Dbao.class.getName(), "Could not add field " + e.getMessage());
         }
     }
-    
+
     public void addFieldPredefinedValue(FieldPredefinedValues value) throws DatabaseException {
-        try{
+        try {
             this.utx.begin();
             this.em.persist(value);
             this.utx.commit();
-        }catch (IllegalStateException | SecurityException | HeuristicMixedException |
+        } catch (IllegalStateException | SecurityException | HeuristicMixedException |
                 HeuristicRollbackException | NotSupportedException | RollbackException |
                 SystemException e) {
 
@@ -156,10 +156,10 @@ public class Dbao {
     }
 
     public Fields getField(int fieldid) throws DatabaseException {
-        
+
         return this.em.find(Fields.class, fieldid);
     }
-    
+
     public TupleToFile getTupletofile(int tupleid) throws DatabaseException {
 
         String query = "TupleToFile.findByTupleid";
@@ -287,6 +287,44 @@ public class Dbao {
 
             logger.log(Level.SEVERE, null, ex);
             throw new DatabaseException(Dbao.class.getName(), "Could not delete field " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Deletes a field's predefined values. When a field modification happens
+     * all its previously defined values need to be purged before the new
+     * ones take their place i.e. a field gets its type changed from a dropdown list
+     * to true/false, or to plain text 
+     * <p>
+     *
+     * @param fieldid
+     * @throws se.kth.meta.exception.DatabaseException when an error happens
+     */
+    public void deleteFieldPredefinedValues(int fieldid) throws DatabaseException {
+
+        Query query = this.em.createNamedQuery("FieldPredefinedValues.findByFieldid");
+        query.setParameter("fieldid", fieldid);
+        List<FieldPredefinedValues> valueList = query.getResultList();
+
+        for (FieldPredefinedValues value : valueList) {
+            try {
+
+                this.utx.begin();
+
+                if (this.em.contains(value)) {
+                    this.em.remove(value);
+                } else {
+                    //if the object is unmanaged it has to be managed before it is removed
+                    this.em.remove(this.em.merge(value));
+                }
+                this.utx.commit();
+            } catch (SecurityException | IllegalStateException | RollbackException |
+                    HeuristicMixedException | HeuristicRollbackException | SystemException |
+                    NotSupportedException ex) {
+
+                logger.log(Level.SEVERE, null, ex);
+                throw new DatabaseException(Dbao.class.getName(), "Could not delete predefined value " + ex.getMessage());
+            }
         }
     }
 

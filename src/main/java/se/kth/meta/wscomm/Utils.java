@@ -72,6 +72,9 @@ public class Utils {
                     field.resetFieldPredefinedValues();
                     //persist the child
                     int fieldid = this.db.addField(field);
+                    //remove any previous predefined values
+                    this.removeFieldPredefinedValues(fieldid);
+                    //add the new predefined values
                     this.addFieldsPredefinedValues(predef, fieldid);
                 }
             } catch (DatabaseException ex) {
@@ -118,7 +121,17 @@ public class Utils {
                     + "encountered a problem");
         }
     }
-
+    
+    public void removeFieldPredefinedValues(int fieldid) throws ApplicationException {
+        try {
+            logger.log(Level.SEVERE, "DELETING PREDEFINED VALUES FOR FIELD {0} ", fieldid);
+            this.db.deleteFieldPredefinedValues(fieldid);
+        } catch (DatabaseException e) {
+            throw new ApplicationException(e.getMessage(), "Utils.java: method deleteField "
+                    + "encountered a problem");
+        }
+    }
+    
     public void storeMetadata(List<EntityIntf> list) throws ApplicationException {
 
         try {
