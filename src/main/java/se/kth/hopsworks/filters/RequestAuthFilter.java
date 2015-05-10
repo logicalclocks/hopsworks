@@ -59,10 +59,9 @@ public class RequestAuthFilter implements ContainerRequestFilter {
       JsonResponse json = new JsonResponse();
 
       log.log(Level.INFO, "Filtering project request path: {0}", pathParts[1]);
+      log.log(Level.INFO, "Method called: {0}", method.getName());
+      log.log(Level.INFO, "Annotations present: {0}", method.getAnnotations().length);
 
-      AllowedRoles rolesAnnotation = method.getAnnotation(AllowedRoles.class);
-      Set<String> rolesSet;
-      rolesSet = new HashSet<>(Arrays.asList(rolesAnnotation.roles()));
 
       if (!method.isAnnotationPresent(AllowedRoles.class)) {
         //Should throw exception if there is a method that is not annotated in this path.
@@ -70,6 +69,9 @@ public class RequestAuthFilter implements ContainerRequestFilter {
                 status(Response.Status.NOT_IMPLEMENTED).build());
         return;
       }
+      AllowedRoles rolesAnnotation = method.getAnnotation(AllowedRoles.class);
+      Set<String> rolesSet;
+      rolesSet = new HashSet<>(Arrays.asList(rolesAnnotation.roles()));
 
       //If the resource is allowed for all roles continue with the request. 
       if (rolesSet.contains(AllowedRoles.ALL)) {
@@ -109,7 +111,6 @@ public class RequestAuthFilter implements ContainerRequestFilter {
                 .entity(json)
                 .build());
       }
-
     }
   }
 }
