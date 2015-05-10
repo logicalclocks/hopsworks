@@ -52,6 +52,8 @@ public class ProjectController {
   @EJB
   private UserManager userBean;
   @EJB
+  private ProjectNameValidator projectNameValidator;
+  @EJB
   private ActivityFacade activityFacade;
   @EJB
   private FileOperations fileOps;
@@ -78,8 +80,9 @@ public class ProjectController {
   public Study createStudy(String newStudyName, String email) throws
           AppException, IOException {
     User user = userBean.getUserByEmail(email);
-    //if there is no project by the same name for this user
-    if (!studyFacade.studyExistsForOwner(newStudyName, user)) {
+    //if there is no project by the same name for this user and project name is valid
+    if (projectNameValidator.isValidName(newStudyName) && !studyFacade.
+            studyExistsForOwner(newStudyName, user)) {
       //Create a new study object
       Date now = new Date();
       Study study = new Study(newStudyName, user, now);
@@ -126,29 +129,36 @@ public class ProjectController {
     }
   }
 
-  public void addServices(Study study, List<StudyServiceEnum> services,
+  public boolean addServices(Study study, List<StudyServiceEnum> services,
           String userEmail) {
+    boolean addedService = false;
     //Add the desired services
     for (StudyServiceEnum se : services) {
-      studyServicesFacade.addServiceForStudy(study, se);
+      if (!studyServicesFacade.findEnabledServicesForStudy(study).contains(se)) {
+        studyServicesFacade.addServiceForStudy(study, se);
+        addedService = true;
+      }
     }
 
-    User user = userBean.getUserByEmail(userEmail);
-
-    logActivity(ActivityFacade.ADDED_SERVICES, ActivityFacade.FLAG_STUDY,
-            user, study);
+    if (addedService) {
+      User user = userBean.getUserByEmail(userEmail);
+      logActivity(ActivityFacade.ADDED_SERVICES, ActivityFacade.FLAG_STUDY,
+              user, study);
+    }
+    return addedService;
   }
 
-  public void mergeStudy(Study study, String userEmail) throws AppException {
+  public void changeName(Study study, String newStudyName, String userEmail)
+          throws AppException {
     User user = userBean.getUserByEmail(userEmail);
 
-    boolean nameExists = studyFacade.studyExistsForOwner(study.getName(), user);
+    boolean nameExists = studyFacade.studyExistsForOwner(newStudyName, user);
 
-    if(nameExists){
-       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+    if (projectNameValidator.isValidName(newStudyName) && nameExists) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NAME_EXIST);
     }
-    
+    study.setName(newStudyName);
     studyFacade.mergeStudy(study);
 
     logActivity(ActivityFacade.STUDY_NAME_CHANGED, ActivityFacade.FLAG_STUDY,
@@ -159,7 +169,7 @@ public class ProjectController {
   private void addStudyMaster(Integer study_id, String userName) {
     StudyTeamPK stp = new StudyTeamPK(study_id, userName);
     StudyTeam st = new StudyTeam(stp);
-    st.setTeamRole("Master");
+    st.setTeamRole(StudyRoleTypes.MASTER.getTeam());
     st.setTimestamp(new Date());
     studyTeamFacade.persistStudyTeam(st);
   }
@@ -219,8 +229,10 @@ public class ProjectController {
   }
 
   /**
-   * Adds new team members as researcher to a project(study) - bulk persist
-   *
+   * Adds new team members to a project(study) - bulk persist
+   * if team role not specified or not in (Master or Researcher)defaults to
+   * researcher
+   * <p>
    * @param study
    * @param email
    * @param studyTeams
@@ -232,25 +244,41 @@ public class ProjectController {
           List<StudyTeam> studyTeams) {
     List<String> failedList = new ArrayList<>();
     User user = userBean.getUserByEmail(email);
+    User newMember;
     for (StudyTeam studyTeam : studyTeams) {
       try {
         if (!studyTeam.getStudyTeamPK().getTeamMember().equals(user.getEmail())) {
-          studyTeam.getStudyTeamPK().setStudyId(study.getId());
-          studyTeam.setTeamRole(StudyRoleTypes.RESEARCHER.getTeam());
+
+          //if the role is not properly set set it to the defualt resercher.
+          if (studyTeam.getTeamRole() == null || (!studyTeam.getTeamRole().
+                  equals(StudyRoleTypes.RESEARCHER.getTeam()) && !studyTeam.
+                  getTeamRole().equals(StudyRoleTypes.MASTER.getTeam()))) {
+            studyTeam.setTeamRole(StudyRoleTypes.RESEARCHER.getTeam());
+          }
+
           studyTeam.setTimestamp(new Date());
-          studyTeamFacade.persistStudyTeam(studyTeam);
-          logger.log(Level.FINE, "{0} - member added to study : {1}.",
-                  new Object[]{studyTeam.getStudyTeamPK().getTeamMember(),
-                    study.getName()});
+          newMember = userBean.getUserByEmail(studyTeam.getStudyTeamPK().getTeamMember());
+          if (newMember!= null && !studyTeamFacade.isUserMemberOfStudy(study, newMember)) {
+            //this makes sure that the member is added to the study sent as the 
+            //first param b/c the securty check was made on the parameter sent as path.
+            studyTeam.getStudyTeamPK().setStudyId(study.getId());
+            studyTeamFacade.persistStudyTeam(studyTeam);
+            logger.log(Level.FINE, "{0} - member added to study : {1}.",
+                    new Object[]{newMember.getEmail(),
+                      study.getName()});
 
-
-          logActivity(ActivityFacade.NEW_MEMBER + studyTeam.
-                  getStudyTeamPK().getTeamMember(),
-                  ActivityFacade.FLAG_STUDY, user, study);
+            logActivity(ActivityFacade.NEW_MEMBER + studyTeam.
+                    getStudyTeamPK().getTeamMember(),
+                    ActivityFacade.FLAG_STUDY, user, study);
+          } else if (newMember == null){
+            failedList.add(studyTeam.getStudyTeamPK().getTeamMember() + " was not found in the system.");
+          } else {
+            failedList.add(newMember.getEmail() + " is alrady a member in this project.");
+          }
         }
       } catch (EJBException ejb) {
-        failedList.add(studyTeam.getStudyTeamPK().getTeamMember());
-        logger.log(Level.SEVERE, "Adding  team member {0} to member failed",
+        failedList.add(studyTeam.getStudyTeamPK().getTeamMember() + "could not be added. Try again later.");
+        logger.log(Level.SEVERE, "Adding  team member {0} to members failed",
                 studyTeam.getStudyTeamPK().getTeamMember());
       }
     }
@@ -296,13 +324,59 @@ public class ProjectController {
    * @param study
    * @param email
    * @param toRemoveEmail
+   * @throws AppException
    */
   public void deleteMemberFromTeam(Study study, String email,
-          String toRemoveEmail) {
-    studyTeamFacade.removeStudyTeam(study, toRemoveEmail);
+          String toRemoveEmail) throws AppException {
+    User userToBeRemoved = userBean.getUserByEmail(toRemoveEmail);
+    if (userToBeRemoved == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.USER_DOES_NOT_EXIST);
+      //user not found
+    }
+    StudyTeam studyTeam = studyTeamFacade.findStudyTeam(study, userToBeRemoved);
+    if (studyTeam == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.TEAM_MEMBER_NOT_FOUND);
+    }
+    studyTeamFacade.removeStudyTeam(study, userToBeRemoved);
     User user = userBean.getUserByEmail(email);
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
             ActivityFacade.FLAG_STUDY, user, study);
+  }
+
+  /**
+   * Updates the role of a member
+   * <p>
+   * @param study
+   * @param owner that is performing the update
+   * @param toUpdateEmail
+   * @param newRole
+   * @throws AppException
+   */
+  public void updateMemberRole(Study study, String owner,
+          String toUpdateEmail, String newRole) throws AppException {
+    User projOwner = userBean.getUserByEmail(owner);
+    User user = userBean.getUserByEmail(toUpdateEmail);
+    if (user == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.USER_DOES_NOT_EXIST);
+      //user not found
+    }
+    StudyTeam studyTeam = studyTeamFacade.findStudyTeam(study, user);
+    if (studyTeam == null) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.TEAM_MEMBER_NOT_FOUND);
+      //member not found
+    }
+    if (!studyTeam.getTeamRole().equals(newRole)) {
+      studyTeam.setTeamRole(newRole);
+      studyTeam.setTimestamp(new Date());
+      studyTeamFacade.update(studyTeam);
+      logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail,
+              ActivityFacade.FLAG_STUDY, projOwner, study);
+    }
+
   }
 
   /**
@@ -314,6 +388,17 @@ public class ProjectController {
   public List<StudyTeam> findStudyByUser(String email) {
     User user = userBean.getUserByEmail(email);
     return studyTeamFacade.findByMember(user);
+  }
+
+  /**
+   * Retrieves all the study teams for a study
+   * <p>
+   * @param studyID
+   * @return a list of study team
+   */
+  public List<StudyTeam> findStudyTeamById(Integer studyID) {
+    Study study = studyFacade.find(studyID);
+    return studyTeamFacade.findMembersByStudy(study);
   }
 
   /**

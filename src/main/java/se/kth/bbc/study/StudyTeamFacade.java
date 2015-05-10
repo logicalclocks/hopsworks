@@ -191,6 +191,16 @@ public class StudyTeamFacade {
   public void persistStudyTeam(StudyTeam team) {
     em.persist(team);
   }
+  
+  /*
+   * merges an update to study team
+   * @param team
+   */
+  public void update(StudyTeam team) {
+    if (team != null) {
+      em.merge(team);
+    }
+  }
 
   /**
    * Remove the StudyTeam entry for User <i>user</i> in Study <i>study</i>.

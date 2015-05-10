@@ -164,8 +164,6 @@ public class StudyTeam implements Serializable {
     this.study = study;
   }
 
-  @XmlTransient
-  @JsonIgnore
   public User getUser() {
     return user;
   }

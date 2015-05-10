@@ -9,9 +9,10 @@ import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
-import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -42,7 +43,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
 @Path("/project")
 @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
 @Produces(MediaType.APPLICATION_JSON)
-@Stateless
+@RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectService {
 
@@ -50,6 +51,8 @@ public class ProjectService {
   private ProjectController projectController;
   @EJB
   private NoCacheResponse noCacheResponse;
+  @Inject
+  private ProjectMembers projectMembers;
 
   private final static Logger logger = Logger.getLogger(ProjectService.class.
           getName());
@@ -99,35 +102,47 @@ public class ProjectService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     JsonResponse json = new JsonResponse();
+    boolean updated = false;
 
     Study study = projectController.findStudyById(id);
     String userEmail = sc.getUserPrincipal().getName();
 
-    // Update the name
-    if (!projectDTO.getProjectName().isEmpty()
-            && projectDTO.getProjectName() != null
-            && !study.getName().equals(projectDTO.getProjectName())) {
-
-      study.setName(projectDTO.getProjectName());
-      projectController.mergeStudy(study, userEmail);
-    } else {
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              ResponseMessages.PROJECT_NAME_NOT_SET);
+    // Update the name if it have been chenged
+    if (!study.getName().equals(projectDTO.getProjectName())) {
+      projectController.
+              changeName(study, projectDTO.getProjectName(), userEmail);
+      json.setSuccessMessage(ResponseMessages.PROJECT_NAME_CHANGED);
+      updated = true;
     }
 
     // Add all the new services
     List<StudyServiceEnum> studyServices = new ArrayList<>();
     for (String s : projectDTO.getServices()) {
-      StudyServiceEnum se = StudyServiceEnum.valueOf(s.toUpperCase());
-      se.toString();
-      studyServices.add(se);
+      try {
+        StudyServiceEnum se = StudyServiceEnum.valueOf(s.toUpperCase());
+        se.toString();
+        studyServices.add(se);
+      } catch (IllegalArgumentException iex) {
+        logger.log(Level.SEVERE,
+                ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
+        json.setErrorMsg(s + ResponseMessages.PROJECT_SERVICE_NOT_FOUND + "\n "
+                + json.getErrorMsg());
+      }
     }
 
     if (!studyServices.isEmpty()) {
-      projectController.addServices(study, studyServices, userEmail);
+      boolean added = projectController.addServices(study, studyServices,
+              userEmail);
+      if (added) {
+        json.setSuccessMessage(ResponseMessages.PROJECT_SERVICE_ADDED);
+        updated = true;
+      }
     }
 
-    json.setData("Project updated");
+    if (!updated) {
+      json.setSuccessMessage("Nothing to update.");
+    }
+
     return noCacheResponse.getNoCacheResponseBuilder(
             Response.Status.CREATED).entity(json).build();
   }
@@ -145,14 +160,12 @@ public class ProjectService {
     List<String> failedMembers = null;
     Study study = null;
 
-    logger.log(Level.SEVERE,
-            projectDTO.toString());
     String owner = sc.getUserPrincipal().getName();
     List<StudyServiceEnum> studyServices = new ArrayList<>();
 
     for (String s : projectDTO.getServices()) {
       try {
-        StudyServiceEnum se = StudyServiceEnum.valueOf(s);
+        StudyServiceEnum se = StudyServiceEnum.valueOf(s.toUpperCase());
         se.toString();
         studyServices.add(se);
       } catch (IllegalArgumentException iex) {
@@ -230,4 +243,12 @@ public class ProjectService {
             json).build();
   }
 
+  @Path("{id}/projectMembers")
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public ProjectMembers projectMembers(
+          @PathParam("id") Integer id) throws AppException {
+    projectMembers.setProjectId(id);
+
+    return projectMembers;
+  }
 }
