@@ -4,11 +4,11 @@
     <head>
         <meta charset="utf-8">
         <title>Authentication Index</title>
-        
+
         <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
-        
+
         <!--styles -->
-<!--        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">-->
+        <!--        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">-->
         <link rel="stylesheet" type="text/css" href="bower_components/ng-sortable/dist/ng-sortable.min.css">
         <link rel="stylesheet" type="text/css" href="bower_components/ng-sortable/dist/ng-sortable.style.min.css">
         <link rel="stylesheet" type="text/css" href="styles/board.css">
@@ -17,6 +17,8 @@
         <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="bower_components/angular-dialog-service/dist/dialogs.min.css">
         <link rel="stylesheet" href="bower_components/angular-tooltips/src/css/angular-tooltips.css" type="text/css" />
+        <link rel="stylesheet" href="bower_components/angular-ui-select/dist/select.css" type="text/css" />
+        <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
 
         <link rel="stylesheet" type="text/css" href="bower_components/angular-dialog-service/dist/dialogs.min.css">
         <link href="bower_components/angularjs-toaster/toaster.css" rel="stylesheet" type="text/css"/>
@@ -54,11 +56,14 @@
 
         <!--TOOLTIPS PLUGIN-->
         <script src="bower_components/angular-tooltips/src/js/angular-tooltips.js"></script>
-        
+
+        <!--EDITABLE SELECT PLUGIN-->
+        <script src="bower_components/angular-ui-select/dist/select.js"></script>
+
         <!--UNLEASH THE BEAST-->
         <script src="bower_components/elasticsearch/elasticsearch.min.js" type="text/javascript"></script>
         <script src="bower_components/elasticsearch/elasticsearch.angular.min.js" type="text/javascript"></script>
-        
+
         <!--APPLICATION MODULE DECLARATION-->
         <script src="scripts/authenticator.js" type="text/javascript"></script>
 
@@ -78,13 +83,14 @@
         <script type="text/javascript" src="scripts/controllers/NewCardController.js"></script>
         <script type="text/javascript" src="scripts/controllers/NewCardDialogController.js"></script>
         <script type="text/javascript" src="scripts/controllers/ExtendTemplateController.js"></script>
+        <script type="text/javascript" src="scripts/controllers/ModifyFieldController.js"></script>
         <script type="text/javascript" src="scripts/controllers/ListController.js"></script>
         <script type="text/javascript" src="scripts/controllers/NewlistController.js"></script>
         <script type="text/javascript" src="scripts/controllers/MetadataController.js"></script>
         <script type="text/javascript" src="scripts/controllers/MetadataViewController.js"></script>
         <script type="text/javascript" src="scripts/controllers/ElasticSearchController.js"></script>
         <script type="text/javascript" src="scripts/controllers/MainController.js"></script>
-        
+
     </head>
 
     <body ng-app="metaUI" ng-controller="MainController">
@@ -122,3 +128,5 @@
                    }">
 
 </toaster-container>
+
+

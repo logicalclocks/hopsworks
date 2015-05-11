@@ -33,18 +33,30 @@
                                             </div>
                                             <!--select list input type-->
                                             <div ng-if="card.fieldtypeid === 2">
-                                                <select ng-model="data[card.id]" 
+<!--                                                <select ng-model="data[card.id]" 
                                                         ng-options="item.value as item.value for item in card.fieldtypeContent"
                                                         tooltips title="{{card.description}}"
                                                         required>
                                                     <option value="">Select default value</option> 
-                                                </select>
+                                                </select>-->
+
+                                                <!--<p>Selected: {{data[card.id].value}}</p>-->
+                                                <ui-select ng-model="data[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 300px;" required>
+                                                    <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
+                                                    <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                                                        <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                                        <small>
+                                                            <span ng-bind-html="''+item.value | highlight: $select.search"></span>
+                                                        </small>
+                                                    </ui-select-choices>
+                                                </ui-select>
                                             </div>
                                             <!--yes/no input type-->
                                             <div ng-if="card.fieldtypeid === 3">
                                                 {{card.fieldtypeContent[0].value}} / {{card.fieldtypeContent[1].value}}
                                                 <input type="checkbox" ng-model="data[card.id]"
                                                        tooltips title="{{card.description}}"
+                                                       ng-checked="true"
                                                        ng-true-value="'{{card.fieldtypeContent[0].value}}'" ng-false-value="'{{card.fieldtypeContent[1].value}}'"/>
                                             </div>
                                         </td>
@@ -55,7 +67,6 @@
                     </li>
                 </ul>
                 <hr/>
-                <!--<input type="submit" value="submit data"/>-->
                 <button class="btn btn-default">
                     <i class="glyphicon glyphicon-floppy-save"></i>
                     Save

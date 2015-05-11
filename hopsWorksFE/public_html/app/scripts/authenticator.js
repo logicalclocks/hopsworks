@@ -15,7 +15,9 @@ angular.module('metaUI', [
     'pascalprecht.translate',
     'dialogs.default-translations',
     'toaster',
-    '720kb.tooltips'
+    '720kb.tooltips',
+    'ui.select',
+    'ngSanitize'
 ])
         .config(['$routeProvider', function ($routeProvider) {
                 $routeProvider.when('/', {templateUrl: 'views/metadataDesign.html'});
@@ -53,7 +55,35 @@ angular.module('metaUI', [
                 return array;
             };
         })
-        
+        .filter('propsFilter', function () {
+            return function (items, props) {
+                var out = [];
+
+                if (angular.isArray(items)) {
+                    items.forEach(function (item) {
+                        var itemMatches = false;
+
+                        var keys = Object.keys(props);
+                        for (var i = 0; i < keys.length; i++) {
+                            var prop = keys[i];
+                            var text = props[prop].toLowerCase();
+                            if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+                                itemMatches = true;
+                                break;
+                            }
+                        }
+
+                        if (itemMatches) {
+                            out.push(item);
+                        }
+                    });
+                } else {
+                    // Let the output be the input untouched
+                    out = items;
+                }
+                return out;
+            };
+        })
         .factory('sessionInjector', function ($q, $location, $routeParams) {
             var defer = $q.defer();
             return {

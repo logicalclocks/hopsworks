@@ -7,8 +7,6 @@ var mainModule = angular.module('metaUI').controller('ModifyFieldController',
         ['$scope', '$rootScope', '$modalInstance', 'data', 'BoardService',
             function ($scope, $rootScope, $modalInstance, data, BoardService) {
 
-                console.log("RECEIVED CARD " + JSON.stringify(data.field));
-
                 $scope.fieldName = data.field.title;
                 $scope.fieldDescription = data.field.description;
                 $scope.fieldType = "";
