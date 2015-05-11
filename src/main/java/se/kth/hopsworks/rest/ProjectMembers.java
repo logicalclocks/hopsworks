@@ -24,8 +24,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.bbc.study.Study;
-import se.kth.bbc.study.StudyTeam;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectTeam;
 import se.kth.hopsworks.controller.MembersDTO;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ResponseMessages;
@@ -63,9 +63,9 @@ public class ProjectMembers {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    List<StudyTeam> list = projectController.findStudyTeamById(this.projectId);
-    GenericEntity<List<StudyTeam>> projects
-            = new GenericEntity<List<StudyTeam>>(list) {
+    List<ProjectTeam> list = projectController.findProjectTeamById(this.projectId);
+    GenericEntity<List<ProjectTeam>> projects
+            = new GenericEntity<List<ProjectTeam>>(list) {
             };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -80,7 +80,7 @@ public class ProjectMembers {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    Study study = projectController.findStudyById(this.projectId);
+    Project project = projectController.findProjectById(this.projectId);
     JsonResponse json = new JsonResponse();
     List<String> failedMembers = null;
     String owner = sc.getUserPrincipal().getName();
@@ -89,9 +89,9 @@ public class ProjectMembers {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.NO_MEMBER_TO_ADD);
     }
-    if (study != null) {
+    if (project != null) {
       //add new members of the project
-      failedMembers = projectController.addMembers(study, owner, members.getProjectTeam());
+      failedMembers = projectController.addMembers(project, owner, members.getProjectTeam());
     }
 
     if (members.getProjectTeam().size() > 1) {
@@ -125,7 +125,7 @@ public class ProjectMembers {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    Study study = projectController.findStudyById(this.projectId);
+    Project project = projectController.findProjectById(this.projectId);
     JsonResponse json = new JsonResponse();
     String owner = sc.getUserPrincipal().getName();
     if (email == null) {
@@ -136,7 +136,7 @@ public class ProjectMembers {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.ROLE_NOT_SET);
     }
-    projectController.updateMemberRole(study, owner, email, role);
+    projectController.updateMemberRole(project, owner, email, role);
 
     json.setSuccessMessage(ResponseMessages.MEMBER_ROLE_UPDATED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -153,14 +153,14 @@ public class ProjectMembers {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    Study study = projectController.findStudyById(this.projectId);
+    Project project = projectController.findProjectById(this.projectId);
     JsonResponse json = new JsonResponse();
     String owner = sc.getUserPrincipal().getName();
     if (email == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.EMAIL_EMPTY);
     }
-    projectController.deleteMemberFromTeam(study, owner, email);
+    projectController.deleteMemberFromTeam(project, owner, email);
 
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(

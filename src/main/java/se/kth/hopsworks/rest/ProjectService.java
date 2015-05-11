@@ -28,9 +28,9 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import se.kth.bbc.study.Study;
-import se.kth.bbc.study.StudyTeam;
-import se.kth.bbc.study.services.StudyServiceEnum;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectTeam;
+import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.hopsworks.controller.ProjectController;
 import se.kth.hopsworks.controller.ProjectDTO;
 import se.kth.hopsworks.controller.ResponseMessages;
@@ -65,9 +65,9 @@ public class ProjectService {
 
     // Get the user according to current session and then get all its projects
     String eamil = sc.getUserPrincipal().getName();
-    List<StudyTeam> list = projectController.findStudyByUser(eamil);
-    GenericEntity<List<StudyTeam>> projects
-            = new GenericEntity<List<StudyTeam>>(list) {
+    List<ProjectTeam> list = projectController.findProjectByUser(eamil);
+    GenericEntity<List<ProjectTeam>> projects
+            = new GenericEntity<List<ProjectTeam>>(list) {
             };
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -85,7 +85,7 @@ public class ProjectService {
 
     // Get a specific project based on the id, Annotated so that 
     // only the user with the allowed role is able to see it 
-    ProjectDTO proj = projectController.getStudyByID(id);
+    ProjectDTO proj = projectController.getProjectByID(id);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             proj).build();
@@ -104,24 +104,23 @@ public class ProjectService {
     JsonResponse json = new JsonResponse();
     boolean updated = false;
 
-    Study study = projectController.findStudyById(id);
+    Project project = projectController.findProjectById(id);
     String userEmail = sc.getUserPrincipal().getName();
 
-    // Update the name if it have been chenged
-    if (!study.getName().equals(projectDTO.getProjectName())) {
-      projectController.
-              changeName(study, projectDTO.getProjectName(), userEmail);
-      json.setSuccessMessage(ResponseMessages.PROJECT_NAME_CHANGED);
-      updated = true;
+    // Update the description if it have been chenged
+    if (project.getDescription() == null || !project.getDescription().equals(projectDTO.getDescription())) {
+        projectController.changeProjectDesc(project, projectDTO.getDescription(), userEmail);
+        json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
+        updated = true;
     }
 
     // Add all the new services
-    List<StudyServiceEnum> studyServices = new ArrayList<>();
+    List<ProjectServiceEnum> projectServices = new ArrayList<>();
     for (String s : projectDTO.getServices()) {
       try {
-        StudyServiceEnum se = StudyServiceEnum.valueOf(s.toUpperCase());
+        ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
         se.toString();
-        studyServices.add(se);
+        projectServices.add(se);
       } catch (IllegalArgumentException iex) {
         logger.log(Level.SEVERE,
                 ResponseMessages.PROJECT_SERVICE_NOT_FOUND);
@@ -130,8 +129,8 @@ public class ProjectService {
       }
     }
 
-    if (!studyServices.isEmpty()) {
-      boolean added = projectController.addServices(study, studyServices,
+    if (!projectServices.isEmpty()) {
+      boolean added = projectController.addServices(project, projectServices,
               userEmail);
       if (added) {
         json.setSuccessMessage(ResponseMessages.PROJECT_SERVICE_ADDED);
@@ -158,16 +157,16 @@ public class ProjectService {
 
     JsonResponse json = new JsonResponse();
     List<String> failedMembers = null;
-    Study study = null;
+    Project project = null;
 
     String owner = sc.getUserPrincipal().getName();
-    List<StudyServiceEnum> studyServices = new ArrayList<>();
+    List<ProjectServiceEnum> projectServices = new ArrayList<>();
 
     for (String s : projectDTO.getServices()) {
       try {
-        StudyServiceEnum se = StudyServiceEnum.valueOf(s.toUpperCase());
+        ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
         se.toString();
-        studyServices.add(se);
+        projectServices.add(se);
       } catch (IllegalArgumentException iex) {
         logger.log(Level.SEVERE,
                 ResponseMessages.PROJECT_SERVICE_NOT_FOUND, iex);
@@ -180,7 +179,7 @@ public class ProjectService {
     projectDTO.setCreated(new Date());
     try {
       //save the project
-      study = projectController.createStudy(projectDTO.getProjectName(),
+      project = projectController.createProject(projectDTO.getProjectName(),
               owner);
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
@@ -194,11 +193,11 @@ public class ProjectService {
               + json.getErrorMsg());
     }
 
-    if (study != null) {
+    if (project != null) {
       //add the services for the project
-      projectController.addServices(study, studyServices, owner);
+      projectController.addServices(project, projectServices, owner);
       //add members of the project
-      failedMembers = projectController.addMembers(study, owner, projectDTO.
+      failedMembers = projectController.addMembers(project, owner, projectDTO.
               getProjectTeam());
     }
 

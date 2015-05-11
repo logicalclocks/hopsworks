@@ -9,26 +9,25 @@
     <class>se.kth.bbc.jobs.jobhistory.JobHistory</class>
     <class>se.kth.bbc.jobs.jobhistory.JobInputFile</class>
     <class>se.kth.bbc.jobs.jobhistory.JobOutputFile</class>
-    <class>se.kth.bbc.study.StudyDetail</class>
-    <class>se.kth.bbc.study.StudyTeam</class>
-    <class>se.kth.bbc.study.Study</class>
-    <class>se.kth.bbc.study.metadata.StudyMeta</class>
-    <class>se.kth.bbc.study.samples.AnatomicalPart</class>
-    <class>se.kth.bbc.study.samples.Disease</class>
-    <class>se.kth.bbc.study.samples.Sample</class>
-    <class>se.kth.bbc.study.samples.Samplecollection</class>
-    <class>se.kth.bbc.study.services.StudyServices</class>
     <class>se.kth.bbc.security.ua.model.Address</class>
     <class>se.kth.bbc.security.ua.model.PeopleGroup</class>
     <class>se.kth.bbc.security.ua.model.User</class>
     <class>se.kth.bbc.security.ua.model.Userlogins</class>
     <class>se.kth.bbc.security.ua.model.Yubikey</class>
-    <class>se.kth.bbc.study.privacy.model.Consent</class>
     <class>se.kth.bbc.security.ua.model.BBCGroup</class>
     <class>se.kth.bbc.security.ua.model.Organization</class>
     <class>se.kth.bbc.activity.Activity</class>
     <class>se.kth.hopsworks.user.model.BbcGroup</class>
     <class>se.kth.hopsworks.user.model.Users</class>
+    <class>se.kth.bbc.project.metadata.ProjectMeta</class>
+    <class>se.kth.bbc.project.privacy.model.Consent</class>
+    <class>se.kth.bbc.project.ProjectTeam</class>
+    <class>se.kth.bbc.project.samples.Sample</class>
+    <class>se.kth.bbc.project.samples.Disease</class>
+    <class>se.kth.bbc.project.samples.Samplecollection</class>
+    <class>se.kth.bbc.project.samples.AnatomicalPart</class>
+    <class>se.kth.bbc.project.Project</class>
+    <class>se.kth.bbc.project.services.ProjectServices</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
@@ -41,7 +40,7 @@
   <persistence-unit name="hopsPU" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>jdbc/hops</jta-data-source>
-    <class>se.kth.bbc.study.fb.Inode</class>
+    <class>se.kth.bbc.project.fb.Inode</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

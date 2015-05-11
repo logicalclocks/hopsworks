@@ -26,8 +26,8 @@ import se.kth.bbc.activity.Activity;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
-import se.kth.bbc.study.Study;
-import se.kth.bbc.study.StudyFacade;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectFacade;
 import se.kth.hopsworks.filters.AllowedRoles;
 
 /**
@@ -46,7 +46,7 @@ public class ActivityService {
   @EJB
   private UserManager userBean;
   @EJB
-  private StudyFacade studyFacade;
+  private ProjectFacade projectFacade;
   @EJB
   private NoCacheResponse noCacheResponse;
 
@@ -88,9 +88,9 @@ public class ActivityService {
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response findAllByProject(@PathParam("id") Integer id,
           @Context SecurityContext sc, @Context HttpServletRequest req) {
-    Study study = studyFacade.find(id);
+    Project project = projectFacade.find(id);
     List<Activity> activityDetails = activityBean.
-            getAllActivityOnStudy(study);
+            getAllActivityOnProject(project);
     GenericEntity<List<Activity>> projectActivities
             = new GenericEntity<List<Activity>>(activityDetails) {
             };
@@ -107,9 +107,9 @@ public class ActivityService {
           @QueryParam("from") int from,
           @QueryParam("to") int to,
           @Context SecurityContext sc, @Context HttpServletRequest req) {
-    Study study = studyFacade.find(id);
+    Project project = projectFacade.find(id);
     List<Activity> activityDetails = activityBean.
-            getPaginatedActivityForStudy(from, to, study);
+            getPaginatedActivityForProject(from, to, project);
     GenericEntity<List<Activity>> projectActivities
             = new GenericEntity<List<Activity>>(activityDetails) {
             };

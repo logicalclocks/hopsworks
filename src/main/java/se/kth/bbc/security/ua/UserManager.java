@@ -16,7 +16,7 @@ import se.kth.bbc.security.ua.model.PeopleGroup;
 import se.kth.bbc.security.ua.model.PeopleGroupPK;
 import se.kth.bbc.security.ua.model.Userlogins;
 import se.kth.bbc.security.ua.model.Yubikey;
-import se.kth.bbc.study.Study;
+import se.kth.bbc.project.Project;
 
 /**
  *
@@ -251,14 +251,14 @@ public class UserManager {
   }
 
   /**
-   * Get all the users that are not in the given study.
+   * Get all the users that are not in the given project.
    *
-   * @param study The study on which to search.
-   * @return List of User objects that are not in the study.
+   * @param project The project on which to search.
+   * @return List of User objects that are not in the project.
    */
-  public List<User> filterUsersBasedOnStudy(Study study) {
-    TypedQuery<User> query = em.createQuery("SELECT u FROM User u WHERE u NOT IN (SELECT DISTINCT st.user FROM StudyTeam st WHERE st.study = :study)", User.class);
-    query.setParameter("study",study);
+  public List<User> filterUsersBasedOnProject(Project project) {
+    TypedQuery<User> query = em.createQuery("SELECT u FROM User u WHERE u NOT IN (SELECT DISTINCT st.user FROM ProjectTeam st WHERE st.project = :project)", User.class);
+    query.setParameter("project",project);
     return query.getResultList();
   }
 

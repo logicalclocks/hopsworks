@@ -23,8 +23,8 @@
       <ui:insert name="titleBar" >
         <ui:include src="/bbc/lims/titleBar.xhtml" />
       </ui:insert>
-      <p:layout id="bbcMainLayout" styleClass="BbcMainLayout" rendered="#{studyManagedBean.currentRoleInStudy() != null}">  
-        <p:growl for="studyRemoved" autoUpdate="true" showDetail="true"/>
+      <p:layout id="bbcMainLayout" styleClass="BbcMainLayout" rendered="#{projectManagedBean.currentRoleInProject() != null}">  
+        <p:growl for="projectRemoved" autoUpdate="true" showDetail="true"/>
 
         <p:layoutUnit position="center">
           <div class="container">

@@ -8,8 +8,8 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
-import se.kth.bbc.study.StudyFacade;
-import se.kth.bbc.study.Study;
+import se.kth.bbc.project.ProjectFacade;
+import se.kth.bbc.project.Project;
 
 /**
  *
@@ -20,33 +20,33 @@ import se.kth.bbc.study.Study;
 public class ClientSessionState implements Serializable {
 
   @EJB
-  private StudyFacade studyFacade;
+  private ProjectFacade projectFacade;
   
   @EJB
   private UserManager userFacade;
 
-  private Study activeStudy;
+  private Project activeProject;
   
   private User user;
 
-  public void setActiveStudy(Study study) {
-    this.activeStudy = study;
+  public void setActiveProject(Project project) {
+    this.activeProject = project;
   }
 
-  public Study getActiveStudy() {
-    return activeStudy;
+  public Project getActiveProject() {
+    return activeProject;
   }
 
-  public String getActiveStudyname() {
-    if (activeStudy != null) {
-      return activeStudy.getName();
+  public String getActiveProjectname() {
+    if (activeProject != null) {
+      return activeProject.getName();
     } else {
       return null;
     }
   }
 
-  public void setActiveStudyByUserAndName(User user, String studyname) {
-    activeStudy = studyFacade.findByNameAndOwner(studyname, user);
+  public void setActiveProjectByUserAndName(User user, String projectname) {
+    activeProject = projectFacade.findByNameAndOwner(projectname, user);
   }
 
   private HttpServletRequest getRequest() {

@@ -100,7 +100,7 @@ public final class SparkController extends JobController {
     try {
       String path = stagingManager.getStagingPath() + File.separator
               + sessionState.getLoggedInUsername() + File.separator
-              + sessionState.getActiveStudyname();
+              + sessionState.getActiveProjectname();
       super.setBasePath(path);
       super.setJobHistoryFacade(history);
       super.setFileOperations(fops);
@@ -154,14 +154,14 @@ public final class SparkController extends JobController {
     SparkJob job = new SparkJob(history, r, fops);
 
     setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
-            sessionState.getActiveStudy(), JobType.SPARK));
+            sessionState.getActiveProject(), JobType.SPARK));
     if (isJobSelected()) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveStudyname())
+              getActiveProjectname())
               + Constants.SPARK_DEFAULT_OUTPUT_PATH + getJobId()
               + File.separator + "stdout.log";
       String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveStudyname())
+              getActiveProjectname())
               + Constants.SPARK_DEFAULT_OUTPUT_PATH + getJobId()
               + File.separator + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
@@ -175,7 +175,7 @@ public final class SparkController extends JobController {
               "Failed to write job history. Aborting execution.");
       return;
     }
-    writeJobStartedActivity(sessionState.getActiveStudy(), sessionState.
+    writeJobStartedActivity(sessionState.getActiveProject(), sessionState.
             getLoggedInUsername());
   }
 

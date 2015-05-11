@@ -75,7 +75,7 @@ public class PeopleStatusBean implements Serializable {
   }
 
   /**
-   * Return both system wide and study wide roles
+   * Return both system wide and project wide roles
    * <p>
    * @return
    */
@@ -88,7 +88,7 @@ public class PeopleStatusBean implements Serializable {
   }
 
   /**
-   * Return study owner role
+   * Return project owner role
    * <p>
    * @return
    */

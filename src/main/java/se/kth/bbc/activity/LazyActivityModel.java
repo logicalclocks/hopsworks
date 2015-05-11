@@ -8,7 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
-import se.kth.bbc.study.Study;
+import se.kth.bbc.project.Project;
 
 /**
  * Model for lazily loading activity data into index page. Some explanations:
@@ -32,7 +32,7 @@ public class LazyActivityModel extends LazyDataModel<Activity> implements
 
   private transient final ActivityFacade activityFacade;
   private List<Activity> data;
-  private Study filterStudy;
+  private Project filterProject;
   private int rowIndex;
 
   public LazyActivityModel(ActivityFacade ac) throws
@@ -40,7 +40,7 @@ public class LazyActivityModel extends LazyDataModel<Activity> implements
     this(ac, null);
   }
 
-  public LazyActivityModel(ActivityFacade ac, Study filterStudy) throws
+  public LazyActivityModel(ActivityFacade ac, Project filterProject) throws
           IllegalArgumentException {
     super();
     if (ac == null) {
@@ -49,7 +49,7 @@ public class LazyActivityModel extends LazyDataModel<Activity> implements
       throw new IllegalArgumentException("ActivityDetailFacade cannot be null.");
     }
     this.activityFacade = ac;
-    this.filterStudy = filterStudy;
+    this.filterProject = filterProject;
     data = new ArrayList<>();
   }
 
@@ -60,12 +60,12 @@ public class LazyActivityModel extends LazyDataModel<Activity> implements
     List<Activity> retData;
 
     // UNDO later: this gives an error while accessing indexPage from profile 
-    if (filterStudy == null) {
+    if (filterProject == null) {
       retData = activityFacade.getPaginatedActivity(first, pageSize);
       //TODO: add support for sorting, filtering
     } else {
-      retData = activityFacade.getPaginatedActivityForStudy(first,
-              pageSize, filterStudy);
+      retData = activityFacade.getPaginatedActivityForProject(first,
+              pageSize, filterProject);
     }
     if (first == 0) {
       data = new ArrayList<>(retData);

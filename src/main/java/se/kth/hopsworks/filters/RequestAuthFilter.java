@@ -13,9 +13,9 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
-import se.kth.bbc.study.Study;
-import se.kth.bbc.study.StudyFacade;
-import se.kth.bbc.study.StudyTeamFacade;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectFacade;
+import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.hopsworks.rest.JsonResponse;
 
 /**
@@ -30,10 +30,10 @@ import se.kth.hopsworks.rest.JsonResponse;
 public class RequestAuthFilter implements ContainerRequestFilter {
 
   @EJB
-  private StudyTeamFacade studyTeamBean;
+  private ProjectTeamFacade projectTeamBean;
 
   @EJB
-  private StudyFacade studyBean;
+  private ProjectFacade projectBean;
 
   @Context
   private ResourceInfo resourceInfo;
@@ -50,7 +50,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
 
     String[] pathParts = path.split("/");
     log.log(Level.INFO, "Filtering request path: {0}", pathParts[0]);
-        //intercepted method must be a project operations on a specific project
+    //intercepted method must be a project operations on a specific project
     //with an id (/project/name/... or /activity/name/...). Project creation will have time stamp so
     //we do not need to sotre that here
     if (pathParts.length > 1 && (pathParts[0].equalsIgnoreCase("project")
@@ -86,9 +86,9 @@ public class RequestAuthFilter implements ContainerRequestFilter {
       Integer projectId;
       String userRole = null;
       projectId = Integer.valueOf(pathParts[1]);
-      Study study = studyBean.find(projectId);
+      Project project = projectBean.find(projectId);
 
-      userRole = studyTeamBean.findCurrentRole(study, userEmail);
+      userRole = projectTeamBean.findCurrentRole(project, userEmail);
 
       if (userRole == null || userRole.isEmpty()) {
         log.log(Level.INFO,

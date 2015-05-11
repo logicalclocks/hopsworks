@@ -73,7 +73,7 @@ public class JobHistoryController implements Serializable {
   }
 
   public List<JobHistory> getHistoryForType(JobType type) {
-    return history.findForStudyByType(sessionState.getActiveStudy(), type);
+    return history.findForProjectByType(sessionState.getActiveProject(), type);
   }
 
   public StreamedContent downloadFile(String path) {

@@ -12,7 +12,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import org.primefaces.model.LazyDataModel;
 import se.kth.bbc.security.ua.model.User;
-import se.kth.bbc.study.Study;
+import se.kth.bbc.project.Project;
 import se.kth.kthfsdashboard.user.Gravatar;
 
 /**
@@ -97,9 +97,9 @@ public class ActivityMB implements Serializable {
     return "more than a year ago"; // dummy
   }
 
-  public String findLastActivityOnStudy(Study study) {
+  public String findLastActivityOnProject(Project project) {
 
-    Activity itr = activityFacade.lastActivityOnStudy(study);
+    Activity itr = activityFacade.lastActivityOnProject(project);
     long currentTime = new Date().getTime();
 
     long getLastUpdate = itr.getTimestamp().getTime();

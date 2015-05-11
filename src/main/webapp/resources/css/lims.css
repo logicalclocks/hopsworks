@@ -304,7 +304,7 @@
 }        
 
 
-.StudyBlock {
+.ProjectBlock {
   font-size: 14px;
   width: 450px;
   height: 450px;
@@ -428,7 +428,7 @@
   overflow: hidden;
 }
 
-.study_new_holder{
+.project_new_holder{
 
   display: inline-block;
   width: 90%;
@@ -710,7 +710,7 @@ h6{
      border-bottom: 1px solid #ccc;
      margin: 0 0 0 0;
 }
-.study_name_holder{
+.project_name_holder{
     
     display: block;
     width: 1170px;
@@ -780,7 +780,7 @@ h6{
   border-bottom: 1px solid #ccc;
   margin: 0 0 0 0;
 }
-.study_name_holder{
+.project_name_holder{
 
   display: block;
   width: 90%;
@@ -835,7 +835,7 @@ label{
 }
 
 
-.new_study {
+.new_project {
   width: 90%;
   height: 141px;
   margin-top: 0px;
@@ -893,7 +893,7 @@ label{
   text-align: left;
 }
 
-.input .createStudy{
+.input .createProject{
 
   height: 10px;
 }
@@ -930,7 +930,7 @@ label{
   padding-left: 20px;
 
 }
-.study_name{
+.project_name{
 
   font-size: 16px;
   line-height: 20px;   
@@ -963,7 +963,7 @@ label{
 }
 
 
-.study_content_list .event-item {
+.project_content_list .event-item {
   border-bottom-width: 1px;
   border-bottom-style: solid;
   border-bottom-color: rgb(238, 238, 238);
@@ -1275,7 +1275,7 @@ img .browser .s16 {
 
 
 
-.nav-study-tabs{
+.nav-project-tabs{
 
   margin: 0 0 0 0;
   display: inline-block;
@@ -1287,7 +1287,7 @@ img .browser .s16 {
 
 }
 
-.nav-study-tab:before, nav-study-tab:after {
+.nav-project-tab:before, nav-project-tab:after {
   display: table;
   content: "";
   line-height: 0;
@@ -1345,7 +1345,7 @@ img .browser .s16 {
   margin-left: 0px;
 }
 
-.container .content_study{
+.container .content_project{
   display: block;
   margin-top: 0px;
   margin-right: 0px;
@@ -1367,7 +1367,7 @@ img .browser .s16 {
   margin-left: 0px;
 }
 
-.study_content_list{
+.project_content_list{
   display: block;
   //height: 2802px;
   min-height: 100%;
@@ -1450,7 +1450,7 @@ img .browser .s16 {
   padding: 4px 6px 4px 6px;
 }
 
-.left .study_role_assign{
+.left .project_role_assign{
 
   width: 170px;
   height: 28px;
@@ -1471,7 +1471,7 @@ img .browser .s16 {
   text-overflow: ellipsis;
 }
 
-.input .study_role_assign{
+.input .project_role_assign{
 
   width: 220px;
   height: 28px;
@@ -1499,7 +1499,7 @@ img .browser .s16 {
 
 
 
-.study_role_assign label{
+.project_role_assign label{
 
   float: left;
   width: 160px;
@@ -1545,11 +1545,11 @@ img .browser .s16 {
   float: top;
 }
 
-.study {
+.project {
   margin-left: 0px;
   width:100%;
 }
-.study:before, .row:after, .study:after {
+.project:before, .row:after, .project:after {
   display: table;
   content: "";
   line-height: 0;
@@ -1592,7 +1592,7 @@ img .browser .s16 {
 }
 
 
-.study_box {
+.project_box {
   display: inline-block;
   background: #F9F9F9;
   width:100%;
@@ -1628,7 +1628,7 @@ img .browser .s16 {
 
 }
 
-.study_panelGrid {
+.project_panelGrid {
   display: block;
   //background: #F9F9F9;
   width:470px;
@@ -1639,7 +1639,7 @@ img .browser .s16 {
 
 
 
-.ui-tabs .study_box{
+.ui-tabs .project_box{
 
   display: inline-block;
   background: #F9F9F9;
@@ -1706,7 +1706,7 @@ form {
 }*/
 
 
-.study_box > .title {
+.project_box > .title {
 
   padding-top: 1%;
   padding-right: 7%;
@@ -1721,7 +1721,7 @@ form {
   font-size: 12px;
 }
 
-.study_box > .title_panelGrid{
+.project_box > .title_panelGrid{
 
   width: 338px;
   height: 36px;
@@ -1732,7 +1732,7 @@ form {
 
 
 
-/*.study_box > ul{
+/*.project_box > ul{
     
     width: 368px;
     height: 54px;
@@ -1768,7 +1768,7 @@ a {
 }*/
 
 
-.title, .study_box .title {
+.title, .project_box .title {
   background: #eee;
   background-image: -webkit-gradient(linear, 0 0, 0 30, color-stop(0.066, #eee), to(#dfdfdf));
   background-image: -webkit-linear-gradient(#eee 6.6%, #dfdfdf);
@@ -2029,7 +2029,7 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
 
-.study_operation_panel{
+.project_operation_panel{
   width: 90%;
   height: 26px;
   display: block;
@@ -2163,7 +2163,7 @@ border-bottom: 1px solid rgba(0,0,0,0.05);
 
 }
 
-.study_download_holder{
+.project_download_holder{
 
   width: 659px;
   height: 26px;
@@ -2349,15 +2349,15 @@ ui-wizard {
   height: auto !important;
 }
 
-.studyInfo .secondColumn {
+.projectInfo .secondColumn {
   padding-left: 60px;
 }
 
-.studyInfo .secondColumn ul {
+.projectInfo .secondColumn ul {
   padding-left: 0px;
 }
 
-.studyInfo input,textarea,.ui-datalist-data {
+.projectInfo input,textarea,.ui-datalist-data {
   width: 185px;
 }
 
@@ -2539,19 +2539,19 @@ ui-wizard {
   margin-bottom: 5px;
 }
 
-.studyDialog .ui-datatable-scrollable-header {
+.projectDialog .ui-datatable-scrollable-header {
   height: 0px;
 }
 
-.studyDialog .ui-datatable {
+.projectDialog .ui-datatable {
   width: 300px;
 }
 
-.studyDialog .ui-datatable tr{  
+.projectDialog .ui-datatable tr{  
   background: none repeat scroll 0% 0% #FAFAFA;
 }
 
-.studyDialog table td {
+.projectDialog table td {
   vertical-align: middle;
 }
 

@@ -83,7 +83,7 @@ public class ResponseMessages {
   public final static String PROJECT_NAME_NOT_SET
           = "The project name cannot be empty.";
   public final static String PROJECT_NAME_NOT_TOO_LONG
-          = "The study name cannot be longer than 24 characters.";
+          = "The project name cannot be longer than 24 characters.";
   public final static String PROJECT_NAME_CONTAIN_DISALLOWED_CHARS
           = "The project name cannot contain any of the characters ";
   public final static String PROJECT_NAME_ENDS_WITH_DOT
@@ -98,7 +98,7 @@ public class ResponseMessages {
 
   //project success messages
   public final static String PROJECT_CREATED = "Project created successfully.";
-  public final static String PROJECT_NAME_CHANGED = "Project name changed";
+  public final static String PROJECT_DESCRIPTION_CHANGED = "Project description changed.";
   public final static String PROJECT_SERVICE_ADDED = "Project service added";
   public final static String PROJECT_REMOVED
           = "The project and all related files were removed successfully.";
