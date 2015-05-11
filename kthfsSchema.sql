@@ -438,6 +438,40 @@ CREATE TABLE IF NOT EXISTS `tuple_to_file` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0 ;
 
+--
+-- Table structure for table `field_predefined_values`
+--
+
+CREATE TABLE IF NOT EXISTS `field_predefined_values` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `fieldid` int(11) NOT NULL,
+  `valuee` varchar(250) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=10 ;
+
+
+CREATE TABLE IF NOT EXISTS `field_types` (
+  `id` mediumint(9) NOT NULL AUTO_INCREMENT,
+  `description` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
+
+--
+-- Dumping data for table `field_types`
+--
+
+INSERT INTO `field_types` (`id`, `description`) VALUES
+(1, 'text'),
+(2, 'value list'),
+(3, 'yes/no');
+
+--
+-- Table structure for table `inodes_ops_deleted`
+--
+
+CREATE TABLE IF NOT EXISTS `inodes_ops_deleted` (
+  `inodeid` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
 -- Constraints for dumped tables
