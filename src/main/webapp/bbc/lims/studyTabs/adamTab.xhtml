@@ -19,7 +19,7 @@
               History
             </h3>
             <ui:insert name="history">
-              <ui:include src="/bbc/lims/studyTabs/HistoryPanel.xhtml">
+              <ui:include src="/bbc/lims/projectTabs/HistoryPanel.xhtml">
                 <ui:param name="type" value="ADAM" />
               </ui:include>
             </ui:insert>
@@ -124,7 +124,7 @@
                       <strong>#{file.jobOutputFilePK.name}</strong>
                       <p:fileDownload value="#{adamController.downloadFile(file.path)}"/>
                     </p:commandLink>
-                    <p:commandLink rendered="#{jobHistoryController.isDir(file.path)}" action="#{InodesMB.cdGlobal(file.path)}" oncomplete="PF('studyTabs').select(2)">
+                    <p:commandLink rendered="#{jobHistoryController.isDir(file.path)}" action="#{InodesMB.cdGlobal(file.path)}" oncomplete="PF('projectTabs').select(2)">
                       <strong>#{file.jobOutputFilePK.name}</strong>
                     </p:commandLink>
                   </div>

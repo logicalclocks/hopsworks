@@ -46,7 +46,7 @@ public class UserGroupsController {
   }
 
   /**
-   * Deletes only GUEST role of a study from USERS_GROUPS table
+   * Deletes only GUEST role of a project from USERS_GROUPS table
    * <p>
    * @param email
    */

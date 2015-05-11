@@ -4,7 +4,7 @@ import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
-import se.kth.bbc.study.Study;
+import se.kth.bbc.project.Project;
 
 /**
  * Class for containing the execution logic of a Hops job. Its internals
@@ -78,14 +78,14 @@ public abstract class HopsJob {
    * <p>
    * @param jobname The (optional) name for the job.
    * @param userEmail The email of the user running the job.
-   * @param study The study under which the job is being run.
+   * @param project The project under which the job is being run.
    * @param jobType The type of job.
    * @return Unique id of the JobHistory object associated with this job.
    */
   public final Long requestJobId(String jobname, String userEmail,
-          Study study,
+          Project project,
           JobType jobType) {
-    jobId = jobHistoryFacade.create(jobname, userEmail, study, jobType,
+    jobId = jobHistoryFacade.create(jobname, userEmail, project, jobType,
             null, JobState.INITIALIZING, null, null, null, null);
     initialized = true;
     return jobId;

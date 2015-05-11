@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
-import se.kth.bbc.study.fb.InodesMB;
+import se.kth.bbc.project.fb.InodesMB;
 
 /**
  * by fanxu

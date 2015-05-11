@@ -19,7 +19,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.security.ua.model.User;
-import se.kth.bbc.study.Study;
+import se.kth.bbc.project.Project;
 
 /**
  *
@@ -42,14 +42,14 @@ import se.kth.bbc.study.Study;
           = "SELECT u FROM Activity u WHERE u.user = :user ORDER BY u.timestamp DESC" ),
   @NamedQuery(name = "Activity.findByTimestamp",
           query = "SELECT u FROM Activity u WHERE u.timestamp = :timestamp"),
-  @NamedQuery(name = "Activity.findByStudy",
+  @NamedQuery(name = "Activity.findByProject",
           query
-          = "SELECT u FROM Activity u WHERE u.study = :study ORDER BY u.timestamp DESC"),
+          = "SELECT u FROM Activity u WHERE u.project = :project ORDER BY u.timestamp DESC"),
   @NamedQuery(name = "Activity.countAll",
           query = "SELECT COUNT(u) FROM Activity u"),
-  @NamedQuery(name = "Activity.countPerStudy",
+  @NamedQuery(name = "Activity.countPerProject",
           query
-          = "SELECT COUNT(u) FROM Activity u WHERE u.study = :study")})
+          = "SELECT COUNT(u) FROM Activity u WHERE u.project = :project")})
 public class Activity implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -77,10 +77,10 @@ public class Activity implements Serializable {
   @Temporal(TemporalType.TIMESTAMP)
   private Date timestamp;
 
-  @JoinColumn(name = "study_id",
+  @JoinColumn(name = "project_id",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
-  private Study study;
+  private Project project;
 
   @JoinColumn(name = "user_id",
           referencedColumnName = "uid")
@@ -156,12 +156,12 @@ public class Activity implements Serializable {
     this.flag = flag;
   }
 
-  public Study getStudy() {
-    return study;
+  public Project getProject() {
+    return project;
   }
 
-  public void setStudy(Study study) {
-    this.study = study;
+  public void setProject(Project project) {
+    this.project = project;
   }
 
   public User getUser() {

@@ -12,83 +12,83 @@
       <title><ui:insert name="title">HopsWorks</ui:insert></title>
       <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
-      <link rel="stylesheet" type="text/css" href="#{resource['/css/studyPage.css']}" />
+      <link rel="stylesheet" type="text/css" href="#{resource['/css/projectPage.css']}" />
       <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
     </h:head>
     <h:body>
       <ui:insert name="titleBar" >
         <ui:include src="/bbc/lims/titleBar.xhtml" />
       </ui:insert>
-      <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutStudy" rendered="#{studyManagedBean.studyName != null}">  
+      <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutProject" rendered="#{projectManagedBean.projectName != null}">  
         <p:layoutUnit position="center">
           <div class="container">
-            <h1>#{studyManagedBean.studyName} </h1>
+            <h1>#{projectManagedBean.projectName} </h1>
             <h:form>
-              <p:commandButton id="toolsBtn" value="Study..." type="button" rendered="#{studyManagedBean.currentOwner}" style="float:right;margin-top: 26px;"/>  
+              <p:commandButton id="toolsBtn" value="Project..." type="button" rendered="#{projectManagedBean.currentOwner}" style="float:right;margin-top: 26px;"/>  
               <p:menu overlay="true" trigger="toolsBtn" my="left top" at="left bottom" >  
-                <p:menuitem value="Edit services" onclick="PF('editServicesDlg').show()" rendered="#{not studyManagedBean.studyArchived}"/> 
+                <p:menuitem value="Edit services" onclick="PF('editServicesDlg').show()" rendered="#{not projectManagedBean.projectArchived}"/> 
                 <p:separator/>
-                <p:menuitem value="Archive" onclick="PF('archiveStudyDlg').show()" rendered="#{not studyManagedBean.studyArchived}"/>
-                <p:menuitem value="Unarchive" onclick="PF('unarchiveStudyDlg').show()" rendered="#{studyManagedBean.studyArchived}"/>
-                <p:menuitem value="Remove" onclick="PF('removeStudyDlg').show();"/> 
+                <p:menuitem value="Archive" onclick="PF('archiveProjectDlg').show()" rendered="#{not projectManagedBean.projectArchived}"/>
+                <p:menuitem value="Unarchive" onclick="PF('unarchiveProjectDlg').show()" rendered="#{projectManagedBean.projectArchived}"/>
+                <p:menuitem value="Remove" onclick="PF('removeProjectDlg').show();"/> 
               </p:menu> 
             </h:form>
             <div class="archivedWarning">
-              <h:outputText value="This study has been archived. To have full access to its functionality and data, you should unarchive it." rendered="#{studyManagedBean.studyArchived}"/>
+              <h:outputText value="This project has been archived. To have full access to its functionality and data, you should unarchive it." rendered="#{projectManagedBean.projectArchived}"/>
             </div>
             <div class="content"> 
-              <p:tabView id="tabStudyPage" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="studyTabs">
+              <p:tabView id="tabProjectPage" dynamic="true" cache="false" styleClass="ui-tabs" widgetVar="projectTabs">
                 <p:tab id="showTab" title="Show">
                   <ui:insert name="showTab">
-                    <ui:include src="/bbc/lims/studyTabs/studyShowTab.xhtml"/>
+                    <ui:include src="/bbc/lims/projectTabs/projectShowTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="teamTab" title="Team" rendered="#{studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="teamTab" title="Team" rendered="#{projectManagedBean.currentRoleInProject() != null and not projectManagedBean.projectArchived}">
                   <ui:insert name="teamTab">
-                    <ui:include src="/bbc/lims/studyTabs/teamTab.xhtml"/>
+                    <ui:include src="/bbc/lims/projectTabs/teamTab.xhtml"/>
                   </ui:insert>                                    
                 </p:tab>
-                <p:tab id="browser" title="Browser" rendered="#{studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="browser" title="Browser" rendered="#{projectManagedBean.currentRoleInProject() != null and not projectManagedBean.projectArchived}">
                   <ui:insert name="browserTab">
-                    <ui:include src="/bbc/lims/studyTabs/browser.xhtml"/>
+                    <ui:include src="/bbc/lims/projectTabs/browser.xhtml"/>
                   </ui:insert>
                 </p:tab>
                 <!-- TODO: figure out how to do this with a loop?-->
-                <p:tab id="cuneiform" title="Cuneiform" rendered="#{studyManagedBean.shouldDrawTab('CUNEIFORM') and studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="cuneiform" title="Cuneiform" rendered="#{projectManagedBean.shouldDrawTab('CUNEIFORM') and projectManagedBean.currentRoleInProject() != null and not projectManagedBean.projectArchived}">
                   <ui:insert name="workflowsTab">
-                    <ui:include src="/bbc/lims/studyTabs/cuneiformTab.xhtml"/>
+                    <ui:include src="/bbc/lims/projectTabs/cuneiformTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="yarn" title="Yarn" rendered="#{studyManagedBean.shouldDrawTab('YARN') and studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="yarn" title="Yarn" rendered="#{projectManagedBean.shouldDrawTab('YARN') and projectManagedBean.currentRoleInProject() != null and not projectManagedBean.projectArchived}">
                   <ui:insert name="yarn">
-                    <ui:include src="/bbc/lims/studyTabs/yarnTab.xhtml"/>
+                    <ui:include src="/bbc/lims/projectTabs/yarnTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="studyinfo" title="Study info" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO') and studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
-                  <ui:insert name="studyinfo">
-                    <ui:include src="/bbc/lims/studyTabs/studyInfoTab.xhtml"/>
+                <p:tab id="projectinfo" title="Project info" rendered="#{projectManagedBean.shouldDrawTab('PROJECT_INFO') and projectManagedBean.currentRoleInProject() != null and not projectManagedBean.projectArchived}">
+                  <ui:insert name="projectinfo">
+                    <ui:include src="/bbc/lims/projectTabs/projectInfoTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="samples" title="Samples" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES') and studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="samples" title="Samples" rendered="#{projectManagedBean.shouldDrawTab('SAMPLES') and projectManagedBean.currentRoleInProject() != null and not projectManagedBean.projectArchived}">
                   <ui:insert name="samples">
-                    <ui:include src="/bbc/lims/studyTabs/samplesTab.xhtml"/>
+                    <ui:include src="/bbc/lims/projectTabs/samplesTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
 
-                <p:tab id="spark" title="Spark" rendered="#{studyManagedBean.shouldDrawTab('SPARK') and studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="spark" title="Spark" rendered="#{projectManagedBean.shouldDrawTab('SPARK') and projectManagedBean.currentRoleInProject() != null and not projectManagedBean.projectArchived}">
                   <ui:insert name="spark">
-                    <ui:include src="/bbc/lims/studyTabs/sparkTab.xhtml"/>
+                    <ui:include src="/bbc/lims/projectTabs/sparkTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
-                <p:tab id="adam" title="ADAM" rendered="#{studyManagedBean.shouldDrawTab('ADAM') and studyManagedBean.currentRoleInStudy() != null and not studyManagedBean.studyArchived}">
+                <p:tab id="adam" title="ADAM" rendered="#{projectManagedBean.shouldDrawTab('ADAM') and projectManagedBean.currentRoleInProject() != null and not projectManagedBean.projectArchived}">
                   <ui:insert name="adam">
-                    <ui:include src="/bbc/lims/studyTabs/adamTab.xhtml"/>
+                    <ui:include src="/bbc/lims/projectTabs/adamTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
 
-                <p:tab title="Privacy" rendered="#{studyManagedBean.shouldDrawTab('PRIVACY') and studyManagedBean.currentRoleInStudy() eq 'Master' and not studyManagedBean.studyArchived}">
+                <p:tab title="Privacy" rendered="#{projectManagedBean.shouldDrawTab('PRIVACY') and projectManagedBean.currentRoleInProject() eq 'Master' and not projectManagedBean.projectArchived}">
                   <ui:insert name="privacyTab">
-                    <ui:include src="/bbc/lims/studyTabs/privacyTab.xhtml"/>
+                    <ui:include src="/bbc/lims/projectTabs/privacyTab.xhtml"/>
                   </ui:insert>
                 </p:tab>
               </p:tabView>
@@ -102,8 +102,8 @@
         <p:poll interval="10" update="@(.historyForm) @(.resultsForm)"/>
       </h:form>
 
-      <!-- In case Study has not been set: user navigated to the page manually. -->
-      <p:layout id="bbcMainLayoutAlt" styleClass="BbcMainLayoutStudy" rendered="#{studyManagedBean.studyName == null}">  
+      <!-- In case Project has not been set: user navigated to the page manually. -->
+      <p:layout id="bbcMainLayoutAlt" styleClass="BbcMainLayoutProject" rendered="#{projectManagedBean.projectName == null}">  
         <p:layoutUnit position="center">
           <div class="container">
             <h1 class="Oops">Oops!</h1>
@@ -113,56 +113,56 @@
         </p:layoutUnit>
       </p:layout>
 
-      <!-- Archive study dialog -->
-      <p:dialog widgetVar="archiveStudyDlg" styleClass="archiveStudyDialog" closable="true" draggable="false" resizable="false" header="Archive study?" modal="true" style="width: auto;">
+      <!-- Archive project dialog -->
+      <p:dialog widgetVar="archiveProjectDlg" styleClass="archiveProjectDialog" closable="true" draggable="false" resizable="false" header="Archive project?" modal="true" style="width: auto;">
         <h:form class="dialogForm">
-          <h:outputText value="Do you want to archive this study? You will still be able to see its activity log, but its data will be unaccessible as long as it is archived. You will be able to unarchive the project at any time." style="width: auto;"/>
+          <h:outputText value="Do you want to archive this project? You will still be able to see its activity log, but its data will be unaccessible as long as it is archived. You will be able to unarchive the project at any time." style="width: auto;"/>
           <h:panelGroup styleClass="dialogButtonGroup">
-            <p:commandButton value="Archive" action="#{studyManagedBean.archiveStudy()}" onstart="PF('archiveStudyDlg').hide()" type="submit" ajax="false"/>
-            <p:commandButton value="Cancel" oncomplete="PF('archiveStudyDlg').hide()" type="button"/>
+            <p:commandButton value="Archive" action="#{projectManagedBean.archiveProject()}" onstart="PF('archiveProjectDlg').hide()" type="submit" ajax="false"/>
+            <p:commandButton value="Cancel" oncomplete="PF('archiveProjectDlg').hide()" type="button"/>
           </h:panelGroup>  
         </h:form>
       </p:dialog>
 
-      <!-- Unarchive study dialog -->
-      <p:dialog widgetVar="unarchiveStudyDlg" styleClass="unarchiveStudyDialog" closable="true" draggable="false" resizable="false" header="Archive study?" modal="true" style="width: auto;">
+      <!-- Unarchive project dialog -->
+      <p:dialog widgetVar="unarchiveProjectDlg" styleClass="unarchiveProjectDialog" closable="true" draggable="false" resizable="false" header="Archive project?" modal="true" style="width: auto;">
         <h:form class="dialogForm">
-          <h:outputText value="Do you want to unarchive this study? The operation will take a while." style="width: auto;"/>
+          <h:outputText value="Do you want to unarchive this project? The operation will take a while." style="width: auto;"/>
           <h:panelGroup styleClass="dialogButtonGroup">
-            <p:commandButton value="Unarchive" action="#{studyManagedBean.unarchiveStudy()}" onstart="PF('unarchiveStudyDlg').hide()" type="submit" ajax="false"/>
-            <p:commandButton value="Cancel" oncomplete="PF('unarchiveStudyDlg').hide()" type="button"/>
+            <p:commandButton value="Unarchive" action="#{projectManagedBean.unarchiveProject()}" onstart="PF('unarchiveProjectDlg').hide()" type="submit" ajax="false"/>
+            <p:commandButton value="Cancel" oncomplete="PF('unarchiveProjectDlg').hide()" type="button"/>
           </h:panelGroup>  
         </h:form>
       </p:dialog>
 
-      <!-- Remove study dialog -->
-      <p:dialog widgetVar="removeStudyDlg" styleClass="studyDialog" closable="true" draggable="false" resizable="false" header="Remove study?" modal="true" style="width: auto;">
+      <!-- Remove project dialog -->
+      <p:dialog widgetVar="removeProjectDlg" styleClass="projectDialog" closable="true" draggable="false" resizable="false" header="Remove project?" modal="true" style="width: auto;">
         <h:form class="dialogForm">
-          <h:outputText value="Do you want to remove this study and its data?" style="width: auto;"/>
-          <p:selectOneRadio id="console" value="#{studyManagedBean.deleteFilesOnRemove}"  layout="grid" columns="1" style="width: auto;" >
-            <f:selectItem itemLabel="Remove study and its data." itemValue="true"/>
-            <f:selectItem itemLabel="Remove study, but keep data." itemValue="false" />
+          <h:outputText value="Do you want to remove this project and its data?" style="width: auto;"/>
+          <p:selectOneRadio id="console" value="#{projectManagedBean.deleteFilesOnRemove}"  layout="grid" columns="1" style="width: auto;" >
+            <f:selectItem itemLabel="Remove project and its data." itemValue="true"/>
+            <f:selectItem itemLabel="Remove project, but keep data." itemValue="false" />
           </p:selectOneRadio>
           <h:panelGroup styleClass="dialogButtonGroup">
-            <p:commandButton value="Remove" action="#{studyManagedBean.removeCurrentStudy()}" onstart="PF('removeStudyDlg').hide()" type="submit"/>
-            <p:commandButton value="Cancel" oncomplete="PF('removeStudyDlg').hide()"/>
+            <p:commandButton value="Remove" action="#{projectManagedBean.removeCurrentProject()}" onstart="PF('removeProjectDlg').hide()" type="submit"/>
+            <p:commandButton value="Cancel" oncomplete="PF('removeProjectDlg').hide()"/>
           </h:panelGroup>  
         </h:form>
       </p:dialog>
       <!-- Remove team member dialog -->
-      <p:dialog id="removeTeamMemberDialog" styleClass="studyDialog" header="Remove team member" widgetVar="remTeamMemDlg" draggable="false" resizable="false" modal="true" closable="false">
+      <p:dialog id="removeTeamMemberDialog" styleClass="projectDialog" header="Remove team member" widgetVar="remTeamMemDlg" draggable="false" resizable="false" modal="true" closable="false">
         <h:form id="remTeamMemForm" class="dialogForm">
-          <h:outputText value="Are you sure you want to remove #{studyTeamController.toRemoveName} [#{studyTeamController.toRemoveEmail}] from this study?"/>
+          <h:outputText value="Are you sure you want to remove #{projectTeamController.toRemoveName} [#{projectTeamController.toRemoveEmail}] from this project?"/>
           <h:panelGroup styleClass="dialogButtonGroup">
-            <p:commandButton value="Yes" action="#{studyTeamController.deleteMemberFromTeam()}" 
+            <p:commandButton value="Yes" action="#{projectTeamController.deleteMemberFromTeam()}" 
                              update=":#{p:component('teamForm')}" oncomplete="PF('remTeamMemDlg').hide()"/>
-            <p:commandButton value="No" action="#{studyTeamController.clearToRemove()}"
+            <p:commandButton value="No" action="#{projectTeamController.clearToRemove()}"
                              oncomplete="PF('remTeamMemDlg').hide()"/>
           </h:panelGroup>
         </h:form>
       </p:dialog>
       <!-- Create folder dialog -->
-      <p:dialog id="createFolderDialog" styleClass="studyDialog" widgetVar="createFolderDlg" closable="true" draggable="false" modal="true" resizable="false" header="Create folder">
+      <p:dialog id="createFolderDialog" styleClass="projectDialog" widgetVar="createFolderDlg" closable="true" draggable="false" modal="true" resizable="false" header="Create folder">
         <h:form styleClass="dialogForm" class="dialogForm">
           <h:panelGrid columns="2">
             <p:outputLabel for="folderName" value="New folder name"/>
@@ -175,7 +175,7 @@
         </h:form>
       </p:dialog>
       <!-- Add sample dialog -->
-      <p:dialog id="addSampleDialog" styleClass="studyDialog" widgetVar="addSampleDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+      <p:dialog id="addSampleDialog" styleClass="projectDialog" widgetVar="addSampleDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample" rendered="#{projectManagedBean.shouldDrawTab('SAMPLES')}">
         <h:form class="dialogForm">
           <p:outputLabel for="sampleName" value="Sample ID"/>
           <p:inputText id="sampleName" required="true" value="#{samplesController.newSample.id}" placeholder="id"> 
@@ -196,46 +196,46 @@
         </h:form>
       </p:dialog>
       <!-- Edit services dialog -->
-      <p:dialog id="editServicesDialog" styleClass="studyDialog" widgetVar="editServicesDlg" closable="true" draggable="false" modal="true" resizable="false" header="Edit services">
+      <p:dialog id="editServicesDialog" styleClass="projectDialog" widgetVar="editServicesDlg" closable="true" draggable="false" modal="true" resizable="false" header="Edit services">
         <h:form class="dialogForm">
-          <p:selectManyCheckbox layout="grid" value="#{studyManagedBean.selectedServices}" columns="3">
-            <f:converter converterId="studyServiceConverter"/>
-            <f:selectItems id="servVals" value="#{newStudyController.availableServices}"/>
+          <p:selectManyCheckbox layout="grid" value="#{projectManagedBean.selectedServices}" columns="3">
+            <f:converter converterId="projectServiceConverter"/>
+            <f:selectItems id="servVals" value="#{newProjectController.availableServices}"/>
           </p:selectManyCheckbox>
           <h:panelGroup styleClass="dialogButtonGroup">
-            <p:commandButton value="Update" action="#{studyManagedBean.updateServices()}" oncomplete="PF('editServicesDlg').hide()"/>
+            <p:commandButton value="Update" action="#{projectManagedBean.updateServices()}" oncomplete="PF('editServicesDlg').hide()"/>
             <p:commandButton value="Cancel" type="button" onclick="PF('editServicesDlg').hide()"/>
           </h:panelGroup>
         </h:form>
       </p:dialog>
-      <!-- edit study design dialog -->
-      <p:dialog id="editStudyDesignDialog" styleClass="studyDialog" widgetVar="editStudyDesignDlg" closable="true" draggable="false" modal="true" header="Edit study design" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO')}">
+      <!-- edit project design dialog -->
+      <p:dialog id="editProjectDesignDialog" styleClass="projectDialog" widgetVar="editProjectDesignDlg" closable="true" draggable="false" modal="true" header="Edit project design" rendered="#{projectManagedBean.shouldDrawTab('PROJECT_INFO')}">
         <h:form class="dialogForm">
-          <p:pickList id="studyDesignPick" value="#{studyMetaController.studyDesignDual}" 
+          <p:pickList id="projectDesignPick" value="#{projectMetaController.projectDesignDual}" 
                       var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="collectionTypeEnumConverter">
             <f:facet name="sourceCaption">Available</f:facet>
             <f:facet name="targetCaption">Selected</f:facet>
           </p:pickList>
           <h:panelGroup styleClass="dialogButtonGroup">
-            <p:commandButton value="OK" oncomplete="PF('editStudyDesignDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('studyInfoForm')}"/>
+            <p:commandButton value="OK" oncomplete="PF('editProjectDesignDlg').hide()" actionListener="#{projectMetaController.process()}" update=":#{p:component('projectInfoForm')}"/>
           </h:panelGroup>
         </h:form>
       </p:dialog>
-      <!-- edit study inclusion criteria dialog -->
-      <p:dialog id="editInclusionCriteriaDialog" styleClass="studyDialog" widgetVar="editInclusionCriteriaDlg" closable="true" draggable="false" modal="true" header="Edit inclusion criteria" rendered="#{studyManagedBean.shouldDrawTab('STUDY_INFO')}">
+      <!-- edit project inclusion criteria dialog -->
+      <p:dialog id="editInclusionCriteriaDialog" styleClass="projectDialog" widgetVar="editInclusionCriteriaDlg" closable="true" draggable="false" modal="true" header="Edit inclusion criteria" rendered="#{projectManagedBean.shouldDrawTab('PROJECT_INFO')}">
         <h:form class="dialogForm">
-          <p:pickList id="inclusionCriteriaPick" value="#{studyMetaController.inclusionCriteriaDual}" 
+          <p:pickList id="inclusionCriteriaPick" value="#{projectMetaController.inclusionCriteriaDual}" 
                       var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="inclusionCriteriumEnumConverter">
             <f:facet name="sourceCaption">Available</f:facet>
             <f:facet name="targetCaption">Selected</f:facet>
           </p:pickList>
           <h:panelGroup styleClass="dialogButtonGroup">
-            <p:commandButton value="OK" oncomplete="PF('editInclusionCriteriaDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('studyInfoForm')}"/>
+            <p:commandButton value="OK" oncomplete="PF('editInclusionCriteriaDlg').hide()" actionListener="#{projectMetaController.process()}" update=":#{p:component('projectInfoForm')}"/>
           </h:panelGroup>
         </h:form>
       </p:dialog>
       <!-- edit collection types dialog -->
-      <p:dialog id="editCollectionTypesDialog" styleClass="studyDialog" widgetVar="editCollectionTypesDlg" closable="true" draggable="false" modal="true" header="Edit collection types" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+      <p:dialog id="editCollectionTypesDialog" styleClass="projectDialog" widgetVar="editCollectionTypesDlg" closable="true" draggable="false" modal="true" header="Edit collection types" rendered="#{projectManagedBean.shouldDrawTab('SAMPLES')}">
         <h:form class="dialogForm">
           <p:pickList id="collectionTypesPick" value="#{samplesController.collectionTypeDualList}" 
                       var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="collectionTypeEnumConverter">
@@ -243,12 +243,12 @@
             <f:facet name="targetCaption">Selected</f:facet>
           </p:pickList>
           <h:panelGroup styleClass="dialogButtonGroup">
-            <p:commandButton value="OK" oncomplete="PF('editCollectionTypesDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('samplesForm')}"/>
+            <p:commandButton value="OK" oncomplete="PF('editCollectionTypesDlg').hide()" actionListener="#{projectMetaController.process()}" update=":#{p:component('samplesForm')}"/>
           </h:panelGroup>
         </h:form>
       </p:dialog>
       <!-- edit material type dialog -->
-      <p:dialog id="editMaterialTypesDialog" styleClass="studyDialog" widgetVar="editMaterialTypesDlg" closable="true" draggable="false" modal="true" header="Edit material types" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+      <p:dialog id="editMaterialTypesDialog" styleClass="projectDialog" widgetVar="editMaterialTypesDlg" closable="true" draggable="false" modal="true" header="Edit material types" rendered="#{projectManagedBean.shouldDrawTab('SAMPLES')}">
         <h:form class="dialogForm">
           <p:pickList id="materialTypesPick" value="#{samplesController.materialTypeDualList}" 
                       var="val" itemLabel="#{val.toString()}" itemValue="#{val}" converter="materialTypeEnumConverter">
@@ -256,12 +256,12 @@
             <f:facet name="targetCaption">Selected</f:facet>
           </p:pickList>
           <h:panelGroup styleClass="dialogButtonGroup">
-            <p:commandButton value="OK" oncomplete="PF('editMaterialTypesDlg').hide()" actionListener="#{studyMetaController.process()}" update=":#{p:component('samplesForm')}"/>
+            <p:commandButton value="OK" oncomplete="PF('editMaterialTypesDlg').hide()" actionListener="#{projectMetaController.process()}" update=":#{p:component('samplesForm')}"/>
           </h:panelGroup>
         </h:form>
       </p:dialog>
       <!-- add samplecollection dialog -->
-      <p:dialog id="addCollectionDialog" styleClass="studyDialog" widgetVar="addCollectionDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample collection" rendered="#{studyManagedBean.shouldDrawTab('SAMPLES')}">
+      <p:dialog id="addCollectionDialog" styleClass="projectDialog" widgetVar="addCollectionDlg" closable="true" draggable="false" modal="true" resizable="false" header="Add sample collection" rendered="#{projectManagedBean.shouldDrawTab('SAMPLES')}">
         <h:form class="dialogForm">
           <h:panelGrid columns="3">
             <p:outputLabel for="collId" value="Collection ID"/>
@@ -289,7 +289,7 @@
       </p:dialog>
 
       <!-- Choose file dialog-->
-      <p:dialog id="chooseFileDialog" styleClass="studyDialog" widgetVar="chooseFileDlg" closable="false" draggable="false" modal="true" resizable="false" header="Choose file" rendered="#{studyManagedBean.currentRoleInStudy() != null}">
+      <p:dialog id="chooseFileDialog" styleClass="projectDialog" widgetVar="chooseFileDlg" closable="false" draggable="false" modal="true" resizable="false" header="Choose file" rendered="#{projectManagedBean.currentRoleInProject() != null}">
         <h:form class="dialogForm">
           <ui:repeat var="node" value="#{InodesMB.currentPath}">
             <p:commandLink action="#{InodesMB.cdBrowse(node.path)}" update="@form">

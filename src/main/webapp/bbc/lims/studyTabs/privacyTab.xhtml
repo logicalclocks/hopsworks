@@ -26,12 +26,12 @@ and open the template in the editor.
             <h:panelGrid columns="3" style="padding-top: 20px;">         
 
               <h:panelGroup style="padding-right:50px;">
-                Consent Status: #{studyManagedBean.ethicalStatus}
+                Consent Status: #{projectManagedBean.ethicalStatus}
               </h:panelGroup>
 
 
               <h:panelGroup style="padding-right:50px;">
-                Retention Period: #{studyManagedBean.retentionPeriod}
+                Retention Period: #{projectManagedBean.retentionPeriod}
               </h:panelGroup>
 
 
@@ -39,7 +39,7 @@ and open the template in the editor.
               <h:panelGroup style="padding-right:50px;">
                 <p:calendar id="cal"
                             style="padding-right: 10px;"
-                            value="#{studyManagedBean.retentionPeriod}" 
+                            value="#{projectManagedBean.retentionPeriod}" 
                             showOn="button" >
 
                 </p:calendar>  
@@ -47,8 +47,8 @@ and open the template in the editor.
                 <p:commandButton  
                   value="Update Period"  
                   update="privacy"
-                  action="#{studyManagedBean.updateRetentionPeriod()}"
-                  rendered="#{studyManagedBean.currentRoleInStudy() == 'Master'}"/>
+                  action="#{projectManagedBean.updateRetentionPeriod()}"
+                  rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"/>
               </h:panelGroup>
 
             </h:panelGrid>
@@ -56,12 +56,12 @@ and open the template in the editor.
             <p:separator></p:separator>
 
             <p:dataGrid 
-              value="#{studyManagedBean.allConsent}"
+              value="#{projectManagedBean.allConsent}"
               var="consent"
               >
               <h:panelGrid columns="1">
                 <p:column>
-                  <h:commandLink  action="#{studyManagedBean.showConsent(consent.name)}" 
+                  <h:commandLink  action="#{projectManagedBean.showConsent(consent.name)}" 
                                   target="_blank"
                                   style="float:left;margin-right:10px">
 
@@ -86,39 +86,39 @@ and open the template in the editor.
             <h:panelGrid id= "consent_menu" columns="3" style="padding-top: 80px;">
 
               <p:fileUpload 
-                value="#{studyManagedBean.file}" 
+                value="#{projectManagedBean.file}" 
                 label="Upload Consent Info" 
                 mode="advanced"
                 fileLimit="1" 
                 allowTypes="/(\.|\/)(pdf|PDF)$/"
                 oncomplete="PF('chooseFileDlg').hide()"
                 update="privacy"
-                fileUploadListener="#{studyManagedBean.uploadConsent}"
-                rendered="#{studyManagedBean.currentRoleInStudy() == 'Master'}"
+                fileUploadListener="#{projectManagedBean.uploadConsent}"
+                rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"
                 />
 
 
-              <p:fileUpload value="#{studyManagedBean.file}" 
+              <p:fileUpload value="#{projectManagedBean.file}" 
                             label="Upload Ethical Approval"
                             mode="advanced" 
                             fileLimit="1" 
                             allowTypes="/(\.|\/)(pdf|PDF)$/"
                             oncomplete="PF('chooseFileDlg').hide()"
-                            fileUploadListener="#{studyManagedBean.uploadEthicalApproval}"
-                            rendered="#{studyManagedBean.currentRoleInStudy() == 'Master'}"
+                            fileUploadListener="#{projectManagedBean.uploadEthicalApproval}"
+                            rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"
                             update="privacy"
                             />
 
 
-              <p:fileUpload value="#{studyManagedBean.file}" 
+              <p:fileUpload value="#{projectManagedBean.file}" 
                             label="Upload Non-Consent Info"
                             mode="advanced" 
                             fileLimit="1" 
                             allowTypes="/(\.|\/)(pdf|PDF)$/"
                             update="privacy"
                             oncomplete="PF('chooseFileDlg').hide()"
-                            fileUploadListener="#{studyManagedBean.uploadEthicaNonConsent}"
-                            rendered="#{studyManagedBean.currentRoleInStudy() == 'Master'}"
+                            fileUploadListener="#{projectManagedBean.uploadEthicaNonConsent}"
+                            rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"
                             />
 
             </h:panelGrid>
@@ -132,7 +132,7 @@ and open the template in the editor.
 
     <h:form id="audit">
       <p:dataTable var="act"
-                   value="#{studyManagedBean.allActivitiesOnStudy}" 
+                   value="#{projectManagedBean.allActivitiesOnProject}" 
                    emptyMessage="No audit logs"
                    scrollable="true">
 

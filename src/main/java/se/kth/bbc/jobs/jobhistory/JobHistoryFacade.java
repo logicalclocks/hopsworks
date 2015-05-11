@@ -15,8 +15,8 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.study.StudyFacade;
-import se.kth.bbc.study.Study;
+import se.kth.bbc.project.ProjectFacade;
+import se.kth.bbc.project.Project;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 import se.kth.bbc.security.ua.model.User;
 
@@ -37,7 +37,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   private UserManager users;
 
   @EJB
-  private StudyFacade studies;
+  private ProjectFacade studies;
 
   public JobHistoryFacade() {
     super(JobHistory.class);
@@ -49,16 +49,16 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   }
 
   /**
-   * Find all the JobHistory entries for the given study and type.
-   * @param study
+   * Find all the JobHistory entries for the given project and type.
+   * @param project
    * @param type
    * @return List of JobHistory objects.
    */
-  public List<JobHistory> findForStudyByType(Study study, JobType type) {
+  public List<JobHistory> findForProjectByType(Project project, JobType type) {
     TypedQuery<JobHistory> q = em.createNamedQuery(
-            "JobHistory.findByStudyAndType", JobHistory.class);
+            "JobHistory.findByProjectAndType", JobHistory.class);
     q.setParameter("type", type);
-    q.setParameter("study", study);
+    q.setParameter("project", project);
     return q.getResultList();
   }
 
@@ -132,7 +132,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     }
   }
 
-  public Long create(String jobname, String userEmail, Study study,
+  public Long create(String jobname, String userEmail, Project project,
           JobType type,
           String args, JobState state, String stdOutPath, String stdErrPath,
           Collection<JobExecutionFile> execFiles,
@@ -146,7 +146,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     JobHistory jh = new JobHistory(submission, state);
     jh.setName(jobname);
     jh.setUser(user);
-    jh.setStudy(study);
+    jh.setProject(project);
     jh.setType(type);
     jh.setArgs(args);
     jh.setStdoutPath(stdOutPath);

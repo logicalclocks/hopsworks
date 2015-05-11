@@ -24,16 +24,16 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.Constants;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
-import se.kth.bbc.study.Study;
-import se.kth.bbc.study.StudyFacade;
-import se.kth.bbc.study.StudyRoleTypes;
-import se.kth.bbc.study.StudyTeam;
-import se.kth.bbc.study.StudyTeamFacade;
-import se.kth.bbc.study.StudyTeamPK;
-import se.kth.bbc.study.fb.Inode;
-import se.kth.bbc.study.fb.InodeFacade;
-import se.kth.bbc.study.services.StudyServiceEnum;
-import se.kth.bbc.study.services.StudyServiceFacade;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectFacade;
+import se.kth.bbc.project.ProjectRoleTypes;
+import se.kth.bbc.project.ProjectTeam;
+import se.kth.bbc.project.ProjectTeamFacade;
+import se.kth.bbc.project.ProjectTeamPK;
+import se.kth.bbc.project.fb.Inode;
+import se.kth.bbc.project.fb.InodeFacade;
+import se.kth.bbc.project.services.ProjectServiceEnum;
+import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.hopsworks.rest.AppException;
 
 /**
@@ -41,14 +41,15 @@ import se.kth.hopsworks.rest.AppException;
  * @author Ermias<ermiasg@kth.se>
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectController {
 
   private final static Logger logger = Logger.getLogger(ProjectController.class.
           getName());
   @EJB
-  private StudyFacade studyFacade;
+  private ProjectFacade projectFacade;
   @EJB
-  private StudyTeamFacade studyTeamFacade;
+  private ProjectTeamFacade projectTeamFacade;
   @EJB
   private UserManager userBean;
   @EJB
@@ -58,15 +59,15 @@ public class ProjectController {
   @EJB
   private FileOperations fileOps;
   @EJB
-  private StudyServiceFacade studyServicesFacade;
+  private ProjectServiceFacade projectServicesFacade;
   @EJB
   private InodeFacade inodes;
 
   /**
-   * Creates a new project(study), the related DIR, the different services in
+   * Creates a new project(project), the related DIR, the different services in
    * the project, and the master of the project.
    *
-   * @param newStudyName the name of the new project(study)
+   * @param newProjectName the name of the new project(project)
    * @param email
    * @return
    * @throws AppException if the project name already exists.
@@ -77,34 +78,34 @@ public class ProjectController {
   //this needs to be an atomic operation (all or nothing) REQUIRES_NEW 
   //will make sure a new transaction is created even if this method is
   //called from within a transaction.
-  public Study createStudy(String newStudyName, String email) throws
+  public Project createProject(String newProjectName, String email) throws
           AppException, IOException {
     User user = userBean.getUserByEmail(email);
     //if there is no project by the same name for this user and project name is valid
-    if (projectNameValidator.isValidName(newStudyName) && !studyFacade.
-            studyExistsForOwner(newStudyName, user)) {
-      //Create a new study object
+    if (projectNameValidator.isValidName(newProjectName) && !projectFacade.
+            projectExistsForOwner(newProjectName, user)) {
+      //Create a new project object
       Date now = new Date();
-      Study study = new Study(newStudyName, user, now);
+      Project project = new Project(newProjectName, user, now);
       //create folder structure
-      //mkStudyDIR(study.getName());
-      logger.log(Level.FINE, "{0} - study directory created successfully.",
-              study.getName());
+      //mkProjectDIR(project.getName());
+      logger.log(Level.FINE, "{0} - project directory created successfully.",
+              project.getName());
 
-      //Persist study object
-      studyFacade.persistStudy(study);
-      studyFacade.flushEm();//flushing it to get study id
+      //Persist project object
+      projectFacade.persistProject(project);
+      projectFacade.flushEm();//flushing it to get project id
       //Add the activity information     
-      logActivity(ActivityFacade.NEW_STUDY,
-              ActivityFacade.FLAG_STUDY, user, study);
-      //update role information in study
-      addStudyMaster(study.getId(), user.getEmail());
-      logger.log(Level.FINE, "{0} - study created successfully.", study.
+      logActivity(ActivityFacade.NEW_PROJECT,
+              ActivityFacade.FLAG_PROJECT, user, project);
+      //update role information in project
+      addProjectOwner(project.getId(), user.getEmail());
+      logger.log(Level.FINE, "{0} - project created successfully.", project.
               getName());
-      return study;
+      return project;
     } else {
-      logger.log(Level.SEVERE, "Study with name {0} already exists!",
-              newStudyName);
+      logger.log(Level.SEVERE, "Project with name {0} already exists!",
+              newProjectName);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NAME_EXIST);
     }
@@ -112,184 +113,227 @@ public class ProjectController {
   }
 
   /**
-   * Returns a Study
+   * Returns a Project
    * <p>
-   * @param id the identifier for a Study
-   * @return Study
-   * @throws se.kth.hopsworks.rest.AppException if the study could not be found.
+   * @param id the identifier for a Project
+   * @return Project
+   * @throws se.kth.hopsworks.rest.AppException if the project could not be
+   * found.
    */
-  public Study findStudyById(Integer id) throws AppException {
+  public Project findProjectById(Integer id) throws AppException {
 
-    Study study = studyFacade.find(id);
-    if (study != null) {
-      return study;
+    Project project = projectFacade.find(id);
+    if (project != null) {
+      return project;
     } else {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
     }
   }
 
-  public boolean addServices(Study study, List<StudyServiceEnum> services,
+  public boolean addServices(Project project, List<ProjectServiceEnum> services,
           String userEmail) {
     boolean addedService = false;
     //Add the desired services
-    for (StudyServiceEnum se : services) {
-      if (!studyServicesFacade.findEnabledServicesForStudy(study).contains(se)) {
-        studyServicesFacade.addServiceForStudy(study, se);
+    for (ProjectServiceEnum se : services) {
+      if (!projectServicesFacade.findEnabledServicesForProject(project).
+              contains(se)) {
+        projectServicesFacade.addServiceForProject(project, se);
         addedService = true;
       }
     }
 
     if (addedService) {
       User user = userBean.getUserByEmail(userEmail);
-      logActivity(ActivityFacade.ADDED_SERVICES, ActivityFacade.FLAG_STUDY,
-              user, study);
+      logActivity(ActivityFacade.ADDED_SERVICES, ActivityFacade.FLAG_PROJECT,
+              user, project);
     }
     return addedService;
   }
 
-  public void changeName(Study study, String newStudyName, String userEmail)
-          throws AppException {
+  /**
+   * change the name of a project but not fully implemented to change the
+   * related folder name in hdsf
+   * <p>
+   * @param project
+   * @param newProjectName
+   * @param userEmail
+   * @throws AppException
+   * @throws IOException
+   */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void changeName(Project project, String newProjectName,
+          String userEmail)
+          throws AppException, IOException {
     User user = userBean.getUserByEmail(userEmail);
 
-    boolean nameExists = studyFacade.studyExistsForOwner(newStudyName, user);
+    boolean nameExists = projectFacade.projectExistsForOwner(newProjectName,
+            user);
 
-    if (projectNameValidator.isValidName(newStudyName) && nameExists) {
+    if (projectNameValidator.isValidName(newProjectName) && nameExists) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NAME_EXIST);
     }
-    study.setName(newStudyName);
-    studyFacade.mergeStudy(study);
+    project.setName(newProjectName);
+    projectFacade.mergeProject(project);
+    //fileOps.renameInHdfs(, );
 
-    logActivity(ActivityFacade.STUDY_NAME_CHANGED, ActivityFacade.FLAG_STUDY,
-            user, study);
+    logActivity(ActivityFacade.PROJECT_NAME_CHANGED, ActivityFacade.FLAG_PROJECT,
+            user, project);
   }
 
-  //Set the study owner as study master in StudyTeam table
-  private void addStudyMaster(Integer study_id, String userName) {
-    StudyTeamPK stp = new StudyTeamPK(study_id, userName);
-    StudyTeam st = new StudyTeam(stp);
-    st.setTeamRole(StudyRoleTypes.MASTER.getTeam());
+  /**
+   * Change the project description
+   * <p>
+   * @param project
+   * @param newProjectDesc
+   * @param userEmail of the user making the change
+   */
+  public void changeProjectDesc(Project project, String newProjectDesc,
+          String userEmail) {
+    User user = userBean.getUserByEmail(userEmail);
+
+    project.setDescription(newProjectDesc);
+    projectFacade.mergeProject(project);
+
+    logActivity(ActivityFacade.PROJECT_DESC_CHANGED, ActivityFacade.FLAG_PROJECT,
+            user, project);
+  }
+
+  //Set the project owner as project master in ProjectTeam table
+  private void addProjectOwner(Integer project_id, String userName) {
+    ProjectTeamPK stp = new ProjectTeamPK(project_id, userName);
+    ProjectTeam st = new ProjectTeam(stp);
+    st.setTeamRole(ProjectRoleTypes.DATA_OWNER.getTeam());
     st.setTimestamp(new Date());
-    studyTeamFacade.persistStudyTeam(st);
+    projectTeamFacade.persistProjectTeam(st);
   }
 
-  //create study on HDFS
-  private void mkStudyDIR(String studyName) throws IOException {
+  //create project on HDFS
+  private void mkProjectDIR(String projectName) throws IOException {
 
     String rootDir = Constants.DIR_ROOT;
-    String studyPath = File.separator + rootDir + File.separator + studyName;
-    String resultsPath = studyPath + File.separator
+    String projectPath = File.separator + rootDir + File.separator + projectName;
+    String resultsPath = projectPath + File.separator
             + Constants.DIR_RESULTS;
-    String cuneiformPath = studyPath + File.separator
+    String cuneiformPath = projectPath + File.separator
             + Constants.DIR_CUNEIFORM;
-    String samplesPath = studyPath + File.separator
+    String samplesPath = projectPath + File.separator
             + Constants.DIR_SAMPLES;
 
-    fileOps.mkDir(studyPath);
+    fileOps.mkDir(projectPath);
     fileOps.mkDir(resultsPath);
     fileOps.mkDir(cuneiformPath);
     fileOps.mkDir(samplesPath);
   }
 
   /**
-   * Remove a study and optionally all associated files.
+   * Remove a project and optionally all associated files.
    *
-   * @param studyID to be removed
+   * @param projectID to be removed
    * @param email
    * @param deleteFilesOnRemove if the associated files should be deleted
-   * @return true if the study and the associated files are removed
+   * @return true if the project and the associated files are removed
    * successfully, and false if the associated files could not be removed.
-   * @throws IOException if the hole operation failed. i.e the study is not
+   * @throws IOException if the hole operation failed. i.e the project is not
    * removed.
    * @throws AppException if the project could not be found.
    */
-  public boolean removeByName(Integer studyID, String email,
+  public boolean removeByName(Integer projectID, String email,
           boolean deleteFilesOnRemove) throws IOException, AppException {
     boolean success = !deleteFilesOnRemove;
     User user = userBean.getUserByEmail(email);
-    Study study = studyFacade.find(studyID);
-    if (study == null) {
+    Project project = projectFacade.find(projectID);
+    if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
     }
-    studyFacade.remove(study);
+    projectFacade.remove(project);
 
-    logActivity(ActivityFacade.REMOVED_STUDY,
-            ActivityFacade.FLAG_STUDY, user, study);
+    logActivity(ActivityFacade.REMOVED_PROJECT,
+            ActivityFacade.FLAG_PROJECT, user, project);
 
     if (deleteFilesOnRemove) {
       String path = File.separator + Constants.DIR_ROOT + File.separator
-              + study.getName();
+              + project.getName();
       success = fileOps.rmRecursive(path);
     }
-    logger.log(Level.FINE, "{0} - study removed.", study.getName());
+    logger.log(Level.FINE, "{0} - project removed.", project.getName());
 
     return success;
   }
 
   /**
-   * Adds new team members to a project(study) - bulk persist
-   * if team role not specified or not in (Master or Researcher)defaults to
-   * researcher
+   * Adds new team members to a project(project) - bulk persist
+   * if team role not specified or not in (Data owner or Data scientist)defaults
+   * to
+   * Data scientist
    * <p>
-   * @param study
+   * @param project
    * @param email
-   * @param studyTeams
+   * @param projectTeams
    * @return a list of user names that could not be added to the project team
    * list.
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public List<String> addMembers(Study study, String email,
-          List<StudyTeam> studyTeams) {
+  public List<String> addMembers(Project project, String email,
+          List<ProjectTeam> projectTeams) {
     List<String> failedList = new ArrayList<>();
     User user = userBean.getUserByEmail(email);
     User newMember;
-    for (StudyTeam studyTeam : studyTeams) {
+    for (ProjectTeam projectTeam : projectTeams) {
       try {
-        if (!studyTeam.getStudyTeamPK().getTeamMember().equals(user.getEmail())) {
+        if (!projectTeam.getProjectTeamPK().getTeamMember().equals(user.
+                getEmail())) {
 
           //if the role is not properly set set it to the defualt resercher.
-          if (studyTeam.getTeamRole() == null || (!studyTeam.getTeamRole().
-                  equals(StudyRoleTypes.RESEARCHER.getTeam()) && !studyTeam.
-                  getTeamRole().equals(StudyRoleTypes.MASTER.getTeam()))) {
-            studyTeam.setTeamRole(StudyRoleTypes.RESEARCHER.getTeam());
+          if (projectTeam.getTeamRole() == null || (!projectTeam.getTeamRole().
+                  equals(ProjectRoleTypes.DATA_SCIENTIST.getTeam())
+                  && !projectTeam.
+                  getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.getTeam()))) {
+            projectTeam.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getTeam());
           }
 
-          studyTeam.setTimestamp(new Date());
-          newMember = userBean.getUserByEmail(studyTeam.getStudyTeamPK().getTeamMember());
-          if (newMember!= null && !studyTeamFacade.isUserMemberOfStudy(study, newMember)) {
-            //this makes sure that the member is added to the study sent as the 
+          projectTeam.setTimestamp(new Date());
+          newMember = userBean.getUserByEmail(projectTeam.getProjectTeamPK().
+                  getTeamMember());
+          if (newMember != null && !projectTeamFacade.isUserMemberOfProject(
+                  project, newMember)) {
+            //this makes sure that the member is added to the project sent as the 
             //first param b/c the securty check was made on the parameter sent as path.
-            studyTeam.getStudyTeamPK().setStudyId(study.getId());
-            studyTeamFacade.persistStudyTeam(studyTeam);
-            logger.log(Level.FINE, "{0} - member added to study : {1}.",
+            projectTeam.getProjectTeamPK().setProjectId(project.getId());
+            projectTeamFacade.persistProjectTeam(projectTeam);
+            logger.log(Level.FINE, "{0} - member added to project : {1}.",
                     new Object[]{newMember.getEmail(),
-                      study.getName()});
+                      project.getName()});
 
-            logActivity(ActivityFacade.NEW_MEMBER + studyTeam.
-                    getStudyTeamPK().getTeamMember(),
-                    ActivityFacade.FLAG_STUDY, user, study);
-          } else if (newMember == null){
-            failedList.add(studyTeam.getStudyTeamPK().getTeamMember() + " was not found in the system.");
+            logActivity(ActivityFacade.NEW_MEMBER + projectTeam.
+                    getProjectTeamPK().getTeamMember(),
+                    ActivityFacade.FLAG_PROJECT, user, project);
+          } else if (newMember == null) {
+            failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
+                    + " was not found in the system.");
           } else {
-            failedList.add(newMember.getEmail() + " is alrady a member in this project.");
+            failedList.add(newMember.getEmail()
+                    + " is alrady a member in this project.");
           }
         }
       } catch (EJBException ejb) {
-        failedList.add(studyTeam.getStudyTeamPK().getTeamMember() + "could not be added. Try again later.");
+        failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
+                + "could not be added. Try again later.");
         logger.log(Level.SEVERE, "Adding  team member {0} to members failed",
-                studyTeam.getStudyTeamPK().getTeamMember());
+                projectTeam.getProjectTeamPK().getTeamMember());
       }
     }
     return failedList;
   }
 
-  private boolean isStudyPresentInHdfs(String studyname) {
-    Inode root = inodes.getStudyRoot(studyname);
+  private boolean isProjectPresentInHdfs(String projectname) {
+    Inode root = inodes.getProjectRoot(projectname);
     if (root == null) {
-      logger.log(Level.INFO, "Study folder not found in HDFS for study {0} .",
-              studyname);
+      logger.log(Level.INFO,
+              "Project folder not found in HDFS for project {0} .",
+              projectname);
       return false;
     }
     return true;
@@ -298,35 +342,36 @@ public class ProjectController {
   /**
    * Project info as data transfer object that can be sent to the user.
    * <p>
-   * @param studyID of the project
+   * @param projectID of the project
    * @return project DTO that contains team members and services
    * @throws se.kth.hopsworks.rest.AppException
    */
-  public ProjectDTO getStudyByID(Integer studyID) throws AppException {
-    Study study = studyFacade.find(studyID);
-    if (study == null) {
+  public ProjectDTO getProjectByID(Integer projectID) throws AppException {
+    Project project = projectFacade.find(projectID);
+    if (project == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);
     }
-    List<StudyTeam> studyTeam = studyTeamFacade.findMembersByStudy(study);
-    List<StudyServiceEnum> studyServices = studyServicesFacade.
-            findEnabledServicesForStudy(study);
+    List<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(
+            project);
+    List<ProjectServiceEnum> projectServices = projectServicesFacade.
+            findEnabledServicesForProject(project);
     List<String> services = new ArrayList<>();
-    for (StudyServiceEnum s : studyServices) {
+    for (ProjectServiceEnum s : projectServices) {
       services.add(s.toString());
     }
-    return new ProjectDTO(study, services, studyTeam);
+    return new ProjectDTO(project, services, projectTeam);
   }
 
   /**
    * Deletes a member from a project
    *
-   * @param study
+   * @param project
    * @param email
    * @param toRemoveEmail
    * @throws AppException
    */
-  public void deleteMemberFromTeam(Study study, String email,
+  public void deleteMemberFromTeam(Project project, String email,
           String toRemoveEmail) throws AppException {
     User userToBeRemoved = userBean.getUserByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
@@ -334,27 +379,28 @@ public class ProjectController {
               ResponseMessages.USER_DOES_NOT_EXIST);
       //user not found
     }
-    StudyTeam studyTeam = studyTeamFacade.findStudyTeam(study, userToBeRemoved);
-    if (studyTeam == null) {
+    ProjectTeam projectTeam = projectTeamFacade.findProjectTeam(project,
+            userToBeRemoved);
+    if (projectTeam == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.TEAM_MEMBER_NOT_FOUND);
     }
-    studyTeamFacade.removeStudyTeam(study, userToBeRemoved);
+    projectTeamFacade.removeProjectTeam(project, userToBeRemoved);
     User user = userBean.getUserByEmail(email);
     logActivity(ActivityFacade.REMOVED_MEMBER + toRemoveEmail,
-            ActivityFacade.FLAG_STUDY, user, study);
+            ActivityFacade.FLAG_PROJECT, user, project);
   }
 
   /**
    * Updates the role of a member
    * <p>
-   * @param study
+   * @param project
    * @param owner that is performing the update
    * @param toUpdateEmail
    * @param newRole
    * @throws AppException
    */
-  public void updateMemberRole(Study study, String owner,
+  public void updateMemberRole(Project project, String owner,
           String toUpdateEmail, String newRole) throws AppException {
     User projOwner = userBean.getUserByEmail(owner);
     User user = userBean.getUserByEmail(toUpdateEmail);
@@ -363,59 +409,59 @@ public class ProjectController {
               ResponseMessages.USER_DOES_NOT_EXIST);
       //user not found
     }
-    StudyTeam studyTeam = studyTeamFacade.findStudyTeam(study, user);
-    if (studyTeam == null) {
+    ProjectTeam projectTeam = projectTeamFacade.findProjectTeam(project, user);
+    if (projectTeam == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.TEAM_MEMBER_NOT_FOUND);
       //member not found
     }
-    if (!studyTeam.getTeamRole().equals(newRole)) {
-      studyTeam.setTeamRole(newRole);
-      studyTeam.setTimestamp(new Date());
-      studyTeamFacade.update(studyTeam);
+    if (!projectTeam.getTeamRole().equals(newRole)) {
+      projectTeam.setTeamRole(newRole);
+      projectTeam.setTimestamp(new Date());
+      projectTeamFacade.update(projectTeam);
       logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail,
-              ActivityFacade.FLAG_STUDY, projOwner, study);
+              ActivityFacade.FLAG_PROJECT, projOwner, project);
     }
 
   }
 
   /**
-   * Retrieves all the study teams that a user have a role
+   * Retrieves all the project teams that a user have a role
    * <p>
    * @param email of the user
-   * @return a list of study team
+   * @return a list of project team
    */
-  public List<StudyTeam> findStudyByUser(String email) {
+  public List<ProjectTeam> findProjectByUser(String email) {
     User user = userBean.getUserByEmail(email);
-    return studyTeamFacade.findByMember(user);
+    return projectTeamFacade.findByMember(user);
   }
 
   /**
-   * Retrieves all the study teams for a study
+   * Retrieves all the project teams for a project
    * <p>
-   * @param studyID
-   * @return a list of study team
+   * @param projectID
+   * @return a list of project team
    */
-  public List<StudyTeam> findStudyTeamById(Integer studyID) {
-    Study study = studyFacade.find(studyID);
-    return studyTeamFacade.findMembersByStudy(study);
+  public List<ProjectTeam> findProjectTeamById(Integer projectID) {
+    Project project = projectFacade.find(projectID);
+    return projectTeamFacade.findMembersByProject(project);
   }
 
   /**
    * Logs activity
    * <p>
    * @param activityPerformed the description of the operation performed
-   * @param flag on what the operation was performed(FLAG_STUDY, FLAG_USER)
+   * @param flag on what the operation was performed(FLAG_PROJECT, FLAG_USER)
    * @param performedBy the user that performed the operation
    * @param performedOn the project the operation was performed on.
    */
   public void logActivity(String activityPerformed, String flag,
-          User performedBy, Study performedOn) {
+          User performedBy, Project performedOn) {
     Date now = new Date();
     Activity activity = new Activity();
     activity.setActivity(activityPerformed);
     activity.setFlag(flag);
-    activity.setStudy(performedOn);
+    activity.setProject(performedOn);
     activity.setTimestamp(now);
     activity.setUser(performedBy);
 

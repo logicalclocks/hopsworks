@@ -26,7 +26,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
-import se.kth.bbc.study.Study;
+import se.kth.bbc.project.Project;
 import se.kth.bbc.security.ua.model.User;
 
 /**
@@ -67,9 +67,9 @@ import se.kth.bbc.security.ua.model.User;
   @NamedQuery(name = "JobHistory.findByType",
           query
           = "SELECT j FROM JobHistory j WHERE j.type = :type"),
-  @NamedQuery(name = "JobHistory.findByStudyAndType",
+  @NamedQuery(name = "JobHistory.findByProjectAndType",
           query
-          = "SELECT j FROM JobHistory j WHERE j.type = :type AND j.study = :study ORDER BY j.submissionTime DESC"),
+          = "SELECT j FROM JobHistory j WHERE j.type = :type AND j.project = :project ORDER BY j.submissionTime DESC"),
   @NamedQuery(name = "JobHistory.findStateForId",
           query
           = "SELECT j.state FROM JobHistory j WHERE j.id = :id")})
@@ -126,10 +126,10 @@ public class JobHistory implements Serializable {
   @ManyToOne(optional = false)
   private User user;
 
-  @JoinColumn(name = "study_id",
+  @JoinColumn(name = "project_id",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
-  private Study study;
+  private Project project;
 
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "jobHistory")
@@ -242,12 +242,12 @@ public class JobHistory implements Serializable {
     this.user = user;
   }
 
-  public Study getStudy() {
-    return study;
+  public Project getProject() {
+    return project;
   }
 
-  public void setStudy(Study study) {
-    this.study = study;
+  public void setProject(Project project) {
+    this.project = project;
   }
 
   @XmlTransient

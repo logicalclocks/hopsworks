@@ -41,9 +41,9 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "ActivityDetail.findByDescription",
             query
             = "SELECT a FROM ActivityDetail a WHERE a.description = :description ORDER BY a.timestamp DESC"),
-    @NamedQuery(name = "ActivityDetail.findByStudyname",
+    @NamedQuery(name = "ActivityDetail.findByProjectname",
             query
-            = "SELECT a FROM ActivityDetail a WHERE a.studyname = :studyname ORDER BY a.timestamp DESC"),
+            = "SELECT a FROM ActivityDetail a WHERE a.projectname = :projectname ORDER BY a.timestamp DESC"),
     @NamedQuery(name = "ActivityDetail.findByTimestamp",
             query
             = "SELECT a FROM ActivityDetail a WHERE a.timestamp = :timestamp ORDER BY a.timestamp DESC")})
@@ -71,8 +71,8 @@ public class ActivityDetail implements Serializable {
     @NotNull
     @Size(min = 1,
             max = 255)
-    @Column(name = "studyname")
-    private String studyname;
+    @Column(name = "projectname")
+    private String projectname;
     @Basic(optional = false)
     @NotNull
     @Column(name = "created")
@@ -114,12 +114,12 @@ public class ActivityDetail implements Serializable {
         this.description = description;
     }
 
-    public String getStudyname() {
-        return studyname;
+    public String getProjectname() {
+        return projectname;
     }
 
-    public void setStudyname(String studyname) {
-        this.studyname = studyname;
+    public void setProjectname(String projectname) {
+        this.projectname = projectname;
     }
 
     public Date getTimestamp() {

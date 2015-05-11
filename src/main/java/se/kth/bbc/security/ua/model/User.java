@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.security.ua.SecurityQuestion;
-import se.kth.bbc.study.Study;
+import se.kth.bbc.project.Project;
 
 /**
  *
@@ -173,7 +173,7 @@ public class User implements Serializable {
   private Organization organization;
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "owner")
-  private Collection<Study> studyCollection;
+  private Collection<Project> projectCollection;
 
   public User() {
   }
@@ -442,11 +442,11 @@ public class User implements Serializable {
 
   @XmlTransient
   @JsonIgnore
-  public Collection<Study> getStudyCollection() {
-    return studyCollection;
+  public Collection<Project> getProjectCollection() {
+    return projectCollection;
   }
 
-  public void setStudyCollection(Collection<Study> studyCollection) {
-    this.studyCollection = studyCollection;
+  public void setProjectCollection(Collection<Project> projectCollection) {
+    this.projectCollection = projectCollection;
   }
 }

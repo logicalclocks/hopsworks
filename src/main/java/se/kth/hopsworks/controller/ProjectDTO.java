@@ -8,8 +8,8 @@ package se.kth.hopsworks.controller;
 import java.util.Date;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.study.Study;
-import se.kth.bbc.study.StudyTeam;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectTeam;
 
 /**
  *
@@ -27,7 +27,7 @@ public class ProjectDTO {
   private String ethicalStatus;
   private boolean archived;
   private List<String> services;
-  private List<StudyTeam> projectTeam;
+  private List<ProjectTeam> projectTeam;
 
   public ProjectDTO() {
   }
@@ -38,24 +38,25 @@ public class ProjectDTO {
     this.owner = owner;
   }
 
-  public ProjectDTO(Study study, List<String> services,
-          List<StudyTeam> projectTeam) {
-    this.projectId = study.getId();
-    this.projectName = study.getName();
-    this.owner = study.getOwner().getEmail();
-    this.retentionPeriod = study.getRetentionPeriod();
-    this.created = study.getCreated();
-    this.ethicalStatus = study.getEthicalStatus();
-    this.archived = study.getArchived();
+  public ProjectDTO(Project project, List<String> services,
+          List<ProjectTeam> projectTeam) {
+    this.projectId = project.getId();
+    this.projectName = project.getName();
+    this.owner = project.getOwner().getEmail();
+    this.retentionPeriod = project.getRetentionPeriod();
+    this.created = project.getCreated();
+    this.ethicalStatus = project.getEthicalStatus();
+    this.archived = project.getArchived();
+    this.description = project.getDescription();
     this.services = services;
     this.projectTeam = projectTeam;
   }
 
   public ProjectDTO(Integer projectId, String projectName, String owner,
           Date retentionPeriod, Date created,
-          String ethicalStatus, boolean archived,
+          String ethicalStatus, boolean archived, String description,
           List<String> services,
-          List<StudyTeam> projectTeam) {
+          List<ProjectTeam> projectTeam) {
     this.projectId = projectId;
     this.projectName = projectName;
     this.owner = owner;
@@ -63,6 +64,7 @@ public class ProjectDTO {
     this.created = created;
     this.ethicalStatus = ethicalStatus;
     this.archived = archived;
+    this.description = description;
     this.services = services;
     this.projectTeam = projectTeam;
   }
@@ -131,11 +133,11 @@ public class ProjectDTO {
     this.services = services;
   }
 
-  public List<StudyTeam> getProjectTeam() {
+  public List<ProjectTeam> getProjectTeam() {
     return projectTeam;
   }
 
-  public void setProjectTeam(List<StudyTeam> projectTeams) {
+  public void setProjectTeam(List<ProjectTeam> projectTeams) {
     this.projectTeam = projectTeams;
   }
 

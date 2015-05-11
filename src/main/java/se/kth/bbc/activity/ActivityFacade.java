@@ -11,7 +11,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.security.ua.model.User;
-import se.kth.bbc.study.Study;
+import se.kth.bbc.project.Project;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -25,7 +25,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
           getName());
 
   // String constants
-  public static final String NEW_STUDY = " created a new study ";
+  public static final String NEW_PROJECT = " created a new project ";
   public static final String NEW_DATA = " added a new dataset ";
   public static final String NEW_MEMBER = " added a member ";
   public static final String NEW_SAMPLE = " added a new sample ";
@@ -33,12 +33,13 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String REMOVED_MEMBER = " removed team member ";
   public static final String REMOVED_SAMPLE = " removed a sample ";
   public static final String REMOVED_FILE = " removed a file ";
-  public static final String REMOVED_STUDY = " removed study ";
+  public static final String REMOVED_PROJECT = " removed project ";
   public static final String RAN_JOB = " ran a job ";
   public static final String ADDED_SERVICES = " added new services ";
-  public static final String STUDY_NAME_CHANGED = " changed studyname ";
+  public static final String PROJECT_NAME_CHANGED = " changed project name ";
+  public static final String PROJECT_DESC_CHANGED = " changed project description.";
   // Flag constants
-  public static final String FLAG_STUDY = "STUDY";
+  public static final String FLAG_PROJECT = "PROJECT";
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -66,10 +67,10 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     return q.getSingleResult();
   }
 
-  public long getStudyCount(Study study) {
-    TypedQuery<Long> q = em.createNamedQuery("Activity.countPerStudy",
+  public long getProjectCount(Project project) {
+    TypedQuery<Long> q = em.createNamedQuery("Activity.countPerProject",
             Long.class);
-    q.setParameter("study", study);
+    q.setParameter("project", project);
     return q.getSingleResult();
   }
 
@@ -79,30 +80,30 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     return query.getResultList();
   }
 
-  public Activity lastActivityOnStudy(Study study) {
-    TypedQuery<Activity> query = em.createNamedQuery("Activity.findByStudy", Activity.class);
-    query.setParameter("study", study);
+  public Activity lastActivityOnProject(Project project) {
+    TypedQuery<Activity> query = em.createNamedQuery("Activity.findByProject", Activity.class);
+    query.setParameter("project", project);
     query.setMaxResults(1);
     try {
       return query.getSingleResult();
     } catch (NoResultException e) {
-      logger.log(Level.SEVERE, "No activity returned for study " + study
+      logger.log(Level.SEVERE, "No activity returned for project " + project
               + ", while its creation should always be there!", e);
       return null;
     }
   }
 
-  public void persistActivity(String activity, Study study, User user) {
+  public void persistActivity(String activity, Project project, User user) {
     Activity a = new Activity();
     a.setActivity(activity);
-    a.setStudy(study);
-    a.setFlag(FLAG_STUDY);
+    a.setProject(project);
+    a.setFlag(FLAG_PROJECT);
     a.setUser(user);
     a.setTimestamp(new Date());
     em.persist(a);
   }
   
-  public void persistActivity(String activity, Study study, String email){
+  public void persistActivity(String activity, Project project, String email){
     TypedQuery<User> userQuery = em.createNamedQuery("User.findByEmail", User.class);
     userQuery.setParameter("email", email);
     User user;
@@ -111,7 +112,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     }catch(NoResultException e){
       throw new IllegalArgumentException("No user found with email "+email+" when trying to persist activity for that user.",e);
     }
-    persistActivity(activity, study, user);
+    persistActivity(activity, project, user);
   }
 
   /**
@@ -126,15 +127,15 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   }
 
   /**
-   * Get all the activities performed on study <i>study</i>.
+   * Get all the activities performed on project <i>project</i>.
    * <p>
-   * @param study
+   * @param project
    * @return
    */
-  public List<Activity> getAllActivityOnStudy(Study study) {
+  public List<Activity> getAllActivityOnProject(Project project) {
     TypedQuery<Activity> q = em.createNamedQuery(
-            "Activity.findByStudy",Activity.class);
-    q.setParameter("study", study);
+            "Activity.findByProject",Activity.class);
+    q.setParameter("project", project);
     return q.getResultList();
   }
   
@@ -188,20 +189,20 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   }
 
   /**
-   * Returns all activities on study <i>studyName</i>, but paginated. Items from
+   * Returns all activities on project <i>projectName</i>, but paginated. Items from
    * <i>first</i> till
    * <i>first+pageSize</i> are returned.
    * <p>
    * @param first
    * @param pageSize
-   * @param study
+   * @param project
    * @return
    */
-  public List<Activity> getPaginatedActivityForStudy(int first,
-          int pageSize, Study study) {
+  public List<Activity> getPaginatedActivityForProject(int first,
+          int pageSize, Project project) {
     TypedQuery<Activity> q = em.createNamedQuery(
-            "Activity.findByStudy", Activity.class);
-    q.setParameter("study", study);
+            "Activity.findByProject", Activity.class);
+    q.setParameter("project", project);
     q.setFirstResult(first);
     q.setMaxResults(pageSize);
     return q.getResultList();

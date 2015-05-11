@@ -24,7 +24,7 @@ import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.security.ua.model.User;
-import se.kth.bbc.study.Study;
+import se.kth.bbc.project.Project;
 
 /**
  *
@@ -473,8 +473,8 @@ public abstract class JobController implements Serializable {
     fileSelector.init(this, isMainUpload, reqAttrs);
   }
 
-  protected void writeJobStartedActivity(Study study, String username) {
+  protected void writeJobStartedActivity(Project project, String username) {
     checkIfActivityFacadeSet();
-    activityFacade.persistActivity(ActivityFacade.RAN_JOB, study, username);
+    activityFacade.persistActivity(ActivityFacade.RAN_JOB, project, username);
   }
 }

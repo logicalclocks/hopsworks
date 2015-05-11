@@ -64,7 +64,7 @@ public class YarnController extends JobController {
     try {
       String path = stagingManager.getStagingPath() + File.separator
               + sessionState.getLoggedInUsername() + File.separator
-              + sessionState.getActiveStudyname();
+              + sessionState.getActiveProjectname();
       super.setBasePath(path);
       super.setJobHistoryFacade(history);
       super.setFileOperations(fops);
@@ -111,15 +111,15 @@ public class YarnController extends JobController {
     //Set up job
     YarnJob job = new YarnJob(history, runner, fops);
     setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
-            sessionState.getActiveStudy(), JobType.YARN));
+            sessionState.getActiveProject(), JobType.YARN));
     if (isJobSelected()) {
       //Set log paths
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveStudyname())
+              getActiveProjectname())
               + Constants.YARN_DEFAULT_OUTPUT_PATH + getJobId()
               + File.separator + "stdout.log";
       String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveStudyname())
+              getActiveProjectname())
               + Constants.YARN_DEFAULT_OUTPUT_PATH + getJobId()
               + File.separator + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
@@ -136,7 +136,7 @@ public class YarnController extends JobController {
               "Failed to write job history. Aborting execution.");
       return;
     }
-    writeJobStartedActivity(sessionState.getActiveStudy(), sessionState.
+    writeJobStartedActivity(sessionState.getActiveProject(), sessionState.
             getLoggedInUsername());
   }
 

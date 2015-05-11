@@ -12,8 +12,8 @@ import javax.ejb.Stateless;
 import org.apache.hadoop.fs.Path;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
-import se.kth.bbc.study.fb.Inode;
-import se.kth.bbc.study.fb.InodeFacade;
+import se.kth.bbc.project.fb.Inode;
+import se.kth.bbc.project.fb.InodeFacade;
 
 /**
  * Session bean for file operations. Translates high-level operations into

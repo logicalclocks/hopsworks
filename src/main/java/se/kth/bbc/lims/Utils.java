@@ -46,8 +46,8 @@ public final class Utils {
     }
   }
 
-  public static String getHdfsRootPath(String studyname) {
-    return "/Projects/" + studyname + "/";
+  public static String getHdfsRootPath(String projectname) {
+    return "/Projects/" + projectname + "/";
   }
 
   public static String getYarnUser() {

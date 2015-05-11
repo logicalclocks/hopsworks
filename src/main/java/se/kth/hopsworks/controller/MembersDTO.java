@@ -7,7 +7,7 @@ package se.kth.hopsworks.controller;
 
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.study.StudyTeam;
+import se.kth.bbc.project.ProjectTeam;
 
 /**
  *
@@ -15,20 +15,20 @@ import se.kth.bbc.study.StudyTeam;
  */
 @XmlRootElement
 public class MembersDTO {
-   private List<StudyTeam> projectTeam;
+   private List<ProjectTeam> projectTeam;
 
   public MembersDTO() {
   }
 
-  public MembersDTO(List<StudyTeam> projectTeam) {
+  public MembersDTO(List<ProjectTeam> projectTeam) {
     this.projectTeam = projectTeam;
   }
 
-  public List<StudyTeam> getProjectTeam() {
+  public List<ProjectTeam> getProjectTeam() {
     return projectTeam;
   }
 
-  public void setProjectTeam(List<StudyTeam> projectTeam) {
+  public void setProjectTeam(List<ProjectTeam> projectTeam) {
     this.projectTeam = projectTeam;
   }
 

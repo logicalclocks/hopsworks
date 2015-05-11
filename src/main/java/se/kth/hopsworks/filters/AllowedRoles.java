@@ -25,13 +25,13 @@ public @interface AllowedRoles {
     /**
      * Allowed only to the owner
      */
-    public static final String DATA_OWNER = "Master";
+    public static final String DATA_OWNER = "Data owner";
     /**
      * Allowed to contributers or members of the project. There is no hierarchy if 
      * only this annotation is used only members will be granted access. So to allow 
      * owners and members use both.
      */
-    public static final String DATA_SCIENTIST = "Researcher";
+    public static final String DATA_SCIENTIST = "Data scientist";
     
     /**
      *  Used to annotate methods that work with project resources 

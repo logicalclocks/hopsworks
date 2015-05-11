@@ -110,7 +110,7 @@ public final class AdamController extends JobController {
     try {
       String path = stagingManager.getStagingPath() + File.separator
               + sessionState.getLoggedInUsername() + File.separator
-              + sessionState.getActiveStudyname();
+              + sessionState.getActiveProjectname();
       super.setBasePath(path);
       super.setJobHistoryFacade(history);
       super.setFileOperations(fops);
@@ -172,14 +172,14 @@ public final class AdamController extends JobController {
 
     AdamJob job = new AdamJob(history, r, fops, args, opts);
     setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
-            sessionState.getActiveStudy(), JobType.ADAM));
+            sessionState.getActiveProject(), JobType.ADAM));
     if (isJobSelected()) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveStudyname())
+              getActiveProjectname())
               + Constants.ADAM_DEFAULT_OUTPUT_PATH + getJobId()
               + File.separator + "stdout.log";
       String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveStudyname())
+              getActiveProjectname())
               + Constants.ADAM_DEFAULT_OUTPUT_PATH + getJobId()
               + File.separator + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
@@ -194,7 +194,7 @@ public final class AdamController extends JobController {
               "Failed to write job history. Aborting execution.");
       return;
     }
-    writeJobStartedActivity(sessionState.getActiveStudy(), sessionState.
+    writeJobStartedActivity(sessionState.getActiveProject(), sessionState.
             getLoggedInUsername());
   }
 
@@ -219,7 +219,7 @@ public final class AdamController extends JobController {
 
   /**
    * Translate all output paths to their internal representation. I.e.:
-   * - The path the user specified should begin with the studyname. If it does
+   * - The path the user specified should begin with the projectname. If it does
    * not, we prepend it.
    * - The final path should start with
    */
@@ -244,12 +244,12 @@ public final class AdamController extends JobController {
       t = t.substring(1);
     }
     String strippedPath;
-    if (t.equals(sessionState.getActiveStudyname())) {
+    if (t.equals(sessionState.getActiveProjectname())) {
       strippedPath = t;
-    } else if (t.startsWith(sessionState.getActiveStudyname() + "/")) {
+    } else if (t.startsWith(sessionState.getActiveProjectname() + "/")) {
       strippedPath = t;
     } else {
-      strippedPath = sessionState.getActiveStudyname() + "/" + t;
+      strippedPath = sessionState.getActiveProjectname() + "/" + t;
     }
     return File.separator + Constants.DIR_ROOT + File.separator + strippedPath;
   }
