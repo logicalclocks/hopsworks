@@ -14,9 +14,9 @@ angular.module('hopsWorksApp')
             self.projects = success;
 
             self.pageSizeProjects = 10;
-            self.totalPagesProjects = Math.ceil(self.projects.length / 10);
+            self.totalPagesProjects = Math.ceil(self.projects.length / self.pageSizeProjects);
             self.totalItemsProjects = self.projects.length;
-            self.currentPageProjects = 0;
+            self.currentPageProjects = 1;
 
           }, function (error) {
             console.log('Error: ' + error);
