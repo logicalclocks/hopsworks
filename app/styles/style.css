@@ -9,9 +9,6 @@ a:focus {
   outline: none;
 }
 
-
-
-
 .form-validate .form-control.ng-dirty.ng-valid, .form-validate .form-control.ng-dirty.ng-valid:focus {
   border-color: #27c24c;
 }
