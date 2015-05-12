@@ -216,14 +216,14 @@
     
   <login-config>
     <auth-method>BASIC</auth-method>
-    <realm-name>cauthRealm</realm-name>
+    <realm-name>kthfsrealm</realm-name>
     <form-login-config>
       <form-login-page>/index.xhtml</form-login-page>
       <form-error-page>/error.xhtml</form-error-page>
     </form-login-config>
   </login-config>
 
-  <filter>
+  <!--<filter>
     <filter-name>LoginFilter</filter-name>
     <filter-class>se.kth.bbc.security.auth.LoginFilter</filter-class>
   </filter>
@@ -237,7 +237,7 @@
     <url-pattern>/security/index.xhtml</url-pattern>
     <url-pattern>/security/protected/index.xhtml</url-pattern>
   </filter-mapping>
-
+-->
 
   <session-config>
     <!-- on production systems you might have another value for the timeout -->

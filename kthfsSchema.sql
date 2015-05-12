@@ -453,6 +453,53 @@ CREATE TABLE IF NOT EXISTS `tuple_to_file` (
 
 
 --
+-- Table structure for table `inodes`
+--
+
+CREATE TABLE IF NOT EXISTS `inodes` (
+  `id` mediumint(9) NOT NULL AUTO_INCREMENT,
+  `name` varchar(128) NOT NULL,
+  `pid` mediumint(9) DEFAULT '0',
+  `root` int(11) DEFAULT '0',
+  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `isDir` tinyint(1) NOT NULL,
+  `size` int(11) DEFAULT NULL,
+  `status` enum('uploading','copying_to_hdfs','available') NOT NULL,
+  `searchable` smallint(6) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `pid_3` (`pid`,`name`),
+  KEY `pid` (`pid`),
+  KEY `pid_2` (`pid`,`isDir`),
+  KEY `name` (`name`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+
+
+--
+-- Table structure for table `inodes_ops`
+--
+
+CREATE TABLE IF NOT EXISTS `inodes_ops` (
+  `inodeid` int(11) NOT NULL,
+  `inode_pid` int(11) NOT NULL,
+  `inode_root` int(11) NOT NULL,
+  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `operationn` smallint(6) NOT NULL,
+  `processed` smallint(6) NOT NULL,
+  PRIMARY KEY (`inodeid`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `inodes_ops_deleted`
+--
+
+CREATE TABLE IF NOT EXISTS `inodes_ops_deleted` (
+  `inodeid` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
+--
 -- Constraints for table `fields`
 --
 ALTER TABLE `fields`
