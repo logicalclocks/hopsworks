@@ -6,8 +6,8 @@
 
 
 angular.module('hopsWorksApp')
-  .controller('DatasetsCtrl', ['$scope', '$location', '$routeParams', 'growl', 'ProjectService', 'ModalService',
-    function ($scope, $location, $routeParams, growl, ProjectService, ModalService) {
+  .controller('DatasetsCtrl', ['$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', '$location', '$routeParams', 'growl', 'ProjectService', 'ModalService',
+    function ($scope, $timeout, $mdSidenav,$mdUtil, $log, $location, $routeParams, growl, ProjectService, ModalService) {
 
       var self = this;
 
@@ -20,7 +20,7 @@ angular.module('hopsWorksApp')
       self.datasets.push('TestData');
       self.datasets.push('Movies');
       self.datasets.push('FinanceCalc');
-      self.datasets.push('EcoStudy');
+      self.datasets.push('EcoProject');
       self.datasets.push('Measurements');
       self.datasets.push('HugeCollection');
 
@@ -46,6 +46,34 @@ angular.module('hopsWorksApp')
       self.files.push(file);
       file = {name: 'Yar5.yml', owner: 'Ermias', modified: 'Dec 34', filesize: '2 GB'}
       self.files.push(file);
+
+
+      self.toggleLeft = buildToggler('left');
+      self.toggleRight = buildToggler('right');
+      /**
+       * Build handler to open/close a SideNav; when animation finishes
+       * report completion in console
+       */
+      function buildToggler(navID) {
+        var debounceFn =  $mdUtil.debounce(function(){
+          $mdSidenav(navID)
+            .toggle()
+            .then(function () {
+              $log.debug("toggle " + navID + " is done");
+            });
+        },300);
+        return debounceFn;
+      };
+
+
+
+
+      self.close = function () {
+        $mdSidenav('right').close()
+          .then(function () {
+            $log.debug("close RIGHT is done");
+          });
+      };
 
 
 

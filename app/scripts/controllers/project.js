@@ -15,7 +15,7 @@ angular.module('hopsWorksApp')
       self.projectMembers = [];
 
       // We could instead implement a service to get all the available types but this will do it for now
-      self.projectTypes = ['CUNEIFORM', 'SAMPLES', 'STUDY_INFO', 'SPARK', 'ADAM', 'MAPREDUCE', 'YARN', 'ZEPPELIN'];
+      self.projectTypes = ['CUNEIFORM', 'SAMPLES', 'PROJECT_INFO', 'SPARK', 'ADAM', 'MAPREDUCE', 'YARN', 'ZEPPELIN'];
       self.alreadyChoosenServices = [];
       self.selectionProjectTypes = [];
       self.pId = $routeParams.projectID;
@@ -80,19 +80,29 @@ angular.module('hopsWorksApp')
           });
       };
 
+      self.membersModal = function () {
+        ModalService.projectMembers('lg', self.pId).then(
+          function (success) {
+          }, function (error) {
+          });
+      };
 
       self.saveProject = function () {
 
         $scope.newProject = {
           'projectName': self.currentProject.projectName,
-          'description': self.currentProject.projectDesc,
+          'description': self.currentProject.description,
           'services': self.selectionProjectTypes
         };
 
         ProjectService.update({id: self.currentProject.projectId}, $scope.newProject)
           .$promise.then(
           function (success) {
-            growl.success("Success: " + success.data.value, {title: 'Success', ttl: 5000});
+            growl.success("Success: " + success.successMessage, {title: 'Success', ttl: 5000});
+            if (success.errorMsg) {
+              growl.warning(success.errorMsg, {title: 'Error', ttl: 15000});
+            }
+
             $modalStack.getTop().key.close();
           }, function (error) {
             growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
@@ -115,17 +125,15 @@ angular.module('hopsWorksApp')
       };
 
 
-      self.saveAllowed = function(){
-        if(self.currentProject.projectName.length == 0){
+      self.saveAllowed = function () {
+        if (self.currentProject.projectName.length == 0) {
           return true;
         }
       };
 
-
-
-
       // Dummy data
-      $scope.labels =["Adam", "Spark", "Yaml", "MapReduce", "Samples", "Zeppelin", "Cuneiform"];
+      $scope.labels = ["Adam", "Spark", "Yarn", "MapReduce", "Samples", "Zeppelin", "Cuneiform"];
+
 
       $scope.data = [
         [65, 59, 90, 81, 56, 55, 40],

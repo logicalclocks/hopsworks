@@ -14,7 +14,8 @@ angular.module('hopsWorksApp', [
   'ngMaterial',
   'ngMessages',
   'ui.sortable',
-  'chart.js'
+  'chart.js',
+  'ng-context-menu'
 ])
   .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 

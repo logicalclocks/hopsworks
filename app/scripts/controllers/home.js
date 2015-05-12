@@ -12,7 +12,6 @@ angular.module('hopsWorksApp')
           ProjectService.query().$promise.then(
               function (success) {
                   self.projects = success;
-                  console.log(self.projects);
               }, function (error) {
                   console.log('Error: ' + error);
               }
@@ -23,7 +22,7 @@ angular.module('hopsWorksApp')
 
       // Create a new project
       self.newProject = function () {
-        ModalService.createProject('lg', 'New project', '').then(
+        ModalService.createProject('lg').then(
           function () {
               loadProjects();
           }, function () {
@@ -38,7 +37,6 @@ angular.module('hopsWorksApp')
         ActivityService.getByUser().then(
         function (success) {
           histories = success;
-            console.log(histories);
           var today = new Date();
           var day = today.getDate();
           var yesterday = new Date(new Date().setDate(day - 1));
