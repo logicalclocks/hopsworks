@@ -56,3 +56,32 @@ a:focus {
   background-color: #fafafa;
 }
 
+
+/* Project list in home */
+.pager {
+  background-color: #2e353d;
+  margin:0px;
+}
+
+.pager .disabled > a, .pager .disabled > a:focus, .pager .disabled > a:hover, .pager .disabled > span {
+  background-color: inherit;
+  border: 0 none;
+  border-radius: 0;
+  color: grey;
+  cursor: not-allowed;
+  padding-top: 10px;
+}
+
+.pager li > a, .pager li > span {
+  background-color: inherit;
+  color: #fff;
+  border: 0px;
+  border-radius: 0;
+  display: inline-block;
+  padding: 10px 14px;
+}
+
+.pager li > a:focus, .pager li > a:hover {
+  background-color: inherit;
+  font-weight: bolder;
+}
