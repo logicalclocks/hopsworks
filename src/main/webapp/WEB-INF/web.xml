@@ -190,8 +190,8 @@
     <security-constraint>
         <display-name>SocketConstraint</display-name>
         <web-resource-collection>
-            <web-resource-name>NoteBookWebSocket</web-resource-name>
-            <description>Security constraint for  note book websocket endpoint</description>
+            <web-resource-name>MetadataWebSocket</web-resource-name>
+            <description>Security constraint for  metadata designer websocket endpoint</description>
             <url-pattern>/wspoint/*</url-pattern>
             <http-method>GET</http-method>
         </web-resource-collection>
