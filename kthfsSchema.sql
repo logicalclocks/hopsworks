@@ -388,55 +388,14 @@ CREATE TABLE IF NOT EXISTS `fields` (
   `searchable` smallint(6) DEFAULT NULL,
   `tableid` int(11) DEFAULT NULL,
   `type` varchar(255) DEFAULT NULL,
+  `description` varchar(250) CHARACTER SET utf8 NOT NULL,
+  `fieldtypeid` int(11) NOT NULL,
   PRIMARY KEY (`fieldid`),
   KEY `FK_fields_tableid` (`tableid`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=7 ;
 
---
--- Table structure for table `raw_data`
---
 
-CREATE TABLE IF NOT EXISTS `raw_data` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `data` longtext,
-  `fieldid` int(11) DEFAULT NULL,
-  `tupleid` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `FK_raw_data_fieldid` (`fieldid`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0 ;
-
---
--- Table structure for table `tables`
---
-
-CREATE TABLE IF NOT EXISTS `tables` (
-  `tableid` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) DEFAULT NULL,
-  `templateid` int(11) NOT NULL,
-  PRIMARY KEY (`tableid`),
-  KEY `FK_tables_templateid` (`templateid`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0 ;
-
---
--- Table structure for table `templates`
---
-
-CREATE TABLE IF NOT EXISTS `templates` (
-  `templateid` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(250) NOT NULL,
-  PRIMARY KEY (`templateid`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
-
---
--- Table structure for table `tuple_to_file`
---
-
-CREATE TABLE IF NOT EXISTS `tuple_to_file` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `inodeid` int(11) DEFAULT NULL,
-  `tupleid` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0 ;
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `field_predefined_values`
@@ -449,6 +408,12 @@ CREATE TABLE IF NOT EXISTS `field_predefined_values` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=10 ;
 
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `field_types`
+--
 
 CREATE TABLE IF NOT EXISTS `field_types` (
   `id` mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -465,17 +430,63 @@ INSERT INTO `field_types` (`id`, `description`) VALUES
 (2, 'value list'),
 (3, 'yes/no');
 
---
--- Table structure for table `inodes_ops_deleted`
---
-
-CREATE TABLE IF NOT EXISTS `inodes_ops_deleted` (
-  `inodeid` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+-- --------------------------------------------------------
 
 --
--- Constraints for dumped tables
+-- Table structure for table `raw_data`
 --
+
+CREATE TABLE IF NOT EXISTS `raw_data` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `data` longtext,
+  `fieldid` int(11) DEFAULT NULL,
+  `tupleid` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_raw_data_fieldid` (`fieldid`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=17 ;
+
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tables`
+--
+
+CREATE TABLE IF NOT EXISTS `tables` (
+  `tableid` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL,
+  `templateid` int(11) NOT NULL,
+  PRIMARY KEY (`tableid`),
+  KEY `FK_tables_templateid` (`templateid`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;
+
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `templates`
+--
+
+CREATE TABLE IF NOT EXISTS `templates` (
+  `templateid` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(250) NOT NULL,
+  PRIMARY KEY (`templateid`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
+
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tuple_to_file`
+--
+
+CREATE TABLE IF NOT EXISTS `tuple_to_file` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` int(11) DEFAULT NULL,
+  `tupleid` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=28 ;
+
 
 --
 -- Constraints for table `fields`
