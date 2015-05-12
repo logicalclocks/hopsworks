@@ -8,14 +8,20 @@ angular.module('hopsWorksApp')
       self.projects = [];
 
       // Load all projects
-      var loadProjects = function (){
-          ProjectService.query().$promise.then(
-              function (success) {
-                  self.projects = success;
-              }, function (error) {
-                  console.log('Error: ' + error);
-              }
-          );
+      var loadProjects = function () {
+        ProjectService.query().$promise.then(
+          function (success) {
+            self.projects = success;
+
+            self.pageSizeProjects = 10;
+            self.totalPagesProjects = Math.ceil(self.projects.length / 10);
+            self.totalItemsProjects = self.projects.length;
+            self.currentPageProjects = 0;
+
+          }, function (error) {
+            console.log('Error: ' + error);
+          }
+        );
       }
 
       loadProjects();
@@ -24,9 +30,9 @@ angular.module('hopsWorksApp')
       self.newProject = function () {
         ModalService.createProject('lg').then(
           function () {
-              loadProjects();
+            loadProjects();
           }, function () {
-                growl.info("Closed project without saving.", {title: 'Info', ttl: 5000});
+            growl.info("Closed project without saving.", {title: 'Info', ttl: 5000});
           });
       };
 
@@ -34,7 +40,7 @@ angular.module('hopsWorksApp')
       self.histories = [];
       var histories = [];
 
-        ActivityService.getByUser().then(
+      ActivityService.getByUser().then(
         function (success) {
           histories = success;
           var today = new Date();
@@ -64,7 +70,7 @@ angular.module('hopsWorksApp')
               if (firstToday) {
                 firstToday = false;
                 history.flag = 'today';
-              } else if(i % 10 == 0 ){
+              } else if (i % 10 == 0) {
                 history.flag = 'today';
               } else {
                 history.flag = '';
@@ -73,7 +79,7 @@ angular.module('hopsWorksApp')
               if (firstYesterday) {
                 firstYesterday = false;
                 history.flag = 'yesterday';
-              } else if(i % 10 == 0 ){
+              } else if (i % 10 == 0) {
                 history.flag = 'yesterday';
               } else {
                 history.flag = '';
@@ -82,7 +88,7 @@ angular.module('hopsWorksApp')
               if (firstThisWeek) {
                 firstThisWeek = false;
                 history.flag = 'thisweek';
-              } else if(i % 10 == 0 ){
+              } else if (i % 10 == 0) {
                 history.flag = 'thisweek';
               } else {
                 history.flag = '';
@@ -91,7 +97,7 @@ angular.module('hopsWorksApp')
               if (firstLastWeek) {
                 firstLastWeek = false;
                 history.flag = 'lastweek';
-              } else if(i % 10 == 0 ){
+              } else if (i % 10 == 0) {
                 history.flag = 'lastweek';
               } else {
                 history.flag = '';
@@ -100,7 +106,7 @@ angular.module('hopsWorksApp')
               if (firstOlder) {
                 firstOlder = false;
                 history.flag = 'older';
-              } else if(i % 10 == 0 ){
+              } else if (i % 10 == 0) {
                 history.flag = 'older';
               } else {
                 history.flag = '';
@@ -118,7 +124,7 @@ angular.module('hopsWorksApp')
         }
       );
 
-
       self.currentPage = 1;
+
 
     }]);
