@@ -2,11 +2,16 @@ package se.kth.bbc.activity;
 
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.project.Project;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
@@ -14,23 +19,29 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
  * @author roshan
  */
 @Stateless
-public class ActivityFacade extends AbstractFacade<UserActivity> {
+public class ActivityFacade extends AbstractFacade<Activity> {
+
+  private static final Logger logger = Logger.getLogger(ActivityFacade.class.
+          getName());
 
   // String constants
-  public static final String NEW_STUDY = " created new study ";
+  public static final String NEW_PROJECT = " created a new project ";
   public static final String NEW_DATA = " added a new dataset ";
-  public static final String NEW_MEMBER = " added new member ";
+  public static final String NEW_MEMBER = " added a member ";
   public static final String NEW_SAMPLE = " added a new sample ";
-  public static final String CHANGE_ROLE = " changed role of ";
+  public static final String CHANGE_ROLE = " changed the role of ";
   public static final String REMOVED_MEMBER = " removed team member ";
   public static final String REMOVED_SAMPLE = " removed a sample ";
   public static final String REMOVED_FILE = " removed a file ";
-  public static final String REMOVED_STUDY = " removed study ";
+  public static final String REMOVED_PROJECT = " removed project ";
   public static final String RAN_JOB = " ran a job ";
+  public static final String ADDED_SERVICES = " added new services ";
+  public static final String PROJECT_NAME_CHANGED = " changed project name ";
+  public static final String PROJECT_DESC_CHANGED = " changed project description.";
   // Flag constants
-  public static final String FLAG_STUDY = "STUDY";
+  public static final String FLAG_PROJECT = "PROJECT";
 
-  @PersistenceContext(unitName = "hopsPU")
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   @Override
@@ -39,50 +50,167 @@ public class ActivityFacade extends AbstractFacade<UserActivity> {
   }
 
   public ActivityFacade() {
-    super(UserActivity.class);
+    super(Activity.class);
   }
 
-  public void persistActivity(UserActivity activity) {
+  public void persistActivity(Activity activity) {
     em.persist(activity);
   }
 
-  public void removetActivity(UserActivity activity) {
+  public void removeActivity(Activity activity) {
     em.remove(activity);
   }
 
   public long getTotalCount() {
     TypedQuery<Long> q = em.
-            createNamedQuery("UserActivity.countAll", Long.class);
+            createNamedQuery("Activity.countAll", Long.class);
     return q.getSingleResult();
   }
 
-  public long getStudyCount(String studyName) {
-    TypedQuery<Long> q = em.createNamedQuery("UserActivity.countStudy",
+  public long getProjectCount(Project project) {
+    TypedQuery<Long> q = em.createNamedQuery("Activity.countPerProject",
             Long.class);
-    q.setParameter("studyName", studyName);
+    q.setParameter("project", project);
     return q.getSingleResult();
   }
 
-  public List<UserActivity> activityOnID(int id) {
-    Query query = em.createNamedQuery("UserActivity.findById",
-            UserActivity.class).setParameter("id", id);
+  public List<Activity> activityOnID(int id) {
+    Query query = em.createNamedQuery("Activity.findById",
+            Activity.class).setParameter("id", id);
     return query.getResultList();
   }
 
-  public List<UserActivity> lastActivityOnStudy(String name) {
-    Query query = em.createNativeQuery(
-            "SELECT * FROM activity WHERE activity_on=? ORDER BY created DESC LIMIT 1",
-            UserActivity.class).setParameter(1, name);
-    return query.getResultList();
+  public Activity lastActivityOnProject(Project project) {
+    TypedQuery<Activity> query = em.createNamedQuery("Activity.findByProject", Activity.class);
+    query.setParameter("project", project);
+    query.setMaxResults(1);
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      logger.log(Level.SEVERE, "No activity returned for project " + project
+              + ", while its creation should always be there!", e);
+      return null;
+    }
   }
 
-  public void persistActivity(String activity, String study, String user) {
-    UserActivity a = new UserActivity();
+  public void persistActivity(String activity, Project project, User user) {
+    Activity a = new Activity();
     a.setActivity(activity);
-    a.setActivityOn(study);
-    a.setFlag(FLAG_STUDY);
-    a.setPerformedBy(user);
+    a.setProject(project);
+    a.setFlag(FLAG_PROJECT);
+    a.setUser(user);
     a.setTimestamp(new Date());
     em.persist(a);
+  }
+  
+  public void persistActivity(String activity, Project project, String email){
+    TypedQuery<User> userQuery = em.createNamedQuery("User.findByEmail", User.class);
+    userQuery.setParameter("email", email);
+    User user;
+    try{
+      user = userQuery.getSingleResult();
+    }catch(NoResultException e){
+      throw new IllegalArgumentException("No user found with email "+email+" when trying to persist activity for that user.",e);
+    }
+    persistActivity(activity, project, user);
+  }
+
+  /**
+   * Gets all activity information.
+   * <p>
+   * @return
+   */
+  public List<Activity> getAllActivities() {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findAll",
+            Activity.class);
+    return q.getResultList();
+  }
+
+  /**
+   * Get all the activities performed on project <i>project</i>.
+   * <p>
+   * @param project
+   * @return
+   */
+  public List<Activity> getAllActivityOnProject(Project project) {
+    TypedQuery<Activity> q = em.createNamedQuery(
+            "Activity.findByProject",Activity.class);
+    q.setParameter("project", project);
+    return q.getResultList();
+  }
+  
+  /**
+   * Get all the activities performed on by user <i>user</i>.
+   * <p>
+   * @param user
+   * @return
+   */
+  public List<Activity> getAllActivityByUser(User user) {
+    TypedQuery<Activity> q = em.createNamedQuery(
+            "Activity.findByUser",Activity.class);
+    q.setParameter("user", user);
+    return q.getResultList();
+  }
+  
+  /**
+   * Get all the activities performed on by user <i>user</i>.but paginated.Items from
+   * <i>first</i> till
+   * <i>first+pageSize</i> are returned.
+   * <p>
+   * @param first
+   * @param pageSize
+   * @param user
+   * @return
+   */
+  public List<Activity> getPaginatedActivityByUser(int first,
+          int pageSize, User user) {
+    TypedQuery<Activity> q = em.createNamedQuery(
+            "Activity.findByUser",Activity.class);
+    q.setParameter("user", user);
+    q.setFirstResult(first);
+    q.setMaxResults(pageSize);
+    return q.getResultList();
+  }
+
+  /**
+   * Returns all activity, but paginated. Items from <i>first</i> till
+   * <i>first+pageSize</i> are returned.
+   * <p>
+   * @param first
+   * @param pageSize
+   * @return
+   */
+  public List<Activity> getPaginatedActivity(int first, int pageSize) {
+    TypedQuery<Activity> q = em.createNamedQuery("Activity.findAll",
+            Activity.class);
+    q.setFirstResult(first);
+    q.setMaxResults(pageSize);
+    return q.getResultList();
+  }
+
+  /**
+   * Returns all activities on project <i>projectName</i>, but paginated. Items from
+   * <i>first</i> till
+   * <i>first+pageSize</i> are returned.
+   * <p>
+   * @param first
+   * @param pageSize
+   * @param project
+   * @return
+   */
+  public List<Activity> getPaginatedActivityForProject(int first,
+          int pageSize, Project project) {
+    TypedQuery<Activity> q = em.createNamedQuery(
+            "Activity.findByProject", Activity.class);
+    q.setParameter("project", project);
+    q.setFirstResult(first);
+    q.setMaxResults(pageSize);
+    return q.getResultList();
+  }
+
+  public List<Activity> findAllTeamActivity(String flag) {
+    Query query = em.createNamedQuery("Activity.findByFlag",
+            Activity.class).setParameter("flag", flag);
+    return query.getResultList();
   }
 }

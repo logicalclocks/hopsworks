@@ -26,7 +26,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
-import se.kth.bbc.study.Study;
+import se.kth.bbc.project.Project;
 import se.kth.bbc.security.ua.model.User;
 
 /**
@@ -67,28 +67,32 @@ import se.kth.bbc.security.ua.model.User;
   @NamedQuery(name = "JobHistory.findByType",
           query
           = "SELECT j FROM JobHistory j WHERE j.type = :type"),
-  @NamedQuery(name = "JobHistory.findByStudyAndType",
+  @NamedQuery(name = "JobHistory.findByProjectAndType",
           query
-          = "SELECT j FROM JobHistory j WHERE j.type = :type AND j.study.name = :studyname ORDER BY j.submissionTime DESC"),
+          = "SELECT j FROM JobHistory j WHERE j.type = :type AND j.project = :project ORDER BY j.submissionTime DESC"),
   @NamedQuery(name = "JobHistory.findStateForId",
           query
           = "SELECT j.state FROM JobHistory j WHERE j.id = :id")})
 public class JobHistory implements Serializable {
 
   private static final long serialVersionUID = 1L;
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
   @Column(name = "id")
   private Long id;
+
   @Size(max = 128)
   @Column(name = "name")
   private String name;
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "submission_time")
   @Temporal(TemporalType.TIMESTAMP)
   private Date submissionTime;
+
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -96,35 +100,45 @@ public class JobHistory implements Serializable {
   @Column(name = "state")
   @Enumerated(EnumType.STRING)
   private JobState state;
+
   @Column(name = "execution_duration")
   private BigInteger executionDuration;
+
   @Size(max = 255)
   @Column(name = "args")
   private String args;
+
   @Size(max = 255)
   @Column(name = "stdout_path")
   private String stdoutPath;
+
   @Size(max = 255)
   @Column(name = "stderr_path")
   private String stderrPath;
+
   @Size(max = 128)
   @Column(name = "type")
   @Enumerated(EnumType.STRING)
   private JobType type;
-  @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "jobHistory")
-  private Collection<JobOutputFile> jobOutputFileCollection;
+
   @JoinColumn(name = "user",
           referencedColumnName = "EMAIL")
   @ManyToOne(optional = false)
   private User user;
-  @JoinColumn(name = "study",
-          referencedColumnName = "name")
+
+  @JoinColumn(name = "project_id",
+          referencedColumnName = "id")
   @ManyToOne(optional = false)
-  private Study study;
+  private Project project;
+
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "jobHistory")
+  private Collection<JobOutputFile> jobOutputFileCollection;
+
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "jobHistory")
   private Collection<JobInputFile> jobInputFileCollection;
+
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "jobHistory")
   private Collection<JobExecutionFile> jobExecutionFileCollection;
@@ -228,12 +242,12 @@ public class JobHistory implements Serializable {
     this.user = user;
   }
 
-  public Study getStudy() {
-    return study;
+  public Project getProject() {
+    return project;
   }
 
-  public void setStudy(Study study) {
-    this.study = study;
+  public void setProject(Project project) {
+    this.project = project;
   }
 
   @XmlTransient

@@ -98,19 +98,15 @@ public class RecoverySelector implements Serializable {
   }
 
   public String redirect() {
-
     if (console.equals("Password")) {
       return "sec_question";
     }
-
     if (console.equals("Mobile")) {
       return "mobile_recovery";
     }
-
     if (console.equals("Yubikey")) {
       return "yubikey_recovery";
     }
-
     return "";
   }
 

@@ -1,6 +1,6 @@
 package se.kth.bbc.lims;
 
-import java.util.Date;
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.faces.context.FacesContext;
@@ -46,8 +46,8 @@ public final class Utils {
     }
   }
 
-  public static String getHdfsRootPath(String studyname) {
-    return "/Projects/" + studyname + "/";
+  public static String getHdfsRootPath(String projectname) {
+    return "/Projects/" + projectname + "/";
   }
 
   public static String getYarnUser() {
@@ -59,5 +59,13 @@ public final class Utils {
               + Constants.DEFAULT_YARN_USER + "\"");
     }
     return machineUser;
+  }
+
+  public static String ensurePathEndsInSlash(String path) {
+    if (!path.endsWith(File.separator)) {
+      return path + File.separator;
+    } else {
+      return path;
+    }
   }
 }

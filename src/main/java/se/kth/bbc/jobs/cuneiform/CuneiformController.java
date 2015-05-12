@@ -39,7 +39,7 @@ import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
 
 /**
- * Controller for the Cuneiform tab in StudyPage.
+ * Controller for the Cuneiform tab in ProjectPage.
  *
  * @author stig
  */
@@ -112,7 +112,7 @@ public final class CuneiformController extends JobController {
     try {
       String path = stagingManager.getStagingPath() + File.separator
               + sessionState.getLoggedInUsername() + File.separator
-              + sessionState.getActiveStudyname();
+              + sessionState.getActiveProjectname();
       super.setBasePath(path);
       super.setJobHistoryFacade(history);
       super.setFileOperations(fops);
@@ -271,9 +271,11 @@ public final class CuneiformController extends JobController {
     String wfPath = getMainFilePath();
     b.addFilePathToBeCopied(wfPath, !wfPath.startsWith("hdfs:"));
 
-    b.stdOutPath("AppMaster.stdout");
-    b.stdErrPath("AppMaster.stderr");
-    b.logPathsRelativeToResourcesPath(true);
+    b.stdOutPath("/tmp/AppMaster.stdout");
+    b.stdErrPath("/tmp/AppMaster.stderr");
+    b.logPathsRelativeToResourcesPath(false);
+
+    b.addToAppMasterEnvironment("CLASSPATH", "/srv/hiway/lib/*:/srv/hiway/*");
 
     YarnRunner r;
 
@@ -292,14 +294,14 @@ public final class CuneiformController extends JobController {
 
     //TODO: include input and execution files
     setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
-            sessionState.getActiveStudyname(), JobType.CUNEIFORM));
+            sessionState.getActiveProject(), JobType.CUNEIFORM));
     if (isJobSelected()) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveStudyname())
+              getActiveProjectname())
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getJobId()
               + File.separator + "stdout.log";
       String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveStudyname())
+              getActiveProjectname())
               + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getJobId()
               + File.separator + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
@@ -314,7 +316,7 @@ public final class CuneiformController extends JobController {
               "Failed to write job history. Aborting execution.");
       return;
     }
-    writeJobStartedActivity(sessionState.getActiveStudyname(), sessionState.
+    writeJobStartedActivity(sessionState.getActiveProject(), sessionState.
             getLoggedInUsername());
   }
 
@@ -358,7 +360,7 @@ public final class CuneiformController extends JobController {
 
   private void prepWorkflowFile() throws IOException {
     StringBuilder extraLines = new StringBuilder(); //Contains the extra workflow lines
-    String foldername = sessionState.getActiveStudyname() + File.separator
+    String foldername = sessionState.getActiveProjectname() + File.separator
             + sessionState.getLoggedInUsername() + File.separator + workflowname
             + File.separator
             + "input"; //folder to which files will be uploaded

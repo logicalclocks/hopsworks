@@ -61,7 +61,6 @@ public class SecurityUtils {
    * @return
    */
   public static String getRandomString(int length) {
-
     String randomStr = UUID.randomUUID().toString();
     while (randomStr.length() < length) {
       randomStr += UUID.randomUUID().toString();

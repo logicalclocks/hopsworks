@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.ua;
 
 import java.io.Serializable;
@@ -31,17 +26,17 @@ public class PeopleStatusBean implements Serializable {
   @EJB
   private UserManager userManager;
 
-  private boolean open_reauests = false;
+  private boolean open_requests = false;
   private boolean open_consents = false;
   private int tabIndex;
   private User user;
 
-  public boolean isOpen_reauests() {
+  public boolean isOpen_requests() {
     return checkForRequests();
   }
 
-  public void setOpen_reauests(boolean open_reauests) {
-    this.open_reauests = open_reauests;
+  public void setOpen_requests(boolean open_requests) {
+    this.open_requests = open_requests;
   }
 
   public User getUser() {
@@ -80,7 +75,7 @@ public class PeopleStatusBean implements Serializable {
   }
 
   /**
-   * Return both system wide and study wide roles
+   * Return both system wide and project wide roles
    * <p>
    * @return
    */
@@ -93,7 +88,7 @@ public class PeopleStatusBean implements Serializable {
   }
 
   /**
-   * Return study owner role
+   * Return project owner role
    * <p>
    * @return
    */
@@ -125,13 +120,13 @@ public class PeopleStatusBean implements Serializable {
     if (isResearcher()) {
       //return false if no requests
 
-      open_reauests = !(userManager.findAllByStatus(
+      open_requests = !(userManager.findAllByStatus(
               PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue()).isEmpty())
               || !(userManager.findAllByStatus(
                       PeopleAccountStatus.YUBIKEY_ACCOUNT_INACTIVE.getValue()).
               isEmpty());
     }
-    return open_reauests;
+    return open_requests;
   }
 
   public String logOut() {

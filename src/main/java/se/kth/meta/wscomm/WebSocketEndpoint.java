@@ -15,7 +15,6 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
-import se.kth.meta.listener.ApplicationListener;
 import se.kth.meta.wscomm.message.Message;
 import se.kth.meta.wscomm.message.TextMessage;
 

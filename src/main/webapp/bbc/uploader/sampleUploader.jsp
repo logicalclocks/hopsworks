@@ -67,7 +67,7 @@
 
 
         <div style="width: 90%;height: 25px;"></div>  
-        <a href="../lims/studyPage.xhtml" >
+        <a href="../lims/projectPage.xhtml" >
           <input type="button" class="button-add button-add-data" value="Return"/>
         </a>
         <script>

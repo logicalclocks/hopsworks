@@ -16,7 +16,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 @Stateless
 public class JobOutputFileFacade extends AbstractFacade<JobOutputFile> {
 
-  @PersistenceContext(unitName = "hopsPU")
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   @Override

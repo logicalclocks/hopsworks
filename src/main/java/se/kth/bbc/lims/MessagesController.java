@@ -2,7 +2,6 @@ package se.kth.bbc.lims;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
-import javax.faces.validator.ValidatorException;
 import org.primefaces.context.RequestContext;
 
 /**

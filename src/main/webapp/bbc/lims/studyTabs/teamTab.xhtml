@@ -14,10 +14,10 @@ and open the template in the editor.
   <body>
     <ui:composition>
       <h3 class="page_title" align="left">
-        Team Members (#{studyManagedBean.countAllMembersPerStudy()})
+        Team Members (#{projectManagedBean.countAllMembersInActiveProject()})
         <span class="right_button">
           <h:form id="frmBtn">
-            <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" action="newTeamMemb" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+            <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" action="newTeamMemb" rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"/>
           </h:form>
         </span>
       </h3>
@@ -26,11 +26,11 @@ and open the template in the editor.
       <h:form id="teamForm">
         <div id="divTeam" class="team_table"> 
           <!-- Loop over all member groups -->
-          <ui:repeat value="#{studyManagedBean.groupedMembers}" var="memGroup" varStatus="memGroupStat">
+          <ui:repeat value="#{projectManagedBean.groupedMembers}" var="memGroup" varStatus="memGroupStat">
             <h:panelGroup id="div_${memGroupStat.index}" styleClass="ui_box">
               <!-- Display role name and number of members in that group -->
               <h5 class="title" align="left">#{memGroup.groupname.team}s
-                (<small>#{studyManagedBean.countRoleUsers(memGroup.groupname)}</small>)
+                (<small>#{projectManagedBean.countRoleUsers(memGroup.groupname)}</small>)
               </h5>
               <ul class="well-list">
                 <!-- Loop over all users in this group-->
@@ -49,27 +49,27 @@ and open the template in the editor.
                       </div>
                       <div class="span5 right">
                         <div class="left">
-                          <div id="frmStudyMaster_${usrStat.index}_${memGroupStat.index}" class="edit_team_members"> 
+                          <div id="frmProjectMaster_${usrStat.index}_${memGroupStat.index}" class="edit_team_members"> 
                             <div style="margin:0;padding:0;display:inline">
                               <p:selectOneMenu value="#{usr.role}" 
-                                               styleClass="study_role_assign" 
-                                               disabled="#{studyManagedBean.studyOwnedBy(usr.email)}" 
+                                               styleClass="project_role_assign" 
+                                               disabled="#{projectManagedBean.projectOwnedBy(usr.email)}" 
                                                style="width:170px;" 
-                                               rendered="#{studyManagedBean.renderComponentList() == 'Master'}">
+                                               rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}">
                                 <p:ajax update="@form" process="@all"
-                                        listener="#{valueChangeMB.updateStudyTeamRole(usr.email,usr.role)}"/>
-                                <f:selectItems value="#{studyManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
+                                        listener="#{valueChangeMB.updateProjectTeamRole(usr.email,usr.role)}"/>
+                                <f:selectItems value="#{projectManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
                               </p:selectOneMenu>
                             </div>
                           </div>
                         </div>
                         <div class="right" align="right">
-                          <h:commandButton class="btn" value="This is you!" disabled="true" rendered="#{studyManagedBean.username eq usr.email}"/>
-                          <h:commandButton class="button-success" value="Owner" disabled="true" rendered="#{studyManagedBean.studyOwnedBy(usr.email)}"/>
+                          <h:commandButton class="btn" value="This is you!" disabled="true" rendered="#{projectManagedBean.username eq usr.email}"/>
+                          <h:commandButton class="button-success" value="Owner" disabled="true" rendered="#{projectManagedBean.projectOwnedBy(usr.email)}"/>
                           <p:commandLink styleClass="ui-button fa fa-minus"  
                                          value="" 
-                                         rendered="#{studyManagedBean.renderComponentList() == 'Master' and not studyManagedBean.studyOwnedBy(usr.email)}" 
-                                         action="#{studyTeamController.setToRemove(usr.email, usr.name)}"
+                                         rendered="#{projectManagedBean.currentRoleInProject() == 'Master' and not projectManagedBean.projectOwnedBy(usr.email)}" 
+                                         action="#{projectTeamController.setToRemove(usr.email, usr.name)}"
                                          update=":#{p:component('remTeamMemForm')}" oncomplete="PF('remTeamMemDlg').show()">
                           </p:commandLink>
                         </div>

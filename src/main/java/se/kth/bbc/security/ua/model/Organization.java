@@ -19,6 +19,8 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  *
@@ -156,6 +158,8 @@ public class Organization implements Serializable {
     this.fax = fax;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public User getUid() {
     return uid;
   }

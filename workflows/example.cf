@@ -1,1 +1,0 @@
-declare hello-world; deftask spell( ~out : ~<str> ) *{    out=`echo ${str[@]}`; sleep 30 }* x = 'hello' 'world'; out = spell( str : x ); target out;

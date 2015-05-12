@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.bbc.security.ua.model;
 
 import java.io.Serializable;
@@ -30,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.security.ua.SecurityQuestion;
+import se.kth.bbc.project.Project;
 
 /**
  *
@@ -83,10 +79,12 @@ import se.kth.bbc.security.ua.SecurityQuestion;
           query
           = "SELECT u FROM User u WHERE u.passwordChanged = :passwordChanged"),
   @NamedQuery(name = "User.findByNotes",
-          query = "SELECT u FROM User u WHERE u.notes = :notes")})
+          query = "SELECT u FROM User u WHERE u.notes = :notes"),
+  @NamedQuery(name = "User.findMaxUid",
+          query = "SELECT MAX(u.uid) FROM User u")})
 public class User implements Serializable {
 
-  private static final long serialVersionUID = 1L;  
+  private static final long serialVersionUID = 1L;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
@@ -119,9 +117,6 @@ public class User implements Serializable {
   @Column(name = "activated")
   @Temporal(TemporalType.TIMESTAMP)
   private Date activated;
-  @Size(max = 100)
-  @Column(name = "home_org")
-  private String homeOrg;
   @Size(max = 10)
   @Column(name = "title")
   private String title;
@@ -176,6 +171,9 @@ public class User implements Serializable {
   @OneToOne(cascade = CascadeType.ALL,
           mappedBy = "uid")
   private Organization organization;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "owner")
+  private Collection<Project> projectCollection;
 
   public User() {
   }
@@ -195,6 +193,8 @@ public class User implements Serializable {
     this.isonline = isonline;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public String getValidationKey() {
     return validationKey;
   }
@@ -219,6 +219,8 @@ public class User implements Serializable {
     this.username = username;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public String getPassword() {
     return password;
   }
@@ -251,20 +253,14 @@ public class User implements Serializable {
     this.lname = lname;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public Date getActivated() {
     return activated;
   }
 
   public void setActivated(Date activated) {
     this.activated = activated;
-  }
-
-  public String getHomeOrg() {
-    return homeOrg;
-  }
-
-  public void setHomeOrg(String homeOrg) {
-    this.homeOrg = homeOrg;
   }
 
   public String getTitle() {
@@ -283,6 +279,8 @@ public class User implements Serializable {
     this.mobile = mobile;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public String getOrcid() {
     return orcid;
   }
@@ -291,6 +289,8 @@ public class User implements Serializable {
     this.orcid = orcid;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public int getFalseLogin() {
     return falseLogin;
   }
@@ -299,6 +299,8 @@ public class User implements Serializable {
     this.falseLogin = falseLogin;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public int getStatus() {
     return status;
   }
@@ -315,6 +317,8 @@ public class User implements Serializable {
     this.isonline = isonline;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public String getSecret() {
     return secret;
   }
@@ -323,6 +327,8 @@ public class User implements Serializable {
     this.secret = secret;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public SecurityQuestion getSecurityQuestion() {
     return securityQuestion;
   }
@@ -331,6 +337,8 @@ public class User implements Serializable {
     this.securityQuestion = securityQuestion;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public String getSecurityAnswer() {
     return securityAnswer;
   }
@@ -339,6 +347,8 @@ public class User implements Serializable {
     this.securityAnswer = securityAnswer;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public int getYubikeyUser() {
     return yubikeyUser;
   }
@@ -363,6 +373,8 @@ public class User implements Serializable {
     this.notes = notes;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public Yubikey getYubikey() {
     return yubikey;
   }
@@ -371,6 +383,8 @@ public class User implements Serializable {
     this.yubikey = yubikey;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public Address getAddress() {
     return address;
   }
@@ -379,6 +393,8 @@ public class User implements Serializable {
     this.address = address;
   }
 
+  @XmlTransient
+  @JsonIgnore
   public Organization getOrganization() {
     return organization;
   }
@@ -424,4 +440,13 @@ public class User implements Serializable {
     return "se.kth.bbc.security.ua.model.User[ uid=" + uid + " ]";
   }
 
+  @XmlTransient
+  @JsonIgnore
+  public Collection<Project> getProjectCollection() {
+    return projectCollection;
+  }
+
+  public void setProjectCollection(Collection<Project> projectCollection) {
+    this.projectCollection = projectCollection;
+  }
 }

@@ -8,18 +8,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import static javax.ejb.TransactionAttributeType.REQUIRES_NEW;
+
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import org.primefaces.push.EventBus;
-import org.primefaces.push.EventBusFactory;
 import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.study.StudyFacade;
-import se.kth.bbc.study.Study;
+import se.kth.bbc.project.ProjectFacade;
+import se.kth.bbc.project.Project;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 import se.kth.bbc.security.ua.model.User;
 
@@ -33,14 +30,14 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   private static final Logger logger = Logger.getLogger(JobHistoryFacade.class.
           getName());
 
-  @PersistenceContext(unitName = "hopsPU")
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   @EJB
   private UserManager users;
 
   @EJB
-  private StudyFacade studies;
+  private ProjectFacade studies;
 
   public JobHistoryFacade() {
     super(JobHistory.class);
@@ -51,11 +48,17 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     return em;
   }
 
-  public List<JobHistory> findForStudyByType(String studyname, JobType type) {
+  /**
+   * Find all the JobHistory entries for the given project and type.
+   * @param project
+   * @param type
+   * @return List of JobHistory objects.
+   */
+  public List<JobHistory> findForProjectByType(Project project, JobType type) {
     TypedQuery<JobHistory> q = em.createNamedQuery(
-            "JobHistory.findByStudyAndType", JobHistory.class);
+            "JobHistory.findByProjectAndType", JobHistory.class);
     q.setParameter("type", type);
-    q.setParameter("studyname", studyname);
+    q.setParameter("project", project);
     return q.getResultList();
   }
 
@@ -69,7 +72,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
   public void update(Long id, JobState newState, long executionTime) {
     JobHistory jh = findById(id);
-    JobState oldstate = jh.getState();
     updateState(id, newState);
     jh.setExecutionDuration(BigInteger.valueOf(executionTime));
     em.merge(jh);
@@ -78,7 +80,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   public void update(Long id, JobState newState,
           Collection<JobOutputFile> outputFiles) {
     JobHistory jh = findById(id);
-    JobState oldstate = jh.getState();
     updateState(id, newState);
     Collection<JobOutputFile> output = jh.getJobOutputFileCollection();
     output.addAll(output);
@@ -100,8 +101,8 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
    * <p>
    * @param jh
    * @param state
+   * @deprecated Need to fix this.
    */
-  @TransactionAttribute(REQUIRES_NEW)
   private void updateState(Long id, JobState state) {
     Query q = em.createNativeQuery("UPDATE jobhistory SET state=? WHERE id=?");
     q.setParameter(1, state.name());
@@ -131,13 +132,12 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     }
   }
 
-  public Long create(String jobname, String userEmail, String studyname,
+  public Long create(String jobname, String userEmail, Project project,
           JobType type,
           String args, JobState state, String stdOutPath, String stdErrPath,
           Collection<JobExecutionFile> execFiles,
           Collection<JobInputFile> inputFiles) {
     User user = users.findByEmail(userEmail);
-    Study study = studies.findByName(studyname);
     Date submission = new Date(); //now
     if (state == null) {
       state = JobState.INITIALIZING;
@@ -146,7 +146,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     JobHistory jh = new JobHistory(submission, state);
     jh.setName(jobname);
     jh.setUser(user);
-    jh.setStudy(study);
+    jh.setProject(project);
     jh.setType(type);
     jh.setArgs(args);
     jh.setStdoutPath(stdOutPath);
@@ -185,5 +185,4 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   public void persist(JobOutputFile jof) {
     em.persist(jof);
   }
-
 }

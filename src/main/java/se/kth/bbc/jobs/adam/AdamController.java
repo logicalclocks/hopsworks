@@ -110,7 +110,7 @@ public final class AdamController extends JobController {
     try {
       String path = stagingManager.getStagingPath() + File.separator
               + sessionState.getLoggedInUsername() + File.separator
-              + sessionState.getActiveStudyname();
+              + sessionState.getActiveProjectname();
       super.setBasePath(path);
       super.setJobHistoryFacade(history);
       super.setFileOperations(fops);
@@ -125,6 +125,11 @@ public final class AdamController extends JobController {
   }
 
   public void startJob() {
+    if (!areJarsAvailable()) {
+      MessagesController.addErrorMessage("Failed to start application master.",
+              "Some jars are not in HDFS and could not be copied over.");
+      return;
+    }
     //First: check if all required arguments have been filled in
     if (!checkIfRequiredPresent()) {
       return;
@@ -159,21 +164,22 @@ public final class AdamController extends JobController {
       r = builder.getYarnRunner();
     } catch (IOException e) {
       logger.log(Level.SEVERE,
-              "Unable to create temp directory for logs. Aborting execution.", e);
-      MessagesController.addErrorMessage("Failed to start Yarn client.");
+              "Failed to create YarnRunner.", e);
+      MessagesController.addErrorMessage("Failed to start Yarn client.", e.
+              getLocalizedMessage());
       return;
     }
 
     AdamJob job = new AdamJob(history, r, fops, args, opts);
     setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
-            sessionState.getActiveStudyname(), JobType.ADAM));
+            sessionState.getActiveProject(), JobType.ADAM));
     if (isJobSelected()) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveStudyname())
+              getActiveProjectname())
               + Constants.ADAM_DEFAULT_OUTPUT_PATH + getJobId()
               + File.separator + "stdout.log";
       String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveStudyname())
+              getActiveProjectname())
               + Constants.ADAM_DEFAULT_OUTPUT_PATH + getJobId()
               + File.separator + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
@@ -188,7 +194,7 @@ public final class AdamController extends JobController {
               "Failed to write job history. Aborting execution.");
       return;
     }
-    writeJobStartedActivity(sessionState.getActiveStudyname(), sessionState.
+    writeJobStartedActivity(sessionState.getActiveProject(), sessionState.
             getLoggedInUsername());
   }
 
@@ -213,7 +219,7 @@ public final class AdamController extends JobController {
 
   /**
    * Translate all output paths to their internal representation. I.e.:
-   * - The path the user specified should begin with the studyname. If it does
+   * - The path the user specified should begin with the projectname. If it does
    * not, we prepend it.
    * - The final path should start with
    */
@@ -238,12 +244,12 @@ public final class AdamController extends JobController {
       t = t.substring(1);
     }
     String strippedPath;
-    if (t.equals(sessionState.getActiveStudyname())) {
+    if (t.equals(sessionState.getActiveProjectname())) {
       strippedPath = t;
-    } else if (t.startsWith(sessionState.getActiveStudyname() + "/")) {
+    } else if (t.startsWith(sessionState.getActiveProjectname() + "/")) {
       strippedPath = t;
     } else {
-      strippedPath = sessionState.getActiveStudyname() + "/" + t;
+      strippedPath = sessionState.getActiveProjectname() + "/" + t;
     }
     return File.separator + Constants.DIR_ROOT + File.separator + strippedPath;
   }
@@ -403,6 +409,53 @@ public final class AdamController extends JobController {
       }
     }
     return null;
+  }
+
+  /**
+   * Check if the Spark jar is in HDFS. If it's not, try and copy it there from
+   * the local filesystem. If it's still not there, then return false.
+   * <p>
+   * @return
+   */
+  private boolean areJarsAvailable() {
+    try {
+      boolean adamJarMissing = false;
+      for (String s : Constants.ADAM_HDFS_JARS) {
+        if (!fops.exists(s)) {
+          adamJarMissing = true;
+          logger.log(Level.WARNING, "Missing Adam jar: {0}", s);
+        }
+      }
+      if (adamJarMissing) {
+        return false;
+      }
+    } catch (IOException e) {
+      return false;
+    }
+
+    boolean isInHdfs;
+    try {
+      isInHdfs = fops.exists(Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
+    } catch (IOException e) {
+      //Can't connect to HDFS: return false
+      return false;
+    }
+    if (isInHdfs) {
+      return true;
+    }
+
+    File localSparkJar = new File(Constants.DEFAULT_SPARK_JAR_PATH);
+    if (localSparkJar.exists()) {
+      try {
+        fops.copyToHDFSFromPath(Constants.DEFAULT_SPARK_JAR_PATH,
+                Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
+      } catch (IOException e) {
+        return false;
+      }
+    } else {
+      return false;
+    }
+    return true;
   }
 
 }

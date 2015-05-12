@@ -8,10 +8,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortOrder;
+import se.kth.bbc.project.Project;
 
 /**
  * Model for lazily loading activity data into index page. Some explanations:
- * PrimeFaces sucks. The code for LazyDataModel as it is right now does not
+ * The code for PF LazyDataModel as it is right now does not
  * allow for usage of commandLink or commandButton in a p:datascroller.
  *
  * Hence, here most of the methods of LazyDataModel are overridden. Basically,
@@ -25,23 +26,21 @@ import org.primefaces.model.SortOrder;
  *
  * @author stig
  */
-public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements
+public class LazyActivityModel extends LazyDataModel<Activity> implements
         Serializable {
+  private static final Logger logger = Logger.getLogger(LazyActivityModel.class.getName());
 
-  private static final Logger logger = Logger.getLogger(LazyActivityModel.class.
-          getName());
-
-  private transient final ActivityDetailFacade activityDetailFacade;
-  private List<ActivityDetail> data;
-  private String filterStudy;
+  private transient final ActivityFacade activityFacade;
+  private List<Activity> data;
+  private Project filterProject;
   private int rowIndex;
 
-  public LazyActivityModel(ActivityDetailFacade ac) throws
+  public LazyActivityModel(ActivityFacade ac) throws
           IllegalArgumentException {
     this(ac, null);
   }
 
-  public LazyActivityModel(ActivityDetailFacade ac, String filterStudy) throws
+  public LazyActivityModel(ActivityFacade ac, Project filterProject) throws
           IllegalArgumentException {
     super();
     if (ac == null) {
@@ -49,24 +48,24 @@ public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements
               "Constructing lazy activity model with a null ActivityDetailFacade. Aborting.");
       throw new IllegalArgumentException("ActivityDetailFacade cannot be null.");
     }
-    this.activityDetailFacade = ac;
-    this.filterStudy = filterStudy;
+    this.activityFacade = ac;
+    this.filterProject = filterProject;
     data = new ArrayList<>();
   }
 
   @Override
-  public List<ActivityDetail> load(int first, int pageSize, String sortField,
+  public List<Activity> load(int first, int pageSize, String sortField,
           SortOrder sortOrder, Map<String, Object> filters) {
 
-    List<ActivityDetail> retData;
+    List<Activity> retData;
 
     // UNDO later: this gives an error while accessing indexPage from profile 
-    if (filterStudy == null) {
-      retData = activityDetailFacade.getPaginatedActivityDetail(first, pageSize);
+    if (filterProject == null) {
+      retData = activityFacade.getPaginatedActivity(first, pageSize);
       //TODO: add support for sorting, filtering
     } else {
-      retData = activityDetailFacade.getPaginatedActivityDetailForStudy(first,
-              pageSize, filterStudy);
+      retData = activityFacade.getPaginatedActivityForProject(first,
+              pageSize, filterProject);
     }
     if (first == 0) {
       data = new ArrayList<>(retData);
@@ -88,7 +87,7 @@ public class LazyActivityModel extends LazyDataModel<ActivityDetail> implements
   }
 
   @Override
-  public ActivityDetail getRowData() {
+  public Activity getRowData() {
     return data.get(rowIndex);
   }
 

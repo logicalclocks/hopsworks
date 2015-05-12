@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
@@ -15,6 +16,7 @@ import se.kth.bbc.security.ua.model.PeopleGroup;
 import se.kth.bbc.security.ua.model.PeopleGroupPK;
 import se.kth.bbc.security.ua.model.Userlogins;
 import se.kth.bbc.security.ua.model.Yubikey;
+import se.kth.bbc.project.Project;
 
 /**
  *
@@ -23,7 +25,7 @@ import se.kth.bbc.security.ua.model.Yubikey;
 @Stateless
 public class UserManager {
 
-  @PersistenceContext(unitName = "hopsPU")
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   // Strating user id from 1000 to create a POSIX compliant username: meb1000
@@ -144,13 +146,6 @@ public class UserManager {
     return true;
   }
 
-  public List<User> findInactivateUsers() {
-    Query query = em.createNativeQuery("SELECT * FROM users p WHERE p.active = "
-            + PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.getValue());
-    List<User> people = query.getResultList();
-    return people;
-  }
-
   public boolean registerYubikey(User uid) {
     Yubikey yk = new Yubikey();
     yk.setUid(uid);
@@ -162,12 +157,12 @@ public class UserManager {
   /**
    * Find a user through email.
    *
-   * @param username
+   * @param email
    * @return
    */
-  public User getUserByEmail(String username) {
+  public User getUserByEmail(String email) {
     TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
-    query.setParameter("email", username);
+    query.setParameter("email", email);
     List<User> list = query.getResultList();
 
     if (list == null || list.isEmpty()) {
@@ -177,7 +172,7 @@ public class UserManager {
     return list.get(0);
   }
 
-  public User getUserByUsernmae(String username) {
+  public User getUserByUsername(String username) {
     TypedQuery<User> query = em.createNamedQuery("User.findByUsername",
             User.class);
     query.setParameter("username", username);
@@ -202,14 +197,6 @@ public class UserManager {
             + "' AND p.yubikey_user = " + status)
             .getResultList();
     return (existing.size() > 0);
-  }
-
-  public Yubikey findYubikey(int uid) {
-    TypedQuery<Yubikey> query = em.createNamedQuery("Yubikey.findByUid",
-            Yubikey.class);
-    query.setParameter("uid", uid);
-    return query.getSingleResult();
-
   }
 
   public List<User> findAllUsers() {
@@ -242,13 +229,7 @@ public class UserManager {
     return query.getSingleResult();
   }
 
-  public Address findAddress(int uid) {
-    TypedQuery<Address> query = em.createNamedQuery("Address.findByUid",
-            Address.class);
-    query.setParameter("uid", uid);
-    return query.getSingleResult();
-  }
-
+  //TODO: remove native query. Use JPA
   public List<String> findGroups(int uid) {
     String sql
             = "SELECT group_name FROM bbc_group INNER JOIN people_group ON (people_group.gid = bbc_group.gid AND people_group.uid = "
@@ -270,16 +251,14 @@ public class UserManager {
   }
 
   /**
-   * Study authorization methods
+   * Get all the users that are not in the given project.
    *
-   * @param name of the study
-   * @return List of User objects for the study, if found
+   * @param project The project on which to search.
+   * @return List of User objects that are not in the project.
    */
-  public List<User> filterUsersBasedOnStudy(String name) {
-
-    Query query = em.createNativeQuery(
-            "SELECT * FROM users WHERE email NOT IN (SELECT team_member FROM study_team WHERE name=?)",
-            User.class).setParameter(1, name);
+  public List<User> filterUsersBasedOnProject(Project project) {
+    TypedQuery<User> query = em.createQuery("SELECT u FROM User u WHERE u NOT IN (SELECT DISTINCT st.user FROM ProjectTeam st WHERE st.project = :project)", User.class);
+    query.setParameter("project",project);
     return query.getResultList();
   }
 
@@ -387,13 +366,8 @@ public class UserManager {
    * @return
    */
   public int lastUserID() {
-    Query query = em.createNativeQuery("SELECT MAX(p.uid) FROM users p");
-    Object obj = query.getSingleResult();
-
-    if (obj == null) {
-      return STARTING_USER;
-    }
-    return (Integer) obj;
+    TypedQuery<Long> query = em.createNamedQuery("User.findMaxUid", Long.class);
+    return query.getSingleResult().intValue();
   }
 
   public void persist(User user) {
@@ -460,24 +434,21 @@ public class UserManager {
 
   }
 
-  public Userlogins getLastUserLoing(int uid) {
-    String sql = "SELECT * FROM userlogins  WHERE uid=" + uid
-            + " ORDER BY login_date DESC LIMIT 1 OFFSET 2";
-    Query query = em.createNativeQuery(sql, Userlogins.class);
-    query.setMaxResults(2);
-
-    List<Userlogins> ul = query.getResultList();
-
-    if (ul.isEmpty()) {
+  /**
+   * Get the last login attempt by the user identified by uid.
+   * @param uid
+   * @return The last login attempt, or null if none is found.
+   */
+  public Userlogins getLastUserLogin(int uid) {
+    TypedQuery<Userlogins> query = em.createNamedQuery("Userlogins.findByUid",Userlogins.class);
+    query.setParameter("uid", uid);
+    query.setFirstResult(2);
+    query.setMaxResults(1);
+    try{
+      return query.getSingleResult();
+    }catch(NoResultException e){
       return null;
     }
-
-    if (ul.size() == 1) {
-      return ul.get(0);
-    }
-
-    return ul.get(1);
-
   }
 
   public boolean registerOrg(User uid, String org, String department) {
@@ -500,5 +471,4 @@ public class UserManager {
     em.merge(org);
     return true;
   }
-
 }

@@ -48,7 +48,7 @@
               <h:outputText value="Select a collection in the panel on the left." rendered="#{not samplesController.collectionSelected}"/>
 
               <p:commandButton id="addColl" value="Add collection" 
-                               type="button" onclick="PF('addCollectionDlg').show()" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+                               type="button" onclick="PF('addCollectionDlg').show()" rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"/>
               <p:commandButton value="Save" action="#{samplesController.updateSampleCollection()}" update="@form" disabled="#{not samplesController.collectionSelected}"/>
             </h:panelGrid>
           </p:panel>
@@ -90,7 +90,7 @@
               <h:outputText value="Select a sample in the panel on the left." rendered="#{not samplesController.sampleSelected}"/>
 
               <p:commandButton id="addData" value="Add sample" 
-                               type="button" onclick="PF('addSampleDlg').show()" rendered="#{studyManagedBean.renderComponentList() == 'Master'}"/>
+                               type="button" onclick="PF('addSampleDlg').show()" rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"/>
               <p:commandButton value="Save" action="#{samplesController.updateSample()}" update="@form" disabled="#{not samplesController.sampleSelected}"/>
             </h:panelGrid>
           </p:panel>

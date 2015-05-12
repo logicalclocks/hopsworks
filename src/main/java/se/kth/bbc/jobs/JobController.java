@@ -23,6 +23,8 @@ import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.Utils;
+import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.project.Project;
 
 /**
  *
@@ -423,7 +425,7 @@ public abstract class JobController implements Serializable {
   /**
    * Write an uploaded file to a specific path. This method is functionally
    * equivalent to UploadedFile.write(String path), except that that one does
-   * not work in Glassfish 4. Should file a report on that somewhere.
+   * not work in Glassfish 4.
    * <p>
    * @param file The file to write.
    * @param destination The destination, including filename, to which the file
@@ -451,7 +453,7 @@ public abstract class JobController implements Serializable {
   /**
    *
    * @param isMainUpload
-   * @param args A series of key-value arguments.
+   * @param attrs A series of key-value arguments.
    */
   public void prepareFileSelector(boolean isMainUpload, String attrs) {
     checkIfFileSelectorSet();
@@ -471,8 +473,8 @@ public abstract class JobController implements Serializable {
     fileSelector.init(this, isMainUpload, reqAttrs);
   }
 
-  protected void writeJobStartedActivity(String study, String user) {
+  protected void writeJobStartedActivity(Project project, String username) {
     checkIfActivityFacadeSet();
-    activityFacade.persistActivity(ActivityFacade.RAN_JOB, study, user);
+    activityFacade.persistActivity(ActivityFacade.RAN_JOB, project, username);
   }
 }

@@ -22,18 +22,15 @@ and open the template in the editor.
           <p:toolbarGroup align="left">              
           </p:toolbarGroup>  
 
-
           <p:toolbarGroup align="right" rendered="#{peopleStatusBean.loggedIn}">
-
             <p:commandButton id="useraddBtn" value="Users" action="userMgmt" type="submit" icon="ui-icon-plus" rendered="#{peopleStatusBean.SYSAdmin}"/>
-            <p:commandButton id="userBtn" value=" #{peopleAministration.loginName}" type="button" icon="ui-icon-person"/>  
+            <p:commandButton id="userBtn" value=" #{peopleAdministration.loginName}" type="button" icon="ui-icon-person"/>  
             <p:menu overlay="true" trigger="userBtn" my="left top" at="left bottom" >  
               <p:menuitem value="My Account" action="profile" /> 
               <p:separator/>
               <p:menuitem value="Logout" action='#{peopleStatusBean.logOut()}'/> 
             </p:menu>  
           </p:toolbarGroup>  
-
         </p:toolbar> 
       </h:form>
     </ui:composition>

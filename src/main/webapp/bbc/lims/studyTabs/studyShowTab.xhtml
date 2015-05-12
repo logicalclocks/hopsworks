@@ -12,22 +12,22 @@ and open the template in the editor.
       >
   <body>
     <ui:composition>
-      <div class="study_content_list">
-        <p:dataScroller value="#{studyManagedBean.specificLazyModel}" var="act" chunkSize="25" lazy="true" buffer="50">
+      <div class="project_content_list">
+        <p:dataScroller value="#{projectManagedBean.specificLazyModel}" var="act" chunkSize="25" lazy="true" buffer="50">
           <div class="event-item" align="left">
             <span class="cgray right">
               #{activityBean.findLastActivity(act.id)}
             </span>
-            <img class="avatar s24" src="#{activityBean.getGravatar(act.performedByEmail,24)}"/>
+            <img class="avatar s24" src="#{activityBean.getGravatar(act.user,24)}"/>
             <div class="event-title">
-              <span class="author_name"><h:link>#{act.performedByName}</h:link></span>
-              <span class="event_label opened">#{act.description}</span>
+              <span class="author_name"><h:link>#{act.user.fname} #{act.user.lname}</h:link></span>
+              <span class="event_label opened">#{act.activity}</span>
               at
-              <h:link><span class="tiny">#{act.performedByName}  /  </span><strong>#{act.studyname}</strong></h:link>
+              <h:link><span class="tiny">#{act.user.fname} #{act.user.lname}  /  </span><strong>#{act.project.name}</strong></h:link>
             </div>
           </div>
         </p:dataScroller>        
-        <h:outputText value="An error occurred while loading the audit trail. Please try refreshing the page." rendered="#{studyManagedBean.specificLazyModel == null}"/>
+        <h:outputText value="An error occurred while loading the audit trail. Please try refreshing the page." rendered="#{projectManagedBean.specificLazyModel == null}"/>
       </div>
     </ui:composition>
   </body>

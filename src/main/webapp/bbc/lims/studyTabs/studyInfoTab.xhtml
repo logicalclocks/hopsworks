@@ -8,42 +8,40 @@
     <ui:composition>
       <div>
         <h1 style="float:none;">
-          Study info
+          Project info
         </h1>
       </div>
-      <div class="studyInfo">
-        <h:form id="studyInfoForm">
+      <div class="projectInfo">
+        <h:form id="projectInfoForm">
           <p:growl autoUpdate="true" showDetail="true" for="updateMessage"/>
           <h:panelGrid columns="3" columnClasses="firstColumn,secondColumn,thirdColumn">
-            <h:outputLabel value="Id" for="studyId"/>
-            <h:inputText value="#{studyMetaController.metadata.id}" id="studyId" required="true" requiredMessage="An id is required to save data."/>
-            <p:message for="studyId"/>
-
-            <h:outputLabel value="Name" for="studyName"/>
-            <h:inputText value="#{studyMetaController.metadata.studyname}" id="studyName" readonly="true" />
-            <p:message for="studyName"/>
+            <h:outputLabel value="Name" for="projectName"/>
+            <h:inputText value="#{projectMetaController.metadata.project.name}" id="projectName" readonly="true" />
+            <p:message for="projectName"/>
 
             <h:outputLabel value="Description" for="description"/>
             <h:panelGrid columns="1">
-              <p:inputTextarea id="description" counter="display" maxlength="2000" counterTemplate="{0} characters remaining." value="#{studyMetaController.metadata.description}"/>
+              <p:inputTextarea id="description" counter="display" maxlength="2000" counterTemplate="{0} characters remaining." value="#{projectMetaController.metadata.description}"/>
               <h:outputText id="display" />
             </h:panelGrid>
             <h:commandLink/>
 
-            <h:outputLabel value="Study design" for="studyDesignList"/>
-            <p:dataList id="studyDesignList" value="#{studyMetaController.studyDesignDual.target}" var="item">
+            <h:outputLabel value="Project design" for="projectDesignList"/>
+            <p:dataList id="projectDesignList" value="#{projectMetaController.projectDesignDual.target}" var="item">
               #{item.toString()}
             </p:dataList>
-            <p:commandLink styleClass="fa fa-edit" oncomplete="PF('editStudyDesignDlg').show()" type="button"/>
+            <p:commandLink styleClass="fa fa-edit" oncomplete="PF('editProjectDesignDlg').show()" 
+                           type="button" immediate="true"/>
 
             <h:outputLabel value="Inclusion criteria" for="inclusionCriteriaList"/>
-            <p:dataList id="inclusionCriteriaList" value="#{studyMetaController.inclusionCriteriaDual.target}" var="item">
+            <p:dataList id="inclusionCriteriaList" value="#{projectMetaController.inclusionCriteriaDual.target}" var="item">
               #{item.toString()}
             </p:dataList>
-            <p:commandLink styleClass="fa fa-edit" oncomplete="PF('editInclusionCriteriaDlg').show()" type="button"/>
-
+            <p:commandLink styleClass="fa fa-edit" 
+                           oncomplete="PF('editInclusionCriteriaDlg').show()" 
+                           type="button" immediate="true"/>
           </h:panelGrid>
-          <p:commandButton value="Save" actionListener="#{studyMetaController.updateMetadata()}" update="@form"/>
+          <p:commandButton value="Save" actionListener="#{projectMetaController.updateMetadata()}" update="@form"/>
         </h:form>
       </div>
     </ui:composition>

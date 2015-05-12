@@ -437,7 +437,6 @@ public class UserRegistration implements Serializable {
     }
 
     try {
-
       // Generates a UNIX compliant account
       int uid = mgr.lastUserID() + 1;
 

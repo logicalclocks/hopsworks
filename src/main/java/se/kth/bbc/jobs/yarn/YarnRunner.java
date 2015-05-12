@@ -167,7 +167,7 @@ public class YarnRunner {
   //--------------------------- CALLBACK METHODS ------------------------------
   //---------------------------------------------------------------------------
   /**
-   * Get the ApplicationSubmissoinContext used to submit the app. This method
+   * Get the ApplicationSubmissionContext used to submit the app. This method
    * should only be called from registered Commands. Invoking it before the
    * ApplicationSubmissionContext is properly set up will result in an
    * IllegalStateException.
@@ -306,9 +306,7 @@ public class YarnRunner {
 
   private void setUpClassPath(Map<String, String> env) {
     // Add AppMaster.jar location to classpath
-    StringBuilder classPathEnv = new StringBuilder(
-            ApplicationConstants.Environment.CLASSPATH.$())
-            .append(":").append("./*");
+    StringBuilder classPathEnv = new StringBuilder().append("./*");
     for (String c : conf.getStrings(
             YarnConfiguration.YARN_APPLICATION_CLASSPATH,
             YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH)) {
@@ -328,6 +326,13 @@ public class YarnRunner {
     } else {
       env.put(KEY_CLASSPATH, classPathEnv.toString());
     }
+    //Put some environment vars in env
+    env.
+            put(Constants.HADOOP_COMMON_HOME_KEY,
+                    Constants.HADOOP_COMMON_HOME_VALUE);
+    env.put(Constants.HADOOP_CONF_DIR_KEY, Constants.HADOOP_CONF_DIR_VALUE);
+    env.put(Constants.HADOOP_HDFS_HOME_KEY, Constants.HADOOP_HDFS_HOME_VALUE);
+    env.put(Constants.HADOOP_YARN_HOME_KEY, Constants.HADOOP_YARN_HOME_VALUE);
   }
 
   private List<String> setUpCommands() {
@@ -513,11 +518,21 @@ public class YarnRunner {
       return this;
     }
 
+    /**
+     * Set the amount of memory allocated to the Application Master (in MB).
+     * <p>
+     * @param amMem Memory in MB.
+     */
     public Builder amMemory(int amMem) {
       this.amMemory = amMem;
       return this;
     }
 
+    /**
+     * Set the amount of cores allocated to the Application Master.
+     * <p>
+     * @param amVCores
+     */
     public Builder amVCores(int amVCores) {
       this.amVCores = amVCores;
       return this;
@@ -733,7 +748,7 @@ public class YarnRunner {
       }
       //Default localResourcesBasePath
       if (localResourcesBasePath == null) {
-        localResourcesBasePath = appName + File.separator + APPID_PLACEHOLDER;
+        localResourcesBasePath = File.separator + APPID_PLACEHOLDER;
       }
       //Default log locations: tmp files
       if (stdOutPath == null || stdOutPath.isEmpty()) {

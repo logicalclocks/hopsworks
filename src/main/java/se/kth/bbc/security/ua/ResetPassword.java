@@ -376,6 +376,7 @@ public class ResetPassword implements Serializable {
       Logger.getLogger(ResetPassword.class.getName()).
               log(Level.SEVERE, null, ex);
     }
+
     return logout();
   }
 
