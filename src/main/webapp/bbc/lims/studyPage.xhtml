@@ -14,6 +14,11 @@
       <link rel="stylesheet" type="text/css" href="#{resource['/css/lims.css']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/projectPage.css']}" />
       <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+      
+      <h:outputScript library="primefaces" name="jquery/jquery.js" target="head" />
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/json3/3.3.2/json3.min.js"></script>
+      <script type="text/javascript" src="../js/searcher.js"></script>
+      
     </h:head>
     <h:body>
       <ui:insert name="titleBar" >
@@ -22,7 +27,16 @@
       <p:layout id="bbcMainLayout" styleClass="BbcMainLayoutProject" rendered="#{projectManagedBean.projectName != null}">  
         <p:layoutUnit position="center">
           <div class="container">
-            <h1>#{projectManagedBean.projectName} </h1>
+              <div id="mainHeader" align="center">
+                <table border="0">
+                    <tr><td valign="center">
+                        <h2>#{projectManagedBean.projectName} </h2>
+                        <!--SEARCH BAR-->
+                        <h:inputHidden id="hiddenStudyName" value="#{projectManagedBean.projectName} "/>
+                        <ui:include src="/bbc/lims/searcher.xhtml"/>
+                    </td></tr>
+                </table>
+            </div>
             <h:form>
               <p:commandButton id="toolsBtn" value="Project..." type="button" rendered="#{projectManagedBean.currentOwner}" style="float:right;margin-top: 26px;"/>  
               <p:menu overlay="true" trigger="toolsBtn" my="left top" at="left bottom" >  

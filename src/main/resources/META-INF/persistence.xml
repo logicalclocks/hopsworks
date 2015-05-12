@@ -41,11 +41,21 @@
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>jdbc/hops</jta-data-source>
     <class>se.kth.bbc.project.fb.Inode</class>
+    <class>se.kth.mse.kth.meta.entity.Templates</class>
+    <class>se.kth.meta.entity.FieldPredefinedValues</class>
+    <class>se.kth.meta.entity.FieldTypes</class>
+    <class>se.kth.meta.entity.Fields</class>
+    <class>se.kth.meta.entity.RawData</class>
+    <class>se.kth.meta.entity.Tables</class>
+    <class>se.kth.meta.entity.Templates</class>
+    <class>se.kth.meta.entity.TupleToFile</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>
     <properties>
       <property name="eclipselink.target-database" value="MYSQL"/>
+      <property name="eclipselink.query-results-cache" value="false"/>
+      <property name="eclipselink.jpa.uppercase-column-names" value="true"/>
     </properties>
   </persistence-unit>
 </persistence>

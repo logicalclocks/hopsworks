@@ -317,3 +317,112 @@ CREATE VIEW `users_groups` AS
   `g`.`group_name` AS `group_name` 
   from 
     ((`people_group` `ug` join `users` `u` on((`u`.`uid` = `ug`.`uid`))) join `bbc_group` `g` on((`g`.`gid` = `ug`.`gid`)));
+
+### METADATA MANAGER SCHEMA
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`kthfshops`@`localhost` PROCEDURE `emptyTables`()
+    NO SQL
+BEGIN
+	
+	truncate raw_data;
+
+	delete from fields;
+	ALTER TABLE fields AUTO_INCREMENT = 1;
+
+	delete from tables;
+	alter table tables AUTO_INCREMENT = 1;
+
+END$$
+
+DELIMITER ;
+
+--
+-- Table structure for table `fields`
+--
+
+CREATE TABLE IF NOT EXISTS `fields` (
+  `fieldid` int(11) NOT NULL AUTO_INCREMENT,
+  `maxsize` int(11) DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `required` smallint(6) DEFAULT NULL,
+  `searchable` smallint(6) DEFAULT NULL,
+  `tableid` int(11) DEFAULT NULL,
+  `type` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`fieldid`),
+  KEY `FK_fields_tableid` (`tableid`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0 ;
+
+--
+-- Table structure for table `raw_data`
+--
+
+CREATE TABLE IF NOT EXISTS `raw_data` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `data` longtext,
+  `fieldid` int(11) DEFAULT NULL,
+  `tupleid` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_raw_data_fieldid` (`fieldid`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0 ;
+
+--
+-- Table structure for table `tables`
+--
+
+CREATE TABLE IF NOT EXISTS `tables` (
+  `tableid` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL,
+  `templateid` int(11) NOT NULL,
+  PRIMARY KEY (`tableid`),
+  KEY `FK_tables_templateid` (`templateid`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0 ;
+
+--
+-- Table structure for table `templates`
+--
+
+CREATE TABLE IF NOT EXISTS `templates` (
+  `templateid` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(250) NOT NULL,
+  PRIMARY KEY (`templateid`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
+
+--
+-- Table structure for table `tuple_to_file`
+--
+
+CREATE TABLE IF NOT EXISTS `tuple_to_file` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` int(11) DEFAULT NULL,
+  `tupleid` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0 ;
+
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `fields`
+--
+ALTER TABLE `fields`
+  ADD CONSTRAINT `FK_fields_tableid` FOREIGN KEY (`tableid`) REFERENCES `tables` (`tableid`);
+
+--
+-- Constraints for table `raw_data`
+--
+ALTER TABLE `raw_data`
+  ADD CONSTRAINT `FK_raw_data_fieldid` FOREIGN KEY (`fieldid`) REFERENCES `fields` (`fieldid`);
+
+--
+-- Constraints for table `tables`
+--
+ALTER TABLE `tables`
+  ADD CONSTRAINT `FK_tables_templateid` FOREIGN KEY (`templateid`) REFERENCES `templates` (`templateid`);
+
+
