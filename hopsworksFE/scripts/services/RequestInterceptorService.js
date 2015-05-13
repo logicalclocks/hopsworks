@@ -5,7 +5,7 @@ angular.module('hopsWorksApp')
     return {
       request: function (config) {
 
-        var RESOURCE_SERVER = 'http://localhost:8080/hopsworks';
+        var RESOURCE_SERVER = 'http://localhost:19931/hopsworks';
         var RESOURCE_NAME = 'api';
 
         var isApi = config.url.indexOf(RESOURCE_NAME);
