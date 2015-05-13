@@ -187,7 +187,7 @@
           </auth-constraint>
     </security-constraint>
     
-    <security-constraint>
+<!--    <security-constraint>
         <display-name>SocketConstraint</display-name>
         <web-resource-collection>
             <web-resource-name>MetadataWebSocket</web-resource-name>
@@ -200,11 +200,11 @@
             <role-name>SYS_ADMIN</role-name>
             <role-name>BBC_USER</role-name>
         </auth-constraint>
-        <!--user-data-constraint>
+        user-data-constraint>
             <description>WSS required</description>
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint-->
-    </security-constraint>
+        </user-data-constraint
+    </security-constraint>-->
     
  
     <security-constraint>

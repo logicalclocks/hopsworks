@@ -28,6 +28,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.hadoop.yarn.util.YarnVersionInfo;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.services.ProjectServiceEnum;
@@ -63,6 +64,7 @@ public class ProjectService {
   public Response findAllByUser(@Context SecurityContext sc,
           @Context HttpServletRequest req) {
 
+      System.err.println("USER FOUND " + (sc.getUserPrincipal() == null));
     // Get the user according to current session and then get all its projects
     String eamil = sc.getUserPrincipal().getName();
     List<ProjectTeam> list = projectController.findProjectByUser(eamil);
