@@ -82,4 +82,3 @@ angular.module('metaUI').controller('ExtendTemplateController',
                             });
                 };
             }]);
-

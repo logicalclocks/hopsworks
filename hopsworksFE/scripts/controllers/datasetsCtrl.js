@@ -46,9 +46,5 @@ angular.module('hopsWorksApp')
       self.files.push(file);
       file = {name: 'Yar5.yml', type: 'YML', changed: '06/04/2015'}
       self.files.push(file);
-
-
-
+      
     }]);
-
-

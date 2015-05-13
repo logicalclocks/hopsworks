@@ -87,10 +87,6 @@ angular.module('hopsWorksApp')
             self.items.push(i);
         };
 
-
-
-
-
       self.goToDatasets = function() {
         $location.path($location.path() + '/datasets');
       };
@@ -136,8 +132,3 @@ angular.module('hopsWorksApp')
 
 // DELETE /api/project/ THELATEST id
 // ProjectService.delete({}, {'id': 35 });
-
-
-
-
-

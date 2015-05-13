@@ -94,5 +94,3 @@ angular.module('metaUI').controller('ElasticSearchController',
         
         $scope.search();
     }]);
-
-

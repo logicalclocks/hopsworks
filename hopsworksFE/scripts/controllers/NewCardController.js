@@ -36,4 +36,3 @@ angular.module('metaUI')
                 initScope($scope);
 
             }]);
-

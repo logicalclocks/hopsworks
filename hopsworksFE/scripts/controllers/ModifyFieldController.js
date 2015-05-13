@@ -121,5 +121,3 @@ var mainModule = angular.module('metaUI').controller('ModifyFieldController',
                     $scope.yesNoItems.push({id: -1, fieldid: data.field.id, value: ""});
                 };
             }]);
-
-

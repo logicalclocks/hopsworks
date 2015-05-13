@@ -24,9 +24,7 @@ angular.module('hopsWorksApp')
                         }, function (error) {
                             self.errorMessage = error.data.errorMsg;
                             console.log(self.errorMessage);
-                        })
+                        });
                 }
             };
-
-
         }]);

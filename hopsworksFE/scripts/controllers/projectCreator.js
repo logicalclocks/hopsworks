@@ -65,7 +65,7 @@ angular.module('hopsWorksApp')
           function (success) {
             $modalInstance.close($scope.newProject);
           }, function (error) {
-            console.log('Error: ' + error)
+            console.log('Error: ' + error);
           }
         );
 

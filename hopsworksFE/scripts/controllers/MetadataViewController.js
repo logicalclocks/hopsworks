@@ -30,6 +30,3 @@ var mainModule = angular.module('metaUI').controller('MetadataViewController',
                 console.log("ARRAY " + JSON.stringify(results));
             }
         ]);
-
-
-

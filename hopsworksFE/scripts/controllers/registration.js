@@ -31,7 +31,7 @@ angular.module('hopsWorksApp')
                     //$location.path('/login');
                 }, function (error) {
                     self.errorMessage = error.data.errorMsg;
-                })
+                });
         }
     };
 

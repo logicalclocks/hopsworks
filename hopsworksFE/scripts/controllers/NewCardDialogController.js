@@ -102,4 +102,3 @@ angular.module('metaUI').controller('NewCardDialogController',
                     $scope.yesNoItems.push({id: -1, fieldid: -1, value: ""});
                 };
             }]);
-

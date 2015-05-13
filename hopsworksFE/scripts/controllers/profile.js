@@ -32,7 +32,7 @@ angular.module('hopsWorksApp')
                     },
                     function (error) {
                         self.errorMsg = error.data.errorMsg;
-                    })
+                    });
             };
 
             self.profile();
@@ -47,7 +47,7 @@ angular.module('hopsWorksApp')
                     }, function (error) {
                         self.errorMsg = error.data.errorMsg;
                         growl.error("Could not update your profile.", {title: 'Error', ttl: 5000});
-                    })
+                    });
             };
 
             self.changeLoginCredentials = function () {
@@ -59,7 +59,7 @@ angular.module('hopsWorksApp')
                         }, function (error) {
                             self.errorMsg = error.data.errorMsg;
                             growl.error("Could not update your passowrd.", {title: 'Error', ttl: 5000});
-                        })
+                        });
                 }
             };
 
