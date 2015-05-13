@@ -15,6 +15,7 @@ angular.module('hopsWorksApp', [
   'ngMessages',
   'ui.sortable',
   'chart.js',
+  'ngWebSocket',
   'ng-context-menu'
 ])
   .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
