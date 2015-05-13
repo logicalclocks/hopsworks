@@ -12,7 +12,9 @@ angular.module('hopsWorksApp')
                 AuthService.logout(self.user).then(
                     function (success) {
                         $location.url('/login');
-                        delete $cookies.email;
+                      delete $cookies.email;
+                      localStorage.removeItem("SESSIONID");
+                      sessionStorage.removeItem("SESSIONID");
                     }, function (error) {
                         self.errorMessage = error.data.msg;
                     });
