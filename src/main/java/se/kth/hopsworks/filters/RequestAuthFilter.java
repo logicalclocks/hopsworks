@@ -84,7 +84,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
               getName();
 
       Integer projectId;
-      String userRole = null;
+      String userRole;
       projectId = Integer.valueOf(pathParts[1]);
       Project project = projectBean.find(projectId);
 
