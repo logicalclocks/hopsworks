@@ -1,11 +1,10 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-    .controller('RecoverCtrl', ['$location', 'AuthService','$scope', 'SecurityQuestions',
-        function ($location, AuthService, $scope, SecurityQuestions) {
+    .controller('RecoverCtrl', ['$location', 'AuthService','$scope',
+        function ($location, AuthService, $scope) {
 
             var self = this;
-            self.securityQuestions = SecurityQuestions.getQuestions();
             self.user = {email: '',
                          securityQuestion: '',
                          securityAnswer: '',
@@ -20,14 +19,12 @@ angular.module('hopsWorksApp')
                         function (success) {
                             self.user = angular.copy(empty);
                             $scope.recoveryForm.$setPristine();
-                            self.successMessage = success.data.successMessage;
+                            self.successMessage = 'Your password have been reset successfully.';
                             //$location.path('/login');
                         }, function (error) {
                             self.errorMessage = error.data.errorMsg;
                             console.log(self.errorMessage);
-                        })
+                        });
                 }
             };
-
-
         }]);

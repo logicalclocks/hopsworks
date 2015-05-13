@@ -25,3 +25,14 @@ angular.module('hopsWorksApp')
             };
 
         }]);
+                        delete $cookies.email;
+                    }, function (error) {
+                        self.errorMessage = error.data.msg;
+                    });
+            };
+
+            self.profileModal = function () {
+                ModalService.profile('md');
+            };
+
+        }]);
