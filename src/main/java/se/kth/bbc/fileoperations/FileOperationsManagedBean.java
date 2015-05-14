@@ -13,6 +13,7 @@ import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.Utils;
+import se.kth.bbc.project.fb.Inode;
 
 //TODO: report errors to user!!! seems to be going wrong!
 /**
@@ -99,9 +100,9 @@ public class FileOperationsManagedBean implements Serializable {
     return newFolderName;
   }
 
-  public void deleteFile(String path) {
+  public void deleteFile(Inode inode) {
     try {
-      fileOps.rm(path);
+      fileOps.rm(inode);
     } catch (IOException ex) {
       Logger.getLogger(FileOperationsManagedBean.class.getName()).log(
               Level.SEVERE, "Failed to remove file.", ex);
