@@ -1,65 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
-  <persistence-unit name="kthfsPU" transaction-type="JTA">
-    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-    <jta-data-source>jdbc/kthfs</jta-data-source>
-    <class>se.kth.bbc.activity.ActivityDetail</class>
-    <class>se.kth.bbc.activity.UsersGroups</class>
-    <class>se.kth.bbc.jobs.jobhistory.JobExecutionFile</class>
-    <class>se.kth.bbc.jobs.jobhistory.JobHistory</class>
-    <class>se.kth.bbc.jobs.jobhistory.JobInputFile</class>
-    <class>se.kth.bbc.jobs.jobhistory.JobOutputFile</class>
-    <class>se.kth.bbc.security.ua.model.Address</class>
-    <class>se.kth.bbc.security.ua.model.PeopleGroup</class>
-    <class>se.kth.bbc.security.ua.model.User</class>
-    <class>se.kth.bbc.security.ua.model.Userlogins</class>
-    <class>se.kth.bbc.security.ua.model.Yubikey</class>
-    <class>se.kth.bbc.security.ua.model.BBCGroup</class>
-    <class>se.kth.bbc.security.ua.model.Organization</class>
+    <persistence-unit name="kthfsPU" transaction-type="JTA">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <jta-data-source>jdbc/kthfs</jta-data-source>
+        <class>se.kth.bbc.activity.ActivityDetail</class>
+        <class>se.kth.bbc.activity.UsersGroups</class>
+        <class>se.kth.bbc.jobs.jobhistory.JobExecutionFile</class>
+        <class>se.kth.bbc.jobs.jobhistory.JobHistory</class>
+        <class>se.kth.bbc.jobs.jobhistory.JobInputFile</class>
+        <class>se.kth.bbc.jobs.jobhistory.JobOutputFile</class>
+        <class>se.kth.bbc.security.ua.model.Address</class>
+        <class>se.kth.bbc.security.ua.model.PeopleGroup</class>
+        <class>se.kth.bbc.security.ua.model.User</class>
+        <class>se.kth.bbc.security.ua.model.Userlogins</class>
+        <class>se.kth.bbc.security.ua.model.Yubikey</class>
+        <class>se.kth.bbc.security.ua.model.BBCGroup</class>
+        <class>se.kth.bbc.security.ua.model.Organization</class>
     
-    <class>se.kth.bbc.activity.Activity</class>
-    <class>se.kth.hopsworks.user.model.BbcGroup</class>
-    <class>se.kth.hopsworks.user.model.Users</class>
-    <class>se.kth.bbc.project.metadata.ProjectMeta</class>
-    <class>se.kth.bbc.project.privacy.model.Consent</class>
-    <class>se.kth.bbc.project.ProjectTeam</class>
-    <class>se.kth.bbc.project.samples.Sample</class>
-    <class>se.kth.bbc.project.samples.Disease</class>
-    <class>se.kth.bbc.project.samples.Samplecollection</class>
-    <class>se.kth.bbc.project.samples.AnatomicalPart</class>
-    <class>se.kth.bbc.project.Project</class>
-    <class>se.kth.bbc.project.services.ProjectServices</class>
-    <class>se.kth.bbc.project.fb.Inode</class>
-    <class>se.kth.bbc.project.fb.InodeOps</class>
- 
-    <exclude-unlisted-classes>true</exclude-unlisted-classes>
-    <shared-cache-mode>NONE</shared-cache-mode>
-    <validation-mode>NONE</validation-mode>
-    <properties>
-      <property name="eclipselink.target-database" value="MYSQL"/>
-      <property name="eclipselink.logging.level" value="INFO"/>
-      <property name="eclipselink.logging.parameters" value="true"/>
-    </properties>
-  </persistence-unit>
-  <persistence-unit name="hopsPU" transaction-type="JTA">
-    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-    <jta-data-source>jdbc/hops</jta-data-source>
+        <class>se.kth.bbc.activity.Activity</class>
+        <class>se.kth.hopsworks.user.model.BbcGroup</class>
+        <class>se.kth.hopsworks.user.model.Users</class>
+        <class>se.kth.bbc.project.metadata.ProjectMeta</class>
+        <class>se.kth.bbc.project.privacy.model.Consent</class>
+        <class>se.kth.bbc.project.ProjectTeam</class>
+        <class>se.kth.bbc.project.samples.Sample</class>
+        <class>se.kth.bbc.project.samples.Disease</class>
+        <class>se.kth.bbc.project.samples.Samplecollection</class>
+        <class>se.kth.bbc.project.samples.AnatomicalPart</class>
+        <class>se.kth.bbc.project.Project</class>
+        <class>se.kth.bbc.project.services.ProjectServices</class> 
+        
+        <class>se.kth.meta.entity.FieldPredefinedValues</class>
+        <class>se.kth.meta.entity.FieldTypes</class>
+        <class>se.kth.meta.entity.Fields</class>
+        <class>se.kth.meta.entity.RawData</class>
+        <class>se.kth.meta.entity.Tables</class>
+        <class>se.kth.meta.entity.Templates</class>
+        <class>se.kth.meta.entity.TupleToFile</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <shared-cache-mode>NONE</shared-cache-mode>
+        <validation-mode>NONE</validation-mode>
+        <properties>
+            <property name="eclipselink.target-database" value="MYSQL"/>
+            <property name="eclipselink.logging.level" value="INFO"/>
+            <property name="eclipselink.logging.parameters" value="true"/>
+        </properties>
+    </persistence-unit>
     
-    <class>se.kth.mse.kth.meta.entity.Templates</class>
-    <class>se.kth.meta.entity.FieldPredefinedValues</class>
-    <class>se.kth.meta.entity.FieldTypes</class>
-    <class>se.kth.meta.entity.Fields</class>
-    <class>se.kth.meta.entity.RawData</class>
-    <class>se.kth.meta.entity.Tables</class>
-    <class>se.kth.meta.entity.Templates</class>
-    <class>se.kth.meta.entity.TupleToFile</class>
-    <exclude-unlisted-classes>true</exclude-unlisted-classes>
-    <shared-cache-mode>NONE</shared-cache-mode>
-    <validation-mode>NONE</validation-mode>
-    <properties>
-      <property name="eclipselink.target-database" value="MYSQL"/>
-      <property name="eclipselink.query-results-cache" value="false"/>
-      <property name="eclipselink.jpa.uppercase-column-names" value="true"/>
-    </properties>
-  </persistence-unit>
+    <persistence-unit name="hopsPU" transaction-type="JTA">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+        <jta-data-source>jdbc/hops</jta-data-source>
+        <class>se.kth.bbc.project.fb.Inode</class>
+        <class>se.kth.bbc.project.fb.InodeOps</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <shared-cache-mode>NONE</shared-cache-mode>
+        <validation-mode>NONE</validation-mode>
+        <properties>
+            <property name="eclipselink.target-database" value="MYSQL"/>
+            <property name="eclipselink.query-results-cache" value="false"/>
+            <property name="eclipselink.jpa.uppercase-column-names" value="true"/>
+        </properties>
+    </persistence-unit>
+    
 </persistence>

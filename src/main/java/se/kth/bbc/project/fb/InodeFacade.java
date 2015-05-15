@@ -29,7 +29,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
     @EJB
     private FileOperations fileOps;
 
-    @PersistenceContext(unitName = "kthfsPU")
+    @PersistenceContext(unitName = "hopsPU")
     private EntityManager em;
 
     @Override
@@ -90,12 +90,11 @@ public class InodeFacade extends AbstractFacade<Inode> {
         Inode z;
         if (parent != null) {
             z = new Inode(name, parent, rootstudy, dir, false, (int) size, status);
-            System.err.println("Z IS NULL " + z);
             parent.addChild(z);
             em.persist(parent);
         } else {
            
-            z = new Inode(name, parent, rootstudy, dir, false, (int) size, status); System.err.println("Z IS NOT NULL " + z);
+            z = new Inode(name, parent, rootstudy, dir, false, (int) size, status);
         }
         em.persist(z);
 
