@@ -233,7 +233,7 @@ public final class SparkController extends JobController {
     if (localSparkJar.exists()) {
       try {
         fops.copyToHDFSFromPath(Constants.DEFAULT_SPARK_JAR_PATH,
-                Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
+                Constants.DEFAULT_SPARK_JAR_HDFS_PATH, null);
       } catch (IOException e) {
         return false;
       }

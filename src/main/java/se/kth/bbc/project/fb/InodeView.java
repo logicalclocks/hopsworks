@@ -18,11 +18,11 @@ public final class InodeView {
   private final Date modification;
 
   public InodeView(Inode i, String path) {
-    this.name = i.getInodePK().getName();
+    this.name = i.getName();
     this.dir = i.isDir();
     this.parent = false;
     this.path = path;
-    this.modification = new Date(i.getModificationTime().longValue());
+    this.modification = new Date(i.getModified().getTime());
   }
 
   private InodeView(String name, boolean dir, boolean parent, String path) {

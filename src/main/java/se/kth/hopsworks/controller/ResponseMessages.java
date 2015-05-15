@@ -113,4 +113,8 @@ public class ResponseMessages {
   public final static String MEMBER_ROLE_UPDATED = "Role updated successfully.";
   public final static String MEMBER_REMOVED_FROM_TEAM
           = "Member removed from team.";
+  
+  //DataSet
+  public final static String DATASET_NAME_EMPTY = "DataSet name can not be empty.";
+  public final static String DATASET_REMOVED_FROM_HDFS = "DataSet removed from hdfs.";
 }

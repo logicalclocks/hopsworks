@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+d<?xml version="1.0" encoding="UTF-8"?>
 <!--
 To change this license header, choose License Headers in Project Properties.
 To change this template file, choose Tools | Templates
@@ -55,7 +55,7 @@ and open the template in the editor.
             <h:column>
               <p:commandLink styleClass="ui-button fa fa-trash remove_data_button"  
                              value="" rendered="#{projectManagedBean.currentRoleInProject() == 'Master' and not inode.dir}" 
-                             update="@form" action="#{fileOperationsMB.deleteFile(inode.path)}">
+                             update="@form" action="#{fileOperationsMB.deleteFile(inode)}">
                 <p:confirm header="Remove file?" message="Are you sure you want to remove this file?" icon="ui-icon-alert"/>
               </p:commandLink>
               <p:commandLink styleClass="ui-button fa fa-trash remove_data_button"  

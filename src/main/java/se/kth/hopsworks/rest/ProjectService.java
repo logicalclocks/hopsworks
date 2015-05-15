@@ -28,6 +28,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import org.apache.hadoop.yarn.util.YarnVersionInfo;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.services.ProjectServiceEnum;

@@ -30,7 +30,7 @@ import se.kth.meta.entity.TupleToFile;
  *
  * @author Vangelis
  */
-@PersistenceContext(unitName = "hopsPU", name = "persistence/em")
+@PersistenceContext(unitName = "kthfsPU", name = "persistence/em")
 @Resource(type = javax.transaction.UserTransaction.class, name = "UserTransaction")
 public class Dbao {
 
@@ -440,7 +440,7 @@ public class Dbao {
 //        }
 //    }
     public void shutdown() throws DatabaseException {
-        this.em.clear();
+//        this.em.clear();
         //this.em.close();
 
         //this.utx = null;
