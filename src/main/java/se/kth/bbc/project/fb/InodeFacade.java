@@ -90,10 +90,12 @@ public class InodeFacade extends AbstractFacade<Inode> {
         Inode z;
         if (parent != null) {
             z = new Inode(name, parent, rootstudy, dir, false, (int) size, status);
+            System.err.println("Z IS NULL " + z);
             parent.addChild(z);
             em.persist(parent);
         } else {
-            z = new Inode(name, parent, rootstudy, dir, false, (int) size, status);
+           
+            z = new Inode(name, parent, rootstudy, dir, false, (int) size, status); System.err.println("Z IS NOT NULL " + z);
         }
         em.persist(z);
 

@@ -64,7 +64,6 @@ public class ProjectService {
   public Response findAllByUser(@Context SecurityContext sc,
           @Context HttpServletRequest req) {
 
-      System.err.println("USER FOUND " + sc.getUserPrincipal());
     // Get the user according to current session and then get all its projects
     String eamil = sc.getUserPrincipal().getName();
     List<ProjectTeam> list = projectController.findProjectByUser(eamil);

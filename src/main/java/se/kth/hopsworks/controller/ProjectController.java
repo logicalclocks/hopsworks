@@ -87,8 +87,8 @@ public class ProjectController {
       //Create a new project object
       Date now = new Date();
       Project project = new Project(newProjectName, user, now);
-      //create folder structure
-      //mkProjectDIR(project.getName());
+      //create folder structure in hdfs
+      mkProjectDIR(project.getName());
       logger.log(Level.FINE, "{0} - project directory created successfully.",
               project.getName());
 
@@ -174,9 +174,11 @@ public class ProjectController {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NAME_EXIST);
     }
+    
+    String oldProjectName = project.getName();
     project.setName(newProjectName);
     projectFacade.mergeProject(project);
-    //fileOps.renameInHdfs(, );
+    fileOps.renameInHdfs(oldProjectName, newProjectName);
 
     logActivity(ActivityFacade.PROJECT_NAME_CHANGED, ActivityFacade.FLAG_PROJECT,
             user, project);

@@ -267,7 +267,7 @@ public class Inode implements Serializable {
     String isDir = (this.isDir()) ? "1" : "0";
     String isSearchable = (this.isSearchable()) ? "1" : "0";
       
-    return this.getId() + "|" + this.getName() + "|" + this.getParent().getId() + "|"
+    return  this.getId() + "|" + this.getName() + "|" + this.getParent().getId() + "|"
                 + this.getRoot() + "|" + this.getModified() + "|" + isDir + "|"
                 + this.getSize() + "|" + this.getStatus() + "|" + isSearchable;
   }
