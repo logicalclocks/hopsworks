@@ -5,14 +5,18 @@ angular.module('hopsWorksApp')
 
     // Keep all pending requests here until they get responses
     var callbacks = [];
-    var projectID = 3;
+    var projectID = 34;
 
     //generic
-    var ws = $websocket("ws://" + $location.host() + ":8080/hopsworks/wspoint/" + projectID + "?evsav");
+    var ws = $websocket("ws://" + $location.host() + ":8080/hopsworks/wspoint/34?evsav");
 
     var collection = [];
 
     ws.onMessage(function (event) {
+      //console.log('Event console:');
+      //console.log(event);
+      //console.log('callbacks console:');
+      //console.log(callbacks);
       processMessage(JSON.parse(event.data));
     });
 
@@ -31,19 +35,27 @@ angular.module('hopsWorksApp')
     //   ws.close();
     // }, 500)
 
+
+
     var processMessage = function (data) {
 
       try {
         var board = data.message;
         var status = data.status;
         var response = {status: data.status, board: data.message};
+
+        $rootScope.$broadcast('andreTesting', {
+          response: response
+        });
+
         //console.log('sender: ' + data.sender + ' message: ' + data.message);
 
         //since the data arrived its time to resolve the defer
         $rootScope.$apply(callbacks.shift().def.resolve(response));
       } catch (e) {
         var res = {sender: 'anonymous', message: e};
-        $rootScope.$apply(callbacks.shift().def.resolve(res));
+        //$rootScope.$apply(callbacks.shift().def.resolve(res));
+        console.log('ErrorLocal:');
         console.log(res);
       }
     };
@@ -68,4 +80,6 @@ angular.module('hopsWorksApp')
         return defer.promise;
       }
     };
+
+
   })

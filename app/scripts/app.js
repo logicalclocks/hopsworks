@@ -16,7 +16,8 @@ angular.module('hopsWorksApp', [
   'ui.sortable',
   'chart.js',
   'ngWebSocket',
-  'ng-context-menu'
+  'ng-context-menu',
+  'xeditable'
 ])
   .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
@@ -34,6 +35,8 @@ angular.module('hopsWorksApp', [
       .when('/', {
         templateUrl: 'views/home.html',
         controller: 'HomeCtrl as homeCtrl',
+
+
         resolve: {
           auth: ['$q', '$location', 'AuthService',
             function ($q, $location, AuthService) {
@@ -47,6 +50,10 @@ angular.module('hopsWorksApp', [
                 });
             }]
         }
+
+
+
+
       })
       .when('/login', {
         templateUrl: 'views/login.html',

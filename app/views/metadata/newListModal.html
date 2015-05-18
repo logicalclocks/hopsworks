@@ -1,8 +1,6 @@
-<!-- New List template -->
-
-<form ng-submit="createNewList()" class="noMargin" name="newListForm">
+<form ng-submit="newListCtrl.createNewList()" class="noMargin" name="newListForm">
   <div class="modal-header">
-    <button type="button" class="close" ng-click="close()">&times;</button>
+    <button type="button" class="close" ng-click="newListCtrl.close()">&times;</button>
     <h4 class="modal-title" ng-model="columnName">Add a new table</h4>
   </div>
   <div class="modal-body">
@@ -15,9 +13,10 @@
       </div>
     </div>
 
+
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-default" ng-click="close()">Close</button>
+    <button type="button" class="btn btn-default" ng-click="newListCtrl.close()">Close</button>
     <button type="submit" class="btn btn-primary">Add</button>
   </div>
 </form>
