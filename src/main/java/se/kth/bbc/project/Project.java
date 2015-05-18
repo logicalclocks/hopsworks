@@ -66,7 +66,7 @@ public class Project implements Serializable {
           mappedBy = "project")
   private Collection<ProjectTeam> projectTeamCollection;
   @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "projectId")
+          mappedBy = "project")
   private Collection<Activity> activityCollection;
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
