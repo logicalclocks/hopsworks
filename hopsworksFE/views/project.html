@@ -1,9 +1,17 @@
 <link rel="stylesheet" href="styles/timeline.css">
 
 <div ng-controller="MainCtrl as mainCtrl">
-  <div ng-include="'nav.html'"></div>
+ 
+  <input type="hidden" name="value" ng-init="mainCtrl.index='child'" value="1"/>
+  
+  <div ng-include="'nav.html'"
+       onload="mainCtrl.projectName = projectCtrl.currentProject.projectName">
+  </div>
 
-
+    <div align="center" id="projectSearchResults">
+        <p ng-bind-html="mainCtrl.searchResult"></p>
+    </div>
+  
   <div id="wrapper" class="toggled">
     <div class="overlay"></div>
 
@@ -14,7 +22,6 @@
         <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName }} / Start</h3>
 
         <!-- Page Content -->
-
         <div class="widget-body col-md-6">
           <div class="timeline clearfix">
             <div class="mid-line"></div>
@@ -55,8 +62,7 @@
         <div class="widget-body col-md-6">
           <div class="timeline clearfix">
 
-            <canvas id="radar" class="chart chart-radar" data="data"
-                    labels="labels">
+            <canvas id="radar" class="chart chart-radar" data="data" labels="labels">
             </canvas>
 
             <p></p>

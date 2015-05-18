@@ -1,8 +1,14 @@
 <link rel="stylesheet" href="styles/timeline.css">
 <div class="container" ng-controller="MainCtrl as mainCtrl" style="padding-top:25px;">
+<!--  <input type="hidden" name="value" ng-init="mainCtrl.index='parent'" value="1"/>-->
+
   <div ng-include="'nav.html'"></div>
   <div class="row">
     <div class="col-md-8" style="padding-left:56px;">
+        
+        <div align="center" id="projectSearchResults">
+            <p ng-bind-html="mainCtrl.searchResult"></p>
+        </div>
       <div class="">
         <div class="widget-body">
           <div class="timeline clearfix">
@@ -103,8 +109,12 @@
         <div ng-if="project.teamRole =='Data owner'">
           <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-unlock fa-2 pull-left"/>
         </div>
+        <div align="right">
+            <i class="glyphicon glyphicon-trash" ng-click="homeCtrl.removeProject(project.project.id)"/>
+        </div>
         {{project.project.name}}
       </a>
+               
       <pager total-items="homeCtrl.totalItemsProjects" ng-model="homeCtrl.currentPageProjects"></pager>
     </div>
 

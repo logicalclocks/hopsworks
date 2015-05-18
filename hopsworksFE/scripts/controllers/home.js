@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('HomeCtrl', ['ProjectService', 'ModalService', 'growl', 'ActivityService',
-    function (ProjectService, ModalService, growl, ActivityService) {
+  .controller('HomeCtrl', ['ProjectService', 'UtilsService', 'ModalService', 'growl', 'ActivityService',
+    function (ProjectService, UtilsService, ModalService, growl, ActivityService) {
 
       var self = this;
       self.projects = [];
@@ -22,8 +22,11 @@ angular.module('hopsWorksApp')
             console.log('Error: ' + error);
           }
         );
-      }
+      };
 
+      //define the elastic index where the searches will be directed to
+      UtilsService.setIndex("parent");
+      
       loadProjects();
 
       // Create a new project
@@ -37,6 +40,14 @@ angular.module('hopsWorksApp')
       };
 
 
+      self.removeProject = function(projectId){
+          
+          ProjectService.delete({id: projectId, wipeData: true})
+                  .then(function(response){
+                      console.log("project removed successfully " + JSON.stringify(response));
+          });
+      };
+      
       self.histories = [];
       var histories = [];
 
@@ -125,6 +136,5 @@ angular.module('hopsWorksApp')
       );
 
       self.currentPage = 1;
-
-
+      
     }]);

@@ -1,9 +1,12 @@
+/*jshint undef: false, unused: false, indent: 2*/
+/*global angular: false */
+
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams'
-    , 'growl', 'ProjectService', 'ModalService', 'ActivityService',
-    function ($scope, $modalStack, $location, $routeParams, growl, ProjectService, ModalService, ActivityService) {
+  .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams', 'UtilsService',
+    'growl', 'ProjectService', 'ModalService', 'ActivityService',
+    function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService) {
 
       var self = this;
       self.currentProject = [];
@@ -20,7 +23,6 @@ angular.module('hopsWorksApp')
       self.selectionProjectTypes = [];
       self.pId = $routeParams.projectID;
 
-
       var getCurrentProject = function () {
         ProjectService.get({}, {'id': self.pId}).$promise.then(
           function (success) {
@@ -36,13 +38,15 @@ angular.module('hopsWorksApp')
               var index = self.projectTypes.indexOf(entry.toUpperCase());
               self.projectTypes.splice(index, 1);
             });
-
+            
+            //set the project name under which the search is performed
+            UtilsService.setProjectName(self.currentProject.projectName);
+            
           }, function (error) {
             $location.path('/');
           }
         );
       };
-
 
       var getAllActivities = function () {
         ActivityService.getByProjectId(self.pId).then(function (success) {
@@ -57,7 +61,6 @@ angular.module('hopsWorksApp')
 
       getAllActivities();
       getCurrentProject();
-
 
       // Check if the service exists and otherwise add it or remove it depending on the previous choice
       self.exists = function (projectType) {
@@ -110,6 +113,7 @@ angular.module('hopsWorksApp')
         );
       };
 
+      
       self.close = function () {
         $modalStack.getTop().key.dismiss();
       };
