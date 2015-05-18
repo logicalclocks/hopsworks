@@ -16,6 +16,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -28,7 +29,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import org.apache.hadoop.yarn.util.YarnVersionInfo;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.services.ProjectServiceEnum;
@@ -54,6 +54,8 @@ public class ProjectService {
   private NoCacheResponse noCacheResponse;
   @Inject
   private ProjectMembers projectMembers;
+  @Inject
+  private DataSetService dataSet;
 
   private final static Logger logger = Logger.getLogger(ProjectService.class.
           getName());
@@ -109,10 +111,12 @@ public class ProjectService {
     String userEmail = sc.getUserPrincipal().getName();
 
     // Update the description if it have been chenged
-    if (project.getDescription() == null || !project.getDescription().equals(projectDTO.getDescription())) {
-        projectController.changeProjectDesc(project, projectDTO.getDescription(), userEmail);
-        json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
-        updated = true;
+    if (project.getDescription() == null || !project.getDescription().equals(
+            projectDTO.getDescription())) {
+      projectController.changeProjectDesc(project, projectDTO.getDescription(),
+              userEmail);
+      json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
+      updated = true;
     }
 
     // Add all the new services
@@ -213,20 +217,19 @@ public class ProjectService {
   }
 
   @DELETE
-  @Path("{id}/query")
+  @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response removeProjectAndFiles(
           @PathParam("id") Integer id,
-          @QueryParam("wipeData") boolean wipeData,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
       
     String user = sc.getUserPrincipal().getName();
     JsonResponse json = new JsonResponse();
-    boolean success = !wipeData;
+    boolean success = true;
     try {
-      success = projectController.removeByName(id, user, wipeData);
+      success = projectController.removeByID(id, user, true);
     } catch (IOException ex) {
       logger.log(Level.SEVERE,
               ResponseMessages.PROJECT_FOLDER_NOT_REMOVED, ex);
@@ -236,10 +239,34 @@ public class ProjectService {
     json.setStatus("OK");
     if (success) {
       json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED);
-    } else {
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
+  }
+  
+  @DELETE
+  @Path("{id}/remove")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response removeProjectNotFiles(
+          @PathParam("id") Integer id,
+          @Context SecurityContext sc,
+          @Context HttpServletRequest req) throws AppException {
+    String user = sc.getUserPrincipal().getName();
+    JsonResponse json = new JsonResponse();
+    boolean success = true;
+    try {
+      success = projectController.removeByID(id, user, false);
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE,
+              ResponseMessages.PROJECT_FOLDER_NOT_REMOVED, ex);
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_FOLDER_NOT_REMOVED);
+    }
+    json.setStatus("OK");
+    if (success) {
       json.setSuccessMessage(ResponseMessages.PROJECT_REMOVED_NOT_FOLDER);
     }
-
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
@@ -248,8 +275,17 @@ public class ProjectService {
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public ProjectMembers projectMembers(
           @PathParam("id") Integer id) throws AppException {
-    projectMembers.setProjectId(id);
+    this.projectMembers.setProjectId(id);
 
-    return projectMembers;
+    return this.projectMembers;
+  }
+
+  @Path("{id}/dataset")
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public DataSetService datasets(
+          @PathParam("id") Integer id) throws AppException {
+    this.dataSet.setProjectId(id);
+
+    return this.dataSet;
   }
 }

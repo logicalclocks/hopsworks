@@ -3,9 +3,13 @@ package se.kth.meta.wscomm;
 import se.kth.meta.db.Dbao;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
+import javax.servlet.http.HttpSession;
+import javax.websocket.CloseReason;
 import javax.websocket.EncodeException;
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
@@ -15,6 +19,9 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectFacade;
+import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.meta.wscomm.message.Message;
 import se.kth.meta.wscomm.message.TextMessage;
 
@@ -22,132 +29,135 @@ import se.kth.meta.wscomm.message.TextMessage;
  *
  * @author Vangelis
  */
-@ServerEndpoint(value = "/wspoint/{*}",
+@ServerEndpoint(value = "/wspoint/{projectID}",
         encoders = MessageEncoder.class,
         decoders = MessageDecoder.class,
         configurator = ServletAwareConfig.class)
 public class WebSocketEndpoint {
 
-    private static final Logger logger = Logger.getLogger(WebSocketEndpoint.class.getName());
+  private static final Logger logger = Logger.getLogger(WebSocketEndpoint.class.
+          getName());
 
-    private Set<Session> sessions = new HashSet<>();
-    private Session mySession;
-    private String sender;
-    private Dbao db;
-    private Protocol protocol;
+  @EJB
+  private ProjectTeamFacade projectTeamBean;
+  @EJB
+  private ProjectFacade projectBean;
+  private String sender;
+  private Project project;
+  private String userRole;
+  private HttpSession httpSession;//this might be used to check the underlying http session
+  private Dbao db;
+  private Protocol protocol;
 
-    public Set<Session> getOpenSessions() {
-        return sessions;
+  @OnOpen
+  public void open(Session session, EndpointConfig config,
+          @PathParam("projectID") String projectId) {
+
+    this.sender = (String) config.getUserProperties().get("user");
+    this.httpSession = (HttpSession) config.getUserProperties().get(
+            "httpSession");
+    this.protocol = (Protocol) config.getUserProperties().get("protocol");
+
+    logger.log(Level.SEVERE, "CONNECTED USER {0}", this.sender);
+    logger.log(Level.SEVERE, "PROJECT ID {0}", projectId);
+
+    this.project = getProject(projectId);
+    if (this.project == null) {
+      try {
+        sendError(session, "Project does not exist.");
+        session.close();
+        return;
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, null, ex);
+      }
     }
 
-    @OnOpen
-    public void open(Session session, EndpointConfig config,
-            @PathParam("*") String sender) {
+    //returns the user role in project. Null if the user has no role in project
+    this.userRole = projectTeamBean.findCurrentRole(this.project, this.sender);
+    logger.log(Level.SEVERE, "User role in this projuct {0}", this.userRole);
 
-        this.sender = sender;
-        this.mySession = session;
-
-        logger.log(Level.SEVERE, "CONNECTED USER {0}", sender);
-
-        //keep track of each new client session
-        this.addSession(session);
-        //this.db = (Dbao) config.getUserProperties().get("db");
-        this.protocol = (Protocol) config.getUserProperties().get("protocol");
+    if (this.userRole == null) {
+      try {
+        session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY,
+                "You do not have a role in this project."));
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, null, ex);
+      }
     }
+    session.getUserProperties().put("projectID", this.project.getId());
+  }
 
-    @OnMessage
-    public void message(Session session, Message msg) {
-        //query string is the client I want to communicate with
-        String receiver = session.getQueryString();
+  @OnMessage
+  public void message(Session session, Message msg) {
+    //query string is the client I want to communicate with
+    String receiver = session.getQueryString();
+    logger.log(Level.SEVERE, "HOPSWORKS: QUERY STRING {0}", session.
+            getQueryString());
+    logger.log(Level.SEVERE, "RECEIVED MESSAGE: {0}", msg.toString());
+    Message response = this.protocol.GFR(msg);
+    //broadcast the response back to everybody in the same project
+    broadcast(response, session);
+  }
 
-        logger.log(Level.SEVERE, "HOPSWORKS: QUERY STRING {0}", session.getQueryString());
-        logger.log(Level.SEVERE, "RECEIVED MESSAGE: {0}", msg.toString());
+  @OnClose
+  public void onClose(Session session) {
+    logger.log(Level.SEVERE,
+            "HOPSWORKS: USER {0} SESSION DESTROYED sessions {1}",
+            new Object[]{this.sender, session.getOpenSessions().size()});
+    Message message = new TextMessage(this.sender, " Left");
+    message.setStatus("INFO");
+    this.broadcast(message, session);
+  }
 
-        if (!authenticate(receiver)) {
-            this.sendError(session, "You are not logged in the system");
-            return;
+  //broadcast to every one connected to the same project
+  private void broadcast(Message msg, Session session) {
+    for (Session s : session.getOpenSessions()) {
+      try {
+        if (s.isOpen() && s.getUserProperties().get("projectID").equals(
+                session.getUserProperties().get("projectID"))) {
+          s.getBasicRemote().sendObject(msg);//RemoteEndpoint.Basic interface provides blocking methods to send
+          //messages; the RemoteEndpoint.Async interface provides nonblocking methods.
+          logger.log(Level.INFO, "Sending >>> {0} to session: {1}",
+                  new Object[]{msg, s.getUserPrincipal()});
         }
-
-        try {
-            Message response = this.protocol.GFR(msg);
-
-            //broadcast the response back to everybody
-            for (Session sess : this.sessions) {
-                sess.getBasicRemote().sendObject(response);
-            }
-        } catch (NullPointerException | EncodeException | IOException e) {
-
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            this.sendError(session, e.getMessage());
-        }
+      } catch (IOException | EncodeException ex) {
+        logger.log(Level.SEVERE, null, ex);
+        this.sendError(session, ex.getMessage());
+      }
     }
+  }
 
-    @OnClose
-    public void onClose(Session session) {
+  @OnError
+  public void error(Session session, Throwable t) {
+    //t.printStackTrace();
+    logger.log(Level.SEVERE, t.getMessage(), t);
+  }
 
-        if (this.sessions.contains(session)) {
-            // remove connection
-            this.sessions.remove(session);
-
-            logger.log(Level.SEVERE, "HOPSWORKS: USER {0} SESSION DESTROYED sessions {1}", 
-                    new Object[]{sender, this.sessions.size()});
-
-            this.broadcast(new TextMessage(this.sender, "Left"));
-        }
+  private void sendClient(Session session, Message message) {
+    try {
+      session.getBasicRemote().sendObject(message);
+    } catch (IOException | EncodeException e) {
+      logger.log(Level.SEVERE, e.getMessage(), e);
     }
+  }
 
-    /**
-     * Broadcasts a message to all open websocket sessions
-     *
-     * @param msg the message to be sent
-     */
-    public void broadcast(Message msg) {
-        synchronized (sessions) {
-            for (Session session : sessions) {
-                if (session.isOpen()) {
-                    session.getAsyncRemote().sendObject(msg);
-                }
-            }
-        }
+  private void sendError(Session session, String err) {
+    String error = String.format("error: %s", err);
+    Message message = new TextMessage("Server", error);
+    message.setStatus("ERROR");
+    this.sendClient(session, message);
+  }
+
+  private Project getProject(String projectId) {
+    Integer pId;
+    Project proj;
+    try {
+      pId = Integer.valueOf(projectId);
+      proj = projectBean.find(pId);
+    } catch (NumberFormatException e) {
+      return null;
     }
+    return proj;
+  }
 
-    @OnError
-    public void error(Session session, Throwable t) {
-        //t.printStackTrace();
-        logger.log(Level.SEVERE, t.getMessage(), t);
-    }
-
-    private void sendClient(Session session, Message message) {
-        try {
-            session.getBasicRemote().sendObject(message);
-        } catch (IOException | EncodeException e) {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-        }
-    }
-
-    private void addSession(Session session) {
-        this.sessions.add(session);
-        logger.log(Level.SEVERE, "HOPSWORKS: USER {0} CONNECTED sessid {1}", new Object[]{sender, session.getId()});
-        logger.log(Level.SEVERE, "HOPSWORKS: CONNECTED USERS {0}", this.sessions.size());
-    }
-
-    private void removeSession(Session session) {
-        this.sessions.remove(session);
-    }
-
-    private void sendError(Session session, String err) {
-        String error = String.format("error: %s", err);
-        Message message = new TextMessage("Server", error);
-        message.setStatus("ERROR");
-        this.sendClient(session, message);
-    }
-
-    private boolean authenticate(String username) {
-//        HttpSession session = this.auth.getSession();
-//        System.err.println("SESSSSSSION NULLL " + session == null);
-//        System.err.println("SESSSSSSION ID " + session.getId());
-
-        return true;
-//        return session != null && auth.getUsername().equals(username);
-    }
 }

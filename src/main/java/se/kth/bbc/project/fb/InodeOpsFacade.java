@@ -25,7 +25,7 @@ public class InodeOpsFacade extends AbstractFacade<InodeOps> {
 
     private static final Logger logger = Logger.getLogger(InodeOpsFacade.class.getName());
 
-    @PersistenceContext(unitName = "hopsPU")
+    @PersistenceContext(unitName = "kthfsPU")
     private EntityManager em;
 
     public InodeOpsFacade() {

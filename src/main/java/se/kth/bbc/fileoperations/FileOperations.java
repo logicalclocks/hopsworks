@@ -8,6 +8,7 @@ import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
+import javax.ejb.EJBTransactionRolledbackException;
 import javax.ejb.Stateless;
 import org.apache.hadoop.fs.Path;
 import static se.kth.bbc.fileoperations.Operation.ADD;
@@ -83,7 +84,12 @@ public class FileOperations {
         logger.log(Level.SEVERE, string);
 
         if (success) {
+            try{
             inodes.createAndPersistDir(path, Inode.AVAILABLE);
+            }catch (EJBTransactionRolledbackException e){
+                fsOps.rm(location, true);
+                throw new EJBTransactionRolledbackException();
+            }
         }
 
         return success;
@@ -240,6 +246,18 @@ public class FileOperations {
         }
         return success;
     }
+    
+    /**
+   * Delete the file in path.
+   *
+   * @param path
+   * @return 
+   * @throws IOException
+   */
+  public boolean rm(String path) throws IOException {
+    Path location = new Path(path);
+    return fsOps.rm(location, false);
+  }
 
     /**
      * Delete the file or folder at the given Inode recursively: if a folder,

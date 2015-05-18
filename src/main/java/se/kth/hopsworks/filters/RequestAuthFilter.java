@@ -66,7 +66,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
       if (!method.isAnnotationPresent(AllowedRoles.class)) {
         //Should throw exception if there is a method that is not annotated in this path.
         requestContext.abortWith(Response.
-                status(Response.Status.NOT_IMPLEMENTED).build());
+                status(Response.Status.SERVICE_UNAVAILABLE).build());
         return;
       }
       AllowedRoles rolesAnnotation = method.getAnnotation(AllowedRoles.class);
@@ -84,7 +84,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
               getName();
 
       Integer projectId;
-      String userRole = null;
+      String userRole;
       projectId = Integer.valueOf(pathParts[1]);
       Project project = projectBean.find(projectId);
 

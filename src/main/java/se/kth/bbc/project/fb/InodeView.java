@@ -2,6 +2,7 @@ package se.kth.bbc.project.fb;
 
 import java.util.Date;
 import java.util.Objects;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Simplified version of the Inode entity to allow for easier access through web
@@ -9,13 +10,16 @@ import java.util.Objects;
  * <p>
  * @author stig
  */
-public final class InodeView {
+@XmlRootElement
+public class InodeView {
 
-  private final String name;
-  private final boolean dir;
-  private final boolean parent;
-  private final String path;
-  private final Date modification;
+  private  String name;
+  private  boolean dir;
+  private  boolean parent;
+  private  String path;
+  private  Date modification;
+
+  public InodeView() {}
 
   public InodeView(Inode i, String path) {
     this.name = i.getName();
@@ -43,6 +47,26 @@ public final class InodeView {
     }
     path = path.substring(0, lastSlash);
     return new InodeView(name, dir, parent, path);
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public void setDir(boolean dir) {
+    this.dir = dir;
+  }
+
+  public void setParent(boolean parent) {
+    this.parent = parent;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
+  }
+
+  public void setModification(Date modification) {
+    this.modification = modification;
   }
 
   public String getName() {

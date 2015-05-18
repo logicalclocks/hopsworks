@@ -16,25 +16,27 @@ import se.kth.hopsworks.rest.AppException;
  */
 @Stateless
 public class ProjectNameValidator {
-   public boolean isValidName(String projectName) throws AppException{
-        if (projectName == null || projectName.isEmpty()) {
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    ResponseMessages.PROJECT_NAME_NOT_SET);
-        }
-        if (projectName.length() > 24){
-          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    ResponseMessages.PROJECT_NAME_NOT_TOO_LONG);
-        }
-        if (projectName.endsWith(".")){
-          throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    ResponseMessages.PROJECT_NAME_ENDS_WITH_DOT);
-        }
-        for (char c : Constants.FILENAME_DISALLOWED_CHARS.toCharArray()) {
-          if (projectName.contains("" + c)){
-            throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-                    ResponseMessages.PROJECT_NAME_CONTAIN_DISALLOWED_CHARS + Constants.FILENAME_DISALLOWED_CHARS);
-          }
-        }
-        return true;
+
+  public boolean isValidName(String projectName) throws AppException {
+    if (projectName == null || projectName.isEmpty()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NAME_NOT_SET);
     }
+    if (projectName.length() > 24) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NAME_TOO_LONG);
+    }
+    if (projectName.endsWith(".")) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.PROJECT_NAME_ENDS_WITH_DOT);
+    }
+    for (char c : Constants.FILENAME_DISALLOWED_CHARS.toCharArray()) {
+      if (projectName.contains("" + c)) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                ResponseMessages.PROJECT_NAME_CONTAIN_DISALLOWED_CHARS
+                + Constants.FILENAME_DISALLOWED_CHARS);
+      }
+    }
+    return true;
+  }
 }

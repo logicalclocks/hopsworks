@@ -12,7 +12,6 @@ package se.kth.hopsworks.controller;
 public class ResponseMessages {
 
   //response for validation error
-
   public final static String USER_DOES_NOT_EXIST = "User does not exist.";
   public final static String USER_WAS_NOT_FOUND
           = "Ops! The operation failed. User not found";
@@ -82,7 +81,7 @@ public class ResponseMessages {
           = "Project Inode could not be created in DB.";
   public final static String PROJECT_NAME_NOT_SET
           = "The project name cannot be empty.";
-  public final static String PROJECT_NAME_NOT_TOO_LONG
+  public final static String PROJECT_NAME_TOO_LONG
           = "The project name cannot be longer than 24 characters.";
   public final static String PROJECT_NAME_CONTAIN_DISALLOWED_CHARS
           = "The project name cannot contain any of the characters ";
@@ -98,12 +97,13 @@ public class ResponseMessages {
 
   //project success messages
   public final static String PROJECT_CREATED = "Project created successfully.";
-  public final static String PROJECT_DESCRIPTION_CHANGED = "Project description changed.";
+  public final static String PROJECT_DESCRIPTION_CHANGED
+          = "Project description changed.";
   public final static String PROJECT_SERVICE_ADDED = "Project service added";
   public final static String PROJECT_REMOVED
           = "The project and all related files were removed successfully.";
   public final static String PROJECT_REMOVED_NOT_FOLDER
-          = "The project was removed successfully. But failed to remove project files.";
+          = "The project was removed successfully. But datasets are priserved.";
   public final static String PROJECT_MEMBER_REMOVED
           = "Member removed successfully";
   public final static String PROJECT_MEMBERS_ADDED
@@ -113,4 +113,10 @@ public class ResponseMessages {
   public final static String MEMBER_ROLE_UPDATED = "Role updated successfully.";
   public final static String MEMBER_REMOVED_FROM_TEAM
           = "Member removed from team.";
+
+  //DataSet
+  public final static String DATASET_NAME_EMPTY
+          = "DataSet name can not be empty.";
+  public final static String DATASET_REMOVED_FROM_HDFS
+          = "DataSet removed from hdfs.";
 }

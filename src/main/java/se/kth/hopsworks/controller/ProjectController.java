@@ -64,8 +64,8 @@ public class ProjectController {
   private InodeFacade inodes;
 
   /**
-   * Creates a new project(project), the related DIR, the different services in
-   * the project, and the master of the project.
+   * Creates a new project(project), the related DIR, the different services
+   * in the project, and the master of the project.
    *
    * @param newProjectName the name of the new project(project)
    * @param email
@@ -87,11 +87,6 @@ public class ProjectController {
       //Create a new project object
       Date now = new Date();
       Project project = new Project(newProjectName, user, now);
-      //create folder structure in hdfs
-      mkProjectDIR(project.getName());
-      logger.log(Level.FINE, "{0} - project directory created successfully.",
-              project.getName());
-
       //Persist project object
       projectFacade.persistProject(project);
       projectFacade.flushEm();//flushing it to get project id
@@ -102,6 +97,12 @@ public class ProjectController {
       addProjectOwner(project.getId(), user.getEmail());
       logger.log(Level.FINE, "{0} - project created successfully.", project.
               getName());
+
+      //create folder structure in hdfs
+      mkProjectDIR(project.getName());
+      logger.log(Level.FINE, "{0} - project directory created successfully.",
+              project.getName());
+
       return project;
     } else {
       logger.log(Level.SEVERE, "Project with name {0} already exists!",
@@ -174,7 +175,7 @@ public class ProjectController {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NAME_EXIST);
     }
-    
+
     String oldProjectName = project.getName();
     project.setName(newProjectName);
     projectFacade.mergeProject(project);
@@ -222,11 +223,14 @@ public class ProjectController {
             + Constants.DIR_CUNEIFORM;
     String samplesPath = projectPath + File.separator
             + Constants.DIR_SAMPLES;
+    String dataSetPath = projectPath + File.separator
+            + Constants.DIR_DATASET;
 
     fileOps.mkDir(projectPath);
     fileOps.mkDir(resultsPath);
     fileOps.mkDir(cuneiformPath);
     fileOps.mkDir(samplesPath);
+    fileOps.mkDir(dataSetPath);
   }
 
   /**
@@ -241,7 +245,7 @@ public class ProjectController {
    * removed.
    * @throws AppException if the project could not be found.
    */
-  public boolean removeByName(Integer projectID, String email,
+  public boolean removeByID(Integer projectID, String email,
           boolean deleteFilesOnRemove) throws IOException, AppException {
     boolean success = !deleteFilesOnRemove;
     User user = userBean.getUserByEmail(email);
@@ -266,10 +270,9 @@ public class ProjectController {
   }
 
   /**
-   * Adds new team members to a project(project) - bulk persist
-   * if team role not specified or not in (Data owner or Data scientist)defaults
-   * to
-   * Data scientist
+   * Adds new team members to a project(project) - bulk persist if team role
+   * not specified or not in (Data owner or Data scientist)defaults to Data
+   * scientist
    * <p>
    * @param project
    * @param email

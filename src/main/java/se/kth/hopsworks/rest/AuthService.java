@@ -66,22 +66,23 @@ public class AuthService {
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
   public Response login(@FormParam("email") String email,
-          @FormParam("password") String password,
+          @FormParam("password") String password, @Context SecurityContext sc,
           @Context HttpServletRequest req, @Context HttpHeaders httpHeaders)
           throws AppException {
 
     req.getServletContext().log("email: " + email);
     req.getServletContext().log("SESSIONID@login: " + req.getSession().getId());
-
+    req.getServletContext().log("SecurityContext: " + sc.getUserPrincipal());
+    req.getServletContext().log("SecurityContext in role: " + sc.isUserInRole(
+            "BBC_USER"));
     JsonResponse json = new JsonResponse();
     Users user = userBean.findByEmail(email);
 
     req.getServletContext().log("1 step: " + email);
     
     //only login if not already logged in...
-    if (req.getUserPrincipal() == null) {
-        req.getServletContext().log("2 step: " + email);
-        req.getServletContext().log("user status " + user.getStatus());
+
+    if (sc.getUserPrincipal() == null) {
       if (user != null && statusValidator.checkStatus(user.getStatus())) {
         try {
             req.getServletContext().log("going to login " + user.getStatus());
@@ -89,12 +90,22 @@ public class AuthService {
           req.getServletContext().log("3 step: " + email);
           userController.resetFalseLogin(user);
           userController.registerLoginInfo(user, "Successful login", req);
+          //if the logedin user has no supported role logout
+          if (!sc.isUserInRole("BBC_USER") && !sc.isUserInRole("SYS_ADMIN")) {
+            req.logout();
+            throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+                "No valid role found for this user");
+          }
+
         } catch (ServletException e) {
           userController.registerFalseLogin(user);
           userController.registerLoginInfo(user, "False login", req);
           throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
                   ResponseMessages.AUTHENTICATION_FAILURE);
         }
+      } else { // if user == null
+        throw new AppException(Response.Status.UNAUTHORIZED.getStatusCode(),
+                ResponseMessages.AUTHENTICATION_FAILURE);
       }
     } else {
       req.getServletContext().log("Skip logged because already logged in: "
