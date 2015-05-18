@@ -440,7 +440,7 @@ public class Dbao {
 //        }
 //    }
     public void shutdown() throws DatabaseException {
-        this.em.clear();
+//        this.em.clear();
         //this.em.close();
 
         //this.utx = null;
