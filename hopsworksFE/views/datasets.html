@@ -8,7 +8,11 @@
     <div class="overlay"></div>
 
     <div ng-include="'navProject.html'"></div>
-
+    <!--SEARCH RESULTS-->
+    <div align="center" id="projectSearchResults">
+      <p ng-bind-html="mainCtrl.searchResult"></p>
+    </div>
+    
     <section>
       <div class="content-wrapper">
         <h3 id="projectBread" style="display: none;"> {{ datasetsCtrl.currentProject.projectName }} / DataSets/ {{datasetsCtrl.currentDataSet}}</h3>
