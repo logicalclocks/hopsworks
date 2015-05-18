@@ -221,6 +221,7 @@ public class ProjectService {
           @QueryParam("wipeData") boolean wipeData,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
+      
     String user = sc.getUserPrincipal().getName();
     JsonResponse json = new JsonResponse();
     boolean success = !wipeData;
