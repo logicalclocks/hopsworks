@@ -15,6 +15,7 @@ angular.module('hopsWorksApp', [
   'ngMessages',
   'ui.sortable',
   'chart.js',
+  'ngWebSocket',
   'ng-context-menu'
 ])
   .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
@@ -124,7 +125,7 @@ angular.module('hopsWorksApp', [
         }
       })
 
-      .when('/project/:projectID/datasets/:datasetID', {
+      .when('/project/:projectID/datasets/:datasetName', {
         templateUrl: 'views/datasetsBrowser.html',
         controller: 'ProjectCtrl as projectCtrl',
         resolve: {
