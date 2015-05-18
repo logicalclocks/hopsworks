@@ -32,12 +32,24 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @Table(name = "inodes")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "Inode.findAll", query = "SELECT i FROM Inode i"),
-  @NamedQuery(name = "Inode.findById", query = "SELECT i FROM Inode i WHERE i.id = :id"),
-  @NamedQuery(name = "Inode.findByParent", query = "SELECT i FROM Inode i WHERE i.parent = :parent ORDER BY i.dir DESC, i.name ASC"),
-  @NamedQuery(name = "Inode.findDirByParent", query = "SELECT i FROM Inode i WHERE i.parent = :parent AND i.dir = TRUE ORDER BY i.name ASC"),
-  @NamedQuery(name = "Inode.findByName", query = "SELECT i FROM Inode i WHERE i.name = :name"),
-  @NamedQuery(name = "Inode.findRootByName", query = "SELECT i FROM Inode i WHERE i.parent IS NULL AND i.name = :name")})
+  @NamedQuery(name = "Inode.findAll",
+          query = "SELECT i FROM Inode i"),
+  @NamedQuery(name = "Inode.findById",
+          query = "SELECT i FROM Inode i WHERE i.id = :id"),
+  @NamedQuery(name = "Inode.findByParent",
+          query
+          = "SELECT i FROM Inode i WHERE i.parent = :parent ORDER BY i.dir DESC, i.name ASC"),
+  @NamedQuery(name = "Inode.findByParentAndName",
+          query
+          = "SELECT i FROM Inode i WHERE i.parent = :parent AND i.name = :name"),
+  @NamedQuery(name = "Inode.findDirByParent",
+          query
+          = "SELECT i FROM Inode i WHERE i.parent = :parent AND i.dir = TRUE ORDER BY i.name ASC"),
+  @NamedQuery(name = "Inode.findByName",
+          query = "SELECT i FROM Inode i WHERE i.name = :name"),
+  @NamedQuery(name = "Inode.findRootByName",
+          query
+          = "SELECT i FROM Inode i WHERE i.parent IS NULL AND i.name = :name")})
 public class Inode implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -50,46 +62,48 @@ public class Inode implements Serializable {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
-  
+
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,max = 128)
+  @Size(min = 1,
+          max = 128)
   @Column(name = "name")
   private String name;
-  
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "modified")
   @Temporal(TemporalType.TIMESTAMP)
   private Date modified;
-  
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "isDir")
   private boolean dir;
-  
+
   @Column(name = "size")
   private Integer size;
-  
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "status")
   private String status;
-  
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "searchable")
   private boolean searchable;
-  
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "root")
   private int root;
-  
+
   @OneToMany(mappedBy = "parent")
   private List<Inode> children;
-  
-  @JoinColumn(name = "pid", referencedColumnName = "id")
+
+  @JoinColumn(name = "pid",
+          referencedColumnName = "id")
   @ManyToOne
   private Inode parent;
 
@@ -102,7 +116,8 @@ public class Inode implements Serializable {
     this.id = id;
   }
 
-  public Inode(Integer id, String name, Date modified, boolean isDir, boolean searchable,
+  public Inode(Integer id, String name, Date modified, boolean isDir,
+          boolean searchable,
           String status) {
     this.id = id;
     this.name = name;
@@ -113,7 +128,8 @@ public class Inode implements Serializable {
     this.children = new ArrayList<>();
   }
 
-  public Inode(String name, Date modified, boolean dir, boolean searchable, String status) {
+  public Inode(String name, Date modified, boolean dir, boolean searchable,
+          String status) {
     this.name = name;
     this.modified = modified;
     this.dir = dir;
@@ -122,7 +138,8 @@ public class Inode implements Serializable {
     this.children = new ArrayList<>();
   }
 
-  public Inode(String name, Inode parent, boolean dir, boolean searchable, int size, String status) {
+  public Inode(String name, Inode parent, boolean dir, boolean searchable,
+          int size, String status) {
     this.name = name;
     this.parent = parent;
     this.dir = dir;
@@ -134,23 +151,26 @@ public class Inode implements Serializable {
   }
 
   /**
-   * Defines the root field of a inode. Root is the id of the study under which this node is 
-   * created no matter the depth down the path. This way all the paths can be flattened under the study name
+   * Defines the root field of a inode. Root is the id of the study under which
+   * this node is
+   * created no matter the depth down the path. This way all the paths can be
+   * flattened under the study name
    * and be searched upon at once.
-   * 
+   * <p>
    * @param name
    * @param parent
    * @param root
    * @param dir
    * @param searchable
    * @param size
-   * @param status 
+   * @param status
    */
-  public Inode(String name, Inode parent, int root, boolean dir, boolean searchable, int size, String status){
-      this(name, parent, dir, searchable, size, status);
-      this.root = root;
+  public Inode(String name, Inode parent, int root, boolean dir,
+          boolean searchable, int size, String status) {
+    this(name, parent, dir, searchable, size, status);
+    this.root = root;
   }
-  
+
   public Integer getId() {
     return id;
   }
@@ -167,14 +187,14 @@ public class Inode implements Serializable {
     this.name = name;
   }
 
-  public int getRoot(){
-      return this.root;
+  public int getRoot() {
+    return this.root;
   }
-  
-  public void setRoot(int root){
-      this.root = root;
+
+  public void setRoot(int root) {
+    this.root = root;
   }
-  
+
   public Date getModified() {
     return modified;
   }
@@ -190,13 +210,13 @@ public class Inode implements Serializable {
   public void setDir(boolean dir) {
     this.dir = dir;
   }
-  
-  public boolean isSearchable(){
-      return this.searchable;
+
+  public boolean isSearchable() {
+    return this.searchable;
   }
-  
-  public void setSearchable(boolean searchable){
-      this.searchable = searchable;
+
+  public void setSearchable(boolean searchable) {
+    this.searchable = searchable;
   }
 
   public Integer getSize() {
@@ -225,10 +245,10 @@ public class Inode implements Serializable {
     this.children = children;
   }
 
-  public void clearChildren(){
-      this.children.clear();
+  public void clearChildren() {
+    this.children.clear();
   }
-  
+
   public void addChild(Inode i) {
     this.children.add(i);
   }
@@ -266,10 +286,11 @@ public class Inode implements Serializable {
   public String toString() {
     String isDir = (this.isDir()) ? "1" : "0";
     String isSearchable = (this.isSearchable()) ? "1" : "0";
-      
-    return  this.getId() + "|" + this.getName() + "|" + this.getParent().getId() + "|"
-                + this.getRoot() + "|" + this.getModified() + "|" + isDir + "|"
-                + this.getSize() + "|" + this.getStatus() + "|" + isSearchable;
+
+    return this.getId() + "|" + this.getName() + "|" + this.getParent().getId()
+            + "|"
+            + this.getRoot() + "|" + this.getModified() + "|" + isDir + "|"
+            + this.getSize() + "|" + this.getStatus() + "|" + isSearchable;
   }
 
   public boolean isRoot() {
@@ -355,5 +376,9 @@ public class Inode implements Serializable {
       }
     }
     return null;
+  }
+
+  Object getInodePK() {
+    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
 }

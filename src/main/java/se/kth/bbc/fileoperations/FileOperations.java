@@ -246,6 +246,18 @@ public class FileOperations {
         }
         return success;
     }
+    
+    /**
+   * Delete the file in path.
+   *
+   * @param path
+   * @return 
+   * @throws IOException
+   */
+  public boolean rm(String path) throws IOException {
+    Path location = new Path(path);
+    return fsOps.rm(location, false);
+  }
 
     /**
      * Delete the file or folder at the given Inode recursively: if a folder,
