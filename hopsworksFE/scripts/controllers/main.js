@@ -4,8 +4,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MainCtrl', ['$cookies', '$location', 'UtilsService', 'AuthService', 'ElasticService', 'md5', 'ModalService',
-            function ($cookies, $location, UtilsService, AuthService, ElasticService, md5, ModalService) {
+        .controller('MainCtrl', ['$cookies', '$location', 'AuthService', 'UtilsService', 'ElasticService', 'md5', 'ModalService',
+            function ($cookies, $location, AuthService, UtilsService, ElasticService, md5, ModalService) {
 
                 var self = this;
                 self.email = $cookies['email'];
@@ -29,8 +29,6 @@ angular.module('hopsWorksApp')
 
                 self.searchTerm = "";
                 self.searchResult = "";
-                self.index = UtilsService.getIndex();
-                self.projectName = UtilsService.getProjectName();
 
                 self.keyTyped = function (evt) {
                     
@@ -46,6 +44,10 @@ angular.module('hopsWorksApp')
                 };
 
                 self.search = function () {
+                    //ask for the index name and project name when it is time to search
+                    self.index = UtilsService.getIndex();
+                    self.projectName = UtilsService.getProjectName();
+                    
                     //console.log("SEARCHING FOR  " + self.searchTerm);
                     console.log("INDEX " + self.index + " PROJECTNAME: " + self.projectName);
                     

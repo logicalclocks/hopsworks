@@ -8,6 +8,8 @@ angular.module('hopsWorksApp')
     'growl', 'ProjectService', 'ModalService', 'ActivityService',
     function ($scope, $modalStack, $location, $routeParams, UtilsService, growl, ProjectService, ModalService, ActivityService) {
 
+      UtilsService.setIndex("child");
+      
       var self = this;
       self.currentProject = [];
       self.activities = [];
@@ -22,6 +24,7 @@ angular.module('hopsWorksApp')
       self.alreadyChoosenServices = [];
       self.selectionProjectTypes = [];
       self.pId = $routeParams.projectID;
+
 
       var getCurrentProject = function () {
         ProjectService.get({}, {'id': self.pId}).$promise.then(
@@ -38,133 +41,11 @@ angular.module('hopsWorksApp')
               var index = self.projectTypes.indexOf(entry.toUpperCase());
               self.projectTypes.splice(index, 1);
             });
+
             
             //set the project name under which the search is performed
             UtilsService.setProjectName(self.currentProject.projectName);
             
-          }, function (error) {
-            $location.path('/');
-          }
-        );
-      };
-
-      var getAllActivities = function () {
-        ActivityService.getByProjectId(self.pId).then(function (success) {
-          self.activities = success.data;
-          self.pageSize = 10;
-          self.totalPages = Math.floor(self.activities.length / self.pageSize);
-          self.totalItems = self.activities.length;
-        }, function (error) {
-
-        });
-      };
-
-      getAllActivities();
-      getCurrentProject();
-
-      // Check if the service exists and otherwise add it or remove it depending on the previous choice
-      self.exists = function (projectType) {
-        var idx = self.selectionProjectTypes.indexOf(projectType);
-        if (idx > -1) {
-          self.selectionProjectTypes.splice(idx, 1);
-        } else {
-          self.selectionProjectTypes.push(projectType);
-        }
-      };
-
-
-      self.projectSettingModal = function () {
-        ModalService.projectSettings('lg').then(
-          function (success) {
-            getAllActivities();
-            getCurrentProject();
-          }, function (error) {
-            growl.info("You closed without saving.", {title: 'Info', ttl: 5000});
-          });
-      };
-
-      self.membersModal = function () {
-        ModalService.projectMembers('lg', self.pId).then(
-          function (success) {
-          }, function (error) {
-          });
-      };
-
-      self.saveProject = function () {
-
-        $scope.newProject = {
-          'projectName': self.currentProject.projectName,
-          'description': self.currentProject.description,
-          'services': self.selectionProjectTypes
-        };
-
-        ProjectService.update({id: self.currentProject.projectId}, $scope.newProject)
-          .$promise.then(
-          function (success) {
-            growl.success("Success: " + success.successMessage, {title: 'Success', ttl: 5000});
-            if (success.errorMsg) {
-              growl.warning(success.errorMsg, {title: 'Error', ttl: 15000});
-            }
-
-            $modalStack.getTop().key.close();
-          }, function (error) {
-            growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
-          }
-        );
-      };
-
-      
-      self.close = function () {
-        $modalStack.getTop().key.dismiss();
-      };
-
-      $scope.showHamburger = $location.path().indexOf("project") > -1;
-
-      self.goToDatasets = function () {
-        $location.path('project/' + self.pId + '/datasets');
-      };
-
-      self.goToSpecificDataset = function (id) {
-        $location.path($location.path() + '/' + id);
-'use strict';
-
-angular.module('hopsWorksApp')
-  .controller('ProjectCtrl', ['$scope', '$modalStack', '$location', '$routeParams'
-    , 'growl', 'ProjectService', 'ModalService', 'ActivityService',
-    function ($scope, $modalStack, $location, $routeParams, growl, ProjectService, ModalService, ActivityService) {
-
-      var self = this;
-      self.currentProject = [];
-      self.activities = [];
-      self.currentPage = 1;
-
-      self.card = {};
-      self.cards = [];
-      self.projectMembers = [];
-
-      // We could instead implement a service to get all the available types but this will do it for now
-      self.projectTypes = ['CUNEIFORM', 'SAMPLES', 'PROJECT_INFO', 'SPARK', 'ADAM', 'MAPREDUCE', 'YARN', 'ZEPPELIN'];
-      self.alreadyChoosenServices = [];
-      self.selectionProjectTypes = [];
-      self.pId = $routeParams.projectID;
-
-
-      var getCurrentProject = function () {
-        ProjectService.get({}, {'id': self.pId}).$promise.then(
-          function (success) {
-            self.currentProject = success;
-            self.projectMembers = self.currentProject.projectTeam;
-            self.alreadyChoosenServices = [];
-            self.currentProject.services.forEach(function (entry) {
-              self.alreadyChoosenServices.push(entry);
-            });
-
-            // Remove already choosen services from the service selection
-            self.alreadyChoosenServices.forEach(function (entry) {
-              var index = self.projectTypes.indexOf(entry.toUpperCase());
-              self.projectTypes.splice(index, 1);
-            });
-
           }, function (error) {
             $location.path('/');
           }
@@ -277,9 +158,5 @@ angular.module('hopsWorksApp')
       $scope.onClick = function (points, evt) {
         console.log(points, evt);
       };
-
-
     }]);
-
-
 

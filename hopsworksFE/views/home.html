@@ -3,6 +3,9 @@
   <div ng-include="'nav.html'"></div>
   <div class="row">
     <div class="col-md-8" style="padding-left:56px;">
+        <div align="center" id="projectSearchResults">
+            <p ng-bind-html="mainCtrl.searchResult"></p>
+        </div>
       <div class="">
         <div class="widget-body">
           <div class="timeline clearfix">
@@ -114,8 +117,8 @@
                  role="menuitem"
                  tabindex="1"
                  ng-click="">
-                                <span><i class="fa fa-share-alt"></i>
-                                  Share...</span>
+                <span><i class="fa fa-share-alt"></i>
+                  Share...</span>
               </a>
             </li>
 

@@ -4,8 +4,7 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-
-        .service('UtilsService', function ($http, TransformRequest) {
+        .service('UtilsService', function () {
                 
                 var index = "";
                 var projectName = "";
@@ -28,8 +27,7 @@ angular.module('hopsWorksApp')
                         console.log("setting the parent " + value);
                         projectName = value;
                     }
-                };
-                
+                };  
 });
 
 

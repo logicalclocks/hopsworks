@@ -4,8 +4,7 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-
-        .factory('ElasticService', ['$http', 'TransformRequest', function ($http, TransformRequest) {
+        .service('ElasticService', ['$http', 'TransformRequest', function ($http, TransformRequest) {
                 var service = {
                     search: function (query, index) {
                         console.log(JSON.stringify(query));
