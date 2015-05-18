@@ -11,7 +11,7 @@
 
     <section>
       <div class="content-wrapper">
-        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.name }} / Datasets</h3>
+        <h3 id="projectBread" style="display: none;"> {{ datasetsCtrl.currentProject.projectName }} / DataSets/ {{datasetsCtrl.currentDataSet}}</h3>
 
         <div class="row">
 
@@ -29,6 +29,7 @@
                   <div class="btn-group"
                        style="width: 100%;">
                     <button style="width: 100%;"
+                            ng-click="datasetsCtrl.newDataSetModal()"
                             class="btn btn-warning">
                       New dataset
                     </button>
@@ -51,11 +52,13 @@
           <div class="col-lg-10">
             <div ng-repeat="dataset in datasetsCtrl.datasets">
               <div ng-if="($index % 5 == 0) && ($index !== 0)" class="row"></div>
-              <div ng-click="projectCtrl.goToSpecificDataset($index)"
+              <div ng-click="projectCtrl.goToSpecificDataset(dataset.name)"
                    ng-init="(iscollapsed$index) = true"
                    class="file-box"
                    ng-mouseenter="(iscollapsed$index) = false"
-                   ng-mouseleave="(iscollapsed$index) = true">
+                   ng-mouseleave="(iscollapsed$index) = true"
+                   context-menu
+                   data-target="menu-{{ $index }}">
                 <div class="file">
                   <a>
                     <span class="corner"></span>
@@ -64,23 +67,58 @@
                       <i class="fa fa-file"></i>
                     </div>
                     <div class="file-name">
-                      {{dataset}}
+                      {{dataset.name}}
                       <br>
-                      <small><b>Added:</b> April 24, 2015</small>
+                      <small><b>Added:</b> {{dataset.modification | date:'medium'}}</small>
                       <br/>
 
                       <div collapse="(iscollapsed$index)" style="text-decoration: none;">
-                        <small><b>Modified:</b> April 24, 2015</small>
+                        <small><b>Modified:</b> {{dataset.modification | date:'medium'}}</small>
                         <br/>
                         <small><b>Created:</b> April 24, 2015</small>
                         <br/>
-                        <small><b>Description:</b> Cool dataset that contains everything</small>
+                        <small><b>Description:</b> A dataset that contains {{dataset.name}} info</small>
                       </div>
                     </div>
                   </a>
                 </div>
               </div>
+                <div class="dropdown position-fixed" id="menu-{{ $index }}">
+                    <ul class="dropdown-menu dropdown-amore" role="menu">
+                        <li>
+                            <a class="pointer"
+                               role="menuitem"
+                               tabindex="1"
+                               ng-click="panel.highlight = true">
+                                <span><i class="fa fa-file-archive-o"></i>
+                                  Compress</span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="pointer"
+                               role="menuitem"
+                               tabindex="2"
+                               ng-click="">
+                                <span><i class="fa fa-share-alt"></i>
+                                  Share...</span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="pointer"
+                               role="menuitem"
+                               tabindex="3"
+                               ng-click="datasetsCtrl.deleteFile(dataset.name)">
+                                 <span><i class="fa fa-trash"></i>
+                                   Remove</span>
+                            </a>
+                        </li>
+
+                    </ul>
+                </div>
             </div>
+
           </div>
 
 

@@ -120,8 +120,8 @@ angular.module('hopsWorksApp')
         $location.path('project/' + self.pId + '/datasets');
       };
 
-      self.goToSpecificDataset = function (id) {
-        $location.path($location.path() + '/' + id);
+      self.goToSpecificDataset = function (name) {
+        $location.path($location.path() + '/' + name);
       };
 
 

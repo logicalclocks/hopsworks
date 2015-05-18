@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .controller('HomeCtrl', ['ProjectService', 'ModalService', 'growl', 'ActivityService',
-    function (ProjectService, ModalService, growl, ActivityService) {
+  .controller('HomeCtrl', ['ProjectService', 'ModalService', 'growl', 'ActivityService','TransformRequest',
+    function (ProjectService, ModalService, growl, ActivityService, TransformRequest) {
 
       var self = this;
       self.projects = [];
@@ -22,7 +22,30 @@ angular.module('hopsWorksApp')
             console.log('Error: ' + error);
           }
         );
-      }
+      };
+
+      var deleteProject = function (id, wipe) {
+        if (wipe){
+          ProjectService.delete({id: id}).$promise.then(
+              function (success) {
+                growl.success(success.successMessage, {title: 'Success', ttl: 15000});
+                loadProjects();
+              }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+              }
+          );
+        }else {
+          ProjectService.remove({id: id}).$promise.then(
+              function (success) {
+                loadProjects();
+                growl.success(success.successMessage, {title: 'Success', ttl: 15000});
+              }, function (error) {
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+              }
+          );
+        }
+
+      };
 
       loadProjects();
 
@@ -34,6 +57,12 @@ angular.module('hopsWorksApp')
           }, function () {
             growl.info("Closed project without saving.", {title: 'Info', ttl: 5000});
           });
+      };
+      self.deleteProject= function (projectId) {
+        deleteProject(projectId, false);
+      };
+      self.wipeProject= function (projectId) {
+        deleteProject(projectId, true);
       };
 
 

@@ -9,7 +9,7 @@
 
     <section>
       <div class="content-wrapper">
-        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.name }} / Datasets</h3>
+        <h3 id="projectBread" style="display: none;"> {{ datasetsCtrl.currentProject.projectName }} / DataSets/ {{datasetsCtrl.currentDataSet}}</h3>
 
         <div class="row">
           <div class="col-lg-2" style="margin-top: 13px;">
@@ -17,7 +17,7 @@
             <table id="mytable" class="table table-bordred table-striped" style="margin-bottom:0px;">
               <thead>
               <th style="border-bottom: 1px solid #e7eaec; color: #2e353d; font-size: 22px">
-                <i class="fa fa-folder" style="padding-right: 5px;"></i>MedicalDataset
+                <i class="fa fa-folder" style="padding-right: 5px;"></i>{{datasetsCtrl.currentDataSet}}
               </th>
               </thead>
             </table>
@@ -28,7 +28,7 @@
                 New
               </button>
               <ul class="dropdown-menu" role="menu" style="width: 100%;">
-                <li><a><i class="fa fa-plus-circle" style="width: 28px;"></i> Folder</a></li>
+                <li><a ng-click="datasetsCtrl.newDataSetModal()"><i class="fa fa-plus-circle" style="width: 28px;"></i> Folder</a></li>
                 <li><a><i class="fa fa-cloud-upload" style="width: 28px;"></i> Upload file</a></li>
                 <li class="divider"></li>
                 <li><a><i class="fa fa-info-circle" style="width: 28px;"></i>Metadata</a></li>
@@ -70,10 +70,10 @@
 
 
                       <td>{{file.name}}</td>
-                      <td>{{file.owner}}</td>
-                      <td>{{file.modified}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
+                      <td>{{file.owner}} me</td>
+                      <td>{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
                       </td>
-                      <td style="width: 12%;">{{file.filesize}}</td>
+                      <td style="width: 12%;">{{file.filesize}} 4TB</td>
 
                       <td>
                         <div class="dropdown position-fixed" id="menu-{{ $index }}">
@@ -92,7 +92,7 @@
                               <a class="pointer"
                                  role="menuitem"
                                  tabindex="2"
-                                 ng-click="panel.highlight = true">
+                                 ng-click="">
                                 <span><i class="fa fa-share-alt"></i>
                                   Share...</span>
                               </a>
@@ -102,7 +102,7 @@
                               <a class="pointer"
                                  role="menuitem"
                                  tabindex="3"
-                                 ng-click="panel.highlight = true">
+                                 ng-click="datasetsCtrl.deleteFile(file.name)">
                                  <span><i class="fa fa-trash"></i>
                                    Remove</span>
                               </a>
@@ -261,7 +261,7 @@
                     <md-tabs md-dynamic-height md-border-bottom>
                       <md-tab label="Details">
                         <md-content>
-                          <table id="mytable" class="table table-bordred table-striped" style="margin-top: 16px;">
+                          <table id="mytable1" class="table table-bordred table-striped" style="margin-top: 16px;">
                             <tr style="background-color: #fafafa">
                               <td style="color:lightgrey;">Size</td>
                               <td style="color: grey;">234 Kb</td>
@@ -386,7 +386,7 @@
 
         </div>
 
-
+</div>
     </section>
 
 

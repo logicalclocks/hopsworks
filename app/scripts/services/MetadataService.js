@@ -5,10 +5,10 @@ angular.module('hopsWorksApp')
 
     // Keep all pending requests here until they get responses
     var callbacks = [];
-    var projectID = 3;
+    var projectID = 45;
 
     //generic
-    var ws = $websocket("ws://" + $location.host() + ":8080/hopsworks/wspoint/" + projectID + "?evsav");
+    var ws = $websocket("ws://" + $location.host() + ":8080/hopsworks/wspoint/" + projectID);
 
     var collection = [];
 

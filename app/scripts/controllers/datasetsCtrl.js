@@ -7,44 +7,114 @@
 
 angular.module('hopsWorksApp')
   .controller('DatasetsCtrl', ['$rootScope', '$modal', '$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', '$websocket', 'WSComm',
-    function ($rootScope, $modal, $scope, $timeout, $mdSidenav, $mdUtil, $log, $websocket, WSComm) {
+        'DataSetService', '$routeParams','ModalService','growl','ProjectService',
+    function ($rootScope, $modal, $scope, $timeout, $mdSidenav, $mdUtil, $log, $websocket, WSComm, DataSetService, $routeParams, ModalService, growl, ProjectService) {
 
       var self = this;
 
       self.datasets = [];
-      self.files = [];
-      var file = {};
+      self.currentDataSet = "";
+      self.currentProject = "";
 
-      self.datasets.push('MedicalExperiment');
-      self.datasets.push('DNASamples');
-      self.datasets.push('TestData');
-      self.datasets.push('Movies');
-      self.datasets.push('FinanceCalc');
-      self.datasets.push('EcoProject');
-      self.datasets.push('Measurements');
-      self.datasets.push('HugeCollection');
+      self.dataSet = {};
+      var file = {name: "", owner: 'André', modified: "", filesize: '4 GB', path:"", dir:""};
+      self.files = [file];
+      var pId = $routeParams.projectID;
+      var currentDS =  $routeParams.datasetName;
+      var dataSetService = DataSetService(pId);
+        //this can be removed if we use project name instead of project id
+        ProjectService.get({}, {'id': pId}).$promise.then(
+            function (success) {
+                console.log(success);
+                self.currentProject = success;
+            }, function (error) {
+                $location.path('/');
+            }
+        );
+        if(currentDS){
+            self.currentDataSet = currentDS;
+        }
 
+        var getAll = function () {
+           dataSetService.getAll().then (
+               function (success) {
+                   self.datasets=success.data;
+                   console.log(success);
+               }, function (error){
+                   console.log("getAll error");
+                   console.log(error);
+               });
+       };
+        var getDir = function (name) {
+            dataSetService.getDir(name).then (
+                function (success) {
+                    self.files = success.data;
+                    console.log(success);
+                }, function (error){
+                    console.log("getDir error");
+                    console.log(error);
+                });
+        };
+        var download = function (file) {
+            dataSetService.download(file).then (
+                function (success) {
+                    console.log("download success");
+                    console.log(success);
+                }, function (error){
+                    console.log("download error");
+                    console.log(error);
+                });
+        };
+        var upload = function (path) {
+            dataSetService.upload(path).then (
+                function (success) {
+                    console.log("upload success");
+                    console.log(success);
+                }, function (error){
+                    console.log("upload error");
+                    console.log(error);
+                });
+        };
 
-      file = {name: 'Folder', owner: 'André', modified: 'Mar 23', filesize: '4 MB'}
-      self.files.push(file);
-      file = {name: 'index.html', owner: 'André', modified: 'Mar 29', filesize: '465 KB'}
-      self.files.push(file);
-      file = {name: 'AndrePage.html', owner: 'André', modified: 'Jan 10', filesize: '33 KB'}
-      self.files.push(file);
-      file = {name: 'image3.jpg', owner: 'Ermias', modified: 'Apr 7', filesize: '8 MB'}
-      self.files.push(file);
-      file = {name: 'dump34.sql', owner: 'André', modified: 'Mar 2', filesize: '37 KB'}
-      self.files.push(file);
-      file = {name: 'Yarn.yml', owner: 'André', modified: 'Feb 25', filesize: '6 MB'}
-      self.files.push(file);
-      file = {name: 'Yarn2.yml', owner: 'André', modified: 'Apr 3', filesize: '17 MB'}
-      self.files.push(file);
-      file = {name: 'Yarn3.yml', owner: 'Ermias', modified: 'Jun 2', filesize: '198 KB'}
-      self.files.push(file);
-      file = {name: 'Yarn4.yml', owner: 'André', modified: 'Oct 23', filesize: '32 MB'}
-      self.files.push(file);
-      file = {name: 'Yar5.yml', owner: 'Ermias', modified: 'Dec 34', filesize: '2 GB'}
-      self.files.push(file);
+        var removeDataSetDir = function (path) {
+            dataSetService.removeDataSetDir(path).then (
+                function (success) {
+                    growl.success(success.data.successMessage , {title: 'Success', ttl: 15000});
+                    load();
+                }, function (error){
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                });
+        };
+        //if in dataset browser show current dataset content
+        //else show datasets in project
+        var load = function () {
+            if(currentDS){
+                getDir(currentDS);
+            }else{
+                getAll();
+            }
+        };
+        load();
+
+        self.newDataSetModal = function () {
+            ModalService.newDataSet('md', currentDS).then(
+                function (success) {
+                    growl.success(success.data.successMessage , {title: 'Success', ttl: 15000});
+                    load();
+                }, function (error) {
+                    growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+
+                });
+        };
+
+        self.deleteFile = function (fileName) {
+            if(currentDS){
+                removeDataSetDir(encodeURIComponent(currentDS + "/" + fileName));
+            }else{
+                removeDataSetDir(fileName);
+            }
+
+        };
 
 
       /* Metadata designer */

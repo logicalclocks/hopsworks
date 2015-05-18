@@ -111,7 +111,31 @@ angular.module('hopsWorksApp')
           }
         });
         return modalInstance.result;
+      },
+
+    newDataSet : function (size, dataSet) {
+        var modalInstance = $modal.open({
+          templateUrl: 'views/newDataSet.html',
+          controller: 'DataSetCreatorCtrl as datasetsCtrl',
+          size: size,
+          resolve: {
+            auth: ['$q', '$location', 'AuthService',
+              function ($q, $location, AuthService) {
+                return AuthService.session().then(
+                    function (success) {
+                    },
+                    function (err) {
+                      $location.path('/login');
+                      $location.replace();
+                      return $q.reject(err);
+                    });
+              }],
+            dataSet: function () {
+              return dataSet;
+            }
+          }
+        });
+        return modalInstance.result;
       }
     }
-
-  }]);
+    }]);
