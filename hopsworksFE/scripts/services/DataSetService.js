@@ -1,3 +1,6 @@
+/*jshint undef: false, unused: false, indent: 2*/
+/*global angular: false */
+
 'use strict';
 
 angular.module('hopsWorksApp')
@@ -30,14 +33,13 @@ angular.module('hopsWorksApp')
                         data: dataSet
                     };
 
-
                     return $http(regReq);
                 },
 
                 removeDataSetDir: function (fileName) {
                     return $http.delete('/api/project/' + id + '/dataset/' + fileName);
                 }
-            }
+            };
             return services;
         };
     }]);

@@ -1,3 +1,6 @@
+/*jshint undef: false, unused: false, indent: 2*/
+/*global angular: false */
+
 'use strict';
 
 angular.module('hopsWorksApp')
@@ -5,10 +8,10 @@ angular.module('hopsWorksApp')
 
     // Keep all pending requests here until they get responses
     var callbacks = [];
-    var projectID = 45;
+    var projectID = 14;
 
     //generic
-    var ws = $websocket("ws://" + $location.host() + ":8080/hopsworks/wspoint/" + projectID);
+    var ws = $websocket("ws://" + $location.host() + ":19931/hopsworks/wspoint/" + projectID);
 
     var collection = [];
 
@@ -32,7 +35,7 @@ angular.module('hopsWorksApp')
     // }, 500)
 
     var processMessage = function (data) {
-
+      
       try {
         var board = data.message;
         var status = data.status;
@@ -68,4 +71,4 @@ angular.module('hopsWorksApp')
         return defer.promise;
       }
     };
-  })
+  });

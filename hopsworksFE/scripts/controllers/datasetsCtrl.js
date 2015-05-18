@@ -6,9 +6,9 @@
 
 
 angular.module('hopsWorksApp')
-  .controller('DatasetsCtrl', ['$rootScope', '$modal', '$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', '$websocket', 'WSComm',
+  .controller('DatasetsCtrl', ['$rootScope', '$modal', '$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', 'WSComm',
         'DataSetService', '$routeParams','ModalService','growl','ProjectService',
-    function ($rootScope, $modal, $scope, $timeout, $mdSidenav, $mdUtil, $log, $websocket, WSComm, DataSetService, $routeParams, ModalService, growl, ProjectService) {
+    function ($rootScope, $modal, $scope, $timeout, $mdSidenav, $mdUtil, $log, WSComm, DataSetService, $routeParams, ModalService, growl, ProjectService) {
 
       var self = this;
 
@@ -103,7 +103,6 @@ angular.module('hopsWorksApp')
                     load();
                 }, function (error) {
                     growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
-
                 });
         };
 
@@ -113,7 +112,6 @@ angular.module('hopsWorksApp')
             }else{
                 removeDataSetDir(fileName);
             }
-
         };
 
 
@@ -140,11 +138,7 @@ angular.module('hopsWorksApp')
           });
       };
 
-
-
-
       self.availableTemplates = [];
-
       self.newTemplateName = "";
       $scope.extendedFrom = {};
 
@@ -152,9 +146,6 @@ angular.module('hopsWorksApp')
 
       self.currentTemplateID = "";
       self.currentBoard = {};
-
-
-
 
 
       self.getAllTemplates = function () {
@@ -168,7 +159,7 @@ angular.module('hopsWorksApp')
             self.availableTemplates = JSON.parse(data.board).templates;
           }
         );
-      }
+      };
 
       self.addNewTemplate = function(){
         return WSComm.send({
@@ -183,7 +174,7 @@ angular.module('hopsWorksApp')
             console.log(data);
           }
         );
-      }
+      };
 
 
       self.removeTemplate = function(templateId){
@@ -198,12 +189,11 @@ angular.module('hopsWorksApp')
             console.log(data);
           }
         );
-      }
-
+      };
 
 
       $scope.$watch('extendedFrom', function(newID){
-        if (typeof newID == "string"){
+        if (typeof newID === "string"){
           self.selectChanged(newID);
         }
       });
@@ -228,8 +218,8 @@ angular.module('hopsWorksApp')
             console.log('Fetched data - error:');
             console.log(error);
           }
-        )
-      }
+        );
+      };
 
       self.extendTemplate = function(){
         return WSComm.send({
@@ -263,8 +253,7 @@ angular.module('hopsWorksApp')
             );
           }
         );
-
-      }
+      };
 
 
       self.fetchTemplate = function (templateId) {
@@ -300,10 +289,7 @@ angular.module('hopsWorksApp')
             console.log(error);
           }
         );
-      }
-
-
-
+      };
 
       self.deleteList = function (column) {
         return WSComm.send({
@@ -324,8 +310,7 @@ angular.module('hopsWorksApp')
             console.log(error);
           }
         );
-      }
-
+      };
 
       self.storeCard = function (column, card) {
         return WSComm.send({
@@ -346,11 +331,8 @@ angular.module('hopsWorksApp')
             fieldtypeid: card.fieldtypeid,
             fieldtypeContent: card.fieldtypeContent
           })
-        })
-      }
-
-
-
+        });
+      };
 
       self.addCard = function (column) {
         $scope.currentColumn = column;
@@ -368,7 +350,7 @@ angular.module('hopsWorksApp')
             self.storeCard(column, card).then(
               function (success) {
                 console.log(success);
-                self.fetchTemplate(self.currentTemplateID)
+                self.fetchTemplate(self.currentTemplateID);
               }, function(error){
                 console.log(error);
               }
@@ -404,20 +386,14 @@ angular.module('hopsWorksApp')
         }).then(
           function(success){
             console.log(success);
-            self.fetchTemplate(self.currentTemplateID)
+            self.fetchTemplate(self.currentTemplateID);
         }, function(error){
             console.log(error);
         });
-      }
-
-
-
-
-
+      };
 
       self.addNewList = function () {
         $scope.template = self.currentTemplateID;
-
 
         $modal.open({
           templateUrl: 'views/metadata/newListModal.html',
@@ -425,18 +401,7 @@ angular.module('hopsWorksApp')
           scope: $scope
         });
 
-      }
-
-
-
-
-
-
-
-
-
-
-
+      };
 
 
       /* TESTING RECEIVE BROADCAST FROM WEBSOCKET SERVICE */
@@ -446,21 +411,9 @@ angular.module('hopsWorksApp')
         //self.getAllTemplates();
       });
 
-
-
-
-
-
-
-
-
-
     }]);
 
-
 /*
-
-
      <DONE>
      fetchTemplates: function () {
      return WSComm.send({
