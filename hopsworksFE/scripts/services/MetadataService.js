@@ -42,11 +42,16 @@ angular.module('hopsWorksApp')
         var response = {status: data.status, board: data.message};
         //console.log('sender: ' + data.sender + ' message: ' + data.message);
 
+        $rootScope.$broadcast('andreTesting', {
+          response: response
+        });
+        
         //since the data arrived its time to resolve the defer
         $rootScope.$apply(callbacks.shift().def.resolve(response));
       } catch (e) {
         var res = {sender: 'anonymous', message: e};
-        $rootScope.$apply(callbacks.shift().def.resolve(res));
+        //$rootScope.$apply(callbacks.shift().def.resolve(res));
+        console.log('ErrorLocal:');
         console.log(res);
       }
     };

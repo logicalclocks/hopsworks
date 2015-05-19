@@ -1,3 +1,6 @@
+/*jshint undef: false, unused: false, indent: 2*/
+/*global angular: false */
+
 'use strict';
 
 angular.module('hopsWorksApp', [
@@ -16,7 +19,8 @@ angular.module('hopsWorksApp', [
   'ui.sortable',
   'chart.js',
   'ngWebSocket',
-  'ng-context-menu'
+  'ng-context-menu',
+  'xeditable'
 ])
   .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
@@ -125,7 +129,7 @@ angular.module('hopsWorksApp', [
         }
       })
 
-      .when('/project/:projectID/datasets/:datasetName', {
+      .when('/project/:projectID/datasets/:datasetID', {
         templateUrl: 'views/datasetsBrowser.html',
         controller: 'ProjectCtrl as projectCtrl',
         resolve: {

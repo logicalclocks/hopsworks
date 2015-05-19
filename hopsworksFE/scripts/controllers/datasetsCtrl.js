@@ -305,7 +305,7 @@ angular.module('hopsWorksApp')
         }).then(
           function(success){
             console.log(success);
-            self.fetchTemplate(self.currentTemplateID)
+            self.fetchTemplate(self.currentTemplateID);
           }, function(error){
             console.log(error);
           }
@@ -397,10 +397,24 @@ angular.module('hopsWorksApp')
 
         $modal.open({
           templateUrl: 'views/metadata/newListModal.html',
-          controller: 'NewListCtrl',
+          controller: 'NewlistCtrl',
           scope: $scope
-        });
+        })
+        .result.then(function (list) {
 
+            if (!angular.isUndefined(list)) {
+                
+                console.log("LIST " + JSON.stringify(self.currentBoard));
+//                self.storeTemplate()
+//                        .then(function (response) {
+//                            //$location.path('/metaDesign');
+//                            console.log("TEMPLATE STORED SUCCESSFULLY " + JSON.stringify(response));
+//                            $rootScope.mainBoard = JSON.parse(response.board);
+//                            defer.resolve($rootScope.mainBoard);
+//                        });
+            }
+        });
+        //
       };
 
 
