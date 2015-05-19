@@ -89,7 +89,6 @@
 
 
           <!-- Slideout - Metadata -->
-
           <div layout="column">
             <section layout="row" flex>
 
@@ -106,7 +105,7 @@
                     </h2>
                     <span flex></span>
                     <button style="font-size:15px;height:28px;color:white;padding-top: 3px;"
-                            ng-click="datasetsCtrl.close()"
+                            ng-click="datasetsCtrl.saveTemplate()"
                             class="btn btn-success">
                       <i class="fa fa-save"></i>
                       Save
@@ -223,17 +222,15 @@
                       </div>
                     </div>
 
+                    <!--TABLES SECTION-->
                     <div class="col-md-10">
                       <div ng-repeat="column in datasetsCtrl.currentBoard.columns">
                         <div ng-if="($index % 3 == 0) && ($index !== 0)" class="row"></div>
 
                         <div class="col-md-4">
 
-
-
                             <div class="panel panel-default">
                               <div class="panel-heading" style="border-bottom: 3px solid #46b8da;">
-
 
                                 <div align="right">
 
@@ -246,55 +243,35 @@
                                      title="Remove table">
                                     <i class="fa fa-trash-o removeList"></i>
                                   </a>
-                    </div>
+                                </div>
 
-                    <span editable-text="column.name"
-                          style="font-size: 16px;"
-                          onaftersave="datasetsCtrl.storeTemplate()"
-                          class="column-title ng-binding">
-                      {{column.name}}
-                    </span>
+                                <span editable-text="column.name"
+                                      style="font-size: 16px;"
+                                      onaftersave="datasetsCtrl.storeTemplate()"
+                                      class="column-title ng-binding">
+                                  {{column.name}}
+                                </span>
 
-
-                  </div>
+                              </div>
                               <div class="panel-body">
-                                <ul class="cards card-list"
-                                    as-sortable="kanbanSortOptions"
-                                    ng-model="column.cards">
-                                  <li class="card"
+                                <ul class="cards card-list" as-sortable="kanbanSortOptions" ng-model="column.cards">
+                                  <li class="card" as-sortable-item
                                       ng-repeat="card in column.cards"
-                                      as-sortable-item
                                       ng-include="'views/metadata/card.html'">
                                   </li>
                                 </ul>
 
-
                               </div>
                             </div>
-
-
-
-
-
                         </div>
                       </div>
-
-
-
-
-
-
-
                     </div>
                     <!-- END Rightside tables -->
-
-
                   </div>
                 </md-content>
               </md-sidenav>
             </section>
           </div>
-
         </div>
       </div>
     </section>

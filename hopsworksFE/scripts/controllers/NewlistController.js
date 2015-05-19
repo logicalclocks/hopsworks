@@ -3,7 +3,7 @@
 
 'use strict';
 
-angular.module('hopsWorksApp').controller('NewlistCtrl', 
+angular.module('metaUI').controller('NewlistController', 
     ['$scope', '$modalInstance', '$location', function ($scope, $modalInstance, $location) {
 
         /* handle the close button */

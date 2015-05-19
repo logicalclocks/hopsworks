@@ -8,9 +8,9 @@ angular.module('metaUI')
 
             // Keep all pending requests here until they get responses
             var callbacks = [];
-
+            var projectid = 14;
             //generic
-            var ws = $websocket("ws://" + $location.host() + ":19931/hopsworks/wspoint/test?evsav");
+            var ws = $websocket("ws://" + $location.host() + ":19931/hopsworks/wspoint/" + projectid);
 
             var collection = [];
 

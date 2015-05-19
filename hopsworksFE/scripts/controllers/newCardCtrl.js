@@ -1,17 +1,18 @@
-/**
- * Created by AMore on 2015-05-15.
- */
+/*jshint undef: false, unused: false, indent: 2*/
+/*global angular: false */
 
 'use strict';
 
 
 angular.module('hopsWorksApp')
   .controller('NewCardCtrl',
-  ['$scope', '$modalInstance', 'WSComm',
-    function ($scope, $modalInstance, WSComm) {
+  ['$scope', '$modalInstance', '$controller',
+    function ($scope, $modalInstance, $controller) {
 
-      console.log('got in: ');
-      console.log($scope.currentColumn.name);
+      var datasetsCtrlModel = $scope.$new(); 
+   
+      $controller('datasetsCtrl',{$scope : datasetsCtrlModel });
+   
       //data is the actual column under processing
       $scope.columnName = $scope.currentColumn.name;
       $scope.id = -1;
@@ -29,12 +30,8 @@ angular.module('hopsWorksApp')
       $scope.yesNoItems = [];
       $scope.selectedItem = "";
 
-      WSComm.send({
-          sender: 'evsav',
-          type: 'FieldTypesMessage',
-          action: 'fetch_field_types',
-          message: 'null'
-        }).then(
+      datasetsCtrl.fetchFieldTypes()
+      .then(
         function (success) {
           console.log('success from fetch_field_types');
           success = JSON.parse(success.board);

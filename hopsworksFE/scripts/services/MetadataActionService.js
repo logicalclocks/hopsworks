@@ -1,0 +1,136 @@
+/*jshint undef: false, unused: false, indent: 2*/
+/*global angular: false */
+
+'use strict';
+
+angular.module('hopsWorksApp')
+        .service('MetadataActionService', function (WSComm) {
+
+            return {
+                
+                fetchTemplates: function () {
+                    //edw klisi tou fetch_templates
+                    return WSComm.send({
+                        sender: 'evsav',
+                        type: 'TemplateMessage',
+                        action: 'fetch_templates',
+                        message: JSON.stringify({})
+                    });
+                },
+                
+                addNewTemplate: function (templatename) {
+                    return WSComm.send({
+                        sender: 'evsav',
+                        type: 'TemplateMessage',
+                        action: 'add_new_template',
+                        message: JSON.stringify({templateName: templatename})
+                    });
+                },
+                
+                removeTemplate: function (templateid) {
+                    return WSComm.send({
+                        sender: 'evsav',
+                        type: 'TemplateMessage',
+                        action: 'remove_template',
+                        message: JSON.stringify({templateId: templateid})
+                    });
+                },
+                
+                extendTemplate: function (templateId, board) {
+
+                    return WSComm.send({
+                        sender: 'evsav',
+                        type: 'TemplateMessage',
+                        action: 'extend_template',
+                        message: JSON.stringify({tempid: templateId, bd: board})
+                    });
+                },
+                
+                fetchTemplate: function (templateId) {
+                    return WSComm.send({
+                        sender: 'evsav',
+                        type: 'TemplateMessage',
+                        action: 'fetch_template',
+                        message: JSON.stringify({tempid: templateId})
+                    });
+                },
+                
+                storeTemplate: function (templateJson) {
+                    return WSComm.send({
+                        sender: 'evsav',
+                        type: 'TemplateMessage',
+                        action: 'store_template',
+                        message: JSON.stringify(templateJson)
+                    });
+                },
+                
+                deleteList: function (column, templateId) {
+                    return WSComm.send({
+                        sender: 'evsav',
+                        type: 'TablesMessage',
+                        action: 'delete_table',
+                        message: JSON.stringify({
+                            tempid: templateId,
+                            id: column.id,
+                            name: column.name,
+                            forceDelete: column.forceDelete
+                        })
+                    });
+                },
+                
+                storeCard: function (column, card) {
+                    return WSComm.send({
+                        sender: 'evsav',
+                        type: 'FieldsMessage',
+                        action: 'store_field',
+                        message: JSON.stringify({
+                            tempid: self.currentTemplateID,
+                            tableid: column.id,
+                            tablename: column.name,
+                            id: card.id,
+                            name: card.title,
+                            type: 'VARCHAR(50)',
+                            searchable: card.find,
+                            required: card.required,
+                            sizefield: card.sizefield,
+                            description: card.description,
+                            fieldtypeid: card.fieldtypeid,
+                            fieldtypeContent: card.fieldtypeContent
+                        })
+                    });
+                },
+                
+                deleteCard: function (column, card) {
+                    return WSComm.send({
+                        sender: 'evsav',
+                        type: 'FieldsMessage',
+                        action: 'delete_field',
+                        message: JSON.stringify({
+                            tempid: self.currentTemplateID,
+                            id: card.id,
+                            tableid: column.id,
+                            tablename: column.name,
+                            name: card.title,
+                            type: 'VARCHAR(50)',
+                            sizefield: card.sizefield,
+                            searchable: card.find,
+                            required: card.required,
+                            forceDelete: card.forceDelete,
+                            description: card.description,
+                            fieldtypeid: card.fieldtypeid,
+                            fieldtypeContent: card.fieldtypeContent
+                        })
+                    });
+                },
+                
+                fetchFieldTypes: function () {
+                    return WSComm.send({
+                        sender: 'evsav',
+                        type: 'FieldTypesMessage',
+                        action: 'fetch_field_types',
+                        message: 'null'
+                    });
+                }
+            };
+
+        });
