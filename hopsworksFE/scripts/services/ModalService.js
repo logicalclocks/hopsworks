@@ -116,7 +116,7 @@ angular.module('hopsWorksApp')
     newDataSet : function (size, dataSet) {
         var modalInstance = $modal.open({
           templateUrl: 'views/newDataSet.html',
-          controller: 'DataSetCreatorCtrl as datasetsCtrl',
+          controller: 'DataSetCreatorCtrl as datasetCreateorCtrl',
           size: size,
           resolve: {
             auth: ['$q', '$location', 'AuthService',
@@ -137,5 +137,5 @@ angular.module('hopsWorksApp')
         });
         return modalInstance.result;
       }
-    }
-    }]);
+    };
+}]);

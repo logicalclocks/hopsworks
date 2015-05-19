@@ -3,14 +3,13 @@
 
 'use strict';
 
-var mainModule = angular.module('hopsWorksApp').controller('ModifyFieldCtrl',
-        ['$scope', '$rootScope', '$modalInstance', 'data', '$controller',
-            function ($scope, $rootScope, $modalInstance, data, $controller) {
+var mainModule = angular.module('hopsWorksApp')
+        .controller('ModifyFieldCtrl',
+        ['$scope', '$modalInstance', 'MetadataActionService',
+            function ($scope, $modalInstance, MetadataActionService) {
 
-                var datasetsCtrl = $controller('datasetsCtrl');
-
-                $scope.fieldName = data.field.title;
-                $scope.fieldDescription = data.field.description;
+                $scope.fieldName = $scope.field.title;
+                $scope.fieldDescription = $scope.field.description;
                 $scope.fieldType = "";
                 $scope.fieldTypeValues = "";
 
@@ -20,44 +19,44 @@ var mainModule = angular.module('hopsWorksApp').controller('ModifyFieldCtrl',
                 $scope.existingRawData = false;
 
                 $scope.items = [];
+                
+                MetadataActionService.fetchFieldTypes()
+                    .then(function (response) {
+                        var board = JSON.parse(response.board);
 
-                datasetsCtrl.fetchFieldTypes()
-                        .then(function (response) {
-                            //construct the select component's contents
-                            angular.forEach(response, function (value, key) {
-                                angular.forEach(value, function (innerValue) {
-                                    $scope.items.push({id: innerValue.id, name: innerValue.description});
-                                });
-                            });
-                            $scope.selectedItem = $scope.items[0];
+                        //construct the select component's contents
+                        angular.forEach(board.fieldTypes, function (value, key) {                                
+                            $scope.items.push({id: value.id, name: value.description});
                         });
+                        $scope.selectedItem = $scope.items[0];
+                    });
 
-                datasetsCtrl.viewMetadata(data.table)
+                MetadataActionService.fetchMetadata($scope.tableid)
                         .then(function (response) {
-
+                            console.log("METADATA RETRIEVED " + JSON.stringify(response.board));
                             angular.forEach(response.fields, function (field, key) {
 
-                                if (field.data.length !== 0 && field.id === data.field.id) {
+                                if (field.data.length !== 0 && field.id === $scope.field.id) {
                                     $scope.existingRawData = true;
                                 }
                             });
                         });
 
-                switch (data.field.fieldtypeid) {
+                switch ($scope.field.fieldtypeid) {
                     case 1:
                         $scope.fieldType = "'a text field'";
                         break;
                     case 2:
                         $scope.fieldType = "'a dropdown list'";
                         $scope.fieldTypeValues = "Existing values: ";
-                        angular.forEach(data.field.fieldtypeContent, function (value, key) {
+                        angular.forEach($scope.field.fieldtypeContent, function (value, key) {
                             $scope.fieldTypeValues += value.value + ", ";
                         });
                         break;
                     case 3:
                         $scope.fieldType = "'a true/false field'";
                         $scope.fieldTypeValues = "Existing values: ";
-                        angular.forEach(data.field.fieldtypeContent, function (value, key) {
+                        angular.forEach($scope.field.fieldtypeContent, function (value, key) {
                             $scope.fieldTypeValues += value.value + ", ";
                         });
                 }
@@ -79,9 +78,9 @@ var mainModule = angular.module('hopsWorksApp').controller('ModifyFieldCtrl',
                             fieldTypeContent = $scope.yesNoItems;
                     }
 
-                    $modalInstance.close({id: data.field.id, title: $scope.fieldName, details: data.field.details,
-                        editing: data.field.editing, find: data.field.find, required: data.field.required,
-                        sizefield: data.field.sizefield, description: $scope.fieldDescription,
+                    $modalInstance.close({id: $scope.field.id, title: $scope.fieldName, details: $scope.field.details,
+                        editing: $scope.field.editing, find: $scope.field.find, required: $scope.field.required,
+                        sizefield: $scope.field.sizefield, description: $scope.fieldDescription,
                         fieldtypeid: $scope.selectedItem.id, fieldtypeContent: fieldTypeContent});
                 };
 
@@ -109,7 +108,7 @@ var mainModule = angular.module('hopsWorksApp').controller('ModifyFieldCtrl',
                 $scope.addNewSelectChoice = function () {
                     var newItemNo = $scope.fieldSelectItems.length + 1;
                     //$scope.choices.push({'id': 'choice' + newItemNo});
-                    $scope.fieldSelectItems.push({id: -1, fieldid: data.field.id, value: ""});
+                    $scope.fieldSelectItems.push({id: -1, fieldid: $scope.field.id, value: ""});
                 };
 
                 $scope.removeSelectChoice = function () {
@@ -119,7 +118,7 @@ var mainModule = angular.module('hopsWorksApp').controller('ModifyFieldCtrl',
                 };
 
                 $scope.addYesnoChoice = function () {
-                    $scope.yesNoItems.push({id: -1, fieldid: data.field.id, value: ""});
-                    $scope.yesNoItems.push({id: -1, fieldid: data.field.id, value: ""});
+                    $scope.yesNoItems.push({id: -1, fieldid: $scope.field.id, value: ""});
+                    $scope.yesNoItems.push({id: -1, fieldid: $scope.field.id, value: ""});
                 };
             }]);

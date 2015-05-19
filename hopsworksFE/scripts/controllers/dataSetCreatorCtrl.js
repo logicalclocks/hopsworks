@@ -12,7 +12,7 @@ angular.module('hopsWorksApp')
 
             self.datasets = [];
             self.temps = [{'temp':"temp"}];
-            self.dataSet = {'name': "", 'description': "", 'template': "", 'searchable': true}
+            self.dataSet = {'name': "", 'description': "", 'template': "", 'searchable': true};
             var pId = $routeParams.projectID;
             var dataSetService = DataSetService(pId);
 

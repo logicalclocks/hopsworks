@@ -55,16 +55,16 @@ angular.module('hopsWorksApp')
                     });
                 },
                 
-                storeTemplate: function (templateJson) {
+                storeTemplate: function (templateId, board) {
                     return WSComm.send({
                         sender: 'evsav',
                         type: 'TemplateMessage',
                         action: 'store_template',
-                        message: JSON.stringify(templateJson)
+                        message: JSON.stringify({tempid: templateId, bd: board})
                     });
                 },
                 
-                deleteList: function (column, templateId) {
+                deleteList: function (templateId, column) {
                     return WSComm.send({
                         sender: 'evsav',
                         type: 'TablesMessage',
@@ -78,13 +78,13 @@ angular.module('hopsWorksApp')
                     });
                 },
                 
-                storeCard: function (column, card) {
+                storeCard: function (templateId, column, card) {
                     return WSComm.send({
                         sender: 'evsav',
                         type: 'FieldsMessage',
                         action: 'store_field',
                         message: JSON.stringify({
-                            tempid: self.currentTemplateID,
+                            tempid: templateId,
                             tableid: column.id,
                             tablename: column.name,
                             id: card.id,
@@ -130,7 +130,15 @@ angular.module('hopsWorksApp')
                         action: 'fetch_field_types',
                         message: 'null'
                     });
+                },
+                
+                fetchMetadata: function (tableId) {
+                    return WSComm.send({
+                        sender: 'evsav',
+                        type: 'MetadataMessage',
+                        action: 'fetch_metadata',
+                        message: JSON.stringify({tableid: tableId})
+                    });
                 }
             };
-
         });

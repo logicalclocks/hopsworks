@@ -1,12 +1,12 @@
 <div class="modal-header">
-    <button class="close" ng-click="datasetsCtrl.close()" data-dismiss="modal" aria-hidden="true"
+    <button class="close" ng-click="datasetCreateorCtrl.close()" data-dismiss="modal" aria-hidden="true"
             type="button">&times;</button>
     <h2 class="modal-title">New DataSet folder</h2>
 </div>
 <div class="modal-body">
 
 
-    <form role="form" name="dataSetForm" ng-submit="datasetsCtrl.saveDataSetDir()" novalidate class="form-validate">
+    <form role="form" name="dataSetForm" ng-submit="datasetCreateorCtrl.saveDataSetDir()" novalidate class="form-validate">
         <div class="row">
                 <fieldset>
 
@@ -15,7 +15,7 @@
                         <md-input-container>
                             <label for="dataSetName" style="color: black;">Folder Name</label>
                             <input name="dataSet_name" type="text" id="dataSetName"
-                                   ng-model="datasetsCtrl.dataSet.name"
+                                   ng-model="datasetCreateorCtrl.dataSet.name"
                                    required
                                    md-sidenav-focus>
                         </md-input-container>
@@ -29,11 +29,11 @@
                         <label for="dataSetName" class="control-label">Description</label>
 
                         <div class="controls">
-                        <textarea class="form-control" style="resize:none;" ng-model="datasetsCtrl.dataSet.description"
+                        <textarea class="form-control" style="resize:none;" ng-model="datasetCreateorCtrl.dataSet.description"
                                   rows="3"></textarea>
                         </div>
                         <md-checkbox class="md-primary"
-                                     ng-model="datasetsCtrl.dataSet.searchable">
+                                     ng-model="datasetCreateorCtrl.dataSet.searchable">
                             Searchable
                         </md-checkbox>
 
@@ -41,12 +41,12 @@
 
                         <div class="controls">
 
-                            <ui-select ng-model="datasetsCtrl.dataSet.template" theme="select2"
+                            <ui-select ng-model="datasetCreateorCtrl.dataSet.template" theme="select2"
                                        style="min-width: 300px;">
 
                                 <ui-select-match placeholder="Add a template..."></ui-select-match>
                                 <ui-select-choices
-                                        repeat="temp in datasetsCtrl.temps">
+                                        repeat="temp in datasetCreateorCtrl.temps">
                                 </ui-select-choices>
 
                             </ui-select>
@@ -67,7 +67,7 @@
 
         <div class="modal-footer">
 
-            <button class="btn btn-default" type="button" ng-click="datasetsCtrl.close()">Cancel</button>
+            <button class="btn btn-default" type="button" ng-click="datasetCreateorCtrl.close()">Cancel</button>
             <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.dataSet_name.$error.required">Create
             </button>
 

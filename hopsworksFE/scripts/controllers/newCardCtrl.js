@@ -5,13 +5,8 @@
 
 
 angular.module('hopsWorksApp')
-  .controller('NewCardCtrl',
-  ['$scope', '$modalInstance', '$controller',
-    function ($scope, $modalInstance, $controller) {
-
-      var datasetsCtrlModel = $scope.$new(); 
-   
-      $controller('datasetsCtrl',{$scope : datasetsCtrlModel });
+  .controller('NewCardCtrl', ['$scope', '$modalInstance', 'MetadataActionService',
+    function ($scope, $modalInstance, MetadataActionService) {
    
       //data is the actual column under processing
       $scope.columnName = $scope.currentColumn.name;
@@ -30,23 +25,22 @@ angular.module('hopsWorksApp')
       $scope.yesNoItems = [];
       $scope.selectedItem = "";
 
-      datasetsCtrl.fetchFieldTypes()
-      .then(
-        function (success) {
-          console.log('success from fetch_field_types');
-          success = JSON.parse(success.board);
-          console.log(success);
+      MetadataActionService.fetchFieldTypes()
+        .then(function (success) {
+            console.log('success from fetch_field_types');
+            success = JSON.parse(success.board);
+            console.log(success);
 
-          //construct the select component's contents
-          angular.forEach(success.fieldTypes, function (type) {
-            $scope.items.push({
-              id: type.id,
-              name: type.description
+            //construct the select component's contents
+            angular.forEach(success.fieldTypes, function (type) {
+              $scope.items.push({
+                id: type.id,
+                name: type.description
+              });
             });
-          });
 
-          $scope.selectedItem = $scope.items[0];
-        },
+            $scope.selectedItem = $scope.items[0];
+          },
       function(error){
         console.log(error);
       });
