@@ -203,10 +203,10 @@ public class NewProjectController implements Serializable {
     String samplesPath = projectPath + File.separator
             + Constants.DIR_SAMPLES;
 
-    fileOps.mkDir(projectPath);
-    fileOps.mkDir(resultsPath);
-    fileOps.mkDir(cuneiformPath);
-    fileOps.mkDir(samplesPath);
+    fileOps.mkDir(projectPath, -1);
+    fileOps.mkDir(resultsPath, -1);
+    fileOps.mkDir(cuneiformPath, -1);
+    fileOps.mkDir(samplesPath, -1);
   }
 
   //load the necessary information for displaying the project page

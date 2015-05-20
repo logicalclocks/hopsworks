@@ -70,7 +70,7 @@ public class DataSetController {
             getName();
     String dataSetPath = projectPath + File.separator
             + Constants.DIR_DATASET + File.separator + dataSetName;
-    fileOps.mkDir(dataSetPath);
+    fileOps.mkDir(dataSetPath, -1);
   }
 
   public void uploadFileToFolder(Project project, String dataSetName) {

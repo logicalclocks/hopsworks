@@ -73,14 +73,13 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @param status
    */
   private Inode createAndPersistInode(String path, int rootStudy, boolean dir,
-          long size,
-          String status) {
+          long size, String status, int templateId) {
         //TODO: update size and modified date of parent
     //TODO: make all occurences of 'size' in application longs.
     Inode parent = getLastCreatedNodeOnPath(path);
     String[] p = path.split("/");
     Inode z = new Inode(p[p.length - 1], parent, rootStudy, dir, false,
-            (int) size, status);
+            (int) size, status, templateId);
     parent.addChild(z);
 
     em.persist(parent);
@@ -90,16 +89,15 @@ public class InodeFacade extends AbstractFacade<Inode> {
   }
 
   private Inode createAndPersistInode(Inode parent, int rootstudy, String name,
-          boolean dir,
-          long size, String status) {
+          boolean dir, long size, String status, int templateId) {
     Inode z;
     if (parent != null) {
-      z = new Inode(name, parent, rootstudy, dir, false, (int) size, status);
+      z = new Inode(name, parent, rootstudy, dir, false, (int) size, status, templateId);
       parent.addChild(z);
       em.persist(parent);
     } else {
 
-      z = new Inode(name, parent, rootstudy, dir, false, (int) size, status);
+      z = new Inode(name, parent, rootstudy, dir, false, (int) size, status, templateId);
     }
     em.persist(z);
 
@@ -112,17 +110,18 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * <p>
    * @param path
    * @param status
+   * @param templateId
    * @return the Inode for the directory (whether it already exists or has
    * just been created)
    */
-  public Inode createAndPersistDir(String path, String status) {
+  public Inode createAndPersistDir(String path, String status, int templateId) {
     while (path.startsWith("/")) {
       path = path.substring(1);
     }
     String[] p = path.split("/");
     Inode root = findByName(p[0]);
     if (root == null) {
-      root = createAndPersistInode(null, 0, p[0], true, 0, status);
+      root = createAndPersistInode(null, 0, p[0], true, 0, status, templateId);
       this.inodeOps.createAndStoreOperation(root, ADD);
     }
 
@@ -139,12 +138,12 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
       if (next == null) {
         if (i == 1) {
-          next = createAndPersistInode(curr, mainRoot, s, true, 0, status);
+          next = createAndPersistInode(curr, mainRoot, s, true, 0, status, templateId);
           this.update(next);
           System.err.println("CREATING DIR " + next.getName());
           this.inodeOps.createAndStoreOperation(next, ADD);
         } else {
-          next = createAndPersistInode(curr, studyRoot, s, true, 0, status);
+          next = createAndPersistInode(curr, studyRoot, s, true, 0, status, templateId);
           this.update(next);
           System.err.println("UPDATING DIR " + next.getName());
           this.inodeOps.createAndStoreOperation(next, ADD);
@@ -155,7 +154,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
     return curr;
   }
 
-  public Inode createAndPersistFile(String path, long size, String status) {
+  public Inode createAndPersistFile(String path, long size, String status, int templateId) {
     //leave out any garbage in the path
     while (path.startsWith("/")) {
       path = path.substring(1);
@@ -165,7 +164,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
     //get the study node
     Inode studyNode = findByName(rootStudy);
 
-    return createAndPersistInode(path, studyNode.getId(), false, size, status);
+    return createAndPersistInode(path, studyNode.getId(), false, size, status, templateId);
   }
 
   public void persist(Inode i) {

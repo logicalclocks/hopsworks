@@ -226,11 +226,11 @@ public class ProjectController {
     String dataSetPath = projectPath + File.separator
             + Constants.DIR_DATASET;
 
-    fileOps.mkDir(projectPath);
-    fileOps.mkDir(resultsPath);
-    fileOps.mkDir(cuneiformPath);
-    fileOps.mkDir(samplesPath);
-    fileOps.mkDir(dataSetPath);
+    fileOps.mkDir(projectPath, -1);
+    fileOps.mkDir(resultsPath, -1);
+    fileOps.mkDir(cuneiformPath, -1);
+    fileOps.mkDir(samplesPath, -1);
+    fileOps.mkDir(dataSetPath, -1);
   }
 
   /**

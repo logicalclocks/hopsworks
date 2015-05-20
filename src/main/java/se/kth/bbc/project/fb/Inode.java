@@ -99,6 +99,11 @@ public class Inode implements Serializable {
   @Column(name = "root")
   private int root;
 
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "templateId")
+  private int templateId;
+    
   @OneToMany(mappedBy = "parent")
   private List<Inode> children;
 
@@ -106,6 +111,8 @@ public class Inode implements Serializable {
           referencedColumnName = "id")
   @ManyToOne
   private Inode parent;
+  
+  
 
   public Inode() {
     this.children = new ArrayList<>();
@@ -164,11 +171,13 @@ public class Inode implements Serializable {
    * @param searchable
    * @param size
    * @param status
+   * @param templateId
    */
   public Inode(String name, Inode parent, int root, boolean dir,
-          boolean searchable, int size, String status) {
+          boolean searchable, int size, String status, int templateId) {
     this(name, parent, dir, searchable, size, status);
     this.root = root;
+    this.templateId = templateId;
   }
 
   public Integer getId() {
@@ -235,6 +244,14 @@ public class Inode implements Serializable {
     this.status = status;
   }
 
+  public void setTemplateId(int templateId){
+      this.templateId = templateId;
+  }
+  
+  public int getTemplateId(){
+      return this.templateId;
+  }
+  
   @XmlTransient
   @JsonIgnore
   public List<Inode> getChildren() {

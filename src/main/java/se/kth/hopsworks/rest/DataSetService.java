@@ -205,7 +205,9 @@ public class DataSetService {
     
     String dsPath = this.path + dataSetName.getName();
     try {
-      success = fileOps.mkDir(dsPath);
+      success = fileOps.mkDir(dsPath, dataSetName.getTemplate());
+      logger.log(Level.SEVERE, "DATASET RECEIVED {0} ", dataSetName.getTemplate());
+      
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),

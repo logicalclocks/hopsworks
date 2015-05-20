@@ -60,14 +60,18 @@ import se.kth.bbc.project.services.ProjectServices;
           query
           = "SELECT t FROM Project t WHERE t.owner = :owner AND t.name = :name")})
 public class Project implements Serializable {
+    
   @Column(name = "archived")
   private Boolean archived;
+  
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<ProjectTeam> projectTeamCollection;
+  
   @OneToMany(cascade = CascadeType.ALL,
-          mappedBy = "projectId")
+          mappedBy = "project")
   private Collection<Activity> activityCollection;
+  
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<ProjectServices> projectServicesCollection;

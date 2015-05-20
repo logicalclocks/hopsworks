@@ -18,12 +18,14 @@ public class InodeView {
   private  boolean parent;
   private  String path;
   private  Date modification;
+  private int id;
 
   public InodeView() {}
 
   public InodeView(Inode i, String path) {
     this.name = i.getName();
     this.dir = i.isDir();
+    this.id = i.getId();
     this.parent = false;
     this.path = path;
     this.modification = new Date(i.getModified().getTime());
@@ -89,6 +91,14 @@ public class InodeView {
     return modification;
   }
 
+  public int getId(){
+      return this.id;
+  }
+  
+  public void setId(int id){
+      this.id = id;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 7;

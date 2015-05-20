@@ -294,7 +294,7 @@ public class SamplesController implements Serializable {
       path + File.separator + Constants.DIR_VCF};
 
     for (String s : folders) {
-      success = fileOps.mkDir(s);
+      success = fileOps.mkDir(s, -1);
       if (!success) {
         MessagesController.addErrorMessage(MessagesController.ERROR,
                 "Failed to create folder " + s + ".");
@@ -311,7 +311,7 @@ public class SamplesController implements Serializable {
             + File.separator + folderName;
 
     //create dir in fs
-    boolean success = fileOps.mkDir(path);
+    boolean success = fileOps.mkDir(path, -1);
     if (!success) {
       MessagesController.addErrorMessage(MessagesController.ERROR,
               "Failed to create folder " + path + ".");

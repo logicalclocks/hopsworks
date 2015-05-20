@@ -74,10 +74,11 @@ public class FileOperations {
      * Create the folders on the given path. Equivalent to mkdir -p.
      *
      * @param path
+     * @param templateId
      * @return
      * @throws IOException
      */
-    public boolean mkDir(String path) throws IOException {
+    public boolean mkDir(String path, int templateId) throws IOException {
         Path location = new Path(path);
         boolean success = fsOps.mkdir(location);
         String string = "CREATING A DIR " + location.getName();
@@ -85,7 +86,7 @@ public class FileOperations {
 
         if (success) {
             try{
-            inodes.createAndPersistDir(path, Inode.AVAILABLE);
+            inodes.createAndPersistDir(path, Inode.AVAILABLE, templateId);
             }catch (EJBTransactionRolledbackException e){
                 fsOps.rm(location, true);
                 throw new EJBTransactionRolledbackException();
@@ -114,7 +115,10 @@ public class FileOperations {
         File localfile = getLocalFile(localFilename);
 
         String dirs = Utils.getDirectoryPart(destination);
-        mkDir(dirs);
+        
+        //We don't support associating templates to files yet. This should change
+        //to set the actual template id upon file creation
+        mkDir(dirs, -1);
 
         //Update the status of the Inode
         if (inode != null) {
@@ -123,7 +127,7 @@ public class FileOperations {
             inodes.persist(inode);
         } else {
             inode = inodes.createAndPersistFile(destination, localfile.length(),
-                    Inode.COPYING);
+                    Inode.COPYING, -1);
         }
 
         //Actually copy to HDFS
@@ -154,7 +158,10 @@ public class FileOperations {
         File localfile = new File(path);
 
         String dirs = Utils.getDirectoryPart(destination);
-        mkDir(dirs);
+        
+        //We don't support associating templates to files yet. This should change
+        //to set the actual template id upon file creation
+        mkDir(dirs, -1);
 
         //Update the status of the Inode
         if (inode != null) {
@@ -163,7 +170,7 @@ public class FileOperations {
             inodes.persist(inode);
         } else {
             inode = inodes.createAndPersistFile(destination, localfile.length(),
-                    Inode.COPYING);
+                    Inode.COPYING, -1);
         }
 
         //Actually copy to HDFS
@@ -199,7 +206,7 @@ public class FileOperations {
     public void writeToHDFS(InputStream is, long size, String destination)
             throws IOException {
 
-        Inode inode = inodes.createAndPersistFile(destination, size, Inode.COPYING);
+        Inode inode = inodes.createAndPersistFile(destination, size, Inode.COPYING, -1);
         //Actually copy to HDFS
         boolean success = false;
         Path destp = new Path(destination);
@@ -340,7 +347,7 @@ public class FileOperations {
      */
     public void startUpload(String destination) {
         if (!inodes.existsPath(destination)) {
-            inodes.createAndPersistFile(destination, 0, Inode.UPLOADING);
+            inodes.createAndPersistFile(destination, 0, Inode.UPLOADING, -1);
         }
     }
 
@@ -401,13 +408,13 @@ public class FileOperations {
         if (fsOps.exists(p)) {
             if (fsOps.isDir(p)) {
                 if (inodes.getInodeAtPath(p.toUri().getPath()) == null) {
-                    inodes.createAndPersistDir(p.toUri().getPath(), Inode.AVAILABLE);
+                    inodes.createAndPersistDir(p.toUri().getPath(), Inode.AVAILABLE, -1);
                 }
                 for (Path c : fsOps.getChildren(p)) {
                     createInodesIfNeeded(c);
                 }
             } else if (inodes.getInodeAtPath(p.toUri().getPath()) == null) {
-                inodes.createAndPersistFile(p.toUri().getPath(), 0, Inode.AVAILABLE);
+                inodes.createAndPersistFile(p.toUri().getPath(), 0, Inode.AVAILABLE, -1);
             }
             return true;
         }
@@ -429,7 +436,7 @@ public class FileOperations {
         Path dstPath = new Path(dst);
         //Make the necessary output directories
         String dirPart = Utils.getDirectoryPart(dst);
-        mkDir(dirPart);
+        mkDir(dirPart, -1);
         //Actually copy
         fsOps.copyInHdfs(srcPath, dstPath);
         createInodesIfNeeded(dst);
