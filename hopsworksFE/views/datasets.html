@@ -12,7 +12,7 @@
     <div align="center" id="projectSearchResults">
       <p ng-bind-html="mainCtrl.searchResult"></p>
     </div>
-    
+
     <section>
       <div class="content-wrapper">
         <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.name }} / Datasets / {{datasetsCtrl.currentDataSet}}</h3>
@@ -59,7 +59,9 @@
                    ng-init="(iscollapsed$index) = true"
                    class="file-box"
                    ng-mouseenter="(iscollapsed$index) = false"
-                   ng-mouseleave="(iscollapsed$index) = true">
+                   ng-mouseleave="(iscollapsed$index) = true"
+                   context-menu
+                   data-target="menu-{{ $index }}">
                 <div class="file">
                   <a>
                     <span class="corner"></span>
@@ -83,6 +85,40 @@
                     </div>
                   </a>
                 </div>
+              </div>
+              <div class="dropdown position-fixed" id="menu-{{ $index }}">
+                <ul class="dropdown-menu dropdown-amore" role="menu">
+                  <li>
+                    <a class="pointer"
+                       role="menuitem"
+                       tabindex="1"
+                       ng-click="panel.highlight = true">
+                                <span><i class="fa fa-file-archive-o"></i>
+                                  Compress</span>
+                    </a>
+                  </li>
+
+                  <li>
+                    <a class="pointer"
+                       role="menuitem"
+                       tabindex="2"
+                       ng-click="">
+                                <span><i class="fa fa-share-alt"></i>
+                                  Share...</span>
+                    </a>
+                  </li>
+
+                  <li>
+                    <a class="pointer"
+                       role="menuitem"
+                       tabindex="3"
+                       ng-click="datasetsCtrl.deleteFile(dataset.name)">
+                                 <span><i class="fa fa-trash"></i>
+                                   Remove</span>
+                    </a>
+                  </li>
+
+                </ul>
               </div>
                 </div>
             </div>
@@ -115,7 +151,7 @@
 
                 <md-content layout-padding style="overflow: hidden;">
                   <div class="row">
-                      
+
                     <div class="col-md-2" style="height: 100%; border-right: 1px dashed lightgrey;">
                       <button class="btn btn-info"
                               style="width: 100%;margin-top: -7px;border-radius: 0px; padding:10px;"

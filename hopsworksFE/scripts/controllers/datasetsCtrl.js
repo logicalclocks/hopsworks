@@ -33,7 +33,7 @@ angular.module('hopsWorksApp')
                 });
                 if (currentDS) {
                     self.currentDataSet = currentDS;
-                    
+
                 }
 
                 var getAll = function () {
@@ -46,16 +46,28 @@ angular.module('hopsWorksApp')
                         console.log(error);
                     });
                 };
-                var getDir = function (name) {
-                    dataSetService.getDir(name).then(
-                            function (success) {
-                                self.files = success.data;
-                                console.log(success);
-                            }, function (error) {
-                        console.log("getDir error");
-                        console.log(error);
-                    });
-                };
+              var getDir = function (name) {
+                var newPath = "";
+                if(self.currentPath && name){
+                  newPath =  self.currentPath +'/'+ name;
+                }else if(self.currentPath){
+                  newPath =  self.currentPath;
+                }else{
+                  newPath = name;
+                }
+                dataSetService.getDir(newPath).then (
+                  function (success) {
+                    self.files = success.data;
+                    self.currentPath = newPath;
+                    if(name){
+                      self.currentDataSet = name;
+                    }
+                    console.log(success);
+                  }, function (error){
+                    console.log("getDir error");
+                    console.log(error);
+                  });
+              };
                 var download = function (file) {
                     dataSetService.download(file).then(
                             function (success) {
@@ -77,47 +89,61 @@ angular.module('hopsWorksApp')
                     });
                 };
 
-                var removeDataSetDir = function (path) {
-                    dataSetService.removeDataSetDir(path).then(
-                            function (success) {
-                                growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
-                                load();
-                            }, function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-                    });
-                };
-                //if in dataset browser show current dataset content
-                //else show datasets in project
-                var load = function () {
-                    if (currentDS) {
-                        getDir(currentDS);
-                    } else {
-                        getAll();
-                    }
-                };
-                load();
+              var removeDataSetDir = function (path) {
+                dataSetService.removeDataSetDir(path).then (
+                  function (success) {
+                    growl.success(success.data.successMessage , {title: 'Success', ttl: 15000});
+                    getDir();
+                  }, function (error){
+                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
+                  });
+              };
+              //if in dataset browser show current dataset content
+              //else show datasets in project
+              var load = function (path) {
+                if(path){
+                  getDir(path);
+                }else{
+                  getAll();
+                }
+              };
+              load(currentDS);
 
-                self.newDataSetModal = function () {
+              self.newDataSetModal = function () {
+                ModalService.newDataSet('md', self.currentPath).then(
+                  function (success) {
+                    growl.success(success.data.successMessage , {title: 'Success', ttl: 15000});
+                    getDir();
+                  }, function (error) {
+                    growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
 
-                    ModalService.newDataSet('md', currentDS).then(
-                            function (success) {
-                                growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
-                                load();
-                            }, function (error) {
-                        growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
-                    });
-                };
+                  });
+              };
 
-                self.deleteFile = function (fileName) {
-                    if (currentDS) {
-                        removeDataSetDir(encodeURIComponent(currentDS + "/" + fileName));
-                    } else {
-                        removeDataSetDir(fileName);
-                    }
-                };
+              self.deleteFile = function (fileName) {
+                if(currentDS){
+                  removeDataSetDir(self.currentPath + '/' + fileName);
+                }else{
+                  removeDataSetDir(fileName);
+                }
+              };
 
+              self.openDir = function (name){
+                getDir(name);
+              };
 
-                /* Metadata designer */
+              self.back = function() {
+                if (self.currentPath.indexOf("/") > -1) {
+                  var parts = self.currentPath.split('/');
+                  self.currentPath = self.currentPath.replace('/' + parts[parts.length - 1], '');
+                  self.currentDataSet = parts[parts.length - 2];
+                  if (self.currentPath) {
+                    getDir();
+                  }
+                }
+              };
+
+              /* Metadata designer */
 
                 self.toggleLeft = buildToggler('left');
                 self.toggleRight = buildToggler('right');
@@ -157,7 +183,7 @@ angular.module('hopsWorksApp')
                         self.selectChanged(newID);
                     }
                 });
-                
+
                 self.getAllTemplates = function () {
                     MetadataActionService.fetchTemplates()
                        .then(function (data) {
@@ -187,7 +213,7 @@ angular.module('hopsWorksApp')
 
                 self.selectChanged = function (extendFromThisID) {
                     console.log('selectChanged - start: ' + extendFromThisID);
-                    
+
                     MetadataActionService.fetchTemplate(parseInt(extendFromThisID))
                         .then(function (success) {
                             console.log('Fetched data - success.board.column:');
@@ -229,7 +255,7 @@ angular.module('hopsWorksApp')
 
                 self.fetchTemplate = function (templateId) {
                     self.currentTemplateID = templateId;
-                    
+
                     MetadataActionService.fetchTemplate(templateId)
                         .then(function (success) {
                             console.log('fetchTemplate - success');
@@ -243,7 +269,7 @@ angular.module('hopsWorksApp')
                 };
 
                 self.storeTemplate = function () {
-                                        
+
                     MetadataActionService.storeTemplate(self.currentTemplateID, self.currentBoard)
                         .then(function(response){
                            console.log("TEMPLATE SAVED SUCCESSFULLY " + JSON.stringify(response));
@@ -266,7 +292,7 @@ angular.module('hopsWorksApp')
                 };
 
                 self.storeCard = function (templateId, column, card) {
-                    
+
                     return MetadataActionService.storeCard(templateId, column, card);
                 };
 
@@ -337,7 +363,7 @@ angular.module('hopsWorksApp')
                     });
                 };
 
-                
+
                 /* TESTING RECEIVE BROADCAST FROM WEBSOCKET SERVICE */
                 $rootScope.$on('andreTesting', function (event, data) {
                     console.log('BroadcastReceived BOARD:');
@@ -347,7 +373,7 @@ angular.module('hopsWorksApp')
 
                 /* CARD MANIPULATION FUNCTIONS */
                 self.makeSearchable = function (card) {
-                    
+
                     card.find = !card.find;
                     console.log("Card " + card.title + " became searchable " + card.find);
                 };
@@ -370,12 +396,12 @@ angular.module('hopsWorksApp')
                     card.sizefield.showing = false;
                     self.editedField = null;
                 };
-                
+
                 self.modifyField = function (column, field) {
                     console.log("SAVING " + JSON.stringify(column));
                     $scope.tableid = column.id;
                     $scope.field = field;
-                    
+
                     var defer = $q.defer();
 
                         //necessary data to modify the field definition
@@ -398,17 +424,17 @@ angular.module('hopsWorksApp')
                                     });
                         }, function (dialogResponse) {
                             console.log("don't modify " + JSON.stringify(dialogResponse));
-                            //hand off the control back to the caller 
+                            //hand off the control back to the caller
                         });
 
                         return defer.promise;
                     };
             }]);
-        
+
 
 /*
 
- 
+
  deleteList: function (templateId, column) {
  return WSComm.send({
  sender: 'evsav',
@@ -422,8 +448,8 @@ angular.module('hopsWorksApp')
  })
  });
  },
-  
- 
+
+
  storeMetadata: function(data){
  return WSComm.send({
  sender: 'evsav',
@@ -432,6 +458,6 @@ angular.module('hopsWorksApp')
  message: JSON.stringify(data)
  });
  },
- 
- 
+
+
  */
