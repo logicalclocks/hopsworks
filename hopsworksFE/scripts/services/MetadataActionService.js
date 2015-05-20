@@ -9,7 +9,6 @@ angular.module('hopsWorksApp')
             return {
                 
                 fetchTemplates: function () {
-                    //edw klisi tou fetch_templates
                     return WSComm.send({
                         sender: 'evsav',
                         type: 'TemplateMessage',
@@ -100,13 +99,13 @@ angular.module('hopsWorksApp')
                     });
                 },
                 
-                deleteCard: function (column, card) {
+                deleteCard: function (templateId, column, card) {
                     return WSComm.send({
                         sender: 'evsav',
                         type: 'FieldsMessage',
                         action: 'delete_field',
                         message: JSON.stringify({
-                            tempid: self.currentTemplateID,
+                            tempid: templateId,
                             id: card.id,
                             tableid: column.id,
                             tablename: column.name,

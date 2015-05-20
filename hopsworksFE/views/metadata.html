@@ -31,6 +31,7 @@
                                                        ng-model="data[card.id]"/>
                                                 <!--ng-model="data[tab.title + '|' + card.title + '|' + card.id]"/>-->
                                             </div>
+                                            
                                             <!--select list input type-->
                                             <div ng-if="card.fieldtypeid === 2">
 <!--                                                <select ng-model="data[card.id]" 
@@ -51,6 +52,7 @@
                                                     </ui-select-choices>
                                                 </ui-select>
                                             </div>
+                                            
                                             <!--yes/no input type-->
                                             <div ng-if="card.fieldtypeid === 3">
                                                 {{card.fieldtypeContent[0].value}} / {{card.fieldtypeContent[1].value}}

@@ -33,6 +33,7 @@ angular.module('hopsWorksApp')
                 });
                 if (currentDS) {
                     self.currentDataSet = currentDS;
+                    
                 }
 
                 var getAll = function () {
@@ -97,6 +98,7 @@ angular.module('hopsWorksApp')
                 load();
 
                 self.newDataSetModal = function () {
+
                     ModalService.newDataSet('md', currentDS).then(
                             function (success) {
                                 growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
@@ -240,10 +242,16 @@ angular.module('hopsWorksApp')
                     );
                 };
 
-
                 self.storeTemplate = function () {
-                    
-                    MetadataActionService.storeTemplate(self.currentTemplateID, self.currentBoard);
+                                        
+                    MetadataActionService.storeTemplate(self.currentTemplateID, self.currentBoard)
+                        .then(function(response){
+                           console.log("TEMPLATE SAVED SUCCESSFULLY " + JSON.stringify(response));
+                           self.currentBoard = JSON.parse(response.board);
+                           self.close();
+                        }, function (error) {
+                            console.log(error);
+                        });
                 };
 
                 self.deleteList = function (column) {
@@ -290,7 +298,7 @@ angular.module('hopsWorksApp')
 
 
                 self.deleteCard = function (column, card) {
-                    MetadataActionService.deleteCard(column, card)
+                    MetadataActionService.deleteCard(self.currentTemplatID, column, card)
                         .then(function (success) {
                             console.log(success);
                             self.fetchTemplate(self.currentTemplateID);
@@ -327,17 +335,6 @@ angular.module('hopsWorksApp')
                                 });
                         }
                     });
-                };
-
-                self.saveTemplate = function(){
-                    MetadataActionService.storeTemplate()
-                        .then(function(response){
-                           console.log("TEMPLATE SAVED SUCCESSFULLY " + JSON.stringify(response));
-                           self.currentBoard = JSON.parse(response.board);
-                           self.close();
-                        }, function (error) {
-                            console.log(error);
-                        });
                 };
 
                 
