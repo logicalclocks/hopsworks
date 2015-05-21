@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,7 +20,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -36,12 +37,11 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
 import se.kth.hopsworks.controller.DataSetDTO;
+import se.kth.meta.entity.Templates;
 
 /**
  * @author André<amore@kth.se>
@@ -95,9 +95,11 @@ public class DataSetService {
             Constants.DIR_DATASET);
     logger.log(Level.FINE, "findDataSetsInProjectID Parent name: {0}", parent.
             getName());
+    
     List<Inode> cwdChildren;
     cwdChildren = inodes.findByParent(parent);
     List<InodeView> kids = new ArrayList<>();
+    
     for (Inode i : cwdChildren) {
       kids.add(new InodeView(i, inodes.getPath(i)));
       logger.log(Level.FINE, "path: {0}", inodes.getPath(i));
@@ -113,7 +115,7 @@ public class DataSetService {
   }
 
   @GET
-  @Path("/{path}")
+  @Path("/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response getDirContent(
@@ -122,15 +124,17 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException {
 
     Inode projectInode = inodes.findByName(this.project.getName());
-    Inode parent = inodes.findByParentAndName(projectInode,
-            Constants.DIR_DATASET);
+    Inode parent = inodes.findByParentAndName(projectInode,Constants.DIR_DATASET);
     String[] pathArray = path.split(File.separator);
+    
     for (String p : pathArray) {
       parent = inodes.findByParentAndName(parent, p);
     }
+    
     List<Inode> cwdChildren;
     cwdChildren = inodes.findByParent(parent);
     List<InodeView> kids = new ArrayList<>();
+    
     for (Inode i : cwdChildren) {
       kids.add(new InodeView(i, inodes.getPath(i)));
       logger.log(Level.FINE, "path: {0}", inodes.getPath(i));
@@ -153,8 +157,10 @@ public class DataSetService {
           @PathParam("fileName") String fileName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
+      
     InputStream is = null;
     String filePath = this.path + fileName;
+    
     try {
       is = fileOps.getInputStream(filePath);
       logger.log(Level.FINE, "File was downloaded from HDFS path: {0}",
@@ -162,6 +168,7 @@ public class DataSetService {
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
     }
+    
     return is;
   }
 /*
@@ -225,22 +232,23 @@ public class DataSetService {
   }
 
   @DELETE
-  @Path("/{fileName}")
+  @Path("/{fileName: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response removedataSetdir(
           @PathParam("fileName") String fileName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
+      
     boolean success = false;
     JsonResponse json = new JsonResponse();
     if (fileName == null || fileName.isEmpty()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NAME_EMPTY);
     }
+    
     String filePath = this.path + fileName;
-    System.err.println(filePath);
-    logger.log(Level.INFO, filePath);
+    
     try {
       success = fileOps.rmRecursive(filePath);
     } catch (IOException ex) {
@@ -248,10 +256,12 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not delete the file at " + filePath);
     }
+    
     if (!success) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not delete the file at " + filePath);
     }
+    
     json.setSuccessMessage(ResponseMessages.DATASET_REMOVED_FROM_HDFS);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();

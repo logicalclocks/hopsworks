@@ -88,11 +88,5 @@ public class InodeOpsFacade extends AbstractFacade<InodeOps> {
         
         System.out.println(inodeops);
         this.persist(inodeops);
-
-//        try {
-//            this.eventQueue.put(event);
-//        } catch (ApplicationException e) {
-//            logger.log(Level.SEVERE, e.getMessage(), e);
-//        }
     }
 }

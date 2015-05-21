@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author vangelis
  */
 @Entity
-@Table(name = "templates")
+@Table(name = "meta_templates")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "Templates.findAll", query = "SELECT t FROM Templates t"),

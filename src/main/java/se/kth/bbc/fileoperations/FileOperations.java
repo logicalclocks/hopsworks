@@ -86,7 +86,7 @@ public class FileOperations {
 
         if (success) {
             try{
-            inodes.createAndPersistDir(path, Inode.AVAILABLE, templateId);
+                inodes.createAndPersistDir(path, Inode.AVAILABLE, templateId);
             }catch (EJBTransactionRolledbackException e){
                 fsOps.rm(location, true);
                 throw new EJBTransactionRolledbackException();
@@ -95,6 +95,7 @@ public class FileOperations {
 
         return success;
     }
+
 
     /**
      * Copy a file from the local system to HDFS. The method first updates the

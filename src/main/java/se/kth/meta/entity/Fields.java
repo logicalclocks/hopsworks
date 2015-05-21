@@ -26,7 +26,7 @@ import javax.validation.constraints.Size;
  * @author Vangelis
  */
 @Entity
-@Table(name = "fields")
+@Table(name = "meta_fields")
 @NamedQueries({
     @NamedQuery(name = "Fields.findAll", query = "SELECT f FROM Fields f"),
     @NamedQuery(name = "Fields.findById", query = "SELECT f FROM Fields f WHERE f.id = :id"),

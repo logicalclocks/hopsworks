@@ -19,6 +19,7 @@ public class InodeView {
   private  String path;
   private  Date modification;
   private int id;
+  private int template;
 
   public InodeView() {}
 
@@ -26,6 +27,7 @@ public class InodeView {
     this.name = i.getName();
     this.dir = i.isDir();
     this.id = i.getId();
+    this.template = i.getTemplate();
     this.parent = false;
     this.path = path;
     this.modification = new Date(i.getModified().getTime());
@@ -38,7 +40,7 @@ public class InodeView {
     this.path = path;
     this.modification = null;
   }
-
+  
   public static InodeView getParentInode(String path) {
     String name = "..";
     boolean dir = true;
@@ -97,6 +99,14 @@ public class InodeView {
   
   public void setId(int id){
       this.id = id;
+  }
+  
+  public int getTemplate(){ 
+      return this.template;
+  }
+  
+  public void setTemplate(int template){
+      this.template = template;
   }
   
   @Override

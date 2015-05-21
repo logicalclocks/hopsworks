@@ -29,7 +29,7 @@ import javax.validation.constraints.Size;
  * @author Vangelis
  */
 @Entity
-@Table(name = "tables")
+@Table(name = "meta_tables")
 @EntityListeners(EntityListener.class)
 
 @NamedQueries({

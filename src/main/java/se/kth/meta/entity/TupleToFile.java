@@ -19,7 +19,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author vangelis
  */
 @Entity
-@Table(name = "tuple_to_file")
+@Table(name = "meta_tuple_to_file")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "TupleToFile.findAll", query = "SELECT t FROM TupleToFile t"),

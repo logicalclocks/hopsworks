@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Vangelis
  */
 @Entity
-@Table(name = "raw_data")
+@Table(name = "meta_raw_data")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "RawData.findAll", query = "SELECT r FROM RawData r"),
