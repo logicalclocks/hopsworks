@@ -8,7 +8,7 @@ angular.module('metaUI').controller('ExtendTemplateController',
         ['$scope', '$modalInstance', '$filter', '$rootScope', 'BoardService', 'data', 
             function ($scope, $modalInstance, $filter, $rootScope, BoardService, data) {
 
-                $scope.templates = {};
+                 $scope.templates = {};
                 $scope.selectedBoard = {};
                 $scope.dialogResponse = {};
                 $scope.templateName = "";
