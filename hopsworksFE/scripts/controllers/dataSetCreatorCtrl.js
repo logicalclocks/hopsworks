@@ -48,14 +48,16 @@ angular.module('hopsWorksApp')
 
             self.saveDataSetDir = function () {
                 if (dataSet) {
-                    console.log("SELECTED THE TEMPLATE " + JSON.stringify(self.selectedTemplate));
+                    
                     self.dataSet.name = dataSet + '/' + self.dataSet.name;
                     self.dataSet.template = self.selectedTemplate.id;
                     
-                    console.log("SSDFSDFSD FSD F SD SD " + JSON.stringify(self.dataSet));
-                    
+                         console.log("SELECTED THE TEMPLATE 1 " + JSON.stringify(self.selectedTemplate));               
                     createDataSetDir(self.dataSet);
                 }else{
+                    self.dataSet.template = self.selectedTemplate.id;
+                    
+                         console.log("SELECTED THE TEMPLATE 2 " + JSON.stringify(self.selectedTemplate));   
                     createDataSetDir(self.dataSet);
                 }
             };

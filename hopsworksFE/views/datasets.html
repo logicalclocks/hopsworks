@@ -15,7 +15,7 @@
 
     <section>
       <div class="content-wrapper">
-        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.name }} / Datasets / {{datasetsCtrl.currentDataSet}}</h3>
+        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName }} / Datasets / {{datasetsCtrl.currentDataSet}}</h3>
 
         <div class="row">
 
@@ -33,6 +33,7 @@
                   <div class="btn-group"
                        style="width: 100%;">
                     <button style="width: 100%;"
+                            ng-click="datasetsCtrl.newDataSetModal()"
                             class="btn btn-warning">
                       New dataset
                     </button>

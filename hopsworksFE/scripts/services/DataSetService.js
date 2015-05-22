@@ -12,7 +12,7 @@ angular.module('hopsWorksApp')
                 },
 
                 getDir: function (dirName) {
-                    return $http.get('/api/project/' + id + '/dataset/' + dirName);
+                     return $http.get('/api/project/' + id + '/dataset/' + dirName);
                 },
 
                 download: function (fileName) {
@@ -37,6 +37,7 @@ angular.module('hopsWorksApp')
                 },
 
                 removeDataSetDir: function (fileName) {
+                    console.log("deleting " + '/api/project/' + id + '/dataset/' + fileName);
                     return $http.delete('/api/project/' + id + '/dataset/' + fileName);
                 }
             };

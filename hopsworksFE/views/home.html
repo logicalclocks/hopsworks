@@ -97,7 +97,7 @@
         </span>
       </div>
       <div ng-repeat="project in homeCtrl.projects | filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects-1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects">
-      <a href="#/project/{{project.project.id}}"
+          <a href="#/project/{{project.project.id}}"
          class="list-group-item"
          context-menu
          data-target="menu-{{ $index }}">

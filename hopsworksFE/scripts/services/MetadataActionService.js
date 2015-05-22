@@ -7,7 +7,6 @@ angular.module('hopsWorksApp')
         .service('MetadataActionService', function (WSComm) {
 
             return {
-                
                 fetchTemplates: function () {
                     return WSComm.send({
                         sender: 'evsav',
@@ -137,6 +136,15 @@ angular.module('hopsWorksApp')
                         type: 'MetadataMessage',
                         action: 'fetch_metadata',
                         message: JSON.stringify({tableid: tableId})
+                    });
+                },
+                
+                storeMetadata: function (data) {
+                    return WSComm.send({
+                        sender: 'evsav',
+                        type: 'MetadataMessage',
+                        action: 'store_metadata',
+                        message: JSON.stringify(data)
                     });
                 }
             };

@@ -123,6 +123,7 @@ angular.module('hopsWorksApp')
               function ($q, $location, AuthService) {
                 return AuthService.session().then(
                     function (success) {
+                        console.log("---------------- " + JSON.stringify(success));
                     },
                     function (err) {
                       $location.path('/login');

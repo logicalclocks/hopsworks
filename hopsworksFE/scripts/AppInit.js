@@ -81,25 +81,25 @@ angular.module('metaUI')
 
                 //initialize the main screen
                 BoardService.fetchTemplates()
-                        .then(function (data) {
+                    .then(function (data) {
 
-                            var data = JSON.parse(data.board);
-                            $rootScope.templates = data.templates;
+                        var data = JSON.parse(data.board);
+                        $rootScope.templates = data.templates;
 
-                            if ($rootScope.templates.length === 0){
-                                $rootScope.templates = [];
-                                return;
-                            }
-                            
-                            var templateid = $rootScope.templates[0].id;
-                            $rootScope.templateId = templateid;
-                            $rootScope.templateName = $rootScope.templates[0].name;
+                        if ($rootScope.templates.length === 0){
+                            $rootScope.templates = [];
+                            return;
+                        }
 
-                            BoardService.fetchTemplate(templateid)
-                                    .then(function (response) {
+                        var templateid = $rootScope.templates[0].id;
+                        $rootScope.templateId = templateid;
+                        $rootScope.templateName = $rootScope.templates[0].name;
 
-                                        $rootScope.mainBoard = BoardService.mainBoard(JSON.parse(response.board));
-                                        $rootScope.tabs = [];
-                                    });
-                        });
+                        BoardService.fetchTemplate(templateid)
+                            .then(function (response) {
+
+                                $rootScope.mainBoard = BoardService.mainBoard(JSON.parse(response.board));
+                                $rootScope.tabs = [];
+                            });
+                    });
             }]);
