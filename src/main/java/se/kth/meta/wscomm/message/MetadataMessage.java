@@ -102,7 +102,7 @@ public class MetadataMessage implements Message {
             
         }
         
-        int inodeid = 1367; //Integer.parseInt(obj.getString("inodeid"));
+        int inodeid = obj.getInt("inodeid");
         Set<Entry<String, JsonValue>> set = obj.entrySet();
 
         for (Entry<String, JsonValue> entry : set) {
