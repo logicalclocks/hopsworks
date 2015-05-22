@@ -132,12 +132,14 @@ public class Project implements Serializable {
 
   public Project(String name) {
     this.name = name;
+    this.archived = false;
   }
 
   public Project(String name, User owner, Date timestamp) {
     this.name = name;
     this.owner = owner;
     this.created = timestamp;
+    this.archived = false;
   }
 
   public Date getCreated() {
@@ -206,7 +208,7 @@ public class Project implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.project.Project[ name=" + name + " ]";
+    return "se.kth.bbc.project.Project[ name=" + name + " archived=" + archived + " ]";
   }
 
   @XmlTransient

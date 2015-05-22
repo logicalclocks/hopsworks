@@ -86,6 +86,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
       Integer projectId;
       String userRole;
       projectId = Integer.valueOf(pathParts[1]);
+      
       Project project = projectBean.find(projectId);
 
       log.log(Level.SEVERE, "PROJECT FOUND {0} ", project);

@@ -166,7 +166,7 @@ public class ProjectService {
 
     String owner = sc.getUserPrincipal().getName();
     List<ProjectServiceEnum> projectServices = new ArrayList<>();
-
+    
     for (String s : projectDTO.getServices()) {
       try {
         ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
