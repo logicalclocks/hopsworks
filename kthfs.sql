@@ -168,10 +168,10 @@ CREATE TABLE IF NOT EXISTS `diseases` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `fields`
+-- Table structure for table `meta_fields`
 --
 
-CREATE TABLE IF NOT EXISTS `fields` (
+CREATE TABLE IF NOT EXISTS `meta_fields` (
   `fieldid` int(11) NOT NULL AUTO_INCREMENT,
   `maxsize` int(11) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
@@ -183,38 +183,38 @@ CREATE TABLE IF NOT EXISTS `fields` (
   `fieldtypeid` int(11) NOT NULL,
   PRIMARY KEY (`fieldid`),
   KEY `FK_fields_tableid` (`tableid`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `field_predefined_values`
+-- Table structure for table `meta_field_predefined_values`
 --
 
-CREATE TABLE IF NOT EXISTS `field_predefined_values` (
+CREATE TABLE IF NOT EXISTS `meta_field_predefined_values` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `fieldid` int(11) NOT NULL,
   `valuee` varchar(250) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `field_types`
+-- Table structure for table `meta_field_types`
 --
 
-CREATE TABLE IF NOT EXISTS `field_types` (
+CREATE TABLE IF NOT EXISTS `meta_field_types` (
   `id` mediumint(9) NOT NULL AUTO_INCREMENT,
   `description` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --
--- Dumping data for table `field_types`
+-- Dumping data for table `meta_field_types`
 --
 
-INSERT INTO `field_types` (`id`, `description`) VALUES
+INSERT INTO `meta_field_types` (`id`, `description`) VALUES
 (1, 'text'),
 (2, 'value list'),
 (3, 'yes/no');
@@ -422,10 +422,10 @@ CREATE TABLE IF NOT EXISTS `project_team` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `raw_data`
+-- Table structure for table `meta_raw_data`
 --
 
-CREATE TABLE IF NOT EXISTS `raw_data` (
+CREATE TABLE IF NOT EXISTS `meta_raw_data` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `data` longtext,
   `fieldid` int(11) DEFAULT NULL,
@@ -511,41 +511,78 @@ CREATE TABLE IF NOT EXISTS `sample_material` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tables`
+-- Table structure for table `meta_inodes_ops`
 --
 
-CREATE TABLE IF NOT EXISTS `tables` (
+CREATE TABLE IF NOT EXISTS `meta_inodes_ops` (
+  `inodeid` int(11) NOT NULL,
+  `inode_pid` int(11) NOT NULL,
+  `inode_root` int(11) NOT NULL,
+  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `operationn` smallint(6) NOT NULL,
+  `processed` smallint(6) NOT NULL,
+  PRIMARY KEY (`inodeid`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `meta_inodes_ops_deleted`
+--
+
+CREATE TABLE IF NOT EXISTS `meta_inodes_ops_deleted` (
+  `inodeid` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+----------------------------------------------------------
+--
+-- Table structure for table `meta_tables`
+--
+
+CREATE TABLE IF NOT EXISTS `meta_tables` (
   `tableid` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) DEFAULT NULL,
   `templateid` int(11) NOT NULL,
   PRIMARY KEY (`tableid`),
   KEY `FK_tables_templateid` (`templateid`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `templates`
+-- Table structure for table `meta_templates`
 --
 
-CREATE TABLE IF NOT EXISTS `templates` (
+CREATE TABLE IF NOT EXISTS `meta_templates` (
   `templateid` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(250) NOT NULL,
   PRIMARY KEY (`templateid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `tuple_to_file`
+-- Table structure for table `meta_template_to_inode`
 --
 
-CREATE TABLE IF NOT EXISTS `tuple_to_file` (
+CREATE TABLE IF NOT EXISTS `meta_template_to_inode` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `template_id` int(11) NOT NULL,
+  `inode_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+
+--
+-- Table structure for table `meta_tuple_to_file`
+--
+
+CREATE TABLE IF NOT EXISTS `meta_tuple_to_file` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `inodeid` int(11) DEFAULT NULL,
   `tupleid` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -714,11 +751,6 @@ ALTER TABLE `collection_type`
 ALTER TABLE `consent`
   ADD CONSTRAINT `consent_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`);
 
---
--- Constraints for table `fields`
---
-ALTER TABLE `fields`
-  ADD CONSTRAINT `FK_fields_tableid` FOREIGN KEY (`tableid`) REFERENCES `tables` (`tableid`);
 
 --
 -- Constraints for table `jobhistory`
@@ -795,11 +827,6 @@ ALTER TABLE `project_team`
   ADD CONSTRAINT `project_team_ibfk_1` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`),
   ADD CONSTRAINT `project_team_ibfk_2` FOREIGN KEY (`team_member`) REFERENCES `users` (`email`) ON DELETE CASCADE ON UPDATE NO ACTION;
 
---
--- Constraints for table `raw_data`
---
-ALTER TABLE `raw_data`
-  ADD CONSTRAINT `FK_raw_data_fieldid` FOREIGN KEY (`fieldid`) REFERENCES `fields` (`fieldid`);
 
 --
 -- Constraints for table `samplecollections`
@@ -836,10 +863,22 @@ ALTER TABLE `sample_material`
   ADD CONSTRAINT `sample_material_ibfk_1` FOREIGN KEY (`sample_id`) REFERENCES `samples` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION;
 
 --
--- Constraints for table `tables`
+-- Constraints for table `meta_fields`
 --
-ALTER TABLE `tables`
-  ADD CONSTRAINT `FK_tables_templateid` FOREIGN KEY (`templateid`) REFERENCES `templates` (`templateid`);
+ALTER TABLE `meta_fields`
+  ADD CONSTRAINT `FK_fields_tableid` FOREIGN KEY (`tableid`) REFERENCES `meta_tables` (`tableid`);
+
+--
+-- Constraints for table `meta_raw_data`
+--
+ALTER TABLE `meta_raw_data`
+  ADD CONSTRAINT `FK_raw_data_fieldid` FOREIGN KEY (`fieldid`) REFERENCES `meta_fields` (`fieldid`);
+
+--
+-- Constraints for table `meta_tables`
+--
+ALTER TABLE `meta_tables`
+  ADD CONSTRAINT `FK_tables_templateid` FOREIGN KEY (`templateid`) REFERENCES `meta_templates` (`templateid`);
 
 --
 -- Constraints for table `userlogins`

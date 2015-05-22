@@ -49,7 +49,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
 public class ProjectService {
 
   @EJB
-  private ProjectController projectController;
+   private ProjectController projectController;
   @EJB
   private NoCacheResponse noCacheResponse;
   @Inject
