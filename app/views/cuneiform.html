@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="styles/timeline.css">
+<link rel="stylesheet" href="styles/cuneiform.css">
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
 
@@ -13,7 +15,7 @@
 
         <!-- Page Content -->
 
-        <div class="widget-body col-md-6">
+        <div class="widget-body col-md-4">
           <h3> History </h3>
           <div class="timeline clearfix">
             <div class="mid-line"></div>
@@ -25,14 +27,18 @@
               <div class="right">
                 <div class="r-arrow"></div>
                 <div class="about-task">
-                  <div class="header">Example job
+                  <div class="header"> VariantCall1
                     <small class="muted">Run by John Doe on 18-05-2015 18:25
                     </small>
                   </div>
                   <p class="no-margin">
-                    State finished took 20s. <br/>
-                    Logs: stdout.log, stderr.log <br/>
-                    Results: results.txt
+                    State: finished, took 51min. <br/>
+                    Logs:
+                    <ul>
+                      <li><a href="">CuneiformVariantCall1.stdout</a></li>
+                      <li><a href="">CuneiformVariantCall1.stderr</a></li>
+                    </ul>
+                    Results: <a href="">results.txt </a>
                   </p>
                 </div>
               </div>
@@ -41,28 +47,36 @@
           </div>
         </div>
 
-        <div class="widget-body col-md-6">
+        <div class="widget-body col-md-4">
           <div class="timeline clearfix">
 
             <h3> Run configuration </h3>
             <table>
               <tr>
-                <td>Job name </td>
-                <td> <input type="text"></td>
+                <td class="firstColumn">Job name </td>
+                <td class="secondColumn"> <input type="text"></td>
               </tr>
               <tr>
-                <td>Upload workflow </td>
-                <td><button>Select...</button></td>
+                <td class="firstColumn">Upload workflow </td>
+                <td class="secondColumn"><button>Select...</button></td>
               </tr>
               <tr>
-                <td>Uploaded file </td>
-                <td>wordcount.cf</td>
+                <td class="firstColumn">Uploaded file </td>
+                <td class="secondColumn">wordcount.cf</td>
+              </tr>
+            </table>
+
+            <h3> Input Parameters </h3>
+            <table>
+              <tr>
+                <td class="firstColumn">txt</td>
+                <td class="secondColumn"> <input type="text"></td>
               </tr>
             </table>
           </div>
         </div>
 
-        <div class="widget-body col-md-6">
+        <div class="widget-body col-md-4">
           <div class="timeline clearfix">
 
             <h3>Results</h3>
