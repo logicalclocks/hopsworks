@@ -11,9 +11,11 @@
       </li>
 
       <li ng-repeat="typeObject in projectCtrl.alreadyChoosenServices">
-        <a href="">
-          {{typeObject}} <span class="sub_icon fa fa-globe fa-lg pull-right"></span>
-        </a>
+        <div ng-click="projectCtrl.goToService(typeObject)">
+          <a href="">
+            {{typeObject}} <span class="sub_icon fa fa-globe fa-lg pull-right"></span>
+          </a>
+        </div>
       </li>
 
 
