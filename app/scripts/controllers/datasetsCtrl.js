@@ -15,38 +15,21 @@ angular.module('hopsWorksApp')
       self.files = [];
       var file = {};
 
-      self.datasets.push('MedicalExperiment');
-      self.datasets.push('DNASamples');
-      self.datasets.push('TestData');
-      self.datasets.push('Movies');
-      self.datasets.push('FinanceCalc');
-      self.datasets.push('EcoProject');
-      self.datasets.push('Measurements');
-      self.datasets.push('HugeCollection');
+      self.datasets.push('Logs');
+      self.datasets.push('CuneiformResults');
+      self.datasets.push('SampleCollectionA');
+      self.datasets.push('SampleCollectionB');
 
 
 
-      file = {name: 'Folder', owner: 'André', modified: 'Mar 23', filesize: '4 MB'}
+      file = {name: 'CuneiformVariantCall1.stdout', owner: 'André', modified: 'Mar 23', filesize: '127 KB'}
       self.files.push(file);
-      file = {name: 'index.html', owner: 'André', modified: 'Mar 29', filesize: '465 KB'}
+      file = {name: 'CuneiformVariantCall1.stderr', owner: 'André', modified: 'Mar 23', filesize: '0 B'}
       self.files.push(file);
-      file = {name: 'AndrePage.html', owner: 'André', modified: 'Jan 10', filesize: '33 KB'}
+      file = {name: 'SparkJob2.stdout', owner: 'André', modified: 'Mar 23', filesize: '1 KB'}
       self.files.push(file);
-      file = {name: 'image3.jpg', owner: 'Ermias', modified: 'Apr 7', filesize: '8 MB'}
+      file = {name: 'SparkJob2.stderr', owner: 'André', modified: 'Mar 23', filesize: '50 KB'}
       self.files.push(file);
-      file = {name: 'dump34.sql', owner: 'André', modified: 'Mar 2', filesize: '37 KB'}
-      self.files.push(file);
-      file = {name: 'Yarn.yml', owner: 'André', modified: 'Feb 25', filesize: '6 MB'}
-      self.files.push(file);
-      file = {name: 'Yarn2.yml', owner: 'André', modified: 'Apr 3', filesize: '17 MB'}
-      self.files.push(file);
-      file = {name: 'Yarn3.yml', owner: 'Ermias', modified: 'Jun 2', filesize: '198 KB'}
-      self.files.push(file);
-      file = {name: 'Yarn4.yml', owner: 'André', modified: 'Oct 23', filesize: '32 MB'}
-      self.files.push(file);
-      file = {name: 'Yar5.yml', owner: 'Ermias', modified: 'Dec 34', filesize: '2 GB'}
-      self.files.push(file);
-
 
       self.toggleLeft = buildToggler('left');
       self.toggleRight = buildToggler('right');

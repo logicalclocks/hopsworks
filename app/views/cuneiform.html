@@ -1,0 +1,91 @@
+<link rel="stylesheet" href="styles/timeline.css">
+
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+
+
+  <div id="wrapper" class="toggled">
+    <div class="overlay"></div>
+
+    <div ng-include="'navProject.html'"></div>
+
+    <section>
+      <div class="content-wrapper">
+        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName }} / Start</h3>
+
+        <!-- Page Content -->
+
+        <div class="widget-body col-md-6">
+          <h3> History </h3>
+          <div class="timeline clearfix">
+            <div class="mid-line"></div>
+
+            <!-- repeat goes here -->
+
+            <div>
+
+              <div class="right">
+                <div class="r-arrow"></div>
+                <div class="about-task">
+                  <div class="header">Example job
+                    <small class="muted">Run by John Doe on 18-05-2015 18:25
+                    </small>
+                  </div>
+                  <p class="no-margin">
+                    State finished took 20s. <br/>
+                    Logs: stdout.log, stderr.log <br/>
+                    Results: results.txt
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="widget-body col-md-6">
+          <div class="timeline clearfix">
+
+            <h3> Run configuration </h3>
+            <table>
+              <tr>
+                <td>Job name </td>
+                <td> <input type="text"></td>
+              </tr>
+              <tr>
+                <td>Upload workflow </td>
+                <td><button>Select...</button></td>
+              </tr>
+              <tr>
+                <td>Uploaded file </td>
+                <td>wordcount.cf</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="widget-body col-md-6">
+          <div class="timeline clearfix">
+
+            <h3>Results</h3>
+
+          </div>
+        </div>
+
+
+        <!-- /#page-content-wrapper -->
+      </div>
+
+
+    </section>
+
+
+  </div>
+  <!-- /#wrapper -->
+
+
+</div>
+
+
+</div>
+
