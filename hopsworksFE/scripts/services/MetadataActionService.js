@@ -130,12 +130,13 @@ angular.module('hopsWorksApp')
                     });
                 },
                 
-                fetchMetadata: function (tableId) {
+                fetchMetadata: function (tableId, inodeId) {
+                    console.log("fetching metadata for inode " + inodeId);
                     return WSComm.send({
                         sender: 'evsav',
                         type: 'MetadataMessage',
                         action: 'fetch_metadata',
-                        message: JSON.stringify({tableid: tableId})
+                        message: JSON.stringify({tableid: tableId, inodeid: inodeId})
                     });
                 },
                 

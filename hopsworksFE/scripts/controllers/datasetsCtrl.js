@@ -19,6 +19,8 @@ angular.module('hopsWorksApp')
                 self.currentProject = "";
                 self.currentFile = {};
                 self.metaData = {};
+                self.meta = [];
+                self.metadataView = {};
 
                 self.dataSet = {};
                 var file = {name: "", owner: 'André', modified: "", filesize: '4 GB', path: "", dir: ""};
@@ -71,6 +73,7 @@ angular.module('hopsWorksApp')
                             }
                             //console.log("GETTING THE DIR " + JSON.stringify(self.files));
                             self.currentFile = self.files[0];
+
                             self.setMetadataTemplate(self.files[0]);
                         }, function (error) {
                             console.log("getDir error");
@@ -87,10 +90,59 @@ angular.module('hopsWorksApp')
                     console.log("SELECTED FILE " + JSON.stringify(file));
                     
                     MetadataActionService.fetchTemplate(templateId)
+                        .then(function(response){
+                            //console.log("LOADED TEMPLATE " + JSON.stringify(response.board));
+                            self.currentBoard = JSON.parse(response.board);
+                            self.initializeMetadataTabs(JSON.parse(response.board));
+
+                            self.fetchMetadataForTemplate();
+                    });
+                };
+                
+                self.fetchMetadataForTemplate = function(){
+                    //columns are the tables in the template
+                    self.meta = [];
+                    
+                    var tables = self.currentBoard.columns;
+                    angular.forEach(tables, function(table, key){
+                        console.log("value " + JSON.stringify(table));
+                        MetadataActionService.fetchMetadata(table.id, self.currentFile.id)
                             .then(function(response){
-                                //console.log("LOADED TEMPLATE " + JSON.stringify(response.board));
-                                self.currentBoard = JSON.parse(response.board);
-                                self.initializeMetadataTabs(JSON.parse(response.board));
+                                //console.log("METADATA FOR TABLE " + table.name);
+                                //console.log("ARE " + JSON.stringify(response.board));
+                                self.reconstructMetadata(table.name, JSON.parse(response.board));
+                                //self.meta = JSON.parse(response.board);
+                        });
+                    });
+                };
+                
+                self.reconstructMetadata = function(tableName, rawdata){
+
+                    $scope.tableName = rawdata.table;
+//                    self.metadataView = results;
+//                    self.meta.push({name: tableName, tuples: self.metadataView});
+                    
+                    self.meta.push({name: tableName, rest: rawdata});
+                    self.metadataView = {};
+                    //self.print(self.meta);
+                    console.log("RECONSTRUCTED ARRAY  " + JSON.stringify(self.meta));
+                };
+                
+                self.print = function(meta){
+                    angular.forEach(meta, function(table){
+                        var field = table.tuples.headers;
+                        console.log("IN TABLE " + table.name);
+                        
+                        angular.forEach(field, function(fieldName){
+                            
+                            console.log("IN FIELD " + fieldName);
+                            
+                            var valueArray = table.tuples.values;
+                            
+                            angular.forEach(valueArray, function(value){
+                                console.log("printing " + JSON.stringify(value[0].raw));
+                            });
+                        });
                     });
                 };
                 
@@ -101,7 +153,7 @@ angular.module('hopsWorksApp')
                         console.log(key + ': ' + value.name);
                         self.tabs.push({title: value.name, cards: value.cards});
                     });
-                    console.log("initialized tabs " + JSON.stringify(self.tabs));
+                    //console.log("initialized tabs " + JSON.stringify(self.tabs));
                 };
                 
                 /*

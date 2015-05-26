@@ -168,6 +168,7 @@
                 <div>
                   <md-content class="md-padding" style="padding-top: 0px;">
                     <md-tabs md-dynamic-height md-border-bottom>
+                        <!--1st SIDE TAB-->
                       <md-tab label="Details">
                         <md-content>
                           <table id="mytable1" class="table table-bordred table-striped" style="margin-top: 16px;">
@@ -206,7 +207,30 @@
                           class="fa fa-pencil-square-o pull-right" style="font-size: 20px;"></i>
                         </div>
 
+                          <!--METADATA PRESENTATION SECTION-->
+                        <div id="board">
+                            <div class="modal-header">
+                                <h4 class="modal-title" ng-model="columnName">Metadata in file <font size="5" color="green">
+                                    <b>{{datasetsCtrl.currentFile.name}}</b></font></h4>
+                            </div>
+
+                            <div class="" height="80%">
+                                <div class="input-group-lg" align="center">
+                                    <div ng-repeat="table in datasetsCtrl.meta"><h2>{{table.name}}</h2>
+                                        <div>
+                                            <div ng-repeat="field in table.rest.fields"><b>{{field.name}}</b>
+                                                <div ng-repeat="value in field.data">
+                                                    {{value.raw}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                          
                       </md-tab>
+                        <!--2nd SIDE TAB-->
                       <md-tab label="Activity">
                         <md-content class="md-padding" style="padding-left: 20px;padding-right: 20px;">
 
