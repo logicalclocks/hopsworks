@@ -92,9 +92,12 @@ public class MetadataMessage implements Message {
         JsonObject obj = Json.createReader(new StringReader(this.message)).readObject();
         List<EntityIntf> data = new LinkedList<>();
 
+        int inodeid = obj.getInt("inodeid");
+        
         try {
             int tableId = obj.getInt("tableid");
             Tables table = new Tables(tableId);
+            table.setInodeid(inodeid);
             List<EntityIntf> list = new LinkedList<>();
             list.add(table);
             return list;
@@ -102,7 +105,6 @@ public class MetadataMessage implements Message {
             
         }
         
-        int inodeid = obj.getInt("inodeid");
         Set<Entry<String, JsonValue>> set = obj.entrySet();
 
         for (Entry<String, JsonValue> entry : set) {

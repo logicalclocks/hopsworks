@@ -162,6 +162,7 @@ public class Dbao {
 
     public TupleToFile getTupletofile(int tupleid) throws DatabaseException {
 
+        //System.err.println("finding meta for tuple " + tupleid);
         String query = "TupleToFile.findByTupleid";
         Query q = this.em.createNamedQuery(query);
         q.setParameter("tupleid", tupleid);

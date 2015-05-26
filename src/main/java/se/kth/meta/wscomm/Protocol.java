@@ -1,6 +1,6 @@
-
 package se.kth.meta.wscomm;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import se.kth.meta.db.Dbao;
 import se.kth.meta.entity.EntityIntf;
@@ -30,7 +30,7 @@ import se.kth.meta.wscomm.message.TextMessage;
 public class Protocol {
 
     private static final Logger logger = Logger.getLogger(Protocol.class.getName());
-    
+
     private Dbao db;
     private Utils utils;
 
@@ -45,9 +45,9 @@ public class Protocol {
 
     /**
      * Process an incoming message and create and send back the response
-     * 
+     *
      * @param message the incoming message
-     * 
+     *
      * @return a new response message or an error message
      */
     public Message GFR(Message message) {
@@ -92,7 +92,7 @@ public class Protocol {
             case DELETE_TABLE:
                 Tables table = (Tables) message.parseSchema().get(0);
                 this.utils.deleteTable(table);
-                
+
                 return this.createSchema(message);
 
             case DELETE_FIELD:
@@ -103,11 +103,12 @@ public class Protocol {
 
             case FETCH_METADATA:
                 table = (Tables) message.parseSchema().get(0);
-                return this.fetchTableMetadata(table);
-                
+                //return this.fetchTableMetadata(table);
+                return this.fetchTableMetadataForInode(table, table.getInodeid());
+
             case FETCH_FIELD_TYPES:
                 return this.fetchFieldTypes(message);
-                
+
             //saves the actual metadata
             case STORE_METADATA:
                 List<EntityIntf> schema = message.parseSchema();
@@ -123,25 +124,25 @@ public class Protocol {
 
         return new TextMessage();
     }
-    
+
     private Message addNewTemplate(Message message) throws ApplicationException {
         ContentMessage cmsg = (ContentMessage) message;
-        
+
         Templates template = cmsg.getTemplate();
         this.utils.addNewTemplate(template);
-        
+
         return this.fetchTemplates(message);
     }
 
     private Message removeTemplate(Message message) throws ApplicationException {
         ContentMessage cmsg = (ContentMessage) message;
-        
+
         Templates template = cmsg.getTemplate();
         this.utils.removeTemplate(template);
-        
+
         return this.fetchTemplates(message);
     }
-    
+
     private void storeSchema(Message message) throws ApplicationException {
         List<EntityIntf> schema = message.parseSchema();
         this.utils.addTables(schema);
@@ -150,27 +151,27 @@ public class Protocol {
     private Message fetchTemplates(Message message) {
 
         List<Templates> templates = this.db.loadTemplates();
-        
+
         String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) templates);
         message.setMessage(jsonMsg);
 
         return message;
     }
 
-    private Message fetchFieldTypes(Message message){
-        
+    private Message fetchFieldTypes(Message message) {
+
         List<FieldTypes> ftypes = this.db.loadFieldTypes();
-        
+
         FieldTypesMessage newMsg = new FieldTypesMessage();
-        
+
         String jsonMsg = newMsg.buildSchema((List<EntityIntf>) (List<?>) ftypes);
-        
+
         newMsg.setSender(message.getSender());
         newMsg.setMessage(jsonMsg);
-        
+
         return newMsg;
     }
-    
+
     private Message createSchema(Message message) {
 
         ContentMessage cmsg = (ContentMessage) message;
@@ -183,6 +184,13 @@ public class Protocol {
         return message;
     }
 
+    /**
+     * Fetches ALL the metadata a metadata table carries. It does not do any
+     * filtering
+     *
+     * @param table
+     * @return
+     */
     private Message fetchTableMetadata(Tables table) {
 
         try {
@@ -191,11 +199,16 @@ public class Protocol {
 
             List<Fields> fields = t.getFields();
             for (Fields field : fields) {
+                /*
+                 * Load raw data based on the field id. Need to filter this further
+                 * according to tupleid and inodeid
+                 */
                 List<RawData> raw = field.getRawData();
 
                 for (RawData rawdata : raw) {
                     TupleToFile ttf = this.db.getTupletofile(rawdata.getTupleid());
                     rawdata.setInodeid(ttf.getInodeid());
+                    System.err.println("SETTING THE INODE FOR TUPLE TO FILE " + ttf.getInodeid());
                 }
             }
 
@@ -212,4 +225,55 @@ public class Protocol {
             return new ErrorMessage("Server", e.getMessage());
         }
     }
+
+    /**
+     * Fetches the metadata a metadata table carries ONLY for a specific inodeid
+     *
+     * @param table
+     * @return
+     */
+    private Message fetchTableMetadataForInode(Tables table, int inodeid) {
+
+        try {
+            MetadataMessage message = new MetadataMessage("Server", "");
+            Tables t = this.db.getTable(table.getId());
+
+            List<Fields> fields = t.getFields();
+
+            for (Fields field : fields) {
+                /*
+                 * Load raw data based on the field id. Need to filter this further
+                 * according to tupleid and inodeid
+                 */
+                List<RawData> rawList = field.getRawData();
+                List<RawData> toKeep = new LinkedList<>();
+                
+                for(RawData raw : rawList){
+
+                    TupleToFile ttf = this.db.getTupletofile(raw.getTupleid());
+
+                    //keep only the data related to the specific inode
+                    if (ttf.getInodeid() == inodeid) {
+                        System.err.println("GOING TO KEEP RAW RECORD " + ttf.getTupleid());
+                        raw.setInodeid(ttf.getInodeid());
+                        toKeep.add(raw);
+                    }
+                }
+
+                field.setRawData(toKeep);
+            }
+
+            List<Tables> tables = new LinkedList<>();
+            tables.add(t);
+            String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
+
+            message.setMessage(jsonMsg);
+
+            return message;
+
+        } catch (DatabaseException e) {
+            return new ErrorMessage("Server", e.getMessage());
+        }
+    }
+
 }
