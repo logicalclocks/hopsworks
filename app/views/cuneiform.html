@@ -4,14 +4,15 @@
   <div ng-include="'nav.html'"></div>
 
 
-  <div id="wrapper" class="toggled">
+  <div id="wrapper" class="toggled" ng-controller="CuneiformCtrl as cuneiformCtrl">
     <div class="overlay"></div>
 
     <div ng-include="'navProject.html'"></div>
 
     <section>
       <div class="content-wrapper">
-        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName }} / Start</h3>
+        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName }} / Cuneiform</h3>
+
 
         <!-- Page Content -->
 
@@ -20,25 +21,23 @@
           <div class="timeline clearfix">
             <div class="mid-line"></div>
 
-            <!-- repeat goes here -->
-
-            <div>
+            <div ng-repeat="job in jobs">
 
               <div class="right">
                 <div class="r-arrow"></div>
                 <div class="about-task">
-                  <div class="header"> VariantCall1
-                    <small class="muted">Run by John Doe on 18-05-2015 18:25
+                  <div class="header"> {{job.name}}
+                    <small class="muted">Run by {{job.owner}} on {{job.submissionTime}}
                     </small>
                   </div>
                   <p class="no-margin">
-                    State: finished, took 51min. <br/>
+                    State: {{job.state}}, took {{job.duration}}. <br/>
                     Logs:
-                    <ul>
-                      <li><a href="">CuneiformVariantCall1.stdout</a></li>
-                      <li><a href="">CuneiformVariantCall1.stderr</a></li>
-                    </ul>
-                    Results: <a href="">results.txt </a>
+                  <ul>
+                    <li><a href="">{{job.stdout}}</a></li>
+                    <li><a href="">{{job.stderr}}</a></li>
+                  </ul>
+                  Results: <a href="" ng-repeat="result in job.results">{{result.name}} </a>
                   </p>
                 </div>
               </div>
@@ -86,6 +85,7 @@
 
 
         <!-- /#page-content-wrapper -->
+
       </div>
 
 

@@ -13,7 +13,6 @@ angular.module('hopsWorksApp')
 
       self.toggleLeft = buildToggler('left');
       self.toggleRight = buildToggler('right');
-
       /**
        * Build handler to open/close a SideNav; when animation finishes
        * report completion in console
@@ -35,6 +34,19 @@ angular.module('hopsWorksApp')
             $log.debug("close RIGHT is done");
           });
       };
+
+      $scope.jobs = [
+              {"name": "job1",
+               "id": "1",
+               "submissionTime":"2015-05-20",
+               "owner": "John Doe",
+               "state": "finished",
+               "duration": "20s",
+               "stdout": "path1",
+               "stderr": "path2",
+               "results": [
+                {"name": "results", "path":"path3"}]}
+            ];
 
     }]);
 
