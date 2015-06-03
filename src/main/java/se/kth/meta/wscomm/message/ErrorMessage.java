@@ -1,4 +1,3 @@
-
 package se.kth.meta.wscomm.message;
 
 import javax.json.Json;
@@ -9,45 +8,45 @@ import javax.json.Json;
  */
 public class ErrorMessage extends PlainMessage {
 
-    private final String TYPE = "ErrorMessage";
-    private String sender;
-    private String message;
-    private String action;
+  private final String TYPE = "ErrorMessage";
+  private String sender;
+  private String message;
+  private String action;
 
-    public ErrorMessage(String sender, String message) {
-        this.sender = sender;
-        this.message = message;
-    }
+  public ErrorMessage(String sender, String message) {
+    this.sender = sender;
+    this.message = message;
+  }
 
-    @Override
-    public String encode() {
-        String value = Json.createObjectBuilder()
-                .add("sender", this.sender)
-                .add("type", this.TYPE)
-                .add("message", this.message)
-                .build()
-                .toString();
+  @Override
+  public String encode() {
+    String value = Json.createObjectBuilder()
+            .add("sender", this.sender)
+            .add("type", this.TYPE)
+            .add("message", this.message)
+            .build()
+            .toString();
 
-        return value;
-    }
+    return value;
+  }
 
-    @Override
-    public String getMessage() {
-        return this.message;
-    }
+  @Override
+  public String getMessage() {
+    return this.message;
+  }
 
-    @Override
-    public void setMessage(String msg) {
-        this.message = msg;
-    }
+  @Override
+  public void setMessage(String msg) {
+    this.message = msg;
+  }
 
-    @Override
-    public String getSender() {
-        return this.sender;
-    }
+  @Override
+  public String getSender() {
+    return this.sender;
+  }
 
-    @Override
-    public void setSender(String sender) {
-        this.sender = sender;
-    }
+  @Override
+  public void setSender(String sender) {
+    this.sender = sender;
+  }
 }

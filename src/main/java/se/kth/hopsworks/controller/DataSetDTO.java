@@ -13,6 +13,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 public class DataSetDTO {
+
   private String name;
   private String description;
   private String searchable;
@@ -52,8 +53,8 @@ public class DataSetDTO {
 
   @Override
   public String toString() {
-    return "DataSetDTO{" + "name=" + name + ", description=" + description +
-            ", searchable=" + searchable + '}';
+    return "DataSetDTO{" + "name=" + name + ", description=" + description
+            + ", searchable=" + searchable + '}';
   }
-  
+
 }

@@ -187,7 +187,7 @@ public class Samplecollection implements Serializable {
           List<CollectionTypeProjectDesignEnum> collectionTypeList) {
     this.collectionTypeList = collectionTypeList;
   }
-    
+
   @XmlTransient
   @JsonIgnore
   public Collection<Sample> getSampleCollection() {

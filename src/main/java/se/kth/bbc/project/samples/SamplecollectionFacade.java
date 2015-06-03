@@ -70,7 +70,6 @@ public class SamplecollectionFacade extends AbstractFacade<Samplecollection> {
   }
 
   //TODO: make the queries here more efficient: do not fetch an entire list!
-  
   /**
    * Check if a collection with this id already exists.
    * <p>

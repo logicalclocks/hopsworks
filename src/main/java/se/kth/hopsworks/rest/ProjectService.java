@@ -224,7 +224,7 @@ public class ProjectService {
           @PathParam("id") Integer id,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-      
+
     String user = sc.getUserPrincipal().getName();
     JsonResponse json = new JsonResponse();
     boolean success = true;
@@ -243,7 +243,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
-  
+
   @DELETE
   @Path("{id}/remove")
   @Produces(MediaType.APPLICATION_JSON)

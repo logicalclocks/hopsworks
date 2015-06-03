@@ -57,18 +57,19 @@ public class UserGroupsController {
 
   /**
    * Check if an entry exists in the UserGroups table for the given email.
+   * <p>
    * @param email
    * @return True if one or more entries exists, false otherwise.
    */
   public boolean existsEntryForEmail(String email) {
     Query query = em.createNamedQuery("UsersGroups.findByEmail",
             UsersGroups.class).setParameter("email", email);
-    try{
+    try {
       query.getSingleResult();
       return true;
-    }catch(NoResultException e){
+    } catch (NoResultException e) {
       return false;
-    }catch (NonUniqueResultException e){
+    } catch (NonUniqueResultException e) {
       return true;
     }
   }

@@ -68,7 +68,7 @@ public class DataSetService {
   private InodeFacade inodes;
   @EJB
   private StagingManager stagingManager;
-  
+
   private Integer projectId;
   private Project project;
   private String path;
@@ -100,7 +100,8 @@ public class DataSetService {
     Inode projectInode = inodes.findByName(this.project.getName());
     Inode parent = inodes.findByParentAndName(projectInode,
             Constants.DIR_DATASET);
-    logger.log(Level.FINE, "findDataSetsInProjectID Parent name: {0}", parent.getInodePK().getName());
+    logger.log(Level.FINE, "findDataSetsInProjectID Parent name: {0}", parent.
+            getInodePK().getName());
     List<Inode> cwdChildren;
     cwdChildren = inodes.findByParent(parent);
     List<InodeView> kids = new ArrayList<>();
@@ -237,7 +238,7 @@ public class DataSetService {
             json).build();
 
   }
- 
+
   @GET
   @Path("upload/{path: .+}")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -246,11 +247,12 @@ public class DataSetService {
   public Response uploadFile(
           @PathParam("path") String path,
           @Context HttpServletRequest request)
-          throws AppException , IOException{
+          throws AppException, IOException {
     JsonResponse json = new JsonResponse();
-    
-    String uploadPath = this.path  + path + "/";
-    logger.log(Level.INFO, "length.....{0}", request.getParameter("flowCurrentChunkSize"));
+
+    String uploadPath = this.path + path + "/";
+    logger.log(Level.INFO, "length.....{0}", request.getParameter(
+            "flowCurrentChunkSize"));
 
     int resumableChunkNumber = getResumableChunkNumber(request);
 
@@ -265,7 +267,8 @@ public class DataSetService {
       raf.seek((resumableChunkNumber - 1) * (long) info.resumableChunkSize);
       //Save to file
       long readed = 0;
-      content_length = HttpUtils.toLong(request.getParameter("flowCurrentChunkSize"),-1);
+      content_length = HttpUtils.toLong(request.getParameter(
+              "flowCurrentChunkSize"), -1);
       byte[] bytes = new byte[1024 * 100];
       while (readed < content_length) {
         int r = is.read(bytes);
@@ -280,15 +283,15 @@ public class DataSetService {
     boolean finished = false;
 
     //Mark as uploaded and check if finished
-      if (info.addChuckAndCheckIfFinished(
-              new ResumableInfo.ResumableChunkNumber(
-                      resumableChunkNumber), content_length)) { //Check if all chunks uploaded, and change filename
-        ResumableInfoStorage.getInstance().remove(info);
-        logger.log(Level.SEVERE, "All finished.");
-        finished = true;
-      } else {
-        logger.log(Level.SEVERE, "Upload");
-      }
+    if (info.addChuckAndCheckIfFinished(
+            new ResumableInfo.ResumableChunkNumber(
+                    resumableChunkNumber), content_length)) { //Check if all chunks uploaded, and change filename
+      ResumableInfoStorage.getInstance().remove(info);
+      logger.log(Level.SEVERE, "All finished.");
+      finished = true;
+    } else {
+      logger.log(Level.SEVERE, "Upload");
+    }
 
     if (finished) {
       try {
@@ -300,18 +303,18 @@ public class DataSetService {
         logger.log(Level.SEVERE, "Failed to write to HDSF", e);
       }
     }
-    
+
     json.setSuccessMessage("Successfuly uploaded file to " + uploadPath);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
 
-  
   private int getResumableChunkNumber(HttpServletRequest request) {
     return HttpUtils.toInt(request.getParameter("flowChunkNumber"), -1);
   }
 
-  private ResumableInfo getResumableInfo(HttpServletRequest request) throws AppException  {
+  private ResumableInfo getResumableInfo(HttpServletRequest request) throws
+          AppException {
     String base_dir = stagingManager.getStagingPath();
 
     int resumableChunkSize = HttpUtils.toInt(request.getParameter(
@@ -333,9 +336,8 @@ public class DataSetService {
             resumableFilePath);
     if (!info.vaild()) {
       storage.remove(info);
-      throw new
-      AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Invalid request params. " );
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Invalid request params. ");
     }
     return info;
   }

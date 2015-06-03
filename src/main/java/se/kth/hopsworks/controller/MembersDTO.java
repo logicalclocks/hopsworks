@@ -15,7 +15,8 @@ import se.kth.bbc.project.ProjectTeam;
  */
 @XmlRootElement
 public class MembersDTO {
-   private List<ProjectTeam> projectTeam;
+
+  private List<ProjectTeam> projectTeam;
 
   public MembersDTO() {
   }
@@ -36,5 +37,5 @@ public class MembersDTO {
   public String toString() {
     return "MembersDTO{" + "projectTeam=" + projectTeam + '}';
   }
-   
+
 }

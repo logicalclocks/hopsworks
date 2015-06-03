@@ -255,9 +255,9 @@ public class ProjectController {
               ResponseMessages.PROJECT_NOT_FOUND);
     }
     projectFacade.remove(project);
-     //if we remove the project we cant store activity that has a reference to it!!
+    //if we remove the project we cant store activity that has a reference to it!!
     //logActivity(ActivityFacade.REMOVED_PROJECT,
-            //ActivityFacade.FLAG_PROJECT, user, project);
+    //ActivityFacade.FLAG_PROJECT, user, project);
 
     if (deleteFilesOnRemove) {
       String path = File.separator + Constants.DIR_ROOT + File.separator

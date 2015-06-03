@@ -153,7 +153,8 @@ public class ProjectTeam implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.project.ProjectTeam[ projectTeamPK=" + projectTeamPK + " ]";
+    return "se.kth.bbc.project.ProjectTeam[ projectTeamPK=" + projectTeamPK
+            + " ]";
   }
 
   public Project getProject() {

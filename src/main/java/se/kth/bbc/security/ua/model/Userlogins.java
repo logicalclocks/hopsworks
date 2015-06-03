@@ -39,7 +39,8 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "Userlogins.findByOutcome",
           query = "SELECT u FROM Userlogins u WHERE u.outcome = :outcome"),
   @NamedQuery(name = "Userlogins.findByUid",
-          query = "SELECT u FROM Userlogins u WHERE u.uid = :uid ORDER BY u.loginDate DESC"),
+          query
+          = "SELECT u FROM Userlogins u WHERE u.uid = :uid ORDER BY u.loginDate DESC"),
   @NamedQuery(name = "Userlogins.findByLoginDate",
           query = "SELECT u FROM Userlogins u WHERE u.loginDate = :loginDate")})
 public class Userlogins implements Serializable {

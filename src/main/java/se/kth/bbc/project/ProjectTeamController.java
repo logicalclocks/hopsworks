@@ -55,7 +55,8 @@ public class ProjectTeamController implements Serializable {
 
   public synchronized void deleteMemberFromTeam() {
     try {
-      teamFacade.removeProjectTeam(sessionState.getActiveProject(), toRemoveEmail);
+      teamFacade.removeProjectTeam(sessionState.getActiveProject(),
+              toRemoveEmail);
       activityFacade.persistActivity(ActivityFacade.REMOVED_MEMBER
               + toRemoveEmail, sessionState.getActiveProject(), sessionState.
               getLoggedInUsername());

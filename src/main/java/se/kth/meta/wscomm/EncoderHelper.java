@@ -1,4 +1,3 @@
-
 package se.kth.meta.wscomm;
 
 /**

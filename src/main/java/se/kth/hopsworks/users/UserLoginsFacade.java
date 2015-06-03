@@ -18,7 +18,8 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
  * @author Ermias
  */
 @Stateless
-public class UserLoginsFacade extends AbstractFacade<Userlogins>{
+public class UserLoginsFacade extends AbstractFacade<Userlogins> {
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -30,14 +31,14 @@ public class UserLoginsFacade extends AbstractFacade<Userlogins>{
   public UserLoginsFacade() {
     super(Userlogins.class);
   }
-  
+
   @Override
   public List<Userlogins> findAll() {
     TypedQuery<Userlogins> query = em.createNamedQuery("Userlogins.findAll",
             Userlogins.class);
     return query.getResultList();
   }
-  
+
   public void persist(Userlogins logins) {
     em.persist(logins);
   }

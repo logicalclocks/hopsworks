@@ -1,4 +1,3 @@
-
 package se.kth.meta.wscomm;
 
 import java.util.logging.Level;
@@ -14,23 +13,24 @@ import se.kth.meta.wscomm.message.Message;
  */
 public class MessageEncoder implements Encoder.Text<Message> {
 
-    private static final Logger logger = Logger.getLogger(MessageDecoder.class.getName());
-    
-    @Override
-    public String encode(Message msg) throws EncodeException {
+  private static final Logger logger = Logger.getLogger(MessageDecoder.class.
+          getName());
 
-        String value = msg.encode();
+  @Override
+  public String encode(Message msg) throws EncodeException {
 
-        logger.log(Level.SEVERE, "RETURNED VALUE IS {0}", value);
-        return value;
-    }
+    String value = msg.encode();
 
-    @Override
-    public void init(final EndpointConfig config) {
-    }
+    logger.log(Level.SEVERE, "RETURNED VALUE IS {0}", value);
+    return value;
+  }
 
-    @Override
-    public void destroy() {
-    }
+  @Override
+  public void init(final EndpointConfig config) {
+  }
+
+  @Override
+  public void destroy() {
+  }
 
 }

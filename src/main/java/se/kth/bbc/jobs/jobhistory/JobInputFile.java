@@ -37,17 +37,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class JobInputFile implements Serializable {
 
   private static final long serialVersionUID = 1L;
-  
+
   @EmbeddedId
   protected JobInputFilePK jobInputFilePK;
-  
+
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 255)
   @Column(name = "path")
   private String path;
-  
+
   @JoinColumn(name = "job_id",
           referencedColumnName = "id",
           insertable = false,

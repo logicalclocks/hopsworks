@@ -15,7 +15,6 @@ import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 
-
 /**
  * Session bean for file operations. Translates high-level operations into
  * operations on both the file system (HDFS) and the backing DB model (table
@@ -138,7 +137,7 @@ public class FileOperations {
    * Delete the file represented by Inode i.
    *
    * @param path The Inode to be removed.
-   * @return 
+   * @return
    * @throws IOException
    */
   public boolean rm(String path) throws IOException {
