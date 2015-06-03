@@ -197,27 +197,12 @@
     
   <login-config>
     <auth-method>BASIC</auth-method>
-    <realm-name>cauthRealm</realm-name>
+    <realm-name>hopsworksrealm</realm-name>
     <form-login-config>
       <form-login-page>/index.xhtml</form-login-page>
       <form-error-page>/error.xhtml</form-error-page>
     </form-login-config>
   </login-config>
-
-  <filter>
-    <filter-name>LoginFilter</filter-name>
-    <filter-class>se.kth.bbc.security.auth.LoginFilter</filter-class>
-  </filter>
-  <filter-mapping>
-    <filter-name>LoginFilter</filter-name>
-    <url-pattern>/index.xhtml</url-pattern>
-    <url-pattern>/security/login.xhtml</url-pattern>
-    <url-pattern>/security/yubikeylogin.xhtml</url-pattern>
-    <url-pattern>/security/register_mobile.xhtml</url-pattern>
-    <url-pattern>/security/register_yubico.xhtml</url-pattern>
-    <url-pattern>/security/index.xhtml</url-pattern>
-    <url-pattern>/security/protected/index.xhtml</url-pattern>
-  </filter-mapping>
 
 
   <session-config>
