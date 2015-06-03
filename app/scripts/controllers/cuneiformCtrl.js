@@ -6,10 +6,12 @@
 
 
 angular.module('hopsWorksApp')
-  .controller('CuneiformCtrl', ['$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', '$location', '$routeParams', 'growl', 'ProjectService', 'ModalService',
-    function ($scope, $timeout, $mdSidenav,$mdUtil, $log, $location, $routeParams, growl, ProjectService, ModalService) {
+  .controller('CuneiformCtrl', ['$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', '$location', '$routeParams', 'growl', 'ProjectService', 'ModalService', 'JobHistoryService',
+    function ($scope, $timeout, $mdSidenav,$mdUtil, $log, $location, $routeParams, growl, ProjectService, ModalService, JobHistoryService) {
 
       var self = this;
+
+      self.pId = $routeParams.projectID;
 
       self.toggleLeft = buildToggler('left');
       self.toggleRight = buildToggler('right');
@@ -35,18 +37,17 @@ angular.module('hopsWorksApp')
           });
       };
 
-      $scope.jobs = [
-              {"name": "job1",
-               "id": "1",
-               "submissionTime":"2015-05-20",
-               "owner": "John Doe",
-               "state": "finished",
-               "duration": "20s",
-               "stdout": "path1",
-               "stderr": "path2",
-               "results": [
-                {"name": "results", "path":"path3"}]}
-            ];
+      var getCuneiformHistory = function () {
+        JobHistoryService.getByProjectAndType(self.pId, 'CUNEIFORM').then(function(success){
+        //Upon success, fill in jobs
+          self.jobs = success.data;
+        }, function(error){
+        //Upon error, do something else
+          self.jobs = null;
+        });
+      };
+
+      getCuneiformHistory();
 
     }]);
 

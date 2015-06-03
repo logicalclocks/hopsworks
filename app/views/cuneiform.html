@@ -21,21 +21,21 @@
           <div class="timeline clearfix">
             <div class="mid-line"></div>
 
-            <div ng-repeat="job in jobs">
+            <div ng-repeat="job in cuneiformCtrl.jobs">
 
               <div class="right">
                 <div class="r-arrow"></div>
                 <div class="about-task">
                   <div class="header"> {{job.name}}
-                    <small class="muted">Run by {{job.owner}} on {{job.submissionTime}}
+                    <small class="muted">Run by {{job.user.fname job.owner.lname}} on {{job.submissionTime}}
                     </small>
                   </div>
                   <p class="no-margin">
-                    State: {{job.state}}, took {{job.duration}}. <br/>
+                    State: {{job.state}}, took {{job.executionDuration}}ms. <br/>
                     Logs:
                   <ul>
-                    <li><a href="">{{job.stdout}}</a></li>
-                    <li><a href="">{{job.stderr}}</a></li>
+                    <li><a href="">{{job.stdoutPath}}</a></li>
+                    <li><a href="">{{job.stderrPath}}</a></li>
                   </ul>
                   Results: <a href="" ng-repeat="result in job.results">{{result.name}} </a>
                   </p>
