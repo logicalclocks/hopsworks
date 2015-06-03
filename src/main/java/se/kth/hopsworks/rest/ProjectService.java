@@ -28,6 +28,9 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import se.kth.bbc.jobs.jobhistory.JobHistory;
+import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.services.ProjectServiceEnum;
@@ -53,6 +56,8 @@ public class ProjectService {
   private NoCacheResponse noCacheResponse;
   @Inject
   private ProjectMembers projectMembers;
+  @EJB
+  private JobHistoryFacade jobHistoryFacade;
 
   private final static Logger logger = Logger.getLogger(ProjectService.class.
           getName());
@@ -251,5 +256,30 @@ public class ProjectService {
     projectMembers.setProjectId(id);
 
     return projectMembers;
+  }
+
+  /**
+   * Get all the jobhistory objects in this study with the specified type. 
+   * @param projectId The id of the project in which to display the jobhistory objects.
+   * @param type The type of jobs to fetch. The String parameter passed through REST should be an uppercase version of the constant value.
+   * @param sc
+   * @param reqJobType
+   * @return A list of all jobhistory objects.
+   */
+  @GET
+  @Path("{id}/jobhistory/{type}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response findAllByType(@PathParam("id") Integer projectId, @PathParam("type") JobType type,
+          @Context SecurityContext sc, @Context HttpServletRequest reqJobType) throws AppException {
+    Project project = projectController.findProjectById(projectId);
+    List<JobHistory> history = jobHistoryFacade.findForProjectByType(project,
+            type);
+    GenericEntity<List<JobHistory>> jobHistory
+            = new GenericEntity<List<JobHistory>>(history) {
+            };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            jobHistory).build();
   }
 }

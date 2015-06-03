@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.hopsworks.controller;
 
 import java.io.File;
@@ -209,24 +204,6 @@ public class ProjectController {
     projectTeamFacade.persistProjectTeam(st);
   }
 
-  //create project on HDFS
-  private void mkProjectDIR(String projectName) throws IOException {
-
-    String rootDir = Constants.DIR_ROOT;
-    String projectPath = File.separator + rootDir + File.separator + projectName;
-    String resultsPath = projectPath + File.separator
-            + Constants.DIR_RESULTS;
-    String cuneiformPath = projectPath + File.separator
-            + Constants.DIR_CUNEIFORM;
-    String samplesPath = projectPath + File.separator
-            + Constants.DIR_SAMPLES;
-
-    fileOps.mkDir(projectPath);
-    fileOps.mkDir(resultsPath);
-    fileOps.mkDir(cuneiformPath);
-    fileOps.mkDir(samplesPath);
-  }
-
   /**
    * Remove a project and optionally all associated files.
    *
@@ -326,17 +303,6 @@ public class ProjectController {
       }
     }
     return failedList;
-  }
-
-  private boolean isProjectPresentInHdfs(String projectname) {
-    Inode root = inodes.getProjectRoot(projectname);
-    if (root == null) {
-      logger.log(Level.INFO,
-              "Project folder not found in HDFS for project {0} .",
-              projectname);
-      return false;
-    }
-    return true;
   }
 
   /**
