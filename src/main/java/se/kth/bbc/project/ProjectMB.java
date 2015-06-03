@@ -54,7 +54,8 @@ import se.kth.bbc.project.privacy.model.Consent;
 @SessionScoped
 public class ProjectMB implements Serializable {
 
-  private static final Logger logger = Logger.getLogger(ProjectMB.class.getName());
+  private static final Logger logger = Logger.getLogger(ProjectMB.class.
+          getName());
   private static final long serialVersionUID = 1L;
   private static final int TAB_INDEX_ALL_STUDIES = 0, TAB_INDEX_MY_STUDIES = 1, TAB_INDEX_JOINED_STUDIES
           = 2;
@@ -298,8 +299,9 @@ public class ProjectMB implements Serializable {
    * @return
    */
   public String currentRoleInProject() {
-    return projectTeamController.findCurrentRole(sessionState.getActiveProject(),
-            getUsername());
+    return projectTeamController.
+            findCurrentRole(sessionState.getActiveProject(),
+                    getUsername());
   }
 
   public List<Project> getAllStudiesPerUser() {
@@ -345,8 +347,10 @@ public class ProjectMB implements Serializable {
       MessagesController.addErrorMessage("Project not found.",
               "The project's root folder was not found in HDFS. You will be unable to access its contents.",
               "loadError");
-      logger.log(Level.INFO, "Project folder not found in HDFS for project{0} .",
-              projectname);
+      logger.
+              log(Level.INFO,
+                      "Project folder not found in HDFS for project{0} .",
+                      projectname);
       return false;
     }
     return true;
@@ -359,8 +363,8 @@ public class ProjectMB implements Serializable {
     sessionState.setActiveProject(s);
     return checkAccess();
   }
-  
-  public String fetchProject(Project project){
+
+  public String fetchProject(Project project) {
     setProjectName(project.getName());
     sessionState.setActiveProject(project);
     return checkAccess();
@@ -383,15 +387,17 @@ public class ProjectMB implements Serializable {
   }
 
   /**
-   * Add 
-   * @return 
+   * Add
+   * <p>
+   * @return
    */
   public synchronized String addToTeam() {
     try {
       Iterator<Theme> itr = getSelectedUsernames().listIterator();
       while (itr.hasNext()) {
         Theme t = itr.next();
-        ProjectTeamPK stp = new ProjectTeamPK(sessionState.getActiveProject().getId(), t.getName());
+        ProjectTeamPK stp = new ProjectTeamPK(sessionState.getActiveProject().
+                getId(), t.getName());
         ProjectTeam st = new ProjectTeam(stp);
         st.setTimestamp(new Date());
         st.setTeamRole(projectTeamEntry.getTeamRole());
@@ -473,7 +479,8 @@ public class ProjectMB implements Serializable {
 
   public boolean isCurrentOwner() {
     String email = getUsername();
-    return email.equals(projectFacade.findOwner(sessionState.getActiveProject()));
+    return email.
+            equals(projectFacade.findOwner(sessionState.getActiveProject()));
   }
 
   /**
@@ -485,7 +492,8 @@ public class ProjectMB implements Serializable {
     boolean success = false;
     try {
       projectFacade.removeProject(sessionState.getActiveProject());
-      activityFacade.persistActivity(ActivityFacade.REMOVED_PROJECT, sessionState.
+      activityFacade.persistActivity(ActivityFacade.REMOVED_PROJECT,
+              sessionState.
               getActiveProject(), sessionState.getLoggedInUser());
       if (deleteFilesOnRemove) {
         String path = File.separator + Constants.DIR_ROOT + File.separator
@@ -558,7 +566,8 @@ public class ProjectMB implements Serializable {
     List<UserGroup> groupedUsers = new ArrayList<>();
     ProjectRoleTypes[] roles = ProjectRoleTypes.values();
     for (ProjectRoleTypes role : roles) {
-      List<User> mems = projectTeamController.findTeamMembersByProject(sessionState.
+      List<User> mems = projectTeamController.findTeamMembersByProject(
+              sessionState.
               getActiveProject(),
               role.getTeam());
       if (!mems.isEmpty()) {
@@ -580,7 +589,8 @@ public class ProjectMB implements Serializable {
    * @return
    */
   public int countRoleUsers(String role) {
-    return projectTeamController.countProjectTeam(sessionState.getActiveProject(),
+    return projectTeamController.countProjectTeam(sessionState.
+            getActiveProject(),
             role);
   }
 
@@ -668,8 +678,9 @@ public class ProjectMB implements Serializable {
    * @return
    */
   public ProjectServiceEnum[] getSelectedServices() {
-    List<ProjectServiceEnum> services = projectServices.findEnabledServicesForProject(
-            sessionState.getActiveProject());
+    List<ProjectServiceEnum> services = projectServices.
+            findEnabledServicesForProject(
+                    sessionState.getActiveProject());
     ProjectServiceEnum[] reArr = new ProjectServiceEnum[services.size()];
     return services.toArray(reArr);
   }
@@ -887,9 +898,10 @@ public class ProjectMB implements Serializable {
             getActiveProject());
     return this.allConsent;
   }
-  
+
   public List<Activity> getAllActivitiesOnProject() {
-    List<Activity> ad = activityFacade.getAllActivityOnProject(sessionState.getActiveProject());
+    List<Activity> ad = activityFacade.getAllActivityOnProject(sessionState.
+            getActiveProject());
     return ad;
   }
 

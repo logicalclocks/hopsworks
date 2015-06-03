@@ -21,12 +21,12 @@ public class ClientSessionState implements Serializable {
 
   @EJB
   private ProjectFacade projectFacade;
-  
+
   @EJB
   private UserManager userFacade;
 
   private Project activeProject;
-  
+
   private User user;
 
   public void setActiveProject(Project project) {
@@ -63,9 +63,9 @@ public class ClientSessionState implements Serializable {
   public String getLoggedInUsername() {
     return getRequest().getUserPrincipal().getName();
   }
-  
-  public User getLoggedInUser(){
-    if(user == null){
+
+  public User getLoggedInUser() {
+    if (user == null) {
       String email = getRequest().getUserPrincipal().getName();
       user = userFacade.findByEmail(email);
     }

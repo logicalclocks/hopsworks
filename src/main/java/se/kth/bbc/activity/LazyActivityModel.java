@@ -28,7 +28,9 @@ import se.kth.bbc.project.Project;
  */
 public class LazyActivityModel extends LazyDataModel<Activity> implements
         Serializable {
-  private static final Logger logger = Logger.getLogger(LazyActivityModel.class.getName());
+
+  private static final Logger logger = Logger.getLogger(LazyActivityModel.class.
+          getName());
 
   private transient final ActivityFacade activityFacade;
   private List<Activity> data;

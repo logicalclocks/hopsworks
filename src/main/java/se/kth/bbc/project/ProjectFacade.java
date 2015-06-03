@@ -79,8 +79,10 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * does not exist.
    */
   public Project findByNameAndOwner(String projectname, User user) {
-    TypedQuery<Project> query = em.createNamedQuery("Project.findByOwnerAndName",
-            Project.class).setParameter("name", projectname).setParameter("owner",
+    TypedQuery<Project> query = em.
+            createNamedQuery("Project.findByOwnerAndName",
+                    Project.class).setParameter("name", projectname).
+            setParameter("owner",
                     user);
     try {
       return query.getSingleResult();
@@ -237,8 +239,9 @@ public class ProjectFacade extends AbstractFacade<Project> {
    * @return
    */
   public boolean projectExistsForOwner(String name, User owner) {
-    TypedQuery<Project> query = em.createNamedQuery("Project.findByOwnerAndName",
-            Project.class);
+    TypedQuery<Project> query = em.
+            createNamedQuery("Project.findByOwnerAndName",
+                    Project.class);
     query.setParameter("owner", owner).setParameter("name", name);
     return !query.getResultList().isEmpty();
   }

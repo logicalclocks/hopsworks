@@ -9,125 +9,125 @@ import se.kth.hopsworks.user.model.Users;
  */
 @XmlRootElement
 public class UserDTO {
-    private String email;
-    private String telephoneNum;
-    private String firstName;
-    private String lastName; 
-    private int status;
-    private String securityQuestion;
-    private String securityAnswer;
-    private String secret;   
-    private String chosenPassword;
-    private String repeatedPassword;
-    private boolean ToS;
 
-    public UserDTO() {
-    }
-    
-    public UserDTO(Users user) {
-        this.email = user.getEmail();
-        this.firstName = user.getFname();
-        this.lastName = user.getLname();
-        this.telephoneNum = user.getMobile();
-    }
+  private String email;
+  private String telephoneNum;
+  private String firstName;
+  private String lastName;
+  private int status;
+  private String securityQuestion;
+  private String securityAnswer;
+  private String secret;
+  private String chosenPassword;
+  private String repeatedPassword;
+  private boolean ToS;
 
-    public String getEmail() {
-        return email;
-    }
+  public UserDTO() {
+  }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+  public UserDTO(Users user) {
+    this.email = user.getEmail();
+    this.firstName = user.getFname();
+    this.lastName = user.getLname();
+    this.telephoneNum = user.getMobile();
+  }
 
-    public String getTelephoneNum() {
-        return telephoneNum;
-    }
+  public String getEmail() {
+    return email;
+  }
 
-    public void setTelephoneNum(String telephoneNum) {
-        this.telephoneNum = telephoneNum;
-    }
+  public void setEmail(String email) {
+    this.email = email;
+  }
 
-    public String getFirstName() {
-        return firstName;
-    }
+  public String getTelephoneNum() {
+    return telephoneNum;
+  }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
+  public void setTelephoneNum(String telephoneNum) {
+    this.telephoneNum = telephoneNum;
+  }
 
-    public String getLastName() {
-        return lastName;
-    }
+  public String getFirstName() {
+    return firstName;
+  }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
+  public void setFirstName(String firstName) {
+    this.firstName = firstName;
+  }
 
-    public int getStatus() {
-        return status;
-    }
+  public String getLastName() {
+    return lastName;
+  }
 
-    public void setStatus(int status) {
-        this.status = status;
-    }
+  public void setLastName(String lastName) {
+    this.lastName = lastName;
+  }
 
-    public String getSecurityQuestion() {
-        return securityQuestion;
-    }
+  public int getStatus() {
+    return status;
+  }
 
-    public void setSecurityQuestion(String securityQuestion) {
-        this.securityQuestion = securityQuestion;
-    }
+  public void setStatus(int status) {
+    this.status = status;
+  }
 
-    public String getSecurityAnswer() {
-        return securityAnswer;
-    }
+  public String getSecurityQuestion() {
+    return securityQuestion;
+  }
 
-    public void setSecurityAnswer(String securityAnswer) {
-        this.securityAnswer = securityAnswer;
-    }
+  public void setSecurityQuestion(String securityQuestion) {
+    this.securityQuestion = securityQuestion;
+  }
 
-    public String getSecret() {
-        return secret;
-    }
+  public String getSecurityAnswer() {
+    return securityAnswer;
+  }
 
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
+  public void setSecurityAnswer(String securityAnswer) {
+    this.securityAnswer = securityAnswer;
+  }
 
-    public String getChosenPassword() {
-        return chosenPassword;
-    }
+  public String getSecret() {
+    return secret;
+  }
 
-    public void setChosenPassword(String chosenPassword) {
-        this.chosenPassword = chosenPassword;
-    }
+  public void setSecret(String secret) {
+    this.secret = secret;
+  }
 
-    public String getRepeatedPassword() {
-        return repeatedPassword;
-    }
+  public String getChosenPassword() {
+    return chosenPassword;
+  }
 
-    public void setRepeatedPassword(String repeatedPassword) {
-        this.repeatedPassword = repeatedPassword;
-    }
+  public void setChosenPassword(String chosenPassword) {
+    this.chosenPassword = chosenPassword;
+  }
 
-    public boolean getToS() {
-        return ToS;
-    }
+  public String getRepeatedPassword() {
+    return repeatedPassword;
+  }
 
-    public void setToS(boolean ToS) {
-        this.ToS = ToS;
-    }
+  public void setRepeatedPassword(String repeatedPassword) {
+    this.repeatedPassword = repeatedPassword;
+  }
 
-    
-    
-    @Override
-    public String toString() {
-        return "UserDTO{" + "email=" + email + ", telephoneNum=" + telephoneNum + 
-               ", firstName=" + firstName + ", lastName=" + lastName + 
-               ", status=" + status + ", securityQuestion=" + securityQuestion + 
-               ", securityAnswer=" + securityAnswer + ", secret=" + secret + 
-               ", chosenPassword=" + chosenPassword + ", repeatedPassword=" + repeatedPassword + ", ToS=" + ToS +'}';
-    }
+  public boolean getToS() {
+    return ToS;
+  }
+
+  public void setToS(boolean ToS) {
+    this.ToS = ToS;
+  }
+
+  @Override
+  public String toString() {
+    return "UserDTO{" + "email=" + email + ", telephoneNum=" + telephoneNum
+            + ", firstName=" + firstName + ", lastName=" + lastName
+            + ", status=" + status + ", securityQuestion=" + securityQuestion
+            + ", securityAnswer=" + securityAnswer + ", secret=" + secret
+            + ", chosenPassword=" + chosenPassword + ", repeatedPassword="
+            + repeatedPassword + ", ToS=" + ToS + '}';
+  }
 
 }

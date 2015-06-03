@@ -12,7 +12,6 @@ package se.kth.hopsworks.controller;
 public class ResponseMessages {
 
   //response for validation error
-
   public final static String USER_DOES_NOT_EXIST = "User does not exist.";
   public final static String USER_WAS_NOT_FOUND
           = "Ops! The operation failed. User not found";
@@ -98,7 +97,8 @@ public class ResponseMessages {
 
   //project success messages
   public final static String PROJECT_CREATED = "Project created successfully.";
-  public final static String PROJECT_DESCRIPTION_CHANGED = "Project description changed.";
+  public final static String PROJECT_DESCRIPTION_CHANGED
+          = "Project description changed.";
   public final static String PROJECT_SERVICE_ADDED = "Project service added";
   public final static String PROJECT_REMOVED
           = "The project and all related files were removed successfully.";

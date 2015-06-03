@@ -37,7 +37,8 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String RAN_JOB = " ran a job ";
   public static final String ADDED_SERVICES = " added new services ";
   public static final String PROJECT_NAME_CHANGED = " changed project name ";
-  public static final String PROJECT_DESC_CHANGED = " changed project description.";
+  public static final String PROJECT_DESC_CHANGED
+          = " changed project description.";
   // Flag constants
   public static final String FLAG_PROJECT = "PROJECT";
 
@@ -81,7 +82,8 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   }
 
   public Activity lastActivityOnProject(Project project) {
-    TypedQuery<Activity> query = em.createNamedQuery("Activity.findByProject", Activity.class);
+    TypedQuery<Activity> query = em.createNamedQuery("Activity.findByProject",
+            Activity.class);
     query.setParameter("project", project);
     query.setMaxResults(1);
     try {
@@ -102,15 +104,17 @@ public class ActivityFacade extends AbstractFacade<Activity> {
     a.setTimestamp(new Date());
     em.persist(a);
   }
-  
-  public void persistActivity(String activity, Project project, String email){
-    TypedQuery<User> userQuery = em.createNamedQuery("User.findByEmail", User.class);
+
+  public void persistActivity(String activity, Project project, String email) {
+    TypedQuery<User> userQuery = em.createNamedQuery("User.findByEmail",
+            User.class);
     userQuery.setParameter("email", email);
     User user;
-    try{
+    try {
       user = userQuery.getSingleResult();
-    }catch(NoResultException e){
-      throw new IllegalArgumentException("No user found with email "+email+" when trying to persist activity for that user.",e);
+    } catch (NoResultException e) {
+      throw new IllegalArgumentException("No user found with email " + email
+              + " when trying to persist activity for that user.", e);
     }
     persistActivity(activity, project, user);
   }
@@ -134,11 +138,11 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    */
   public List<Activity> getAllActivityOnProject(Project project) {
     TypedQuery<Activity> q = em.createNamedQuery(
-            "Activity.findByProject",Activity.class);
+            "Activity.findByProject", Activity.class);
     q.setParameter("project", project);
     return q.getResultList();
   }
-  
+
   /**
    * Get all the activities performed on by user <i>user</i>.
    * <p>
@@ -147,13 +151,14 @@ public class ActivityFacade extends AbstractFacade<Activity> {
    */
   public List<Activity> getAllActivityByUser(User user) {
     TypedQuery<Activity> q = em.createNamedQuery(
-            "Activity.findByUser",Activity.class);
+            "Activity.findByUser", Activity.class);
     q.setParameter("user", user);
     return q.getResultList();
   }
-  
+
   /**
-   * Get all the activities performed on by user <i>user</i>.but paginated.Items from
+   * Get all the activities performed on by user <i>user</i>.but paginated.Items
+   * from
    * <i>first</i> till
    * <i>first+pageSize</i> are returned.
    * <p>
@@ -165,7 +170,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public List<Activity> getPaginatedActivityByUser(int first,
           int pageSize, User user) {
     TypedQuery<Activity> q = em.createNamedQuery(
-            "Activity.findByUser",Activity.class);
+            "Activity.findByUser", Activity.class);
     q.setParameter("user", user);
     q.setFirstResult(first);
     q.setMaxResults(pageSize);
@@ -189,7 +194,8 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   }
 
   /**
-   * Returns all activities on project <i>projectName</i>, but paginated. Items from
+   * Returns all activities on project <i>projectName</i>, but paginated. Items
+   * from
    * <i>first</i> till
    * <i>first+pageSize</i> are returned.
    * <p>

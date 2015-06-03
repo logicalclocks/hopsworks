@@ -108,10 +108,12 @@ public class ProjectService {
     String userEmail = sc.getUserPrincipal().getName();
 
     // Update the description if it have been chenged
-    if (project.getDescription() == null || !project.getDescription().equals(projectDTO.getDescription())) {
-        projectController.changeProjectDesc(project, projectDTO.getDescription(), userEmail);
-        json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
-        updated = true;
+    if (project.getDescription() == null || !project.getDescription().equals(
+            projectDTO.getDescription())) {
+      projectController.changeProjectDesc(project, projectDTO.getDescription(),
+              userEmail);
+      json.setSuccessMessage(ResponseMessages.PROJECT_DESCRIPTION_CHANGED);
+      updated = true;
     }
 
     // Add all the new services

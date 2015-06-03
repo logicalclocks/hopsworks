@@ -63,7 +63,8 @@ public class ProjectMembers {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    List<ProjectTeam> list = projectController.findProjectTeamById(this.projectId);
+    List<ProjectTeam> list = projectController.findProjectTeamById(
+            this.projectId);
     GenericEntity<List<ProjectTeam>> projects
             = new GenericEntity<List<ProjectTeam>>(list) {
             };
@@ -91,7 +92,8 @@ public class ProjectMembers {
     }
     if (project != null) {
       //add new members of the project
-      failedMembers = projectController.addMembers(project, owner, members.getProjectTeam());
+      failedMembers = projectController.addMembers(project, owner, members.
+              getProjectTeam());
     }
 
     if (members.getProjectTeam().size() > 1) {

@@ -31,100 +31,111 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @Table(name = "bbc_group")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "BBCGroup.findAll", query = "SELECT b FROM BBCGroup b"),
-    @NamedQuery(name = "BBCGroup.findByGroupName", query = "SELECT b FROM BBCGroup b WHERE b.groupName = :groupName"),
-    @NamedQuery(name = "BBCGroup.findByGroupDesc", query = "SELECT b FROM BBCGroup b WHERE b.groupDesc = :groupDesc"),
-    @NamedQuery(name = "BBCGroup.findByGid", query = "SELECT b FROM BBCGroup b WHERE b.gid = :gid")})
+  @NamedQuery(name = "BBCGroup.findAll",
+          query = "SELECT b FROM BBCGroup b"),
+  @NamedQuery(name = "BBCGroup.findByGroupName",
+          query = "SELECT b FROM BBCGroup b WHERE b.groupName = :groupName"),
+  @NamedQuery(name = "BBCGroup.findByGroupDesc",
+          query = "SELECT b FROM BBCGroup b WHERE b.groupDesc = :groupDesc"),
+  @NamedQuery(name = "BBCGroup.findByGid",
+          query = "SELECT b FROM BBCGroup b WHERE b.gid = :gid")})
 public class BBCGroup implements Serializable {
-    private static final long serialVersionUID = 1L;
-    @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 20)
-    @Column(name = "group_name")
-    private String groupName;
-    @Size(max = 200)
-    @Column(name = "group_desc")
-    private String groupDesc;
-    @Id
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "gid")
-    private Integer gid;
-    @JoinTable(name = "people_group", joinColumns = {
-        @JoinColumn(name = "gid", referencedColumnName = "gid")}, inverseJoinColumns = {
-        @JoinColumn(name = "uid", referencedColumnName = "uid")})
-    @ManyToMany
-    private Collection<User> userCollection;
 
-    public BBCGroup() {
-    }
+  private static final long serialVersionUID = 1L;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+          max = 20)
+  @Column(name = "group_name")
+  private String groupName;
+  @Size(max = 200)
+  @Column(name = "group_desc")
+  private String groupDesc;
+  @Id
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "gid")
+  private Integer gid;
+  @JoinTable(name = "people_group",
+          joinColumns = {
+            @JoinColumn(name = "gid",
+                    referencedColumnName = "gid")},
+          inverseJoinColumns = {
+            @JoinColumn(name = "uid",
+                    referencedColumnName = "uid")})
+  @ManyToMany
+  private Collection<User> userCollection;
 
-    public BBCGroup(Integer gid) {
-        this.gid = gid;
-    }
+  public BBCGroup() {
+  }
 
-    public BBCGroup(Integer gid, String groupName) {
-        this.gid = gid;
-        this.groupName = groupName;
-    }
+  public BBCGroup(Integer gid) {
+    this.gid = gid;
+  }
 
-    public String getGroupName() {
-        return groupName;
-    }
+  public BBCGroup(Integer gid, String groupName) {
+    this.gid = gid;
+    this.groupName = groupName;
+  }
 
-    public void setGroupName(String groupName) {
-        this.groupName = groupName;
-    }
+  public String getGroupName() {
+    return groupName;
+  }
 
-    public String getGroupDesc() {
-        return groupDesc;
-    }
+  public void setGroupName(String groupName) {
+    this.groupName = groupName;
+  }
 
-    public void setGroupDesc(String groupDesc) {
-        this.groupDesc = groupDesc;
-    }
+  public String getGroupDesc() {
+    return groupDesc;
+  }
 
-    public Integer getGid() {
-        return gid;
-    }
+  public void setGroupDesc(String groupDesc) {
+    this.groupDesc = groupDesc;
+  }
 
-    public void setGid(Integer gid) {
-        this.gid = gid;
-    }
+  public Integer getGid() {
+    return gid;
+  }
 
-    @XmlTransient
-    @JsonIgnore
-    public Collection<User> getUserCollection() {
-        return userCollection;
-    }
+  public void setGid(Integer gid) {
+    this.gid = gid;
+  }
 
-    public void setUserCollection(Collection<User> userCollection) {
-        this.userCollection = userCollection;
-    }
+  @XmlTransient
+  @JsonIgnore
+  public Collection<User> getUserCollection() {
+    return userCollection;
+  }
 
-    @Override
-    public int hashCode() {
-        int hash = 0;
-        hash += (gid != null ? gid.hashCode() : 0);
-        return hash;
-    }
+  public void setUserCollection(Collection<User> userCollection) {
+    this.userCollection = userCollection;
+  }
 
-    @Override
-    public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof BBCGroup)) {
-            return false;
-        }
-        BBCGroup other = (BBCGroup) object;
-        if ((this.gid == null && other.gid != null) || (this.gid != null && !this.gid.equals(other.gid))) {
-            return false;
-        }
-        return true;
-    }
+  @Override
+  public int hashCode() {
+    int hash = 0;
+    hash += (gid != null ? gid.hashCode() : 0);
+    return hash;
+  }
 
-    @Override
-    public String toString() {
-        return "se.kth.bbc.security.ua.model.BBCGroup[ gid=" + gid + " ]";
+  @Override
+  public boolean equals(Object object) {
+    // TODO: Warning - this method won't work in the case the id fields are not set
+    if (!(object instanceof BBCGroup)) {
+      return false;
     }
-    
+    BBCGroup other = (BBCGroup) object;
+    if ((this.gid == null && other.gid != null) || (this.gid != null
+            && !this.gid.equals(other.gid))) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return "se.kth.bbc.security.ua.model.BBCGroup[ gid=" + gid + " ]";
+  }
+
 }

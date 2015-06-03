@@ -257,8 +257,10 @@ public class UserManager {
    * @return List of User objects that are not in the project.
    */
   public List<User> filterUsersBasedOnProject(Project project) {
-    TypedQuery<User> query = em.createQuery("SELECT u FROM User u WHERE u NOT IN (SELECT DISTINCT st.user FROM ProjectTeam st WHERE st.project = :project)", User.class);
-    query.setParameter("project",project);
+    TypedQuery<User> query = em.createQuery(
+            "SELECT u FROM User u WHERE u NOT IN (SELECT DISTINCT st.user FROM ProjectTeam st WHERE st.project = :project)",
+            User.class);
+    query.setParameter("project", project);
     return query.getResultList();
   }
 
@@ -436,17 +438,19 @@ public class UserManager {
 
   /**
    * Get the last login attempt by the user identified by uid.
+   * <p>
    * @param uid
    * @return The last login attempt, or null if none is found.
    */
   public Userlogins getLastUserLogin(int uid) {
-    TypedQuery<Userlogins> query = em.createNamedQuery("Userlogins.findByUid",Userlogins.class);
+    TypedQuery<Userlogins> query = em.createNamedQuery("Userlogins.findByUid",
+            Userlogins.class);
     query.setParameter("uid", uid);
     query.setFirstResult(2);
     query.setMaxResults(1);
-    try{
+    try {
       return query.getSingleResult();
-    }catch(NoResultException e){
+    } catch (NoResultException e) {
       return null;
     }
   }

@@ -60,8 +60,8 @@ public class RequestAuthFilter implements ContainerRequestFilter {
 
       log.log(Level.INFO, "Filtering project request path: {0}", pathParts[1]);
       log.log(Level.INFO, "Method called: {0}", method.getName());
-      log.log(Level.INFO, "Annotations present: {0}", method.getAnnotations().length);
-
+      log.log(Level.INFO, "Annotations present: {0}",
+              method.getAnnotations().length);
 
       if (!method.isAnnotationPresent(AllowedRoles.class)) {
         //Should throw exception if there is a method that is not annotated in this path.
