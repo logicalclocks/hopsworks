@@ -7,6 +7,7 @@ package se.kth.rest.application.config;
 
 import java.util.Set;
 import javax.ws.rs.core.Application;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 /**
  *
@@ -18,6 +19,7 @@ public class ApplicationConfig extends Application {
   @Override
   public Set<Class<?>> getClasses() {
     Set<Class<?>> resources = new java.util.HashSet<>();
+    resources.add(MultiPartFeature.class);
     addRestResourceClasses(resources);
     return resources;
   }
@@ -34,12 +36,11 @@ public class ApplicationConfig extends Application {
     resources.add(se.kth.hopsworks.rest.AppExceptionMapper.class);
     resources.add(se.kth.hopsworks.rest.AuthExceptionMapper.class);
     resources.add(se.kth.hopsworks.rest.AuthService.class);
-    resources.add(se.kth.hopsworks.rest.DataSetService.class);
-    resources.add(se.kth.hopsworks.rest.ProjectMembers.class);
     resources.add(se.kth.hopsworks.rest.ProjectService.class);
     resources.add(se.kth.hopsworks.rest.ThrowableExceptionMapper.class);
     resources.add(se.kth.hopsworks.rest.TransactionExceptionMapper.class);
     resources.add(se.kth.hopsworks.rest.UserService.class);
   }
+
 
 }

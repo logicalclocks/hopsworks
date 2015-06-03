@@ -1,17 +1,12 @@
 package se.kth.bbc.project.fb;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.fileoperations.FileOperations;
-import static se.kth.bbc.fileoperations.Operation.ADD;
 import se.kth.bbc.lims.Constants;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
@@ -22,16 +17,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 @Stateless
 public class InodeFacade extends AbstractFacade<Inode> {
 
-  private static final Logger logger = Logger.getLogger(InodeFacade.class.
-          getName());
-
-  @EJB
-  InodeOpsFacade inodeOps;
-
-  @EJB
-  private FileOperations fileOps;
-
-  @PersistenceContext(unitName = "kthfsPU")
+  @PersistenceContext(unitName = "hopsPU")
   private EntityManager em;
 
   @Override
@@ -44,10 +30,6 @@ public class InodeFacade extends AbstractFacade<Inode> {
   }
 
   public Inode findByName(String name) {
-    if (name == null) {
-      return null;
-    }
-
     TypedQuery<Inode> query = em.createNamedQuery("Inode.findByName",
             Inode.class);
     query.setParameter("name", name);
@@ -58,147 +40,45 @@ public class InodeFacade extends AbstractFacade<Inode> {
     }
   }
 
+  /**
+   * Find all the Inodes that have <i>parent</i> as parent.
+   * <p>
+   * @param parent
+   * @return
+   */
   public List<Inode> findByParent(Inode parent) {
-    TypedQuery<Inode> query = em.createNamedQuery("Inode.findByParent",
+    TypedQuery<Inode> query = em.createNamedQuery("Inode.findByParentId",
             Inode.class);
-    query.setParameter("parent", parent);
+    query.setParameter("parentId", parent.getId());
     return query.getResultList();
   }
 
   /**
-   *
-   * @param path The path to the new file, file itself included.
-   * @param dir
-   * @param size
-   * @param status
+   * Get all the children of <i>parent</i>. Alias of findByParent().
+   * <p>
+   * @param parent
+   * @return
    */
-  private Inode createAndPersistInode(String path, int rootStudy, boolean dir,
-          long size,
-          String status) {
-        //TODO: update size and modified date of parent
-    //TODO: make all occurences of 'size' in application longs.
-    Inode parent = getLastCreatedNodeOnPath(path);
-    String[] p = path.split("/");
-    Inode z = new Inode(p[p.length - 1], parent, rootStudy, dir, false,
-            (int) size, status);
-    parent.addChild(z);
-
-    em.persist(parent);
-    em.persist(z);
-
-    return z;
-  }
-
-  private Inode createAndPersistInode(Inode parent, int rootstudy, String name,
-          boolean dir,
-          long size, String status) {
-    Inode z;
-    if (parent != null) {
-      z = new Inode(name, parent, rootstudy, dir, false, (int) size, status);
-      parent.addChild(z);
-      em.persist(parent);
-    } else {
-
-      z = new Inode(name, parent, rootstudy, dir, false, (int) size, status);
-    }
-    em.persist(z);
-
-    return z;
+  public List<Inode> getChildren(Inode parent) {
+    return findByParent(parent);
   }
 
   /**
-   * Creates the inode-dir (and its parent dirs) if it doesn't exist or
-   * returns the existing inode dir. Equivalent of: mkdir -p
+   * Find the parent of the given Inode. If the Inode has no parent, null is
+   * returned.
    * <p>
-   * @param path
-   * @param status
-   * @return the Inode for the directory (whether it already exists or has
-   * just been created)
+   * @param i
+   * @return The parent, or null if no parent.
    */
-  public Inode createAndPersistDir(String path, String status) {
-    while (path.startsWith("/")) {
-      path = path.substring(1);
-    }
-    String[] p = path.split("/");
-    Inode root = findByName(p[0]);
-    if (root == null) {
-      root = createAndPersistInode(null, 0, p[0], true, 0, status);
-      this.inodeOps.createAndStoreOperation(root, ADD);
-    }
-
-    int mainRoot = root.getId();
-
-    //find the main study node - the study root
-    Inode mainStudy = findByName(p[1]);
-    int studyRoot = (mainStudy == null) ? 0 : mainStudy.getId();
-
-    Inode curr = root;
-    for (int i = 1; i < p.length; i++) {
-      String s = p[i];
-      Inode next = curr.getChild(s);
-
-      if (next == null) {
-        if (i == 1) {
-          next = createAndPersistInode(curr, mainRoot, s, true, 0, status);
-          this.update(next);
-          System.err.println("CREATING DIR " + next.getName());
-          this.inodeOps.createAndStoreOperation(next, ADD);
-        } else {
-          next = createAndPersistInode(curr, studyRoot, s, true, 0, status);
-          this.update(next);
-          System.err.println("UPDATING DIR " + next.getName());
-          this.inodeOps.createAndStoreOperation(next, ADD);
-        }
-      }
-      curr = next;
-    }
-    return curr;
-  }
-
-  public Inode createAndPersistFile(String path, long size, String status) {
-    //leave out any garbage in the path
-    while (path.startsWith("/")) {
-      path = path.substring(1);
-    }
-    //get the study name
-    String rootStudy = path.split("/")[1];
-    //get the study node
-    Inode studyNode = findByName(rootStudy);
-
-    return createAndPersistInode(path, studyNode.getId(), false, size, status);
-  }
-
-  public void persist(Inode i) {
-    em.persist(i);
-    em.flush();
-  }
-
-  public void update(Inode i) {
-    em.merge(i);
-    em.flush();
-  }
-
-  /**
-   * Remove the inode on path <i>location</i> from the DB.
-   * <p>
-   * @param location The location of the file or folder to remove recursively.
-   * @return True if the operation succeeded, false if it failed. A return
-   * value of false should be treated with caution as this may result in
-   * inconsistencies between the file system and its representation in the DB.
-   */
-  public boolean removeRecursivePath(String location) {
-    Inode toRem = getInode(location);
-    if (toRem == null) {
-      return false;
-    }
-
+  public Inode findParent(Inode i) {
+    int id = i.getInodePK().getParentId();
+    TypedQuery<Inode> q = em.createNamedQuery("Inode.findById", Inode.class);
+    q.setParameter("id", id);
     try {
-      this.fileOps.rmR(toRem);
-      //em.remove(toRem);
-    } catch (IOException e) {
-      return false;
+      return q.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
     }
-    return true;
   }
 
   /**
@@ -206,7 +86,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @param path
    * @return null if no such Inode found
    */
-  public Inode getInode(String path) {
+  private Inode getInode(String path) {
     // Get the path components
     String[] p;
     if (path.charAt(0) == '/') {
@@ -226,7 +106,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
     }
     //Move down the path
     for (int i = 1; i < p.length; i++) {
-      Inode next = curr.getChild(p[i]);
+      Inode next = findByParentAndName(curr, p[i]);
       if (next == null) {
         return null;
       } else {
@@ -251,8 +131,8 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * Check whether the given path exists.
    * <p>
    * @param path The path to search for.
-   * @return True if the path exist (i.e. there is an Inode on this path),
-   * false otherwise.
+   * @return True if the path exist (i.e. there is an Inode on this path), false
+   * otherwise.
    */
   public boolean existsPath(String path) {
     return getInode(path) != null;
@@ -268,33 +148,14 @@ public class InodeFacade extends AbstractFacade<Inode> {
     return getInode(path);
   }
 
-  private Inode getLastCreatedNodeOnPath(String path) {
-    while (path.startsWith("/")) {
-      path = path.substring(1);
-    }
-    String[] p = path.split("/");
-    Inode root = findByName(p[0]);
-    Inode curr = root;
-    for (int i = 1; i < p.length - 1; i++) {
-      String s = p[i];
-      Inode next = curr.getChild(s);
-      if (next != null) {
-        curr = next;
-      } else {
-        break;
-      }
-    }
-    return curr;
-  }
-
   public Inode getProjectRoot(String name) {
     return getInode("/" + Constants.DIR_ROOT + "/" + name);
   }
 
-  public Inode findParent(Inode i) {
-    int id = i.getParent().getId();
-    TypedQuery<Inode> q = em.createNamedQuery("Inode.findById", Inode.class);
-    q.setParameter("id", id);
+  public Inode findByParentAndName(Inode parent, String name) {
+    TypedQuery<Inode> q = em.createNamedQuery("Inode.findByPrimaryKey",
+            Inode.class);
+    q.setParameter("inodePk", new InodePK(parent.getId(), name));
     try {
       return q.getSingleResult();
     } catch (NoResultException e) {
@@ -302,31 +163,6 @@ public class InodeFacade extends AbstractFacade<Inode> {
     }
   }
 
-  public String getPath(Inode i) {
-    List<String> pathComponents = new ArrayList<>();
-    Inode parent = i;
-    while (parent.getId() != 1) {
-      pathComponents.add(parent.getName());
-      parent = findParent(parent);
-    }
-    StringBuilder path = new StringBuilder();
-    for (int j = pathComponents.size() - 1; j >= 0; j--) {
-      path.append("/").append(pathComponents.get(j));
-    }
-    return path.toString();
-  }
-  
-  public boolean isProjectRoot(Inode i) {
-    Inode parent = findParent(i);
-    if (!parent.getName().equals(
-            Constants.DIR_ROOT)) {
-      return false;
-    } else {
-      //A node is the project root if its parent has the name $DIR_ROOT and its grandparent is the root node
-      return parent.getParent().getId() == 1;
-    }
-  }
-  
   public Inode getProjectRootForInode(Inode i) {
     if (isProjectRoot(i)) {
       return i;
@@ -340,16 +176,55 @@ public class InodeFacade extends AbstractFacade<Inode> {
     }
   }
 
-  
-  public Inode findByParentAndName(Inode parent, String name) {
-    TypedQuery<Inode> query = em.createNamedQuery("Inode.findByParentAndName",
-            Inode.class);
-    query.setParameter("parent", parent);
-    query.setParameter("name", name);
-    try {
-      return query.getSingleResult(); //Sure to give a single result because all children of same parent "null" so name is unique
-    } catch (NoResultException e) {
-      return null;
+  public boolean isProjectRoot(Inode i) {
+    Inode parent = findParent(i);
+    if (!parent.getInodePK().getName().equals(
+            Constants.DIR_ROOT)) {
+      return false;
+    } else {
+      //A node is the project root if its parent has the name $DIR_ROOT and its grandparent is the root node
+      return parent.getInodePK().getParentId() == 1;
     }
   }
+
+  public String getProjectNameForInode(Inode i) {
+    Inode projectRoot = getProjectRootForInode(i);
+    return projectRoot.getInodePK().getName();
+  }
+
+  public List<NavigationPath> getConstituentsPath(Inode i) {
+    if (isProjectRoot(i)) {
+      List<NavigationPath> p = new ArrayList<>();
+      p.add(new NavigationPath(i.getInodePK().getName(), i.getInodePK().
+              getName() + "/"));
+      return p;
+    } else {
+      List<NavigationPath> p = getConstituentsPath(findParent(i));
+      NavigationPath a;
+      if (i.isDir()) {
+        a = new NavigationPath(i.getInodePK().getName(), p.get(p.size() - 1).
+                getPath() + i.getInodePK().getName() + "/");
+      } else {
+        a = new NavigationPath(i.getInodePK().getName(), p.get(p.size() - 1).
+                getPath() + i.getInodePK().getName());
+      }
+      p.add(a);
+      return p;
+    }
+  }
+
+  public String getPath(Inode i) {
+    List<String> pathComponents = new ArrayList<>();
+    Inode parent = i;
+    while (parent.getId() != 1) {
+      pathComponents.add(parent.getInodePK().getName());
+      parent = findParent(parent);
+    }
+    StringBuilder path = new StringBuilder();
+    for (int j = pathComponents.size() - 1; j >= 0; j--) {
+      path.append("/").append(pathComponents.get(j));
+    }
+    return path.toString();
+  }
+
 }

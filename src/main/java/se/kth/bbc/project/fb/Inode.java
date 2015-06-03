@@ -1,270 +1,280 @@
 package se.kth.bbc.project.fb;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.math.BigInteger;
 import javax.persistence.Basic;
 import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import org.eclipse.persistence.annotations.Convert;
+import org.eclipse.persistence.annotations.Converter;
 
 /**
  *
  * @author stig
  */
 @Entity
-@Table(name = "inodes")
+@Table(name = "hdfs_inodes")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Inode.findAll",
-          query = "SELECT i FROM Inode i"),
+          query
+          = "SELECT i FROM Inode i"),
   @NamedQuery(name = "Inode.findById",
-          query = "SELECT i FROM Inode i WHERE i.id = :id"),
-  @NamedQuery(name = "Inode.findByParent",
           query
-          = "SELECT i FROM Inode i WHERE i.parent = :parent ORDER BY i.dir DESC, i.name ASC"),
-  @NamedQuery(name = "Inode.findByParentAndName",
+          = "SELECT i FROM Inode i WHERE i.id = :id"),
+  @NamedQuery(name = "Inode.findByParentId",
           query
-          = "SELECT i FROM Inode i WHERE i.parent = :parent AND i.name = :name"),
-  @NamedQuery(name = "Inode.findDirByParent",
-          query
-          = "SELECT i FROM Inode i WHERE i.parent = :parent AND i.dir = TRUE ORDER BY i.name ASC"),
+          = "SELECT i FROM Inode i WHERE i.inodePK.parentId = :parentId"),
   @NamedQuery(name = "Inode.findByName",
-          query = "SELECT i FROM Inode i WHERE i.name = :name"),
+          query
+          = "SELECT i FROM Inode i WHERE i.inodePK.name = :name"),
+  @NamedQuery(name = "Inode.findByModificationTime",
+          query
+          = "SELECT i FROM Inode i WHERE i.modificationTime = :modificationTime"),
+  @NamedQuery(name = "Inode.findByPrimaryKey",
+          query
+          = "SELECT i FROM Inode i WHERE i.inodePK = :inodePk"),
+  @NamedQuery(name = "Inode.findByAccessTime",
+          query
+          = "SELECT i FROM Inode i WHERE i.accessTime = :accessTime"),
+  @NamedQuery(name = "Inode.findByClientName",
+          query
+          = "SELECT i FROM Inode i WHERE i.clientName = :clientName"),
+  @NamedQuery(name = "Inode.findByClientMachine",
+          query
+          = "SELECT i FROM Inode i WHERE i.clientMachine = :clientMachine"),
+  @NamedQuery(name = "Inode.findByClientNode",
+          query
+          = "SELECT i FROM Inode i WHERE i.clientNode = :clientNode"),
+  @NamedQuery(name = "Inode.findByGenerationStamp",
+          query
+          = "SELECT i FROM Inode i WHERE i.generationStamp = :generationStamp"),
+  @NamedQuery(name = "Inode.findByHeader",
+          query
+          = "SELECT i FROM Inode i WHERE i.header = :header"),
+  @NamedQuery(name = "Inode.findBySymlink",
+          query
+          = "SELECT i FROM Inode i WHERE i.symlink = :symlink"),
+  @NamedQuery(name = "Inode.findByQuotaEnabled",
+          query
+          = "SELECT i FROM Inode i WHERE i.quotaEnabled = :quotaEnabled"),
+  @NamedQuery(name = "Inode.findByUnderConstruction",
+          query
+          = "SELECT i FROM Inode i WHERE i.underConstruction = :underConstruction"),
+  @NamedQuery(name = "Inode.findBySubtreeLocked",
+          query
+          = "SELECT i FROM Inode i WHERE i.subtreeLocked = :subtreeLocked"),
+  @NamedQuery(name = "Inode.findBySubtreeLockOwner",
+          query
+          = "SELECT i FROM Inode i WHERE i.subtreeLockOwner = :subtreeLockOwner"),
   @NamedQuery(name = "Inode.findRootByName",
           query
-          = "SELECT i FROM Inode i WHERE i.parent IS NULL AND i.name = :name")})
+          = "SELECT i FROM Inode i WHERE i.inodePK.parentId = 1 AND i.inodePK.name = :name")})
 public class Inode implements Serializable {
 
   private static final long serialVersionUID = 1L;
-  public static final String AVAILABLE = "available";
-  public static final String UPLOADING = "uploading";
-  public static final String COPYING = "copying_to_hdfs";
-
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @EmbeddedId
+  protected InodePK inodePK;
   @Basic(optional = false)
+  @NotNull
   @Column(name = "id")
-  private Integer id;
-
+  private int id;
+  @Column(name = "modification_time")
+  private BigInteger modificationTime;
+  @Column(name = "access_time")
+  private BigInteger accessTime;
+  @Lob
+  @Column(name = "permission")
+  private byte[] permission;
+  @Size(max = 100)
+  @Column(name = "client_name")
+  private String clientName;
+  @Size(max = 100)
+  @Column(name = "client_machine")
+  private String clientMachine;
+  @Size(max = 100)
+  @Column(name = "client_node")
+  private String clientNode;
+  @Column(name = "generation_stamp")
+  private Integer generationStamp;
+  @Column(name = "header")
+  private BigInteger header;
+  @Size(max = 3000)
+  @Column(name = "symlink")
+  private String symlink;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-          max = 128)
-  @Column(name = "name")
-  private String name;
-
+  @Column(name = "quota_enabled")
+  @Converter(name = "byteConverter",
+          converterClass = se.kth.bbc.project.fb.ByteConverter.class)
+  @Convert("byteConverter")
+  private Byte quotaEnabled;
   @Basic(optional = false)
   @NotNull
-  @Column(name = "modified")
-  @Temporal(TemporalType.TIMESTAMP)
-  private Date modified;
-
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "isDir")
-  private boolean dir;
-
-  @Column(name = "size")
-  private Integer size;
-
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "status")
-  private String status;
-
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "searchable")
-  private boolean searchable;
-
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "root")
-  private int root;
-
-  @OneToMany(mappedBy = "parent")
-  private List<Inode> children;
-
-  @JoinColumn(name = "pid",
-          referencedColumnName = "id")
-  @ManyToOne
-  private Inode parent;
+  @Column(name = "under_construction")
+  @Converter(name = "byteConverter",
+          converterClass = se.kth.bbc.project.fb.ByteConverter.class)
+  @Convert("byteConverter")
+  private Byte underConstruction;
+  @Column(name = "subtree_locked")
+  @Converter(name = "byteConverter",
+          converterClass = se.kth.bbc.project.fb.ByteConverter.class)
+  @Convert("byteConverter")
+  private Byte subtreeLocked;
+  @Column(name = "subtree_lock_owner")
+  private BigInteger subtreeLockOwner;
 
   public Inode() {
-    this.children = new ArrayList<>();
   }
 
-  public Inode(Integer id) {
-    this.children = new ArrayList<>();
+  public Inode(InodePK inodePK) {
+    this.inodePK = inodePK;
+  }
+
+  public Inode(InodePK inodePK, int id, byte quotaEnabled,
+          byte underConstruction) {
+    this.inodePK = inodePK;
     this.id = id;
+    this.quotaEnabled = quotaEnabled;
+    this.underConstruction = underConstruction;
   }
 
-  public Inode(Integer id, String name, Date modified, boolean isDir,
-          boolean searchable,
-          String status) {
-    this.id = id;
-    this.name = name;
-    this.modified = modified;
-    this.dir = isDir;
-    this.searchable = searchable;
-    this.status = status;
-    this.children = new ArrayList<>();
+  public Inode(int parentId, String name) {
+    this.inodePK = new InodePK(parentId, name);
   }
 
-  public Inode(String name, Date modified, boolean dir, boolean searchable,
-          String status) {
-    this.name = name;
-    this.modified = modified;
-    this.dir = dir;
-    this.searchable = searchable;
-    this.status = status;
-    this.children = new ArrayList<>();
+  public InodePK getInodePK() {
+    return inodePK;
   }
 
-  public Inode(String name, Inode parent, boolean dir, boolean searchable,
-          int size, String status) {
-    this.name = name;
-    this.parent = parent;
-    this.dir = dir;
-    this.searchable = searchable;
-    this.size = size;
-    this.status = status;
-    this.modified = new Date();
-    this.children = new ArrayList<>();
+  public void setInodePK(InodePK inodePK) {
+    this.inodePK = inodePK;
   }
 
-  /**
-   * Defines the root field of a inode. Root is the id of the study under which
-   * this node is
-   * created no matter the depth down the path. This way all the paths can be
-   * flattened under the study name
-   * and be searched upon at once.
-   * <p>
-   * @param name
-   * @param parent
-   * @param root
-   * @param dir
-   * @param searchable
-   * @param size
-   * @param status
-   */
-  public Inode(String name, Inode parent, int root, boolean dir,
-          boolean searchable, int size, String status) {
-    this(name, parent, dir, searchable, size, status);
-    this.root = root;
-  }
-
-  public Integer getId() {
+  public int getId() {
     return id;
   }
 
-  public void setId(Integer id) {
+  public void setId(int id) {
     this.id = id;
   }
 
-  public String getName() {
-    return name;
+  public BigInteger getModificationTime() {
+    return modificationTime;
   }
 
-  public void setName(String name) {
-    this.name = name;
+  public void setModificationTime(BigInteger modificationTime) {
+    this.modificationTime = modificationTime;
   }
 
-  public int getRoot() {
-    return this.root;
+  public BigInteger getAccessTime() {
+    return accessTime;
   }
 
-  public void setRoot(int root) {
-    this.root = root;
+  public void setAccessTime(BigInteger accessTime) {
+    this.accessTime = accessTime;
   }
 
-  public Date getModified() {
-    return modified;
+  public byte[] getPermission() {
+    return permission;
   }
 
-  public void setModified(Date modified) {
-    this.modified = modified;
+  public void setPermission(byte[] permission) {
+    this.permission = permission;
   }
 
-  public boolean isDir() {
-    return dir;
+  public String getClientName() {
+    return clientName;
   }
 
-  public void setDir(boolean dir) {
-    this.dir = dir;
+  public void setClientName(String clientName) {
+    this.clientName = clientName;
   }
 
-  public boolean isSearchable() {
-    return this.searchable;
+  public String getClientMachine() {
+    return clientMachine;
   }
 
-  public void setSearchable(boolean searchable) {
-    this.searchable = searchable;
+  public void setClientMachine(String clientMachine) {
+    this.clientMachine = clientMachine;
   }
 
-  public Integer getSize() {
-    return size;
+  public String getClientNode() {
+    return clientNode;
   }
 
-  public void setSize(Integer size) {
-    this.size = size;
+  public void setClientNode(String clientNode) {
+    this.clientNode = clientNode;
   }
 
-  public String getStatus() {
-    return status;
+  public Integer getGenerationStamp() {
+    return generationStamp;
   }
 
-  public void setStatus(String status) {
-    this.status = status;
+  public void setGenerationStamp(Integer generationStamp) {
+    this.generationStamp = generationStamp;
   }
 
-  @XmlTransient
-  @JsonIgnore
-  public List<Inode> getChildren() {
-    return children;
+  public BigInteger getHeader() {
+    return header;
   }
 
-  public void setChildren(List<Inode> children) {
-    this.children = children;
+  public void setHeader(BigInteger header) {
+    this.header = header;
   }
 
-  public void clearChildren() {
-    this.children.clear();
+  public String getSymlink() {
+    return symlink;
   }
 
-  public void addChild(Inode i) {
-    this.children.add(i);
+  public void setSymlink(String symlink) {
+    this.symlink = symlink;
   }
 
-  public Inode getParent() {
-    return parent;
+  public byte getQuotaEnabled() {
+    return quotaEnabled;
   }
 
-  public void setParent(Inode parent) {
-    this.parent = parent;
+  public void setQuotaEnabled(byte quotaEnabled) {
+    this.quotaEnabled = quotaEnabled;
+  }
+
+  public byte getUnderConstruction() {
+    return underConstruction;
+  }
+
+  public void setUnderConstruction(byte underConstruction) {
+    this.underConstruction = underConstruction;
+  }
+
+  public Byte getSubtreeLocked() {
+    return subtreeLocked;
+  }
+
+  public void setSubtreeLocked(Byte subtreeLocked) {
+    this.subtreeLocked = subtreeLocked;
+  }
+
+  public BigInteger getSubtreeLockOwner() {
+    return subtreeLockOwner;
+  }
+
+  public void setSubtreeLockOwner(BigInteger subtreeLockOwner) {
+    this.subtreeLockOwner = subtreeLockOwner;
   }
 
   @Override
   public int hashCode() {
     int hash = 0;
-    hash += (id != null ? id.hashCode() : 0);
+    hash += (inodePK != null ? inodePK.hashCode() : 0);
     return hash;
   }
 
@@ -275,8 +285,8 @@ public class Inode implements Serializable {
       return false;
     }
     Inode other = (Inode) object;
-    if ((this.id == null && other.id != null) || (this.id != null && !this.id.
-            equals(other.id))) {
+    if ((this.inodePK == null && other.inodePK != null) || (this.inodePK != null
+            && !this.inodePK.equals(other.inodePK))) {
       return false;
     }
     return true;
@@ -284,101 +294,11 @@ public class Inode implements Serializable {
 
   @Override
   public String toString() {
-    String isDir = (this.isDir()) ? "1" : "0";
-    String isSearchable = (this.isSearchable()) ? "1" : "0";
-
-    return this.getId() + "|" + this.getName() + "|" + this.getParent().getId()
-            + "|"
-            + this.getRoot() + "|" + this.getModified() + "|" + isDir + "|"
-            + this.getSize() + "|" + this.getStatus() + "|" + isSearchable;
+    return "se.kth.bbc.project.fb.Inode[ inodePK=" + inodePK + " ]";
   }
 
-  public boolean isRoot() {
-    return parent == null;
+  public boolean isDir() {
+    return header.equals(BigInteger.ZERO);
   }
 
-  /**
-   * Determines whether the Inode is the root of this study subtree. It is so
-   * if its parent is the "ultimate root". This method should always be used
-   * to check for root-being in non-filesystem operation contexts to guarantee
-   * safety.
-   *
-   * @return True if the Inode is the root of its study subtree.
-   */
-  public boolean isStudyRoot() {
-    if (parent != null) {
-      return parent.parent == null;
-    } else {
-      return false;
-    }
-  }
-
-  public boolean isParent() {
-    return name.compareTo("..") == 0;
-  }
-
-  public List<NavigationPath> getConstituentsPath() {
-    if (isStudyRoot()) {
-      List<NavigationPath> p = new ArrayList<>();
-      p.add(new NavigationPath(name, name + "/"));
-      return p;
-    } else {
-      List<NavigationPath> p = parent.getConstituentsPath();
-      NavigationPath a;
-      if (dir) {
-        a = new NavigationPath(name, p.get(p.size() - 1).getPath() + name + "/");
-      } else {
-        a = new NavigationPath(name, p.get(p.size() - 1).getPath() + name);
-      }
-      p.add(a);
-      return p;
-    }
-  }
-
-  public String getStudyPath() {
-    if (isStudyRoot()) {
-      return name + "/";
-    } else if (dir) {
-      return parent.getStudyPath() + name + "/";
-    } else {
-      return parent.getStudyPath() + name;
-    }
-  }
-
-  public String getStudyRoot() {
-    if (isStudyRoot()) {
-      return name;
-    } else {
-      return parent.getStudyRoot();
-    }
-  }
-
-  /**
-   * Get the path to this Inode.
-   *
-   * @return The path to this inode. If the Inode is a folder, the path ends
-   * in a "/".
-   */
-  public String getPath() {
-    if (isRoot()) {
-      return "/" + name + "/";
-    } else if (dir) {
-      return parent.getPath() + name + "/";
-    } else {
-      return parent.getPath() + name;
-    }
-  }
-
-  public Inode getChild(String name) {
-    for (Inode i : children) {
-      if (i.name.equals(name)) {
-        return i;
-      }
-    }
-    return null;
-  }
-
-  Object getInodePK() {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-  }
 }

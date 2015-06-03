@@ -11,7 +11,7 @@ $(document).ready(function () {
                             type: "parent",
                             query: {
                                 match: {
-                                    name: $('#hiddenStudyName').val()
+                                    name: $('#hiddenProjectName').val()
                                 }
                             }
                         }

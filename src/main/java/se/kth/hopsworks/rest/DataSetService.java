@@ -9,6 +9,7 @@ package se.kth.hopsworks.rest;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -36,11 +37,14 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
+import se.kth.bbc.lims.StagingManager;
+import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
+import se.kth.bbc.upload.HttpUtils;
+import se.kth.bbc.upload.ResumableInfo;
+import se.kth.bbc.upload.ResumableInfoStorage;
 import se.kth.hopsworks.controller.DataSetDTO;
 
 /**
@@ -62,6 +66,9 @@ public class DataSetService {
   private FileOperations fileOps;
   @EJB
   private InodeFacade inodes;
+  @EJB
+  private StagingManager stagingManager;
+  
   private Integer projectId;
   private Project project;
   private String path;
@@ -93,8 +100,7 @@ public class DataSetService {
     Inode projectInode = inodes.findByName(this.project.getName());
     Inode parent = inodes.findByParentAndName(projectInode,
             Constants.DIR_DATASET);
-    logger.log(Level.FINE, "findDataSetsInProjectID Parent name: {0}", parent.
-            getName());
+    logger.log(Level.FINE, "findDataSetsInProjectID Parent name: {0}", parent.getInodePK().getName());
     List<Inode> cwdChildren;
     cwdChildren = inodes.findByParent(parent);
     List<InodeView> kids = new ArrayList<>();
@@ -113,7 +119,7 @@ public class DataSetService {
   }
 
   @GET
-  @Path("/{path}")
+  @Path("/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response getDirContent(
@@ -146,8 +152,8 @@ public class DataSetService {
   }
 
   @GET
-  @Path("download/{fileName}")
-  @Produces(MediaType.WILDCARD)
+  @Path("{fileName}")
+  @Produces(MediaType.MULTIPART_FORM_DATA)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public InputStream downloadFile(
           @PathParam("fileName") String fileName,
@@ -164,31 +170,7 @@ public class DataSetService {
     }
     return is;
   }
-/*
-  @POST
-  @Path("upload/{dataSetPath}")
-  @Consumes(MediaType.MULTIPART_FORM_DATA)
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-  public Response uploadFile(
-          @PathParam("dataSetPath") String dataSetPath,
-          @FormDataParam("file") InputStream uploadedInputStream,
-          @FormDataParam("file") FormDataContentDisposition fileDetail) throws
-          AppException {
-    JsonResponse json = new JsonResponse();
-    String dsPath = this.path + dataSetPath;
-    try {
-      fileOps.writeToHDFS(uploadedInputStream, fileDetail.getSize(), dsPath);
-    } catch (IOException ex) {
-      logger.log(Level.SEVERE, null, ex);
-      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Could not upload file to " + dsPath);
-    }
-    json.setSuccessMessage("Successfuly uploaded file to " + dsPath);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
-  }
-*/
+
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
@@ -202,7 +184,7 @@ public class DataSetService {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NAME_EMPTY);
     }
-    
+
     String dsPath = this.path + dataSetName.getName();
     try {
       success = fileOps.mkDir(dsPath);
@@ -223,7 +205,7 @@ public class DataSetService {
   }
 
   @DELETE
-  @Path("/{fileName}")
+  @Path("/{fileName: .+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public Response removedataSetdir(
@@ -254,6 +236,108 @@ public class DataSetService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
 
+  }
+ 
+  @GET
+  @Path("upload/{path: .+}")
+  @Consumes(MediaType.MULTIPART_FORM_DATA)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
+  public Response uploadFile(
+          @PathParam("path") String path,
+          @Context HttpServletRequest request)
+          throws AppException , IOException{
+    JsonResponse json = new JsonResponse();
+    
+    String uploadPath = this.path  + path + "/";
+    logger.log(Level.INFO, "length.....{0}", request.getParameter("flowCurrentChunkSize"));
+
+    int resumableChunkNumber = getResumableChunkNumber(request);
+
+    ResumableInfo info = getResumableInfo(request);
+
+    long content_length;
+    //Seek to position
+    try (RandomAccessFile raf
+            = new RandomAccessFile(info.resumableFilePath, "rw");
+            InputStream is = request.getInputStream()) {
+      //Seek to position
+      raf.seek((resumableChunkNumber - 1) * (long) info.resumableChunkSize);
+      //Save to file
+      long readed = 0;
+      content_length = HttpUtils.toLong(request.getParameter("flowCurrentChunkSize"),-1);
+      byte[] bytes = new byte[1024 * 100];
+      while (readed < content_length) {
+        int r = is.read(bytes);
+        if (r < 0) {
+          break;
+        }
+        raf.write(bytes, 0, r);
+        readed += r;
+      }
+    }
+
+    boolean finished = false;
+
+    //Mark as uploaded and check if finished
+      if (info.addChuckAndCheckIfFinished(
+              new ResumableInfo.ResumableChunkNumber(
+                      resumableChunkNumber), content_length)) { //Check if all chunks uploaded, and change filename
+        ResumableInfoStorage.getInstance().remove(info);
+        logger.log(Level.SEVERE, "All finished.");
+        finished = true;
+      } else {
+        logger.log(Level.SEVERE, "Upload");
+      }
+
+    if (finished) {
+      try {
+        uploadPath = Utils.ensurePathEndsInSlash(uploadPath);
+        fileOps.copyAfterUploading(info.resumableFilename, uploadPath
+                + info.resumableFilename);
+        logger.log(Level.SEVERE, "Copied to HDFS");
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Failed to write to HDSF", e);
+      }
+    }
+    
+    json.setSuccessMessage("Successfuly uploaded file to " + uploadPath);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            json).build();
+  }
+
+  
+  private int getResumableChunkNumber(HttpServletRequest request) {
+    return HttpUtils.toInt(request.getParameter("flowChunkNumber"), -1);
+  }
+
+  private ResumableInfo getResumableInfo(HttpServletRequest request) throws AppException  {
+    String base_dir = stagingManager.getStagingPath();
+
+    int resumableChunkSize = HttpUtils.toInt(request.getParameter(
+            "flowChunkSize"), -1);
+    long resumableTotalSize = HttpUtils.toLong(request.getParameter(
+            "flowTotalSize"), -1);
+    String resumableIdentifier = request.getParameter("flowIdentifier");
+    String resumableFilename = request.getParameter("flowFilename");
+    String resumableRelativePath = request.getParameter("flowRelativePath");
+    //Here we add a ".temp" to every upload file to indicate NON-FINISHED
+    String resumableFilePath = new File(base_dir, resumableFilename).
+            getAbsolutePath() + ".temp";
+    //TODO: the current way of uploading will not scale: if two persons happen to upload a file with the same name, trouble is waiting to happen
+
+    ResumableInfoStorage storage = ResumableInfoStorage.getInstance();
+
+    ResumableInfo info = storage.get(resumableChunkSize, resumableTotalSize,
+            resumableIdentifier, resumableFilename, resumableRelativePath,
+            resumableFilePath);
+    if (!info.vaild()) {
+      storage.remove(info);
+      throw new
+      AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "Invalid request params. " );
+    }
+    return info;
   }
 
 }

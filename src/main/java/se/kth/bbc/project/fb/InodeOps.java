@@ -154,7 +154,7 @@ public class InodeOps implements Serializable {
 
     @Override
     public String toString() {
-        return "se.kth.bbc.study.fb.InodesOps[ inodeid=" + inodeid + ","
+        return "se.kth.bbc.project.fb.InodesOps[ inodeid=" + inodeid + ","
                 + " inodepid=" +inodePid +", inoderoot=" + inodeRoot + ", operation=" + operationn + ", processed=" +processed +""
                 + " modified=" +modified +" ]";
     }

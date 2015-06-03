@@ -2,7 +2,6 @@ package se.kth.bbc.project.fb;
 
 import java.util.Date;
 import java.util.Objects;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Simplified version of the Inode entity to allow for easier access through web
@@ -10,23 +9,20 @@ import javax.xml.bind.annotation.XmlRootElement;
  * <p>
  * @author stig
  */
-@XmlRootElement
-public class InodeView {
+public final class InodeView {
 
-  private  String name;
-  private  boolean dir;
-  private  boolean parent;
-  private  String path;
-  private  Date modification;
-
-  public InodeView() {}
+  private final String name;
+  private final boolean dir;
+  private final boolean parent;
+  private final String path;
+  private final Date modification;
 
   public InodeView(Inode i, String path) {
-    this.name = i.getName();
+    this.name = i.getInodePK().getName();
     this.dir = i.isDir();
     this.parent = false;
     this.path = path;
-    this.modification = new Date(i.getModified().getTime());
+    this.modification = new Date(i.getModificationTime().longValue());
   }
 
   private InodeView(String name, boolean dir, boolean parent, String path) {
@@ -47,26 +43,6 @@ public class InodeView {
     }
     path = path.substring(0, lastSlash);
     return new InodeView(name, dir, parent, path);
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public void setDir(boolean dir) {
-    this.dir = dir;
-  }
-
-  public void setParent(boolean parent) {
-    this.parent = parent;
-  }
-
-  public void setPath(String path) {
-    this.path = path;
-  }
-
-  public void setModification(Date modification) {
-    this.modification = modification;
   }
 
   public String getName() {
