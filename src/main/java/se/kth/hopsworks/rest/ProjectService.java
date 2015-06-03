@@ -259,18 +259,19 @@ public class ProjectService {
   }
 
   /**
-   * Get all the jobhistory objects in this study with the specified type. 
+   * Get all the jobhistory objects in this project with the specified type. 
    * @param projectId The id of the project in which to display the jobhistory objects.
    * @param type The type of jobs to fetch. The String parameter passed through REST should be an uppercase version of the constant value.
    * @param sc
    * @param reqJobType
    * @return A list of all jobhistory objects.
+   * @throws se.kth.hopsworks.rest.AppException
    */
   @GET
   @Path("{id}/jobhistory/{type}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response findAllByType(@PathParam("id") Integer projectId, @PathParam("type") JobType type,
+  public Response findAllJobHistoryByType(@PathParam("id") Integer projectId, @PathParam("type") JobType type,
           @Context SecurityContext sc, @Context HttpServletRequest reqJobType) throws AppException {
     Project project = projectController.findProjectById(projectId);
     List<JobHistory> history = jobHistoryFacade.findForProjectByType(project,

@@ -223,8 +223,6 @@ public class JobHistory implements Serializable {
     this.type = type;
   }
 
-  @XmlTransient
-  @JsonIgnore
   public Collection<JobOutputFile> getJobOutputFileCollection() {
     return jobOutputFileCollection;
   }
@@ -250,8 +248,6 @@ public class JobHistory implements Serializable {
     this.project = project;
   }
 
-  @XmlTransient
-  @JsonIgnore
   public Collection<JobInputFile> getJobInputFileCollection() {
     return jobInputFileCollection;
   }
@@ -261,8 +257,6 @@ public class JobHistory implements Serializable {
     this.jobInputFileCollection = jobInputFileCollection;
   }
 
-  @XmlTransient
-  @JsonIgnore
   public Collection<JobExecutionFile> getJobExecutionFileCollection() {
     return jobExecutionFileCollection;
   }
