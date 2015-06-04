@@ -22,7 +22,7 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 
 /**
- *
+ * Service offering file download.
  * @author stig
  */
 @Path("/files")
@@ -40,7 +40,8 @@ public class FileService {
   /**
    * Download a file with given HDFS path from the Project identified by
    * projectId.
-   * The path can be both an absolute and relative path.
+   * The path can be both an absolute and relative path. Instead of slashes, use
+   * spaces in the path.
    * <p>
    * @param projectId The id of the project in which capacity the file is
    * downloaded.
@@ -50,16 +51,16 @@ public class FileService {
    * @return
    */
   @GET
-  @Path("/{projectId}/query")
+  @Path("/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response downloadFile(@PathParam("projectId") Integer projectId,
           @QueryParam("path") String path,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    
+
     path = path.replace(" ", "/");
     Project p = projects.find(projectId);
-    if(p==null){
+    if (p == null) {
       return Response.status(Response.Status.NOT_FOUND).build();
     }
     path = fops.getAbsoluteHDFSPath(p.getName(), path);
