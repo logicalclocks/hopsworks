@@ -66,6 +66,7 @@ public class FileSystemOperations {
    *
    * @param location The location of the file.
    * @return An InputStream for the file.
+   * @throws java.io.IOException When an error occurs upon HDFS opening.
    */
   public InputStream getInputStream(Path location) throws IOException {
     return fs.open(location, 1048576); //TODO: undo hard coding of weird constant here...
