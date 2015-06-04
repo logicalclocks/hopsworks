@@ -374,7 +374,7 @@ public final class CuneiformController extends JobController {
           fops.copyWithinHdfs(getFilePath(cp.getValue()), absoluteHDFSfoldername
                   + File.separator + cp.getValue());
         } else {
-          fops.copyFromLocalNoInode(getFilePath(cp.getValue()),
+          fops.copyToHDFSFromPath(getFilePath(cp.getValue()),
                   absoluteHDFSfoldername + File.separator + cp.getValue());
         }
         //add a line to the workflow file
