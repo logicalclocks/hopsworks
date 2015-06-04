@@ -12,6 +12,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -37,35 +38,32 @@ public class FileService {
   private ProjectFacade projects;
 
   /**
-   * Download a file with given HDFS path, from the Project identified by
+   * Download a file with given HDFS path from the Project identified by
    * projectId.
    * The path can be both an absolute and relative path.
    * <p>
    * @param projectId The id of the project in which capacity the file is
    * downloaded.
-   * @param path The HDFS path to download the file from. May be absolute (i.e.
-   * hdfs://[...]), or relative to the project base directory.
+   * @param path The project-relative HDFS path to download the file from.
    * @param sc
    * @param req
    * @return
    */
   @GET
-  @Path("/{projectId}")
+  @Path("/{projectId}/query")
   @Produces(MediaType.APPLICATION_JSON)
   public Response downloadFile(@PathParam("projectId") Integer projectId,
+          @QueryParam("path") String path,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) {
-    String path = "hdfs:///Projects//LifeGene/data/testfile";
-    if (!path.startsWith("hdfs://")) {
-      Project p = projects.find(projectId);
-      if (p == null) {
-        return Response.status(Response.Status.NOT_FOUND).build();
-      }
-      String projectname = p.getName();
-      //relative path
-      path = "hdfs://" + projectname + (path.startsWith("/") ? (path) : ("/"
-              + path));
+    
+    path = path.replace(" ", "/");
+    Project p = projects.find(projectId);
+    if(p==null){
+      return Response.status(Response.Status.NOT_FOUND).build();
     }
+    path = fops.getAbsoluteHDFSPath(p.getName(), path);
+
     //Now we have an absolute path.
     InputStream is;
     try {

@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import org.apache.hadoop.fs.Path;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
@@ -260,6 +261,23 @@ public class FileOperations {
    */
   public boolean exists(String path) throws IOException {
     return inodes.existsPath(path);
+  }
+
+  /**
+   * Get the absolute HDFS path of the form
+   * <i>hdfs:///projects/projectname/relativepath</i>
+   * <p>
+   * @param projectname
+   * @param relativePath
+   * @return
+   */
+  public String getAbsoluteHDFSPath(String projectname, String relativePath) {
+    //Strip relativePath from all leading slashes
+    while (relativePath.startsWith("/")) {
+      relativePath = relativePath.substring(1);
+    }
+    return "hdfs:///" + Constants.DIR_ROOT + "/" + projectname + "/"
+            + relativePath;
   }
 
 }
