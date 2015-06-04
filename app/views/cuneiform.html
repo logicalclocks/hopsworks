@@ -34,8 +34,8 @@
                     State: {{job.state}}, took {{job.executionDuration}}ms. <br/>
                     Logs:
                   <ul>
-                    <li><a href="">{{job.stdoutPath}}</a></li>
-                    <li><a href="">{{job.stderrPath}}</a></li>
+                    <li><a ng-click="cuneiformCtrl.getFile(job.stdoutPath)">{{job.stdoutPath}}</a></li>
+                    <li><a ng-click="cuneiformCtrl.getFile(job.stderrPath)">{{job.stderrPath}}</a></li>
                   </ul>
                   Results: <a href="" ng-repeat="result in job.jobOutputFileCollection">{{result.jobOutputFilePK.name}} </a>
                   </p>

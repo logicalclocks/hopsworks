@@ -6,8 +6,8 @@
 
 
 angular.module('hopsWorksApp')
-  .controller('CuneiformCtrl', ['$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', '$location', '$routeParams', 'growl', 'ProjectService', 'ModalService', 'JobHistoryService',
-    function ($scope, $timeout, $mdSidenav,$mdUtil, $log, $location, $routeParams, growl, ProjectService, ModalService, JobHistoryService) {
+  .controller('CuneiformCtrl', ['$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', '$location', '$routeParams', 'growl', 'ProjectService', 'ModalService', 'JobHistoryService', 'DownloadService',
+    function ($scope, $timeout, $mdSidenav,$mdUtil, $log, $location, $routeParams, growl, ProjectService, ModalService, JobHistoryService, DownloadService) {
 
       var self = this;
 
@@ -48,6 +48,10 @@ angular.module('hopsWorksApp')
       };
 
       getCuneiformHistory();
+
+      self.getFile = function(path) {
+          DownloadService.getFile(self.pId, path);
+      };
 
     }]);
 
