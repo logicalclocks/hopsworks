@@ -37,7 +37,10 @@
                     <li><a ng-click="cuneiformCtrl.getFile(job.stdoutPath)">{{job.stdoutPath}}</a></li>
                     <li><a ng-click="cuneiformCtrl.getFile(job.stderrPath)">{{job.stderrPath}}</a></li>
                   </ul>
-                  Results: <a href="" ng-repeat="result in job.jobOutputFileCollection">{{result.jobOutputFilePK.name}} </a>
+                  Results:
+                  <ul>
+                    <li ng-repeat="result in job.jobOutputFileCollection"><a ng-click="cuneiformCtrl.getFile(result.path)">{{result.jobOutputFilePK.name}} </a></li>
+                  </ul>
                   </p>
                 </div>
               </div>
