@@ -51,7 +51,7 @@ public class FileService {
    * @return
    */
   @GET
-  @Path("/{projectId}")
+  @Path("/{projectId}/download")
   @Produces(MediaType.APPLICATION_JSON)
   public Response downloadFile(@PathParam("projectId") Integer projectId,
           @QueryParam("path") String path,
