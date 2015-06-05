@@ -30,13 +30,13 @@ angular.module('hopsWorksApp')
             auth: ['$q', '$location', 'AuthService',
               function ($q, $location, AuthService) {
                 return AuthService.session().then(
-                  function (success) {
-                  },
-                  function (err) {
-                    $location.path('/login');
-                    $location.replace();
-                    return $q.reject(err);
-                  });
+                    function (success) {
+                    },
+                    function (err) {
+                      $location.path('/login');
+                      $location.replace();
+                      return $q.reject(err);
+                    });
               }]
           }
         });
@@ -52,13 +52,13 @@ angular.module('hopsWorksApp')
             auth: ['$q', '$location', 'AuthService',
               function ($q, $location, AuthService) {
                 return AuthService.session().then(
-                  function (success) {
-                  },
-                  function (err) {
-                    $location.path('/login');
-                    $location.replace();
-                    return $q.reject(err);
-                  });
+                    function (success) {
+                    },
+                    function (err) {
+                      $location.path('/login');
+                      $location.replace();
+                      return $q.reject(err);
+                    });
               }]
           }
         });
@@ -75,13 +75,13 @@ angular.module('hopsWorksApp')
             auth: ['$q', '$location', 'AuthService',
               function ($q, $location, AuthService) {
                 return AuthService.session().then(
-                  function (success) {
-                  },
-                  function (err) {
-                    $location.path('/login');
-                    $location.replace();
-                    return $q.reject(err);
-                  });
+                    function (success) {
+                    },
+                    function (err) {
+                      $location.path('/login');
+                      $location.replace();
+                      return $q.reject(err);
+                    });
               }]
           }
         });
@@ -97,13 +97,13 @@ angular.module('hopsWorksApp')
             auth: ['$q', '$location', 'AuthService',
               function ($q, $location, AuthService) {
                 return AuthService.session().then(
-                  function (success) {
-                  },
-                  function (err) {
-                    $location.path('/login');
-                    $location.replace();
-                    return $q.reject(err);
-                  });
+                    function (success) {
+                    },
+                    function (err) {
+                      $location.path('/login');
+                      $location.replace();
+                      return $q.reject(err);
+                    });
               }],
             projectId: function () {
               return projectId;
@@ -111,7 +111,59 @@ angular.module('hopsWorksApp')
           }
         });
         return modalInstance.result;
+      },
+
+      newDataSet: function (size, dataSet) {
+        var modalInstance = $modal.open({
+          templateUrl: 'views/newDataSet.html',
+          controller: 'DataSetCreatorCtrl as datasetsCtrl',
+          size: size,
+          resolve: {
+            auth: ['$q', '$location', 'AuthService',
+              function ($q, $location, AuthService) {
+                return AuthService.session().then(
+                    function (success) {
+                    },
+                    function (err) {
+                      $location.path('/login');
+                      $location.replace();
+                      return $q.reject(err);
+                    });
+              }],
+            dataSet: function () {
+              return dataSet;
+            }
+          }
+        });
+        return modalInstance.result;
+      },
+
+      upload: function (size, projectId, path) {
+        var modalInstance = $modal.open({
+          templateUrl: 'views/fileUpload.html',
+          controller: 'FileUploadCtrl as fileUploadCtrl',
+          size: size,
+          resolve: {
+            auth: ['$q', '$location', 'AuthService',
+              function ($q, $location, AuthService) {
+                return AuthService.session().then(
+                    function (success) {
+                    },
+                    function (err) {
+                      $location.path('/login');
+                      $location.replace();
+                      return $q.reject(err);
+                    });
+              }],
+            projectId: function () {
+              return projectId;
+            },
+            path: function () {
+              return path;
+            }
+          }
+        });
+        return modalInstance.result;
       }
     }
-
-  }]);
+    }]);

@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-  .factory("MembersService", ['$resource', function ($resource) {
+  .factory('MembersService', ['$resource', function ($resource) {
     return $resource("/api/project/:id/projectMembers/:email",
       {id: "@id", email: "@email"},
       {

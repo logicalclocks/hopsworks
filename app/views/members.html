@@ -45,7 +45,7 @@
 
           <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
           <ui-select-choices
-            repeat="card in memberCtrl.cards | cardFilter: {email: $select.search, firstname: $select.search, lastname: $select.search}">
+            repeat="card in memberCtrl.cards">
 
             <div ng-bind-html="memberCtrl.card.email | highlight: $select.search"></div>
             <small>

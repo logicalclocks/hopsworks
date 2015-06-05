@@ -71,7 +71,7 @@ angular.module('hopsWorksApp')
 
 
       self.projectSettingModal = function () {
-        ModalService.projectSettings('lg').then(
+        ModalService.projectSettings('md').then(
           function (success) {
             getAllActivities();
             getCurrentProject();
@@ -120,8 +120,8 @@ angular.module('hopsWorksApp')
         $location.path('project/' + self.pId + '/datasets');
       };
 
-      self.goToSpecificDataset = function (id) {
-        $location.path($location.path() + '/' + id);
+      self.goToSpecificDataset = function (name) {
+        $location.path($location.path() + '/' + name);
       };
 
 
