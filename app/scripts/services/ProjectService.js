@@ -11,7 +11,11 @@ angular.module('hopsWorksApp')
           headers:{'Content-Type':'application/json; charset=UTF-8'}
         },
         "delete": {
-          method:"DELETE"
+          method:'DELETE'
+        },
+        "remove": {
+          url:'/api/project/:id/remove',
+          method:'DELETE'
         },
         "update": {
           method: "PUT",
@@ -24,3 +28,8 @@ angular.module('hopsWorksApp')
       }
     );
   }]);
+/**
+ * ,
+ *data:$.param({wipeData:true}),
+ *headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+ **/
