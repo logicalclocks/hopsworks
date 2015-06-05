@@ -6,7 +6,7 @@ angular.module('hopsWorksApp')
         var service = {
             getFile: function (projectId, path) {
               path = path.replace(/\//g,'+');
-                $http.get('/api/files/'+projectId+'?path='+path, {responseType:'arraybuffer'})
+                $http.get('/api/files/'+projectId+'/download?path='+path, {responseType:'arraybuffer'})
                 .success(function(data) {
                   var file = new Blob([data], {type:'text'});
                   var fileURL = URL.createObjectURL(file);
