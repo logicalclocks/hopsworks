@@ -1,0 +1,74 @@
+package se.kth.hopsworks.rest;
+
+import java.util.List;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.context.RequestScoped;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import se.kth.bbc.jobs.jobhistory.JobHistory;
+import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.JobType;
+import se.kth.bbc.project.Project;
+import se.kth.hopsworks.controller.ProjectController;
+import se.kth.hopsworks.filters.AllowedRoles;
+
+/**
+ *
+ * @author stig
+ */
+@Path("/jobs")
+@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
+@Produces(MediaType.APPLICATION_JSON)
+@RequestScoped
+@TransactionAttribute(TransactionAttributeType.NEVER)
+public class JobService {
+
+  @EJB
+  private ProjectController projectController;
+  @EJB
+  private NoCacheResponse noCacheResponse;
+  @EJB
+  private JobHistoryFacade jobHistoryFacade;
+
+  /**
+   * Get all the jobhistory objects in this project with the specified type.
+   * <p>
+   * @param projectId The id of the project in which to display the jobhistory
+   * objects.
+   * @param type The type of jobs to fetch. The String parameter passed through
+   * REST should be an uppercase version of the constant value.
+   * @param sc
+   * @param reqJobType
+   * @return A list of all jobhistory objects.
+   * @throws se.kth.hopsworks.rest.AppException
+   */
+  @GET
+  @Path("{projectId}/history/{type}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response findAllJobHistoryByType(@PathParam("projectId") Integer projectId,
+          @PathParam("type") JobType type,
+          @Context SecurityContext sc, @Context HttpServletRequest reqJobType)
+          throws AppException {
+    Project project = projectController.findProjectById(projectId);
+    List<JobHistory> history = jobHistoryFacade.findForProjectByType(project,
+            type);
+    GenericEntity<List<JobHistory>> jobHistory
+            = new GenericEntity<List<JobHistory>>(history) {
+            };
+
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            jobHistory).build();
+  }
+}
