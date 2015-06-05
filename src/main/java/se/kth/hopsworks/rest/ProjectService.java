@@ -16,14 +16,12 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -193,8 +191,8 @@ public class ProjectService {
               + json.getErrorMsg());
     } catch (EJBException ex) {
       logger.log(Level.SEVERE,
-              ResponseMessages.PROJECT_INODE_NOT_CREATED, ex);
-      json.setErrorMsg(ResponseMessages.PROJECT_INODE_NOT_CREATED + "\n "
+              ResponseMessages.FOLDER_INODE_NOT_CREATED, ex);
+      json.setErrorMsg(ResponseMessages.FOLDER_INODE_NOT_CREATED + "\n "
               + json.getErrorMsg());
     }
 

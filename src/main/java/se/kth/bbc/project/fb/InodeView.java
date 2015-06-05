@@ -2,6 +2,7 @@ package se.kth.bbc.project.fb;
 
 import java.util.Date;
 import java.util.Objects;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Simplified version of the Inode entity to allow for easier access through web
@@ -9,20 +10,27 @@ import java.util.Objects;
  * <p>
  * @author stig
  */
+@XmlRootElement
 public final class InodeView {
 
-  private final String name;
-  private final boolean dir;
-  private final boolean parent;
-  private final String path;
-  private final Date modification;
+  private  String name;
+  private  boolean dir;
+  private  boolean parent;
+  private  String path;
+  private  Date modification;
+  private  Date accessTime;
+  
 
+  public InodeView() {
+  }
+  
   public InodeView(Inode i, String path) {
     this.name = i.getInodePK().getName();
     this.dir = i.isDir();
     this.parent = false;
     this.path = path;
     this.modification = new Date(i.getModificationTime().longValue());
+    this.accessTime = new Date(i.getAccessTime().longValue());
   }
 
   private InodeView(String name, boolean dir, boolean parent, String path) {
@@ -45,6 +53,30 @@ public final class InodeView {
     return new InodeView(name, dir, parent, path);
   }
 
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public void setDir(boolean dir) {
+    this.dir = dir;
+  }
+
+  public void setParent(boolean parent) {
+    this.parent = parent;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
+  }
+
+  public void setModification(Date modification) {
+    this.modification = modification;
+  }
+
+  public void setAccessTime(Date accessTime) {
+    this.accessTime = accessTime;
+  }
+  
   public String getName() {
     return name;
   }
@@ -63,6 +95,10 @@ public final class InodeView {
 
   public Date getModification() {
     return modification;
+  }
+
+  public Date getAccessTime() {
+    return accessTime;
   }
 
   @Override

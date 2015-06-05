@@ -46,6 +46,7 @@ import se.kth.bbc.upload.HttpUtils;
 import se.kth.bbc.upload.ResumableInfo;
 import se.kth.bbc.upload.ResumableInfoStorage;
 import se.kth.hopsworks.controller.DataSetDTO;
+import se.kth.hopsworks.controller.FolderNameValidator;
 
 /**
  * @author André<amore@kth.se>
@@ -68,6 +69,8 @@ public class DataSetService {
   private InodeFacade inodes;
   @EJB
   private StagingManager stagingManager;
+  @EJB
+  private FolderNameValidator datasetNameValidator;
 
   private Integer projectId;
   private Project project;
@@ -82,8 +85,7 @@ public class DataSetService {
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator
             + this.project.getName();
-    this.path = projectPath + File.separator
-            + Constants.DIR_DATASET + File.separator;
+    this.path = projectPath + File.separator;
   }
 
   public Integer getProjectId() {
@@ -97,10 +99,10 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    Inode projectInode = inodes.findByName(this.project.getName());
+    Inode projectInode = inodes.findByName(Constants.DIR_ROOT);
     Inode parent = inodes.findByParentAndName(projectInode,
-            Constants.DIR_DATASET);
-    logger.log(Level.FINE, "findDataSetsInProjectID Parent name: {0}", parent.
+            this.project.getName());
+    logger.log(Level.INFO, "findDataSetsInProjectID Parent name: {0}", parent.
             getInodePK().getName());
     List<Inode> cwdChildren;
     cwdChildren = inodes.findByParent(parent);
@@ -128,9 +130,9 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    Inode projectInode = inodes.findByName(this.project.getName());
+    Inode projectInode = inodes.findByName(Constants.DIR_ROOT);
     Inode parent = inodes.findByParentAndName(projectInode,
-            Constants.DIR_DATASET);
+            this.project.getName());
     String[] pathArray = path.split(File.separator);
     for (String p : pathArray) {
       parent = inodes.findByParentAndName(parent, p);
@@ -153,19 +155,23 @@ public class DataSetService {
   }
 
   @GET
-  @Path("{fileName}")
+  @Path("download/{filePath: .+}")
   @Produces(MediaType.MULTIPART_FORM_DATA)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public InputStream downloadFile(
-          @PathParam("fileName") String fileName,
+          @PathParam("filePath") String filePath,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     InputStream is = null;
-    String filePath = this.path + fileName;
+    String fullPath = this.path + filePath;
+    if (inodes.getInodeAtPath(fullPath) == null){
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              ResponseMessages.FILE_NOT_FOUND);
+    }
     try {
-      is = fileOps.getInputStream(filePath);
+      is = fileOps.getInputStream(fullPath);
       logger.log(Level.FINE, "File was downloaded from HDFS path: {0}",
-              filePath);
+              fullPath);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
     }
@@ -180,13 +186,46 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     boolean success = false;
+    boolean exist = true;
+    String dsPath = File.separator + Constants.DIR_ROOT + File.separator
+            + this.project.getName();
     JsonResponse json = new JsonResponse();
-    if (dataSetName == null || dataSetName.getName().isEmpty()) {
+    if (dataSetName == null || dataSetName.getName() == null || dataSetName.
+            getName().isEmpty()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NAME_EMPTY);
     }
 
-    String dsPath = this.path + dataSetName.getName();
+    //check if the folder is allowed and if it already exists
+    Inode projectInode = inodes.findByName(Constants.DIR_ROOT);
+    Inode parent = inodes.findByParentAndName(projectInode,
+            this.project.getName());
+    String[] pathArray = dataSetName.getName().split(File.separator);
+    for (String p : pathArray) {
+
+      if (parent != null) {
+        parent = inodes.findByParentAndName(parent, p);
+        if (parent != null) {
+          dsPath = dsPath + File.separator + p;
+        } else {//first time when we find non existing folder name
+          if (datasetNameValidator.isValidName(p)) {
+            dsPath = dsPath + File.separator + p;
+            exist = false;
+          }
+        }
+      } else {
+        if (datasetNameValidator.isValidName(p)) {
+          dsPath = dsPath + File.separator + p;
+          exist = false;
+        }
+      }
+    }
+
+    if (exist) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.FOLDER_NAME_EXIST);
+    }
+
     try {
       success = fileOps.mkDir(dsPath);
     } catch (IOException ex) {
@@ -220,7 +259,6 @@ public class DataSetService {
               ResponseMessages.DATASET_NAME_EMPTY);
     }
     String filePath = this.path + fileName;
-    System.err.println(filePath);
     logger.log(Level.INFO, filePath);
     try {
       success = fileOps.rmRecursive(filePath);
@@ -249,14 +287,45 @@ public class DataSetService {
           @Context HttpServletRequest request)
           throws AppException, IOException {
     JsonResponse json = new JsonResponse();
+    String uploadPath;
+    boolean exist = true;
+    if (path == null) {
+      path = "";
+    }
+    if (path.equals("") || path.endsWith(File.separator)) {
+      uploadPath = this.path + path;
+    } else {
+      uploadPath = this.path + path + File.separator;
+    }
 
-    String uploadPath = this.path + path + "/";
-    logger.log(Level.INFO, "length.....{0}", request.getParameter(
+    logger.log(Level.INFO, "size.....{0}", request.getParameter(
             "flowCurrentChunkSize"));
 
     int resumableChunkNumber = getResumableChunkNumber(request);
 
     ResumableInfo info = getResumableInfo(request);
+    String fileName = info.resumableFilename;
+    //check if all the non existing dir names in the path are valid.
+    Inode projectInode = inodes.findByName(Constants.DIR_ROOT);
+    Inode parent = inodes.findByParentAndName(projectInode,
+            this.project.getName());
+    String[] pathArray = path.split(File.separator);
+    for (String p : pathArray) {
+      if (parent != null) {
+        parent = inodes.findByParentAndName(parent, p);
+      } else {
+        datasetNameValidator.isValidName(p);
+        exist = false;
+      }
+    }
+
+    if (exist) { //if the path exists check if the file exists.
+      parent = inodes.findByParentAndName(parent, fileName);
+      if (parent != null) {
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                ResponseMessages.FILE_NAME_EXIST);
+      }
+    }
 
     long content_length;
     //Seek to position
@@ -297,7 +366,7 @@ public class DataSetService {
       try {
         uploadPath = Utils.ensurePathEndsInSlash(uploadPath);
         fileOps.copyAfterUploading(info.resumableFilename, uploadPath
-                + info.resumableFilename);
+                + fileName);
         logger.log(Level.SEVERE, "Copied to HDFS");
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Failed to write to HDSF", e);
@@ -309,6 +378,8 @@ public class DataSetService {
             json).build();
   }
 
+  
+ 
   private int getResumableChunkNumber(HttpServletRequest request) {
     return HttpUtils.toInt(request.getParameter("flowChunkNumber"), -1);
   }
@@ -327,7 +398,8 @@ public class DataSetService {
     //Here we add a ".temp" to every upload file to indicate NON-FINISHED
     String resumableFilePath = new File(base_dir, resumableFilename).
             getAbsolutePath() + ".temp";
-    //TODO: the current way of uploading will not scale: if two persons happen to upload a file with the same name, trouble is waiting to happen
+    //TODO: the current way of uploading will not scale: if two persons happen 
+    //to upload a file with the same name, trouble is waiting to happen
 
     ResumableInfoStorage storage = ResumableInfoStorage.getInstance();
 

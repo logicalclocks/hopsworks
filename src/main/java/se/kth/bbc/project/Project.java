@@ -62,7 +62,7 @@ import se.kth.bbc.project.services.ProjectServices;
 public class Project implements Serializable {
 
   @Column(name = "archived")
-  private Boolean archived;
+  private Boolean archived = false;
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<ProjectTeam> projectTeamCollection;
