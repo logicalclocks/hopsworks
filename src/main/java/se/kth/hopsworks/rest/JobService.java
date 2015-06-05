@@ -27,7 +27,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
  *
  * @author stig
  */
-@Path("/jobs")
+@Path("/project/{projectId}/jobs")
 @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
@@ -54,7 +54,7 @@ public class JobService {
    * @throws se.kth.hopsworks.rest.AppException
    */
   @GET
-  @Path("{projectId}/history/{type}")
+  @Path("/history/{type}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response findAllJobHistoryByType(@PathParam("projectId") Integer projectId,

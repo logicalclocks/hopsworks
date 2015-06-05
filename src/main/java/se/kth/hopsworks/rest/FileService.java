@@ -20,12 +20,13 @@ import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
+import se.kth.hopsworks.filters.AllowedRoles;
 
 /**
- * Service offering file download.
+ * Service offering file operations.
  * @author stig
  */
-@Path("/files")
+@Path("/project/{projectId}/files")
 @RolesAllowed({"SYS_ADMIN", "BBC_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Stateless
@@ -51,8 +52,9 @@ public class FileService {
    * @return
    */
   @GET
-  @Path("/{projectId}/download")
+  @Path("/download")
   @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response downloadFile(@PathParam("projectId") Integer projectId,
           @QueryParam("path") String path,
           @Context SecurityContext sc,
