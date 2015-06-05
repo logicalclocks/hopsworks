@@ -78,6 +78,12 @@ public class RequestAuthFilter implements ContainerRequestFilter {
         log.log(Level.INFO, "Accessing resource that is allowed for all");
         return;
       }
+      
+      if (requestContext.getSecurityContext().getUserPrincipal() == null) {
+        requestContext.abortWith(Response.
+                status(Response.Status.UNAUTHORIZED).build());
+        return;
+      }
 
       //if the resource is only allowed for some roles check if the user have the requierd role for the resource.
       String userEmail = requestContext.getSecurityContext().getUserPrincipal().
