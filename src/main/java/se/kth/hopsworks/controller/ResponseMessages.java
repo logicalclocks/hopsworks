@@ -70,23 +70,29 @@ public class ResponseMessages {
           = "The project's root folder was not found in HDFS. You will not be unable to access its contents.";
   public final static String PROJECT_NOT_REMOVED = "Project wasn't removed.";
   public final static String PROJECT_NAME_EXIST
-          = "A Project with this name already exists!";
+          = "A Project with the same name already exists in the system!";
   public final static String PROJECT_FOLDER_NOT_CREATED
           = "Project folder could not be created in HDFS.";
   public final static String PROJECT_FOLDER_NOT_REMOVED
           = "Project folder could not be removed from HDFS.";
   public final static String PROJECT_MEMBER_NOT_REMOVED
           = "Failed to remove team member.";
-  public final static String PROJECT_INODE_NOT_CREATED
-          = "Project Inode could not be created in DB.";
-  public final static String PROJECT_NAME_NOT_SET
-          = "The project name cannot be empty.";
-  public final static String PROJECT_NAME_TOO_LONG
-          = "The project name cannot be longer than 24 characters.";
-  public final static String PROJECT_NAME_CONTAIN_DISALLOWED_CHARS
-          = "The project name cannot contain any of the characters ";
-  public final static String PROJECT_NAME_ENDS_WITH_DOT
-          = "The project name cannot end in a period.";
+  public final static String FOLDER_INODE_NOT_CREATED
+          = "Folder Inode could not be created in DB.";
+  public final static String FOLDER_NAME_NOT_SET
+          = "Name cannot be empty.";
+  public final static String FOLDER_NAME_TOO_LONG
+          = "Name cannot be longer than 24 characters.";
+  public final static String FOLDER_NAME_CONTAIN_DISALLOWED_CHARS
+          = "Name cannot contain any of the characters ";
+  public final static String FOLDER_NAME_ENDS_WITH_DOT
+          = "Name cannot end in a period.";
+  public final static String FOLDER_NAME_EXIST
+          = "A directory with the same name already exists. "
+          + "If you want to replace it delete it first then try recreating.";
+  public final static String FILE_NAME_EXIST
+          = "File already exists.";
+  public final static String FILE_NOT_FOUND = "File not found.";
   public final static String PROJECT_SERVICE_NOT_FOUND
           = " service was not found. ";
   public final static String NO_MEMBER_TO_ADD = " No member to add.";

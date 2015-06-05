@@ -165,7 +165,9 @@ public class UsersController {
 
     if (userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
       user.setSecurityQuestion(SecurityQuestions.getQuestion(securityQuestion));
-      user.setSecurityAnswer(DigestUtils.sha256Hex(securityAnswer.toLowerCase()));
+      user.
+              setSecurityAnswer(DigestUtils.sha256Hex(securityAnswer.
+                              toLowerCase()));
       userBean.update(user);
     }
   }
@@ -232,7 +234,7 @@ public class UsersController {
       int count = user.getFalseLogin() + 1;
       user.setFalseLogin(count);
       if (count > Users.ALLOWED_FALSE_LOGINS) {
-        user.setStatus(UserAccountStatus.ACCOUNT_BLOCKED.getValue());       
+        user.setStatus(UserAccountStatus.ACCOUNT_BLOCKED.getValue());
       }
       userBean.update(user);
     }

@@ -38,19 +38,19 @@ import se.kth.bbc.project.Project;
           query
           = "SELECT s FROM ProjectMeta s WHERE s.description = :description")})
 public class ProjectMeta implements Serializable {
-  
+
   private static final long serialVersionUID = 1L;
-  
+
   @Id
   @Basic(optional = false)
   @NotNull
   @Column(name = "project_id")
   private Integer projectId;
-  
+
   @Size(max = 2000)
   @Column(name = "description")
   private String description;
-  
+
   @JoinColumn(name = "project_id",
           referencedColumnName = "id",
           insertable = false,
@@ -58,7 +58,7 @@ public class ProjectMeta implements Serializable {
           = false)
   @OneToOne(optional = false)
   private Project project;
-  
+
   @ElementCollection(targetClass = CollectionTypeProjectDesignEnum.class)
   @CollectionTable(name = "project_design",
           joinColumns = @JoinColumn(name = "project_id",
@@ -66,7 +66,7 @@ public class ProjectMeta implements Serializable {
   @Column(name = "design")
   @Enumerated(EnumType.STRING)
   private List<CollectionTypeProjectDesignEnum> projectDesignList;
-  
+
   @ElementCollection(targetClass = InclusionCriteriumEnum.class)
   @CollectionTable(name = "project_inclusion_criteria",
           joinColumns = @JoinColumn(name = "project_id",
@@ -138,8 +138,8 @@ public class ProjectMeta implements Serializable {
       return false;
     }
     ProjectMeta other = (ProjectMeta) object;
-    if ((this.projectId == null && other.projectId != null) ||
-            (this.projectId != null && !this.projectId.equals(other.projectId))) {
+    if ((this.projectId == null && other.projectId != null) || (this.projectId
+            != null && !this.projectId.equals(other.projectId))) {
       return false;
     }
     return true;
@@ -147,7 +147,8 @@ public class ProjectMeta implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.project.metadata.ProjectMeta[ projectId=" + projectId + " ]";
+    return "se.kth.bbc.project.metadata.ProjectMeta[ projectId=" + projectId
+            + " ]";
   }
 
 }

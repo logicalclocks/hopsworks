@@ -19,7 +19,7 @@ public class ProjectTeamPK implements Serializable {
   @Basic(optional = false)
   @Column(name = "project_id")
   private Integer projectId;
-  
+
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -66,7 +66,8 @@ public class ProjectTeamPK implements Serializable {
       return false;
     }
     ProjectTeamPK other = (ProjectTeamPK) object;
-    if ((this.projectId == null && other.projectId != null) || (this.projectId != null
+    if ((this.projectId == null && other.projectId != null) || (this.projectId
+            != null
             && !this.projectId.equals(other.projectId))) {
       return false;
     }
@@ -80,7 +81,8 @@ public class ProjectTeamPK implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.project.ProjectTeamPK[ projectId=" + projectId + ", teamMember="
+    return "se.kth.bbc.project.ProjectTeamPK[ projectId=" + projectId
+            + ", teamMember="
             + teamMember + " ]";
   }
 

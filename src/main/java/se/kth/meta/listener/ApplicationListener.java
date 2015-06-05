@@ -25,52 +25,55 @@ import javax.websocket.server.ServerContainer;
 public class ApplicationListener implements ServletContextListener,
         ServletRequestListener {
 
-    private static final Logger logger = Logger.getLogger(ApplicationListener.class.getName());
-    private Dbao db;
+  private static final Logger logger = Logger.getLogger(
+          ApplicationListener.class.getName());
+  private Dbao db;
 
-    @Override
-    public void contextInitialized(ServletContextEvent servletContextEvent) {
+  @Override
+  public void contextInitialized(ServletContextEvent servletContextEvent) {
 
-        ServletContext context = servletContextEvent.getServletContext();
+    ServletContext context = servletContextEvent.getServletContext();
 
-        final ServerContainer serverContainer = (ServerContainer) context
-                .getAttribute("javax.websocket.server.ServerContainer");
+    final ServerContainer serverContainer = (ServerContainer) context
+            .getAttribute("javax.websocket.server.ServerContainer");
 
-        try {
-            //initialize the Database Access Object
-            this.db = (Dbao) context.getAttribute("db");
-            if (this.db == null) {
-                //this.db = this.createDb();
-                this.db = new Dbao();
-                context.setAttribute("db", this.db);
-                context.setAttribute("protocol", new Protocol(this.db));
-            }
-            
-            //initialize the WebSockets Endpoint
-            serverContainer.addEndpoint(WebSocketEndpoint.class);
-            
-            logger.log(Level.SEVERE, "HOPSWORKS WS INITIALIZED");
-        } catch (DatabaseException e) {
-            logger.log(Level.SEVERE, "HOPSWORKS WAS NOT INITIALIZED ", e);
-        } catch (DeploymentException ex) {
-            Logger.getLogger(ApplicationListener.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    try {
+      //initialize the Database Access Object
+      this.db = (Dbao) context.getAttribute("db");
+      if (this.db == null) {
+        //this.db = this.createDb();
+        this.db = new Dbao();
+        context.setAttribute("db", this.db);
+        context.setAttribute("protocol", new Protocol(this.db));
+      }
+
+      //initialize the WebSockets Endpoint
+      serverContainer.addEndpoint(WebSocketEndpoint.class);
+
+      logger.log(Level.SEVERE, "HOPSWORKS WS INITIALIZED");
+    } catch (DatabaseException e) {
+      logger.log(Level.SEVERE, "HOPSWORKS WAS NOT INITIALIZED ", e);
+    } catch (DeploymentException ex) {
+      Logger.getLogger(ApplicationListener.class.getName()).log(Level.SEVERE,
+              null, ex);
     }
+  }
 
-    @Override
-    public void contextDestroyed(ServletContextEvent servletContextEvent) {
-        System.err.println("METAHOPS WS DESTROYED");
+  @Override
+  public void contextDestroyed(ServletContextEvent servletContextEvent) {
+    System.err.println("METAHOPS WS DESTROYED");
 
-        try {
-            this.db.shutdown();
-        } catch (NullPointerException | DatabaseException e) {
-            //in case the database was not initialized
-            String message = "METAHOPS WS: Error closing the database " + e.getMessage();
-            logger.log(Level.SEVERE, message, e);
-        }  
+    try {
+      this.db.shutdown();
+    } catch (NullPointerException | DatabaseException e) {
+      //in case the database was not initialized
+      String message = "METAHOPS WS: Error closing the database " + e.
+              getMessage();
+      logger.log(Level.SEVERE, message, e);
     }
+  }
 
-    //create db object manually
+  //create db object manually
 //    private Dbao createDb() throws ApplicationException {
 //        Dbao dbao = null;
 //
@@ -88,17 +91,17 @@ public class ApplicationListener implements ServletContextListener,
 //        }
 //        return dbao;
 //    }
-    @Override
-    public void requestInitialized(ServletRequestEvent event) {
-        HttpServletRequest request = (HttpServletRequest) event.getServletRequest();
-        HttpSession se = request.getSession();
-        //logger.info("METAHOPS WS: REQUEST INITIALIZED");
-    }
+  @Override
+  public void requestInitialized(ServletRequestEvent event) {
+    HttpServletRequest request = (HttpServletRequest) event.getServletRequest();
+    HttpSession se = request.getSession();
+    //logger.info("METAHOPS WS: REQUEST INITIALIZED");
+  }
 
-    @Override
-    public void requestDestroyed(ServletRequestEvent sre) {
-        //logger.info("METAHOPS WS: REQUEST DESROYED");
-    }
+  @Override
+  public void requestDestroyed(ServletRequestEvent sre) {
+    //logger.info("METAHOPS WS: REQUEST DESROYED");
+  }
 
 //    @Override
 //    public void sessionCreated(HttpSessionEvent event) {

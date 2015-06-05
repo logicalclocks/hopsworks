@@ -60,8 +60,9 @@ import se.kth.bbc.project.services.ProjectServices;
           query
           = "SELECT t FROM Project t WHERE t.owner = :owner AND t.name = :name")})
 public class Project implements Serializable {
+
   @Column(name = "archived")
-  private Boolean archived;
+  private Boolean archived = false;
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<ProjectTeam> projectTeamCollection;
@@ -107,7 +108,6 @@ public class Project implements Serializable {
           max = 30)
   @Column(name = "ethical_status")
   private String ethicalStatus;
-
 
   @Column(name = "deleted")
   private Boolean deleted;

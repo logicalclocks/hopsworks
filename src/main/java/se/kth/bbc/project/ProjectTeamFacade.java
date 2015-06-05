@@ -61,43 +61,52 @@ public class ProjectTeamFacade {
    * <p>
    * @param project
    * @param role
-   * @return A list of User entities that have the role <i>role</i> in Project <i>project</i>.
+   * @return A list of User entities that have the role <i>role</i> in Project
+   * <i>project</i>.
    */
   public List<User> findTeamMembersByProject(Project project, String role) {
     List<ProjectTeam> results = findProjectTeamByProjectAndRole(project, role);
     ArrayList<User> retList = new ArrayList<>(results.size());
-    for(ProjectTeam st : results){
+    for (ProjectTeam st : results) {
       retList.add(st.getUser());
     }
     return retList;
   }
-  
+
   /**
-   * Get all the ProjectTeam entries for users in the role <i>role</i> in Project <i>project</i>.
+   * Get all the ProjectTeam entries for users in the role <i>role</i> in
+   * Project <i>project</i>.
+   * <p>
    * @param project
    * @param role
-   * @return 
+   * @return
    */
-  public List<ProjectTeam> findProjectTeamByProjectAndRole(Project project, String role){
-    TypedQuery<ProjectTeam> q = em.createNamedQuery("ProjectTeam.findMembersByRoleInProject",ProjectTeam.class);
+  public List<ProjectTeam> findProjectTeamByProjectAndRole(Project project,
+          String role) {
+    TypedQuery<ProjectTeam> q = em.createNamedQuery(
+            "ProjectTeam.findMembersByRoleInProject", ProjectTeam.class);
     q.setParameter("project", project);
-    q.setParameter("teamRole",role);
+    q.setParameter("teamRole", role);
     return q.getResultList();
   }
 
   /**
-   * Find all the ProjectTeam entries for members in Project <i>project</i> that have the role Researcher.
+   * Find all the ProjectTeam entries for members in Project <i>project</i> that
+   * have the role Researcher.
+   * <p>
    * @param project
-   * @return 
+   * @return
    */
   public List<ProjectTeam> findResearchMembersByName(Project project) {
     return findProjectTeamByProjectAndRole(project, "Researcher");
   }
 
   /**
-   * Find all the ProjectTeam entries for members in Project <i>project</i> that have the role Guest.
+   * Find all the ProjectTeam entries for members in Project <i>project</i> that
+   * have the role Guest.
+   * <p>
    * @param project
-   * @return 
+   * @return
    */
   public List<ProjectTeam> findGuestMembersByName(Project project) {
     return findProjectTeamByProjectAndRole(project, "Guest");
@@ -110,7 +119,8 @@ public class ProjectTeamFacade {
    * @return
    */
   public List<ProjectTeam> findMembersByProject(Project project) {
-    TypedQuery<ProjectTeam> query = em.createNamedQuery("ProjectTeam.findByProject",
+    TypedQuery<ProjectTeam> query = em.createNamedQuery(
+            "ProjectTeam.findByProject",
             ProjectTeam.class);
     query.setParameter("project", project);
     return query.getResultList();
@@ -159,39 +169,44 @@ public class ProjectTeamFacade {
 
   /**
    * Get the current role of User <i>user</i> in Project <i>project</i>.
+   * <p>
    * @param project
    * @param user
-   * @return The current role of the user in the project, or null if the user is not in it.
+   * @return The current role of the user in the project, or null if the user is
+   * not in it.
    */
   public String findCurrentRole(Project project, User user) {
-    TypedQuery<ProjectTeam> q = em.createNamedQuery("ProjectTeam.findRoleForUserInProject", ProjectTeam.class);
-    q.setParameter("project",project);
+    TypedQuery<ProjectTeam> q = em.createNamedQuery(
+            "ProjectTeam.findRoleForUserInProject", ProjectTeam.class);
+    q.setParameter("project", project);
     q.setParameter("user", user);
-    try{
+    try {
       return q.getSingleResult().getTeamRole();
-    }catch(NoResultException e){
+    } catch (NoResultException e) {
       return null;
     }
   }
-  
+
   /**
    * Get the current role of User <i>user</i> in Project <i>project</i>.
+   * <p>
    * @param project
    * @param user
-   * @return The current role of the user in the project, or null if the user is not in it.
+   * @return The current role of the user in the project, or null if the user is
+   * not in it.
    * @deprecated use findCurrentRole(Project project, User user) instead.
    */
   public String findCurrentRole(Project project, String user) {
-    TypedQuery<User> q = em.createNamedQuery("User.findByEmail",User.class);
+    TypedQuery<User> q = em.createNamedQuery("User.findByEmail", User.class);
     q.setParameter("email", user);
     User u = q.getSingleResult();
-    return findCurrentRole(project,u);
+    return findCurrentRole(project, u);
   }
 
   public void persistProjectTeam(ProjectTeam team) {
     em.persist(team);
   }
-  
+
   /*
    * merges an update to project team
    * @param team
@@ -203,9 +218,11 @@ public class ProjectTeamFacade {
   }
 
   /**
-   * Remove the ProjectTeam entry for User <i>user</i> in Project <i>project</i>.
+   * Remove the ProjectTeam entry for User <i>user</i> in Project
+   * <i>project</i>.
+   * <p>
    * @param project
-   * @param user 
+   * @param user
    */
   public void removeProjectTeam(Project project, User user) {
     ProjectTeam team = findByPrimaryKey(project, user);
@@ -213,11 +230,13 @@ public class ProjectTeamFacade {
       em.remove(team);
     }
   }
-  
+
   /**
-   * Remove the ProjectTeam entry for the User with email <i>email</i> in Project <i>project</i>.
+   * Remove the ProjectTeam entry for the User with email <i>email</i> in
+   * Project <i>project</i>.
+   * <p>
    * @param project
-   * @param email 
+   * @param email
    * @deprecated Use removeProjectTeam(Project project, User user) instead.
    */
   public void removeProjectTeam(Project project, String email) {
@@ -228,9 +247,10 @@ public class ProjectTeamFacade {
 
   /**
    * Update the team role of User <i>user</i> in Project <i>project</i>.
+   * <p>
    * @param project
    * @param user
-   * @param teamRole 
+   * @param teamRole
    */
   public void updateTeamRole(Project project, User user, String teamRole) {
     ProjectTeam team = findByPrimaryKey(project, user);
@@ -240,24 +260,27 @@ public class ProjectTeamFacade {
       em.merge(team);
     }
   }
-  
+
   /**
-   * Update the team role of the User with email <i>email</i> in Project <i>project</i>.
+   * Update the team role of the User with email <i>email</i> in Project
+   * <i>project</i>.
+   * <p>
    * @param project
    * @param email
-   * @param teamRole 
+   * @param teamRole
    */
   public void updateTeamRole(Project project, String email, String teamRole) {
     TypedQuery<User> query = em.createNamedQuery("User.findByEmail", User.class);
     query.setParameter("email", email);
-    updateTeamRole(project,query.getSingleResult(),teamRole);
+    updateTeamRole(project, query.getSingleResult(), teamRole);
   }
 
   /**
    * Find the ProjectTeam entry for Project <i>project</i> and User <i>user</i>.
+   * <p>
    * @param project
    * @param user
-   * @return 
+   * @return
    */
   public ProjectTeam findByPrimaryKey(Project project, User user) {
     return em.find(ProjectTeam.class, new ProjectTeam(project, user).
@@ -266,22 +289,25 @@ public class ProjectTeamFacade {
 
   /**
    * Check if the User <i>user</i> is a member of the Project <i>project</i>.
+   * <p>
    * @param project
    * @param user
-   * @return 
+   * @return
    */
   public boolean isUserMemberOfProject(Project project, User user) {
-    TypedQuery<ProjectTeam> q = em.createNamedQuery("ProjectTeam.findRoleForUserInProject",ProjectTeam.class);
+    TypedQuery<ProjectTeam> q = em.createNamedQuery(
+            "ProjectTeam.findRoleForUserInProject", ProjectTeam.class);
     q.setParameter("project", project);
     q.setParameter("user", user);
     return q.getResultList().size() > 0;
   }
- 
+
   /**
    * Check if the User <i>user</i> is a member of the Project <i>project</i>.
+   * <p>
    * @param project
    * @param user
-   * @return 
+   * @return
    * @deprecated use isUserMemberOfProject(Project project,User user) instead.
    */
   public boolean isUserMemberOfProject(Project project, String user) {
@@ -289,7 +315,6 @@ public class ProjectTeamFacade {
     q.setParameter("email", user);
     return isUserMemberOfProject(project, q.getSingleResult());
   }
-  
 
   /**
    * Find the ProjectTeam entry for the given project and user.

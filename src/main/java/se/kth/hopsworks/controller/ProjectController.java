@@ -53,7 +53,7 @@ public class ProjectController {
   @EJB
   private UserManager userBean;
   @EJB
-  private ProjectNameValidator projectNameValidator;
+  private FolderNameValidator projectNameValidator;
   @EJB
   private ActivityFacade activityFacade;
   @EJB
@@ -83,7 +83,7 @@ public class ProjectController {
     User user = userBean.getUserByEmail(email);
     //if there is no project by the same name for this user and project name is valid
     if (projectNameValidator.isValidName(newProjectName) && !projectFacade.
-            projectExistsForOwner(newProjectName, user)) {
+            projectExists(newProjectName)) {
       //Create a new project object
       Date now = new Date();
       Project project = new Project(newProjectName, user, now);
@@ -217,20 +217,7 @@ public class ProjectController {
 
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator + projectName;
-    String resultsPath = projectPath + File.separator
-            + Constants.DIR_RESULTS;
-    String cuneiformPath = projectPath + File.separator
-            + Constants.DIR_CUNEIFORM;
-    String samplesPath = projectPath + File.separator
-            + Constants.DIR_SAMPLES;
-    String dataSetPath = projectPath + File.separator
-            + Constants.DIR_DATASET;
-
     fileOps.mkDir(projectPath);
-    fileOps.mkDir(resultsPath);
-    fileOps.mkDir(cuneiformPath);
-    fileOps.mkDir(samplesPath);
-    fileOps.mkDir(dataSetPath);
   }
 
   /**
@@ -255,9 +242,9 @@ public class ProjectController {
               ResponseMessages.PROJECT_NOT_FOUND);
     }
     projectFacade.remove(project);
-     //if we remove the project we cant store activity that has a reference to it!!
+    //if we remove the project we cant store activity that has a reference to it!!
     //logActivity(ActivityFacade.REMOVED_PROJECT,
-            //ActivityFacade.FLAG_PROJECT, user, project);
+    //ActivityFacade.FLAG_PROJECT, user, project);
 
     if (deleteFilesOnRemove) {
       String path = File.separator + Constants.DIR_ROOT + File.separator

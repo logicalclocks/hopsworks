@@ -74,14 +74,16 @@ public class ProjectMetaController implements Serializable {
     //create project design model
     List<CollectionTypeProjectDesignEnum> availableDesign;
     List<CollectionTypeProjectDesignEnum> usedDesign;
-    if (metadata.getProjectDesignList() == null || metadata.getProjectDesignList().
+    if (metadata.getProjectDesignList() == null || metadata.
+            getProjectDesignList().
             isEmpty()) {
       availableDesign = Arrays.asList(CollectionTypeProjectDesignEnum.values());
       usedDesign = new ArrayList<>();
     } else {
       availableDesign = new ArrayList<>();
       usedDesign = new ArrayList<>();
-      for (CollectionTypeProjectDesignEnum item : CollectionTypeProjectDesignEnum.
+      for (CollectionTypeProjectDesignEnum item
+              : CollectionTypeProjectDesignEnum.
               values()) {
         if (metadata.getProjectDesignList().contains(item)) {
           usedDesign.add(item);

@@ -1,2 +1,2 @@
 # hopsworks
-BiobankCloud Laboratory Information Management Platform
+Hopsworks Big data Management Platform

@@ -62,13 +62,14 @@ public class ProjectPrivacyManager {
     em.persist(consent);
     return true;
   }
-  
-   /**
+
+  /**
    * Get all the Consents for the given Project.
+   * <p>
    * @param project
    * @return The Consent object, or null if none has been found.
    */
-  public List<Consent> getAllConsentsByProject(Project project){
+  public List<Consent> getAllConsentsByProject(Project project) {
     TypedQuery<Consent> q = em.createNamedQuery("Consent.findByProject",
             Consent.class);
     q.setParameter("project", project);
@@ -78,9 +79,10 @@ public class ProjectPrivacyManager {
   //TODO: this method is very badly designed. Not sure if it's supposed to count the number of consents, or ...?
   /**
    * Get the consent by its name.
+   * <p>
    * @param name
    * @return The Consent object, or null if none has been found.
-   * @throws ParseException 
+   * @throws ParseException
    */
   public Consent getConsentByName(String name) throws ParseException {
     TypedQuery<Consent> q = em.createNamedQuery("Consent.findByName",

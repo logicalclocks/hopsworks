@@ -11,22 +11,26 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author stig
  */
 @XmlRootElement
-public class InodeView {
+public final class InodeView {
 
   private  String name;
   private  boolean dir;
   private  boolean parent;
   private  String path;
   private  Date modification;
+  private  Date accessTime;
+  
 
-  public InodeView() {}
-
+  public InodeView() {
+  }
+  
   public InodeView(Inode i, String path) {
-    this.name = i.getName();
+    this.name = i.getInodePK().getName();
     this.dir = i.isDir();
     this.parent = false;
     this.path = path;
-    this.modification = new Date(i.getModified().getTime());
+    this.modification = new Date(i.getModificationTime().longValue());
+    this.accessTime = new Date(i.getAccessTime().longValue());
   }
 
   private InodeView(String name, boolean dir, boolean parent, String path) {
@@ -69,6 +73,10 @@ public class InodeView {
     this.modification = modification;
   }
 
+  public void setAccessTime(Date accessTime) {
+    this.accessTime = accessTime;
+  }
+  
   public String getName() {
     return name;
   }
@@ -87,6 +95,10 @@ public class InodeView {
 
   public Date getModification() {
     return modification;
+  }
+
+  public Date getAccessTime() {
+    return accessTime;
   }
 
   @Override

@@ -38,7 +38,7 @@ public class FileSystemOperations {
   @PostConstruct
   public void init() {
     try {
-      getFs();
+      fs = getFs();
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
     }
@@ -75,7 +75,7 @@ public class FileSystemOperations {
   }
 
   /**
-   * Create a new folder on the given path. Equivalent to  mkdir -p.
+   * Create a new folder on the given path. Equivalent to mkdir -p.
    *
    * @param location The path to the new folder, its name included.
    * @return True if successful.
@@ -96,11 +96,12 @@ public class FileSystemOperations {
   public boolean rm(Path location, boolean recursive) throws IOException {
     if (fs.exists(location)) {
       return fs.delete(location, recursive);
-    } 
-    return true;
+    } else {
+      return true;
+    }
   }
 
-  private void getFs() throws IOException {
+  private FileSystem getFs() throws IOException {
 
     String coreConfDir = System.getenv("HADOOP_CONF_DIR");
     //If still not found: throw exception
@@ -115,7 +116,7 @@ public class FileSystemOperations {
     if (!hadoopConfFile.exists()) {
       logger.log(Level.SEVERE, "Unable to locate configuration file in {0}",
               hadoopConfFile);
-      throw new IllegalStateException("No hadoop conf file: hadoop-site.xml");
+      throw new IllegalStateException("No hadoop conf file: core-site.xml");
     }
     File yarnConfFile = new File(coreConfDir, "yarn-site.xml");
     if (!yarnConfFile.exists()) {
@@ -138,7 +139,8 @@ public class FileSystemOperations {
     conf.addResource(hadoopPath);
     conf.addResource(yarnPath);
     conf.addResource(hdfsPath);
-    fs = FileSystem.get(conf);
+    FileSystem fs = FileSystem.get(conf);
+    return fs;
   }
 
   public String cat(Path file) throws IOException {
@@ -159,25 +161,8 @@ public class FileSystemOperations {
     fs.copyFromLocalFile(false, source, destination);
   }
 
-  public void moveWithinHdsf(Path source, Path destination) throws IOException {
+  public void moveWithinHdfs(Path source, Path destination) throws IOException {
     fs.rename(source, destination);
-  }
-
-  public boolean exists(Path path) throws IOException {
-    return fs.exists(path);
-  }
-
-  public boolean isDir(Path path) throws IOException {
-    return fs.isDirectory(path);
-  }
-
-  public List<Path> getChildren(Path path) throws IOException {
-    FileStatus[] stat = fs.listStatus(path);
-    List<Path> children = new ArrayList<>();
-    for (FileStatus s : stat) {
-      children.add(s.getPath());
-    }
-    return children;
   }
 
   /**
@@ -197,8 +182,8 @@ public class FileSystemOperations {
       FileUtil.copy(fs, src1, fs, dst, false, conf);
     }
   }
-  
-  public void copyToLocal(Path src, Path dst) throws IOException{
+
+  public void copyToLocal(Path src, Path dst) throws IOException {
     fs.copyToLocalFile(src, dst);
   }
 

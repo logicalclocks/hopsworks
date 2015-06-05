@@ -67,8 +67,10 @@ public class ProjectServiceFacade extends AbstractFacade<ProjectServices> {
     }
   }
 
-  public void removeServiceForProject(Project project, ProjectServiceEnum service) {
-    ProjectServices c = em.find(ProjectServices.class, new ProjectServicePK(project.getId(),
+  public void removeServiceForProject(Project project,
+          ProjectServiceEnum service) {
+    ProjectServices c = em.find(ProjectServices.class, new ProjectServicePK(
+            project.getId(),
             service));
     if (c != null) {
       em.remove(c);
