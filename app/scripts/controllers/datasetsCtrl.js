@@ -73,7 +73,7 @@ angular.module('hopsWorksApp')
             dataSetService.download(file).then (
                 function (data) {
                     var file = new Blob([data], { type: 'application/txt' });
-                    saveAs(file, 'filename');
+                    //saveAs(file, 'filename');
                 }, function (error){
                     console.log("download error");
                     console.log(error);
@@ -115,11 +115,10 @@ angular.module('hopsWorksApp')
             ModalService.newDataSet('md', self.currentPath).then(
                 function (success) {
                     growl.success(success.data.successMessage , {title: 'Success', ttl: 15000});
-                    //getDir();
-                    load(currentDS);
+                    getDir();
                 }, function (error) {
                     growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
-
+                    getDir();
                 });
         };
 
@@ -133,7 +132,7 @@ angular.module('hopsWorksApp')
 
 
         self.uploadFile = function () {
-            ModalService.upload('lg', self.currentProject.projectId, self.currentDataSet).then(
+            ModalService.upload('lg', self.currentProject.projectId, self.currentPath).then(
                 function (success) {
                     growl.success(success.data.successMessage , {title: 'Success', ttl: 15000});
                 }, function (error) {
