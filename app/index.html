@@ -9,20 +9,26 @@
   <link href='http://fonts.googleapis.com/css?family=Roboto:500' rel='stylesheet' type='text/css'>
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro' rel='stylesheet' type='text/css'>
 
+
   <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"/>
   <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"/>
   <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
   <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/0.8.3/angular-material.min.css">
-  <link rel="stylesheet" href="scripts/angular-chart/dist/angular-chart.css">
 
-  <link rel="stylesheet" href="scripts/growl/angular-growl.css"/>
-  <link rel="stylesheet" href="scripts/select/select.css"/>
+  <link rel="stylesheet" href="../bower_components/angular-chart/dist/angular-chart.css">
+  <link rel="stylesheet" href="../bower_components/angular-growl-v2/build/angular-growl.min.css"/>
+  <link rel="stylesheet" href="../bower_components/angular-ui-select/dist/select.css"/>
+  <link rel="stylesheet" href="../bower_components/ng-sortable/dist/ng-sortable.min.css"/>
+  <link rel="stylesheet" href="../bower_components/ng-sortable/dist/ng-sortable.style.min.css">
+  <link rel="stylesheet" href="../bower_components/angular-xeditable/dist/css/xeditable.css"/>
 
   <link rel="stylesheet" href="styles/nav.css">
   <link rel="stylesheet" href="styles/project_sidebar.css">
   <link rel="stylesheet" href="styles/form.css">
   <link rel="stylesheet" href="styles/style.css">
   <link rel="stylesheet" href="styles/filebrowser.css">
+  <link rel="stylesheet" href="styles/board.css">
+
 
 
 </head>
@@ -33,7 +39,7 @@
 </div>
 
 
-<!-- Dependencies -->
+<!-- Dependencies CDN-->
 <script src="https://code.jquery.com/jquery-2.1.3.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.js"></script>
@@ -49,15 +55,19 @@
 <script src="https://ajax.googleapis.com/ajax/libs/angular_material/0.8.3/angular-material.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular-messages.js"></script>
 <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
 
+<!-- Dependencies -->
 
-
-<script src="scripts/growl/angular-growl.js"></script>
-<script src="scripts/select/select.js"></script>
-<script src="scripts/select/sortable.js"></script>
-<script src="scripts/chart/Chart.js"></script>
-<script src="scripts/angular-chart/angular-chart.js"></script>
-<script src="scripts/ng-context-menu/ng-context-menu.js"></script>
+<script src="../bower_components/angular-growl-v2/build/angular-growl.js"></script>
+<script src="../bower_components/angular-ui-select/dist/select.js"></script>
+<script src="../bower_components/ng-sortable/dist/ng-sortable.js"></script>
+<script src="../bower_components/Chart.js/Chart.js"></script>
+<script src="../bower_components/angular-chart.js/angular-chart.js"></script>
+<script src="../bower_components/angular-websocket/dist/angular-websocket.js"></script>
+<script src="../bower_components/ng-context-menu/dist/ng-context-menu.js"></script>
+<script src="../bower_components/angular-xeditable/dist/js/xeditable.js"></script>
+<script src="../bower_components/ng-flow/dist/ng-flow-standalone.js"></script>
 
 <!-- Application -->
 <script src="scripts/app.js"></script>
@@ -78,7 +88,11 @@
 <script src="scripts/controllers/recoverCtrl.js"></script>
 <script src="scripts/controllers/datasetsCtrl.js"></script>
 <script src="scripts/controllers/cuneiformCtrl.js"></script>
+<script src="scripts/controllers/dataSetCreator.js"></script>
 <script src="scripts/controllers/memberCtrl.js"></script>
+<script src="scripts/controllers/newCardCtrl.js"></script>
+<script src="scripts/controllers/newTableCtrl.js"></script>
+<script src="scripts/controllers/fileUpload.js"></script>
 
 
 <!-- Services -->
@@ -94,6 +108,8 @@
 <script src="scripts/services/JobHistoryService.js"></script>
 <script src="scripts/services/SecurityQuestions.js"></script>
 <script src="scripts/services/MembersService.js"></script>
+<script src="scripts/services/MetadataService.js"></script>
+<script src="scripts/services/DataSetService.js"></script>
 
 </body>
 </html>

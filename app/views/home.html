@@ -93,10 +93,11 @@
         </button>
         </span>
       </div>
-
+      <div ng-repeat="project in homeCtrl.projects | filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects-1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects">
       <a href="#/project/{{project.project.id}}"
          class="list-group-item"
-         ng-repeat="project in homeCtrl.projects | filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects-1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects">
+         context-menu
+         data-target="menu-{{ $index }}">
         <div ng-if="project.teamRole =='Data scientist' ">
           <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-lock fa-2 pull-left"/>
         </div>
@@ -105,6 +106,41 @@
         </div>
         {{project.project.name}}
       </a>
+        <div class="dropdown position-fixed" id="menu-{{ $index }}">
+          <ul class="dropdown-menu dropdown-amore" role="menu">
+
+            <li>
+              <a class="pointer"
+                 role="menuitem"
+                 tabindex="1"
+                 ng-click="">
+                                <span><i class="fa fa-share-alt"></i>
+                                  Share...</span>
+              </a>
+            </li>
+
+            <li>
+              <a class="pointer"
+                 role="menuitem"
+                 tabindex="2"
+                 ng-click="homeCtrl.deleteProject(project.project.id)">
+                                 <span><i class="fa fa-trash"></i>
+                                   Remove and keep DataSets</span>
+              </a>
+            </li>
+            <li>
+              <a class="pointer"
+                 role="menuitem"
+                 tabindex="3"
+                 ng-click="homeCtrl.wipeProject(project.project.id)">
+                                 <span><i class="fa fa-trash"></i>
+                                   Remove and delete DataSets </span>
+              </a>
+            </li>
+
+          </ul>
+        </div>
+      </div>
       <pager total-items="homeCtrl.totalItemsProjects" ng-model="homeCtrl.currentPageProjects"></pager>
     </div>
 

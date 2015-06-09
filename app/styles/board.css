@@ -1,0 +1,177 @@
+
+#board {
+  margin: 0;
+  padding: 0 10px;
+}
+#board table {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+#board {
+  -moz-user-select: none;
+}
+#board .table td {
+  padding: 5px 5px 0;
+}
+#board .table th {
+  padding: 10px 0 10px 5px;
+}
+.columnHeader, #board .table thead th {
+  background: linear-gradient(to bottom, #ffffff, #f2f2f2) repeat-x scroll 0 0 #fafafa;
+  border-bottom: 1px solid #dddddd;
+  font-size: 20px;
+  font-weight: normal;
+  padding: 5px 0;
+  text-align: center;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+}
+#board .table thead th:first-of-type {
+  padding: 5px 10px 5px 20px;
+  white-space: nowrap;
+}
+#board .table thead {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+#board .table > tbody > tr > th, #board .table > tbody > tr > td {
+  border-top: medium none;
+}
+#board .table thead i, #board .table tbody i {
+  color: green;
+  font-size: 14px;
+}
+#board tbody th, #board tbody td {
+  background-color: #ffffff;
+  text-align: center;
+}
+#board .table td.addTask, #board .table td.addStory {
+  margin: 0;
+  padding: 0;
+}
+#board .table td.addTask button, #board .table th.addStory button {
+  background-color: #f2f2f2;
+  border: medium none;
+  height: 100%;
+  margin: 0;
+  padding: 0 3px;
+  width: 100%;
+}
+#board .table td.addTask button:hover, #board .table th.addStory button:hover {
+  background-color: #fafafa;
+}
+#board .table .story, #board .table .task {
+  transform: rotate(-2deg);
+}
+#board .table .story:hover, #board .table .story:focus, #board .table .task:hover, #board .table .task:focus {
+  box-shadow: 3px 6px 20px rgba(0, 0, 0, 0.4);
+  position: relative;
+  transform: scale(1.12);
+  z-index: 1035;
+}
+div.story, div.task {
+  -moz-user-select: none;
+  box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  margin: 4px 4px 4px 0;
+  padding: 5px 0;
+  position: relative;
+  text-align: center;
+}
+div.story {
+  margin: 0 5px 0 0;
+}
+div.story h3, div.task h3 {
+  font-size: 13px;
+  font-weight: normal;
+  line-height: 13px;
+  margin: 5px;
+  padding: 0;
+  text-align: center;
+  text-shadow: none;
+  transform-style: preserve-3d;
+}
+#columns {
+  margin: 20px 0 5px;
+}
+#columns > div {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+.column {
+  border: 1px solid darkgrey;
+  box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.7);
+}
+.card-list {
+  list-style: outside none none;
+  margin: 0;
+  min-height: 50px;
+  padding: 0;
+}
+.noMargin {
+  margin-bottom: 0;
+}
+.default {
+  box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.098) inset;
+}
+.default-color {
+  background-color: #ffffff;
+}
+.card {
+  box-shadow: 1px 1px 3px #999;
+  background: none repeat scroll 0 0 white;
+  border-radius: 10px;
+  margin-top: 7px;
+  padding: 10px;
+}
+.card-title {
+  color: #7c9eb2;
+  display: block;
+  font-weight: bold;
+  line-height: 1.5em;
+  padding: 2px 1px;
+  text-decoration: none;
+}
+.addList {
+  width: 10px;
+}
+.removeList {
+  color: #990000;
+  float: right;
+  padding-right: 10px;
+}
+.addNewCard {
+  color: green;
+  float: right;
+  padding-right: 10px;
+}
+.removeCard {
+  color: #444;
+  padding: 12px;
+}
+.removeButton {
+  color: #990000;
+}
+.searchable-true {
+  color: #33cc33;
+}
+.asteriskRed {
+  color: #990000;
+}
+.required-true {
+  color: #33cc33;
+}
+.cardMaxSize-true {
+  color: #33cc33;
+}
+.fillInMetadataInput {
+  width: 40em;
+}
+.cardMaxSizeField {
+  width: 10px;
+}
+.tab-title {
+  color: #7c9eb2;
+  display: block;
+  font-weight: bold;
+  line-height: 1.5em;
+  padding: 2px 1px;
+  text-decoration: none;
+}
