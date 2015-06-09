@@ -16,10 +16,6 @@ angular.module('hopsWorksApp')
                     return $http.get('/api/project/' + id + '/dataset/download/' + fileName, { responseType: 'arraybuffer' });
                 },
 
-                upload: function (dataSetPath) {
-                    return $http.post('/api/project/' + id + '/dataset/upload/' + dataSetPath);
-                },
-
                 createDataSetDir: function (dataSet) {
                     var regReq = {
                         method: 'POST',

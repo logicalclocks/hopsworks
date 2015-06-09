@@ -84,8 +84,7 @@ angular.module('hopsWorksApp')
               }
             $modalInstance.close($scope.newProject);
           }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
-            console.log('Error: ' + error)
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000, referenceId: 1});
           }
         );
 
