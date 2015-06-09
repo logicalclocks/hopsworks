@@ -32,7 +32,8 @@ angular.module('hopsWorksApp', [
     $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 
       flowFactoryProvider.defaults = {
-        permanentErrors: [404, 500, 501],
+        //if [400, 401, 403, 409, 415, 500, 501] error codes are sent from the server do not retry.
+        permanentErrors: [400, 401, 403, 409, 415, 500, 501],
         maxChunkRetries: 1,
         chunkRetryInterval: 5000,
         simultaneousUploads: 4

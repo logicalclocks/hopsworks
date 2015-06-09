@@ -52,8 +52,10 @@ angular.module('hopsWorksApp')
                 newPath = self.currentPath +'/'+ name;
             }else if(self.currentPath){
                 newPath = self.currentPath;
-            }else{
+            }else if (name){
                 newPath = name;
+            }else{
+                getAll();
             }
             dataSetService.getDir(newPath).then (
                 function (success) {
@@ -76,17 +78,6 @@ angular.module('hopsWorksApp')
                     //saveAs(file, 'filename');
                 }, function (error){
                     console.log("download error");
-                    console.log(error);
-                });
-        };
-        var upload = function (path) {
-            dataSetService.upload(path).then (
-                function (success) {
-                    console.log("upload success");
-                    console.log(success);
-                    getDir();
-                }, function (error){
-                    console.log("upload error");
                     console.log(error);
                 });
         };
@@ -135,8 +126,10 @@ angular.module('hopsWorksApp')
             ModalService.upload('lg', self.currentProject.projectId, self.currentPath).then(
                 function (success) {
                     growl.success(success.data.successMessage , {title: 'Success', ttl: 15000});
+                    getDir();
                 }, function (error) {
                     growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+                    getDir();
                 });
         };
 
