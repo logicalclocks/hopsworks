@@ -53,6 +53,15 @@ angular.module('hopsWorksApp')
             self.getFile = function (path) {
               DownloadService.getFile(self.pId, path);
             };
+            
+            self.selectFile = function() {
+              ModalService.selectFile('lg').then(
+                      function() {
+                        
+                      },function(){
+
+                    });
+            };
 
           }]);
 
