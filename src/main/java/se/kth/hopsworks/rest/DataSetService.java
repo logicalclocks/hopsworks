@@ -97,9 +97,7 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    Inode projectInode = inodes.findByName(Constants.DIR_ROOT);
-    Inode parent = inodes.findByParentAndName(projectInode,
-            this.project.getName());
+    Inode parent = inodes.getProjectRoot(this.project.getName());
     List<Inode> cwdChildren;
     cwdChildren = inodes.findByParent(parent);
     List<InodeView> kids = new ArrayList<>();
@@ -124,9 +122,7 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    Inode projectInode = inodes.findByName(Constants.DIR_ROOT);
-    Inode parent = inodes.findByParentAndName(projectInode,
-            this.project.getName());
+    Inode parent = inodes.getProjectRoot(this.project.getName());
     String[] pathArray = path.split(File.separator);
     for (String p : pathArray) {
       parent = inodes.findByParentAndName(parent, p);
@@ -202,9 +198,7 @@ public class DataSetService {
     }
 
     //check if the folder is allowed and if it already exists
-    Inode projectInode = inodes.findByName(Constants.DIR_ROOT);
-    Inode parent = inodes.findByParentAndName(projectInode,
-            this.project.getName());
+    Inode parent = inodes.getProjectRoot(this.project.getName());
     String[] pathArray = dataSetName.getName().split(File.separator);
     for (String p : pathArray) {
 
@@ -307,9 +301,7 @@ public class DataSetService {
     ResumableInfo info = getResumableInfo(request, uploadPath);
     String fileName = info.resumableFilename;
     //check if all the non existing dir names in the path are valid.
-    Inode projectInode = inodes.findByName(Constants.DIR_ROOT);
-    Inode parent = inodes.findByParentAndName(projectInode,
-            this.project.getName());
+    Inode parent = inodes.getProjectRoot(this.project.getName());
     String[] pathArray = path.split(File.separator);
     for (String p : pathArray) {
       if (parent != null) {
