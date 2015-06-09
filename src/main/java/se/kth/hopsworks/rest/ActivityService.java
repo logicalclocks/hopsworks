@@ -19,10 +19,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.activity.Activity;
 import se.kth.bbc.activity.ActivityFacade;
-import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
+import se.kth.bbc.security.ua.UserManager;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.hopsworks.filters.AllowedRoles;
 
 /**

@@ -1,6 +1,5 @@
 package se.kth.hopsworks.rest;
 
-import se.kth.hopsworks.controller.ResponseMessages;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.security.RolesAllowed;
@@ -19,6 +18,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.controller.UsersController;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.hopsworks.user.model.Users;

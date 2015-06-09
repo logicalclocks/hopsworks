@@ -8,17 +8,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import se.kth.bbc.security.ua.UserManager;
-import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.Project;
-import se.kth.kthfsdashboard.user.AbstractFacade;
+import se.kth.bbc.project.ProjectFacade;
+import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**
  *

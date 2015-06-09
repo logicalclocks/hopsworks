@@ -1,9 +1,5 @@
 package se.kth.meta.db;
 
-import se.kth.meta.entity.Fields;
-import se.kth.meta.entity.RawData;
-import se.kth.meta.entity.Tables;
-import se.kth.meta.exception.DatabaseException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,8 +18,12 @@ import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 import se.kth.meta.entity.FieldPredefinedValues;
 import se.kth.meta.entity.FieldTypes;
+import se.kth.meta.entity.Fields;
+import se.kth.meta.entity.RawData;
+import se.kth.meta.entity.Tables;
 import se.kth.meta.entity.Templates;
 import se.kth.meta.entity.TupleToFile;
+import se.kth.meta.exception.DatabaseException;
 
 /**
  * Offers database functionalities

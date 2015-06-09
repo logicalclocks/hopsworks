@@ -1,8 +1,8 @@
 package se.kth.meta.wscomm.message;
 
-import se.kth.meta.entity.EntityIntf;
 import java.util.List;
 import javax.json.JsonObject;
+import se.kth.meta.entity.EntityIntf;
 
 /**
  * Represents the different types of messages that may be exchanged between the
