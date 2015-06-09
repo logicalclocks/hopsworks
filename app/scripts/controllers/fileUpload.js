@@ -35,12 +35,9 @@ angular.module('hopsWorksApp')
             growl.error(msg.errorMsg, {title: 'Error', ttl: 5000, referenceId: 1});
         }
 
-        self.progressHandler = function (file, message, flow) {
-
+        self.fileAddedHandler = function (file, flow) {
+            console.log(file.name);
+            self.files[file.name]='';
         }
-         self.fileAddedHandler = function (file, flow) {
-             console.log(file.name);
-             //self.files[file.name]='';
-         }
 
     }]);
