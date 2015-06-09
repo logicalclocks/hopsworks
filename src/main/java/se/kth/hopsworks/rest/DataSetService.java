@@ -7,9 +7,12 @@
 package se.kth.hopsworks.rest;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -137,6 +140,10 @@ public class DataSetService {
     for (String p : pathArray) {
       parent = inodes.findByParentAndName(parent, p);
     }
+    if (parent == null) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              ResponseMessages.FILE_NOT_FOUND);
+    }
     List<Inode> cwdChildren;
     cwdChildren = inodes.findByParent(parent);
     List<InodeView> kids = new ArrayList<>();
@@ -164,7 +171,7 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException {
     InputStream is = null;
     String fullPath = this.path + filePath;
-    if (inodes.getInodeAtPath(fullPath) == null){
+    if (inodes.getInodeAtPath(fullPath) == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               ResponseMessages.FILE_NOT_FOUND);
     }
@@ -298,12 +305,13 @@ public class DataSetService {
       uploadPath = this.path + path + File.separator;
     }
 
-    logger.log(Level.INFO, "size.....{0}", request.getParameter(
-            "flowCurrentChunkSize"));
+    logger.log(Level.INFO, "path... {0}", path);
 
     int resumableChunkNumber = getResumableChunkNumber(request);
 
-    ResumableInfo info = getResumableInfo(request);
+    ResumableInfo info = getResumableInfo(request, uploadPath);
+    logger.log(Level.INFO, "temp dir for upload -----> {0}",
+            info.resumableFilePath);
     String fileName = info.resumableFilename;
     //check if all the non existing dir names in the path are valid.
     Inode projectInode = inodes.findByName(Constants.DIR_ROOT);
@@ -322,6 +330,7 @@ public class DataSetService {
     if (exist) { //if the path exists check if the file exists.
       parent = inodes.findByParentAndName(parent, fileName);
       if (parent != null) {
+        logger.log(Level.INFO, "{0} file already exists.", fileName);
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.FILE_NAME_EXIST);
       }
@@ -365,9 +374,13 @@ public class DataSetService {
     if (finished) {
       try {
         uploadPath = Utils.ensurePathEndsInSlash(uploadPath);
-        fileOps.copyAfterUploading(info.resumableFilename, uploadPath
+        fileOps.copyAfterUploading(uploadPath + info.resumableFilename,
+                uploadPath
                 + fileName);
         logger.log(Level.SEVERE, "Copied to HDFS");
+        //might need try catch for security exception
+        Files.deleteIfExists(Paths.get(stagingManager.getStagingPath() + uploadPath + fileName));
+        logger.log(Level.SEVERE, "Deleted {0}", stagingManager.getStagingPath() + uploadPath + fileName);
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Failed to write to HDSF", e);
       }
@@ -378,15 +391,22 @@ public class DataSetService {
             json).build();
   }
 
-  
- 
   private int getResumableChunkNumber(HttpServletRequest request) {
     return HttpUtils.toInt(request.getParameter("flowChunkNumber"), -1);
   }
 
-  private ResumableInfo getResumableInfo(HttpServletRequest request) throws
+  private ResumableInfo getResumableInfo(HttpServletRequest request,
+          String hdfsPath) throws
           AppException {
+    //this will give us a tmp folder
     String base_dir = stagingManager.getStagingPath();
+    //this will create a folder if it doesnot exist inside the tmp folder 
+    //spesific to where the file is being uploaded
+    File userTmpDir = new File(base_dir + hdfsPath);
+    if (!userTmpDir.exists()) {
+      userTmpDir.mkdirs();
+    }
+    base_dir = userTmpDir.getAbsolutePath();
 
     int resumableChunkSize = HttpUtils.toInt(request.getParameter(
             "flowChunkSize"), -1);
@@ -395,11 +415,22 @@ public class DataSetService {
     String resumableIdentifier = request.getParameter("flowIdentifier");
     String resumableFilename = request.getParameter("flowFilename");
     String resumableRelativePath = request.getParameter("flowRelativePath");
+
+    File file = new File(base_dir, resumableFilename);
+    //check if the file alrady exists in the staging dir.
+    if (file.exists() && file.canRead()) {
+      //file.exists returns true after deleting a file 
+      //so make sure the file exists by trying to read from it.
+      try (FileReader fileReader = new FileReader(file.getAbsolutePath())) {
+        fileReader.read();
+        throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+                "A file with the same name is being uploaded.");
+      } catch (Exception e) {
+      }
+    }
+
     //Here we add a ".temp" to every upload file to indicate NON-FINISHED
-    String resumableFilePath = new File(base_dir, resumableFilename).
-            getAbsolutePath() + ".temp";
-    //TODO: the current way of uploading will not scale: if two persons happen 
-    //to upload a file with the same name, trouble is waiting to happen
+    String resumableFilePath = file.getAbsolutePath() + ".temp";
 
     ResumableInfoStorage storage = ResumableInfoStorage.getInstance();
 
@@ -409,7 +440,7 @@ public class DataSetService {
     if (!info.vaild()) {
       storage.remove(info);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Invalid request params. ");
+              "Invalid request params.");
     }
     return info;
   }
