@@ -66,7 +66,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
       if (!method.isAnnotationPresent(AllowedRoles.class)) {
         //Should throw exception if there is a method that is not annotated in this path.
         requestContext.abortWith(Response.
-                status(Response.Status.NOT_IMPLEMENTED).build());
+                status(Response.Status.SERVICE_UNAVAILABLE).build());
         return;
       }
       AllowedRoles rolesAnnotation = method.getAnnotation(AllowedRoles.class);
@@ -78,15 +78,23 @@ public class RequestAuthFilter implements ContainerRequestFilter {
         log.log(Level.INFO, "Accessing resource that is allowed for all");
         return;
       }
+      
+      if (requestContext.getSecurityContext().getUserPrincipal() == null) {
+        requestContext.abortWith(Response.
+                status(Response.Status.UNAUTHORIZED).build());
+        return;
+      }
 
       //if the resource is only allowed for some roles check if the user have the requierd role for the resource.
       String userEmail = requestContext.getSecurityContext().getUserPrincipal().
               getName();
 
       Integer projectId;
-      String userRole = null;
+      String userRole;
       projectId = Integer.valueOf(pathParts[1]);
       Project project = projectBean.find(projectId);
+
+      log.log(Level.SEVERE, "PROJECT FOUND {0} ", project);
 
       userRole = projectTeamBean.findCurrentRole(project, userEmail);
 

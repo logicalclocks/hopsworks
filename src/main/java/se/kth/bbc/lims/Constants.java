@@ -1,8 +1,8 @@
 package se.kth.bbc.lims;
 
 /**
- * Constants class to facilitate deployment on different servers.
- * TODO: move this to configuration file to be read!
+ * Constants class to facilitate deployment on different servers. TODO: move
+ * this to configuration file to be read!
  *
  * @author stig
  */

@@ -39,6 +39,18 @@
       <version>2.7.0-SNAPSHOT</version>
     </dependency>
     <dependency>
+      <groupId>com.sun.jersey.contribs</groupId>
+      <artifactId>jersey-multipart</artifactId>
+      <version>1.9-ea04</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>com.eclipsesource.jaxrs</groupId>
+      <artifactId>jersey-all</artifactId>
+      <version>2.17</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>
       <version>7.0</version>

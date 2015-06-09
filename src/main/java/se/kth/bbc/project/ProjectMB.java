@@ -557,8 +557,8 @@ public class ProjectMB implements Serializable {
   }
 
   /**
-   * Return a list of UserGroups, which contain the members of this project per
-   * role type.
+   * Return a list of UserGroups, which contain the members of this project
+   * per role type.
    *
    * @return
    */
@@ -718,8 +718,8 @@ public class ProjectMB implements Serializable {
   }
 
   /**
-   * Archive the current project. Should implement erasure coding on the project
-   * folder.
+   * Archive the current project. Should implement erasure coding on the
+   * project folder.
    */
   public void archiveProject() {
     //archive the project

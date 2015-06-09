@@ -48,7 +48,7 @@ public class ProjectController {
   @EJB
   private UserManager userBean;
   @EJB
-  private ProjectNameValidator projectNameValidator;
+  private FolderNameValidator projectNameValidator;
   @EJB
   private ActivityFacade activityFacade;
   @EJB
@@ -59,8 +59,8 @@ public class ProjectController {
   private InodeFacade inodes;
 
   /**
-   * Creates a new project(project), the related DIR, the different services in
-   * the project, and the master of the project.
+   * Creates a new project(project), the related DIR, the different services
+   * in the project, and the master of the project.
    *
    * @param newProjectName the name of the new project(project)
    * @param email
@@ -78,15 +78,10 @@ public class ProjectController {
     User user = userBean.getUserByEmail(email);
     //if there is no project by the same name for this user and project name is valid
     if (projectNameValidator.isValidName(newProjectName) && !projectFacade.
-            projectExistsForOwner(newProjectName, user)) {
+            projectExists(newProjectName)) {
       //Create a new project object
       Date now = new Date();
       Project project = new Project(newProjectName, user, now);
-      //create folder structure
-      //mkProjectDIR(project.getName());
-      logger.log(Level.FINE, "{0} - project directory created successfully.",
-              project.getName());
-
       //Persist project object
       projectFacade.persistProject(project);
       projectFacade.flushEm();//flushing it to get project id
@@ -97,6 +92,12 @@ public class ProjectController {
       addProjectOwner(project.getId(), user.getEmail());
       logger.log(Level.FINE, "{0} - project created successfully.", project.
               getName());
+
+      //create folder structure in hdfs
+      mkProjectDIR(project.getName());
+      logger.log(Level.FINE, "{0} - project directory created successfully.",
+              project.getName());
+
       return project;
     } else {
       logger.log(Level.SEVERE, "Project with name {0} already exists!",
@@ -169,9 +170,11 @@ public class ProjectController {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NAME_EXIST);
     }
+
+    String oldProjectName = project.getName();
     project.setName(newProjectName);
     projectFacade.mergeProject(project);
-    //fileOps.renameInHdfs(, );
+    fileOps.renameInHdfs(oldProjectName, newProjectName);
 
     logActivity(ActivityFacade.PROJECT_NAME_CHANGED, ActivityFacade.FLAG_PROJECT,
             user, project);
@@ -204,6 +207,14 @@ public class ProjectController {
     projectTeamFacade.persistProjectTeam(st);
   }
 
+  //create project on HDFS
+  private void mkProjectDIR(String projectName) throws IOException {
+
+    String rootDir = Constants.DIR_ROOT;
+    String projectPath = File.separator + rootDir + File.separator + projectName;
+    fileOps.mkDir(projectPath);
+  }
+
   /**
    * Remove a project and optionally all associated files.
    *
@@ -216,7 +227,7 @@ public class ProjectController {
    * removed.
    * @throws AppException if the project could not be found.
    */
-  public boolean removeByName(Integer projectID, String email,
+  public boolean removeByID(Integer projectID, String email,
           boolean deleteFilesOnRemove) throws IOException, AppException {
     boolean success = !deleteFilesOnRemove;
     User user = userBean.getUserByEmail(email);
@@ -226,9 +237,9 @@ public class ProjectController {
               ResponseMessages.PROJECT_NOT_FOUND);
     }
     projectFacade.remove(project);
-
-    logActivity(ActivityFacade.REMOVED_PROJECT,
-            ActivityFacade.FLAG_PROJECT, user, project);
+    //if we remove the project we cant store activity that has a reference to it!!
+    //logActivity(ActivityFacade.REMOVED_PROJECT,
+    //ActivityFacade.FLAG_PROJECT, user, project);
 
     if (deleteFilesOnRemove) {
       String path = File.separator + Constants.DIR_ROOT + File.separator
@@ -241,10 +252,9 @@ public class ProjectController {
   }
 
   /**
-   * Adds new team members to a project(project) - bulk persist
-   * if team role not specified or not in (Data owner or Data scientist)defaults
-   * to
-   * Data scientist
+   * Adds new team members to a project(project) - bulk persist if team role
+   * not specified or not in (Data owner or Data scientist)defaults to Data
+   * scientist
    * <p>
    * @param project
    * @param email

@@ -41,6 +41,7 @@ public class ActivityFacade extends AbstractFacade<Activity> {
           = " changed project description.";
   // Flag constants
   public static final String FLAG_PROJECT = "PROJECT";
+  public static final String FLAG_DATASET = "DATASET";
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;

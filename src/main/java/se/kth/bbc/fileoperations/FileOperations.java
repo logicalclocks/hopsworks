@@ -141,7 +141,7 @@ public class FileOperations {
    * Delete the file at the given path.
    *
    * @param path The path to the file to be removed.
-   * @returns true if the file has been deleted, false otherwise.
+   * @return true if the file has been deleted, false otherwise.
    * @throws IOException
    */
   public boolean rm(String path) throws IOException {

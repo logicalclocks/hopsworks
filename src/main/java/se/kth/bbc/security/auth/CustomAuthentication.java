@@ -97,19 +97,19 @@ public class CustomAuthentication implements Serializable {
     }
 
     user = mgr.getUserByEmail(username);
-
+    System.err.println("STEP 1");
     // Add padding if custom realm is disabled
     if (this.otpCode == null || this.otpCode.isEmpty()) {
       this.otpCode = MOBILE_OTP_PADDING;
     }
-
+    System.err.println("STEP 2");
     // Return if username is wrong
     if (user == null) {
       MessagesController.addMessageToGrowl(
               AccountStatusErrorMessages.USER_NOT_FOUND);
       return ("");
     }
-
+    System.err.println("STEP 3");
     // Retrun if user is not Mobile user     
     if (user.getYubikeyUser() == PeopleAccountStatus.YUBIKEY_USER.getValue()) {
       MessagesController.addMessageToGrowl(
@@ -117,6 +117,7 @@ public class CustomAuthentication implements Serializable {
       return ("");
 
     }
+    System.err.println("STEP 4");
     // Return if user not activated
     if (user.getStatus() == PeopleAccountStatus.MOBILE_ACCOUNT_INACTIVE.
             getValue()) {
@@ -124,7 +125,7 @@ public class CustomAuthentication implements Serializable {
               AccountStatusErrorMessages.INACTIVE_ACCOUNT);
       return ("");
     }
-
+    System.err.println("STEP 5");
     // Return if used is bloked
     if (user.getStatus() == PeopleAccountStatus.ACCOUNT_BLOCKED.getValue()) {
       // Inform the use about the blocked account
@@ -132,7 +133,7 @@ public class CustomAuthentication implements Serializable {
               AccountStatusErrorMessages.BLOCKED_ACCOUNT);
       return ("");
     }
-
+    System.err.println("STEP 6");
     // Return if used is bloked
     if (user.getStatus() == PeopleAccountStatus.ACCOUNT_DEACTIVATED.getValue()) {
       // Inform the use about the blocked account
@@ -144,10 +145,12 @@ public class CustomAuthentication implements Serializable {
     userid = user.getUid();
 
     registerLoginInfo(user, "AUTHENTICATION");
-
+    System.err.println("STEP 7");
     try {
       // concatenate the static password with the otp due to limitations of passing two passwords to glassfish
-      req.login(this.username, this.password + this.otpCode);
+      //req.login(this.username, this.password + this.otpCode);
+      req.login(this.username, this.password);
+      System.err.println("STEP 7.1");
       // Reset the lock for failed accounts
       mgr.resetLock(userid);
       // Set the onlne flag
@@ -170,7 +173,7 @@ public class CustomAuthentication implements Serializable {
         }
 
       }
-
+      System.err.println("STEP 8");
       // Inform the use about invalid credentials
       MessagesController.addMessageToGrowl(
               AccountStatusErrorMessages.INCCORCT_CREDENTIALS);
@@ -181,7 +184,7 @@ public class CustomAuthentication implements Serializable {
     if (user.getStatus() == PeopleAccountStatus.ACCOUNT_PENDING.getValue()) {
       return ("reset");
     }
-
+    System.err.println("STEP 9");
     // Go to welcome page
     return ("indexPage");
   }

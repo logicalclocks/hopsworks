@@ -187,6 +187,24 @@
     </auth-constraint>
   </security-constraint>
     
+  <!--    <security-constraint>
+      <display-name>SocketConstraint</display-name>
+      <web-resource-collection>
+          <web-resource-name>MetadataWebSocket</web-resource-name>
+          <description>Security constraint for  metadata designer websocket endpoint</description>
+          <url-pattern>/wspoint/*</url-pattern>
+          <http-method>GET</http-method>
+      </web-resource-collection>
+      <auth-constraint>
+          <description>definition of which roles  may access the quote endpoint</description>
+          <role-name>SYS_ADMIN</role-name>
+          <role-name>BBC_USER</role-name>
+      </auth-constraint>
+      user-data-constraint>
+          <description>WSS required</description>
+          <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+      </user-data-constraint
+  </security-constraint>-->
  
   <security-constraint>
     <web-resource-collection>
@@ -197,13 +215,12 @@
     
   <login-config>
     <auth-method>BASIC</auth-method>
-    <realm-name>hopsworksrealm</realm-name>
+    <realm-name>kthfsrealm</realm-name>
     <form-login-config>
       <form-login-page>/index.xhtml</form-login-page>
       <form-error-page>/error.xhtml</form-error-page>
     </form-login-config>
   </login-config>
-
 
   <session-config>
     <!-- on production systems you might have another value for the timeout -->

@@ -25,9 +25,11 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
+import se.kth.bbc.activity.Activity;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.project.metadata.ProjectMeta;
 import se.kth.bbc.project.samples.Samplecollection;
+import se.kth.bbc.project.services.ProjectServices;
 
 /**
  *
@@ -58,6 +60,18 @@ import se.kth.bbc.project.samples.Samplecollection;
           query
           = "SELECT t FROM Project t WHERE t.owner = :owner AND t.name = :name")})
 public class Project implements Serializable {
+
+  @Column(name = "archived")
+  private Boolean archived = false;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "project")
+  private Collection<ProjectTeam> projectTeamCollection;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "project")
+  private Collection<Activity> activityCollection;
+  @OneToMany(cascade = CascadeType.ALL,
+          mappedBy = "project")
+  private Collection<ProjectServices> projectServicesCollection;
 
   private static final long serialVersionUID = 1L;
 
@@ -94,9 +108,6 @@ public class Project implements Serializable {
           max = 30)
   @Column(name = "ethical_status")
   private String ethicalStatus;
-
-  @Column(name = "archived")
-  private boolean archived;
 
   @Column(name = "deleted")
   private Boolean deleted;
@@ -257,6 +268,38 @@ public class Project implements Serializable {
 
   public void setArchived(Boolean archived) {
     this.archived = archived;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<ProjectTeam> getProjectTeamCollection() {
+    return projectTeamCollection;
+  }
+
+  public void setProjectTeamCollection(
+          Collection<ProjectTeam> projectTeamCollection) {
+    this.projectTeamCollection = projectTeamCollection;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<Activity> getActivityCollection() {
+    return activityCollection;
+  }
+
+  public void setActivityCollection(Collection<Activity> activityCollection) {
+    this.activityCollection = activityCollection;
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<ProjectServices> getProjectServicesCollection() {
+    return projectServicesCollection;
+  }
+
+  public void setProjectServicesCollection(
+          Collection<ProjectServices> projectServicesCollection) {
+    this.projectServicesCollection = projectServicesCollection;
   }
 
 }
