@@ -20,207 +20,205 @@ angular.module('hopsWorksApp', [
   'xeditable',
   'flow'
 ])
-  .config(['$routeProvider', '$httpProvider', 'flowFactoryProvider',function ($routeProvider, $httpProvider, flowFactoryProvider) {
+        .config(['$routeProvider', '$httpProvider', 'flowFactoryProvider', function ($routeProvider, $httpProvider, flowFactoryProvider) {
 
-    // Responseinterceptor for authentication
-    $httpProvider.interceptors.push('AuthInterceptorService');
+            // Responseinterceptor for authentication
+            $httpProvider.interceptors.push('AuthInterceptorService');
 
-    // Requestinterceptor to transform some of the requests
-    $httpProvider.interceptors.push('RequestInterceptorService');
+            // Requestinterceptor to transform some of the requests
+            $httpProvider.interceptors.push('RequestInterceptorService');
 
-    // Set the content type to be FORM type for all general post requests and override them explicit if needed
-    $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
+            // Set the content type to be FORM type for all general post requests and override them explicit if needed
+            $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 
-      flowFactoryProvider.defaults = {
-        permanentErrors: [404, 500, 501],
-        maxChunkRetries: 1,
-        chunkRetryInterval: 5000,
-        simultaneousUploads: 4
-      };
-      flowFactoryProvider.on('catchAll', function (event) {
-        console.log('catchAll', arguments);
-      });
+            flowFactoryProvider.defaults = {
+              permanentErrors: [404, 500, 501],
+              maxChunkRetries: 1,
+              chunkRetryInterval: 5000,
+              simultaneousUploads: 4
+            };
+            flowFactoryProvider.on('catchAll', function (event) {
+              console.log('catchAll', arguments);
+            });
 
-    $routeProvider
-      .when('/', {
-        templateUrl: 'views/home.html',
-        controller: 'HomeCtrl as homeCtrl',
-
-
-        resolve: {
-          auth: ['$q', '$location', 'AuthService',
-            function ($q, $location, AuthService) {
-              return AuthService.session().then(
-                function (success) {
-                },
-                function (err) {
-                  $location.path('/login');
-                  $location.replace();
-                  return $q.reject(err);
-                });
-            }]
-        }
+            $routeProvider
+                    .when('/', {
+                      templateUrl: 'views/home.html',
+                      controller: 'HomeCtrl as homeCtrl',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                          function ($q, $location, AuthService) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                      $location.path('/login');
+                                      $location.replace();
+                                      return $q.reject(err);
+                                    });
+                          }]
+                      }
 
 
 
 
-      })
-      .when('/login', {
-        templateUrl: 'views/login.html',
-        controller: 'LoginCtrl as loginCtrl',
-        resolve: {
-          auth: ['$q', '$location', 'AuthService',
-            function ($q, $location, AuthService) {
-              return AuthService.session().then(
-                function (success) {
-                  $location.path('/');
-                  $location.replace();
-                  return $q.when(success);
-                },
-                function (err) {
-                });
-            }]
-        }
-      })
-      .when('/register', {
-        templateUrl: 'views/register.html',
-        controller: 'RegCtrl as regCtrl',
-        resolve: {
-          auth: ['$q', '$location', 'AuthService',
-            function ($q, $location, AuthService) {
-              return AuthService.session().then(
-                function (success) {
-                  $location.path('/');
-                  $location.replace();
-                  return $q.when(success);
-                },
-                function (err) {
+                    })
+                    .when('/login', {
+                      templateUrl: 'views/login.html',
+                      controller: 'LoginCtrl as loginCtrl',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                          function ($q, $location, AuthService) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                      $location.path('/');
+                                      $location.replace();
+                                      return $q.when(success);
+                                    },
+                                    function (err) {
+                                    });
+                          }]
+                      }
+                    })
+                    .when('/register', {
+                      templateUrl: 'views/register.html',
+                      controller: 'RegCtrl as regCtrl',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                          function ($q, $location, AuthService) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                      $location.path('/');
+                                      $location.replace();
+                                      return $q.when(success);
+                                    },
+                                    function (err) {
 
-                });
-            }]
-        }
-      })
-      .when('/recover', {
-        templateUrl: 'views/recover.html',
-        controller: 'RecoverCtrl as recoverCtrl'
-      })
+                                    });
+                          }]
+                      }
+                    })
+                    .when('/recover', {
+                      templateUrl: 'views/recover.html',
+                      controller: 'RecoverCtrl as recoverCtrl'
+                    })
 
 
-      .when('/project/:projectID', {
-        templateUrl: 'views/project.html',
-        controller: 'ProjectCtrl as projectCtrl',
-        resolve: {
-          auth: ['$q', '$location', 'AuthService',
-            function ($q, $location, AuthService) {
-              return AuthService.session().then(
-                function (success) {
-                },
-                function (err) {
-                  $location.path('/login');
-                  $location.replace();
-                  return $q.reject(err);
-                });
-            }]
-        }
-      })
+                    .when('/project/:projectID', {
+                      templateUrl: 'views/project.html',
+                      controller: 'ProjectCtrl as projectCtrl',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                          function ($q, $location, AuthService) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                      $location.path('/login');
+                                      $location.replace();
+                                      return $q.reject(err);
+                                    });
+                          }]
+                      }
+                    })
 
-      .when('/project/:projectID/datasets', {
-        templateUrl: 'views/datasets.html',
-        controller: 'ProjectCtrl as projectCtrl',
-        resolve: {
-          auth: ['$q', '$location', 'AuthService',
-            function ($q, $location, AuthService) {
-              return AuthService.session().then(
-                function (success) {
-                },
-                function (err) {
-                  $location.path('/login');
-                  $location.replace();
-                  return $q.reject(err);
-                });
-            }]
-        }
-      })
+                    .when('/project/:projectID/datasets', {
+                      templateUrl: 'views/datasets.html',
+                      controller: 'ProjectCtrl as projectCtrl',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                          function ($q, $location, AuthService) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                      $location.path('/login');
+                                      $location.replace();
+                                      return $q.reject(err);
+                                    });
+                          }]
+                      }
+                    })
 
-      .when('/project/:projectID/datasets/:datasetName', {
-        templateUrl: 'views/datasetsBrowser.html',
-        controller: 'ProjectCtrl as projectCtrl',
-        resolve: {
-          auth: ['$q', '$location', 'AuthService',
-            function ($q, $location, AuthService) {
-              return AuthService.session().then(
-                function (success) {
-                },
-                function (err) {
-                  $location.path('/login');
-                  $location.replace();
-                  return $q.reject(err);
-                });
-            }]
-        }
-      })
+                    .when('/project/:projectID/datasets/:datasetName', {
+                      templateUrl: 'views/datasetsBrowser.html',
+                      controller: 'ProjectCtrl as projectCtrl',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                          function ($q, $location, AuthService) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                      $location.path('/login');
+                                      $location.replace();
+                                      return $q.reject(err);
+                                    });
+                          }]
+                      }
+                    })
 
-      .when('/project/:projectID/cuneiform', {
-        templateUrl: 'views/cuneiform.html',
-        controller: 'ProjectCtrl as projectCtrl',
-        resolve: {
-          auth: ['$q', '$location', 'AuthService',
-            function ($q, $location, AuthService) {
-              return AuthService.session().then(
-                function (success) {
-                },
-                function (err) {
-                  $location.path('/login');
-                  $location.replace();
-                  return $q.reject(err);
-                });
-            }]
-        }
-      })
+                    .when('/project/:projectID/cuneiform', {
+                      templateUrl: 'views/cuneiform.html',
+                      controller: 'ProjectCtrl as projectCtrl',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                          function ($q, $location, AuthService) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                      $location.path('/login');
+                                      $location.replace();
+                                      return $q.reject(err);
+                                    });
+                          }]
+                      }
+                    })
 
-      .otherwise({
-        redirectTo: '/'
-      });
-  }])
+                    .otherwise({
+                      redirectTo: '/'
+                    });
+          }])
 
 //We already have a limitTo filter built-in to angular,
 //let's make a startFrom filter
-  .filter('startFrom', function () {
-    return function (input, start) {
-      start = +start; //parse to int
-      return input.slice(start);
-    }
-  })
-
-
-  .filter('cardFilter', function () {
-    return function (items, props) {
-      var out = [];
-
-      if (angular.isArray(items)) {
-        items.forEach(function (item) {
-          var itemMatches = false;
-          var keys = Object.keys(props);
-          for (var i = 0; i < keys.length; i++) {
-            var prop = keys[i];
-            var text = props[prop].toLowerCase();
-            if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
-              itemMatches = true;
-              break;
-            }
+        .filter('startFrom', function () {
+          return function (input, start) {
+            start = +start; //parse to int
+            return input.slice(start);
           }
+        })
 
-          if (itemMatches) {
-            out.push(item);
+
+        .filter('cardFilter', function () {
+          return function (items, props) {
+            var out = [];
+
+            if (angular.isArray(items)) {
+              items.forEach(function (item) {
+                var itemMatches = false;
+                var keys = Object.keys(props);
+                for (var i = 0; i < keys.length; i++) {
+                  var prop = keys[i];
+                  var text = props[prop].toLowerCase();
+                  if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+                    itemMatches = true;
+                    break;
+                  }
+                }
+
+                if (itemMatches) {
+                  out.push(item);
+                }
+              });
+            } else {
+              // Let the output be the input untouched
+              out = items;
+            }
+
+
+            return out;
           }
         });
-      } else {
-        // Let the output be the input untouched
-        out = items;
-      }
-
-
-      return out;
-    }
-  });
 
