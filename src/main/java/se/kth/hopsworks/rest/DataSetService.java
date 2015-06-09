@@ -105,17 +105,13 @@ public class DataSetService {
     Inode projectInode = inodes.findByName(Constants.DIR_ROOT);
     Inode parent = inodes.findByParentAndName(projectInode,
             this.project.getName());
-    logger.log(Level.INFO, "findDataSetsInProjectID Parent name: {0}", parent.
-            getInodePK().getName());
     List<Inode> cwdChildren;
     cwdChildren = inodes.findByParent(parent);
     List<InodeView> kids = new ArrayList<>();
     for (Inode i : cwdChildren) {
       kids.add(new InodeView(i, inodes.getPath(i)));
-      logger.log(Level.FINE, "path: {0}", inodes.getPath(i));
     }
 
-    logger.log(Level.FINE, "Num of children: {0}", cwdChildren.size());
     GenericEntity<List<InodeView>> inodViews
             = new GenericEntity<List<InodeView>>(kids) {
             };
@@ -149,10 +145,7 @@ public class DataSetService {
     List<InodeView> kids = new ArrayList<>();
     for (Inode i : cwdChildren) {
       kids.add(new InodeView(i, inodes.getPath(i)));
-      logger.log(Level.FINE, "path: {0}", inodes.getPath(i));
     }
-
-    logger.log(Level.FINE, "Num of children: {0}", cwdChildren.size());
     GenericEntity<List<InodeView>> inodViews
             = new GenericEntity<List<InodeView>>(kids) {
             };
@@ -266,7 +259,6 @@ public class DataSetService {
               ResponseMessages.DATASET_NAME_EMPTY);
     }
     String filePath = this.path + fileName;
-    logger.log(Level.INFO, filePath);
     try {
       success = fileOps.rmRecursive(filePath);
     } catch (IOException ex) {
@@ -305,13 +297,9 @@ public class DataSetService {
       uploadPath = this.path + path + File.separator;
     }
 
-    logger.log(Level.INFO, "path... {0}", path);
-
     int resumableChunkNumber = getResumableChunkNumber(request);
 
     ResumableInfo info = getResumableInfo(request, uploadPath);
-    logger.log(Level.INFO, "temp dir for upload -----> {0}",
-            info.resumableFilePath);
     String fileName = info.resumableFilename;
     //check if all the non existing dir names in the path are valid.
     Inode projectInode = inodes.findByName(Constants.DIR_ROOT);
@@ -330,7 +318,6 @@ public class DataSetService {
     if (exist) { //if the path exists check if the file exists.
       parent = inodes.findByParentAndName(parent, fileName);
       if (parent != null) {
-        logger.log(Level.INFO, "{0} file already exists.", fileName);
         throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
                 ResponseMessages.FILE_NAME_EXIST);
       }
@@ -380,7 +367,6 @@ public class DataSetService {
         logger.log(Level.SEVERE, "Copied to HDFS");
         //might need try catch for security exception
         Files.deleteIfExists(Paths.get(stagingManager.getStagingPath() + uploadPath + fileName));
-        logger.log(Level.SEVERE, "Deleted {0}", stagingManager.getStagingPath() + uploadPath + fileName);
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Failed to write to HDSF", e);
       }
