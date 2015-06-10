@@ -534,7 +534,7 @@ CREATE TABLE IF NOT EXISTS `meta_inodes_ops_deleted` (
   `inodeid` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-----------------------------------------------------------
+-- --------------------------------------------------------
 --
 -- Table structure for table `meta_tables`
 --
