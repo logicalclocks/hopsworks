@@ -1,5 +1,6 @@
 package se.kth.bbc.jobs.cuneiform;
 
+import se.kth.bbc.jobs.cuneiform.model.InputParameter;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
 import java.io.BufferedWriter;
@@ -45,16 +46,15 @@ import se.kth.bbc.lims.Utils;
  */
 @ManagedBean
 @ViewScoped
-public final class CuneiformController extends JobController {
+public final class CuneiformMB extends JobController {
 
   private static final String KEY_PREFIX_TARGET = "TARGET_";
-  private static final Logger logger = Logger.getLogger(
-          CuneiformController.class.getName());
+  private static final Logger logger = Logger.getLogger(CuneiformMB.class.getName());
 
   //Variables for new job
   private String workflowname;
   private boolean workflowUploaded = false;
-  private List<CuneiformParameter> freevars;
+  private List<InputParameter> freevars;
   private List<String> targetVars;
   private List<String> queryVars; //The target variables that should be queried
   private String jobName;
@@ -151,7 +151,7 @@ public final class CuneiformController extends JobController {
   }
 
   private void bindFreeVar(String name, String value) {
-    for (CuneiformParameter cp : freevars) {
+    for (InputParameter cp : freevars) {
       if (cp.getName().equals(name)) {
         cp.setValue(value);
         break;
@@ -163,6 +163,7 @@ public final class CuneiformController extends JobController {
     return workflowUploaded;
   }
 
+  //TODO use CuneiformController instead
   private void inspectWorkflow() {
     try {
       //Get the variables
@@ -171,7 +172,7 @@ public final class CuneiformController extends JobController {
       List<String> freenames = StaticNodeVisitor.getFreeVarNameList(tlc);
       this.freevars = new ArrayList<>(freenames.size());
       for (String s : freenames) {
-        this.freevars.add(new CuneiformParameter(s, null));
+        this.freevars.add(new InputParameter(s, null));
       }
 
       targetVars = StaticNodeVisitor.getTargetVarNameList(tlc);
@@ -207,7 +208,7 @@ public final class CuneiformController extends JobController {
     this.sessionState = sessionState;
   }
 
-  public List<CuneiformParameter> getFreeVars() {
+  public List<InputParameter> getFreeVars() {
     return freevars;
   }
 
@@ -215,7 +216,7 @@ public final class CuneiformController extends JobController {
     return targetVars;
   }
 
-  public void setFreeVars(List<CuneiformParameter> vars) {
+  public void setFreeVars(List<InputParameter> vars) {
     this.freevars = vars;
   }
 
@@ -367,7 +368,7 @@ public final class CuneiformController extends JobController {
     String absoluteHDFSfoldername = "/user/" + System.getProperty("user.name")
             + "/" + foldername;
     //find out which free variables were bound (the ones that have a non-null value)
-    for (CuneiformParameter cp : freevars) {
+    for (InputParameter cp : freevars) {
       if (cp.getValue() != null) {
         //copy the input file to where cuneiform expects it
         if (getFilePath(cp.getValue()).startsWith("hdfs:")) {
