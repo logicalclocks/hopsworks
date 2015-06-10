@@ -1,11 +1,11 @@
 package se.kth.hopsworks.rest;
 
 import java.util.List;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -27,9 +27,6 @@ import se.kth.hopsworks.filters.AllowedRoles;
  *
  * @author stig
  */
-@Path("/project/{projectId}/jobs")
-@RolesAllowed({"SYS_ADMIN", "BBC_USER"})
-@Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JobService {
@@ -40,12 +37,19 @@ public class JobService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private JobHistoryFacade jobHistoryFacade;
+  @Inject
+  private CuneiformService cuneiform;
+
+  private Integer projectId;
+
+  JobService setProjectId(Integer id) {
+    this.projectId = id;
+    return this;
+  }
 
   /**
    * Get all the jobhistory objects in this project with the specified type.
    * <p>
-   * @param projectId The id of the project in which to display the jobhistory
-   * objects.
    * @param type The type of jobs to fetch. The String parameter passed through
    * REST should be an uppercase version of the constant value.
    * @param sc
@@ -57,8 +61,7 @@ public class JobService {
   @Path("/history/{type}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response findAllJobHistoryByType(@PathParam("projectId") Integer projectId,
-          @PathParam("type") JobType type,
+  public Response findAllJobHistoryByType(@PathParam("type") JobType type,
           @Context SecurityContext sc, @Context HttpServletRequest reqJobType)
           throws AppException {
     Project project = projectController.findProjectById(projectId);
@@ -70,5 +73,11 @@ public class JobService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             jobHistory).build();
+  }
+
+  @Path("/cuneiform")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public CuneiformService jobs(@PathParam("projectId") Integer projectId) {
+    return this.cuneiform;
   }
 }
