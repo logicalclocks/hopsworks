@@ -715,6 +715,24 @@ CREATE TABLE IF NOT EXISTS `zeppelin_paragraph` (
 
 -- --------------------------------------------------------
 
+CREATE TABLE IF NOT EXISTS `inodes` (
+  `id` mediumint(9) NOT NULL AUTO_INCREMENT,
+  `name` varchar(128) NOT NULL,
+  `pid` mediumint(9) DEFAULT '0',
+  `root` int(11) DEFAULT '0',
+  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `isDir` tinyint(1) NOT NULL,
+  `size` int(11) DEFAULT NULL,
+  `status` enum('uploading','copying_to_hdfs','available') NOT NULL,
+  `searchable` smallint(6) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `pid_3` (`pid`,`name`),
+  KEY `pid` (`pid`),
+  KEY `pid_2` (`pid`,`isDir`),
+  KEY `name` (`name`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+
+
 --
 -- Structure for view `users_groups`
 --
