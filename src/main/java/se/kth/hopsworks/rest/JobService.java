@@ -77,7 +77,7 @@ public class JobService {
 
   @Path("/cuneiform")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public CuneiformService jobs(@PathParam("projectId") Integer projectId) {
-    return this.cuneiform;
+  public CuneiformService jobs() {
+    return this.cuneiform.setProjectId(projectId);
   }
 }

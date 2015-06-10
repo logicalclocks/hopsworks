@@ -2,6 +2,7 @@ package se.kth.bbc.jobs.cuneiform.model;
 
 import java.io.Serializable;
 import java.util.Objects;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * A workflow input parameter. Has a name and value, and can be bound. Binding a
@@ -10,10 +11,13 @@ import java.util.Objects;
  * <p>
  * @author stig
  */
+@XmlRootElement
 public class InputParameter implements Serializable {
 
-  private final String name;
+  private String name;
   private String value;
+  
+  public InputParameter(){}//Needed by JAXB
 
   /**
    * Create a new InputParameter with given name and bound value.
@@ -42,6 +46,14 @@ public class InputParameter implements Serializable {
    */
   public String getName() {
     return name;
+  }
+
+  /**
+   * Set the name of the InputParameter.
+   * @param name 
+   */
+  public void setName(String name) {
+    this.name = name;
   }
 
   /**

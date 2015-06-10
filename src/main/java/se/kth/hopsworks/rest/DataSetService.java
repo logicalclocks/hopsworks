@@ -158,7 +158,7 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException {
     InputStream is = null;
     String fullPath = this.path + filePath;
-    if (inodes.getInodeAtPath(fullPath) == null){
+    if (inodes.getInodeAtPath(fullPath) == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               ResponseMessages.FILE_NOT_FOUND);
     }
@@ -167,7 +167,9 @@ public class DataSetService {
       logger.log(Level.FINE, "File was downloaded from HDFS path: {0}",
               fullPath);
     } catch (IOException ex) {
-      logger.log(Level.SEVERE, null, ex);
+      logger.
+              log(Level.SEVERE, "File download from path " + fullPath
+                      + "failed.", ex);
     }
     return is;
   }
@@ -372,8 +374,6 @@ public class DataSetService {
             json).build();
   }
 
-  
- 
   private int getResumableChunkNumber(HttpServletRequest request) {
     return HttpUtils.toInt(request.getParameter("flowChunkNumber"), -1);
   }

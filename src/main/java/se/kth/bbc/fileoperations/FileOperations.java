@@ -255,7 +255,7 @@ public class FileOperations {
   /**
    * Check if the inode at the given path exists.
    * <p>
-   * @param path
+   * @param path The path without HDFS prefix.
    * @return
    * @throws IOException
    */

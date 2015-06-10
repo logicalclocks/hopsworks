@@ -2,6 +2,7 @@ package se.kth.bbc.jobs.cuneiform.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Represents a (Cuneiform) workflow. It has a name, the contents of the
@@ -9,12 +10,18 @@ import java.util.List;
  * <p>
  * @author stig
  */
+@XmlRootElement
 public class WorkflowDTO {
 
-  private final String name;
+  private String name;
   private String contents;
   private List<InputParameter> inputParams;
   private List<OutputParameter> outputParams;
+  
+  /**
+   * No-arg constructor for JAXB.
+   */
+  public WorkflowDTO(){}
 
   /**
    * Creates a new WorkflowDTO with the given name.
@@ -60,6 +67,14 @@ public class WorkflowDTO {
    */
   public String getName() {
     return name;
+  }
+  
+  /**
+   * Set the name of the workflow.
+   * @param name 
+   */
+  public void setName(String name){
+    this.name = name;
   }
 
   /**

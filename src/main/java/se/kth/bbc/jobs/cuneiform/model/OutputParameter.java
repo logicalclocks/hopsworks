@@ -1,6 +1,7 @@
 package se.kth.bbc.jobs.cuneiform.model;
 
 import java.util.Objects;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * A workflow output parameter: can be queried or not. The value of queried
@@ -8,10 +9,13 @@ import java.util.Objects;
  * <p>
  * @author stig
  */
+@XmlRootElement
 public class OutputParameter {
 
-  private final String name;
+  private String name;
   private boolean queried;
+  
+  public OutputParameter(){} //Needed by JAXB
 
   /**
    * Creates a new non-queried OutputParameter with the given name.
@@ -40,6 +44,14 @@ public class OutputParameter {
    */
   public String getName() {
     return name;
+  }
+
+  /**
+   * Set the name of the OutputParameter
+   * @param name 
+   */
+  public void setName(String name) {
+    this.name = name;
   }
 
   /**
