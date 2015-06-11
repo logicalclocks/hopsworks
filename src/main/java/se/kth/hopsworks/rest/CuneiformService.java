@@ -34,13 +34,6 @@ public class CuneiformService {
   @EJB
   private NoCacheResponse noCacheResponse;
 
-  private Integer projectId;
-
-  CuneiformService setProjectId(Integer id) {
-    this.projectId = id;
-    return this;
-  }
-
   @GET
   @Path("/inspect/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -49,7 +42,7 @@ public class CuneiformService {
           @Context SecurityContext sc, @Context HttpServletRequest reqJobType)
           throws AppException {
     try {
-      WorkflowDTO wf = cfCtrl.inspectWorkflow(this.projectId, path);
+      WorkflowDTO wf = cfCtrl.inspectWorkflow(path);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(wf).build();
     } catch (IOException |

@@ -78,6 +78,6 @@ public class JobService {
   @Path("/cuneiform")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
   public CuneiformService jobs() {
-    return this.cuneiform.setProjectId(projectId);
+    return this.cuneiform;
   }
 }
