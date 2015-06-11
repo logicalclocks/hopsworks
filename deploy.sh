@@ -16,3 +16,6 @@ cp bower.json $GLASSFISH_HOME/glassfish/domains/domain1/docroot/
 cd $GLASSFISH_HOME/glassfish/domains/domain1/docroot
 #install bower components
 bower install
+
+#Open a new firefox tab
+firefox -new-tab http://localhost:8080/app

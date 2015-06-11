@@ -1,10 +1,10 @@
 'use strict';
 /*
- * Service allowing fetching job history objects by type.
+ * Service responsible for communicating with the Cuneiform backend.
  */
 angular.module('hopsWorksApp')
 
-        .factory('JobHistoryService', ['$http', function ($http) {
+        .factory('CuneiformService', ['$http', function ($http) {
             var service = {
               /**
                * Gets the stored jobhistory objects for the given projectId and type.
@@ -12,8 +12,8 @@ angular.module('hopsWorksApp')
                * @param {string} type, capitalised service name.
                * @returns {unresolved} A list of jobhistory objects.
                */
-              getByProjectAndType: function (projectId, type) {
-                return $http.get('/api/project/' + projectId + '/jobs/history/' + type.toUpperCase());
+              inspectStoredWorkflow: function (projectId, path) {
+                return $http.get('/api/project/' + projectId + '/jobs/cuneiform/inspect/' + path);
               }
             };
             return service;

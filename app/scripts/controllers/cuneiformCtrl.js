@@ -1,13 +1,14 @@
 /**
  * Created by stig on 2015-05-25.
+ * Controller for the Cuneiform jobs page.
  */
 
 'use strict';
 
 
 angular.module('hopsWorksApp')
-        .controller('CuneiformCtrl', ['$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', '$location', '$routeParams', 'growl', 'ProjectService', 'ModalService', 'JobHistoryService', 'DownloadService',
-          function ($scope, $timeout, $mdSidenav, $mdUtil, $log, $location, $routeParams, growl, ProjectService, ModalService, JobHistoryService, DownloadService) {
+        .controller('CuneiformCtrl', ['$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', '$location', '$routeParams', 'growl', 'ModalService', 'JobHistoryService', 'DownloadService', 'CuneiformService',
+          function ($scope, $timeout, $mdSidenav, $mdUtil, $log, $location, $routeParams, growl, ModalService, JobHistoryService, DownloadService, CuneiformService) {
 
             var self = this;
 
@@ -38,6 +39,9 @@ angular.module('hopsWorksApp')
                       });
             };
 
+            /*
+             * Get all Cuneiform job history objects for this project.
+             */
             var getCuneiformHistory = function () {
               JobHistoryService.getByProjectAndType(self.pId, 'CUNEIFORM').then(function (success) {
                 //Upon success, fill in jobs
@@ -53,14 +57,21 @@ angular.module('hopsWorksApp')
             self.getFile = function (path) {
               DownloadService.getFile(self.pId, path);
             };
-            
-            self.selectFile = function() {
-              ModalService.selectFile('lg').then(
-                      function() {
-                        
-                      },function(){
 
-                    });
+            self.selectFile = function () {
+              ModalService.selectFile('lg').then(
+                      function (success) {
+                        CuneiformService.inspectStoredWorkflow(self.pId, success).then(
+                                function (success) {
+                                  self.workflow = success.data;
+                                  alert(self.workflow);
+                                }, function (error) {
+                          //TODO: display message.
+
+                        })
+                      }, function (error) {
+                        //Nothing.
+              });
             };
 
           }]);
