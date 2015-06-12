@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.file.FileAlreadyExistsException;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -113,11 +115,10 @@ public class FileOperations {
    * Write an input stream to a HDFS file.
    *
    * @param is The InputStream to be written.
-   * @param size The length of the file.
    * @param destination The path on HDFS at which the file should be created.
    * Includes the filename.
    */
-  public void writeToHDFS(InputStream is, long size, String destination) throws
+  public void writeToHDFS(InputStream is, String destination) throws
           IOException {
     //Actually copy to HDFS
     Path destp = new Path(destination);

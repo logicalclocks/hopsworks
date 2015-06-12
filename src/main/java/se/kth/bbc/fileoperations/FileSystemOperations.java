@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -181,6 +182,13 @@ public class FileSystemOperations {
     }
   }
 
+  /**
+   * Copy the contents from the HDFS path *src* to the local path *dst*.
+   * <p>
+   * @param src
+   * @param dst
+   * @throws IOException
+   */
   public void copyToLocal(Path src, Path dst) throws IOException {
     fs.copyToLocalFile(src, dst);
   }

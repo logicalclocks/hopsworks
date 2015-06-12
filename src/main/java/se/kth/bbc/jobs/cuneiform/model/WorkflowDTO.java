@@ -1,5 +1,8 @@
 package se.kth.bbc.jobs.cuneiform.model;
 
+import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
+import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -17,11 +20,12 @@ public class WorkflowDTO {
   private String contents;
   private List<InputParameter> inputParams;
   private List<OutputParameter> outputParams;
-  
+
   /**
    * No-arg constructor for JAXB.
    */
-  public WorkflowDTO(){}
+  public WorkflowDTO() {
+  }
 
   /**
    * Creates a new WorkflowDTO with the given name.
@@ -33,31 +37,14 @@ public class WorkflowDTO {
   }
 
   /**
-   * Creates a new WorkflowDTO with the given name and contents.
+   * Creates a new WorkflowDTO with the given name, contents.
    * <p>
    * @param name
    * @param contents
    */
   public WorkflowDTO(String name, String contents) {
-    this(name, contents, new ArrayList<InputParameter>(),
-            new ArrayList<OutputParameter>());
-  }
-
-  /**
-   * Creates a new WorkflowDTO with the given name, contents and in- and output
-   * parameters.
-   * <p>
-   * @param name
-   * @param contents
-   * @param inputParams
-   * @param outputParams
-   */
-  public WorkflowDTO(String name, String contents,
-          List<InputParameter> inputParams, List<OutputParameter> outputParams) {
     this.name = name;
     this.contents = contents;
-    this.inputParams = inputParams;
-    this.outputParams = outputParams;
   }
 
   /**
@@ -68,12 +55,13 @@ public class WorkflowDTO {
   public String getName() {
     return name;
   }
-  
+
   /**
    * Set the name of the workflow.
-   * @param name 
+   * <p>
+   * @param name
    */
-  public void setName(String name){
+  public void setName(String name) {
     this.name = name;
   }
 
@@ -138,56 +126,6 @@ public class WorkflowDTO {
   }
 
   /**
-   * Add an input parameter to the list. Only happens if the list does not
-   * contain this parameter yet.
-   * <p>
-   * @param param
-   * @return True if the addition took place, false if not.
-   */
-  public boolean addInputParameter(InputParameter param) {
-    if (!inputParams.contains(param)) {
-      return inputParams.add(param);
-    } else {
-      return false;
-    }
-  }
-
-  /**
-   * Add an output parameter to the list. Only happens if the list does not
-   * contain this parameter yet.
-   * <p>
-   * @param param
-   * @return True if the addition took place, false if not.
-   */
-  public boolean addOutputParameter(OutputParameter param) {
-    if (!outputParams.contains(param)) {
-      return outputParams.add(param);
-    } else {
-      return false;
-    }
-  }
-
-  /**
-   * Remove the given input parameter.
-   * <p>
-   * @param param
-   * @return
-   */
-  public boolean removeInputParameter(InputParameter param) {
-    return inputParams.remove(param);
-  }
-
-  /**
-   * Remove the given output parameter.
-   * <p>
-   * @param param
-   * @return
-   */
-  public boolean removeOutputParameter(OutputParameter param) {
-    return outputParams.remove(param);
-  }
-
-  /**
    * Get the input parameter with the given name. Returns null if not found.
    * <p>
    * @param name
@@ -215,6 +153,89 @@ public class WorkflowDTO {
       }
     }
     return null;
+  }
+
+  /**
+   * Set the value of the input parameter with the given name. Returns false if
+   * no inputparameter with such name was found.
+   * <p>
+   * @param name
+   * @param value
+   * @return
+   */
+  public boolean setInputValue(String name, String value) {
+    for (InputParameter ip : inputParams) {
+      if (ip.getName().equals(name)) {
+        ip.setValue(value);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Set the queried status of the output parameter with the given name. Returns
+   * false if no outputparameter with such name was found.
+   * <p>
+   * @param name
+   * @param queried
+   * @return
+   */
+  public boolean setOutputQueried(String name, boolean queried) {
+    for (OutputParameter op : outputParams) {
+      if (op.getName().equals(name)) {
+        op.setQueried(queried);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Inspect the workflow. This method analyzes the contents of the workflow and
+   * sets the inputParams and outputParams fields of the object. It overwrites
+   * all previously set input and output parameters.
+   * <p>
+   * @throws HasFailedException
+   */
+  public void inspect() throws HasFailedException {
+    // Inspect the workflow and get the parameter lists
+    TopLevelContext tlc = StaticNodeVisitor.createTlc(contents);
+    List<String> freenames = StaticNodeVisitor.getFreeVarNameList(tlc);
+    List<String> outnames = StaticNodeVisitor.getTargetVarNameList(tlc);
+    // Construct and fill the parameter lists
+    inputParams = new ArrayList<>(freenames.size());
+    outputParams = new ArrayList<>(outnames.size());
+    for (String par : freenames) {
+      inputParams.add(new InputParameter(par));
+    }
+    for (String par : outnames) {
+      outputParams.add(new OutputParameter(par));
+    }
+  }
+
+  /**
+   * Update the workflow contents from the parameter bindings and query status.
+   * Parameter bindings are literally put into the file. Hence, paths should be
+   * absolute.
+   */
+  public void updateContentsFromVars() {
+    StringBuilder extraLines = new StringBuilder(); //Contains the extra workflow lines
+    //find out which free variables were bound (the ones that have a non-null value)
+    for (InputParameter ip : inputParams) {
+      if (ip.isBound()) {
+        //add a line to the workflow file
+        extraLines.append(ip.getName()).append(" = '").append(ip.getValue()).
+                append("';\n");
+      }
+    }
+    // for all selected target vars: add "<varname>;" to file
+    for (OutputParameter op : outputParams) {
+      if (op.isQueried()) {
+        extraLines.append(op.getName()).append(";\n");
+      }
+    }
+    contents += "\n" + extraLines.toString();
   }
 
 }

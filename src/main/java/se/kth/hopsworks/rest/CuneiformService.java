@@ -9,7 +9,9 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -34,6 +36,23 @@ public class CuneiformService {
   @EJB
   private NoCacheResponse noCacheResponse;
 
+  private Integer projectId;
+
+  CuneiformService setProjectId(Integer id) {
+    this.projectId = id;
+    return this;
+  }
+
+  /**
+   * Inspect the workflow stored at the given path. Returns a WorkflowDTO
+   * containing the workflow parameters and the likes.
+   * <p>
+   * @param path
+   * @param sc
+   * @param reqJobType
+   * @return
+   * @throws AppException
+   */
   @GET
   @Path("/inspect/{path: .+}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -58,6 +77,34 @@ public class CuneiformService {
               ex);
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               "Could not find specified workflow file." + ex.getMessage());
+    }
+  }
+
+  /**
+   * Run a workflow. The workflowDTO is passed as an argument. The workflow is
+   * based on the given path. This call returns a jobId if the job was started
+   * successfully.
+   * <p>
+   * @param workflow
+   * @param sc
+   * @param reqJobType
+   * @return
+   */
+  @POST
+  @Path("/run")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Consumes(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response runWorkFlow(WorkflowDTO workflow, @Context SecurityContext sc,
+          @Context HttpServletRequest reqJobType) throws AppException {
+    System.out.println("Starting CF job.");
+    try {
+      long jobid = cfCtrl.startWorkflow(null, workflow, "admin@kth.se", projectId);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jobid).build();
+    } catch (IOException ex) {
+      Logger.getLogger(CuneiformService.class.getName()).log(Level.SEVERE, "Error running Cuneiform job.",
+              ex);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Error running job.");
     }
   }
 
