@@ -78,14 +78,14 @@ angular.module('hopsWorksApp')
                                                     should: {
                                                         fuzzy_like_this_field: {
                                                             
-                                                            multi_match : {
-                                                              query: searchTerm, 
-                                                              fields: [ "name", "EXTENDED_METADATA" ] 
-                                                            }
-                                                              
-//                                                            name: {
-//                                                                like_text: searchTerm
+//                                                            multi_match : {
+//                                                              query: searchTerm, 
+//                                                              fields: [ "name", "EXTENDED_METADATA" ] 
 //                                                            }
+                                                              
+                                                            name: {
+                                                                like_text: searchTerm
+                                                            }
                                                         }
                                                     }
                                                 }
