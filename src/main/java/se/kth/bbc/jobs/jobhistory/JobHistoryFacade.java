@@ -59,77 +59,34 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     return q.getResultList();
   }
 
-  public void update(Long id, JobState newState) {
+  public void update(JobHistory history, JobState newState) {
     //TODO: check if state is a final one, if so: update execution time
-    JobHistory jh = findById(id);
-    if (jh.getState() != newState) {
-      updateState(id, newState);
-    }
+    update(history, null, newState, -1, null, null, null, null, null);
   }
 
-  public void update(Long id, JobState newState, long executionTime) {
-    JobHistory jh = findById(id);
-    updateState(id, newState);
-    jh.setExecutionDuration(BigInteger.valueOf(executionTime));
-    em.merge(jh);
+  public void update(JobHistory history, JobState newState, long executionTime) {
+    update(history, null, newState, executionTime, null, null, null, null, null);
   }
 
-  public void update(Long id, JobState newState,
+  public void update(JobHistory history, JobState newState,
           Collection<JobOutputFile> outputFiles) {
-    JobHistory jh = findById(id);
-    updateState(id, newState);
-    Collection<JobOutputFile> output = jh.getJobOutputFileCollection();
-    output.addAll(output);
-    jh.setJobOutputFileCollection(output);
-    em.merge(jh);
+    update(history, null, newState, -1, null, null, null, null, outputFiles);
   }
 
-  public void update(Long id, Collection<JobOutputFile> extraOutputFiles) {
-    JobHistory jh = findById(id);
-    Collection<JobOutputFile> output = jh.getJobOutputFileCollection();
-    output.addAll(output);
-    jh.setJobOutputFileCollection(output);
-    em.merge(jh);
+  public void update(JobHistory history,
+          Collection<JobOutputFile> extraOutputFiles) {
+    update(history, null, null, -1, null, null, null, null, extraOutputFiles);
   }
 
-  /**
-   * Separate method to isolate the state updating transaction. Needed for
-   * remote updating.
-   * <p>
-   * @param jh
-   * @param state
-   * @deprecated Need to fix this.
-   */
-  private void updateState(Long id, JobState state) {
-    Query q = em.createNativeQuery("UPDATE jobhistory SET state=? WHERE id=?");
-    q.setParameter(1, state.name());
-    q.setParameter(2, id);
-    q.executeUpdate();
-  }
-
-  public void updateArgs(Long id, String args) {
-    JobHistory jh = findById(id);
-    jh.setArgs(args);
-    em.merge(jh);
+  public void updateArgs(JobHistory history, String args) {
+    update(history, null, null, -1, args, null, null, null, null);
   }
 
   public JobHistory findById(Long id) {
-    if (id == null) {
-      throw new NullPointerException();
-    }
-    TypedQuery<JobHistory> q = em.createNamedQuery("JobHistory.findById",
-            JobHistory.class);
-    q.setParameter("id", id);
-    try {
-      return q.getSingleResult();
-    } catch (NoResultException e) {
-      logger.log(Level.SEVERE, "Tried to look up jobHistory for id " + id
-              + ", but no such id could be found.", e);
-      throw e;
-    }
+    return em.find(JobHistory.class, id);
   }
 
-  public Long create(String jobname, String userEmail, Project project,
+  public JobHistory create(String jobname, String userEmail, Project project,
           JobType type,
           String args, JobState state, String stdOutPath, String stdErrPath,
           Collection<JobExecutionFile> execFiles,
@@ -153,19 +110,15 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
     em.persist(jh);
     em.flush();
-    return jh.getId();
+    return jh;
   }
 
-  public void updateStdOutPath(Long id, String stdOutPath) {
-    JobHistory jh = findById(id);
-    jh.setStdoutPath(stdOutPath);
-    em.merge(jh);
+  public void updateStdOutPath(JobHistory history, String stdOutPath) {
+    update(history, null, null, -1, null, stdOutPath, null, null, null);
   }
 
-  public void updateStdErrPath(Long id, String stdErrPath) {
-    JobHistory jh = findById(id);
-    jh.setStderrPath(stdErrPath);
-    em.merge(jh);
+  public void updateStdErrPath(JobHistory history, String stdErrPath) {
+    update(history, null, null, -1, null, null, stdErrPath, null, null);
   }
 
   public JobState getState(Long jobId) {
@@ -181,5 +134,54 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
   public void persist(JobOutputFile jof) {
     em.persist(jof);
+  }
+
+  /**
+   * Updates all given fields of <i>history</i> to the given value, unless that
+   * value is null for entities, or -1 for integers.
+   * <p>
+   * @param history
+   * @param name
+   * @param state
+   * @param executionDuration
+   * @param args
+   * @param stdoutPath
+   * @param stderrPath
+   * @param jobInputFileCollection
+   * @param jobOutputFileCollection
+   */
+  public void update(JobHistory history, String name, JobState state,
+          long executionDuration, String args, String stdoutPath,
+          String stderrPath, Collection<JobInputFile> jobInputFileCollection,
+          Collection<JobOutputFile> jobOutputFileCollection) {
+    if (name != null) {
+      history.setName(name);
+    }
+    if (state != null) {
+      history.setState(state);
+    }
+    if (executionDuration != -1) {
+      history.setExecutionDuration(BigInteger.valueOf(executionDuration));
+    }
+    if (args != null) {
+      history.setArgs(args);
+    }
+    if (stdoutPath != null) {
+      history.setStdoutPath(stdoutPath);
+    }
+    if (stderrPath != null) {
+      history.setStderrPath(stderrPath);
+    }
+    if (jobInputFileCollection != null) {
+      history.setJobInputFileCollection(jobInputFileCollection);
+    }
+    if (jobOutputFileCollection != null) {
+      history.setJobOutputFileCollection(jobOutputFileCollection);
+    }
+    em.merge(history);
+  }
+  
+  public void refresh(JobHistory object){
+    em.refresh(object);
   }
 }

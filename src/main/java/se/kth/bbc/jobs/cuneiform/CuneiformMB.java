@@ -49,7 +49,8 @@ import se.kth.bbc.lims.Utils;
 public final class CuneiformMB extends JobController {
 
   private static final String KEY_PREFIX_TARGET = "TARGET_";
-  private static final Logger logger = Logger.getLogger(CuneiformMB.class.getName());
+  private static final Logger logger = Logger.getLogger(CuneiformMB.class.
+          getName());
 
   //Variables for new job
   private String workflowname;
@@ -249,7 +250,7 @@ public final class CuneiformMB extends JobController {
     YarnRunner.Builder b = new YarnRunner.Builder(Constants.HIWAY_JAR_PATH,
             "Hiway.jar");
     b.amMainClass(
-            "de.huberlin.wbi.hiway.app.am.CuneiformApplicationMaster");
+            "de.huberlin.wbi.hiway.am.cuneiform.CuneiformApplicationMaster");
     b.appName("Cuneiform " + jobName);
     b.addAmJarToLocalResources(false); // Weird way of hiway working
 
@@ -294,16 +295,18 @@ public final class CuneiformMB extends JobController {
     CuneiformJob job = new CuneiformJob(history, fops, r);
 
     //TODO: include input and execution files
-    setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
+    setSelectedJob(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
             sessionState.getActiveProject(), JobType.CUNEIFORM));
     if (isJobSelected()) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveProjectname())
-              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getJobId()
+              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getSelectedJob().
+              getId()
               + File.separator + "stdout.log";
       String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveProjectname())
-              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getJobId()
+              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getSelectedJob().
+              getId()
               + File.separator + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
       job.setStdErrFinalDestination(stdErrFinalDestination);
@@ -322,12 +325,13 @@ public final class CuneiformMB extends JobController {
   }
 
   public boolean hasOutputFiles() {
-    return jobOutputFacade.findOutputFilesForJobid(getJobId()).size() > 0;
+    return jobOutputFacade.findOutputFilesForJobid(getSelectedJob().getId()).
+            size() > 0;
   }
 
   public List<String> getOutputFileNames() {
     List<JobOutputFile> files = jobOutputFacade.findOutputFilesForJobid(
-            getJobId());
+            getSelectedJob().getId());
     List<String> names = new ArrayList<>(files.size());
     for (JobOutputFile file : files) {
       names.add(file.getJobOutputFilePK().getName());
@@ -337,14 +341,15 @@ public final class CuneiformMB extends JobController {
 
   public StreamedContent downloadOutput(String name) {
     //find file from facade, get input stream from path
-    JobOutputFile file = jobOutputFacade.findByNameAndJobId(name, getJobId());
+    JobOutputFile file = jobOutputFacade.findByNameAndJobId(name,
+            getSelectedJob().getId());
     if (file == null) {
       //should never happen
       MessagesController.addErrorMessage(
               "Something went wrong while downloading " + name + ".");
       logger.log(Level.SEVERE,
               "Trying to download an output file that does not exist. JobId:{0}, filename: {1}",
-              new Object[]{getJobId(),
+              new Object[]{getSelectedJob().getId(),
                 name});
       return null;
     }
@@ -353,7 +358,7 @@ public final class CuneiformMB extends JobController {
       return downloadFile(path, name);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Failed to download output file " + name
-              + ". Jobid: " + getJobId() + ", path: " + path, ex);
+              + ". Jobid: " + getSelectedJob().getId() + ", path: " + path, ex);
       MessagesController.addErrorMessage("Download failed.");
     }
     return null;

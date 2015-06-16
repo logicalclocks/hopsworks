@@ -20,7 +20,7 @@ public abstract class HopsJob {
 
   private JobHistoryFacade jobHistoryFacade;
   private boolean initialized = false;
-  private Long jobId;
+  private JobHistory history;
 
   public HopsJob(JobHistoryFacade facade) {
     this.jobHistoryFacade = facade;
@@ -38,16 +38,16 @@ public abstract class HopsJob {
     return initialized;
   }
 
-  public final Long getJobId() {
-    return jobId;
+  public final JobHistory getHistory() {
+    return history;
   }
 
   protected final void updateState(JobState newState) {
-    jobHistoryFacade.update(jobId, newState);
+    jobHistoryFacade.update(history, newState);
   }
 
   protected final void updateArgs(String args) {
-    jobHistoryFacade.updateArgs(jobId, args);
+    jobHistoryFacade.updateArgs(history, args);
   }
 
   /**
@@ -72,9 +72,8 @@ public abstract class HopsJob {
    * Request a unique job id by creating a JobHistory object. Creates
    * and persists a JobHistory object that should ultimately enable this job to
    * be rerun. The object is in the state INITIALIZING. Upon success, returns
-   * the
-   * unique id of the created JobHistory object to allow tracking.
-   * This method must be called before attempting to run it.
+   * the created JobHistory object to allow tracking.
+   * This method must be called before attempting to run the actual job.
    * <p>
    * @param jobname The (optional) name for the job.
    * @param userEmail The email of the user running the job.
@@ -82,13 +81,13 @@ public abstract class HopsJob {
    * @param jobType The type of job.
    * @return Unique id of the JobHistory object associated with this job.
    */
-  public final Long requestJobId(String jobname, String userEmail,
+  public final JobHistory requestJobId(String jobname, String userEmail,
           Project project,
           JobType jobType) {
-    jobId = jobHistoryFacade.create(jobname, userEmail, project, jobType,
+    history = jobHistoryFacade.create(jobname, userEmail, project, jobType,
             null, JobState.INITIALIZING, null, null, null, null);
     initialized = true;
-    return jobId;
+    return history;
   }
 
   /*

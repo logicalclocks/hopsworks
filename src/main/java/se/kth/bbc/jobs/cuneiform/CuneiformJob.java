@@ -69,7 +69,7 @@ public final class CuneiformJob extends YarnJob {
     //Update execution time and final state
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    getJobHistoryFacade().update(getJobId(), getFinalState(), duration);
+    getJobHistoryFacade().update(getHistory(), getFinalState(), duration);
 
   }
 
@@ -83,7 +83,7 @@ public final class CuneiformJob extends YarnJob {
       JSONArray outputpaths = jobj.getJSONArray("output");
       for (int i = 0; i < outputpaths.length(); i++) {
         String outfile = outputpaths.getString(i);
-        JobOutputFile file = new JobOutputFile(getJobId(), Utils.getFileName(
+        JobOutputFile file = new JobOutputFile(getHistory().getId(), Utils.getFileName(
                 outfile));
         file.setPath(outfile);
         getJobHistoryFacade().persist(file);
@@ -91,7 +91,7 @@ public final class CuneiformJob extends YarnJob {
     } catch (IOException | JSONException e) {
       logger.log(Level.SEVERE,
               "Failed to copy output files after running Cuneiform job "
-              + getJobId(), e);
+              + getHistory().getId(), e);
     }
   }
 }

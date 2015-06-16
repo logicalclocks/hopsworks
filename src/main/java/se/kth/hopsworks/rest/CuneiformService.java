@@ -20,6 +20,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
+import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.hopsworks.controller.CuneiformController;
 import se.kth.hopsworks.filters.AllowedRoles;
 
@@ -82,8 +83,8 @@ public class CuneiformService {
 
   /**
    * Run a workflow. The workflowDTO is passed as an argument. The workflow is
-   * based on the given path. This call returns a jobId if the job was started
-   * successfully.
+   * based on the given path. This call returns a JobHistory object if the call
+   * succeeds.
    * <p>
    * @param workflow
    * @param sc
@@ -92,19 +93,23 @@ public class CuneiformService {
    */
   @POST
   @Path("/run")
-  @Produces(MediaType.TEXT_PLAIN)
+  @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response runWorkFlow(WorkflowDTO workflow, @Context SecurityContext sc,
           @Context HttpServletRequest reqJobType) throws AppException {
     System.out.println("Starting CF job.");
     try {
-      long jobid = cfCtrl.startWorkflow(null, workflow, "admin@kth.se", projectId);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jobid).build();
+      JobHistory jh = cfCtrl.startWorkflow(null, workflow, "admin@kth.se",
+              projectId);
+      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+              entity(jh).build();
     } catch (IOException ex) {
-      Logger.getLogger(CuneiformService.class.getName()).log(Level.SEVERE, "Error running Cuneiform job.",
+      Logger.getLogger(CuneiformService.class.getName()).log(Level.SEVERE,
+              "Error running Cuneiform job.",
               ex);
-      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Error running job.");
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), "Error running job.");
     }
   }
 

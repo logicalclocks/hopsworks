@@ -14,6 +14,7 @@ import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.cuneiform.CuneiformJob;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
+import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnRunner;
@@ -86,10 +87,10 @@ public class CuneiformController {
    * @param wf
    * @param user
    * @param projectId
-   * @return The jobId of the started job.
+   * @return The job history object for the started job.
    * @throws IOException
    */
-  public long startWorkflow(String jobName, WorkflowDTO wf, String user,
+  public JobHistory startWorkflow(String jobName, WorkflowDTO wf, String user,
           Integer projectId) throws IOException {
     // Set the job name if necessary.
     if (jobName == null || jobName.isEmpty()) {
@@ -107,13 +108,13 @@ public class CuneiformController {
     YarnRunner.Builder b = new YarnRunner.Builder(Constants.HIWAY_JAR_PATH,
             "Hiway.jar");
     b.amMainClass(
-            "de.huberlin.wbi.hiway.app.am.CuneiformApplicationMaster");
+            "de.huberlin.wbi.hiway.am.cuneiform.CuneiformApplicationMaster");
     b.appName("Cuneiform " + jobName);
     b.addAmJarToLocalResources(false); // Weird way of hiway working
 
     String machineUser = Utils.getYarnUser();
 
-    b.localResourcesBasePath("/user/" + machineUser + "/hiway/"
+    b.localResourcesBasePath("/hiway/"
             + YarnRunner.APPID_PLACEHOLDER);
 
     //construct AM arguments
@@ -150,14 +151,14 @@ public class CuneiformController {
     Project project = projects.find(projectId);
 
     //TODO: include input and execution files
-    Long jobId = job.requestJobId(jobName, user,
+    JobHistory jh = job.requestJobId(jobName, user,
             project, JobType.CUNEIFORM);
-    if (jobId != null) {
+    if (jh != null) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(project.getName())
-              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobId + File.separator
+              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jh.getId() + File.separator
               + "stdout.log";
       String stdErrFinalDestination = Utils.getHdfsRootPath(project.getName())
-              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jobId + File.separator
+              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jh.getId() + File.separator
               + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
       job.setStdErrFinalDestination(stdErrFinalDestination);
@@ -169,7 +170,7 @@ public class CuneiformController {
       throw new IOException("Failed to persist JobHistory.");
     }
     activities.persistActivity(ActivityFacade.RAN_JOB, project, user);
-    return jobId;
+    return jh;
   }
 
   /**

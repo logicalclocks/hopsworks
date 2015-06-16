@@ -171,16 +171,16 @@ public final class AdamController extends JobController {
     }
 
     AdamJob job = new AdamJob(history, r, fops, args, opts);
-    setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
+    setSelectedJob(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
             sessionState.getActiveProject(), JobType.ADAM));
     if (isJobSelected()) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveProjectname())
-              + Constants.ADAM_DEFAULT_OUTPUT_PATH + getJobId()
+              + Constants.ADAM_DEFAULT_OUTPUT_PATH + getSelectedJob().getId()
               + File.separator + "stdout.log";
       String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveProjectname())
-              + Constants.ADAM_DEFAULT_OUTPUT_PATH + getJobId()
+              + Constants.ADAM_DEFAULT_OUTPUT_PATH + getSelectedJob().getId()
               + File.separator + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
       job.setStdErrFinalDestination(stdErrFinalDestination);

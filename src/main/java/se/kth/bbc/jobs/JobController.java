@@ -42,7 +42,7 @@ public abstract class JobController implements Serializable {
   private String basePath = null;
 
   //Used to track job that was last executed or selected
-  private Long jobhistoryid;
+  private JobHistory jobhistory;
 
   private JobHistoryFacade history = null;
   private FileOperations fops;
@@ -256,37 +256,20 @@ public abstract class JobController implements Serializable {
     this.activityFacade = facade;
   }
 
-  public void setJobId(Long jobId) {
-    this.jobhistoryid = jobId;
-  }
-
-  public Long getJobId() {
-    return jobhistoryid;
-  }
-
   public JobHistory getSelectedJob() {
-    checkIfHistorySet();
-    if (jobhistoryid == null) {
-      return null;
-    } else {
-      return history.findById(jobhistoryid);
-    }
-  }
-
-  public void setSelectedJob(Long id) {
-    this.jobhistoryid = id;
+    return jobhistory;
   }
 
   public void setSelectedJob(JobHistory job) {
-    this.jobhistoryid = job.getId();
+    this.jobhistory = job;
   }
 
   public boolean isJobSelected() {
-    return jobhistoryid != null;
+    return jobhistory != null;
   }
 
   public boolean isSelectedJobRunning() {
-    if (jobhistoryid == null) {
+    if (jobhistory == null) {
       return false;
     } else {
       return !jobHasFinishedState();
@@ -294,7 +277,7 @@ public abstract class JobController implements Serializable {
   }
 
   public boolean isSelectedJobHasFinished() {
-    if (jobhistoryid == null) {
+    if (jobhistory == null) {
       return false;
     } else {
       return jobHasFinishedState();
@@ -303,12 +286,11 @@ public abstract class JobController implements Serializable {
 
   private boolean jobHasFinishedState() {
     checkIfHistorySet();
-    JobState state = history.getState(jobhistoryid);
-    if (state == null) {
-      //should never happen
+    history.refresh(jobhistory);
+    if(jobhistory.getState() == null){
       return true;
     }
-    return state.isFinalState();
+    return jobhistory.getState().isFinalState();
   }
 
   protected void putVariable(String key, String value) {
