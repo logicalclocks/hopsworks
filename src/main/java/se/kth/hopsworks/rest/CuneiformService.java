@@ -92,7 +92,7 @@ public class CuneiformService {
    */
   @POST
   @Path("/run")
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.TEXT_PLAIN)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response runWorkFlow(WorkflowDTO workflow, @Context SecurityContext sc,

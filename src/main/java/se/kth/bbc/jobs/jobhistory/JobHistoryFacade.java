@@ -35,9 +35,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   @EJB
   private UserManager users;
 
-  @EJB
-  private ProjectFacade studies;
-
   public JobHistoryFacade() {
     super(JobHistory.class);
   }

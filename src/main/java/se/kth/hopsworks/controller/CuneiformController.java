@@ -133,7 +133,7 @@ public class CuneiformController {
     b.stdErrPath("/tmp/AppMaster.stderr");
     b.logPathsRelativeToResourcesPath(false);
 
-    //b.addToAppMasterEnvironment("CLASSPATH", "/srv/hiway/lib/*:/srv/hiway/*");
+    b.addToAppMasterEnvironment("CLASSPATH", "/srv/hiway/lib/*:/srv/hiway/*");
     YarnRunner r;
 
     try {
