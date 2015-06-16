@@ -3,6 +3,30 @@ dist
 .tmp
 .sass-cache
 bower_components
+app/index1.html
+app/scripts/AppInit.js
+app/scripts/MetadataDesignController.js
+app/scripts/authenticator.js
+app/scripts/controllers/ElasticSearchController.js
+app/scripts/controllers/ExtendTemplateController.js
+app/scripts/controllers/ListController.js
+app/scripts/controllers/MainController.js
+app/scripts/controllers/MetadataController.js
+app/scripts/controllers/MetadataDesignController.js
+app/scripts/controllers/MetadataViewController.js
+app/scripts/controllers/ModifyFieldController.js
+app/scripts/controllers/NewCardController.js
+app/scripts/controllers/NewCardDialogController.js
+app/scripts/controllers/NewlistController.js
+app/scripts/controllers/SaveController.js
+app/scripts/controllers/TabsController.js
+app/scripts/controllers/WSController.js
+app/scripts/services/BoardManipulator.js
+app/scripts/services/BoardService.js
+app/scripts/services/DialogService.js
+
+
+
 
 # Created by https://www.gitignore.io
 
