@@ -44,6 +44,14 @@ public class YarnJob extends HopsJob {
   public final void setStdErrFinalDestination(String stdErrFinalDestination) {
     this.stdErrFinalDestination = stdErrFinalDestination;
   }
+  
+  protected final String getStdOutFinalDestination(){
+    return this.stdOutFinalDestination;
+  }
+  
+  protected final String getStdErrFinalDestination(){
+    return this.stdErrFinalDestination;
+  }
 
   protected final void updateArgs() {
     super.updateArgs(runner.getAmArgs());
@@ -73,6 +81,7 @@ public class YarnJob extends HopsJob {
       updateState(JobState.STARTING_APP_MASTER);
       monitor = runner.startAppMaster();
       started = true;
+      getJobHistoryFacade().updateAppId(getHistory(), monitor.getApplicationId().toString());
       return true;
     } catch (YarnException | IOException e) {
       logger.log(Level.SEVERE,
@@ -155,7 +164,7 @@ public class YarnJob extends HopsJob {
     }
   }
 
-  protected final void copyLogs() {
+  protected void copyLogs() {
     try {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {

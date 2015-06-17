@@ -11,7 +11,7 @@ public class Constants {
   //TODO: check entire project for correct closing of resources!
   //Local path to the hiway jar
   public static final String HIWAY_JAR_PATH
-          = "/srv/hiway/hiway-core-0.2.0-SNAPSHOT.jar";
+          = "/srv/hiway-1.0.1-SNAPSHOT/hiway-core-1.0.1-SNAPSHOT.jar";
 
   //User under which yarn is run
   public static final String DEFAULT_YARN_USER = "glassfish";

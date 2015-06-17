@@ -118,6 +118,10 @@ public class JobHistory implements Serializable {
   @Column(name = "type")
   @Enumerated(EnumType.STRING)
   private JobType type;
+  
+  @Size(max = 30)
+  @Column(name = "app_id")
+  private String appId;
 
   @JoinColumn(name = "user",
           referencedColumnName = "EMAIL")
@@ -219,6 +223,14 @@ public class JobHistory implements Serializable {
 
   public void setType(JobType type) {
     this.type = type;
+  }
+    
+  public String getAppId() {
+    return appId;
+  }
+
+  public void setAppId(String appId) {
+    this.appId = appId;
   }
 
   public Collection<JobOutputFile> getJobOutputFileCollection() {

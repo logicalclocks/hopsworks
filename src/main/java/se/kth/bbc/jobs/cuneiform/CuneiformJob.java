@@ -26,8 +26,12 @@ public final class CuneiformJob extends YarnJob {
 
   private static final Logger logger = Logger.getLogger(CuneiformJob.class.
           getName());
+  public static final String APPID_PLACEHOLDER = "$APPID";
+  private static final String APPID_REGEX = "\\$APPID";
 
   private String summaryPath;
+  private String stdOutPath;
+  private String stdErrPath;
 
   public CuneiformJob(JobHistoryFacade facade, FileOperations fops,
           YarnRunner runner) {
@@ -36,6 +40,26 @@ public final class CuneiformJob extends YarnJob {
 
   public void setSummaryPath(String summaryPath) {
     this.summaryPath = summaryPath;
+  }
+
+  /**
+   * Set the path where Hiway finally copies the output logs to. Because of
+   * Hi-WAY specific handling of logs, this is needed.
+   * <p>
+   * @param stdOutPath
+   */
+  public void setStdOutPath(String stdOutPath) {
+    this.stdOutPath = stdOutPath;
+  }
+
+  /**
+   * Set the path where Hiway finally copies the error logs to. Because of
+   * Hi-WAY specific handling of logs, this is needed.
+   * <p>
+   * @param stdErrPath
+   */
+  public void setStdErrPath(String stdErrPath) {
+    this.stdErrPath = stdErrPath;
   }
 
   @Override
@@ -61,7 +85,7 @@ public final class CuneiformJob extends YarnJob {
     if (!proceed) {
       return;
     }
-    super.copyLogs();
+    copyLogs();
     //If the application finished normally: process its output
     if (super.appFinishedSuccessfully()) {
       processOutput();
@@ -83,8 +107,9 @@ public final class CuneiformJob extends YarnJob {
       JSONArray outputpaths = jobj.getJSONArray("output");
       for (int i = 0; i < outputpaths.length(); i++) {
         String outfile = outputpaths.getString(i);
-        JobOutputFile file = new JobOutputFile(getHistory().getId(), Utils.getFileName(
-                outfile));
+        JobOutputFile file = new JobOutputFile(getHistory().getId(), Utils.
+                getFileName(
+                        outfile));
         file.setPath(outfile);
         getJobHistoryFacade().persist(file);
       }
@@ -94,4 +119,16 @@ public final class CuneiformJob extends YarnJob {
               + getHistory().getId(), e);
     }
   }
+
+  /**
+   * Updates the JobHistory object with the actual paths of the logs.
+   */
+  @Override
+  protected void copyLogs() {
+    stdOutPath = stdOutPath.replaceAll(APPID_REGEX, getHistory().getAppId());
+    stdErrPath = stdErrPath.replaceAll(APPID_REGEX, getHistory().getAppId());
+    getJobHistoryFacade().updateStdOutPath(getHistory(), stdOutPath);
+    getJobHistoryFacade().updateStdErrPath(getHistory(), stdErrPath);
+  }
+  
 }

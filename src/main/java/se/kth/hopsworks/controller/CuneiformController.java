@@ -2,6 +2,7 @@ package se.kth.hopsworks.controller;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +34,8 @@ import se.kth.bbc.project.ProjectFacade;
 public class CuneiformController {
 
   private Logger logger = Logger.getLogger(CuneiformController.class.getName());
+  private static final String OUT_LOGS = "AppMaster.stdout";
+  private static final String ERR_LOGS = "AppMaster.stderr";
 
   @EJB
   private FileOperations fops;
@@ -129,9 +132,8 @@ public class CuneiformController {
 
     //Pass on workflow file
     b.addFilePathToBeCopied(wfLocation, true);
-
-    b.stdOutPath("/tmp/AppMaster.stdout");
-    b.stdErrPath("/tmp/AppMaster.stderr");
+    b.stdOutPath(">(tee AppMaster.stdout <LOG_DIR>/"+OUT_LOGS+")");
+    b.stdErrPath(">(tee AppMaster.stderr <LOG_DIR>/"+ERR_LOGS+" >&2)");
     b.logPathsRelativeToResourcesPath(false);
 
     b.addToAppMasterEnvironment("CLASSPATH", "/srv/hiway/lib/*:/srv/hiway/*");
@@ -148,6 +150,8 @@ public class CuneiformController {
     }
 
     CuneiformJob job = new CuneiformJob(history, fops, r);
+    job.setStdOutPath("/hiway/"+CuneiformJob.APPID_PLACEHOLDER+"/"+OUT_LOGS);
+    job.setStdErrPath("/hiway/"+CuneiformJob.APPID_PLACEHOLDER+"/"+ERR_LOGS);
     Project project = projects.find(projectId);
 
     //TODO: include input and execution files
@@ -187,6 +191,9 @@ public class CuneiformController {
     wf.updateContentsFromVars();
     //actually write to workflow file
     Path p = Files.createTempFile(Utils.stripExtension(wf.getName()), ".cf");
+    try(FileWriter t = new FileWriter(p.toFile(),false)){
+      t.write(wf.getContents());
+    }
     return p.toString();
   }
 

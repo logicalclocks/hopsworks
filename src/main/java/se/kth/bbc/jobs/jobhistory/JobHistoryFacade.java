@@ -4,17 +4,14 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.project.Project;
-import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.kthfsdashboard.user.AbstractFacade;
@@ -61,25 +58,25 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
   public void update(JobHistory history, JobState newState) {
     //TODO: check if state is a final one, if so: update execution time
-    update(history, null, newState, -1, null, null, null, null, null);
+    update(history, null, newState, -1, null, null, null, null, null, null);
   }
 
   public void update(JobHistory history, JobState newState, long executionTime) {
-    update(history, null, newState, executionTime, null, null, null, null, null);
+    update(history, null, newState, executionTime, null, null, null, null, null, null);
   }
 
   public void update(JobHistory history, JobState newState,
           Collection<JobOutputFile> outputFiles) {
-    update(history, null, newState, -1, null, null, null, null, outputFiles);
+    update(history, null, newState, -1, null, null, null, null, null, outputFiles);
   }
 
   public void update(JobHistory history,
           Collection<JobOutputFile> extraOutputFiles) {
-    update(history, null, null, -1, null, null, null, null, extraOutputFiles);
+    update(history, null, null, -1, null, null, null, null, null, extraOutputFiles);
   }
 
   public void updateArgs(JobHistory history, String args) {
-    update(history, null, null, -1, args, null, null, null, null);
+    update(history, null, null, -1, args, null, null, null, null, null);
   }
 
   public JobHistory findById(Long id) {
@@ -114,11 +111,16 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   }
 
   public void updateStdOutPath(JobHistory history, String stdOutPath) {
-    update(history, null, null, -1, null, stdOutPath, null, null, null);
+    update(history, null, null, -1, null, stdOutPath, null, null, null, null);
   }
 
   public void updateStdErrPath(JobHistory history, String stdErrPath) {
-    update(history, null, null, -1, null, null, stdErrPath, null, null);
+    update(history, null, null, -1, null, null, stdErrPath, null, null, null);
+  }
+  
+  public void updateAppId(JobHistory history, String appId){
+    update(history, null, null, -1, null, null, null,
+            appId, null, null);
   }
 
   public JobState getState(Long jobId) {
@@ -147,12 +149,13 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
    * @param args
    * @param stdoutPath
    * @param stderrPath
+   * @param appId
    * @param jobInputFileCollection
    * @param jobOutputFileCollection
    */
   public void update(JobHistory history, String name, JobState state,
           long executionDuration, String args, String stdoutPath,
-          String stderrPath, Collection<JobInputFile> jobInputFileCollection,
+          String stderrPath, String appId, Collection<JobInputFile> jobInputFileCollection,
           Collection<JobOutputFile> jobOutputFileCollection) {
     if (name != null) {
       history.setName(name);
@@ -171,6 +174,9 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     }
     if (stderrPath != null) {
       history.setStderrPath(stderrPath);
+    }
+    if(appId != null){
+      history.setAppId(appId);
     }
     if (jobInputFileCollection != null) {
       history.setJobInputFileCollection(jobInputFileCollection);
