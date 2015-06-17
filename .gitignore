@@ -27,6 +27,8 @@ app/scripts/services/BoardService.js
 app/scripts/services/DialogService.js
 
 app/views/partials/*
+public_html/*
+nbproject/*
 
 
 
