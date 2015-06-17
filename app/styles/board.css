@@ -161,6 +161,7 @@ div.story h3, div.task h3 {
 .cardMaxSize-true {
   color: #33cc33;
 }
+
 input[type="text"] {
   width: 20em;
 }

@@ -20,9 +20,10 @@ angular.module('hopsWorksApp', [
   'chart.js',
   'ngWebSocket',
   'ng-context-menu',
-  'xeditable'
+  'xeditable',
+  'flow'
 ])
-  .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
+  .config(['$routeProvider', '$httpProvider', 'flowFactoryProvider',function ($routeProvider, $httpProvider, flowFactoryProvider) {
 
     // Responseinterceptor for authentication
     $httpProvider.interceptors.push('AuthInterceptorService');
@@ -33,11 +34,23 @@ angular.module('hopsWorksApp', [
     // Set the content type to be FORM type for all general post requests and override them explicit if needed
     $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 
+      flowFactoryProvider.defaults = {
+        //if [400, 401, 403, 409, 415, 500, 501] error codes are sent from the server do not retry.
+        permanentErrors: [400, 401, 403, 409, 415, 500, 501],
+        maxChunkRetries: 1,
+        chunkRetryInterval: 5000,
+        simultaneousUploads: 4
+      };
+      flowFactoryProvider.on('catchAll', function (event) {
+        console.log('catchAll', arguments);
+      });
 
     $routeProvider
       .when('/', {
         templateUrl: 'views/home.html',
         controller: 'HomeCtrl as homeCtrl',
+
+
         resolve: {
           auth: ['$q', '$location', 'AuthService',
             function ($q, $location, AuthService) {
@@ -51,6 +64,10 @@ angular.module('hopsWorksApp', [
                 });
             }]
         }
+
+
+
+
       })
       .when('/login', {
         templateUrl: 'views/login.html',

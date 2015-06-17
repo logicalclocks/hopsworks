@@ -1,73 +1,74 @@
 <div class="modal-header">
-    <button class="close" ng-click="datasetCreatorCtrl.close()" data-dismiss="modal" aria-hidden="true"
-            type="button">&times;</button>
-    <h2 class="modal-title">New DataSet folder</h2>
+  <button class="close" ng-click="datasetCreatorCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">New DataSet folder</h2>
 </div>
 <div class="modal-body">
 
 
-    <form role="form" name="dataSetForm" ng-submit="datasetCreatorCtrl.saveDataSetDir()" novalidate class="form-validate">
-        <div class="row">
-            <fieldset>
+  <form role="form" name="dataSetForm" ng-submit="datasetCreatorCtrl.saveDataSetDir()" novalidate class="form-validate">
+    <div class="row">
+      <fieldset>
 
-                <div class="control-group col-md-offset-1">
+        <div class="control-group col-md-offset-1" style="margin-right: 8.33333%;">
 
-                    <md-input-container>
-                        <label for="dataSetName" style="color: black;">Folder Name</label>
-                        <input name="dataSet_name" type="text" id="dataSetName"
-                               ng-model="datasetCreatorCtrl.dataSet.name"
-                               required
-                               md-sidenav-focus>
-                    </md-input-container>
+          <md-input-container>
+            <label for="dataSetName" style="color: black;">Folder Name</label>
+            <input name="dataSet_name" type="text" id="dataSetName"
+                   ng-model="datasetCreatorCtrl.dataSet.name"
+                   required
+                   md-sidenav-focus>
+          </md-input-container>
 
-                <span
-                    ng-show="(dataSetForm.$submitted || dataSetForm.dataSet_name.$dirty) &amp;&amp; dataSetForm.dataSet_name.$error.required"
-                    class="text-danger ng-hide">This field is required</span>
+          <span
+            ng-show="(dataSetForm.$submitted || dataSetForm.dataSet_name.$dirty) & amp; & amp;
+                        dataSetForm.dataSet_name.$error.required"
+            class="text-danger ng-hide">This field is required</span>
 
-                        <p></p>
+          <p></p>
 
-                        <label for="dataSetName" class="control-label">Description</label>
+          <label for="dataSetName" class="control-label">Description</label>
 
-                        <div class="controls">
-                        <textarea class="form-control" style="resize:none;" ng-model="datasetCreatorCtrl.dataSet.description"
-                                  rows="3"></textarea>
-                        </div>
-                        <md-checkbox class="md-primary"
-                                     ng-model="datasetCreatorCtrl.dataSet.searchable">
-                            Searchable
-                        </md-checkbox>
+          <div class="controls">
+            <textarea class="form-control" style="resize:none;" ng-model="datasetCreatorCtrl.dataSet.description"
+                      rows="3"></textarea>
+          </div>
+          <md-checkbox class="md-primary"
+                       ng-model="datasetCreatorCtrl.dataSet.searchable">
+            Searchable
+          </md-checkbox>
 
-                        <label style="margin-top:20px;" for="dataSetName" class="control-label">Templates</label>
+          <label style="margin-top:20px;" for="dataSetName" class="control-label">Templates</label>
 
-                        <div class="controls">
+          <div class="controls">
 
-                            <ui-select ng-model="datasetCreatorCtrl.selectedTemplate" theme="select2"
-                                       on-select="update('otinanai')" style="min-width: 300px;">
+            <ui-select ng-model="datasetCreatorCtrl.selectedTemplate" theme="select2"
+                       on-select="update('otinanai')" style="min-width: 300px;">
 
-                                <ui-select-match placeholder="Add a template...">{{$select.selected.name}}</ui-select-match>
+              <ui-select-match placeholder="Add a template...">{{$select.selected.name}}</ui-select-match>
 
-                                <ui-select-choices repeat="template in datasetCreatorCtrl.templates | filter: $select.search">
-                                    <small>
-                                        <span ng-bind-html="'' + template.name | highlight: $select.search"></span>
-                                    </small>
-                                </ui-select-choices>
+              <ui-select-choices repeat="template in datasetCreatorCtrl.templates | filter: $select.search">
+                <small>
+                  <span ng-bind-html="'' + template.name | highlight: $select.search"></span>
+                </small>
+              </ui-select-choices>
 
-                            </ui-select>
-                        </div>
-                    </div>
-
-                </fieldset>
-            <fieldset>
-            <div class="col-md-1">
-
-            </div>
-            </fieldset>
-            </div>
-
-        <div class="modal-footer">
-            <button  class="btn btn-default" type="button" ng-click="datasetCreatorCtrl.close()">Cancel</button>
-            <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.dataSet_name.$error.required">Create</button>
+            </ui-select>
+          </div>
         </div>
-    </form>
+
+      </fieldset>
+      <fieldset>
+        <div class="col-md-1">
+
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="modal-footer">
+      <button  class="btn btn-default" type="button" ng-click="datasetCreatorCtrl.close()">Cancel</button>
+      <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.dataSet_name.$error.required">Create</button>
+    </div>
+  </form>
 
 </div>

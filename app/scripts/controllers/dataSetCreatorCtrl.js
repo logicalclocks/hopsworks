@@ -22,7 +22,6 @@ angular.module('hopsWorksApp')
 
             self.templates = [];
             
-            console.log("DDFD");
             MetadataActionService.fetchTemplates()
                 .then(function(response){
                     var temps = JSON.parse(response.board);

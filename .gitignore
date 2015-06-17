@@ -2,6 +2,7 @@ node_modules
 dist
 .tmp
 .sass-cache
+.nbproject/project.properties
 bower_components
 app/index1.html
 app/indexdefault.html
@@ -24,6 +25,7 @@ app/scripts/controllers/WSController.js
 app/scripts/services/BoardManipulator.js
 app/scripts/services/BoardService.js
 app/scripts/services/DialogService.js
+
 
 
 

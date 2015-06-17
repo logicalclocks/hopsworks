@@ -80,7 +80,7 @@ angular.module('hopsWorksApp')
 
 
       self.projectSettingModal = function () {
-        ModalService.projectSettings('lg').then(
+        ModalService.projectSettings('md').then(
           function (success) {
             getAllActivities();
             getCurrentProject();

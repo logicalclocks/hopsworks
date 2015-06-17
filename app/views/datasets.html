@@ -15,7 +15,8 @@
 
     <section>
       <div class="content-wrapper">
-        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName }} / Datasets / {{datasetsCtrl.currentDataSet}}</h3>
+
+        <h3 id="projectBread" style="display: none;"> {{ datasetsCtrl.currentProject.projectName}} /{{datasetsCtrl.currentDataSet}}</h3>
 
         <div class="row">
 
@@ -62,7 +63,7 @@
                    ng-mouseenter="(iscollapsed$index) = false"
                    ng-mouseleave="(iscollapsed$index) = true"
                    context-menu
-                   data-target="menu-{{ $index }}">
+                   data-target="menu-{{ $index}}">
                 <div class="file">
                   <a>
                     <span class="corner"></span>
@@ -73,11 +74,11 @@
                     <div class="file-name">
                       {{dataset.name}}
                       <br>
-                      <small><b>Added:</b> {{dataset.modification | date:'medium'}}</small>
+                      <small><b>Added:</b> {{dataset.modification| date:'medium'}}</small>
                       <br/>
 
                       <div collapse="(iscollapsed$index)" style="text-decoration: none;">
-                        <small><b>Modified:</b> {{dataset.modification | date:'medium'}}</small>
+                        <small><b>Modified:</b> {{dataset.modification| date:'medium'}}</small>
                         <br/>
                         <small><b>Created:</b> April 24, 2015</small>
                         <br/>
@@ -87,15 +88,16 @@
                   </a>
                 </div>
               </div>
-              <div class="dropdown position-fixed" id="menu-{{ $index }}">
+
+              <div class="dropdown position-fixed" id="menu-{{ $index}}">
                 <ul class="dropdown-menu dropdown-amore" role="menu">
                   <li>
                     <a class="pointer"
                        role="menuitem"
                        tabindex="1"
                        ng-click="panel.highlight = true">
-                                <span><i class="fa fa-file-archive-o"></i>
-                                  Compress</span>
+                      <span><i class="fa fa-file-archive-o"></i>
+                        Compress</span>
                     </a>
                   </li>
 
@@ -104,8 +106,8 @@
                        role="menuitem"
                        tabindex="2"
                        ng-click="">
-                                <span><i class="fa fa-share-alt"></i>
-                                  Share...</span>
+                      <span><i class="fa fa-share-alt"></i>
+                        Share...</span>
                     </a>
                   </li>
 
@@ -114,15 +116,25 @@
                        role="menuitem"
                        tabindex="3"
                        ng-click="datasetsCtrl.deleteFile(dataset.name)">
-                                 <span><i class="fa fa-trash"></i>
-                                   Remove</span>
+                      <span><i class="fa fa-trash"></i>
+                        Remove</span>
                     </a>
                   </li>
 
                 </ul>
               </div>
-                </div>
+              <li>
+                <a class="pointer"
+                   role="menuitem"
+                   tabindex="3"
+                   ng-click="datasetsCtrl.deleteFile(dataset.name)">
+                  <span><i class="fa fa-trash"></i>
+                    Remove</span>
+                </a>
+              </li>
+              </ul>
             </div>
+          </div>
 
 
           <!-- Slideout - Metadata -->
@@ -242,9 +254,9 @@
                             </span>
                           </li>
                         </ul>
-                          <ul class="datasetList"
-                              style="margin-top:10px;"
-                              ng-if="datasetsCtrl.currentTemplateID">
+                        <ul class="datasetList"
+                            style="margin-top:10px;"
+                            ng-if="datasetsCtrl.currentTemplateID">
                           <li ng-click="datasetsCtrl.addNewList()">
                             <span>
                               Add table
@@ -266,40 +278,40 @@
 
                         <div class="col-md-4">
 
-                            <div class="panel panel-default">
-                              <div class="panel-heading" style="border-bottom: 3px solid #46b8da;">
+                          <div class="panel panel-default">
+                            <div class="panel-heading" style="border-bottom: 3px solid #46b8da;">
 
-                                <div align="right">
+                              <div align="right">
 
-                                  <a ng-click="datasetsCtrl.addCard(column)"
-                                     title="Add card to table">
-                                    <i class="fa fa-plus addNewCard"></i>
-                                  </a>
+                                <a ng-click="datasetsCtrl.addCard(column)"
+                                   title="Add card to table">
+                                  <i class="fa fa-plus addNewCard"></i>
+                                </a>
 
-                                  <a ng-click="datasetsCtrl.deleteList(column)"
-                                     title="Remove table">
-                                    <i class="fa fa-trash-o removeList"></i>
-                                  </a>
-                                </div>
-
-                                <span editable-text="column.name"
-                                      style="font-size: 16px;"
-                                      onaftersave="datasetsCtrl.storeTemplate(false)"
-                                      class="column-title ng-binding">
-                                  {{column.name}}
-                                </span>
-
+                                <a ng-click="datasetsCtrl.deleteList(column)"
+                                   title="Remove table">
+                                  <i class="fa fa-trash-o removeList"></i>
+                                </a>
                               </div>
-                              <div class="panel-body">
-                                <ul class="cards card-list" as-sortable="kanbanSortOptions" ng-model="column.cards">
-                                  <li class="card" as-sortable-item
-                                      ng-repeat="card in column.cards"
-                                      ng-include="'views/metadata/card.html'">
-                                  </li>
-                                </ul>
 
-                              </div>
+                              <span editable-text="column.name"
+                                    style="font-size: 16px;"
+                                    onaftersave="datasetsCtrl.storeTemplate(false)"
+                                    class="column-title ng-binding">
+                                {{column.name}}
+                              </span>
+
                             </div>
+                            <div class="panel-body">
+                              <ul class="cards card-list" as-sortable="kanbanSortOptions" ng-model="column.cards">
+                                <li class="card" as-sortable-item
+                                    ng-repeat="card in column.cards"
+                                    ng-include="'views/metadata/card.html'">
+                                </li>
+                              </ul>
+
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -309,9 +321,3 @@
               </md-sidenav>
             </section>
           </div>
-        </div>
-      </div>
-    </section>
-  </div>
-  <!-- /#wrapper -->
-</div>

@@ -5,119 +5,119 @@
 
 
 angular.module('hopsWorksApp')
-  .controller('NewCardCtrl', ['$scope', '$modalInstance', 'MetadataActionService',
-    function ($scope, $modalInstance, MetadataActionService) {
-   
-      //data is the actual column under processing
-      $scope.columnName = $scope.currentColumn.name;
-      $scope.id = -1;
-      $scope.title = '';
-      $scope.details = '';
-      $scope.description = '';
-      $scope.cardType = '';
-      $scope.editing = false;
-      $scope.find = false;
-      $scope.required = false;
-      $scope.sizefield = {showing: false, value: ""};
+        .controller('NewCardCtrl', ['$scope', '$modalInstance', 'MetadataActionService',
+          function ($scope, $modalInstance, MetadataActionService) {
 
-      $scope.items = [];
-      $scope.fieldSelectItems = [];
-      $scope.yesNoItems = [];
-      $scope.selectedItem = "";
+            //data is the actual column under processing
+            $scope.columnName = $scope.currentColumn.name;
+            $scope.id = -1;
+            $scope.title = '';
+            $scope.details = '';
+            $scope.description = '';
+            $scope.cardType = '';
+            $scope.editing = false;
+            $scope.find = false;
+            $scope.required = false;
+            $scope.sizefield = {showing: false, value: ""};
 
-      MetadataActionService.fetchFieldTypes()
-        .then(function (success) {
-            console.log('success from fetch_field_types');
-            success = JSON.parse(success.board);
-            console.log(success);
+            $scope.items = [];
+            $scope.fieldSelectItems = [];
+            $scope.yesNoItems = [];
+            $scope.selectedItem = "";
 
-            //construct the select component's contents
-            angular.forEach(success.fieldTypes, function (type) {
-              $scope.items.push({
-                id: type.id,
-                name: type.description
+            MetadataActionService.fetchFieldTypes()
+                    .then(function (success) {
+                      console.log('success from fetch_field_types');
+                      success = JSON.parse(success.board);
+                      console.log(success);
+
+                      //construct the select component's contents
+                      angular.forEach(success.fieldTypes, function (type) {
+                        $scope.items.push({
+                          id: type.id,
+                          name: type.description
+                        });
+                      });
+
+                      $scope.selectedItem = $scope.items[0];
+                    },
+                            function (error) {
+                              console.log(error);
+                            });
+
+            // Dialog service
+            $scope.cancel = function () {
+              $modalInstance.dismiss('Canceled');
+            };
+
+            $scope.saveCard = function () {
+              if (!this.newCardForm.$valid) {
+                console.log('false');
+                return false;
+              }
+
+              var fieldTypeContent = [];
+              switch ($scope.selectedItem.id) {
+                case 1:
+                  fieldTypeContent = [{id: -1, fieldid: -1, value: ""}];
+                  break;
+                case 2:
+                  fieldTypeContent = $scope.fieldSelectItems;
+                  break;
+                case 3:
+                  fieldTypeContent = $scope.yesNoItems;
+              }
+
+              $modalInstance.close({
+                id: this.id,
+                title: this.title,
+                details: this.details,
+                editing: this.editing,
+                find: this.find,
+                required: this.required,
+                sizefield: this.sizefield,
+                description: this.description,
+                fieldtypeid: this.selectedItem.id,
+                fieldtypeContent: fieldTypeContent
               });
-            });
+            };
 
-            $scope.selectedItem = $scope.items[0];
-          },
-      function(error){
-        console.log(error);
-      });
+            $scope.hitEnter = function (evt) {
+              if (angular.equals(evt.keyCode, 13))
+                $scope.saveCard();
+            };
 
-      // Dialog service
-      $scope.cancel = function () {
-        $modalInstance.dismiss('Canceled');
-      };
+            $scope.update = function () {
 
-      $scope.saveCard = function () {
-        if (!this.newCardForm.$valid) {
-          console.log('false');
-          return false;
-        }
+              switch ($scope.selectedItem.id) {
+                case 1:
+                  $scope.yesNoItems = [];
+                  $scope.fieldSelectItems = [];
+                  break;
+                case 2:
+                  $scope.yesNoItems = [];
+                  $scope.addNewSelectChoice();
+                  break;
+                case 3:
+                  $scope.fieldSelectItems = [];
+                  $scope.addYesnoChoice();
+              }
+            };
 
-        var fieldTypeContent = [];
-        switch ($scope.selectedItem.id) {
-          case 1:
-            fieldTypeContent = [{id: -1, fieldid: -1, value: ""}];
-            break;
-          case 2:
-            fieldTypeContent = $scope.fieldSelectItems;
-            break;
-          case 3:
-            fieldTypeContent = $scope.yesNoItems;
-        }
+            $scope.addNewSelectChoice = function () {
+              var newItemNo = $scope.fieldSelectItems.length + 1;
+              //$scope.choices.push({'id': 'choice' + newItemNo});
+              $scope.fieldSelectItems.push({id: -1, fieldid: -1, value: ""});
+            };
 
-        $modalInstance.close({
-          id: this.id,
-          title: this.title,
-          details: this.details,
-          editing: this.editing,
-          find: this.find,
-          required: this.required,
-          sizefield: this.sizefield,
-          description: this.description,
-          fieldtypeid: this.selectedItem.id,
-          fieldtypeContent: fieldTypeContent
-        });
-      };
+            $scope.removeSelectChoice = function () {
+              var lastItem = $scope.fieldSelectItems.length - 1;
+              //$scope.choices.splice(lastItem);
+              $scope.fieldSelectItems.splice(lastItem);
+            };
 
-      $scope.hitEnter = function (evt) {
-        if (angular.equals(evt.keyCode, 13))
-          $scope.saveCard();
-      };
-
-      $scope.update = function () {
-
-        switch ($scope.selectedItem.id) {
-          case 1:
-            $scope.yesNoItems = [];
-            $scope.fieldSelectItems = [];
-            break;
-          case 2:
-            $scope.yesNoItems = [];
-            $scope.addNewSelectChoice();
-            break;
-          case 3:
-            $scope.fieldSelectItems = [];
-            $scope.addYesnoChoice();
-        }
-      };
-
-      $scope.addNewSelectChoice = function () {
-        var newItemNo = $scope.fieldSelectItems.length + 1;
-        //$scope.choices.push({'id': 'choice' + newItemNo});
-        $scope.fieldSelectItems.push({id: -1, fieldid: -1, value: ""});
-      };
-
-      $scope.removeSelectChoice = function () {
-        var lastItem = $scope.fieldSelectItems.length - 1;
-        //$scope.choices.splice(lastItem);
-        $scope.fieldSelectItems.splice(lastItem);
-      };
-
-      $scope.addYesnoChoice = function () {
-        $scope.yesNoItems.push({id: -1, fieldid: -1, value: ""});
-        $scope.yesNoItems.push({id: -1, fieldid: -1, value: ""});
-      };
-    }]);
+            $scope.addYesnoChoice = function () {
+              $scope.yesNoItems.push({id: -1, fieldid: -1, value: ""});
+              $scope.yesNoItems.push({id: -1, fieldid: -1, value: ""});
+            };
+          }]);

@@ -255,8 +255,7 @@ body.rtls .file-box {
 
 
 .table-hover > tbody > tr:hover {
-  background-color: #4285f4;
-  color:white;
+  background-color: #fafafa;
 }
 
 #hoverable{
@@ -281,12 +280,9 @@ md-sidenav {
   overflow: auto;
   position: absolute;
   /*width: 1409px;*/
-  width: 88%;
+  width: 87.5%;
   z-index: 60;
 }
-
-
-
 
 /* Filebrowser action dropdown */
 .position-fixed {
@@ -324,5 +320,10 @@ md-sidenav {
 .dropdown-amore li:nth-child(3) {
   border-top: 1px solid #f1f1f1;
   border-left: 3px solid #ec1b5a;
+}
+
+.table-hover > tbody > tr.highlight {
+  background-color:#4285f4;
+  color:white;
 }
 
