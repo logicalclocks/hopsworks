@@ -23,70 +23,72 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 @Stateless
 public class InodeOpsFacade extends AbstractFacade<InodeOps> {
 
-    private static final Logger logger = Logger.getLogger(InodeOpsFacade.class.getName());
+  private static final Logger logger = Logger.getLogger(InodeOpsFacade.class.
+          getName());
 
-    @PersistenceContext(unitName = "kthfsPU")
-    private EntityManager em;
+  @PersistenceContext(unitName = "kthfsPU")
+  private EntityManager em;
 
-    public InodeOpsFacade() {
-        super(InodeOps.class);
+  public InodeOpsFacade() {
+    super(InodeOps.class);
+  }
+
+  @Override
+  protected EntityManager getEntityManager() {
+    return em;
+  }
+
+  /**
+   * persists an operation for a specific inode only if it doesn't exist.
+   * Otherwise updates an already existing operation
+   *
+   * @param inodeops
+   */
+  public void persist(InodeOps inodeops) {
+    Query query = this.em.createNamedQuery("InodeOps.findByInodeid");
+    query.setParameter("inodeid", inodeops.getInodeid());
+
+    List list = query.getResultList();
+
+    if (list.isEmpty()) {
+      this.em.persist(inodeops);
+      this.em.flush();
+    } else {
+      logger.log(Level.SEVERE, "Could not add operation for file {0} ",
+              inodeops.getInodeid());
+      this.update(inodeops);
+    }
+  }
+
+  public void update(InodeOps inodeops) {
+    this.em.merge(inodeops);
+    this.em.flush();
+  }
+
+  public void createAndStoreOperation(Inode inode, Operation operation) {
+
+    int intOperation = -1;
+
+    switch (operation) {
+      case ADD:
+        intOperation = 1;
+        break;
+      case REMOVE:
+        intOperation = 0;
+        break;
+      default:
+        intOperation = -100;
     }
 
-    @Override
-    protected EntityManager getEntityManager() {
-        return em;
-    }
+    String event = intOperation + "|" + inode;
 
-    /**
-     * persists an operation for a specific inode only if it doesn't exist.
-     * Otherwise updates an already existing operation
-     *
-     * @param inodeops
-     */
-    public void persist(InodeOps inodeops) {
-        Query query = this.em.createNamedQuery("InodeOps.findByInodeid");
-        query.setParameter("inodeid", inodeops.getInodeid());
+    //update the 'modified' field with the current timestamp 
+    //so that it can be fetched for indexing
+    InodeOps inodeops = new InodeOps(inode.getId(),
+            inode.getParent().getId(), inode.getRoot(),
+            new Date(), intOperation, 0);
 
-        List list = query.getResultList();
-
-        if (list.isEmpty()) {
-            this.em.persist(inodeops);
-            this.em.flush();
-        } else {
-            logger.log(Level.SEVERE, "Could not add operation for file {0} ", inodeops.getInodeid());
-            this.update(inodeops);
-        }
-    }
-
-    public void update(InodeOps inodeops) {
-        this.em.merge(inodeops);
-        this.em.flush();
-    }
-
-    public void createAndStoreOperation(Inode inode, Operation operation) {
-
-        int intOperation = -1;
-
-        switch (operation) {
-            case ADD:
-                intOperation = 1;
-                break;
-            case REMOVE:
-                intOperation = 0;
-                break;
-            default:
-                intOperation = -100;
-        }
-
-        String event = intOperation + "|" + inode;
-
-        //update the 'modified' field with the current timestamp 
-        //so that it can be fetched for indexing
-        InodeOps inodeops = new InodeOps(inode.getId(),
-                inode.getParent().getId(), inode.getRoot(),
-                new Date(), intOperation, 0);
-        
-        System.out.println(inodeops);
-        this.persist(inodeops);
-    }
+    System.out.println(inodeops);
+    this.persist(inodeops);
+  }
 }

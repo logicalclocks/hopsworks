@@ -128,7 +128,8 @@ public class NewProjectController implements Serializable {
       if (!projectFacade.projectExists(newProjectName)) {
         //Create a new project object
         Date now = new Date();
-        project = new Project(newProjectName, sessionState.getLoggedInUser(), now);
+        project = new Project(newProjectName, sessionState.getLoggedInUser(),
+                now);
         //create folder structure
         mkProjectDIR(project.getName());
         logger.log(Level.FINE, "{0} - project directory created successfully.",

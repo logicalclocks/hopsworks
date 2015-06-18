@@ -13,15 +13,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class InodeView {
 
-  private  String name;
-  private  boolean dir;
-  private  boolean parent;
-  private  String path;
-  private  Date modification;
+  private String name;
+  private boolean dir;
+  private boolean parent;
+  private String path;
+  private Date modification;
   private int id;
   private int template;
 
-  public InodeView() {}
+  public InodeView() {
+  }
 
   public InodeView(Inode i, String path) {
     this.name = i.getName();
@@ -40,7 +41,7 @@ public class InodeView {
     this.path = path;
     this.modification = null;
   }
-  
+
   public static InodeView getParentInode(String path) {
     String name = "..";
     boolean dir = true;
@@ -93,22 +94,22 @@ public class InodeView {
     return modification;
   }
 
-  public int getId(){
-      return this.id;
+  public int getId() {
+    return this.id;
   }
-  
-  public void setId(int id){
-      this.id = id;
+
+  public void setId(int id) {
+    this.id = id;
   }
-  
-  public int getTemplate(){ 
-      return this.template;
+
+  public int getTemplate() {
+    return this.template;
   }
-  
-  public void setTemplate(int template){
-      this.template = template;
+
+  public void setTemplate(int template) {
+    this.template = template;
   }
-  
+
   @Override
   public int hashCode() {
     int hash = 7;

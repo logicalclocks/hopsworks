@@ -29,6 +29,7 @@ public class ProjectMetaFacade extends AbstractFacade<ProjectMeta> {
 
   /**
    * Find the ProjectMeta object associated with the given Project.
+   * <p>
    * @param project
    * @return The associated ProjectMeta object, or null if there is none.
    */

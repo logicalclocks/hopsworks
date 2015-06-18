@@ -1,4 +1,3 @@
-
 package se.kth.meta.wscomm;
 
 import se.kth.meta.exception.ApplicationException;
@@ -18,34 +17,36 @@ import se.kth.meta.wscomm.message.Message;
  */
 public class MessageDecoder implements Decoder.Text<Message> {
 
-    private static final Logger logger = Logger.getLogger(MessageDecoder.class.getName());
-    
-    @Override
-    public Message decode(String textMessage) throws DecodeException {
+  private static final Logger logger = Logger.getLogger(MessageDecoder.class.
+          getName());
 
-        Message msg = null;
-        JsonObject obj = Json.createReader(new StringReader(textMessage)).readObject();
+  @Override
+  public Message decode(String textMessage) throws DecodeException {
 
-        try {
-            DecoderHelper helper = new DecoderHelper(obj);
-            msg = helper.getMessage();
-            msg.init(obj);
-        } catch (ApplicationException e) {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-        }
-        return msg;
+    Message msg = null;
+    JsonObject obj = Json.createReader(new StringReader(textMessage)).
+            readObject();
+
+    try {
+      DecoderHelper helper = new DecoderHelper(obj);
+      msg = helper.getMessage();
+      msg.init(obj);
+    } catch (ApplicationException e) {
+      logger.log(Level.SEVERE, e.getMessage(), e);
     }
+    return msg;
+  }
 
-    @Override
-    public void init(final EndpointConfig ec) {
-    }
+  @Override
+  public void init(final EndpointConfig ec) {
+  }
 
-    @Override
-    public boolean willDecode(final String s) {
-        return true;
-    }
+  @Override
+  public boolean willDecode(final String s) {
+    return true;
+  }
 
-    @Override
-    public void destroy() {
-    }
+  @Override
+  public void destroy() {
+  }
 }

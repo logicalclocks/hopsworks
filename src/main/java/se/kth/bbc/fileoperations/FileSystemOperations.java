@@ -75,7 +75,7 @@ public class FileSystemOperations {
   }
 
   /**
-   * Create a new folder on the given path. Equivalent to  mkdir -p.
+   * Create a new folder on the given path. Equivalent to mkdir -p.
    *
    * @param location The path to the new folder, its name included.
    * @return True if successful.
@@ -96,7 +96,7 @@ public class FileSystemOperations {
   public boolean rm(Path location, boolean recursive) throws IOException {
     if (fs.exists(location)) {
       return fs.delete(location, recursive);
-    } 
+    }
     return true;
   }
 
@@ -197,8 +197,8 @@ public class FileSystemOperations {
       FileUtil.copy(fs, src1, fs, dst, false, conf);
     }
   }
-  
-  public void copyToLocal(Path src, Path dst) throws IOException{
+
+  public void copyToLocal(Path src, Path dst) throws IOException {
     fs.copyToLocalFile(src, dst);
   }
 

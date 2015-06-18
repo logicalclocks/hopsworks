@@ -13,6 +13,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 public class DataSetDTO {
+
   private String name;
   private String description;
   private String searchable;
@@ -21,7 +22,8 @@ public class DataSetDTO {
   public DataSetDTO() {
   }
 
-  public DataSetDTO(String name, String description, String searchable, int template) {
+  public DataSetDTO(String name, String description, String searchable,
+          int template) {
     this.name = name;
     this.description = description;
     this.searchable = searchable;
@@ -52,18 +54,19 @@ public class DataSetDTO {
     this.searchable = searchable;
   }
 
-  public int getTemplate(){
-      return this.template;
+  public int getTemplate() {
+    return this.template;
   }
-  
-  public void setTemplate(int template){
-      this.template = template;
+
+  public void setTemplate(int template) {
+    this.template = template;
   }
-  
+
   @Override
   public String toString() {
-    return "DataSetDTO{" + "template=" + this.template + "name=" + name + ", description=" + description +
-            ", searchable=" + searchable + '}';
+    return "DataSetDTO{" + "template=" + this.template + "name=" + name
+            + ", description=" + description + ", searchable=" + searchable
+            + '}';
   }
-  
+
 }

@@ -17,22 +17,22 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
  */
 @Stateless
 public class BbcGroupFacade extends AbstractFacade<BbcGroup> {
-    @PersistenceContext(unitName = "kthfsPU")
-    private EntityManager em;
 
-    @Override
-    protected EntityManager getEntityManager() {
-        return em;
-    }
+  @PersistenceContext(unitName = "kthfsPU")
+  private EntityManager em;
 
-    public BbcGroupFacade() {
-        super(BbcGroup.class);
-    }
-    
-    public BbcGroup findByGroupName(String name){
-        return em.createNamedQuery("BbcGroup.findByGroupName", BbcGroup.class)
-                         .setParameter("groupName", name).getSingleResult();    
-    }
-    
+  @Override
+  protected EntityManager getEntityManager() {
+    return em;
+  }
+
+  public BbcGroupFacade() {
+    super(BbcGroup.class);
+  }
+
+  public BbcGroup findByGroupName(String name) {
+    return em.createNamedQuery("BbcGroup.findByGroupName", BbcGroup.class)
+            .setParameter("groupName", name).getSingleResult();
+  }
 
 }

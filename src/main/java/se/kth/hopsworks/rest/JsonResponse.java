@@ -17,7 +17,7 @@ public class JsonResponse {
 
   private String status;
   private Integer statusCode;
-  private String errorMsg= "";
+  private String errorMsg = "";
   private String successMessage;
   private List<String> fieldErrors;
   private Object data;

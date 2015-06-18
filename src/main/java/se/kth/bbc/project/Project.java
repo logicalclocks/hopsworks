@@ -60,18 +60,18 @@ import se.kth.bbc.project.services.ProjectServices;
           query
           = "SELECT t FROM Project t WHERE t.owner = :owner AND t.name = :name")})
 public class Project implements Serializable {
-    
+
   @Column(name = "archived")
   private Boolean archived;
-  
+
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<ProjectTeam> projectTeamCollection;
-  
+
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<Activity> activityCollection;
-  
+
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "project")
   private Collection<ProjectServices> projectServicesCollection;
@@ -111,7 +111,6 @@ public class Project implements Serializable {
           max = 30)
   @Column(name = "ethical_status")
   private String ethicalStatus;
-
 
   @Column(name = "deleted")
   private Boolean deleted;
@@ -208,7 +207,8 @@ public class Project implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.project.Project[ name=" + name + " archived=" + archived + " ]";
+    return "se.kth.bbc.project.Project[ name=" + name + " archived=" + archived
+            + " ]";
   }
 
   @XmlTransient

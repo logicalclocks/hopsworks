@@ -48,7 +48,7 @@ import se.kth.bbc.project.Project;
   @NamedQuery(name = "Consent.findByType",
           query = "SELECT c FROM Consent c WHERE c.type = :type")})
 public class Consent implements Serializable {
-  
+
   @JoinColumn(name = "project_id",
           referencedColumnName = "id")
   @ManyToOne(optional = false)
@@ -74,7 +74,7 @@ public class Consent implements Serializable {
   @Size(max = 20)
   @Column(name = "type")
   private String type;
-  
+
   public Consent() {
   }
 

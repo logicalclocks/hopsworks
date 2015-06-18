@@ -52,14 +52,14 @@ public class InodesMB implements Serializable {
   }
 
   public List<Inode> getChildren() {
-        //Because InodesMB is session scoped, need to check for change of study!!!!
+    //Because InodesMB is session scoped, need to check for change of study!!!!
     //TODO: implement this more gracefully.
     if (!cwd.getStudyRoot().equals(sessionState.getActiveProjectname())) {
       init();
     }
     //get from DB and update Inode
     cwd.setChildren(inodes.findByParent(cwd));
-    
+
     List<Inode> res = new ArrayList<>();
     res.addAll(cwd.getChildren());
     if (!cwd.isStudyRoot()) { // root doesn't have a parent to show
@@ -72,7 +72,7 @@ public class InodesMB implements Serializable {
   public void cdUp() {
     if (!cwd.isStudyRoot()) {
       Inode parent = cwd.getParent();
-            // nullify object reference to prevent mem leak
+      // nullify object reference to prevent mem leak
       // TODO: uncomment this line when we get the list of children from the DB.
 //            cwd.setParent(null);
       // set cwd to move up a directory
@@ -151,9 +151,10 @@ public class InodesMB implements Serializable {
   }
 
   public List<NavigationPath> getCurrentPath() {
-        //Because InodesMB is session scoped, need to check for change of study!!!!
+    //Because InodesMB is session scoped, need to check for change of study!!!!
     //TODO: implement this more gracefully.
-    if (cwd == null || !cwd.getStudyRoot().equals(sessionState.getActiveProjectname())) {
+    if (cwd == null || !cwd.getStudyRoot().equals(sessionState.
+            getActiveProjectname())) {
       init();
     }
     return cwd.getConstituentsPath();

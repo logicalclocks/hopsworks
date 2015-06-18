@@ -16,27 +16,29 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class ThrowableExceptionMapper implements ExceptionMapper<Throwable> {
 
-    private final static Logger log = Logger.getLogger(ThrowableExceptionMapper.class.getName());
+  private final static Logger log = Logger.getLogger(
+          ThrowableExceptionMapper.class.getName());
 
-    @Override
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response toResponse(Throwable ex) {
-        log.log(Level.INFO, "ThrowableExceptionMapper: {0}", ex.getClass());
-        JsonResponse json = new JsonResponse();
-        setHttpStatus(ex, json);
-        json.setErrorMsg("Ops! somthing went wrong :(");
-        ex.printStackTrace();
-        return Response.status(json.getStatusCode())
-                .entity(json)
-                .build();
-    }
+  @Override
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response toResponse(Throwable ex) {
+    log.log(Level.INFO, "ThrowableExceptionMapper: {0}", ex.getClass());
+    JsonResponse json = new JsonResponse();
+    setHttpStatus(ex, json);
+    json.setErrorMsg("Ops! somthing went wrong :(");
+    ex.printStackTrace();
+    return Response.status(json.getStatusCode())
+            .entity(json)
+            .build();
+  }
 
-    private void setHttpStatus(Throwable ex, JsonResponse json) {
-        if (ex instanceof WebApplicationException) {
-            json.setStatusCode(((WebApplicationException) ex).getResponse().getStatus());
-        } else {
-            json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()); //defaults to internal server error 500
-        }
+  private void setHttpStatus(Throwable ex, JsonResponse json) {
+    if (ex instanceof WebApplicationException) {
+      json.setStatusCode(((WebApplicationException) ex).getResponse().
+              getStatus());
+    } else {
+      json.setStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()); //defaults to internal server error 500
     }
+  }
 
 }

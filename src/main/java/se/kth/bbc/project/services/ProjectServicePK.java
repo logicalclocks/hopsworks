@@ -14,6 +14,7 @@ import javax.validation.constraints.NotNull;
  */
 @Embeddable
 public class ProjectServicePK implements Serializable {
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "project_id")
@@ -66,8 +67,8 @@ public class ProjectServicePK implements Serializable {
     if (this.projectId != other.projectId) {
       return false;
     }
-    if ((this.service == null && other.service != null) ||
-            (this.service != null && !this.service.equals(other.service))) {
+    if ((this.service == null && other.service != null) || (this.service != null
+            && !this.service.equals(other.service))) {
       return false;
     }
     return true;
@@ -75,7 +76,7 @@ public class ProjectServicePK implements Serializable {
 
   @Override
   public String toString() {
-    return "["+projectId+","+service+"]";
+    return "[" + projectId + "," + service + "]";
   }
-  
+
 }

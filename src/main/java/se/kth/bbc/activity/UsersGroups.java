@@ -33,10 +33,10 @@ import se.kth.bbc.security.ua.model.User;
 public class UsersGroups implements Serializable {
 
   private static final long serialVersionUID = 1L;
-  
+
   @EmbeddedId
   protected UsersGroupsPK usersGroupsPK;
-  
+
   @JoinColumn(name = "email",
           referencedColumnName = "EMAIL",
           insertable = false,

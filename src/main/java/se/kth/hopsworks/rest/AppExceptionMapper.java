@@ -17,18 +17,19 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class AppExceptionMapper implements ExceptionMapper<AppException> {
 
-    private final static Logger log = Logger.getLogger(AppExceptionMapper.class.getName());
+  private final static Logger log = Logger.getLogger(AppExceptionMapper.class.
+          getName());
 
-    @Override
-    public Response toResponse(AppException ex) {
-        log.log(Level.INFO, "AppExceptionMapper: {0}", ex.getClass());
-        JsonResponse json = new JsonResponse();
-        json.setStatusCode(ex.getStatus());
-        json.setErrorMsg(ex.getMessage());
-        return Response.status(ex.getStatus())
-                .entity(json)
-                .type(MediaType.APPLICATION_JSON).
-                build();
-    }
+  @Override
+  public Response toResponse(AppException ex) {
+    log.log(Level.INFO, "AppExceptionMapper: {0}", ex.getClass());
+    JsonResponse json = new JsonResponse();
+    json.setStatusCode(ex.getStatus());
+    json.setErrorMsg(ex.getMessage());
+    return Response.status(ex.getStatus())
+            .entity(json)
+            .type(MediaType.APPLICATION_JSON).
+            build();
+  }
 
 }

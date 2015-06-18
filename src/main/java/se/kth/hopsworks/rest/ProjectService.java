@@ -49,7 +49,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
 public class ProjectService {
 
   @EJB
-   private ProjectController projectController;
+  private ProjectController projectController;
   @EJB
   private NoCacheResponse noCacheResponse;
   @Inject
@@ -166,7 +166,7 @@ public class ProjectService {
 
     String owner = sc.getUserPrincipal().getName();
     List<ProjectServiceEnum> projectServices = new ArrayList<>();
-    
+
     for (String s : projectDTO.getServices()) {
       try {
         ProjectServiceEnum se = ProjectServiceEnum.valueOf(s.toUpperCase());
@@ -193,8 +193,8 @@ public class ProjectService {
               + json.getErrorMsg());
     } catch (EJBException ex) {
       logger.log(Level.SEVERE,
-              ResponseMessages.PROJECT_INODE_NOT_CREATED, ex);
-      json.setErrorMsg(ResponseMessages.PROJECT_INODE_NOT_CREATED + "\n "
+              ResponseMessages.FOLDER_INODE_NOT_CREATED, ex);
+      json.setErrorMsg(ResponseMessages.FOLDER_INODE_NOT_CREATED + "\n "
               + json.getErrorMsg());
     }
 
@@ -224,7 +224,7 @@ public class ProjectService {
           @PathParam("id") Integer id,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-      
+
     String user = sc.getUserPrincipal().getName();
     JsonResponse json = new JsonResponse();
     boolean success = true;
@@ -243,7 +243,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
-  
+
   @DELETE
   @Path("{id}/remove")
   @Produces(MediaType.APPLICATION_JSON)

@@ -50,6 +50,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
   /**
    * Find all the JobHistory entries for the given project and type.
+   * <p>
    * @param project
    * @param type
    * @return List of JobHistory objects.
