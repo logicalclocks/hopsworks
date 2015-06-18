@@ -1,0 +1,1 @@
+insert into inodes (name,isDir,status) values ('Projects',true,'available');
