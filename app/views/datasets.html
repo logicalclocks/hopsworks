@@ -1,7 +1,6 @@
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
 
-
   <div id="wrapper"
        class="toggled"
        ng-controller="DatasetsCtrl as datasetsCtrl">
@@ -19,7 +18,6 @@
         <h3 id="projectBread" style="display: none;"> {{ datasetsCtrl.currentProject.projectName}} /{{datasetsCtrl.currentDataSet}}</h3>
 
         <div class="row">
-
 
           <div class="col-lg-2">
             <div class="ibox float-e-margins">
@@ -52,7 +50,6 @@
               <div class="ibox-content"></div>
             </div>
           </div>
-
 
           <div class="col-lg-10">
             <div ng-repeat="dataset in datasetsCtrl.datasets">
@@ -123,19 +120,8 @@
 
                 </ul>
               </div>
-              <li>
-                <a class="pointer"
-                   role="menuitem"
-                   tabindex="3"
-                   ng-click="datasetsCtrl.deleteFile(dataset.name)">
-                  <span><i class="fa fa-trash"></i>
-                    Remove</span>
-                </a>
-              </li>
-              </ul>
             </div>
           </div>
-
 
           <!-- Slideout - Metadata -->
           <div layout="column">

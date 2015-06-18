@@ -124,6 +124,7 @@ angular.module('hopsWorksApp')
 
               self.meta.push({name: tableName, rest: rawdata});
               self.metadataView = {};
+              console.log(JSON.stringify(self.meta));
               //self.print(self.meta);
               console.log("RECONSTRUCTED ARRAY  " + JSON.stringify(self.meta));
             };
