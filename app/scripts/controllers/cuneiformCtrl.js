@@ -64,7 +64,6 @@ angular.module('hopsWorksApp')
                         CuneiformService.inspectStoredWorkflow(self.pId, success).then(
                                 function (success) {
                                   self.workflow = success.data;
-                                  alert(self.workflow);
                                 }, function (error) {
                           //TODO: display message.
 
@@ -73,6 +72,16 @@ angular.module('hopsWorksApp')
                         //Nothing.
               });
             };
+            
+            self.execute = function() {
+              CuneiformService.runWorkflow(self.pId, self.workflow).then(
+                      function(success){
+                        //Do something
+                        self.job = success.data;
+                      }, function(error){
+                        //Display error message
+                      })
+            }
 
           }]);
 

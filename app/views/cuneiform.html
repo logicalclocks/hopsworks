@@ -60,7 +60,7 @@
                 <td class="secondColumn"> <input type="text"></td>
               </tr>
               <tr>
-                <td class="firstColumn">Upload workflow </td>
+                <td class="firstColumn">Select workflow </td>
                 <td class="secondColumn">
                   <button ng-click="cuneiformCtrl.selectFile()">
                     <span>Select...</span>
@@ -68,18 +68,22 @@
                 </td>
               </tr>
               <tr>
-                <td class="firstColumn">Uploaded file </td>
-                <td class="secondColumn">wordcount.cf</td>
+                <td class="firstColumn">Selected file </td>
+                <td class="secondColumn">{{cuneiformCtrl.workflow.name}}</td>
               </tr>
             </table>
 
-            <h3> Input Parameters </h3>
+            <h3 ng-show="cuneiformCtrl.workflow.inputParams.length > 0"> Input Parameters </h3>
             <table>
-              <tr>
-                <td class="firstColumn">txt</td>
-                <td class="secondColumn"> <input type="text"></td>
+              <tr ng-repeat="param in cuneiformCtrl.workflow.inputParams">
+                <td class="firstColumn">{{param.name}}</td>
+                <td class="secondColumn"> <input type="text" ng-model="param.value"></td>
               </tr>
             </table>
+
+            <button ng-click="cuneiformCtrl.execute()">
+              <span>Execute</span>
+            </button>
           </div>
         </div>
 
