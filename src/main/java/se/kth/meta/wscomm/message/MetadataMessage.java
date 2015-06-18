@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -21,6 +22,9 @@ import se.kth.meta.entity.Tables;
  * @author Vangelis
  */
 public class MetadataMessage implements Message {
+
+  private static final Logger logger = Logger.
+          getLogger(MetadataMessage.class.getName());
 
   private final String TYPE = "MetadataMessage";
   private String sender;

@@ -188,7 +188,7 @@ public class TemplateMessage extends ContentMessage {
           try {
             //just in case the user has entered shit
             Double.parseDouble(maxsize);
-            //sanitize fucking maxsize
+            //sanitize maxsize
             maxsize = (!"".equals(maxsize)) ? maxsize : "0";
           } catch (NumberFormatException e) {
             maxsize = "0";

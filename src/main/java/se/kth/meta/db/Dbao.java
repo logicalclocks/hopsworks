@@ -1,6 +1,5 @@
 package se.kth.meta.db;
 
-import java.io.IOException;
 import se.kth.meta.entity.Fields;
 import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.Tables;
@@ -9,8 +8,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -23,7 +20,6 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
-import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.meta.entity.FieldPredefinedValues;
 import se.kth.meta.entity.FieldTypes;
 import se.kth.meta.entity.Templates;
@@ -42,8 +38,6 @@ public class Dbao {
 
   private static final Logger logger = Logger.getLogger(Dbao.class.getName());
 
-//    @EJB
-//    private FileOperations fileOps;
   private Tables table;
   private Context ic;
   private EntityManager em;
@@ -56,11 +50,6 @@ public class Dbao {
       this.em = (EntityManager) ic.lookup("java:comp/env/persistence/em");
       this.utx = (UserTransaction) ic.lookup("java:comp/env/UserTransaction");
 
-//            System.out.println("EXISTING PATH " + fileOps.exists("/Projects"));
-//            logger.log(Level.SEVERE, "Database initialized.\n");
-//            Fields field = this.em.find(Fields.class, 10);
-//            field.setForceDelete(true);
-//            this.deleteField(field);
     } catch (NamingException | IllegalStateException | SecurityException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new DatabaseException(Dbao.class.getName(), ex.getMessage());
@@ -203,6 +192,7 @@ public class Dbao {
 
     try {
       Tables t = this.getTable(table.getId());
+//    NEEDS TO BE REEMPLOYED
 //            t.setForceDelete(table.forceDelete());
 //            if (!t.getFields().isEmpty() && !t.forceDelete()) {
 //                throw new DatabaseException("Table '" + t.getName() + "' has fields "
@@ -474,14 +464,15 @@ public class Dbao {
 //        }
 //    }
   public void shutdown() throws DatabaseException {
-//        this.em.clear();
+    //TODO RETHINK ABOUT SHUTTING DOWN DB CONNECTION
+    //this.em.clear();
     //this.em.close();
 
     //this.utx = null;
-//        try {
-//            this.ic.close();
-//        } catch (NamingException e) {
-//            throw new ApplicationException(e.getMessage());
-//        }
+    //        try {
+    //            this.ic.close();
+    //        } catch (NamingException e) {
+    //            throw new ApplicationException(e.getMessage());
+    //        }
   }
 }

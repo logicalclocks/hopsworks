@@ -90,7 +90,7 @@ public class FieldsMessage extends ContentMessage {
     } catch (NullPointerException e) {
     }
     try {
-      //sanitize fucking maxsize in case the user has entered shit
+      //sanitize maxsize in case the user has entered shit
       maxsize = (!"".equals(maxsize)) ? maxsize : "0";
       Integer.parseInt(maxsize);
     } catch (NumberFormatException e) {

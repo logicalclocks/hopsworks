@@ -15,15 +15,15 @@ import javax.persistence.PreUpdate;
  */
 public class EntityListener {
 
+  //Listener in case we need to handle the entities before or after db
+  //operations take place. Should be removed probably
   @PrePersist
   void onPrePersist(Object o) {
   }
 
   @PostPersist
   void onPostPersist(Object o) {
-    System.err.println("CHANGES MADE TO THE DATABASE ");
     Tables t = (Tables) o;
-    System.out.println("TABLE " + t.getName());
   }
 
   @PostLoad

@@ -1,3 +1,5 @@
 /target/
 nb-configuration.xml
 nbactions.xml
+
+src/main/java/se/kth/meta/listener/SessionListener.java

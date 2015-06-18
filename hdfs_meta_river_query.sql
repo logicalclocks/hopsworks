@@ -1,5 +1,5 @@
 
-----------   ACCUMULATE ALL THE METADATA FOR AN INODE INTO ONE FIELD --------------
+----------   ACCUMULATE ALL METADATA FOR AN INODE INTO ONE FIELD --------------
 SELECT mtof.inodeid, GROUP_CONCAT( mrd.data SEPARATOR  '|' ) AS DATA
 FROM meta_tuple_to_file mtof, meta_raw_data mrd
 WHERE mrd.tupleid = mtof.tupleid

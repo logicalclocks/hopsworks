@@ -1,5 +1,6 @@
 package se.kth.meta.wscomm.message;
 
+import java.util.logging.Logger;
 import javax.json.Json;
 
 /**
@@ -7,6 +8,9 @@ import javax.json.Json;
  * @author Vangelis
  */
 public class ErrorMessage extends PlainMessage {
+
+  private static final Logger logger = Logger.
+          getLogger(ErrorMessage.class.getName());
 
   private final String TYPE = "ErrorMessage";
   private String sender;

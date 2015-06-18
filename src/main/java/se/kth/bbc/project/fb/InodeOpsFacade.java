@@ -88,7 +88,6 @@ public class InodeOpsFacade extends AbstractFacade<InodeOps> {
             inode.getParent().getId(), inode.getRoot(),
             new Date(), intOperation, 0);
 
-    System.out.println(inodeops);
     this.persist(inodeops);
   }
 }

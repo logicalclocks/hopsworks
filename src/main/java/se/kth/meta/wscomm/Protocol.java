@@ -219,7 +219,6 @@ public class Protocol {
       List<Tables> tables = new LinkedList<>();
       tables.add(t);
       String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
-      //System.out.println("JSONMSG " + jsonMsg);
 
       message.setMessage(jsonMsg);
 
