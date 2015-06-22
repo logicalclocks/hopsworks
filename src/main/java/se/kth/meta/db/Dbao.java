@@ -56,6 +56,7 @@ public class Dbao {
     }
   }
 
+
   /**
    * adds a new record into 'tables' table. Represents a new metadata template
    * <p>
@@ -104,6 +105,7 @@ public class Dbao {
       throw new DatabaseException(Dbao.class.getName(), e.getMessage());
     }
   }
+  
 
   /**
    * adds a new record into 'fields' table. Each record represents a table
@@ -156,7 +158,7 @@ public class Dbao {
               "Could not add predefined value " + e.getMessage());
     }
   }
-
+  
   public Tables getTable(int tableid) throws DatabaseException {
 
     return this.em.find(Tables.class, tableid);
@@ -223,7 +225,7 @@ public class Dbao {
               "Could not delete table " + ex.getMessage());
     }
   }
-
+  
   /**
    * adds a new record into 'templates' table.
    *
@@ -245,7 +247,7 @@ public class Dbao {
               "Could not add template " + e.getMessage());
     }
   }
-
+  
   public void removeTemplate(Templates template) throws DatabaseException {
     try {
       Templates t = this.em.find(Templates.class, template.getId());
@@ -307,11 +309,12 @@ public class Dbao {
     }
   }
 
+
   /**
    * Deletes a field's predefined values. When a field modification happens
-   * all its previously defined values need to be purged before the new ones
-   * take their place i.e. a field gets its type changed from a dropdown list
-   * to true/false, or to plain text
+   * all its previously defined values need to be purged before the new
+   * ones take their place i.e. a field gets its type changed from a dropdown
+   * list to true/false, or to plain text
    * <p>
    *
    * @param fieldid
@@ -466,6 +469,7 @@ public class Dbao {
   public void shutdown() throws DatabaseException {
     //TODO RETHINK ABOUT SHUTTING DOWN DB CONNECTION
     //this.em.clear();
+
     //this.em.close();
 
     //this.utx = null;
@@ -474,5 +478,6 @@ public class Dbao {
     //        } catch (NamingException e) {
     //            throw new ApplicationException(e.getMessage());
     //        }
+
   }
 }

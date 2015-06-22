@@ -30,8 +30,8 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "TupleToFile.findByInodeid",
           query = "SELECT t FROM TupleToFile t WHERE t.inodeid = :inodeid"),
   @NamedQuery(name = "TupleToFile.findByTupleidAndInodeid",
-          query
-          = "SELECT t FROM TupleToFile t WHERE t.tupleid = :tupleid AND t.inodeid = :inodeid")})
+          query = "SELECT t FROM TupleToFile t WHERE t.tupleid = :tupleid AND t.inodeid = :inodeid")})
+
 public class TupleToFile implements Serializable {
 
   private static final long serialVersionUID = 1L;

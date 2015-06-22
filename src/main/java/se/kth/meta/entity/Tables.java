@@ -75,7 +75,6 @@ public class Tables implements Serializable, EntityIntf {
 
   @Transient
   private int inodeid;
-
   /*
    * indicates whether a table containing fields can be deleted along
    * with its fields or not
@@ -182,6 +181,7 @@ public class Tables implements Serializable, EntityIntf {
   public int getInodeid() {
     return this.inodeid;
   }
+
 
   @Override
   public int hashCode() {

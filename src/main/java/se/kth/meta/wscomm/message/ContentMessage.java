@@ -20,7 +20,7 @@ public abstract class ContentMessage implements Message {
 
   private static final Logger logger = Logger.
           getLogger(ContentMessage.class.getName());
-  
+
   protected int templateId;
   protected String action;
   protected Templates template;

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.hopsworks.controller;
 
 import java.io.File;
@@ -30,8 +25,6 @@ import se.kth.bbc.project.ProjectRoleTypes;
 import se.kth.bbc.project.ProjectTeam;
 import se.kth.bbc.project.ProjectTeamFacade;
 import se.kth.bbc.project.ProjectTeamPK;
-import se.kth.bbc.project.fb.Inode;
-import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.services.ProjectServiceEnum;
 import se.kth.bbc.project.services.ProjectServiceFacade;
 import se.kth.hopsworks.rest.AppException;
@@ -60,8 +53,6 @@ public class ProjectController {
   private FileOperations fileOps;
   @EJB
   private ProjectServiceFacade projectServicesFacade;
-  @EJB
-  private InodeFacade inodes;
 
   /**
    * Creates a new project(project), the related DIR, the different services
@@ -84,7 +75,7 @@ public class ProjectController {
 
     //if there is no project by the same name for this user and project name is valid
     if (projectNameValidator.isValidName(newProjectName) && !projectFacade.
-            projectExistsForOwner(newProjectName, user)) {
+            projectExists(newProjectName)) {
 
       //Create a new project object
       Date now = new Date();
@@ -222,20 +213,7 @@ public class ProjectController {
 
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator + projectName;
-    String resultsPath = projectPath + File.separator
-            + Constants.DIR_RESULTS;
-    String cuneiformPath = projectPath + File.separator
-            + Constants.DIR_CUNEIFORM;
-    String samplesPath = projectPath + File.separator
-            + Constants.DIR_SAMPLES;
-    String dataSetPath = projectPath + File.separator
-            + Constants.DIR_DATASET;
-
     fileOps.mkDir(projectPath, -1);
-    fileOps.mkDir(resultsPath, -1);
-    fileOps.mkDir(cuneiformPath, -1);
-    fileOps.mkDir(samplesPath, -1);
-    fileOps.mkDir(dataSetPath, -1);
   }
 
   /**
@@ -336,17 +314,6 @@ public class ProjectController {
       }
     }
     return failedList;
-  }
-
-  private boolean isProjectPresentInHdfs(String projectname) {
-    Inode root = inodes.getProjectRoot(projectname);
-    if (root == null) {
-      logger.log(Level.INFO,
-              "Project folder not found in HDFS for project {0} .",
-              projectname);
-      return false;
-    }
-    return true;
   }
 
   /**

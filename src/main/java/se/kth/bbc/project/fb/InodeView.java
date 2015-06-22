@@ -11,27 +11,30 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author stig
  */
 @XmlRootElement
-public class InodeView {
+public final class InodeView {
 
-  private String name;
-  private boolean dir;
-  private boolean parent;
-  private String path;
-  private Date modification;
+  private  String name;
+  private  boolean dir;
+  private  boolean parent;
+  private  String path;
+  private  Date modification;
+  private  Date accessTime;
   private int id;
   private int template;
+  
 
   public InodeView() {
   }
-
+  
   public InodeView(Inode i, String path) {
-    this.name = i.getName();
+    this.name = i.getInodePK().getName();
     this.dir = i.isDir();
     this.id = i.getId();
     this.template = i.getTemplate();
     this.parent = false;
     this.path = path;
-    this.modification = new Date(i.getModified().getTime());
+    this.modification = new Date(i.getModificationTime().longValue());
+    this.accessTime = new Date(i.getAccessTime().longValue());
   }
 
   private InodeView(String name, boolean dir, boolean parent, String path) {
@@ -74,6 +77,10 @@ public class InodeView {
     this.modification = modification;
   }
 
+  public void setAccessTime(Date accessTime) {
+    this.accessTime = accessTime;
+  }
+  
   public String getName() {
     return name;
   }
@@ -94,20 +101,8 @@ public class InodeView {
     return modification;
   }
 
-  public int getId() {
-    return this.id;
-  }
-
-  public void setId(int id) {
-    this.id = id;
-  }
-
-  public int getTemplate() {
-    return this.template;
-  }
-
-  public void setTemplate(int template) {
-    this.template = template;
+  public Date getAccessTime() {
+    return accessTime;
   }
 
   @Override

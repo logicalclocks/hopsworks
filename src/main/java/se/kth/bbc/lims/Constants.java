@@ -147,7 +147,7 @@ public class Constants {
   public static final String DIR_SAMPLES = "Samples";
   public static final String DIR_CUNEIFORM = "Cuneiform";
   public static final String DIR_RESULTS = "Results";
-  public static final String DIR_DATASET = "DataSet";
+
   public static final String DIR_BAM = "bam";
   public static final String DIR_SAM = "sam";
   public static final String DIR_FASTQ = "fastq";

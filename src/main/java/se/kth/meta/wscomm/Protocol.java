@@ -46,9 +46,15 @@ public class Protocol {
 
   /**
    * Process an incoming message and create and send back the response
+<<<<<<< HEAD
    *
    * @param message the incoming message
    *
+=======
+   * <p>
+   * @param message the incoming message
+   * <p>
+>>>>>>> 441af052b2c07c665bab622a1d3e173d74dac50c
    * @return a new response message or an error message
    */
   public Message GFR(Message message) {

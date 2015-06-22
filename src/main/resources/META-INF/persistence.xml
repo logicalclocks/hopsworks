@@ -30,7 +30,7 @@
     <class>se.kth.bbc.project.Project</class>
     <class>se.kth.bbc.project.services.ProjectServices</class>
 
-    <class>se.kth.bbc.project.fb.Inode</class>
+
     <class>se.kth.bbc.project.fb.InodeOps</class>
     <class>se.kth.mse.kth.meta.entity.Templates</class>
     <class>se.kth.meta.entity.FieldPredefinedValues</class>
@@ -54,7 +54,9 @@
   <persistence-unit name="hopsPU" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>jdbc/hops</jta-data-source>
-        
+
+    <class>se.kth.bbc.project.fb.Inode</class>
+
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>
     <validation-mode>NONE</validation-mode>

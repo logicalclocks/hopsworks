@@ -1,9 +1,3 @@
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package se.kth.hopsworks.rest;
 
 import java.io.File;
@@ -42,6 +36,9 @@ import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
+
+import se.kth.bbc.lims.StagingManager;
+import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
@@ -88,8 +85,7 @@ public class DataSetService {
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator
             + this.project.getName();
-    this.path = projectPath + File.separator
-            + Constants.DIR_DATASET + File.separator;
+    this.path = projectPath + File.separator;
   }
 
   public Integer getProjectId() {
@@ -103,11 +99,8 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    Inode projectInode = inodes.findByName(this.project.getName());
-    Inode parent = inodes.findByParentAndName(projectInode,
-            Constants.DIR_DATASET);
-    logger.log(Level.FINE, "findDataSetsInProjectID Parent name: {0}", parent.
-            getName());
+
+    Inode parent = inodes.getProjectRoot(this.project.getName());
 
     List<Inode> cwdChildren;
     cwdChildren = inodes.findByParent(parent);
@@ -115,10 +108,8 @@ public class DataSetService {
 
     for (Inode i : cwdChildren) {
       kids.add(new InodeView(i, inodes.getPath(i)));
-      logger.log(Level.FINE, "path: {0}", inodes.getPath(i));
     }
 
-    logger.log(Level.FINE, "Num of children: {0}", cwdChildren.size());
     GenericEntity<List<InodeView>> inodViews
             = new GenericEntity<List<InodeView>>(kids) {
             };
@@ -136,13 +127,15 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-    Inode projectInode = inodes.findByName(this.project.getName());
-    Inode parent = inodes.findByParentAndName(projectInode,
-            Constants.DIR_DATASET);
+    Inode parent = inodes.getProjectRoot(this.project.getName());
     String[] pathArray = path.split(File.separator);
 
     for (String p : pathArray) {
       parent = inodes.findByParentAndName(parent, p);
+    }
+    if (parent == null) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              ResponseMessages.FILE_NOT_FOUND);
     }
 
     List<Inode> cwdChildren;
@@ -151,10 +144,7 @@ public class DataSetService {
 
     for (Inode i : cwdChildren) {
       kids.add(new InodeView(i, inodes.getPath(i)));
-      logger.log(Level.FINE, "path: {0}", inodes.getPath(i));
     }
-
-    logger.log(Level.FINE, "Num of children: {0}", cwdChildren.size());
     GenericEntity<List<InodeView>> inodViews
             = new GenericEntity<List<InodeView>>(kids) {
             };
@@ -164,53 +154,32 @@ public class DataSetService {
   }
 
   @GET
-  @Path("download/{fileName}")
-  @Produces(MediaType.WILDCARD)
+  @Path("download/{filePath: .+}")
+  @Produces(MediaType.MULTIPART_FORM_DATA)
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
   public InputStream downloadFile(
-          @PathParam("fileName") String fileName,
+          @PathParam("filePath") String filePath,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
     InputStream is = null;
-    String filePath = this.path + fileName;
+
+    String fullPath = this.path + filePath;
+    if (inodes.getInodeAtPath(fullPath) == null) {
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              ResponseMessages.FILE_NOT_FOUND);
+    }
 
     try {
-      is = fileOps.getInputStream(filePath);
+      is = fileOps.getInputStream(fullPath);
       logger.log(Level.FINE, "File was downloaded from HDFS path: {0}",
-              filePath);
+              fullPath);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
     }
 
     return is;
   }
-  /*
-   * @POST
-   * @Path("upload/{dataSetPath}")
-   * @Consumes(MediaType.MULTIPART_FORM_DATA)
-   * @Produces(MediaType.APPLICATION_JSON)
-   * @AllowedRoles(roles = {AllowedRoles.DATA_OWNER})
-   * public Response uploadFile(
-   * @PathParam("dataSetPath") String dataSetPath,
-   * @FormDataParam("file") InputStream uploadedInputStream,
-   * @FormDataParam("file") FormDataContentDisposition fileDetail) throws
-   * AppException {
-   * JsonResponse json = new JsonResponse();
-   * String dsPath = this.path + dataSetPath;
-   * try {
-   * fileOps.writeToHDFS(uploadedInputStream, fileDetail.getSize(), dsPath);
-   * } catch (IOException ex) {
-   * logger.log(Level.SEVERE, null, ex);
-   * throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-   * "Could not upload file to " + dsPath);
-   * }
-   * json.setSuccessMessage("Successfuly uploaded file to " + dsPath);
-   * return
-   * noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-   * json).build();
-   * }
-   */
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)
@@ -220,13 +189,44 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
     boolean success = false;
+    boolean exist = true;
+    String dsPath = File.separator + Constants.DIR_ROOT + File.separator
+            + this.project.getName();
     JsonResponse json = new JsonResponse();
-    if (dataSetName == null || dataSetName.getName().isEmpty()) {
+    if (dataSetName == null || dataSetName.getName() == null || dataSetName.
+            getName().isEmpty()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.DATASET_NAME_EMPTY);
     }
 
-    String dsPath = this.path + dataSetName.getName();
+    //check if the folder is allowed and if it already exists
+    Inode parent = inodes.getProjectRoot(this.project.getName());
+    String[] pathArray = dataSetName.getName().split(File.separator);
+    for (String p : pathArray) {
+
+      if (parent != null) {
+        parent = inodes.findByParentAndName(parent, p);
+        if (parent != null) {
+          dsPath = dsPath + File.separator + p;
+        } else {//first time when we find non existing folder name
+          if (datasetNameValidator.isValidName(p)) {
+            dsPath = dsPath + File.separator + p;
+            exist = false;
+          }
+        }
+      } else {
+        if (datasetNameValidator.isValidName(p)) {
+          dsPath = dsPath + File.separator + p;
+          exist = false;
+        }
+      }
+    }
+
+    if (exist) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              ResponseMessages.FOLDER_NAME_EXIST);
+    }
+
     try {
       success = fileOps.mkDir(dsPath, dataSetName.getTemplate());
       logger.log(Level.SEVERE, "DATASET RECEIVED {0} ", dataSetName.
@@ -373,8 +373,8 @@ public class DataSetService {
                 + fileName);
         logger.log(Level.SEVERE, "Copied to HDFS");
         //might need try catch for security exception
-        Files.deleteIfExists(Paths.get(stagingManager.getStagingPath()
-                + uploadPath + fileName));
+
+        Files.deleteIfExists(Paths.get(stagingManager.getStagingPath() + uploadPath + fileName));
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Failed to write to HDSF", e);
       }

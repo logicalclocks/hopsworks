@@ -24,6 +24,7 @@ public class EntityListener {
   @PostPersist
   void onPostPersist(Object o) {
     Tables t = (Tables) o;
+
   }
 
   @PostLoad

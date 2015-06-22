@@ -67,27 +67,27 @@ public class InodeOpsFacade extends AbstractFacade<InodeOps> {
 
   public void createAndStoreOperation(Inode inode, Operation operation) {
 
-    int intOperation = -1;
-
-    switch (operation) {
-      case ADD:
-        intOperation = 1;
-        break;
-      case REMOVE:
-        intOperation = 0;
-        break;
-      default:
-        intOperation = -100;
-    }
-
-    String event = intOperation + "|" + inode;
-
-    //update the 'modified' field with the current timestamp 
-    //so that it can be fetched for indexing
-    InodeOps inodeops = new InodeOps(inode.getId(),
-            inode.getParent().getId(), inode.getRoot(),
-            new Date(), intOperation, 0);
-
-    this.persist(inodeops);
+//    int intOperation = -1;
+//
+//    switch (operation) {
+//      case ADD:
+//        intOperation = 1;
+//        break;
+//      case REMOVE:
+//        intOperation = 0;
+//        break;
+//      default:
+//        intOperation = -100;
+//    }
+//
+//    String event = intOperation + "|" + inode;
+//
+//    //update the 'modified' field with the current timestamp 
+//    //so that it can be fetched for indexing
+//    InodeOps inodeops = new InodeOps(inode.getId(),
+//            inode.getParent().getId(), inode.getRoot(),
+//            new Date(), intOperation, 0);
+//
+//    this.persist(inodeops);
   }
 }
