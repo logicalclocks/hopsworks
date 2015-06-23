@@ -9,7 +9,6 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.lims.Constants;
 import se.kth.kthfsdashboard.user.AbstractFacade;
-import se.kth.meta.entity.Templates;
 
 /**
  *
@@ -18,7 +17,7 @@ import se.kth.meta.entity.Templates;
 @Stateless
 public class InodeFacade extends AbstractFacade<Inode> {
 
-  @PersistenceContext(unitName = "hopsPU")
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   @Override
