@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui" 
+      xmlns:f="http://java.sun.com/jsf/core"
+      >
+  <body>
+    <ui:composition>
+      <h3 class="page_title" align="left">
+        Team Members (#{projectManagedBean.countAllMembersInActiveProject()})
+        <span class="right_button">
+          <h:form id="frmBtn">
+            <h:commandButton id="addTeam" class="button-add button-add-team" value="New Member" type="submit" action="newTeamMemb" rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"/>
+          </h:form>
+        </span>
+      </h3>
+      <hr/>
+      <div class="clear_fixing"></div>
+      <h:form id="teamForm">
+        <div id="divTeam" class="team_table"> 
+          <!-- Loop over all member groups -->
+          <ui:repeat value="#{projectManagedBean.groupedMembers}" var="memGroup" varStatus="memGroupStat">
+            <h:panelGroup id="div_${memGroupStat.index}" styleClass="ui_box">
+              <!-- Display role name and number of members in that group -->
+              <h5 class="title" align="left">#{memGroup.groupname.team}s
+                (<small>#{projectManagedBean.countRoleUsers(memGroup.groupname)}</small>)
+              </h5>
+              <ul class="well-list">
+                <!-- Loop over all users in this group-->
+                <ui:repeat value="#{memGroup.members}" var="usr" varStatus="usrStat">
+                  <li id="team_member_row_${usrStat.index}_${memGroupStat.index}" class="team_member_row">
+                    <div class="row">
+                      <div class="span6">
+                        <img class="avatar s36" src="#{activityBean.getGravatar(usr.email,36)}"/>
+                        <p:commandLink styleClass="dark">
+                          <strong>#{usr.name}</strong>
+                          <br/>
+                          <small class="cgray">
+                            #{usr.email}
+                          </small>
+                        </p:commandLink>
+                      </div>
+                      <div class="span5 right">
+                        <div class="left">
+                          <div id="frmProjectMaster_${usrStat.index}_${memGroupStat.index}" class="edit_team_members"> 
+                            <div style="margin:0;padding:0;display:inline">
+                              <p:selectOneMenu value="#{usr.role}" 
+                                               styleClass="project_role_assign" 
+                                               disabled="#{projectManagedBean.projectOwnedBy(usr.email)}" 
+                                               style="width:170px;" 
+                                               rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}">
+                                <p:ajax update="@form" process="@all"
+                                        listener="#{valueChangeMB.updateProjectTeamRole(usr.email,usr.role)}"/>
+                                <f:selectItems value="#{projectManagedBean.team}" var="ms" itemLabel="#{ms.team}" itemValue="#{ms}"/>
+                              </p:selectOneMenu>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="right" align="right">
+                          <h:commandButton class="btn" value="This is you!" disabled="true" rendered="#{projectManagedBean.username eq usr.email}"/>
+                          <h:commandButton class="button-success" value="Owner" disabled="true" rendered="#{projectManagedBean.projectOwnedBy(usr.email)}"/>
+                          <p:commandLink styleClass="ui-button fa fa-minus"  
+                                         value="" 
+                                         rendered="#{projectManagedBean.currentRoleInProject() == 'Master' and not projectManagedBean.projectOwnedBy(usr.email)}" 
+                                         action="#{projectTeamController.setToRemove(usr.email, usr.name)}"
+                                         update=":#{p:component('remTeamMemForm')}" oncomplete="PF('remTeamMemDlg').show()">
+                          </p:commandLink>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </ui:repeat>
+              </ul>
+            </h:panelGroup>
+          </ui:repeat>
+        </div>
+      </h:form>
+    </ui:composition>
+  </body>
+</html>

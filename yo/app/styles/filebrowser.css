@@ -1,0 +1,348 @@
+.file-box {
+  float: left;
+  width: 220px;
+}
+.file-manager h5 {
+  text-transform: uppercase;
+}
+.file-manager {
+  list-style: outside none none;
+  margin: 0;
+  padding: 0;
+}
+.folder-list li a {
+  color: #666666;
+  display: block;
+  padding: 5px 0;
+}
+.folder-list li {
+  border-bottom: 1px solid #e7eaec;
+  display: block;
+}
+.folder-list li i {
+  color: #3d4d5d;
+  margin-right: 8px;
+}
+.category-list li a {
+  color: #666666;
+  display: block;
+  padding: 5px 0;
+}
+.category-list li {
+  display: block;
+}
+.category-list li i {
+  color: #3d4d5d;
+  margin-right: 8px;
+}
+.category-list li a .text-navy {
+  color: #1ab394;
+}
+.category-list li a .text-primary {
+  color: #1c84c6;
+}
+.category-list li a .text-info {
+  color: #23c6c8;
+}
+.category-list li a .text-danger {
+  color: #ef5352;
+}
+.category-list li a .text-warning {
+  color: #f8ac59;
+}
+.file-manager h5.tag-title {
+  margin-top: 20px;
+}
+.tag-list li {
+  float: left;
+}
+.tag-list li a {
+  background-color: #f3f3f4;
+  border: 1px solid #e7eaec;
+  border-radius: 2px;
+  color: inherit;
+  display: block;
+  font-size: 10px;
+  margin-right: 5px;
+  margin-top: 5px;
+  padding: 5px 12px;
+}
+.file {
+  background-color: #ffffff;
+  border: 1px solid #e7eaec;
+  margin-bottom: 20px;
+  margin-right: 20px;
+  padding: 0;
+  position: relative;
+}
+
+.file .icon, .file .image {
+  height: 100px;
+  overflow: hidden;
+}
+.file .icon {
+  padding: 15px 10px;
+  text-align: center;
+}
+.file-control {
+  color: inherit;
+  font-size: 11px;
+  margin-right: 10px;
+}
+.file-control.active {
+  text-decoration: underline;
+}
+.file .icon i {
+  color: #dadada;
+  font-size: 70px;
+}
+.file .file-name {
+  background-color: #f8f8f8;
+  border-top: 1px solid #e7eaec;
+  padding: 10px;
+}
+.file-name small {
+  color: #676a6c;
+}
+.corner {
+  -moz-border-bottom-colors: none;
+  -moz-border-left-colors: none;
+  -moz-border-right-colors: none;
+  -moz-border-top-colors: none;
+  border-color: transparent #f1f1f1 #f1f1f1 transparent;
+  border-image: none;
+  border-style: solid;
+  border-width: 0.6em;
+  bottom: 0;
+  display: inline-block;
+  height: 0;
+  line-height: 0;
+  position: absolute;
+  right: 0;
+  width: 0;
+}
+
+
+body.rtls .file-box {
+  float: right;
+}
+
+
+.ui-sortable .ibox-title {
+  cursor: move;
+}
+.ibox.ui-sortable-placeholder {
+  margin: 0 0 23px !important;
+}
+
+.ibox-content h1, .ibox-content h2, .ibox-content h3, .ibox-content h4, .ibox-content h5, .ibox-title h1, .ibox-title h2, .ibox-title h3, .ibox-title h4, .ibox-title h5 {
+  margin-top: 5px;
+}
+.ibox-content.text-box {
+  padding-bottom: 0;
+  padding-top: 15px;
+}
+.ui-draggable .ibox-title {
+  cursor: move;
+}
+
+.ibox {
+  clear: both;
+  margin-bottom: 25px;
+  margin-top: 0;
+  padding: 0;
+}
+.ibox.collapsed .ibox-content {
+  display: none;
+}
+.ibox.collapsed .fa.fa-chevron-up::before {
+  content: "";
+}
+.ibox.collapsed .fa.fa-chevron-down::before {
+  content: "";
+}
+.ibox::after, .ibox::before {
+  display: table;
+}
+.ibox-title {
+  -moz-border-bottom-colors: none;
+  -moz-border-left-colors: none;
+  -moz-border-right-colors: none;
+  -moz-border-top-colors: none;
+  background-color: #ffffff;
+  border-color: #e7eaec;
+  border-image: none;
+  border-style: solid solid none;
+  border-width: 4px 0 0;
+  color: inherit;
+  margin-bottom: 0;
+  min-height: 48px;
+  padding: 14px 15px 7px;
+}
+.ibox-content {
+  background-color: #ffffff;
+  border-color: #e7eaec;
+  border-image: none;
+  border-style: solid solid none;
+  border-width: 1px 0;
+  color: inherit;
+  padding: 15px 20px 20px;
+}
+
+.ibox-content {
+  clear: both;
+}
+.ibox-heading {
+  background-color: #f3f6fb;
+  border-bottom: medium none;
+}
+.ibox-heading h3 {
+  font-size: 24px;
+  font-weight: 200;
+}
+.ibox-title h5 {
+  display: inline-block;
+  float: left;
+  font-size: 14px;
+  margin: 0 0 7px;
+  padding: 0;
+  text-overflow: ellipsis;
+}
+.ibox-title .label {
+  float: left;
+  margin-left: 4px;
+}
+.ibox-tools {
+  display: inline-block;
+  float: right;
+  margin-top: 0;
+  padding: 0;
+  position: relative;
+}
+.ibox-tools a {
+  color: #c4c4c4;
+  cursor: pointer;
+  margin-left: 5px;
+}
+.ibox-tools a.btn-primary {
+  color: #fff;
+}
+.ibox-tools .dropdown-menu > li > a {
+  font-size: 12px;
+  padding: 4px 10px;
+}
+.ibox .open > .dropdown-menu {
+  left: auto;
+  right: 0;
+}
+
+
+.hr-line-dashed {
+  background-color: #ffffff;
+  border-top: 1px dashed #e7eaec;
+  color: #ffffff;
+  height: 1px;
+  margin: 20px 0;
+}
+.hr-line-solid {
+  background-color: rgba(0, 0, 0, 0);
+  border-bottom-color: #e7eaec;
+  border-bottom-width: 1px;
+  border-style: solid !important;
+  margin-bottom: 15px;
+  margin-top: 15px;
+}
+
+
+.table-hover > tbody > tr:hover {
+  background-color: #fafafa;
+}
+
+#hoverable{
+  border-style: solid;
+  color: #666;
+  margin-top: 15px;
+  padding: 15px 20px 35px;
+}
+
+#hoverable:hover{
+  background-color: #f1f1f1;
+  color:grey;
+}
+
+
+md-sidenav {
+  background-color: #fff;
+  bottom: 0;
+  flex-direction: column;
+  max-width: none;
+  overflow: hidden;
+  position: relative;
+  width: 98%;
+  z-index: 60;
+}
+
+.md-sidenav-right {
+  left: 98%;
+}
+
+md-content {
+  overflow: hidden;
+}
+
+md-backdrop.md-sidenav-backdrop {
+  z-index: 50;
+  top: 51px;
+}
+
+[layout-padding], [layout-padding] > [flex] {
+  padding: 0px;
+}
+
+
+
+
+
+/* Filebrowser action dropdown */
+.position-fixed {
+  position: fixed;
+}
+
+.dropdown-amore {
+  -webkit-border-radius: 0px;
+  -moz-border-radius: 0px;
+  border-radius: 0px;
+  width: 250px;
+  margin:0px;
+  padding:0px;
+}
+.dropdown-amore li, a {
+  height: 40px;
+}
+
+.dropdown-amore a > span {
+  display: block;
+  padding-top: 6px;
+}
+
+.dropdown-amore a > span > i {
+  padding-right: 10px;
+}
+
+
+.dropdown-amore li:first-child {
+  border-left: 3px solid #314190;
+}
+.dropdown-amore li:nth-child(2) {
+  border-left: 3px solid #79aefe;
+}
+.dropdown-amore li:nth-child(3) {
+  border-top: 1px solid #f1f1f1;
+  border-left: 3px solid #ec1b5a;
+}
+
+.table-hover > tbody > tr.highlight {
+  background-color:#4285f4;
+  color:white;
+}
+

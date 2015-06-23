@@ -1,0 +1,251 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<!-- =========== FULL CONFIGURATION FILE ================================== -->
+
+<faces-config version="2.0"
+              xmlns="http://java.sun.com/xml/ns/javaee" 
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+              xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd">
+  <navigation-rule>      
+    <navigation-case>
+      <from-outcome>welcome</from-outcome>
+      <to-view-id>/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+        
+    <navigation-case>
+      <from-outcome>user_auth</from-outcome>
+      <to-view-id>/security/login.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>user_guides</from-outcome>
+      <to-view-id>/security/user_guides.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>      
+    <navigation-case>
+      <from-outcome>register_mobile</from-outcome>
+      <to-view-id>/security/register_mobile.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>register_yubico</from-outcome>
+      <to-view-id>/security/register_yubico.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>activate_yubikey</from-outcome>
+      <to-view-id>/security/protected/admin/activate_yubikey.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>yubico</from-outcome>
+      <to-view-id>/security/yubico.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>qrcode</from-outcome>
+      <to-view-id>/security/qrcode.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+        
+    <navigation-case>
+      <from-outcome>login</from-outcome>
+      <to-view-id>/security/login.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>yubikeylogin</from-outcome>
+      <to-view-id>/security/yubikeylogin.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>logout</from-outcome>
+      <to-view-id>/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>login_error</from-outcome>
+      <to-view-id>/security/loginError.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+  
+    <navigation-case>
+      <from-outcome>reset_password</from-outcome>
+      <to-view-id>/security/reset_password.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>password_changed</from-outcome>
+      <to-view-id>/security/password_changed.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+        
+    <navigation-case>
+      <from-outcome>sec_question</from-outcome>
+      <to-view-id>/security/sec_question.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>sec_question_changed</from-outcome>
+      <to-view-id>/security/sec_question_changed.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>reset</from-outcome>
+      <to-view-id>/security/reset.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>mobile_recovery</from-outcome>
+      <to-view-id>/security/mobile_recovery.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+        
+    <navigation-case>
+      <from-outcome>mobile_recovery</from-outcome>
+      <to-view-id>/security/yubikey_recovery.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+        
+    <navigation-case>
+      <from-outcome>validate_code</from-outcome>
+      <to-view-id>/security/validate_code.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+        
+    <navigation-case>
+      <from-outcome>login_issue</from-outcome>
+      <to-view-id>/security/login_issue.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>     
+
+    <navigation-case>
+      <from-outcome>print_address</from-outcome>
+      <to-view-id>/security/protected/admin/print_address.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+
+    <navigation-case>
+      <from-outcome>profile_password</from-outcome>
+      <to-view-id>/security/protected/researcher/profile_password.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+        
+    <navigation-case>
+      <from-outcome>profile_password_changed</from-outcome>
+      <to-view-id>/security/profile_password_changed.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+ 
+    <navigation-case>
+      <from-outcome>change_sec_question</from-outcome>
+      <to-view-id>/security/protected/researcher/change_sec_question.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>profile</from-outcome>
+      <to-view-id>/security/protected/researcher/profile.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>deactivate_account</from-outcome>
+      <to-view-id>/security/protected/researcher/deactivate_account.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+        
+    <navigation-case>
+      <from-outcome>admin_profile</from-outcome>
+      <to-view-id>/security/protected/admin/admin_profile.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+  
+        
+    <navigation-case>
+      <from-outcome>consentMgmt</from-outcome>
+      <to-view-id>/security/protected/admin/consentManagement.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+        
+    <navigation-case>
+      <from-outcome>auditMgmt</from-outcome>
+      <to-view-id>/security/protected/audit/auditManagement.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>       
+    
+    <navigation-case>
+      <from-outcome>userMgmt</from-outcome>
+      <to-view-id>/security/protected/admin/userManagement.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
+      <from-outcome>newProject</from-outcome>
+      <to-view-id>/bbc/lims/newProject.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>projectPage</from-outcome>
+      <to-view-id>/bbc/lims/projectPage.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>newTeamMemb</from-outcome>
+      <to-view-id>/bbc/lims/newTeamMember.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>indexPage</from-outcome>
+      <to-view-id>/bbc/lims/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>logout</from-outcome>
+      <to-view-id>/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>login</from-outcome>
+      <to-view-id>/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>welcome</from-outcome>
+      <to-view-id>/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+    <navigation-case>
+      <from-outcome>lims</from-outcome>
+      <to-view-id>/bbc/lims/index.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+  </navigation-rule>
+    
+  <application>
+    <resource-bundle>
+      <base-name>/Bundle</base-name>
+      <var>bundle</var>
+    </resource-bundle>
+    <action-listener>org.primefaces.application.DialogActionListener</action-listener>
+    <navigation-handler>org.primefaces.application.DialogNavigationHandler</navigation-handler>
+    <view-handler>org.primefaces.application.DialogViewHandler</view-handler>       
+  </application>
+  <converter>
+    <converter-for-class>java.lang.Enum</converter-for-class>
+    <converter-class>javax.faces.convert.EnumConverter</converter-class>
+  </converter>
+</faces-config>

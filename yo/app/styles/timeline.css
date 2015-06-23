@@ -1,0 +1,95 @@
+.timeline {
+    margin: 0;
+    padding: 0;
+    position: relative;
+}
+.timeline .mid-line {
+    background: none repeat scroll 0 0 #ededed;
+    height: 100%;
+    /*left: 50%;*/
+    margin-left: -1.5px;
+    position: absolute;
+    width: 3px;
+}
+.timeline .time-header {
+    border: 1px solid #ededed;
+    border-radius: 2px;
+    clear: both;
+    color: white;
+    float: none;
+    font-size: 13px;
+    height: 24px;
+    /*left: 50%;*/
+    line-height: 24px;
+    margin-bottom: 30px;
+    margin-left: -40px;
+    overflow: hidden;
+    position: relative;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 80px;
+}
+.timeline .time-header.completed {
+    background: none repeat scroll 0 0 #3eb157;
+    border: 1px solid #35974a;
+}
+.timeline .time-header.info {
+    background: none repeat scroll 0 0 #15295c;
+    border: 1px solid #0e1c3f;
+}
+.timeline .time-header.error {
+    background: none repeat scroll 0 0 #d13736;
+    border: 1px solid #b92b2a;
+}
+.timeline > div {
+    clear: left;
+    float: left;
+    margin-bottom: 15px;
+    position: relative;
+    width: 100%;
+    z-index: 2;
+}
+.timeline > .right {
+    clear: right;
+    float: left;
+}
+.timeline .r-arrow {
+    border-bottom: 9px solid transparent;
+    border-right: 9px solid #ededed;
+    border-top: 9px solid transparent;
+    height: 0;
+    /*left: -9px;*/
+    position: absolute;
+    /*top: 30px;*/
+    margin-top: 40px;
+    width: 0;
+    z-index: 10;
+}
+.timeline .right > .task-type {
+    left: -40px;
+    right: auto;
+    top: 50px;
+}
+.about-task {
+    background: none repeat scroll 0 0 #fafafa;
+    border: 1px solid #ededed;
+    border-radius: 2px;
+    margin-left: 9px;
+    min-height: 60px;
+    padding: 10px;
+}
+.about-task .header {
+    border-bottom: 1px solid #e6e6e6;
+    border-radius: 2px;
+    color: black;
+    font-size: 16px;
+    height: 30px;
+    line-height: 30px;
+    margin-bottom: 10px;
+    padding: 0;
+}
+.about-task small {
+    float: right;
+    font-size: 11px;
+}

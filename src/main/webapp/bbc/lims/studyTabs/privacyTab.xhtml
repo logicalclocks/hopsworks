@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://java.sun.com/jsf/core"
+      >
+  <style>
+  </style>
+
+  <body>
+    <p:growl id="growl" life="2000" severity="error,info" showDetail="true" autoUpdate="true"/>
+
+    <h:form id="privacy" enctype="multipart/form-data">
+      <p:panelMenu>
+        <p:submenu   style="padding-bottom: 10px; border-color: white; border: 0px none;" label="Consent and Ethical Approval">
+          <p:menuitem value=""
+                      ajax="false"
+                      icon="ui-icon-close">
+
+            <h:panelGrid columns="3" style="padding-top: 20px;">         
+
+              <h:panelGroup style="padding-right:50px;">
+                Consent Status: #{projectManagedBean.ethicalStatus}
+              </h:panelGroup>
+
+
+              <h:panelGroup style="padding-right:50px;">
+                Retention Period: #{projectManagedBean.retentionPeriod}
+              </h:panelGroup>
+
+
+
+              <h:panelGroup style="padding-right:50px;">
+                <p:calendar id="cal"
+                            style="padding-right: 10px;"
+                            value="#{projectManagedBean.retentionPeriod}" 
+                            showOn="button" >
+
+                </p:calendar>  
+
+                <p:commandButton  
+                  value="Update Period"  
+                  update="privacy"
+                  action="#{projectManagedBean.updateRetentionPeriod()}"
+                  rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"/>
+              </h:panelGroup>
+
+            </h:panelGrid>
+
+            <p:separator></p:separator>
+
+            <p:dataGrid 
+              value="#{projectManagedBean.allConsent}"
+              var="consent"
+              >
+              <h:panelGrid columns="1">
+                <p:column>
+                  <h:commandLink  action="#{projectManagedBean.showConsent(consent.name)}" 
+                                  target="_blank"
+                                  style="float:left;margin-right:10px">
+
+                    <h:graphicImage  library="images/icons" 
+                                     name="consent.png" 
+                                     width="30"
+                                     height="30"/>
+                  </h:commandLink>
+                </p:column>
+
+                <p:column>
+                  <h:outputLabel value="#{consent.name}" />
+                </p:column>
+
+                <p:column>
+                  <h:outputLabel value="#{consent.date}" />
+                </p:column>
+              </h:panelGrid>
+            </p:dataGrid>
+
+
+            <h:panelGrid id= "consent_menu" columns="3" style="padding-top: 80px;">
+
+              <p:fileUpload 
+                value="#{projectManagedBean.file}" 
+                label="Upload Consent Info" 
+                mode="advanced"
+                fileLimit="1" 
+                allowTypes="/(\.|\/)(pdf|PDF)$/"
+                oncomplete="PF('chooseFileDlg').hide()"
+                update="privacy"
+                fileUploadListener="#{projectManagedBean.uploadConsent}"
+                rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"
+                />
+
+
+              <p:fileUpload value="#{projectManagedBean.file}" 
+                            label="Upload Ethical Approval"
+                            mode="advanced" 
+                            fileLimit="1" 
+                            allowTypes="/(\.|\/)(pdf|PDF)$/"
+                            oncomplete="PF('chooseFileDlg').hide()"
+                            fileUploadListener="#{projectManagedBean.uploadEthicalApproval}"
+                            rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"
+                            update="privacy"
+                            />
+
+
+              <p:fileUpload value="#{projectManagedBean.file}" 
+                            label="Upload Non-Consent Info"
+                            mode="advanced" 
+                            fileLimit="1" 
+                            allowTypes="/(\.|\/)(pdf|PDF)$/"
+                            update="privacy"
+                            oncomplete="PF('chooseFileDlg').hide()"
+                            fileUploadListener="#{projectManagedBean.uploadEthicaNonConsent}"
+                            rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"
+                            />
+
+            </h:panelGrid>
+
+          </p:menuitem>
+        </p:submenu>
+      </p:panelMenu>
+
+    </h:form>
+
+
+    <h:form id="audit">
+      <p:dataTable var="act"
+                   value="#{projectManagedBean.allActivitiesOnProject}" 
+                   emptyMessage="No audit logs"
+                   scrollable="true">
+
+        <f:facet name="header" >Audit </f:facet>
+        <p:column id="fnameColumn" filterBy="#{act.user.fname}"
+                  headerText="First name"
+                  style="width:16%; font-size: 12px; text-align: left;">
+
+          <h:outputText value="#{act.user.fname}" />
+        </p:column>
+
+        <p:column id="lnameColumn" filterBy="#{act.user.lname}"
+                  headerText="Last name"
+                  style="width:16%; font-size: 12px; text-align: left;">
+
+          <h:outputText value="#{act.user.lname}" />
+        </p:column>
+
+        <p:column id="emailColumn" filterBy="#{act.user.email}"
+                  headerText="Email" 
+                  style="width:32%;font-size: 12px;text-align: left;">
+          <h:outputText value="#{act.user.email}" />
+        </p:column>
+
+        <p:column  filterBy="#{act.timestamp}"
+                   headerText="Action Date" 
+                   style="width:32%;font-size: 12px;text-align: left;">
+          <h:outputText value="#{act.timestamp}"/>
+        </p:column>
+
+        <p:column  filterBy="#{act.activity}"
+                   headerText="Action" 
+                   style="width:32%;font-size: 12px;text-align: left;">
+          <h:outputText value="#{act.activity}"/>
+        </p:column>
+      </p:dataTable>
+    </h:form>
+  </body>
+</html> 

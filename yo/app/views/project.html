@@ -1,0 +1,90 @@
+<link rel="stylesheet" href="styles/timeline.css">
+
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+
+
+  <div id="wrapper" class="toggled">
+    <div class="overlay"></div>
+
+    <div ng-include="'navProject.html'"></div>
+
+    <section>
+      <div class="content-wrapper">
+        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName }} / Start</h3>
+
+        <!-- Page Content -->
+
+        <div class="widget-body col-md-6">
+          <div class="timeline clearfix">
+            <div class="mid-line"></div>
+
+            <div ng-repeat="activity in projectCtrl.activities | startFrom:(projectCtrl.currentPage-1) * projectCtrl.pageSize | limitTo:projectCtrl.pageSize">
+
+              <div class="right">
+                <div class="r-arrow"></div>
+                <div class="about-task">
+                  <div class="header">{{activity.user.fname }} {{activity.user.lname}} {{activity.activity}}
+                    <small class="muted">On {{activity.timestamp |
+                      date:'medium'}}
+                    </small>
+                  </div>
+                  <p class="no-margin">
+                    Project name: {{activity.project.name}} Owner: {{activity.project.owner.fname}}
+                    Created on: {{activity.project.created | date:'medium'}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <pagination ng-if="projectCtrl.totalPages > 1"
+                        total-items="projectCtrl.totalItems"
+                        ng-model="projectCtrl.currentPage"
+                        max-size="projectCtrl.pageSize"
+                        class="pagination-sm"
+                        boundary-links="true"
+                        rotate="false"
+                        num-pages="projectCtrl.totalPages" >
+            </pagination>
+
+
+
+          </div>
+        </div>
+
+        <div class="widget-body col-md-6">
+          <div class="timeline clearfix">
+
+            <canvas id="radar" class="chart chart-radar" data="data"
+                    labels="labels">
+            </canvas>
+
+            <p></p>
+
+            <canvas id="line" class="chart chart-line" data="data2"
+                    labels="labels2" legend="true" series="series"
+                    click="onClick">
+            </canvas>
+
+
+          </div>
+        </div>
+
+
+
+        <!-- /#page-content-wrapper -->
+      </div>
+
+
+    </section>
+
+
+  </div>
+  <!-- /#wrapper -->
+
+
+</div>
+
+
+</div>
+

@@ -1,0 +1,42 @@
+<aside class="offsidebar">
+  <nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation" style="margin-top:50px;">
+
+    <ul class="nav sidebar-nav">
+
+      <li style="background: #1a1a1a;">
+        <a href="#/project/{{projectCtrl.currentProject.projectId}}" class="text-center">
+          {{ projectCtrl.currentProject.projectName | limitTo: 17 }}{{projectCtrl.currentProject.projectName.length > 17
+          ? '...' : ''}}
+        </a>
+      </li>
+
+      <li ng-repeat="typeObject in projectCtrl.alreadyChoosenServices">
+        <a href="">
+          {{typeObject}} <span class="sub_icon fa fa-globe fa-lg pull-right"></span>
+        </a>
+      </li>
+
+
+      <li ng-click="projectCtrl.goToDatasets()">
+        <a>
+          DATASETS <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
+        </a>
+      </li>
+
+
+      <li ng-click="projectCtrl.projectSettingModal()" style="margin-top:40px;">
+        <a>
+          Settings <span class="sub_icon fa fa-dashboard fa-lg pull-right"></span>
+        </a>
+      </li>
+
+      <li ng-click="projectCtrl.membersModal()">
+        <a>
+          Members <span class="sub_icon fa fa-users fa-lg pull-right"></span>
+        </a>
+      </li>
+
+
+    </ul>
+  </nav>
+</aside>

@@ -1,0 +1,197 @@
+<div class="modal-header">
+  <button class="close"
+          ng-click="memberCtrl.close()"
+          type="button">&times;
+  </button>
+  <h2 class="modal-title">Members</h2>
+</div>
+<div class="modal-body" id="profileModal" ng-controller="MainCtrl as mainCtrl">
+
+  <div class="row">
+    <div class="col-md-5" style="max-width: 400px">
+      <input type="text"
+             id="srch-term"
+             ng-model="searchInput"
+             name="srch-term"
+             placeholder="Find member..."
+             style="height: 28px;margin-top: 0px;height:38px;"
+             class="form-control">
+    </div>
+    <div class="col-md-offset-5 col-md-2">
+      <button type="button"
+              title="New members"
+              data-toggle="collapse"
+              data-target="#collapseAddMember"
+              aria-expanded="false"
+              aria-controls="collapseAddMember"
+              class="btn btn-sm btn-success pull-right">
+        <i class="fa fa-user-plus fa-2x"></i>
+        New members
+      </button>
+    </div>
+  </div>
+
+
+  <div class="collapse" id="collapseAddMember">
+    <div class="well" style="margin-top:20px;padding-bottom: 40px">
+
+      <h2>Members to be added</h2>
+
+      <div class="controls">
+
+        <ui-select ng-model="memberCtrl.card.selected"
+                   theme="select2"
+                   style="min-width: 300px;">
+
+          <ui-select-match placeholder="Add members...">{{$select.selected.email}}</ui-select-match>
+          <ui-select-choices
+            repeat="card in memberCtrl.cards">
+
+            <div ng-bind-html="memberCtrl.card.email | highlight: $select.search"></div>
+            <small>
+              <i class="fa fa-user-plus"></i>
+              <span style="font-size: 14px;;"
+                    ng-bind-html="''+card.email | highlight: $select.search">
+              </span>
+              <br/>
+              <span ng-bind-html="''+card.firstname | highlight: $select.search"></span>
+              <span ng-bind-html="''+card.lastname | highlight: $select.search"></span>
+            </small>
+          </ui-select-choices>
+        </ui-select>
+
+        <div style="margin-top:10px; min-height:50px;" class="thumbnail ui-droppable">
+
+          <table class="table">
+            <tbody>
+            <tr style="font-weight: bold;" ng-show="!memberCtrl.newMembers.projectTeam.length == 0">
+              <td style="width:70%;border-top:none;">Member</td>
+              <td style="width:20%;border-top:none;">Role</td>
+              <td style="width:10%;border-top:none;"></td>
+            </tr>
+
+            <tr ng-show="memberCtrl.newMembers.projectTeam.length == 0">
+              <td style="border-top: none;">
+                No members added yet...
+              </td>
+            </tr>
+
+            <tr ng-repeat="newMember in memberCtrl.newMembers.projectTeam">
+
+              <td>
+                <div class="media">
+                  <div class="media-body" style="padding-top:8px;">
+                    <h4 class="media-heading" style="margin-bottom:0px;">
+                      <b>{{newMember.projectTeamPK.teamMember}}</b>
+                    </h4>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <select name="role"
+                        ng-model="newMember.teamRole"
+                        class="form-control">
+                  <option ng-repeat="role in memberCtrl.roles"
+                          value="{{role}}">
+                    {{role}}
+                  </option>
+                </select>
+              </td>
+              <td>
+                <button type="button"
+                        style="width:32px; height: 32px; border-radius: 16px;"
+                        ng-click="memberCtrl.removeMember(newMember.projectTeamPK.teamMember)"
+                        class="btn btn-danger pull-right">
+                  <em class="fa fa-trash"></em>
+                </button>
+              </td>
+
+            </tr>
+            </tbody>
+          </table>
+
+          <div class="col-md-offset-10 col-md-2" style="margin-top: -18px; right: -21px;">
+            <button type="button"
+                    title="Save"
+                    ng-click="memberCtrl.addMembers()"
+                    style="width: 220px;margin-top: 40px;"
+                    class="btn btn-sm btn-success pull-right"
+                    data-toggle="collapse"
+                    data-target="#collapseAddMember"
+                    aria-expanded="false"
+                    aria-controls="collapseAddMember">
+              Save
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+
+    </div>
+  </div>
+
+
+
+  <form name="tableform"
+        style="padding-top:20px;"
+        oncancel="cancel()"
+        class="">
+
+    <table class="table">
+      <tbody>
+      <tr style="font-weight: bold">
+        <td style="width:75%;border-top:none;">Members</td>
+        <td style="width:18%;border-top:none;">Role</td>
+        <td style="width:7%;border-top:none;">Action</td>
+      </tr>
+
+      <tr ng-repeat="member in memberCtrl.members | filter:searchInput">
+        <td ng-class="{'text-muted' : member.user.email == mainCtrl.email}">
+          <div class="media">
+            <a class="pull-left">
+              <img src="http://gravatar.com/avatar/{{mainCtrl.emailHash}}?d=mm"
+                   style="height: 50px; margin-right: 10px;border: 2px solid white;margin-top:3px;"
+                   class="profile-image img-circle">
+            </a>
+
+            <div class="media-body" style="padding-top:8px;">
+              <h4 class="media-heading" style="margin-bottom:0px;">
+                <b>{{member.user.fname}} {{member.user.lname}} <span ng-show="member.user.email == mainCtrl.email"> (me)</span></b>
+              </h4>
+
+              <p><span style="font-size:12px;">{{member.user.email}}</span></p>
+            </div>
+          </div>
+        </td>
+        <td>
+          <select name="role"
+                  ng-options="role for role in memberCtrl.roles"
+                  ng-model="member.teamRole"
+                  ng-change="memberCtrl.selectChanged($index,member.user.email,member.teamRole)"
+                  ng-disabled="member.user.email == mainCtrl.email"
+                  class="form-control">
+          </select>
+
+          <span style="color: green;" ng-show="memberCtrl.showThisIndex == $index">
+            <i class="fa fa-check-square-o"></i>
+            Saved!
+          </span>
+
+
+        </td>
+        <td>
+          <button type="button"
+                  style="width:32px; height: 32px; border-radius: 16px;"
+                  ng-disabled="member.user.email == mainCtrl.email"
+                  ng-click="memberCtrl.deleteMemberFromBackend(member.user.email)"
+                  class="btn btn-danger pull-right">
+            <em class="fa fa-trash"></em>
+          </button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </form>
+</div>

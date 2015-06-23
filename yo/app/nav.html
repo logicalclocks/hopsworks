@@ -1,0 +1,99 @@
+<script>
+  $(document).ready(function () {
+    var trigger = $('.hamburger'),
+      overlay = $('.overlay'),
+      isClosed = true;
+
+    trigger.click(function () {
+      hamburger_cross();
+    });
+
+    function hamburger_cross() {
+
+      if (isClosed == true) {
+        overlay.hide();
+        trigger.removeClass('is-open');
+        trigger.addClass('is-closed');
+        isClosed = false;
+
+        $("#projectBread").show("slow");
+
+      } else {
+        overlay.show();
+        trigger.removeClass('is-closed');
+        trigger.addClass('is-open');
+        isClosed = true;
+
+        $("#projectBread").hide("slow");
+
+      }
+    }
+
+    $('[data-toggle="offcanvas"]').click(function () {
+      $('#wrapper').toggleClass('toggled');
+    });
+  });
+</script>
+
+
+<nav class="navbar navbar-default navbar-sics navbar-fixed-top" id="header_nav">
+    <div class="container-fluid">
+
+      <div growl class="pull-right"></div>
+
+      <div class="container-fluid" style="min-width: 600px">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <div class="navbar-header" style="padding-right: 55px">
+
+        <a class="navbar-brand" href="#/" style="font-family: Lobster; font-size: 30px; color: #fff;">HopsWorks
+          <img class="pull-right" style="margin-left:10px" width="30" src="images/hops.png"/>
+        </a>
+        <div class="input-group" ng-show="showHamburger">
+          <button type="button" class="hamburger is-open" style="color:white;" data-toggle="offcanvas">
+            <span class="hamb-top"></span>
+            <span class="hamb-middle"></span>
+            <span class="hamb-bottom"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="collapse navbar-collapse" id="navbar">
+        <ul class="nav navbar-nav navbar-right"
+            style="margin-right:10px;">
+          <li class="dropdown">
+            <a class="dropdown-toggle" style="padding:7px 0 8px 10px;" data-toggle="dropdown"  aria-expanded="false">
+
+              <img src="http://gravatar.com/avatar/{{mainCtrl.emailHash}}?d=mm" style="height: 35px; margin-right: 10px;border: 2px solid white;" class="profile-image img-circle">
+              {{mainCtrl.email}} <b class="caret"></b>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a ng-click="mainCtrl.profileModal()"><i class="fa fa-cog"></i> Account</a></li>
+              <li><a href="#/" ng-click="mainCtrl.logout()"><i class="fa fa-sign-out"></i> Sign out</a></li>
+            </ul>
+          </li>
+        </ul>
+
+
+            <form class="navbar-form" role="search">
+                <div class="col-md-offset-2 col-md-4 input-group">
+                    <input type="text" class="form-control" style="height: 28px;margin-top: 3px;" placeholder="Search"
+                           name="srch-term" id="srch-term">
+
+                    <div class="input-group-btn" style="width: 54px;">
+                        <button class="btn btn-default" style="color: #028e9b;margin-top: 3px; padding: 6px 12px;"
+                                type="submit">
+                            <i class="glyphicon glyphicon-search"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</nav>
+
+
+

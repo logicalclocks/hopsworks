@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core">
+  <h:head>
+    <title>BiobankCloud - Password reset</title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />       
+  </h:head>                                                    
+
+  <h:body >
+    <ui:insert name="titleBar" >
+      <ui:include src="/bbc/lims/titleBar.xhtml" />       
+    </ui:insert>
+
+
+
+    <div  align="center" class="CSQ"> 
+      <h:form>
+        <p:selectOneMenu id="sec_question" 
+                         value="#{resetPassword.question}" 
+                         required="true"
+                         requiredMessage="Select security question">
+          <f:selectItem itemLabel="Select Security Question" itemValue="" />
+          <f:selectItems value="#{resetPassword.questions}"/>
+        </p:selectOneMenu>  
+
+
+        <p:inputText id="ans" label="ans" 
+                     value="#{resetPassword.answer}" 
+                     required="true"
+                     requiredMessage="Answer Security Question"
+                     autocomplete="false"/>
+        <p:watermark for="ans" value="Answer your security question" />
+
+        <p:password id="cur" value="#{resetPassword.current}" 
+                    required="true" autocomplete="false"
+                    requiredMessage="Enter password"  />
+        <p:watermark for="cur" value="Enter your password" />
+
+
+        <p:messages id="messages" autoUpdate="true" closable="true"/>
+
+
+
+        <h:panelGrid columns="2" style="margin-top: 10px;">
+          <p:commandButton 
+            type="submit"
+            value="Submit"
+            ajax="false"
+            action="#{resetPassword.changeSecQuestion()}"/>
+
+          <p:commandButton 
+            type="submit"
+            value="Cancel"
+            action="profile" process="@this" />
+
+        </h:panelGrid>
+
+      </h:form>
+    </div>
+
+
+
+  </h:body>
+</html>

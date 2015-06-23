@@ -1,0 +1,74 @@
+<div growl></div>
+
+
+<div class="modal-header">
+  <button class="close"
+          ng-click="projectCtrl.close()"
+          data-dismiss="modal"
+          aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Project settings</h2>
+</div>
+
+
+<form role="form" name="projectForm" ng-submit="projectCtrl.saveProject()" novalidate class="form-validate">
+  <div class="modal-body" id="testmodal">
+
+
+    <div class="row">
+
+      <div class="col-md-8">
+        <fieldset>
+          <div class="control-group col-md-offset-1">
+            <md-input-container>
+              <label for="projectname" style="color: black;">Name</label>
+              <input name="project_name"
+                     type="text"
+                     id="projectname"
+                     ng-model="projectCtrl.currentProject.projectName"
+                     required
+                     disabled
+                     >
+            </md-input-container>
+                        <span
+                          ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp; projectForm.project_name.$error.required"
+                          class="text-danger ng-hide">This field is required</span>
+
+            <p></p>
+
+            <label for="projectname" class="control-label">Description</label>
+
+            <div class="controls">
+              <textarea class="form-control" style="resize:none;"
+                        ng-model="projectCtrl.currentProject.description"
+                        rows="3">
+              </textarea>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="col-md-4">
+        <h3 style="margin-top: 40px; margin-left:40px; margin-bottom:0px">Services</h3>
+
+        <fieldset>
+          <div class="control-group col-md-offset-2">
+            <md-checkbox class="md-primary"
+                         ng-repeat="projectType in projectCtrl.projectTypes"
+                         ng-click="projectCtrl.exists(projectType)">
+              {{ projectType }}
+            </md-checkbox>
+          </div>
+        </fieldset>
+      </div>
+
+
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-default" type="button" ng-click="projectCtrl.close()">Cancel</button>
+    <button class="btn btn-primary" type="submit" ng-disabled="projectForm.project_name.$error.required">
+      Save
+    </button>
+  </div>
+</form>

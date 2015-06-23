@@ -1,0 +1,143 @@
+<div class="container" ng-controller="MainCtrl as mainCtrl" style="padding-top:25px;">
+  <div ng-include="'nav.html'"></div>
+  <div class="row">
+    <div class="col-md-8" style="padding-left:56px; min-width: 500px">
+      <div class="">
+        <div class="widget-body">
+          <div class="timeline clearfix">
+            <div class="mid-line"></div>
+
+            <div
+              ng-repeat="historyObject in homeCtrl.histories| startFrom:(homeCtrl.currentPage - 1) * homeCtrl.pageSize | limitTo:homeCtrl.pageSize">
+
+              <div class="time-header info" ng-if="historyObject.flag == 'older'">Older</div>
+              <div class="time-header error" ng-if="historyObject.flag == 'lastweek'">Last week</div>
+              <div class="time-header error" ng-if="historyObject.flag == 'thisweek'">This week</div>
+              <div class="time-header completed" ng-if="historyObject.flag == 'yesterday'">Yesterday</div>
+              <div class="time-header info" ng-if="historyObject.flag == 'today'">Today</div>
+
+              <div class="right">
+                <div class="r-arrow"></div>
+                <div class="about-task">
+                  <div class="header">{{historyObject.project.name}}
+                    <small class="muted">{{historyObject.timestamp|
+                      date:'medium'}}
+                    </small>
+                  </div>
+                  <p class="no-margin">
+                    {{historyObject.user.fname}} {{historyObject.activity}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <pagination total-items="homeCtrl.totalItems"
+                        ng-model="homeCtrl.currentPage"
+                        max-size="homeCtrl.pageSize"
+                        class="pagination-sm"
+                        boundary-links="true"
+                        rotate="false"
+                        style="margin-left: 170px"
+                        num-pages="homeCtrl.totalPages">
+            </pagination>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 sidebar" style="min-width: 390px; max-width: 390px">
+      <span class="list-group-item active">
+        <span class="badge pull-left" style="margin-right: 10px;">{{homeCtrl.projects.length}}</span> Projects
+
+        <button class="btn btn-lightgrey pull-right"
+                style="height: 43px;margin-right: -16px;margin-top: -11px;width: 70px; border-radius: 0px;"
+                ng-click="homeCtrl.newProject()">
+          <i class="fa fa-plus-circle fa-lg"></i>
+          <span style="margin-left:3px;">New</span>
+        </button>
+
+      </span>
+
+      <div class="list-group-item"
+           style="background-color: #f5f5f5;">
+        <div class="input-group-btn search-panel pull-left"
+             style="width: 83px;">
+          <button type="button"
+                  class="btn btn-default dropdown-toggle"
+                  data-toggle="dropdown">
+            <span id="search_concept">Filter by</span>
+            <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu">
+            <li><a href="#its_equal"> My own</a></li>
+            <li><a href="#greather_than"> Private</a></li>
+            <li><a href="#less_than"> Public </a></li>
+            <li class="divider"></li>
+            <li><a href="#all">All</a></li>
+          </ul>
+        </div>
+        <input type="hidden" name="search_param" value="all" id="search_param">
+        <input type="text" class="form-control pull-left" ng-model="searchProject"
+               style="width: 205px; border-radius: 0;"
+               name="x" placeholder="Find project...">
+        <span class="input-group-btn">
+          <button class="btn btn-default" type="button" style="height:34px;">
+            <span class="glyphicon glyphicon-search"></span>
+          </button>
+        </span>
+      </div>
+      <div ng-repeat="project in homeCtrl.projects| filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects - 1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects">
+        <a href="#/project/{{project.project.id}}"
+           class="list-group-item"
+           data-target="menu-{{$index}}">
+          <div ng-if="project.teamRole == 'Data scientist'">
+            <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-lock fa-2 pull-left"></i>
+          </div>
+          <div ng-if="project.teamRole == 'Data owner'">
+            <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-unlock fa-2 pull-left"></i>
+          </div>
+          {{project.project.name}}
+        </a>
+        <div class="dropdown position-fixed" id="menu-{{$index}}">
+          <ul class="dropdown-menu dropdown-amore">
+
+            <li>
+              <a class="pointer"
+                 role="menuitem"
+                 tabindex="1"
+                 ng-click="">
+                <span><i class="fa fa-share-alt"></i>
+                  Share...</span>
+              </a>
+            </li>
+
+            <li>
+              <a class="pointer"
+                 role="menuitem"
+                 tabindex="2"
+                 ng-click="homeCtrl.deleteProject(project.project.id)">
+                <span><i class="fa fa-trash"></i>
+                  Remove and keep DataSets</span>
+              </a>
+            </li>
+            <li>
+              <a class="pointer"
+                 role="menuitem"
+                 tabindex="3"
+                 ng-click="homeCtrl.wipeProject(project.project.id)">
+                <span><i class="fa fa-trash"></i>
+                  Remove and delete DataSets </span>
+              </a>
+            </li>
+
+          </ul>
+        </div>
+      </div>
+      <pager total-items="homeCtrl.totalItemsProjects" ng-model="homeCtrl.currentPageProjects"></pager>
+    </div>
+
+
+  </div>
+
+</div>

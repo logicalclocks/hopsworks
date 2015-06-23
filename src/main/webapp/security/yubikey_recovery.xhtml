@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core">
+
+  <h:head>
+    <title>BiobankCloud - Password reset</title>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/layout.css']}" />
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/security.css']}" />
+  </h:head>
+
+  <h:body >
+    <ui:insert name="titleBar" >
+      <ui:include src="/bbc/lims/titleBar.xhtml" />       
+    </ui:insert>
+
+
+    <div class="ForgotPassword" align="center">
+
+      <h:form >
+        <p:inputText id="rname" required="true" label="email" 
+                     requiredMessage="Enter your email."
+                     validatorMessage="Invalid username"
+                     value="#{recoverySelector.uname}" >
+
+          <f:validateRegex
+            pattern="^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$" />
+        </p:inputText>
+        <p:watermark for="rname" value="Enter your email" />
+
+
+        <p:password id="cupwd" value="#{recoverySelector.passwd}"  
+                    label="current" required="true" 
+                    requiredMessage="Enter password"/>
+        <p:watermark for="cupwd" value="Enter your passwoed" />
+
+        <p:messages id="messages" autoUpdate="true"  closable="true"/>
+
+
+        <h:panelGrid columns="2"  >
+          <p:commandButton type="submit" value="Submit" action="#{recoverySelector.sendYubiReq()}"/>
+          <p:commandButton type="submit" value="Cancel" action="welcome" process="@this"/>
+
+        </h:panelGrid>
+
+
+      </h:form>
+
+    </div>
+  </h:body>
+</html>

@@ -1,0 +1,132 @@
+body {
+  font-family: "Source Sans Pro", sans-serif;
+  font-size: 14px;
+  line-height: 1.52857;
+  padding: 0;
+  min-width: 600px;
+}
+
+h2 {
+    font-size: 1.5em;
+}
+
+button, html, input, select, textarea {
+  font-family: "Source Sans Pro", sans-serif;
+  font-size: 14px;
+  line-height: 1.52857;
+  padding: 0;
+}
+
+a:focus {
+  outline: none;
+}
+
+.form-validate .form-control.ng-dirty.ng-valid, .form-validate .form-control.ng-dirty.ng-valid:focus {
+  border-color: #27c24c;
+}
+
+.form-validate .form-control.ng-dirty.ng-invalid {
+  border-color: #f05050;
+}
+
+.form-validate.ng-submitted.form-validate .form-control.ng-invalid {
+  border-color: #f05050;
+}
+
+.panel {
+  background-color: #fafafa;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  margin-bottom: 21px;
+}
+
+.panel-heading {
+  border-color: #cfdbe2;
+  background-color: #3a3f51;
+  color: #fff;
+  border-bottom: 0 none;
+  font-size: 14px;
+  border-bottom: 1px solid transparent;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  padding: 10px 15px;
+}
+
+.modal-header {
+  background-color:  #2e353d;
+  color: #ffffff;
+}
+
+.modal-header .close {
+  margin-top: -2px;
+  color: #fff;
+  opacity: 0.5;
+}
+
+.modal-content {
+  background-color: #fafafa;
+}
+
+.modal-dialog {
+  min-width: 400px;
+}
+
+.modal-lg {
+  min-width: 900px;
+}
+
+/* Project list in home */
+.pager {
+  background-color: #2e353d;
+  margin:0px;
+}
+
+.pager .disabled > a, .pager .disabled > a:focus, .pager .disabled > a:hover, .pager .disabled > span {
+  background-color: inherit;
+  border: 0 none;
+  border-radius: 0;
+  color: grey;
+  cursor: not-allowed;
+  padding-top: 10px;
+}
+
+.pager li > a, .pager li > span {
+  background-color: inherit;
+  color: #fff;
+  border: 0px;
+  border-radius: 0;
+  display: inline-block;
+  padding: 10px 14px;
+}
+
+.pager li > a:focus, .pager li > a:hover {
+  background-color: inherit;
+  font-weight: bolder;
+}
+
+
+.datasetList {
+  background-color: #46b8da;
+  list-style-type:none;
+  color:white;
+  padding-left: 0;
+  text-indent: 15px;
+}
+
+.datasetList > li {
+  padding: 6px;
+}
+
+.datasetList > li:hover {
+  background-color: #2e353d;
+}
+
+#deleteTemplateIcon{
+  border-left: 3px solid white;
+  height: 34px;
+  margin-right: -6px;
+  margin-top: -6px;
+  padding-top: 11px;
+  width: 38px;
+}

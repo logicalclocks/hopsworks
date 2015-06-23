@@ -1,0 +1,167 @@
+
+    <div class="modal-header">
+        <button class="close" ng-click="profileCtrl.close()" data-dismiss="modal" aria-hidden="true" type="button">&times;</button>
+        <h2 class="modal-title">Profile</h2>
+    </div>
+    <div class="modal-body" id="profileModal">
+    <div class="row">
+
+        <div growl reference="1" class="pull-right"></div>
+
+        <div class="col-xs-9 col-sm-9 col-md-9 pull-right">
+            <form method="post"
+                  name="profileForm"
+                  ng-submit="profileCtrl.updateProfile()"
+                  class="form-validate"
+                  novalidate>
+
+
+                <div class="row">
+                    <div class="col-xs-6 col-sm-6 col-md-6">
+                        <div class="form-group has-feedback">
+                            <label class="text-muted">First Name</label>
+                            <input name="first_name" placeholder="First Name" autocomplete="off"
+                                   ng-model="profileCtrl.user.firstName" required class="form-control "
+                                   type="text">
+                                    <span ng-show="(profileForm.$submitted || profileForm.first_name.$dirty) &amp;&amp; profileForm.first_name.$error.required"
+                                          class="text-danger ng-hide">This field is required</span>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 col-sm-6 col-md-6">
+                        <div class="form-group has-feedback">
+                            <label class="text-muted">Last Name</label>
+                            <input name="last_name" placeholder="Last Name" autocomplete="off"
+                                   ng-model="profileCtrl.user.lastName" required class="form-control "
+                                   type="text">
+                                    <span ng-show="(profileForm.$submitted ||profileForm.last_name.$dirty) &amp;&amp; profileForm.last_name.$error.required"
+                                          class="text-danger ng-hide">This field is required</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group has-feedback">
+                    <label class="text-muted">Phone Number</label>
+                    <input name="phone_number" placeholder="Phone" autocomplete="on"
+                           ng-model="profileCtrl.user.telephoneNum"
+                           ng-pattern="/^[+ 0]?\d{2}[- ]?\d{3}[- ]?\d{6}$/"
+                           class="form-control "
+                           type="text">
+                            <span ng-show="profileForm.phone_number.$dirty &amp;&amp; profileForm.phone_number.$error.pattern"
+                                  class="text-danger ng-hide">Phone number should be in (+00-000-000000) format.</span>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
+                        <input type="submit" class="btn btn-block btn-primary mt-lg" value="Save"
+                               ng-disabled="profileForm.$pristine"/>
+                    </div>
+                    <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
+                        <input type="button" class="btn btn-block btn-primary mt-lg" ng-click="profileCtrl.reset()"
+                               value="Reset" ng-disabled="profileForm.$pristine"/>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+        <div class="col-xs-3 col-sm-3 col-md-3 ">
+            <img class="img-thumbnail"
+                 ng-src="http://www.gravatar.com/avatar/{{ profileCtrl.emailHash + '?s=300&d=mm' }}"/>
+        </div>
+    </div>
+    <form method="post"
+          name="credentialsForm"
+          ng-submit="profileCtrl.changeLoginCredentials()"
+          class="form-validate"
+          novalidate>
+
+        <legend>Login Credentials</legend>
+
+        <div class="form-group has-feedback">
+            <label class="text-muted">Email address</label>
+            <input name="user_email" placeholder="Email" autocomplete="off"
+                   ng-model="profileCtrl.user.email" required
+                   class="form-control"
+                   type="email" ng-disabled="true">
+            <span class="fa fa-envelope form-control-feedback text-muted"></span>
+                            <span ng-show="(credentialsForm.$submitted ||credentialsForm.user_email.$dirty) &amp;&amp; credentialsForm.user_email.$error.required"
+                                  class="text-danger ng-hide">This field is required</span>
+                            <span ng-show="credentialsForm.user_email.$dirty &amp;&amp; credentialsForm.user_email.$error.email"
+                                  class="text-danger ng-hide">This field must be a valid email address</span>
+        </div>
+
+
+        <div class="form-group has-feedback">
+            <label class="text-muted">Current Password</label>
+            <input name="user_old_password" ng-model="profileCtrl.loginCredes.oldPassword"
+                   match="profileCtrl.user.chosenPassword"
+                   class="form-control" type="password" required>
+            <span class="fa fa-lock form-control-feedback text-muted"></span>
+                <span ng-show="(credentialsForm.$submitted ||credentialsForm.sec_answer.$dirty) &amp;&amp; credentialsForm.sec_answer.$error.required"
+                      class="text-danger ng-hide">You have to enter your current password.</span>
+        </div>
+
+
+        <!--div class="form-group has-feedback">
+            <label class="text-muted">Security question</label>
+            <input name="sec_question" placeholder="Security question"
+                   autocomplete="off"
+                   ng-model="profileCtrl.loginCredes.securityQuestion" required
+                   class="form-control "
+                   type="text">
+                                <span ng-show="(credentialsForm.$submitted ||credentialsForm.sec_question.$dirty) &amp;&amp; credentialsForm.sec_question.$error.required"
+                                      class="text-danger ng-hide">This field is required</span>
+        </div>
+        <div class="form-group has-feedback">
+            <label class="text-muted">Security answer</label>
+            <input name="sec_answer" placeholder="Security answer"
+                   autocomplete="off"
+                   ng-model="profileCtrl.loginCredes.securityAnswer" required
+                   class="form-control"
+                   type="text">
+                                <span ng-show="(credentialsForm.$submitted ||credentialsForm.sec_answer.$dirty) &amp;&amp; credentialsForm.sec_answer.$error.required"
+                                      class="text-danger ng-hide">This field is required</span>
+        </div-->
+
+
+        <div class="row">
+            <div class="col-xs-6 col-sm-6 col-md-6">
+                <div class="form-group has-feedback">
+                    <label class="text-muted">New Password</label>
+                    <input id="id-password" name="user_password"
+                           ng-model="profileCtrl.loginCredes.newPassword"
+                           ng-minlength="6"
+                           ng-maxlength="10"
+                           ng-pattern="/(?=.*[a-z])(?=.*[A-Z])(?=.*[\d\W]).*$/"
+                           required
+                           class="form-control"
+                           type="password">
+                    <span class="fa fa-lock form-control-feedback text-muted"></span>
+                                    <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password.$dirty) &amp;&amp; credentialsForm.user_password.$error.required"
+                                          class="text-danger ng-hide">This field is required</span>
+                                    <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.minlength"
+                                          class="text-danger ng-hide">Password should be at least 6 characters. </span>
+                                    <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.maxlength"
+                                          class="text-danger ng-hide">Password should be at most 10 characters. </span>
+                                    <span ng-show="credentialsForm.user_password.$dirty &amp;&amp; credentialsForm.user_password.$error.pattern"
+                                          class="text-danger ng-hide">Password should including one uppercase letter,
+                                          one special character and/or alphanumeric characters. </span>
+                </div>
+            </div>
+            <div class="col-xs-6 col-sm-6 col-md-6">
+                <div class="form-group has-feedback">
+                    <label class="text-muted">Confirm Password</label>
+                    <input name="user_password_confirm" ng-model="profileCtrl.loginCredes.confirmedPassword"
+                           match="regCtrl.newUser.chosenPassword"
+                           class="form-control" type="password">
+                    <span class="fa fa-lock form-control-feedback text-muted"></span>
+                                    <span ng-show="(credentialsForm.$submitted || credentialsForm.user_password_confirm.$dirty) &amp;&amp; credentialsForm.user_password_confirm.$invalid"
+                                          class="text-danger ng-hide">Password does Not match</span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-3 col-sm-3 col-md-3 pull-right">
+                <button type="submit" class="btn btn-block btn-primary mt-lg">Save</button>
+            </div>
+        </div>
+    </form>
+</div>

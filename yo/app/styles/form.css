@@ -1,0 +1,178 @@
+.c-checkbox, .c-radio {
+  margin-right: 4px;
+}
+
+.c-checkbox *, .c-radio * {
+  cursor: pointer;
+}
+
+.c-checkbox input, .c-radio input {
+  margin-left: 0 !important;
+  opacity: 0;
+  position: absolute;
+}
+
+.c-checkbox span, .c-radio span {
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  display: inline-block;
+  height: 20px;
+  margin-left: -20px;
+  margin-right: 5px;
+  position: relative;
+  text-align: center;
+  vertical-align: top;
+  width: 20px;
+}
+
+.c-checkbox span::before, .c-radio span::before {
+  margin-left: 0;
+}
+
+.c-checkbox:hover span, .c-radio:hover span {
+  border-color: #5d9cec;
+}
+
+.form-inline .c-checkbox span, .form-inline .c-radio span {
+  margin-left: 0;
+}
+
+.c-checkbox.c-checkbox-rounded span, .c-checkbox.c-radio-rounded span, .c-radio span, .c-radio.c-checkbox-rounded span, .c-radio.c-radio-rounded span {
+  border-radius: 500px;
+}
+
+.c-checkbox span::before, .c-radio span::before {
+  bottom: 0;
+  font-size: 12px;
+  left: 0;
+  line-height: 18px;
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  text-align: center !important;
+  top: 0;
+  vertical-align: middle;
+}
+
+.c-checkbox input[type="checkbox"]:checked + span::before, .c-checkbox input[type="radio"]:checked + span::before, .c-radio input[type="checkbox"]:checked + span::before, .c-radio input[type="radio"]:checked + span::before {
+  color: #fff;
+  opacity: 1;
+  transition: color 0.3s ease-out 0s;
+}
+
+.c-checkbox input[type="checkbox"]:checked + span, .c-checkbox input[type="radio"]:checked + span, .c-radio input[type="checkbox"]:checked + span, .c-radio input[type="radio"]:checked + span {
+  background-color: #5d9cec;
+  border-color: #5d9cec;
+}
+
+
+.text-muted {
+  color: #909fa7;
+}
+
+textarea.form-control {
+  height: auto
+}
+
+.form-control::-moz-placeholder {
+  color: #b7bac9;
+  opacity: 1;
+}
+
+.form-control-feedback {
+  left: 16px;
+  right: auto;
+}
+.form-control +
+.form-control-feedback,
+.form-control +
+.parsley-errors-list +
+.form-control-feedback {
+  left: auto;
+  right: 0;
+}
+
+
+.text-danger {
+  color: #f05050;
+}
+
+.mt0 {
+  margin-top: 0 !important;
+}
+
+.mt-lg {
+  margin-top: 15px !important;
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #5d9cec;
+  border-color: transparent;
+}
+.btn-primary.active,
+.btn-primary.focus,
+.btn-primary:active,
+.btn-primary:focus,
+.btn-primary:hover,
+.open > .dropdown-toggle.btn-primary {
+  color: #fff;
+  background-color: #4b91ea;
+  border-color: transparent;
+}
+
+.alert-danger hr {
+  border-top-color: rgba(0, 0, 0, .1)
+}
+
+.alert-danger .alert-link {
+  color: #e6e6e6
+}
+
+.content-wrapper {
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  margin-top: -1px;
+  padding: 20px;
+  width: 100%;
+}
+.content-wrapper > .unwrap {
+  margin: -15px;
+}
+
+.content-wrapper>.content-heading, .content-wrapper>h3 {
+  font-family: inherit;
+  line-height: 0;
+  font-size: 16px;
+  color: #929292;
+  margin: -20px -20px 20px;
+  padding: 27px 23px 22px;
+  font-weight: 400;
+  background-color: #fafbfc;
+  border-bottom: 1px solid #cfdbe2;
+}
+
+.wrapper>section {
+  background-color: #f5f7fa;
+  height: 100%;
+  margin-bottom: 60px !important;
+  margin-left: 0;
+  position: relative;
+  z-index: 111;
+}
+
+
+.styleSelect select {
+  background: none repeat scroll 0 0 white;
+  border: 0 none;
+  border-radius: 0;
+  color: #666;
+  font-size: 16px;
+  height: 31px;
+  line-height: 1;
+  padding: 5px;
+  width: 168px;
+}
+
+.styleSelect {
+  overflow: hidden;
+}

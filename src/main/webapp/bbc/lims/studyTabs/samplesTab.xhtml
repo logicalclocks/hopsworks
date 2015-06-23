@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+  <body>
+    <ui:composition>
+      <h:form styleClass="samples" id="samplesForm">
+        <p:growl for="updateSuccess" autoUpdate="true" showDetail="true"/>
+        <p:growl for="updateSuccess" autoUpdate="true" showDetail="true"/>
+        <p:growl for="message" autoUpdate="true" showDetail="true"/>
+        <p:panelGrid columns="1">
+          <p:panel id="samplecollections">
+            <div>
+              <h2 style="float:none;">
+                Collections
+              </h2>
+            </div>
+            <h:panelGrid columns="2" columnClasses="firstColumn,secondColumn">
+              <p:dataTable var="coll" value="#{samplesController.samplecollection}">
+                <p:column headerText="Collections">
+                  <p:commandLink value="#{coll.acronym}" actionListener="#{samplesController.selectCollection(coll.id)}" update="@form :#{p:component('editCollectionTypesDialog')}"/>
+                </p:column>
+              </p:dataTable>
+              <h:panelGrid columns="2" columnClasses="firstColumn,secondColumn" id="collectionInfo" rendered="#{samplesController.collectionSelected}">
+                <h:outputLabel value="Id" for="collectionid"/>
+                <h:inputText value="#{samplesController.selectedCollection.id}" id="collectionid" readonly="true"/>
+
+                <h:outputLabel value="Acronym" for="collectionAcronym"/>
+                <h:inputText value="#{samplesController.selectedCollection.acronym}" id="collectionAcronym"/>
+
+                <h:outputLabel value="Name" for="collectionname"/>
+                <h:inputText value="#{samplesController.selectedCollection.name}" id="collectionname"/>
+
+                <h:outputLabel value="Description" for="collectionDescription"/>
+                <h:inputTextarea value="#{samplesController.selectedCollection.description}" id="collectionDescription" />
+
+                <h:outputLabel value="Collection types" for="collectionTypeList"/>
+                <h:panelGrid columns="2">
+                  <p:dataList id="collectionTypeList" value="#{samplesController.selectedCollection.collectionTypeList}" var="item" emptyMessage="No collection type set">
+                    #{item.toString()}
+                  </p:dataList>
+                  <p:commandLink styleClass="fa fa-edit" oncomplete="PF('editCollectionTypesDlg').show()" type="button" process="@this"/>
+                </h:panelGrid>
+
+              </h:panelGrid>
+              <h:outputText value="Select a collection in the panel on the left." rendered="#{not samplesController.collectionSelected}"/>
+
+              <p:commandButton id="addColl" value="Add collection" 
+                               type="button" onclick="PF('addCollectionDlg').show()" rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"/>
+              <p:commandButton value="Save" action="#{samplesController.updateSampleCollection()}" update="@form" disabled="#{not samplesController.collectionSelected}"/>
+            </h:panelGrid>
+          </p:panel>
+          <p:panel id="samples" rendered="#{samplesController.collectionSelected}">
+            <div>
+              <h2 style="float:none;">
+                Samples in #{samplesController.selectedCollection.name}
+              </h2>
+            </div>
+            <h:panelGrid columns="2" columnClasses="firstColumn,secondColumn">
+              <p:dataTable var="sample" value="#{samplesController.selectedCollection.sampleCollection}" emptyMessage="Empty collection">
+                <p:column headerText="Samples">
+                  <p:commandLink value="#{sample.id}" actionListener="#{samplesController.selectSample(sample.id)}" update="@form :#{p:component('editMaterialTypesDialog')}"/>
+                </p:column>
+              </p:dataTable>
+              <h:panelGrid id="sampleInfo" rendered="#{samplesController.sampleSelected}" columns="2" columnClasses="firstColumn,secondColumn">
+                <h:outputLabel value="Id" for="sampleid"/>
+                <h:inputText value="#{samplesController.selectedSample.id}" id="sampleid" readonly="true"/>
+
+                <!-- TODO: completely clueless here. Adding these fields again makes the save-button not work anymore -->
+
+                <!--                                <h:outputText value="try out"/>
+                                                <h:inputText value="#{samplesController.selectedSample.parentId}" id="parentId"/>-->
+
+                <!--                              <h:outputLabel value="Parent id" for="parentId"/>
+                                              <h:inputText value="#{samplesController.selectedSample.parentId}" id="parentId"/>
+
+                <h:outputLabel value="Sampled time" for="sampledTime"/>
+                <h:inputText value="#{samplesController.selectedSample.sampledTime}" id="sampledTime"/>-->
+
+                <h:outputLabel value="Material types" for="materialTypeList"/>
+                <h:panelGrid columns="2">
+                  <p:dataList id="materialTypeList" value="#{samplesController.selectedSample.materialTypeList}" var="item" emptyMessage="No material type set">
+                    #{item.toString()}
+                  </p:dataList>
+                  <p:commandLink styleClass="fa fa-edit" oncomplete="PF('editMaterialTypesDlg').show()" type="button" process="@this"/>
+                </h:panelGrid>
+              </h:panelGrid>
+              <h:outputText value="Select a sample in the panel on the left." rendered="#{not samplesController.sampleSelected}"/>
+
+              <p:commandButton id="addData" value="Add sample" 
+                               type="button" onclick="PF('addSampleDlg').show()" rendered="#{projectManagedBean.currentRoleInProject() == 'Master'}"/>
+              <p:commandButton value="Save" action="#{samplesController.updateSample()}" update="@form" disabled="#{not samplesController.sampleSelected}"/>
+            </h:panelGrid>
+          </p:panel>
+        </p:panelGrid>
+      </h:form>
+    </ui:composition>
+  </body>
+</html>

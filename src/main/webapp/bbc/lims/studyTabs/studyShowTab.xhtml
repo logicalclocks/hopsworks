@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"  
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      >
+  <body>
+    <ui:composition>
+      <div class="project_content_list">
+        <p:dataScroller value="#{projectManagedBean.specificLazyModel}" var="act" chunkSize="25" lazy="true" buffer="50">
+          <div class="event-item" align="left">
+            <span class="cgray right">
+              #{activityBean.findLastActivity(act.id)}
+            </span>
+            <img class="avatar s24" src="#{activityBean.getGravatar(act.user,24)}"/>
+            <div class="event-title">
+              <span class="author_name"><h:link>#{act.user.fname} #{act.user.lname}</h:link></span>
+              <span class="event_label opened">#{act.activity}</span>
+              at
+              <h:link><span class="tiny">#{act.user.fname} #{act.user.lname}  /  </span><strong>#{act.project.name}</strong></h:link>
+            </div>
+          </div>
+        </p:dataScroller>        
+        <h:outputText value="An error occurred while loading the audit trail. Please try refreshing the page." rendered="#{projectManagedBean.specificLazyModel == null}"/>
+      </div>
+    </ui:composition>
+  </body>
+</html>

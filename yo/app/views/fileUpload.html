@@ -1,0 +1,104 @@
+<div flow-init="{target:'/hopsworks/api/project/'+ fileUploadCtrl.projectId  +'/dataset/upload/'+ fileUploadCtrl.path}"
+     flow-file-error="fileUploadCtrl.fileErrorHandler( $file, $message, $flow )"
+     flow-error="fileUploadCtrl.errorHandler( $file, $message, $flow )"
+     flow-file-added="fileUploadCtrl.fileAddedHandler($file, $flow)">
+
+    <div growl reference="1" class="pull-right" ></div>
+
+    <div flow-prevent-drop
+         flow-drag-enter="style={border: '5px solid green'}"
+         flow-drag-leave="style={}"
+         ng-style="style">
+        <div class="container" style="width: 900px;">
+            <h1>Upload</h1>
+            <hr class="soften"/>
+
+            <div class="row" style="margin-left: 0px;">
+                <div class="span6">
+            <span class="btn btn-small btn-info" flow-btn>
+                <i class="glyphicon glyphicon-file"></i>
+                &nbsp Upload File</span>
+            <span class="btn btn-small btn-info" flow-btn flow-directory ng-show="$flow.supportDirectory">
+                <i class="glyphicon glyphicon-folder-open"></i>
+                &nbsp Upload Folder
+            </span>
+                </div>
+            </div>
+            <hr class="soften">
+            <p>
+                <a class="btn btn-small btn-success" ng-click="$flow.resume()">
+                    <i class="glyphicon glyphicon-cloud-upload"></i>
+                    Upload all</a>
+                <a class="btn btn-small btn-warning" ng-click="$flow.pause()">
+                    <i class="glyphicon glyphicon-pause"></i>
+                    Pause all</a>
+                <a class="btn btn-small btn-danger" ng-click="$flow.cancel()">
+                    <i class="glyphicon glyphicon-remove-circle"></i>
+                    Cancel all</a>
+                <span class="label label-info">Total Size: {{fileUploadCtrl.size($flow.getSize())}}</span>
+                <!--span class="label label-info">Is Uploading: {{$flow.isUploading()}}</span-->
+            </p>
+
+            <table class="table table-hover table-striped" flow-transfers>
+                <thead>
+                <tr>
+                    <th width="5%">#</th>
+                    <th width="40%">Name</th>
+                    <th width="10%">Size</th>
+                    <th width="28%">Progress</th>
+                    <!--th>Paused</th>
+                    <th>Uploading</th>
+                    <th>Completed</th-->
+                    <th width="17%">Settings</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="file in transfers">
+                    <td>{{$index+1}}</td>
+                    <td>{{file.name}}</td>
+                    <td>{{fileUploadCtrl.size(file.size)}}</td>
+                    <td>
+                        <div class="progress">
+                            <div ng-show="file.sizeUploaded() > 0" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{file.progress() * 100}}"
+                                 aria-valuemin="0" aria-valuemax="100" style="width:{{file.progress() * 100}}%">
+                                {{file.progress() * 100}}%
+                            </div>
+                            <div ng-show="file.error" class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"
+                                 aria-valuemin="0" aria-valuemax="100" style="width:100%">
+                                {{fileUploadCtrl.files[file.name]}}
+                            </div>
+                        </div>
+
+                    </td>
+                    <!--td>{{file.paused}}</td>
+                    <td>{{file.isUploading()}}</td>
+                    <td>{{file.isComplete()}}</td-->
+                    <td>
+                        <div class="">
+                            <a class="btn btn-mini btn-warning btn-circle" ng-click="file.pause()" ng-hide="file.paused">
+                                <i class="glyphicon glyphicon-pause"></i>
+                            </a>
+                            <a class="btn btn-mini btn-warning btn-circle" ng-click="file.resume()" ng-show="file.paused">
+                                <i class="glyphicon glyphicon-play"></i>
+                            </a>
+                            <a class="btn btn-mini btn-danger btn-circle" ng-click="file.cancel()">
+                                <i class="glyphicon glyphicon-remove-circle"></i>
+                            </a>
+                            <a class="btn btn-mini btn-info btn-circle" ng-click="file.retry()" ng-show="file.error">
+                                <i class="glyphicon glyphicon-repeat round"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <hr class="soften"/>
+
+            <div class="alert" flow-drop flow-drag-enter="class='alert-success'" flow-drag-leave="class=''"
+                 ng-class="class">
+                Drag And Drop your file here
+            </div>
+        </div>
+    </div>
+</div>

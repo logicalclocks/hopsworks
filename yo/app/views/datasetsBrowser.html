@@ -1,0 +1,300 @@
+<div ng-controller="MainCtrl as mainCtrl">
+  <div ng-include="'nav.html'"></div>
+
+
+  <div id="wrapper"
+       class="toggled"
+       ng-controller="DatasetsCtrl as datasetsCtrl">
+
+    <div class="overlay"></div>
+    <section layout="row" flex="">
+
+      <md-content flex="" layout-padding="">
+        <div ng-include="'navProject.html'"></div>
+        <div layout="column" layout-fill="" layout-align="top center">
+           <div class="content-wrapper">
+              <h3>
+                <a href="#/project/{{datasetsCtrl.currentProject.projectId}}/datasets">
+                    {{ datasetsCtrl.currentProject.projectName }}
+                </a>
+                <span data-ng-repeat="path in datasetsCtrl.pathParts track by $index">/
+                <a ng-click="datasetsCtrl.goToFolder($index)">{{path}}</a></span>
+              </h3>
+              <div class="row">
+                  <div class="col-lg-2" style="margin-top: 13px;">
+                      <table id="mytable" class="table table-bordred table-striped" style="margin-bottom:0px;">
+              <thead>
+              <th style="border-bottom: 1px solid #e7eaec; color: #2e353d; font-size: 22px">
+                <i class="glyphicon glyphicon-folder-open" style="padding-right: 10px;"></i>{{datasetsCtrl.currentDataSet}}
+              </th>
+              </thead>
+            </table>
+
+            <div class="btn-group" style="width: 100%; max-width: 250px">
+              <button style="margin-top:15px;width: 100%;" class="btn btn-warning dropdown-toggle"
+                      data-toggle="dropdown" aria-expanded="false">
+                New
+              </button>
+              <ul class="dropdown-menu" role="menu" style="width: 100%;">
+                <li><a ng-click="datasetsCtrl.newDataSetModal()"><i class="fa fa-plus-circle" style="width: 28px;"></i> Folder</a></li>
+                <li><a ng-click="datasetsCtrl.uploadFile()"><i class="fa fa-cloud-upload" style="width: 28px;"></i> Upload file</a></li>
+                <li class="divider"></li>
+                <li><a><i class="fa fa-info-circle" style="width: 28px;"></i>Metadata</a></li>
+              </ul>
+            </div>
+            <div class="ibox-content" style="margin-top:15px;"></div>
+
+
+          </div>
+                  <div class="col-lg-7">
+                      <div class="row">
+                          <div class="col-md-12" style="margin-top: 25px;">
+                          <div class="table-responsive" style="overflow: hidden;">
+                    <table class="table table-bordred table-hover" >
+                    <thead>
+                    <th >Name</th>
+                    <th >Owner</th>
+                    <th >Last modified</th>
+                    <th >File size</th>
+                    <th></th>
+                    <th></th>
+                    </thead>
+
+
+                    <tbody ui-sortable ng-model="datasetsCtrl.files">
+                    <td style="padding: 0px">&nbsp &nbsp
+                      <a ng-click="datasetsCtrl.back()" style="font-size:25px">..</a></td>
+
+                    <tr ng-repeat="file in datasetsCtrl.files"
+                        context-menu
+                        data-target="menu-{{ $index }}"
+                        ng-class="{ 'highlight': datasetsCtrl.selected === $index, 'expanded': expanded }"
+                        ng-dblclick="datasetsCtrl.openDir(file.name, file.dir)"
+                        ng-click="datasetsCtrl.select($index , file)"
+                        id="table-{{ $index }}">
+
+
+                      <td>
+                        <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
+                        <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
+                        {{file.name}}</td>
+                      <td>{{file.owner}} me</td>
+                      <td>{{file.modification| date:'short'}} <span style=" color: #757575; font-size: 12px; padding-left: 5px;">me</span>
+                      </td>
+                      <td style="width: 12%;">{{file.filesize}} 4TB</td>
+                      <td>
+                        <div class="dropdown position-fixed" id="menu-{{ $index }}">
+                          <ul class="dropdown-menu dropdown-amore" role="menu">
+                            <li>
+                              <a class="pointer"
+                                 role="menuitem"
+                                 tabindex="1"
+                                 ng-click="panel.highlight = true">
+                                <span><i class="fa fa-file-archive-o"></i>
+                                  Compress</span>
+                              </a>
+                            </li>
+
+                            <li>
+                              <a class="pointer"
+                                 role="menuitem"
+                                 tabindex="2"
+                                 ng-click="">
+                                <span><i class="fa fa-share-alt"></i>
+                                  Share...</span>
+                              </a>
+                            </li>
+
+                            <li>
+                              <a class="pointer"
+                                 role="menuitem"
+                                 tabindex="3"
+                                 ng-click="datasetsCtrl.deleteFile(file.name)">
+                                 <span><i class="fa fa-trash"></i>
+                                   Remove</span>
+                              </a>
+                            </li>
+
+                          </ul>
+                        </div>
+                      </td>
+
+
+                      <td style="margin:0px;width:25px;">
+                        <i ng-if="$index >= 5"
+                           title="This file is compressed"
+                           style="color: lightgrey; margin-top:3px;"
+                           class="fa fa-file-archive-o fa-lg pull-right">
+                        </i>
+                      </td>
+
+                    </tr>
+                    </tbody>
+
+                  </table>
+                  </div>
+              </div>
+            </div>
+          </div>
+                  <div class="col-lg-3" style="border-left: 1px dashed lightgrey; padding-left: 0px;">
+                      <div class="ibox float-e-margins">
+                          <div class="file-manager">
+                <div>
+                  <md-content class="md-padding" style="padding-top: 0px; min-width: 300px; max-width: 395px">
+                    <md-tabs md-dynamic-height md-border-bottom>
+                      <md-tab label="Details">
+                        <md-content>
+                          <table id="mytable1" ng-show="datasetsCtrl.selected > -1" class="table table-bordred table-striped" style="margin-top: 16px;">
+                            <tr style="background-color: #fafafa">
+                              <td style="color:lightgrey;">Size</td>
+                              <td style="color: grey;">234 Kb</td>
+                            </tr>
+
+                            <tr style="background-color: #fafafa">
+                              <td style="color:lightgrey;">Description</td>
+                              <td style="color: grey;">{{datasetsCtrl.fileDetail.name}}</td>
+                            </tr>
+
+                            <tr style="background-color: #fafafa">
+                              <td style="color: lightgrey;">Type</td>
+                              <td ng-show="!datasetsCtrl.fileDetail.dir" style="color: grey;">File</td>
+                              <td ng-show="datasetsCtrl.fileDetail.dir" style="color: grey;">Directory</td>
+                            </tr>
+
+                            <tr style="background-color: #fafafa">
+                              <td style="color:lightgrey;">Last changed</td>
+                              <td style="color: grey;">{{datasetsCtrl.fileDetail.modification| date:'short'}}</td>
+                            </tr>
+
+                            <tr style="background-color: #fafafa">
+                              <td style="color:lightgrey;">Owner</td>
+                              <td style="color: grey;">André More</td>
+                            </tr>
+                          </table>
+
+                        </md-content>
+
+
+                        <div class="ibox-content" id="hoverable" ng-click="datasetsCtrl.toggleRight()">
+                          <span class="pull-left" style="font-size: 16px; margin-top:-2px;">Add metadata</span> <i
+                          class="fa fa-pencil-square-o pull-right" style="font-size: 20px;"></i>
+                        </div>
+
+
+                      </md-tab>
+                      <md-tab label="Activity">
+                        <md-content class="md-padding" style="padding-left: 20px;padding-right: 20px;">
+
+
+                          <div class="row">
+
+                            <span
+                              style="color: #444;font-size: 11px; margin-bottom: 10px;padding: 16px 6px 6px;text-transform: uppercase;">
+                              LAST WEEK
+                            </span>
+
+                            <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center"
+                                           style="border-radius: 3px; margin-top:10px;">
+                              <div class="col-md-2" style="margin-top: -45px;">
+                                <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;"
+                                     src="http://gravatar.com/avatar/4b43f0e86b038f246887dde7f399a5a3?d=mm">
+                              </div>
+                              <div class="col-md-10" style="margin-top: 12px;padding-left:20px;">
+                                <b>You</b> uploaded an item
+                                </br>
+                                <span style="color:#444; font-size: 11px;">Apr 30</span>
+
+                                <p style="margin-top: 20px; color:#444;">
+                                  SICSEngineering.pdf
+                                </p>
+                              </div>
+                            </md-whiteframe>
+
+                            <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center"
+                                           style="border-radius: 3px; margin-top:20px; margin-bottom: 20px;">
+                              <div class="col-md-2" style="margin-top: -45px;">
+                                <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;"
+                                     src="http://gravatar.com/avatar/4b43f0e86b038f246887dde7f399a5a3?d=mm">
+                              </div>
+                              <div class="col-md-10" style="margin-top: 12px;padding-left:20px;">
+                                <b>André</b> uploaded an item
+                                </br>
+                                <span style="color:#444; font-size: 11px;">Apr 11</span>
+
+                                <p style="margin-top: 20px; color:#444;">
+                                  AndreSecretFile.rsa
+                                </p>
+                              </div>
+                            </md-whiteframe>
+
+                            <span
+                              style="color: #444;font-size: 11px; margin-bottom: 10px;padding: 16px 6px 6px;text-transform: uppercase;">
+                              EARLIER THIS MONTH
+                            </span>
+
+
+                            <md-whiteframe class="md-whiteframe-z1" layout layout-align="center center"
+                                           style="border-radius: 3px; margin-top:10px;">
+                              <div class="col-md-2" style="margin-top: -45px;">
+                                <img class="profile-image img-circle" style="height: 42px; border: 1px solid lightgrey;"
+                                     src="http://gravatar.com/avatar/f7b87f83afcba880c6300e1e4e4a8790?d=mm">
+                              </div>
+                              <div class="col-md-10" style="margin-top: 12px;padding-left:20px;">
+                                <b>Ermias</b> uploaded an item
+                                </br>
+                                <span style="color:#444; font-size: 11px;">Apr 07</span>
+
+                                <p style="margin-top: 20px; color:#444;">
+                                  happy_birthday.cake
+                                </p>
+                              </div>
+                            </md-whiteframe>
+                          </div>
+                        </md-content>
+                      </md-tab>
+
+                    </md-tabs>
+                  </md-content>
+                </div>
+
+
+              </div>
+
+
+            </div>
+
+
+          </div>
+              </div>
+           </div>
+        </div>
+        <div flex=""></div>
+      </md-content>
+      <!-- Slideout - Add Metadata -->
+          <md-sidenav class="md-sidenav-right md-whiteframe-z2" md-component-id="right"
+                      style="margin-top: 0px;">
+
+            <md-toolbar class="md-theme-light"
+                        style="background-color: #f1f1f1;color: gray; height: 39px; min-height: 39px;">
+
+              <div class="md-toolbar-tools">
+                <h2 style="margin:0;">
+                  <span>Metadata manager</span>
+                </h2>
+                <span flex></span>
+                <button style="font-size:15px;height:28px;color:white;padding-top: 3px;"
+                        ng-click="datasetsCtrl.close()"
+                        class="btn btn-success">
+                  <i class="fa fa-save"></i>
+                  Save
+                </button>
+              </div>
+
+            </md-toolbar>
+            <md-content layout-padding></md-content>
+          </md-sidenav>
+    </section>
+  </div>
+</div>
+
+

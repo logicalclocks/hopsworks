@@ -1,0 +1,116 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+    <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Lobster'>
+    <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Varela+Round'>
+    <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Roboto:500'>
+    <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=Source+Sans+Pro'>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"/>
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <!-- build:css(.) styles/vendor.css -->
+    <!-- bower:css -->
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="bower_components/angular-material/angular-material.css" />
+    <link rel="stylesheet" href="bower_components/angular-growl-v2/build/angular-growl.css" />
+    <link rel="stylesheet" href="bower_components/angular-xeditable/dist/css/xeditable.css" />
+    <link rel="stylesheet" href="bower_components/angular-chart.js/dist/angular-chart.css" />
+    <link rel="stylesheet" href="bower_components/select2/select2.css" />
+    <link rel="stylesheet" href="bower_components/angular-ui-select/dist/select.css" />
+    <!-- endbower -->
+    <!-- endbuild -->
+    <!-- build:css(.tmp) styles/main.css -->
+    <link rel="stylesheet" href="styles/nav.css">
+    <link rel="stylesheet" href="styles/timeline.css">
+    <link rel="stylesheet" href="styles/project_sidebar.css">
+    <link rel="stylesheet" href="styles/form.css">
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/filebrowser.css">
+    <link rel="stylesheet" href="styles/board.css">
+    <!-- endbuild -->
+
+
+
+  </head>
+  <body  ng-app="hopsWorksApp">
+    <!--[if lt IE 7]>
+       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+    <![endif]-->
+
+    <div style="margin-top:50px;">
+      <div ng-view=""></div>
+    </div>
+
+
+    <!-- build:js(.) scripts/vendor.js -->
+    <!-- bower:js -->
+    <script src="bower_components/jquery/dist/jquery.js"></script>
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="bower_components/angular-animate/angular-animate.js"></script>
+    <script src="bower_components/angular-aria/angular-aria.js"></script>
+    <script src="bower_components/angular-material/angular-material.js"></script>
+    <script src="bower_components/flow.js/dist/flow.js"></script>
+    <script src="bower_components/ng-flow/dist/ng-flow.js"></script>
+    <script src="bower_components/angular-websocket/angular-websocket.min.js"></script>
+    <script src="bower_components/angular-md5/angular-md5.js"></script>
+    <script src="bower_components/angular-growl-v2/build/angular-growl.js"></script>
+    <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+    <script src="bower_components/angular-messages/angular-messages.js"></script>
+    <script src="bower_components/angular-xeditable/dist/js/xeditable.js"></script>
+    <script src="bower_components/angular-cookies/angular-cookies.js"></script>
+    <script src="bower_components/angular-touch/angular-touch.js"></script>
+    <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
+    <script src="bower_components/angular-resource/angular-resource.js"></script>
+    <script src="bower_components/angular-route/angular-route.js"></script>
+    <script src="bower_components/Chart.js/Chart.js"></script>
+    <script src="bower_components/angular-chart.js/dist/angular-chart.js"></script>
+    <script src="bower_components/ng-context-menu/dist/ng-context-menu.js"></script>
+    <script src="bower_components/select2/select2.js"></script>
+    <script src="bower_components/angular-ui-select2/src/select2.js"></script>
+    <script src="bower_components/angular-ui-select/dist/select.js"></script>
+    <!-- endbower -->
+    <!-- endbuild -->
+
+    <!-- build:js({.tmp,app}) scripts/scripts.js -->
+
+    <script src="scripts/app.js"></script>
+
+    <script src="scripts/directives/modal.js"></script>
+    <script src="scripts/directives/passwordMatch.js"></script>
+
+    <script src="scripts/controllers/main.js"></script>
+    <script src="scripts/controllers/home.js"></script>
+    <script src="scripts/controllers/login.js"></script>
+    <script src="scripts/controllers/registration.js"></script>
+    <script src="scripts/controllers/profile.js"></script>
+    <script src="scripts/controllers/project.js"></script>
+    <script src="scripts/controllers/projectCreator.js"></script>
+    <script src="scripts/controllers/modal.js"></script>
+    <script src="scripts/controllers/recoverCtrl.js"></script>
+    <script src="scripts/controllers/datasetsCtrl.js"></script>
+    <script src="scripts/controllers/dataSetCreator.js"></script>
+    <script src="scripts/controllers/memberCtrl.js"></script>
+    <script src="scripts/controllers/newCardCtrl.js"></script>
+    <script src="scripts/controllers/newTableCtrl.js"></script>
+    <script src="scripts/controllers/fileUpload.js"></script>
+
+    <script src="scripts/services/AuthInterceptorService.js"></script>
+    <script src="scripts/services/AuthService.js"></script>
+    <script src="scripts/services/ProjectService.js"></script>
+    <script src="scripts/services/UserService.js"></script>
+    <script src="scripts/services/RequestInterceptorService.js"></script>
+    <script src="scripts/services/TransformRequest.js"></script>
+    <script src="scripts/services/ModalService.js"></script>
+    <script src="scripts/services/ActivityService.js"></script>
+    <script src="scripts/services/SecurityQuestions.js"></script>
+    <script src="scripts/services/MembersService.js"></script>
+    <script src="scripts/services/MetadataService.js"></script>
+    <script src="scripts/services/DataSetService.js"></script>
+    <!-- endbuild -->
+
+  </body>
+</html>

@@ -1,0 +1,448 @@
+/* 
+    Created on : Aug 15, 2014, 2:39:43 PM
+    Author     : roshan
+*/
+
+.ui-widget, .ui-widget .ui-widget .ui-widget-content {
+  //font-size: 70% !important;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size: 12px;
+
+
+}
+
+label {
+  width: auto;
+}
+
+.ui-tabs{
+  display: block;
+  height: auto;
+  padding: 0em !important;
+}
+
+.ui-tabs .ui-tabs-nav{
+  height: auto;
+  display: block;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 8px;
+  padding-left: 8px;
+  padding-bottom: 0px;
+  padding-right: 0px;
+  padding-top: 0px;
+  list-style: none;
+  list-style-type: none;
+  list-style-position: outside;
+  list-style-image: none; 
+}
+
+.ui-tabs .ui-tabs-panel .ui-widget-content li{
+  line-height: 20px;
+  display: block;
+  height: auto;
+  margin-bottom: -1px;
+
+}
+
+.ui-tabs .ui-tabs-nav li.ui-tabs-selected { 
+  padding-bottom: 0; 
+  border-right-width: 1px; 
+  border-right-width: 1px; 
+}
+
+.ui-tabs .ui-tabs-panels{
+  display: block;
+  min-height: 100%;
+  height: auto !important; 
+  margin: 0 0 0 0 !important;
+  padding-bottom: 0px !important;
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+  padding-top: 0px !important;
+
+  /*    display: inline-block;
+      width: 1170px !important;
+      min-height: 100%;
+      height: auto;
+      margin: 0 0 0 0;
+      padding: 0 0 0 0;
+      float: left;*/
+
+
+}
+
+.ui-tabs .ui-tabs-panel{
+  position: relative; 
+  display: block;
+  min-height: 100%;
+  height: auto; 
+  margin: 0 !important;
+  padding: 0 !important;
+  zoom:1;
+
+  /*    float: left;
+      display: list-item;
+      text-align: left;
+      background-color: #FFF;
+      padding: 10px 10px 10px 10px;
+      min-height: 18px;
+      width: 1148px;
+      height: 42px;
+      list-style: none;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.0470588);
+      text-align: -webkit-match-parent;*/
+
+
+
+  /*     width: 1148px;
+      height: 46px;
+      background-color: #FFF;
+      padding: 10px 10px 10px 10px;
+      min-height: 20px;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      border-bottom-width: 1px;
+      border-bottom-style: solid;
+      border-bottom-color: rgba(0, 0, 0, 0.0470588);
+      list-style: none;
+      display: list-item;
+      text-align: -webkit-match-parent;
+      float: left;
+  */
+
+}
+
+.ui-tabs .ui-widget-content{
+  height: auto  !important; 
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+
+}
+
+.ui-tabs-panel.disabled{color:#888;}
+.ui-tabs-panel.smoke{background-color:#f5f5f5;}
+//.ui-tabs-panel:hover{background:#d9edf7;border-bottom:1px solid #adf;}
+
+
+.BbcMainLayoutProject {
+  //text-align: center;
+  min-height: 1500px;
+  width: 100%;
+}
+
+.BbcMainLayoutProject .ui-widget-content {
+  border-width: 0px;  
+  overflow-y: hidden;
+  overflow-x: hidden;
+  width: 100% !important;
+}
+
+.BbcMainLayoutProject .ui-layout-unit-content{
+  min-height: 1500px;
+  height: auto !important;
+
+}
+/*.BbcMainLayoutProject::-webkit-scrollbar {
+     display: none;
+}*/
+
+.span5 .ui-button{
+  font-size: 11px;
+  padding: 2px 6px;
+  line-height: 16px;
+  margin: 2px;
+  border-color: #BD362F;
+  color: #FFF;
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+  background-color: #DB4F4A;
+  background-image: linear-gradient(to bottom, #EE5F5B, #BD362F);
+  background-repeat: repeat-x;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  border-width: 1px;
+  border-style: solid;
+  border-image: none;
+  border-radius: 4px;
+  box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px 1px 2px rgba(0, 0, 0, 0.05);
+  font-family: 'FontAwesome';
+  font-style: normal;   
+}
+
+.span5 .ui-button .ui-widget-content{
+  color: #ffffff;
+}
+
+.span5 .ui-button:hover {
+  //color:#333;
+  background: #FF530D;
+}
+
+.ui-dialog .ui-widget-content {
+  background: #ffffff;
+  color: #4f4f4f;
+}
+
+.ui-dialog .ui-dialog-buttonpane {
+  text-align: right;
+  border-width: 1px 0 0 0;
+  background-image: none;
+  margin: .5em 0 0 0;
+  padding: .3em 1em .5em .4em;
+
+}
+
+.ui-dialog .ui-dialog-titlebar {
+  padding: .4em .4em .4em 1em;
+  position: relative;
+  border: 0px;
+}
+
+h1 {
+  font-size: 30px;
+  float: left;
+}
+
+.Oops {
+  float: none;
+}
+
+.ui-treetable table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-top: 1%;
+}
+
+.uploading {
+  background-color: #FF9999;
+}
+
+.copying_to_hdfs {
+  background-color: #FFCC66;
+}
+
+.available {
+  background-color: #66FF99;
+}
+
+.ui-datascroller .ui-datascroller-item {
+  width: 100%;
+}
+
+.ui-tabs-panel .container {
+  width: 100%;
+}
+
+.workflow-panel-content {
+  margin-left: 0.6em;
+}
+
+.workflow-head{
+  margin-top: 1.5%;
+}
+
+.workflow-head .left{
+  float: left;
+  width: auto;
+}
+
+.workflow-head span, .workflow-head .ui-widget label{
+  /*width: auto !important;*/
+}
+
+.workflow-head .left span label {
+  font-size: 20px;
+  color: #456;
+  font-weight: normal;
+  line-height: 28px;
+  font-family: "Helvetica Neue","Helvetica","Arial","sans-serif";
+  margin-right: 10px;
+  padding-top: 0;
+}
+
+.workflow-head .ui-selectonemenu {
+  margin-right: 10px;
+  vertical-align: top;
+}
+
+.workflow-head .left .ui-selectonemenu label {
+  font-size: 15px;
+}
+
+.workflow-head .ui-button span {
+  font-size: 13px;
+}
+
+.workflow-head .right {
+  float: right;
+}
+
+.publicCheckbox .ui-chkbox-box {
+  margin-top: 5px;
+  vertical-align: bottom;
+  padding-top: 0;
+}
+
+.publicCheckbox label {
+  margin-top: 2px;
+}
+
+.publicCheckbox .ui-widget {
+  float: left;
+  margin-right: 3px;    
+}
+
+.wf-table-header {
+  min-width: 170px;
+  text-align: left;
+}
+
+.wf-panel .ui-panel-content{
+  margin: 5px;
+}
+
+.right_button .button-add-data {
+  font-weight: bold;
+  font-size: 1em;
+  padding: 4px;    
+  text-shadow: 0px 1px 0px rgba(255, 255, 255, 0.8);
+  color: #4F4F4F;
+  background: -moz-linear-gradient(center top , rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0)) repeat scroll 0% 0% #C4C4C4;
+  border: 1px solid #A8A8A8;
+  border-radius: 3px;
+  margin-bottom: 5px;
+}
+
+.browser_header {
+  background: #eee;
+  background-image: -webkit-gradient(linear, 0 0, 0 30, color-stop(0.066, #eee), to(#dfdfdf));
+  background-image: -webkit-linear-gradient(#eee 6.6%, #dfdfdf);
+  background-image: -moz-linear-gradient(#eee 6.6%, #dfdfdf);
+  background-image: -o-linear-gradient(#eee 6.6%, #dfdfdf);
+  border-bottom: 1px solid #ccc;
+  color: #456;
+  font-size: 16px;
+  text-shadow: 0 1px 1px #fff;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: normal;
+}
+
+.browser_table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  border: 1px solid #CCC;
+}
+
+.browser_table td {
+  padding: 10px;
+  border-top: 1px solid #DDD;
+}
+
+.browser_row{    
+  background: none repeat scroll 0% 0% #FAFAFA;
+}
+
+.browser_row:hover{
+  background:#d9edf7;border-bottom:1px solid #adf;
+}
+
+.remove_data_button {
+  font-size: 11px;
+  padding: 2px 6px;
+  line-height: 16px !important;
+  margin: 2px;
+  text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+  background-repeat: repeat-x;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  border-width: 1px;
+  border-style: solid;
+  border-image: none;
+  border-radius: 4px;
+  box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px 1px 2px rgba(0, 0, 0, 0.05);
+  font-family: "FontAwesome";
+  font-style: normal;
+}
+
+.remove_data_button:hover {
+  color: #313131;
+}
+
+.action_column {
+  width: 2%;
+  min-width: 10px;
+}
+
+.historyPanel {
+  float: left;
+  max-height: 850px;
+  overflow-y: auto !important;
+}
+
+.jobPanel td{
+  vertical-align: top;
+}
+
+.jobPanel {
+  width: 100%;
+}
+
+.historyColumn {
+  width: 25%;
+}
+
+.historyColumn label{
+  text-align: left;
+}
+
+.runColumn {
+  width: 50%;
+}
+
+.runColumn form {
+  margin-left: 40px;
+}
+
+.resultsColumn {
+  width: 25%;
+}
+
+.resultsColumn .stateSpan {
+  padding-top: 5px;
+  line-height: 18px;
+  display: inline-block;
+  font-size: 14px;
+}
+
+.workflow-head .targetVars td {
+  vertical-align: middle;
+}
+
+.historyColumn .ui-panel-title {
+  font-size: 16px;
+}
+
+.jobPanel h3 {
+  font-size: 20px;
+}
+
+.ui-fileupload .ui-widget-header {
+  background: none;
+  border:none;
+}
+
+.workflow-head td {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 0px;
+  padding-right: 20px;
+}
+
+.archivedWarning {
+  clear: both;
+  font-size: 20px;
+}
