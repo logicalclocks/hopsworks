@@ -2,11 +2,6 @@ package se.kth.meta.listener;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import se.kth.meta.db.Dbao;
-import se.kth.meta.exception.DatabaseException;
-import javax.servlet.ServletContext;
-import se.kth.meta.wscomm.WebSocketEndpoint;
-import se.kth.meta.wscomm.Protocol;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;

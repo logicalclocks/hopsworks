@@ -1,6 +1,5 @@
 package se.kth.meta.wscomm;
 
-import se.kth.meta.exception.ApplicationException;
 import java.io.StringReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;

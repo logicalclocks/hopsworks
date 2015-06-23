@@ -1,8 +1,5 @@
 package se.kth.meta.wscomm.message;
 
-import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.Fields;
-import se.kth.meta.entity.Tables;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -14,9 +11,9 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
+import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.FieldPredefinedValues;
 import se.kth.meta.entity.FieldTypes;
-import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.Fields;
 import se.kth.meta.entity.Tables;
 import se.kth.meta.entity.Templates;

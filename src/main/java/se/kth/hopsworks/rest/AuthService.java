@@ -1,7 +1,5 @@
 package se.kth.hopsworks.rest;
 
-import se.kth.hopsworks.controller.ResponseMessages;
-import se.kth.hopsworks.controller.UserStatusValidator;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

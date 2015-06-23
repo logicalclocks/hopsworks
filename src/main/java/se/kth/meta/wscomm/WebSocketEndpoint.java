@@ -1,10 +1,6 @@
 package se.kth.meta.wscomm;
 
-import se.kth.meta.db.Dbao;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;

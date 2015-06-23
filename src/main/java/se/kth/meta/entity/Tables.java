@@ -1,6 +1,5 @@
 package se.kth.meta.entity;
 
-import se.kth.meta.entity.listener.EntityListener;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;

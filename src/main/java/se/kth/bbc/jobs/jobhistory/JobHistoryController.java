@@ -15,7 +15,6 @@ import org.primefaces.model.StreamedContent;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.adam.AdamController;
-import se.kth.bbc.jobs.cuneiform.CuneiformController;
 import se.kth.bbc.jobs.cuneiform.CuneiformMB;
 import se.kth.bbc.jobs.spark.SparkController;
 import se.kth.bbc.jobs.yarn.YarnController;

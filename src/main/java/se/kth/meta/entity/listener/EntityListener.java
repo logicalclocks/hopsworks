@@ -1,6 +1,5 @@
 package se.kth.meta.entity.listener;
 
-import se.kth.meta.entity.Tables;
 import javax.persistence.PostLoad;
 import javax.persistence.PostPersist;
 import javax.persistence.PostRemove;

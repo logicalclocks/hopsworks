@@ -1,6 +1,5 @@
 package se.kth.bbc.jobs.cuneiform;
 
-import se.kth.bbc.jobs.cuneiform.model.InputParameter;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
 import java.io.BufferedWriter;
@@ -28,6 +27,7 @@ import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.FileSelectionController;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.JobControllerEvent;
+import se.kth.bbc.jobs.cuneiform.model.InputParameter;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;

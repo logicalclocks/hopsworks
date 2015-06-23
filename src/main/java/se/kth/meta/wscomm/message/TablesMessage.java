@@ -1,7 +1,5 @@
 package se.kth.meta.wscomm.message;
 
-import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.Tables;
 import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;

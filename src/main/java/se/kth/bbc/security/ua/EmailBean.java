@@ -1,11 +1,6 @@
 package se.kth.bbc.security.ua;
 
 import java.util.Date;
-import javax.mail.*;
-import javax.mail.internet.*;
-import javax.annotation.Resource;
-import javax.ejb.Asynchronous;
-import javax.ejb.Stateless;
 import javax.annotation.Resource;
 import javax.ejb.Asynchronous;
 import javax.ejb.Stateless;
