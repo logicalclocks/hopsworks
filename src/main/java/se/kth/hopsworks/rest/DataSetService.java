@@ -7,6 +7,9 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -37,6 +40,13 @@ import se.kth.hopsworks.controller.ResponseMessages;
 import se.kth.hopsworks.filters.AllowedRoles;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
+import javax.ws.rs.core.SecurityContext;
+import se.kth.bbc.fileoperations.FileOperations;
+import se.kth.bbc.lims.Constants;
+import se.kth.bbc.lims.StagingManager;
+import se.kth.bbc.lims.Utils;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.fb.InodeView;
@@ -45,6 +55,8 @@ import se.kth.bbc.upload.ResumableInfo;
 import se.kth.bbc.upload.ResumableInfoStorage;
 import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.FolderNameValidator;
+import se.kth.hopsworks.controller.ResponseMessages;
+import se.kth.hopsworks.filters.AllowedRoles;
 
 /**
  * @author André<amore@kth.se>
@@ -106,7 +118,6 @@ public class DataSetService {
     for (Inode i : cwdChildren) {
       kids.add(new InodeView(i, inodes.getPath(i)));
     }
-
     GenericEntity<List<InodeView>> inodViews
             = new GenericEntity<List<InodeView>>(kids) {
             };
@@ -427,7 +438,7 @@ public class DataSetService {
     if (!info.vaild()) {
       storage.remove(info);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
-              "Invalid request params.");
+              "Invalid request params. ");
     }
     return info;
   }

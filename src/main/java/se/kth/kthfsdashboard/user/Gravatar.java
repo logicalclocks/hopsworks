@@ -2,6 +2,9 @@ package se.kth.kthfsdashboard.user;
 
 import java.io.*;
 import java.security.*;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * Custom class to get the gravatar image from an email. Implemented because of

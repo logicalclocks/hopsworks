@@ -153,16 +153,16 @@ public final class SparkController extends JobController {
 
     SparkJob job = new SparkJob(history, r, fops);
 
-    setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
+    setSelectedJob(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
             sessionState.getActiveProject(), JobType.SPARK));
     if (isJobSelected()) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveProjectname())
-              + Constants.SPARK_DEFAULT_OUTPUT_PATH + getJobId()
+              + Constants.SPARK_DEFAULT_OUTPUT_PATH + getSelectedJob().getId()
               + File.separator + "stdout.log";
       String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveProjectname())
-              + Constants.SPARK_DEFAULT_OUTPUT_PATH + getJobId()
+              + Constants.SPARK_DEFAULT_OUTPUT_PATH + getSelectedJob().getId()
               + File.separator + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
       job.setStdErrFinalDestination(stdErrFinalDestination);

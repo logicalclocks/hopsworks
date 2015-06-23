@@ -9,6 +9,7 @@ import javax.json.JsonObject;
 import javax.websocket.DecodeException;
 import javax.websocket.Decoder;
 import javax.websocket.EndpointConfig;
+import se.kth.meta.exception.ApplicationException;
 import se.kth.meta.wscomm.message.Message;
 
 /**

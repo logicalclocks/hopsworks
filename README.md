@@ -14,5 +14,3 @@ Both the frontend and backend are packaged together in a single war file.
 
 To access the admin page go to index.xhtml.
 
-### Issues
- * The Grant minifier has messed up some css and js files, so the app is not behaving as it should.

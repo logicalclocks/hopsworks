@@ -43,6 +43,10 @@ import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 import se.kth.bbc.project.privacy.ProjectPrivacyManager;
 import se.kth.bbc.project.privacy.model.Consent;
+import se.kth.bbc.project.services.ProjectServiceEnum;
+import se.kth.bbc.project.services.ProjectServiceFacade;
+import se.kth.bbc.security.ua.UserManager;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *
@@ -388,7 +392,7 @@ public class ProjectMB implements Serializable {
 
   /**
    * Add
-   *
+   * <p>
    * @return
    */
   public synchronized String addToTeam() {

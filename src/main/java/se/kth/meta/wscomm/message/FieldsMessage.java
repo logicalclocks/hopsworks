@@ -14,6 +14,11 @@ import javax.json.JsonObject;
 import javax.json.JsonValue;
 import se.kth.meta.entity.FieldPredefinedValues;
 import se.kth.meta.entity.FieldTypes;
+import se.kth.meta.entity.EntityIntf;
+import se.kth.meta.entity.FieldPredefinedValues;
+import se.kth.meta.entity.FieldTypes;
+import se.kth.meta.entity.Fields;
+import se.kth.meta.entity.Tables;
 
 /**
  *

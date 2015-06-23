@@ -120,6 +120,10 @@ public class JobHistory implements Serializable {
   @Column(name = "type")
   @Enumerated(EnumType.STRING)
   private JobType type;
+  
+  @Size(max = 30)
+  @Column(name = "app_id")
+  private String appId;
 
   @JoinColumn(name = "user",
           referencedColumnName = "EMAIL")
@@ -149,6 +153,23 @@ public class JobHistory implements Serializable {
   public JobHistory(Date submissionTime, JobState state) {
     this.submissionTime = submissionTime;
     this.state = state;
+  }
+  
+  public JobHistory(JobHistory jh){
+    this(jh.submissionTime,jh.state);
+    this.id = jh.id;
+    this.name = jh.name;
+    this.executionDuration = jh.executionDuration;
+    this.args = jh.args;
+    this.stderrPath = jh.stderrPath;
+    this.stdoutPath = jh.stdoutPath;
+    this.type = jh.type;
+    this.appId = jh.appId;
+    this.user = jh.user;
+    this.project = jh.project;
+    this.jobInputFileCollection = jh.jobInputFileCollection;
+    this.jobOutputFileCollection = jh.jobOutputFileCollection;
+    this.jobExecutionFileCollection = jh.jobExecutionFileCollection;
   }
 
   public Long getId() {
@@ -222,9 +243,15 @@ public class JobHistory implements Serializable {
   public void setType(JobType type) {
     this.type = type;
   }
+    
+  public String getAppId() {
+    return appId;
+  }
 
-  @XmlTransient
-  @JsonIgnore
+  public void setAppId(String appId) {
+    this.appId = appId;
+  }
+
   public Collection<JobOutputFile> getJobOutputFileCollection() {
     return jobOutputFileCollection;
   }
@@ -250,8 +277,6 @@ public class JobHistory implements Serializable {
     this.project = project;
   }
 
-  @XmlTransient
-  @JsonIgnore
   public Collection<JobInputFile> getJobInputFileCollection() {
     return jobInputFileCollection;
   }
@@ -261,8 +286,6 @@ public class JobHistory implements Serializable {
     this.jobInputFileCollection = jobInputFileCollection;
   }
 
-  @XmlTransient
-  @JsonIgnore
   public Collection<JobExecutionFile> getJobExecutionFileCollection() {
     return jobExecutionFileCollection;
   }

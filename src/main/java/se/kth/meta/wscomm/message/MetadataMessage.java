@@ -13,6 +13,8 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 import se.kth.meta.entity.Fields;
+import se.kth.meta.entity.EntityIntf;
+import se.kth.meta.entity.RawData;
 import se.kth.meta.entity.Tables;
 
 /**

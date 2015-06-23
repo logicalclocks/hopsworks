@@ -17,6 +17,15 @@ import se.kth.bbc.security.ua.model.PeopleGroupPK;
 import se.kth.bbc.security.ua.model.Userlogins;
 import se.kth.bbc.security.ua.model.Yubikey;
 import se.kth.bbc.project.Project;
+import javax.persistence.TypedQuery;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.security.ua.model.Address;
+import se.kth.bbc.security.ua.model.Organization;
+import se.kth.bbc.security.ua.model.PeopleGroup;
+import se.kth.bbc.security.ua.model.PeopleGroupPK;
+import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.security.ua.model.Userlogins;
+import se.kth.bbc.security.ua.model.Yubikey;
 
 /**
  *

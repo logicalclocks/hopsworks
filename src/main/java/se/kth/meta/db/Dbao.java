@@ -24,6 +24,12 @@ import se.kth.meta.entity.FieldPredefinedValues;
 import se.kth.meta.entity.FieldTypes;
 import se.kth.meta.entity.Templates;
 import se.kth.meta.entity.TupleToFile;
+import se.kth.meta.entity.Fields;
+import se.kth.meta.entity.RawData;
+import se.kth.meta.entity.Tables;
+import se.kth.meta.entity.Templates;
+import se.kth.meta.entity.TupleToFile;
+import se.kth.meta.exception.DatabaseException;
 
 /**
  * Offers database functionalities
@@ -427,55 +433,6 @@ public class Dbao {
     return query.getResultList();
   }
 
-  //TEST TO SEE DATABASE UPDATES
-//    @Override
-//    public void run() {
-//        while (true) {
-//            try {
-//
-//                Thread.sleep(2000);
-//                if (table == null) {
-//                    table = this.getTable(1);
-//                    if (!this.em.contains(table)) {
-//                        try {
-//                            utx.begin();
-//                            //now the entity becomes managed
-//                            table = em.merge(table);
-//                            //utx.commit();
-//                        } catch (SecurityException | IllegalStateException ex) {
-//                            Logger.getLogger(Dbao.class.getName()).log(Level.SEVERE, null, ex);
-//                        }
-//
-//                        System.out.print("this entity should now be managed: " + em.contains(table));
-//                    }
-//                    System.out.println("Table retrieved " + table.getId() + " -- " + table.getName());
-//                } else {
-//                    //this.utx.begin();
-//                    //table = this.em.find(Tables.class, 1);
-//                    this.em.refresh(table);
-//                    //table = this.em.merge(table);
-//                    //this.utx.commit();
-//                    System.out.println("Table refreshed " + table.getId() + " -- " + table.getName());
-//                }
-//
-//                //another test
-//                //this.loadTemplate();
-//            } catch (InterruptedException e) {
-//                System.err.println("O " + e.getMessage());
-//            } catch (NotSupportedException | SystemException | ApplicationException ex) {
-//                Logger.getLogger(Dbao.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
-//    }
   public void shutdown() throws DatabaseException {
-//        this.em.clear();
-    //this.em.close();
-
-    //this.utx = null;
-//        try {
-//            this.ic.close();
-//        } catch (NamingException e) {
-//            throw new ApplicationException(e.getMessage());
-//        }
   }
 }

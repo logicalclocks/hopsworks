@@ -22,6 +22,8 @@ import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.project.metadata.CollectionTypeProjectDesignEnum;
+import se.kth.bbc.project.metadata.CollectionTypeProjectDesignEnum;
+import se.kth.bbc.security.ua.UserManager;
 
 /**
  *

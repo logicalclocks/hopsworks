@@ -32,49 +32,42 @@
               <div>
                 <h:panelGrid columns="2" columnClasses="labelColumn,valueColumn">
                   <h:outputLabel for="JobName" value="Job name"/>
-                  <h:inputText id="JobName" value="#{cuneiformController.jobName}"/>
+                  <h:inputText id="JobName" value="#{cuneiformMB.jobName}"/>
 
                   <h:outputLabel value="Upload workflow file" for="wfUploader"/>
                   <p:commandButton id="wfUploader"
                                    value="Select..."
                                    oncomplete="PF('chooseFileDlg').show()"
-                                   actionListener="#{cuneiformController.prepareFileSelector(true,'')}">
+                                   actionListener="#{cuneiformMB.prepareFileSelector(true,'')}">
                   </p:commandButton>
 
                   <h:outputLabel value="Uploaded file"/>
-                  <h:outputLabel value="#{cuneiformController.workflowName==null ? 'No file uploaded yet' : cuneiformController.workflowName}"/>
+                  <h:outputLabel value="#{cuneiformMB.workflowName==null ? 'No file uploaded yet' : cuneiformMB.workflowName}"/>
                 </h:panelGrid>
               </div>
 
-              <h:panelGroup rendered="#{cuneiformController.workflowUploaded}">
+              <h:panelGroup rendered="#{cuneiformMB.workflowUploaded}">
                 <div>
                   <h3> Input parameters </h3>
-                  <ui:repeat value="#{cuneiformController.freeVars}" var="variable">
+                  <ui:repeat value="#{cuneiformMB.freeVars}" var="variable">
                     <h:panelGrid columns="2">
                       <h:outputLabel value="#{variable.name}"/>
                       <p:commandButton value="Select..."
                                        oncomplete="PF('chooseFileDlg').show()"
-                                       actionListener="#{cuneiformController.prepareFileSelector(false,'name ' += variable.name)}">
+                                       actionListener="#{cuneiformMB.prepareFileSelector(false,'name ' += variable.name)}">
                       </p:commandButton>
-                      <h:outputLabel value="Uploaded file" rendered="#{cuneiformController.isFileUploadedForVar(variable.name)}"/>
-                      <h:outputLabel value="#{variable.value}" rendered="#{cuneiformController.isFileUploadedForVar(variable.name)}"/>
+                      <h:outputLabel value="Uploaded file" rendered="#{cuneiformMB.isFileUploadedForVar(variable.name)}"/>
+                      <h:outputLabel value="#{variable.value}" rendered="#{cuneiformMB.isFileUploadedForVar(variable.name)}"/>
                     </h:panelGrid>
                   </ui:repeat>
 
                 </div>
 
-                <!--                                <div class="targetVars">                                
-                                                    <h3> Target variables</h3>
-                                                    Select variables to query.
-                                                    <p:selectManyCheckbox id="targetVars" value="#{cuneiformController.queryVars}" layout="grid" columns="3">
-                                                        <f:selectItems value="#{cuneiformController.targetVars}" var="target" itemLabel="#{target}" itemValue="#{target}" />
-                                                    </p:selectManyCheckbox>
-                                                </div>-->
               </h:panelGroup>
 
               <div>
                 <!-- TODO: add validator that checks if the CF file is parseable -->
-                <p:commandButton id="cuneiformExecuteButton" value="Execute" action="#{cuneiformController.startWorkflow()}" 
+                <p:commandButton id="cuneiformExecuteButton" value="Execute" action="#{cuneiformMB.startWorkflow()}" 
                                  process="@form" update="@(.historyForm) @(.resultsForm) @(.runConfForm)"/>
               </div>
             </div>
@@ -84,38 +77,38 @@
               Results
             </h3>
             <h:panelGrid columns="2">
-              <h:outputLabel value="Current state:" for="curr_state" rendered="#{cuneiformController.selectedJobRunning or cuneiformController.selectedJobHasFinished}"/>
-              <h:outputText id="curr_state" value="#{cuneiformController.selectedJob.state}" styleClass="stateSpan"/>
+              <h:outputLabel value="Current state:" for="curr_state" rendered="#{cuneiformMB.selectedJobRunning or cuneiformMB.selectedJobHasFinished}"/>
+              <h:outputText id="curr_state" value="#{cuneiformMB.selectedJob.state}" styleClass="stateSpan"/>
             </h:panelGrid>
-            <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformController.selectedJobRunning}"/>
+            <h:graphicImage library="images" name="ajax-loader.GIF" rendered="#{cuneiformMB.selectedJobRunning}"/>
 
             <div>
-              <h:panelGroup id="outputFilesGroup" rendered="#{cuneiformController.selectedJobHasFinished}" >
+              <h:panelGroup id="outputFilesGroup" rendered="#{cuneiformMB.selectedJobHasFinished}" >
                 <h:outputText value="Results:"/>
-                <ui:repeat value="#{cuneiformController.outputFileNames}" var="file">
+                <ui:repeat value="#{cuneiformMB.outputFileNames}" var="file">
                   <div>
                     <p:commandLink ajax="false">
                       <strong>#{file}</strong>
-                      <p:fileDownload value="#{cuneiformController.downloadOutput(file)}"/>
+                      <p:fileDownload value="#{cuneiformMB.downloadOutput(file)}"/>
                     </p:commandLink>
                   </div>
                 </ui:repeat>
               </h:panelGroup>
             </div>
-            <h:panelGroup rendered="#{cuneiformController.selectedJobHasFinished}" >
+            <h:panelGroup rendered="#{cuneiformMB.selectedJobHasFinished}" >
               <div>
                 <h:outputText value="Logs:"/>
               </div>
               <div>
                 <p:commandLink ajax="false">
                   <strong>stdout.log</strong>
-                  <p:fileDownload value="#{cuneiformController.downloadStdout()}" rendered="#{cuneiformController.selectedJob.stdoutPath != null}"/>
+                  <p:fileDownload value="#{cuneiformMB.downloadStdout()}" rendered="#{cuneiformMB.selectedJob.stdoutPath != null}"/>
                 </p:commandLink>
               </div>
               <div>
                 <p:commandLink ajax="false">
                   <strong>stderr.log</strong>
-                  <p:fileDownload value="#{cuneiformController.downloadStderr()}" rendered="#{cuneiformController.selectedJob.stderrPath != null}"/>
+                  <p:fileDownload value="#{cuneiformMB.downloadStderr()}" rendered="#{cuneiformMB.selectedJob.stderrPath != null}"/>
                 </p:commandLink>
               </div>
             </h:panelGroup>

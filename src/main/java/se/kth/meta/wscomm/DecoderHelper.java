@@ -2,6 +2,8 @@ package se.kth.meta.wscomm;
 
 import se.kth.meta.exception.ApplicationException;
 import javax.json.JsonObject;
+import javax.json.JsonObject;
+import se.kth.meta.exception.ApplicationException;
 import se.kth.meta.wscomm.message.Message;
 
 /**

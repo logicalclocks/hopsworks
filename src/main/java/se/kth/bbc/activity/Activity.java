@@ -20,6 +20,8 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.project.Project;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *

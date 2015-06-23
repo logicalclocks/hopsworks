@@ -205,7 +205,6 @@
           <transport-guarantee>CONFIDENTIAL</transport-guarantee>
       </user-data-constraint
   </security-constraint>-->
-    
  
   <security-constraint>
     <web-resource-collection>
@@ -222,22 +221,6 @@
       <form-error-page>/error.xhtml</form-error-page>
     </form-login-config>
   </login-config>
-
-  <!--<filter>
-      <filter-name>LoginFilter</filter-name>
-      <filter-class>se.kth.bbc.security.auth.LoginFilter</filter-class>
-    </filter>
-    <filter-mapping>
-      <filter-name>LoginFilter</filter-name>
-      <url-pattern>/index.xhtml</url-pattern>
-      <url-pattern>/security/login.xhtml</url-pattern>
-      <url-pattern>/security/yubikeylogin.xhtml</url-pattern>
-      <url-pattern>/security/register_mobile.xhtml</url-pattern>
-      <url-pattern>/security/register_yubico.xhtml</url-pattern>
-      <url-pattern>/security/index.xhtml</url-pattern>
-      <url-pattern>/security/protected/index.xhtml</url-pattern>
-    </filter-mapping>
-  -->
 
   <session-config>
     <!-- on production systems you might have another value for the timeout -->

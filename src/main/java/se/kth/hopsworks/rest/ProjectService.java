@@ -54,6 +54,8 @@ public class ProjectService {
   private ProjectMembers projectMembers;
   @Inject
   private DataSetService dataSet;
+  @Inject
+  private JobService jobs;
 
   private final static Logger logger = Logger.getLogger(ProjectService.class.
           getName());
@@ -285,5 +287,11 @@ public class ProjectService {
     this.dataSet.setProjectId(id);
 
     return this.dataSet;
+  }
+  
+  @Path("{projectId}/jobs")
+  @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
+  public JobService jobs(@PathParam("projectId") Integer projectId){
+    return this.jobs.setProjectId(projectId);
   }
 }

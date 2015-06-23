@@ -9,6 +9,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
+import se.kth.meta.entity.EntityIntf;
+import se.kth.meta.entity.Tables;
 
 /**
  *

@@ -12,6 +12,8 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.project.Project;
+import se.kth.bbc.project.Project;
+import se.kth.bbc.security.ua.model.User;
 import se.kth.kthfsdashboard.user.AbstractFacade;
 
 /**

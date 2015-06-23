@@ -110,17 +110,17 @@ public class YarnController extends JobController {
 
     //Set up job
     YarnJob job = new YarnJob(history, runner, fops);
-    setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
+    setSelectedJob(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
             sessionState.getActiveProject(), JobType.YARN));
     if (isJobSelected()) {
       //Set log paths
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveProjectname())
-              + Constants.YARN_DEFAULT_OUTPUT_PATH + getJobId()
+              + Constants.YARN_DEFAULT_OUTPUT_PATH + getSelectedJob().getId()
               + File.separator + "stdout.log";
       String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveProjectname())
-              + Constants.YARN_DEFAULT_OUTPUT_PATH + getJobId()
+              + Constants.YARN_DEFAULT_OUTPUT_PATH + getSelectedJob().getId()
               + File.separator + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
       job.setStdErrFinalDestination(stdErrFinalDestination);

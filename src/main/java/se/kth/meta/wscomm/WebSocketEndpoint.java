@@ -22,6 +22,7 @@ import javax.websocket.server.ServerEndpoint;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.project.ProjectTeamFacade;
+import se.kth.meta.db.Dbao;
 import se.kth.meta.wscomm.message.Message;
 import se.kth.meta.wscomm.message.TextMessage;
 
