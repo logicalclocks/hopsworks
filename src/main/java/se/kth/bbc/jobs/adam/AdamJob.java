@@ -60,7 +60,8 @@ public class AdamJob extends YarnJob {
     makeOutputAvailable();
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    getJobHistoryFacade().update(getHistory(), getFinalState(), duration);
+    updateHistory(null, getFinalState(), duration, null, null, null, null, null,
+            null);
   }
 
   /**

@@ -152,6 +152,23 @@ public class JobHistory implements Serializable {
     this.submissionTime = submissionTime;
     this.state = state;
   }
+  
+  public JobHistory(JobHistory jh){
+    this(jh.submissionTime,jh.state);
+    this.id = jh.id;
+    this.name = jh.name;
+    this.executionDuration = jh.executionDuration;
+    this.args = jh.args;
+    this.stderrPath = jh.stderrPath;
+    this.stdoutPath = jh.stdoutPath;
+    this.type = jh.type;
+    this.appId = jh.appId;
+    this.user = jh.user;
+    this.project = jh.project;
+    this.jobInputFileCollection = jh.jobInputFileCollection;
+    this.jobOutputFileCollection = jh.jobOutputFileCollection;
+    this.jobExecutionFileCollection = jh.jobExecutionFileCollection;
+  }
 
   public Long getId() {
     return id;

@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -56,33 +58,34 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     return q.getResultList();
   }
 
-  public void update(JobHistory history, JobState newState) {
+  public JobHistory update(JobHistory history, JobState newState) {
     //TODO: check if state is a final one, if so: update execution time
-    update(history, null, newState, -1, null, null, null, null, null, null);
+    return update(history, null, newState, -1, null, null, null, null, null, null);
   }
 
-  public void update(JobHistory history, JobState newState, long executionTime) {
-    update(history, null, newState, executionTime, null, null, null, null, null, null);
+  public JobHistory update(JobHistory history, JobState newState, long executionTime) {
+    return update(history, null, newState, executionTime, null, null, null, null, null, null);
   }
 
-  public void update(JobHistory history, JobState newState,
+  public JobHistory update(JobHistory history, JobState newState,
           Collection<JobOutputFile> outputFiles) {
-    update(history, null, newState, -1, null, null, null, null, null, outputFiles);
+    return update(history, null, newState, -1, null, null, null, null, null, outputFiles);
   }
 
-  public void update(JobHistory history,
+  public JobHistory update(JobHistory history,
           Collection<JobOutputFile> extraOutputFiles) {
-    update(history, null, null, -1, null, null, null, null, null, extraOutputFiles);
+    return update(history, null, null, -1, null, null, null, null, null, extraOutputFiles);
   }
 
-  public void updateArgs(JobHistory history, String args) {
-    update(history, null, null, -1, args, null, null, null, null, null);
+  public JobHistory updateArgs(JobHistory history, String args) {
+    return update(history, null, null, -1, args, null, null, null, null, null);
   }
 
   public JobHistory findById(Long id) {
     return em.find(JobHistory.class, id);
   }
 
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW) //This seems to ensure that the entity is actually created and can later be found using em.find().
   public JobHistory create(String jobname, String userEmail, Project project,
           JobType type,
           String args, JobState state, String stdOutPath, String stdErrPath,
@@ -106,20 +109,21 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     jh.setJobInputFileCollection(inputFiles);
 
     em.persist(jh);
-    em.flush();
+    em.flush(); //To get the id.
+    System.out.println("Id: "+jh.getId());
     return jh;
   }
 
-  public void updateStdOutPath(JobHistory history, String stdOutPath) {
-    update(history, null, null, -1, null, stdOutPath, null, null, null, null);
+  public JobHistory updateStdOutPath(JobHistory history, String stdOutPath) {
+    return update(history, null, null, -1, null, stdOutPath, null, null, null, null);
   }
 
-  public void updateStdErrPath(JobHistory history, String stdErrPath) {
-    update(history, null, null, -1, null, null, stdErrPath, null, null, null);
+  public JobHistory updateStdErrPath(JobHistory history, String stdErrPath) {
+    return update(history, null, null, -1, null, null, stdErrPath, null, null, null);
   }
   
-  public void updateAppId(JobHistory history, String appId){
-    update(history, null, null, -1, null, null, null,
+  public JobHistory updateAppId(JobHistory history, String appId){
+    return update(history, null, null, -1, null, null, null,
             appId, null, null);
   }
 
@@ -137,7 +141,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   public void persist(JobOutputFile jof) {
     em.persist(jof);
   }
-
+  
   /**
    * Updates all given fields of <i>history</i> to the given value, unless that
    * value is null for entities, or -1 for integers.
@@ -153,10 +157,16 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
    * @param jobInputFileCollection
    * @param jobOutputFileCollection
    */
-  public void update(JobHistory history, String name, JobState state,
+  public JobHistory update(JobHistory history, String name, JobState state,
           long executionDuration, String args, String stdoutPath,
           String stderrPath, String appId, Collection<JobInputFile> jobInputFileCollection,
           Collection<JobOutputFile> jobOutputFileCollection) {
+    JobHistory obj = em.find(JobHistory.class, history.getId());
+    if(obj == null){
+      throw new IllegalArgumentException("Unable to find JobHistory object with id "+history.getId());
+    }else{
+      history = obj;
+    }    
     if (name != null) {
       history.setName(name);
     }
@@ -185,9 +195,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
       history.setJobOutputFileCollection(jobOutputFileCollection);
     }
     em.merge(history);
-  }
-  
-  public void refresh(JobHistory object){
-    em.refresh(object);
+    return history;
   }
 }

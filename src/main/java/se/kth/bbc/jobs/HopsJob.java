@@ -1,7 +1,10 @@
 package se.kth.bbc.jobs;
 
+import java.util.Collection;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
+import se.kth.bbc.jobs.jobhistory.JobInputFile;
+import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.project.Project;
@@ -38,16 +41,29 @@ public abstract class HopsJob {
     return initialized;
   }
 
+  /**
+   * Returns a copy of the current history object. Should not be used for updating.
+   * @return 
+   */
   public final JobHistory getHistory() {
-    return history;
+    return new JobHistory(history);
   }
 
   protected final void updateState(JobState newState) {
-    jobHistoryFacade.update(history, newState);
+    history = jobHistoryFacade.update(history, newState);
   }
 
   protected final void updateArgs(String args) {
-    jobHistoryFacade.updateArgs(history, args);
+    history = jobHistoryFacade.updateArgs(history, args);
+  }
+
+  protected final void updateHistory(String name, JobState state,
+          long executionDuration, String args, String stdoutPath,
+          String stderrPath, String appId, Collection<JobInputFile> inputFiles,
+          Collection<JobOutputFile> outputFiles) {
+    history = jobHistoryFacade.update(history, name, state,
+            executionDuration, args, stdoutPath, stderrPath, appId, inputFiles,
+            outputFiles);
   }
 
   /**

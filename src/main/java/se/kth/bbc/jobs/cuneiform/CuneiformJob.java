@@ -93,8 +93,8 @@ public final class CuneiformJob extends YarnJob {
     //Update execution time and final state
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    getJobHistoryFacade().update(getHistory(), getFinalState(), duration);
-
+    updateHistory(null, getFinalState(), duration, null, null, null, null, null,
+            null);
   }
 
   private void processOutput() {
@@ -127,8 +127,7 @@ public final class CuneiformJob extends YarnJob {
   protected void copyLogs() {
     stdOutPath = stdOutPath.replaceAll(APPID_REGEX, getHistory().getAppId());
     stdErrPath = stdErrPath.replaceAll(APPID_REGEX, getHistory().getAppId());
-    getJobHistoryFacade().updateStdOutPath(getHistory(), stdOutPath);
-    getJobHistoryFacade().updateStdErrPath(getHistory(), stdErrPath);
+    updateHistory(null, null, -1, null, stdOutPath, stdErrPath, null, null, null);
   }
-  
+
 }

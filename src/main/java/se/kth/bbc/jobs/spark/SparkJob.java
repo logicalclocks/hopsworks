@@ -50,7 +50,8 @@ public final class SparkJob extends YarnJob {
     super.copyLogs();
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    getJobHistoryFacade().update(getHistory(), getFinalState(), duration);
+    updateHistory(null, getFinalState(), duration, null, null, null, null, null,
+            null);
   }
 
 }

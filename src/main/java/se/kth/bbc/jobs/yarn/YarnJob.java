@@ -44,12 +44,12 @@ public class YarnJob extends HopsJob {
   public final void setStdErrFinalDestination(String stdErrFinalDestination) {
     this.stdErrFinalDestination = stdErrFinalDestination;
   }
-  
-  protected final String getStdOutFinalDestination(){
+
+  protected final String getStdOutFinalDestination() {
     return this.stdOutFinalDestination;
   }
-  
-  protected final String getStdErrFinalDestination(){
+
+  protected final String getStdErrFinalDestination() {
     return this.stdErrFinalDestination;
   }
 
@@ -81,7 +81,8 @@ public class YarnJob extends HopsJob {
       updateState(JobState.STARTING_APP_MASTER);
       monitor = runner.startAppMaster();
       started = true;
-      getJobHistoryFacade().updateAppId(getHistory(), monitor.getApplicationId().toString());
+      updateHistory(null, null, -1, null, null, null,
+              monitor.getApplicationId().toString(), null, null);
       return true;
     } catch (YarnException | IOException e) {
       logger.log(Level.SEVERE,
@@ -166,31 +167,29 @@ public class YarnJob extends HopsJob {
 
   protected void copyLogs() {
     try {
+      String stdout = null;
+      String stderr = null;
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
           fops.copyToHDFSFromPath(runner.getStdOutPath(),
                   stdOutFinalDestination);
-          getJobHistoryFacade().updateStdOutPath(getHistory(),
-                  stdOutFinalDestination);
+          stdout = stdOutFinalDestination;
         } else {
           //TODO: move in HDFS
-          getJobHistoryFacade().updateStdOutPath(getHistory(),
-                  runner.getStdOutPath());
+          stdout = runner.getStdOutPath();
         }
-
       }
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
           fops.copyToHDFSFromPath(runner.getStdErrPath(),
                   stdErrFinalDestination);
-          getJobHistoryFacade().updateStdErrPath(getHistory(),
-                  stdErrFinalDestination);
+          stderr = stdErrFinalDestination;
         } else {
           //TODO: move in HDFS
-          getJobHistoryFacade().updateStdErrPath(getHistory(),
-                  runner.getStdErrPath());
+          stderr = runner.getStdErrPath();
         }
       }
+      updateHistory(null, null, -1, null, stdout, stderr, null, null, null);
     } catch (IOException e) {
       //TODO: figure out how to handle this
       logger.log(Level.SEVERE, "Exception while trying to write logs for job "
@@ -219,7 +218,7 @@ public class YarnJob extends HopsJob {
     copyLogs();
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    getJobHistoryFacade().update(getHistory(), getFinalState(), duration);
-
+    updateHistory(null, getFinalState(), duration, null, null, null, null, null,
+            null);
   }
 }

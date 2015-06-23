@@ -286,11 +286,8 @@ public abstract class JobController implements Serializable {
 
   private boolean jobHasFinishedState() {
     checkIfHistorySet();
-    history.refresh(jobhistory);
-    if(jobhistory.getState() == null){
-      return true;
-    }
-    return jobhistory.getState().isFinalState();
+    JobState state = history.getState(jobhistory.getId());
+    return state.isFinalState();
   }
 
   protected void putVariable(String key, String value) {
