@@ -28,13 +28,7 @@ CREATE DEFINER=`vmetahops`@`localhost` PROCEDURE `emptyTables`()
     NO SQL
 BEGIN
 	
-	truncate raw_data;
-
-	delete from fields;
-	ALTER TABLE fields AUTO_INCREMENT = 1;
-
-	delete from tables;
-	alter table tables AUTO_INCREMENT = 1;
+	--TODO EMPTY ALL THE CORRESPONDING META TABLES
 
 END$$
 
@@ -527,12 +521,26 @@ CREATE TABLE IF NOT EXISTS `meta_inodes_ops` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `meta_inodes_ops_deleted`
+-- Table structure for table `meta_inodes_ops_children_deleted`
 --
 
-CREATE TABLE IF NOT EXISTS `meta_inodes_ops_deleted` (
-  `inodeid` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+CREATE TABLE IF NOT EXISTS `meta_inodes_ops_children_deleted` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `meta_inodes_ops_parents_deleted`
+--
+
+CREATE TABLE IF NOT EXISTS `meta_inodes_ops_parents_deleted` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 --
