@@ -24,23 +24,24 @@
 
             <div ng-repeat="job in cuneiformCtrl.jobs">
 
-              <div class="right">
+              <div class="right" ng-click="cuneiformCtrl.selectJob(job)">
                 <div class="r-arrow"></div>
                 <div class="about-task">
                   <div class="header"> {{job.name}}
-                    <small class="muted">Run by {{job.user.fname + ' ' + job.user.lname}} on {{job.submissionTime}}
+                    <small class="muted" ng-show="job.user">Run by {{job.user.fname + ' ' + job.user.lname}} on {{job.submissionTime}}
                     </small>
                   </div>
                   <p class="no-margin">
-                    State: {{job.state}}, took {{job.executionDuration}}ms. <br/>
+                    <span ng-show="job.state"> State: {{job.state}} </span>
+                    <span ng-show="job.executionDuration">Took {{job.executionDuration}}ms.</span>
                     Logs:
                   <ul>
-                    <li><a ng-click="cuneiformCtrl.getFile(job.stdoutPath)">{{job.stdoutPath}}</a></li>
-                    <li><a ng-click="cuneiformCtrl.getFile(job.stderrPath)">{{job.stderrPath}}</a></li>
+                    <li><a ng-click="cuneiformCtrl.getFile(job.stdoutPath)" ng-show="job.stdoutPath">{{job.stdoutPath}}</a></li>
+                    <li><a ng-click="cuneiformCtrl.getFile(job.stderrPath)" ng-show="job.stderrPath">{{job.stderrPath}}</a></li>
                   </ul>
                   Results:
                   <ul>
-                    <li ng-repeat="result in job.jobOutputFileCollection"><a ng-click="cuneiformCtrl.getFile(result.path)">{{result.jobOutputFilePK.name}} </a></li>
+                    <li ng-repeat="result in job.jobOutputFileCollection" ng-show="job.jobOutputFileCollection"><a ng-click="cuneiformCtrl.getFile(result.path)">{{result.jobOutputFilePK.name}} </a></li>
                   </ul>
                   </p>
                 </div>
@@ -90,8 +91,28 @@
         <div class="widget-body col-md-4">
           <div class="timeline clearfix">
 
-            <h3>Results</h3>
-
+            <h3>Selected job</h3>
+            <div ng-show="cuneiformCtrl.job">
+                <div class="about-task">
+                  <div class="header"> {{cuneiformCtrl.job.name}}
+                    <small class="muted" ng-show="cuneiformCtrl.job.user">Run by {{cuneiformCtrl.job.user.fname + ' ' + cuneiformCtrl.job.user.lname}} on {{cuneiformCtrl.job.submissionTime}}
+                    </small>
+                  </div>
+                  <p class="no-margin">
+                    <span ng-show="cuneiformCtrl.job.state">State: {{cuneiformCtrl.job.state}}</span>
+                    <span ng-show="cuneiformCtrl.job.executionDuration">Took {{cuneiformCtrl.job.executionDuration}}ms.</span>
+                    Logs:
+                  <ul>
+                    <li><a ng-click="cuneiformCtrl.getFile(cuneiformCtrl.job.stdoutPath)" ng-show="cuneiformCtrl.job.stdoutPath">{{cuneiformCtrl.job.stdoutPath}}</a></li>
+                    <li><a ng-click="cuneiformCtrl.getFile(cuneiformCtrl.job.stderrPath)" ng-show="cuneiformCtrl.job.stderrPath">{{cuneiformCtrl.job.stderrPath}}</a></li>
+                  </ul>
+                  Results:
+                  <ul>
+                    <li ng-repeat="result in cuneiformCtrl.job.jobOutputFileCollection" ng-show="cuneiformCtrl.job.jobOutputFileCollection"><a ng-click="cuneiformCtrl.getFile(result.path)">{{result.jobOutputFilePK.name}} </a></li>
+                  </ul>
+                  </p>
+                </div>
+            </div>
           </div>
         </div>
         <!-- /#page-content-wrapper -->
