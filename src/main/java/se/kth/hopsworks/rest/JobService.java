@@ -1,6 +1,8 @@
 package se.kth.hopsworks.rest;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -30,6 +32,9 @@ import se.kth.hopsworks.filters.AllowedRoles;
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JobService {
+
+  private static final Logger logger = Logger.getLogger(JobService.class.
+          getName());
 
   @EJB
   private ProjectController projectController;
@@ -73,6 +78,26 @@ public class JobService {
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             jobHistory).build();
+  }
+
+  @GET
+  @Path("/status/{jobId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
+  public Response getStatusOfJob(@PathParam("jobId") long id,
+          @Context SecurityContext sc, @Context HttpServletRequest req) throws
+          AppException {
+    JobHistory jh = jobHistoryFacade.find(id);
+    if (jh == null) {
+      logger.log(Level.WARNING,
+              "Trying to access the status of a non-existing job with id {0}",
+              id);
+      throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
+              "No job with the given id was found.");
+    }
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
+            new GenericEntity<JobHistory>(jh) {
+            }).build();
   }
 
   @Path("/cuneiform")
