@@ -7,8 +7,8 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('CuneiformCtrl', ['$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', '$location', '$routeParams', 'growl', 'ModalService', 'JobHistoryService', 'DownloadService', 'CuneiformService',
-          function ($scope, $timeout, $mdSidenav, $mdUtil, $log, $location, $routeParams, growl, ModalService, JobHistoryService, DownloadService, CuneiformService) {
+        .controller('CuneiformCtrl', ['$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', '$location', '$routeParams', 'growl', 'ModalService', 'JobHistoryService', 'DownloadService', 'CuneiformService', '$interval',
+          function ($scope, $timeout, $mdSidenav, $mdUtil, $log, $location, $routeParams, growl, ModalService, JobHistoryService, DownloadService, CuneiformService, $interval) {
 
             var self = this;
 
@@ -69,19 +69,46 @@ angular.module('hopsWorksApp')
 
                         })
                       }, function (error) {
-                        //Nothing.
+                //Nothing.
               });
             };
-            
-            self.execute = function() {
+
+            self.execute = function () {
               CuneiformService.runWorkflow(self.pId, self.workflow).then(
-                      function(success){
+                      function (success) {
                         //Do something
                         self.job = success.data;
-                      }, function(error){
-                        //Display error message
-                      })
-            }
+                        self.workflow = null;
+                        //Start polling
+                        poller = $interval(pollStatus, 3000);
+                      }, function (error) {
+                //Display error message
+              })
+            };
+
+            var pollStatus = function () {
+              JobHistoryService.pollStatus(self.pId, self.job.id).then(
+                      function (success) {
+                        self.job = success.data;
+                        //check if job finished
+                        if (self.job.state == 'FINISHED' 
+                                || self.job.state == 'FAILED' 
+                                || self.job.state == 'KILLED' 
+                                || self.job.state == 'FRAMEWORK_FAILURE' 
+                                || self.job.state == 'APP_MASTER_START_FAILED'){
+                          //if so: stop executing
+                          $interval.cancel(poller);
+                        }
+                      }, function (error) {
+                         $interval.cancel(poller);
+                         //TODO: display error message
+              })
+            };
+            var poller;
+            
+            $scope.$on('$destroy',function(){
+              $interval.cancel(poller);
+            });
 
           }]);
 

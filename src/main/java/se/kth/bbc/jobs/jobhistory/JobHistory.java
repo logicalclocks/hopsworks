@@ -321,7 +321,7 @@ public class JobHistory implements Serializable {
   }
 
   public boolean isFinished() {
-    return this.state == JobState.FINISHED;
+    return this.state.isFinalState();
   }
 
 }

@@ -100,7 +100,7 @@ public class CuneiformService {
           @Context HttpServletRequest reqJobType) throws AppException {
     System.out.println("Starting CF job.");
     try {
-      JobHistory jh = cfCtrl.startWorkflow(null, workflow, "admin@kth.se",
+      JobHistory jh = cfCtrl.startWorkflow(null, workflow, reqJobType.getUserPrincipal().getName(),
               projectId);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(jh).build();
