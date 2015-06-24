@@ -41,10 +41,10 @@ public class FileSystemOperations {
       logger.log(Level.SEVERE, "Unable to initialize FileSystem", ex);
     }
   }
-  
+
   @PreDestroy
-  public void closeFs(){
-    if(fs != null){
+  public void closeFs() {
+    if (fs != null) {
       try {
         fs.close();
       } catch (IOException ex) {

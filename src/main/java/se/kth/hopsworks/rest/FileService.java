@@ -24,6 +24,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
 
 /**
  * Service offering file operations.
+ * <p>
  * @author stig
  */
 @Path("/project/{projectId}/files")

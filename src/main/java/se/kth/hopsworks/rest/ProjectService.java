@@ -288,10 +288,10 @@ public class ProjectService {
 
     return this.dataSet;
   }
-  
+
   @Path("{projectId}/jobs")
   @AllowedRoles(roles = {AllowedRoles.DATA_OWNER, AllowedRoles.DATA_SCIENTIST})
-  public JobService jobs(@PathParam("projectId") Integer projectId){
+  public JobService jobs(@PathParam("projectId") Integer projectId) {
     return this.jobs.setProjectId(projectId);
   }
 }

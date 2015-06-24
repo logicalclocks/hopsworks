@@ -89,7 +89,7 @@ public class JobInputFile implements Serializable {
   public void setPath(String path) {
     this.path = path;
   }
-  
+
   @XmlTransient
   @JsonIgnore
   public JobHistory getJobHistory() {

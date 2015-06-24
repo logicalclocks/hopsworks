@@ -132,8 +132,8 @@ public class CuneiformController {
 
     //Pass on workflow file
     b.addFilePathToBeCopied(wfLocation, true);
-    b.stdOutPath(">(tee AppMaster.stdout <LOG_DIR>/"+OUT_LOGS+")");
-    b.stdErrPath(">(tee AppMaster.stderr <LOG_DIR>/"+ERR_LOGS+" >&2)");
+    b.stdOutPath(">(tee AppMaster.stdout <LOG_DIR>/" + OUT_LOGS + ")");
+    b.stdErrPath(">(tee AppMaster.stderr <LOG_DIR>/" + ERR_LOGS + " >&2)");
     b.logPathsRelativeToResourcesPath(false);
 
     b.addToAppMasterEnvironment("CLASSPATH", "/srv/hiway/lib/*:/srv/hiway/*");
@@ -150,8 +150,10 @@ public class CuneiformController {
     }
 
     CuneiformJob job = new CuneiformJob(history, fops, r);
-    job.setStdOutPath("/hiway/"+CuneiformJob.APPID_PLACEHOLDER+"/"+OUT_LOGS);
-    job.setStdErrPath("/hiway/"+CuneiformJob.APPID_PLACEHOLDER+"/"+ERR_LOGS);
+    job.setStdOutPath("/hiway/" + CuneiformJob.APPID_PLACEHOLDER + "/"
+            + OUT_LOGS);
+    job.setStdErrPath("/hiway/" + CuneiformJob.APPID_PLACEHOLDER + "/"
+            + ERR_LOGS);
     Project project = projects.find(projectId);
 
     //TODO: include input and execution files
@@ -159,10 +161,12 @@ public class CuneiformController {
             project, JobType.CUNEIFORM);
     if (jh != null) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(project.getName())
-              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jh.getId() + File.separator
+              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jh.getId()
+              + File.separator
               + "stdout.log";
       String stdErrFinalDestination = Utils.getHdfsRootPath(project.getName())
-              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jh.getId() + File.separator
+              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + jh.getId()
+              + File.separator
               + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
       job.setStdErrFinalDestination(stdErrFinalDestination);
@@ -191,7 +195,7 @@ public class CuneiformController {
     wf.updateContentsFromVars();
     //actually write to workflow file
     Path p = Files.createTempFile(Utils.stripExtension(wf.getName()), ".cf");
-    try(FileWriter t = new FileWriter(p.toFile(),false)){
+    try (FileWriter t = new FileWriter(p.toFile(), false)) {
       t.write(wf.getContents());
     }
     return p.toString();

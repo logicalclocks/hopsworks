@@ -18,8 +18,9 @@ public final class YarnMonitor implements Closeable {
   private final ApplicationId appId;
 
   public YarnMonitor(ApplicationId id, YarnClient yarnClient) {
-    if(id == null){
-      throw new IllegalArgumentException("ApplicationId cannot be null for Yarn monitor!");
+    if (id == null) {
+      throw new IllegalArgumentException(
+              "ApplicationId cannot be null for Yarn monitor!");
     }
     this.appId = id;
     this.yarnClient = yarnClient;
@@ -49,8 +50,8 @@ public final class YarnMonitor implements Closeable {
           IOException {
     return yarnClient.getApplicationReport(appId).getYarnApplicationState();
   }
-  
-  public ApplicationId getApplicationId(){
+
+  public ApplicationId getApplicationId() {
     return appId;
   }
 

@@ -14,8 +14,9 @@ public class OutputParameter {
 
   private String name;
   private boolean queried;
-  
-  public OutputParameter(){} //Needed by JAXB
+
+  public OutputParameter() {
+  } //Needed by JAXB
 
   /**
    * Creates a new non-queried OutputParameter with the given name.
@@ -48,7 +49,8 @@ public class OutputParameter {
 
   /**
    * Set the name of the OutputParameter
-   * @param name 
+   * <p>
+   * @param name
    */
   public void setName(String name) {
     this.name = name;

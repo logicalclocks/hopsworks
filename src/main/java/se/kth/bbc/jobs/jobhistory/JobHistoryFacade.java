@@ -64,21 +64,26 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
   public JobHistory update(JobHistory history, JobState newState) {
     //TODO: check if state is a final one, if so: update execution time
-    return update(history, null, newState, -1, null, null, null, null, null, null);
+    return update(history, null, newState, -1, null, null, null, null, null,
+            null);
   }
 
-  public JobHistory update(JobHistory history, JobState newState, long executionTime) {
-    return update(history, null, newState, executionTime, null, null, null, null, null, null);
+  public JobHistory update(JobHistory history, JobState newState,
+          long executionTime) {
+    return update(history, null, newState, executionTime, null, null, null, null,
+            null, null);
   }
 
   public JobHistory update(JobHistory history, JobState newState,
           Collection<JobOutputFile> outputFiles) {
-    return update(history, null, newState, -1, null, null, null, null, null, outputFiles);
+    return update(history, null, newState, -1, null, null, null, null, null,
+            outputFiles);
   }
 
   public JobHistory update(JobHistory history,
           Collection<JobOutputFile> extraOutputFiles) {
-    return update(history, null, null, -1, null, null, null, null, null, extraOutputFiles);
+    return update(history, null, null, -1, null, null, null, null, null,
+            extraOutputFiles);
   }
 
   public JobHistory updateArgs(JobHistory history, String args) {
@@ -114,19 +119,21 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
     em.persist(jh);
     em.flush(); //To get the id.
-    System.out.println("Id: "+jh.getId());
+    System.out.println("Id: " + jh.getId());
     return jh;
   }
 
   public JobHistory updateStdOutPath(JobHistory history, String stdOutPath) {
-    return update(history, null, null, -1, null, stdOutPath, null, null, null, null);
+    return update(history, null, null, -1, null, stdOutPath, null, null, null,
+            null);
   }
 
   public JobHistory updateStdErrPath(JobHistory history, String stdErrPath) {
-    return update(history, null, null, -1, null, null, stdErrPath, null, null, null);
+    return update(history, null, null, -1, null, null, stdErrPath, null, null,
+            null);
   }
-  
-  public JobHistory updateAppId(JobHistory history, String appId){
+
+  public JobHistory updateAppId(JobHistory history, String appId) {
     return update(history, null, null, -1, null, null, null,
             appId, null, null);
   }
@@ -145,7 +152,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
   public void persist(JobOutputFile jof) {
     em.persist(jof);
   }
-  
+
   /**
    * Updates all given fields of <i>history</i> to the given value, unless that
    * value is null for entities, or -1 for integers.
@@ -163,14 +170,16 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
    */
   public JobHistory update(JobHistory history, String name, JobState state,
           long executionDuration, String args, String stdoutPath,
-          String stderrPath, String appId, Collection<JobInputFile> jobInputFileCollection,
+          String stderrPath, String appId,
+          Collection<JobInputFile> jobInputFileCollection,
           Collection<JobOutputFile> jobOutputFileCollection) {
     JobHistory obj = em.find(JobHistory.class, history.getId());
-    if(obj == null){
-      throw new IllegalArgumentException("Unable to find JobHistory object with id "+history.getId());
-    }else{
+    if (obj == null) {
+      throw new IllegalArgumentException(
+              "Unable to find JobHistory object with id " + history.getId());
+    } else {
       history = obj;
-    }    
+    }
     if (name != null) {
       history.setName(name);
     }
@@ -189,7 +198,7 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
     if (stderrPath != null) {
       history.setStderrPath(stderrPath);
     }
-    if(appId != null){
+    if (appId != null) {
       history.setAppId(appId);
     }
     if (jobInputFileCollection != null) {

@@ -42,8 +42,10 @@ public abstract class HopsJob {
   }
 
   /**
-   * Returns a copy of the current history object. Should not be used for updating.
-   * @return 
+   * Returns a copy of the current history object. Should not be used for
+   * updating.
+   * <p>
+   * @return
    */
   public final JobHistory getHistory() {
     return new JobHistory(history);

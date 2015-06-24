@@ -28,12 +28,12 @@ public final class Utils {
       return filename.substring(lastDot);
     }
   }
-  
-  public static String stripExtension(String filename){
+
+  public static String stripExtension(String filename) {
     int lastDot = filename.lastIndexOf(".");
-    if(lastDot < 0){
+    if (lastDot < 0) {
       return filename;
-    }else{
+    } else {
       return filename.substring(0, lastDot);
     }
   }

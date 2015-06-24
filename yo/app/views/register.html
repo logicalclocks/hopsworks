@@ -1,221 +1,221 @@
 <div class="wrapper">
-    <div class="row-fluid">
-        <div class="col-md-offset-4 col-md-4">
-            <!-- START panel-->
-            <div class="panel">
-                <div class="panel-heading text-center">
-                    <a style="text-decoration:none; font-family: Lobster; font-size: 30px; margin-left: 5px; color: #fff;">HopsWorks
-                        <img alt="" style="margin-left:10px"
-                             width="30"
-                             src="images/hops.png">
-                    </a>
-                </div>
-                <div class="panel-body">
-                    <p class="text-center">SIGN UP TO GET ACCESS.</p>
-
-                    <form role="form" name="registerForm" ng-submit="regCtrl.register()" novalidate class="form-validate">
-                        <div class="row">
-                            <div class="col-xs-12 col-sm-6 col-md-6">
-                                <div class="form-group has-feedback">
-                                    <label class="text-muted">First Name</label>
-                                    <input name="first_name" placeholder="First Name" autocomplete="off"
-                                           ng-model="regCtrl.newUser.firstName" required class="form-control "
-                                           type="text">
-                                    <span ng-show="(registerForm.$submitted || registerForm.first_name.$dirty) &amp;&amp; registerForm.first_name.$error.required"
-                                          class="text-danger ng-hide">This field is required</span>
-                                </div>
-                            </div>
-                            <div class="col-xs-12 col-sm-6 col-md-6">
-                                <div class="form-group has-feedback">
-                                    <label class="text-muted">Last Name</label>
-                                    <input name="last_name" placeholder="Last Name" autocomplete="off"
-                                           ng-model="regCtrl.newUser.lastName" required class="form-control "
-                                           type="text">
-                                    <span ng-show="(registerForm.$submitted ||registerForm.last_name.$dirty) &amp;&amp; registerForm.last_name.$error.required"
-                                          class="text-danger ng-hide">This field is required</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group has-feedback">
-                            <label class="text-muted">Phone Number</label>
-                            <input name="phone_number" placeholder="Phone" autocomplete="on"
-                                   ng-model="regCtrl.newUser.telephoneNum"
-                                   ng-pattern="/^[+ 0]?\d{2}[- ]?\d{3}[- ]?\d{6}$/"
-                                   class="form-control "
-                                   type="text">
-                            <span ng-show="registerForm.phone_number.$dirty &amp;&amp; registerForm.phone_number.$error.pattern"
-                                  class="text-danger ng-hide">Phone number should be in (000-000-000000) format.</span>
-                        </div>
-                        <div class="form-group has-feedback">
-                            <label class="text-muted">Security question</label>
-                            <select name="sec_question" placeholder="Security question"
-                                   ng-model="regCtrl.newUser.securityQuestion" required
-                                   class="form-control ">
-                                <option value="">Select security question</option>
-                                <option ng-repeat="question in regCtrl.securityQuestions" value="{{question}}">{{question}}</option>
-                            </select>
-                                    <span ng-show="(registerForm.$submitted ||registerForm.sec_question.$dirty) &amp;&amp; registerForm.sec_question.$error.required"
-                                          class="text-danger ng-hide">This field is required</span>
-                        </div>
-                        <div class="form-group has-feedback">
-                            <label class="text-muted">Security answer</label>
-                            <input name="sec_answer" placeholder="Security answer"
-                                   autocomplete="off"
-                                   ng-model="regCtrl.newUser.securityAnswer" required
-                                   class="form-control"
-                                   type="text">
-                                    <span ng-show="(registerForm.$submitted ||registerForm.sec_answer.$dirty) &amp;&amp; registerForm.sec_answer.$error.required"
-                                          class="text-danger ng-hide">This field is required</span>
-                        </div>
-                        <div class="form-group has-feedback">
-                            <label class="text-muted">Email address</label>
-                            <input name="user_email" placeholder="Email" autocomplete="off"
-                                   ng-model="regCtrl.newUser.email" required
-                                   class="form-control"
-                                   type="email">
-                            <span class="fa fa-envelope form-control-feedback text-muted"></span>
-                            <span ng-show="(registerForm.$submitted ||registerForm.user_email.$dirty) &amp;&amp; registerForm.user_email.$error.required"
-                                  class="text-danger ng-hide">This field is required</span>
-                            <span ng-show="registerForm.user_email.$dirty &amp;&amp; registerForm.user_email.$error.email"
-                                  class="text-danger ng-hide">This field must be a valid email address</span>
-                        </div>
-                        <div class="row">
-                            <div class="col-xs-12 col-sm-6 col-md-6">
-                                <div class="form-group has-feedback">
-                                    <label class="text-muted">Password</label>
-                                    <input id="id-password" name="user_password"
-                                           ng-model="regCtrl.newUser.chosenPassword"
-                                           ng-minlength="6"
-                                           ng-maxlength="10"
-                                           ng-pattern="/(?=.*[a-z])(?=.*[A-Z])(?=.*[\d\W]).*$/"
-                                           required
-                                           class="form-control"
-                                           type="password">
-                                    <span class="fa fa-lock form-control-feedback text-muted"></span>
-                                    <span ng-show="(registerForm.$submitted || registerForm.user_password.$dirty) &amp;&amp; registerForm.user_password.$error.required"
-                                          class="text-danger ng-hide">This field is required</span>
-                                    <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.minlength"
-                                          class="text-danger ng-hide">Password should be at least 6 characters. </span>
-                                    <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.maxlength"
-                                          class="text-danger ng-hide">Password should be at most 10 characters. </span>
-                                    <span ng-show="registerForm.user_password.$dirty &amp;&amp; registerForm.user_password.$error.pattern"
-                                          class="text-danger ng-hide">Password should including one uppercase letter,
-                                          one special character and/or alphanumeric characters. </span>
-                                </div>
-                            </div>
-                            <div class="col-xs-12 col-sm-6 col-md-6">
-                                <div class="form-group has-feedback">
-                                    <label class="text-muted">Confirm Password</label>
-                                    <input name="user_password_confirm" ng-model="regCtrl.newUser.repeatedPassword"
-                                           match="regCtrl.newUser.chosenPassword"
-                                           class="form-control" type="password">
-                                    <span class="fa fa-lock form-control-feedback text-muted"></span>
-                                    <span ng-show="(registerForm.$submitted || registerForm.user_password_confirm.$dirty) &amp;&amp; registerForm.user_password_confirm.$invalid"
-                                          class="text-danger ng-hide">Password does Not match</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="checkbox c-checkbox pull-left col-md-6">
-                                    <label>
-                                        <input required="" name="user_agreed" ng-model="regCtrl.newUser.ToS"
-                                               type="checkbox">
-                                        <span class="fa fa-check"></span>I agree with the <a href=""
-                                                                                             data-target="#tosModal"
-                                                                                             data-toggle="modal">terms</a>
-                                    </label>
-
-                                <div ng-show="(registerForm.$submitted || registerForm.user_agreed.$dirty) &amp;&amp; registerForm.user_agreed.$error.required"
-                                     class="text-danger ng-hide">You must agree to the terms
-                                </div>
-
-                            </div>
-                        </div>
-                        <div class="row">
-
-                            <div class="col-md-12">
-
-                                <button type="submit" class="btn btn-block btn-primary mt-lg">Create account
-                                </button>
-                            </div>
-
-                        </div>
-                    </form>
-                    <div ng-show="regCtrl.successMessage" class="alert  alert-success text-center ng-binding ng-hide">{{regCtrl.successMessage}}</div>
-                    <div ng-show="regCtrl.errorMessage" class="alert alert-danger text-center ng-binding ng-hide">{{regCtrl.errorMessage}}</div>
-                    <p class="pt-lg text-center">Have an account?</p>
-                    <a href="#/login" class="btn btn-block btn-default">Sign in</a>
-                </div>
-            </div>
-            <!-- END panel-->
-            <div class="p-lg text-center">
-            </div>
+  <div class="row-fluid">
+    <div class="col-md-offset-4 col-md-4">
+      <!-- START panel-->
+      <div class="panel">
+        <div class="panel-heading text-center">
+          <a style="text-decoration:none; font-family: Lobster; font-size: 30px; margin-left: 5px; color: #fff;">HopsWorks
+            <img alt="" style="margin-left:10px"
+                 width="30"
+                 src="images/hops.png">
+          </a>
         </div>
+        <div class="panel-body">
+          <p class="text-center">SIGN UP TO GET ACCESS.</p>
+
+          <form role="form" name="registerForm" ng-submit="regCtrl.register()" novalidate class="form-validate">
+            <div class="row">
+              <div class="col-xs-12 col-sm-6 col-md-6">
+                <div class="form-group has-feedback">
+                  <label class="text-muted">First Name</label>
+                  <input name="first_name" placeholder="First Name" autocomplete="off"
+                         ng-model="regCtrl.newUser.firstName" required class="form-control "
+                         type="text">
+                  <span ng-show="(registerForm.$submitted || registerForm.first_name.$dirty) & amp; & amp; registerForm.first_name.$error.required"
+                        class="text-danger ng-hide">This field is required</span>
+                </div>
+              </div>
+              <div class="col-xs-12 col-sm-6 col-md-6">
+                <div class="form-group has-feedback">
+                  <label class="text-muted">Last Name</label>
+                  <input name="last_name" placeholder="Last Name" autocomplete="off"
+                         ng-model="regCtrl.newUser.lastName" required class="form-control "
+                         type="text">
+                  <span ng-show="(registerForm.$submitted || registerForm.last_name.$dirty) & amp; & amp; registerForm.last_name.$error.required"
+                        class="text-danger ng-hide">This field is required</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-group has-feedback">
+              <label class="text-muted">Phone Number</label>
+              <input name="phone_number" placeholder="Phone" autocomplete="on"
+                     ng-model="regCtrl.newUser.telephoneNum"
+                     ng-pattern="/^[+ 0]?\d{2}[- ]?\d{3}[- ]?\d{6}$/"
+                     class="form-control "
+                     type="text">
+              <span ng-show="registerForm.phone_number.$dirty & amp; & amp; registerForm.phone_number.$error.pattern"
+                    class="text-danger ng-hide">Phone number should be in (000-000-000000) format.</span>
+            </div>
+            <div class="form-group has-feedback">
+              <label class="text-muted">Security question</label>
+              <select name="sec_question" placeholder="Security question"
+                      ng-model="regCtrl.newUser.securityQuestion" required
+                      class="form-control ">
+                <option value="">Select security question</option>
+                <option ng-repeat="question in regCtrl.securityQuestions" value="{{question}}">{{question}}</option>
+              </select>
+              <span ng-show="(registerForm.$submitted || registerForm.sec_question.$dirty) & amp; & amp; registerForm.sec_question.$error.required"
+                    class="text-danger ng-hide">This field is required</span>
+            </div>
+            <div class="form-group has-feedback">
+              <label class="text-muted">Security answer</label>
+              <input name="sec_answer" placeholder="Security answer"
+                     autocomplete="off"
+                     ng-model="regCtrl.newUser.securityAnswer" required
+                     class="form-control"
+                     type="text">
+              <span ng-show="(registerForm.$submitted || registerForm.sec_answer.$dirty) & amp; & amp; registerForm.sec_answer.$error.required"
+                    class="text-danger ng-hide">This field is required</span>
+            </div>
+            <div class="form-group has-feedback">
+              <label class="text-muted">Email address</label>
+              <input name="user_email" placeholder="Email" autocomplete="off"
+                     ng-model="regCtrl.newUser.email" required
+                     class="form-control"
+                     type="email">
+              <span class="fa fa-envelope form-control-feedback text-muted"></span>
+              <span ng-show="(registerForm.$submitted || registerForm.user_email.$dirty) & amp; & amp; registerForm.user_email.$error.required"
+                    class="text-danger ng-hide">This field is required</span>
+              <span ng-show="registerForm.user_email.$dirty & amp; & amp; registerForm.user_email.$error.email"
+                    class="text-danger ng-hide">This field must be a valid email address</span>
+            </div>
+            <div class="row">
+              <div class="col-xs-12 col-sm-6 col-md-6">
+                <div class="form-group has-feedback">
+                  <label class="text-muted">Password</label>
+                  <input id="id-password" name="user_password"
+                         ng-model="regCtrl.newUser.chosenPassword"
+                         ng-minlength="6"
+                         ng-maxlength="10"
+                         ng-pattern="/(?=.*[a-z])(?=.*[A-Z])(?=.*[\d\W]).*$/"
+                         required
+                         class="form-control"
+                         type="password">
+                  <span class="fa fa-lock form-control-feedback text-muted"></span>
+                  <span ng-show="(registerForm.$submitted || registerForm.user_password.$dirty) & amp; & amp; registerForm.user_password.$error.required"
+                        class="text-danger ng-hide">This field is required</span>
+                  <span ng-show="registerForm.user_password.$dirty & amp; & amp; registerForm.user_password.$error.minlength"
+                        class="text-danger ng-hide">Password should be at least 6 characters. </span>
+                  <span ng-show="registerForm.user_password.$dirty & amp; & amp; registerForm.user_password.$error.maxlength"
+                        class="text-danger ng-hide">Password should be at most 10 characters. </span>
+                  <span ng-show="registerForm.user_password.$dirty & amp; & amp; registerForm.user_password.$error.pattern"
+                        class="text-danger ng-hide">Password should including one uppercase letter,
+                    one special character and/or alphanumeric characters. </span>
+                </div>
+              </div>
+              <div class="col-xs-12 col-sm-6 col-md-6">
+                <div class="form-group has-feedback">
+                  <label class="text-muted">Confirm Password</label>
+                  <input name="user_password_confirm" ng-model="regCtrl.newUser.repeatedPassword"
+                         match="regCtrl.newUser.chosenPassword"
+                         class="form-control" type="password">
+                  <span class="fa fa-lock form-control-feedback text-muted"></span>
+                  <span ng-show="(registerForm.$submitted || registerForm.user_password_confirm.$dirty) & amp; & amp; registerForm.user_password_confirm.$invalid"
+                        class="text-danger ng-hide">Password does Not match</span>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="checkbox c-checkbox pull-left col-md-6">
+                <label>
+                  <input required="" name="user_agreed" ng-model="regCtrl.newUser.ToS"
+                         type="checkbox">
+                  <span class="fa fa-check"></span>I agree with the <a href=""
+                                                                       data-target="#tosModal"
+                                                                       data-toggle="modal">terms</a>
+                </label>
+
+                <div ng-show="(registerForm.$submitted || registerForm.user_agreed.$dirty) & amp; & amp; registerForm.user_agreed.$error.required"
+                     class="text-danger ng-hide">You must agree to the terms
+                </div>
+
+              </div>
+            </div>
+            <div class="row">
+
+              <div class="col-md-12">
+
+                <button type="submit" class="btn btn-block btn-primary mt-lg">Create account
+                </button>
+              </div>
+
+            </div>
+          </form>
+          <div ng-show="regCtrl.successMessage" class="alert  alert-success text-center ng-binding ng-hide">{{regCtrl.successMessage}}</div>
+          <div ng-show="regCtrl.errorMessage" class="alert alert-danger text-center ng-binding ng-hide">{{regCtrl.errorMessage}}</div>
+          <p class="pt-lg text-center">Have an account?</p>
+          <a href="#/login" class="btn btn-block btn-default">Sign in</a>
+        </div>
+      </div>
+      <!-- END panel-->
+      <div class="p-lg text-center">
+      </div>
     </div>
+  </div>
 </div>
 <modal id="tosModal" title="Terms & Conditions">
-    <p><strong>Limited License</strong></p>
+  <p><strong>Limited License</strong></p>
 
-    <p>TermsFeed grants you a non-exclusive, non-transferable, revocable license to access and use our Website in
-        order for you to make purchases of electronic documents and related services through our Website, strictly
-        in accordance with our Legal Terms.
-    </p>
+  <p>TermsFeed grants you a non-exclusive, non-transferable, revocable license to access and use our Website in
+    order for you to make purchases of electronic documents and related services through our Website, strictly
+    in accordance with our Legal Terms.
+  </p>
 
-    <p><strong>Copyrights and Trademarks</strong></p>
+  <p><strong>Copyrights and Trademarks</strong></p>
 
-    <p>Unless otherwise noted, all materials including without limitation, logos, brand names, images, designs,
-        photographs, video clips and written and other materials that appear as part of our Website are copyrights,
-        trademarks, service marks, trade dress and/or other intellectual property whether registered or unregistered
-        ("Intellectual Property") owned, controlled or licensed by TermsFeed. Our Website as a whole is protected by
-        copyright and trade dress. Nothing on our Website should be construed as granting, by implication, estoppel
-        or otherwise, any license or right to use any Intellectual Property displayed or used on our Website,
-        without the prior written permission of the Intellectual Property owner. TermsFeed aggressively enforces its
-        intellectual property rights to the fullest extent of the law. The names and logos of TermsFeed, may not be
-        used in any way, including in advertising or publicity pertaining to distribution of materials on our
-        Website, without prior, written permission from TermsFeed. TermsFeed prohibits use of any logo of TermsFeed
-        or any of its affiliates as part of a link to or from any Website unless TermsFeed approves such link in
-        advance and in writing. Fair use of TermsFeed’s Intellectual Property requires proper acknowledgment. Other
-        product and company names mentioned in our Website may be the Intellectual Property of their respective
-        owners.
-    </p>
+  <p>Unless otherwise noted, all materials including without limitation, logos, brand names, images, designs,
+    photographs, video clips and written and other materials that appear as part of our Website are copyrights,
+    trademarks, service marks, trade dress and/or other intellectual property whether registered or unregistered
+    ("Intellectual Property") owned, controlled or licensed by TermsFeed. Our Website as a whole is protected by
+    copyright and trade dress. Nothing on our Website should be construed as granting, by implication, estoppel
+    or otherwise, any license or right to use any Intellectual Property displayed or used on our Website,
+    without the prior written permission of the Intellectual Property owner. TermsFeed aggressively enforces its
+    intellectual property rights to the fullest extent of the law. The names and logos of TermsFeed, may not be
+    used in any way, including in advertising or publicity pertaining to distribution of materials on our
+    Website, without prior, written permission from TermsFeed. TermsFeed prohibits use of any logo of TermsFeed
+    or any of its affiliates as part of a link to or from any Website unless TermsFeed approves such link in
+    advance and in writing. Fair use of TermsFeed’s Intellectual Property requires proper acknowledgment. Other
+    product and company names mentioned in our Website may be the Intellectual Property of their respective
+    owners.
+  </p>
 
-    <p><strong>Links to Third-Party Websites</strong></p>
+  <p><strong>Links to Third-Party Websites</strong></p>
 
-    <p>Our Website may contain links to Websites owned or operated by parties other than TermsFeed. Such links are
-        provided for your reference only. TermsFeed does not monitor or control outside Websites and is not
-        responsible for their content. TermsFeed’s inclusion of links to an outside Website does not imply any
-        endorsement of the material on our Website or, unless expressly disclosed otherwise, any sponsorship,
-        affiliation or association with its owner, operator or sponsor, nor does TermsFeed’ inclusion of the links
-        imply that TermsFeed is authorized to use any trade name, trademark, logo, legal or official seal, or
-        copyrighted symbol that may be reflected in the linked Website.
-    </p>
+  <p>Our Website may contain links to Websites owned or operated by parties other than TermsFeed. Such links are
+    provided for your reference only. TermsFeed does not monitor or control outside Websites and is not
+    responsible for their content. TermsFeed’s inclusion of links to an outside Website does not imply any
+    endorsement of the material on our Website or, unless expressly disclosed otherwise, any sponsorship,
+    affiliation or association with its owner, operator or sponsor, nor does TermsFeed’ inclusion of the links
+    imply that TermsFeed is authorized to use any trade name, trademark, logo, legal or official seal, or
+    copyrighted symbol that may be reflected in the linked Website.
+  </p>
 
-    <p><strong>Content Disclaimer</strong></p>
+  <p><strong>Content Disclaimer</strong></p>
 
-    <p>Postings on our Website are made at such times as TermsFeed determines in its discretion. You should not
-        assume that the information contained on our Website has been updated or otherwise contains current
-        information. TermsFeed does not review past postings to determine whether they remain accurate and
-        information contained in such postings may have been superseded. THE INFORMATION AND MATERIALS IN OUR
-        WEBSITE ARE PROVIDED FOR YOUR REVIEW IN ACCORDANCE WITH THE NOTICES, TERMS AND CONDITIONS SET FORTH HEREIN.
-        THESE MATERIALS ARE NOT GUARANTEED OR REPRESENTED TO BE COMPLETE, CORRECT OR UP TO DATE. THESE MATERIALS MAY
-        BE CHANGED FROM TIME TO TIME WITHOUT NOTICE.
-    </p>
+  <p>Postings on our Website are made at such times as TermsFeed determines in its discretion. You should not
+    assume that the information contained on our Website has been updated or otherwise contains current
+    information. TermsFeed does not review past postings to determine whether they remain accurate and
+    information contained in such postings may have been superseded. THE INFORMATION AND MATERIALS IN OUR
+    WEBSITE ARE PROVIDED FOR YOUR REVIEW IN ACCORDANCE WITH THE NOTICES, TERMS AND CONDITIONS SET FORTH HEREIN.
+    THESE MATERIALS ARE NOT GUARANTEED OR REPRESENTED TO BE COMPLETE, CORRECT OR UP TO DATE. THESE MATERIALS MAY
+    BE CHANGED FROM TIME TO TIME WITHOUT NOTICE.
+  </p>
 
-    <p><strong>Contracts, Attorneys, and Legal Advice Disclaimer</strong></p>
+  <p><strong>Contracts, Attorneys, and Legal Advice Disclaimer</strong></p>
 
-    <p>You understand that we offer legal contracts ("Contracts"), as created by actual attorneys, for sale through
-        our Website. We also offer you the ability to purchase reviews of such Contracts by attorneys who have
-        registered with our Website. However, you acknowledge that we are not attorneys nor do we offer legal
-        advice. You acknowledge that we do not endorse any specific attorney or any Contracts as being better than
-        another. We do not otherwise guarantee the legal accuracy or applicability of any Contracts for your legal
-        needs. You will at all times look to any attorney that you select for services as to any legal claims
-        related to such services.
-    </p>
+  <p>You understand that we offer legal contracts ("Contracts"), as created by actual attorneys, for sale through
+    our Website. We also offer you the ability to purchase reviews of such Contracts by attorneys who have
+    registered with our Website. However, you acknowledge that we are not attorneys nor do we offer legal
+    advice. You acknowledge that we do not endorse any specific attorney or any Contracts as being better than
+    another. We do not otherwise guarantee the legal accuracy or applicability of any Contracts for your legal
+    needs. You will at all times look to any attorney that you select for services as to any legal claims
+    related to such services.
+  </p>
 
-    <p><strong>Indemnification</strong></p>
+  <p><strong>Indemnification</strong></p>
 
-    <p>You agree to defend, indemnify and hold TermsFeed harmless from and against any and all claims, damages,
-        costs and expenses, including attorneys' fees, arising from or related to your use of our Website or any
-        Contracts or Services you purchase through it.
-    </p>
+  <p>You agree to defend, indemnify and hold TermsFeed harmless from and against any and all claims, damages,
+    costs and expenses, including attorneys' fees, arising from or related to your use of our Website or any
+    Contracts or Services you purchase through it.
+  </p>
 </modal>

@@ -118,7 +118,7 @@ public class JobHistory implements Serializable {
   @Column(name = "type")
   @Enumerated(EnumType.STRING)
   private JobType type;
-  
+
   @Size(max = 30)
   @Column(name = "app_id")
   private String appId;
@@ -152,9 +152,9 @@ public class JobHistory implements Serializable {
     this.submissionTime = submissionTime;
     this.state = state;
   }
-  
-  public JobHistory(JobHistory jh){
-    this(jh.submissionTime,jh.state);
+
+  public JobHistory(JobHistory jh) {
+    this(jh.submissionTime, jh.state);
     this.id = jh.id;
     this.name = jh.name;
     this.executionDuration = jh.executionDuration;
@@ -241,7 +241,7 @@ public class JobHistory implements Serializable {
   public void setType(JobType type) {
     this.type = type;
   }
-    
+
   public String getAppId() {
     return appId;
   }

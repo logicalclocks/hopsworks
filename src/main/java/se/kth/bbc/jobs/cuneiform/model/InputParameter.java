@@ -16,8 +16,9 @@ public class InputParameter implements Serializable {
 
   private String name;
   private String value;
-  
-  public InputParameter(){}//Needed by JAXB
+
+  public InputParameter() {
+  }//Needed by JAXB
 
   /**
    * Create a new InputParameter with given name and bound value.
@@ -50,7 +51,8 @@ public class InputParameter implements Serializable {
 
   /**
    * Set the name of the InputParameter.
-   * @param name 
+   * <p>
+   * @param name
    */
   public void setName(String name) {
     this.name = name;

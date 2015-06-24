@@ -22,7 +22,9 @@
             </md-input-container>
 
             <span
-              ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) &amp;&amp; projectForm.project_name.$error.required"
+              ng-show="(projectForm.$submitted || projectForm.project_name.$dirty) & amp;
+                  & amp;
+                  projectForm.project_name.$error.required"
               class="text-danger ng-hide">This field is required</span>
 
             <p></p>
@@ -30,8 +32,8 @@
             <label for="projectname" class="control-label">Description</label>
 
             <div class="controls">
-                        <textarea class="form-control" style="resize:none;" ng-model="projectCreatorCtrl.projectDesc"
-                                  rows="3"></textarea>
+              <textarea class="form-control" style="resize:none;" ng-model="projectCreatorCtrl.projectDesc"
+                        rows="3"></textarea>
             </div>
 
 
@@ -49,8 +51,8 @@
                   <div ng-bind-html="projectCreatorCtrl.card.email | highlight: $select.search"></div>
                   <small>
                     <i class="fa fa-user-plus"></i>
-                                    <span style="font-size: 14px;;"
-                                          ng-bind-html="''+card.email | highlight: $select.search"></span>
+                    <span style="font-size: 14px;;"
+                          ng-bind-html="''+card.email | highlight: $select.search"></span>
                     <br/>
                     <span ng-bind-html="''+card.firstname | highlight: $select.search"></span>
                     <span ng-bind-html="''+card.lastname | highlight: $select.search"></span>
@@ -87,7 +89,7 @@
             <md-checkbox class="md-primary"
                          ng-repeat="projectType in projectCreatorCtrl.projectTypes"
                          ng-click="projectCreatorCtrl.exists(projectType)">
-              {{ projectType }}
+              {{ projectType}}
             </md-checkbox>
           </div>
 
