@@ -36,24 +36,35 @@ angular.module('hopsWorksApp')
             }
             );
 
+            /*
+             * Get all datasets under the current project.
+             * @returns {undefined}
+             */
             var getAll = function () {
               dataSetService.getAll().then(
                       function (success) {
                         self.datasets = success.data;
+                        //To allow displaying datasets as folders.
+                        self.files = success.data;
                         console.log(success);
                       }, function (error) {
                 console.log("getAll error");
                 console.log(error);
               });
             };
-            var getDir = function (name) {
+            /**
+             * Get all directories under the DS with given name.
+             * @param {type} datasetName
+             * @returns {undefined}
+             */
+            var getDir = function (datasetName) {
               var newPath = "";
-              if (self.currentPath && name) {
-                newPath = self.currentPath + '/' + name;
+              if (self.currentPath && datasetName) {
+                newPath = self.currentPath + '/' + datasetName;
               } else if (self.currentPath) {
                 newPath = self.currentPath;
-              } else if (name) {
-                newPath = name;
+              } else if (datasetName) {
+                newPath = datasetName;
               } else {
                 getAll();
               }
@@ -62,8 +73,8 @@ angular.module('hopsWorksApp')
                         self.files = success.data;
                         self.currentPath = newPath;
                         self.pathParts = newPath.split('/');
-                        if (name) {
-                          self.currentDataSet = name;
+                        if (datasetName) {
+                          self.currentDataSet = datasetName;
                         }
                         console.log(success);
                       }, function (error) {
@@ -71,6 +82,12 @@ angular.module('hopsWorksApp')
                 console.log(error);
               });
             };
+
+            /**
+             * Download a file.
+             * @param {type} file Can either be a filename or a path.
+             * @returns {undefined}
+             */
             var download = function (file) {
               dataSetService.download(file).then(
                       function (data) {
@@ -82,7 +99,30 @@ angular.module('hopsWorksApp')
               });
             };
 
-            var removeDataSetDir = function (path) {
+            /**
+             * Upload a file to the specified path.
+             * @param {type} path
+             * @returns {undefined}
+             */
+            var upload = function (path) {
+              dataSetService.upload(path).then(
+                      function (success) {
+                        console.log("upload success");
+                        console.log(success);
+                        getDir();
+                      }, function (error) {
+                console.log("upload error");
+                console.log(error);
+              });
+            };
+
+            /**
+             * Remove the inode at the given path. If called on a folder, will 
+             * remove the folder and all its contents recursively.
+             * @param {type} path
+             * @returns {undefined}
+             */
+            var removeInode = function (path) {
               dataSetService.removeDataSetDir(path).then(
                       function (success) {
                         growl.success(success.data.successMessage, {title: 'Success', ttl: 15000});
@@ -91,8 +131,12 @@ angular.module('hopsWorksApp')
                 growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               });
             };
-            //if in dataset browser show current dataset content
-            //else show datasets in project
+
+            /*
+             * Load the datasets/folder contents to be displayed.
+             * if in dataset browser show current dataset content
+             * else show datasets in project
+             */
             var load = function (path) {
               if (path) {
                 getDir(path);
@@ -102,6 +146,10 @@ angular.module('hopsWorksApp')
             };
             load(currentDS);
 
+            /**
+             * Open a modal dialog for DS creation.
+             * @returns {undefined}
+             */
             self.newDataSetModal = function () {
               ModalService.newDataSet('md', self.currentPath).then(
                       function (success) {
@@ -113,15 +161,26 @@ angular.module('hopsWorksApp')
               });
             };
 
+            /**
+             * Delete the file with the given name. If currently in a Dataset, 
+             * will prepend the current path, otherwise will remove the dataset 
+             * with given name. If called on a folder, will remove the folder 
+             * and all its contents recursively.
+             * @param {type} fileName
+             * @returns {undefined}
+             */
             self.deleteFile = function (fileName) {
               if (currentDS) {
-                removeDataSetDir(self.currentPath + '/' + fileName);
+                removeInode(self.currentPath + '/' + fileName);
               } else {
-                removeDataSetDir(fileName);
+                removeInode(fileName);
               }
             };
 
-
+            /**
+             * Opens a modal dialog for file upload.
+             * @returns {undefined}
+             */
             self.uploadFile = function () {
               ModalService.upload('lg', self.currentProject.projectId, self.currentPath).then(
                       function (success) {
@@ -132,6 +191,14 @@ angular.module('hopsWorksApp')
               });
             };
 
+            /**
+             * Upon click on a inode in the browser:
+             *  + If folder: open folder, fetch contents from server and display.
+             *  + If file: open a confirm dialog prompting for download.
+             * @param {type} name
+             * @param {type} isDir
+             * @returns {undefined}
+             */
             self.openDir = function (name, isDir) {
               if (isDir) {
                 getDir(name);
@@ -144,8 +211,11 @@ angular.module('hopsWorksApp')
               }
             };
 
+            /**
+             * Go up to parent directory.
+             * @returns {undefined}
+             */
             self.back = function () {
-
               if (self.pathParts.length > 1) {
                 self.pathParts.pop();
                 self.currentPath = self.pathParts.join('/');
@@ -158,6 +228,11 @@ angular.module('hopsWorksApp')
               }
             };
 
+            /**
+             * Go to the folder at the index in the pathparts array.
+             * @param {type} index
+             * @returns {undefined}
+             */
             self.goToFolder = function (index) {
               var parts = self.currentPath.split('/');
               if (index > -1) {
@@ -170,6 +245,12 @@ angular.module('hopsWorksApp')
               }
             };
 
+            /**
+             * Select an inode; updates details panel.
+             * @param {type} selectedIndex
+             * @param {type} file
+             * @returns {undefined}
+             */
             self.select = function (selectedIndex, file) {
               self.selected = selectedIndex;
               self.fileDetail = file;
@@ -200,8 +281,6 @@ angular.module('hopsWorksApp')
             };
 
 
-
-
             self.availableTemplates = [];
 
             self.newTemplateName = "";
@@ -211,10 +290,6 @@ angular.module('hopsWorksApp')
 
             self.currentTemplateID = "";
             self.currentBoard = {};
-
-
-
-
 
             self.getAllTemplates = function () {
               WSComm.send({
@@ -244,7 +319,6 @@ angular.module('hopsWorksApp')
               );
             }
 
-
             self.removeTemplate = function (templateId) {
               return WSComm.send({
                 sender: 'evsav',
@@ -258,8 +332,6 @@ angular.module('hopsWorksApp')
                       }
               );
             }
-
-
 
             $scope.$watch('extendedFrom', function (newID) {
               if (typeof newID == "string") {
@@ -322,9 +394,7 @@ angular.module('hopsWorksApp')
                         );
                       }
               );
-
             }
-
 
             self.fetchTemplate = function (templateId) {
               self.currentTemplateID = templateId;
@@ -345,7 +415,6 @@ angular.module('hopsWorksApp')
               );
             };
 
-
             self.storeTemplate = function () {
               return WSComm.send({
                 sender: 'evsav',
@@ -360,9 +429,6 @@ angular.module('hopsWorksApp')
               }
               );
             }
-
-
-
 
             self.deleteList = function (column) {
               return WSComm.send({
@@ -385,7 +451,6 @@ angular.module('hopsWorksApp')
               );
             }
 
-
             self.storeCard = function (column, card) {
               return WSComm.send({
                 sender: 'evsav',
@@ -407,9 +472,6 @@ angular.module('hopsWorksApp')
                 })
               })
             }
-
-
-
 
             self.addCard = function (column) {
               $scope.currentColumn = column;
@@ -438,7 +500,6 @@ angular.module('hopsWorksApp')
               }
               );
             };
-
 
             self.deleteCard = function (column, card) {
               return WSComm.send({
@@ -469,7 +530,6 @@ angular.module('hopsWorksApp')
               });
             }
 
-
             self.addNewList = function () {
               $scope.template = self.currentTemplateID;
 
@@ -487,20 +547,7 @@ angular.module('hopsWorksApp')
                 console.log(error);
               }
               );
-
             }
-
-
-
-
-
-
-
-
-
-
-
-
 
             /* TESTING RECEIVE BROADCAST FROM WEBSOCKET SERVICE */
             $rootScope.$on('andreTesting', function (event, data) {
@@ -508,216 +555,4 @@ angular.module('hopsWorksApp')
               console.log(JSON.parse(data.response.board));
               //self.getAllTemplates();
             });
-
-
-
-
-
-
-
-
-
-
           }]);
-
-
-/*
- 
- 
- <DONE>
- fetchTemplates: function () {
- return WSComm.send({
- sender: 'evsav',
- type: 'TemplateMessage',
- action: 'fetch_templates',
- message: JSON.stringify({})
- });
- },
- <DONE>
- 
- <DONE>
- fetchTemplate: function (templateId) {
- return WSComm.send({
- sender: 'evsav',
- type: 'TemplateMessage',
- action: 'fetch_template',
- message: JSON.stringify({tempid: templateId})
- });
- },
- <DONE>
- 
- <DONE>
- storeTemplate: function (templateId, board) {
- return WSComm.send({
- sender: 'evsav',
- type: 'TemplateMessage',
- action: 'store_template',
- message: JSON.stringify({tempid: templateId, bd: board})
- });
- },
- <DONE>
- 
- <DONE>
- extendTemplate: function(templateId, board){
- return WSComm.send({
- sender: 'evsav',
- type: 'TemplateMessage',
- action: 'extend_template',
- message: JSON.stringify({tempid: templateId, bd: board})
- });
- },
- <DONE>
- 
- <DONE>
- addNewTemplate: function(templateName){
- return WSComm.send({
- sender: 'evsav',
- type: 'TemplateMessage',
- action: 'add_new_template',
- message: JSON.stringify({templateName: templateName})
- });
- },
- <DONE>
- 
- <DONE>
- removeTemplate: function(templateId){
- return WSComm.send({
- sender: 'evsav',
- type: 'TemplateMessage',
- action: 'remove_template',
- message: JSON.stringify({templateId: templateId})
- });
- },
- <DONE>
- 
- deleteList: function (templateId, column) {
- return WSComm.send({
- sender: 'evsav',
- type: 'TablesMessage',
- action: 'delete_table',
- message: JSON.stringify({
- tempid: templateId,
- id: column.id,
- name: column.name,
- forceDelete: column.forceDelete
- })
- });
- },
- 
- <DONE>
- 
- 
- <DONE>
- self.storeCard = function (column) {
- return WSComm.send({
- sender: 'evsav',
- type: 'FieldsMessage',
- action: 'store_field',
- message: JSON.stringify({
- tempid: self.currentTemplateID,
- tableid: column.id,
- tablename: column.name,
- id: card.id,
- name: card.title,
- type: 'VARCHAR(50)',
- searchable: card.find,
- required: card.required,
- sizefield: card.sizefield,
- description: card.description,
- fieldtypeid: card.fieldtypeid,
- fieldtypeContent: card.fieldtypeContent
- })
- }).then(
- function(success){
- console.log(success);
- }, function(error){
- console.log(error);
- }
- );
- }
- <DONE>
- 
- <DONE>
- storeCard: function (templateId, column, card) {
- return WSComm.send({
- sender: 'evsav',
- type: 'FieldsMessage',
- action: 'store_field',
- message: JSON.stringify({
- tempid: templateId,
- tableid: column.id,
- tablename: column.name,
- id: card.id,
- name: card.title,
- type: 'VARCHAR(50)',
- searchable: card.find,
- required: card.required,
- sizefield: card.sizefield,
- description: card.description,
- fieldtypeid: card.fieldtypeid,
- fieldtypeContent: card.fieldtypeContent
- })
- });
- },
- <DONE>
- 
- <DONE>
- deleteCard: function (templateId, column, card) {
- 
- return WSComm.send({
- sender: 'evsav',
- type: 'FieldsMessage',
- action: 'delete_field',
- message: JSON.stringify({
- tempid: templateId,
- id: card.id,
- tableid: column.id,
- tablename: column.name,
- name: card.title,
- type: 'VARCHAR(50)',
- sizefield: card.sizefield,
- searchable: card.find,
- required: card.required,
- forceDelete: card.forceDelete,
- description: card.description,
- fieldtypeid: card.fieldtypeid,
- fieldtypeContent: card.fieldtypeContent
- })
- });
- },
- <DONE>
- 
- 
- storeMetadata: function(data){
- return WSComm.send({
- sender: 'evsav',
- type: 'MetadataMessage',
- action: 'store_metadata',
- message: JSON.stringify(data)
- });
- },
- 
- fetchMetadata: function (tableId) {
- return WSComm.send({
- sender: 'evsav',
- type: 'MetadataMessage',
- action: 'fetch_metadata',
- message: JSON.stringify({tableid: tableId})
- });
- },
- 
- <DONE>
- 
- fetchFieldTypes: function(){
- return WSComm.send({
- sender: 'evsav',
- type: 'FieldTypesMessage',
- action: 'fetch_field_types',
- message: 'null'
- });
- }
- <DONE>
- 
- 
- */
-

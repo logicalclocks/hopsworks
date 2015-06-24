@@ -1,5 +1,3 @@
-# Created by https://www.gitignore.io
-
 ### Maven ###
 target/
 pom.xml.tag
@@ -79,4 +77,16 @@ build/Release
 
 # Dependency directory
 # https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
+
+### Intellij ###
+# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm
+
+*.iml
+
+## Directory-based project format:
+.idea/
 node_modules
+
+## File-based project format:
+*.ipr
+*.iws

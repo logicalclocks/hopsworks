@@ -1,0 +1,11 @@
+td {
+  padding: 2px;
+}
+
+td.firstColumn {
+  width: 50%;
+}
+
+td.secondColumn {
+  width: 50%;
+}
