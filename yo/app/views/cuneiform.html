@@ -36,12 +36,12 @@
                     <span ng-show="job.executionDuration">Took {{job.executionDuration}}ms.</span>
                     Logs:
                   <ul>
-                    <li><a ng-click="cuneiformCtrl.getFile(job.stdoutPath)" ng-show="job.stdoutPath">{{job.stdoutPath}}</a></li>
-                    <li><a ng-click="cuneiformCtrl.getFile(job.stderrPath)" ng-show="job.stderrPath">{{job.stderrPath}}</a></li>
+                    <li><a ng-click="" ng-show="job.stdoutPath">{{job.stdoutPath}}</a></li>
+                    <li><a ng-click="" ng-show="job.stderrPath">{{job.stderrPath}}</a></li>
                   </ul>
                   Results:
                   <ul>
-                    <li ng-repeat="result in job.jobOutputFileCollection" ng-show="job.jobOutputFileCollection"><a ng-click="cuneiformCtrl.getFile(result.path)">{{result.jobOutputFilePK.name}} </a></li>
+                    <li ng-repeat="result in job.jobOutputFileCollection" ng-show="job.jobOutputFileCollection"><a ng-click="">{{result.jobOutputFilePK.name}} </a></li>
                   </ul>
                   </p>
                 </div>
@@ -121,12 +121,12 @@
                     <span ng-show="cuneiformCtrl.job.executionDuration">Took {{cuneiformCtrl.job.executionDuration}}ms.</span>
                     Logs:
                   <ul>
-                    <li><a ng-click="cuneiformCtrl.getFile(cuneiformCtrl.job.stdoutPath)" ng-show="cuneiformCtrl.job.stdoutPath">{{cuneiformCtrl.job.stdoutPath}}</a></li>
-                    <li><a ng-click="cuneiformCtrl.getFile(cuneiformCtrl.job.stderrPath)" ng-show="cuneiformCtrl.job.stderrPath">{{cuneiformCtrl.job.stderrPath}}</a></li>
+                    <li><a ng-click="" ng-show="cuneiformCtrl.job.stdoutPath">{{cuneiformCtrl.job.stdoutPath}}</a></li>
+                    <li><a ng-click="" ng-show="cuneiformCtrl.job.stderrPath">{{cuneiformCtrl.job.stderrPath}}</a></li>
                   </ul>
                   Results:
                   <ul>
-                    <li ng-repeat="result in cuneiformCtrl.job.jobOutputFileCollection" ng-show="cuneiformCtrl.job.jobOutputFileCollection"><a ng-click="cuneiformCtrl.getFile(result.path)">{{result.jobOutputFilePK.name}} </a></li>
+                    <li ng-repeat="result in cuneiformCtrl.job.jobOutputFileCollection" ng-show="cuneiformCtrl.job.jobOutputFileCollection"><a ng-click="">{{result.jobOutputFilePK.name}} </a></li>
                   </ul>
                   </p>
                 </div>

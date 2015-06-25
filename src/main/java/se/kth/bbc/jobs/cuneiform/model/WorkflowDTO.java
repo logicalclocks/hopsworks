@@ -225,7 +225,12 @@ public class WorkflowDTO {
     for (InputParameter ip : inputParams) {
       if (ip.isBound()) {
         //add a line to the workflow file
-        extraLines.append(ip.getName()).append(" = '").append(ip.getValue()).
+        String value = ip.getValue();
+        while (value.startsWith("/")) {
+          //need to strip starting slashes from paths...
+          value = value.substring(1);
+        }
+        extraLines.append(ip.getName()).append(" = '").append(value).
                 append("';\n");
       }
     }

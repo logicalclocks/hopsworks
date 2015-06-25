@@ -18,7 +18,7 @@
             context-menu
             data-target="menu-{{ $index}}"
             ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }"
-            ng-dblclick="datasetsCtrl.openDir(file.name, file.dir)"
+            ng-dblclick="selectFileCtrl.dblClick(datasetsCtrl, file)"
             ng-click="selectFileCtrl.select(file.path); datasetsCtrl.select($index, file);"
             id="table-{{ $index}}">
           

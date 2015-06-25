@@ -85,7 +85,7 @@ public class InputParameter implements Serializable {
    * @return
    */
   public boolean isBound() {
-    return value == null;
+    return value != null;
   }
 
   /**
