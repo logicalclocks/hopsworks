@@ -68,6 +68,9 @@ angular.module('hopsWorksApp')
               } else {
                 getAll();
               }
+              //Reset the selected file
+              self.selected = null;
+              self.fileDetail = null;
               dataSetService.getDir(newPath).then(
                       function (success) {
                         self.files = success.data;
