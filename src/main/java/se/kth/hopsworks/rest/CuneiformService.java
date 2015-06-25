@@ -1,5 +1,6 @@
 package se.kth.hopsworks.rest;
 
+import se.kth.bbc.jobs.cuneiform.model.CuneiformRunWrapper;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -21,6 +22,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
+import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 import se.kth.hopsworks.controller.CuneiformController;
 import se.kth.hopsworks.filters.AllowedRoles;
 
@@ -63,8 +65,9 @@ public class CuneiformService {
           throws AppException {
     try {
       WorkflowDTO wf = cfCtrl.inspectWorkflow(path);
+      CuneiformRunWrapper ret = new CuneiformRunWrapper(new YarnJobConfiguration(),wf);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
-              entity(wf).build();
+              entity(ret).build();
     } catch (IOException |
             HasFailedException ex) {
       Logger.getLogger(CuneiformService.class.getName()).log(Level.SEVERE,
@@ -86,21 +89,22 @@ public class CuneiformService {
    * based on the given path. This call returns a JobHistory object if the call
    * succeeds.
    * <p>
-   * @param workflow
+   * @param runData
    * @param sc
    * @param reqJobType
    * @return
+   * @throws se.kth.hopsworks.rest.AppException
    */
   @POST
   @Path("/run")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response runWorkFlow(WorkflowDTO workflow, @Context SecurityContext sc,
+  public Response runWorkFlow(CuneiformRunWrapper runData, @Context SecurityContext sc,
           @Context HttpServletRequest reqJobType) throws AppException {
     System.out.println("Starting CF job.");
     try {
-      JobHistory jh = cfCtrl.startWorkflow(null, workflow, reqJobType.getUserPrincipal().getName(),
+      JobHistory jh = cfCtrl.startWorkflow(runData, reqJobType.getUserPrincipal().getName(),
               projectId);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(jh).build();

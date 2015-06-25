@@ -54,12 +54,8 @@
         <div class="widget-body col-md-4">
           <div class="timeline clearfix">
 
-            <h3> Run configuration </h3>
+            <h3> Workflow </h3>
             <table>
-              <tr>
-                <td class="firstColumn">Job name </td>
-                <td class="secondColumn"> <input type="text"></td>
-              </tr>
               <tr>
                 <td class="firstColumn">Select workflow </td>
                 <td class="secondColumn">
@@ -85,6 +81,28 @@
             <button ng-click="cuneiformCtrl.execute()">
               <span>Execute</span>
             </button>
+            
+            <div ng-show="cuneiformCtrl.yarnConfig">
+            <h3>Job configuration</h3>
+            <table>
+              <tr>
+                <td class="firstColumn">Job name</td>
+                <td class="secondColumn"><input type="text" ng-model="cuneiformCtrl.yarnConfig.appName"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">Application master memory</td>
+                <td class="secondColumn"><input type="number" ng-model="cuneiformCtrl.yarnConfig.amMemory" min="0"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">Application master vcores</td>
+                <td class="secondColumn"><input type="number" ng-model="cuneiformCtrl.yarnConfig.amVCores" min="1"></td>
+              </tr>
+              <tr>
+                <td class="firstColumn">ResourceManager queue</td>
+                <td class="secondColumn"><input type="text" ng-model="cuneiformCtrl.yarnConfig.amQueue"></td>
+              </tr>
+            </table>
+            </div>
           </div>
         </div>
 

@@ -15,14 +15,14 @@ angular.module('hopsWorksApp')
               inspectStoredWorkflow: function (projectId, path) {
                 return $http.get('/api/project/' + projectId + '/jobs/cuneiform/inspect/' + path);
               },
-              runWorkflow: function(projectId, workflow) {
+              runWorkflow: function(projectId, runConfig) {
                 var req = {
                   method: 'POST',
                   url: '/api/project/'+projectId+'/jobs/cuneiform/run',
                   headers: {
                     'Content-Type': 'application/json'
                   },
-                  data: workflow
+                  data: runConfig
                 }
                 return $http(req);
               }

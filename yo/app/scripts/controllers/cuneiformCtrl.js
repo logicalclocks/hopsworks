@@ -63,7 +63,8 @@ angular.module('hopsWorksApp')
                       function (success) {
                         CuneiformService.inspectStoredWorkflow(self.pId, success).then(
                                 function (success) {
-                                  self.workflow = success.data;
+                                  self.workflow = success.data.wf;
+                                  self.yarnConfig = success.data.yarnConfig;
                                 }, function (error) {
                           //TODO: display message.
 
@@ -74,7 +75,7 @@ angular.module('hopsWorksApp')
             };
 
             self.execute = function () {
-              CuneiformService.runWorkflow(self.pId, self.workflow).then(
+              CuneiformService.runWorkflow(self.pId, {"wf": self.workflow, "yarnConfig": self.yarnConfig}).then(
                       function (success) {
                         //get the resulting job
                         self.job = success.data;
@@ -82,6 +83,7 @@ angular.module('hopsWorksApp')
                         self.jobs.unshift(self.job);
                         //Reset the configuration data
                         self.workflow = null;
+                        self.yarnConfig = null;
                         //Start polling
                         poller = $interval(pollStatus, 3000);
                       }, function (error) {

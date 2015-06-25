@@ -14,6 +14,7 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.cuneiform.CuneiformJob;
+import se.kth.bbc.jobs.cuneiform.model.CuneiformRunWrapper;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
@@ -86,19 +87,20 @@ public class CuneiformController {
    * Start the workflow *wf* with the given name, as the user with given
    * username in capacity of member of given project.
    * <p>
-   * @param jobName
-   * @param wf
+   * @param runData
    * @param user
    * @param projectId
    * @return The job history object for the started job.
    * @throws IOException
    */
-  public JobHistory startWorkflow(String jobName, WorkflowDTO wf, String user,
+  public JobHistory startWorkflow(CuneiformRunWrapper runData, String user,
           Integer projectId) throws IOException {
-    // Set the job name if necessary.
-    if (jobName == null || jobName.isEmpty()) {
-      jobName = "Untitled Cuneiform job";
+    WorkflowDTO wf = runData.getWf();
+    if (runData.getYarnConfig().getAppName() == null
+            || runData.getYarnConfig().getAppName().isEmpty()) {
+      runData.getYarnConfig().setAppName("Untitled Cuneiform job");
     }
+    // Set the job name if necessary.
     String wfLocation;
     try {
       wfLocation = prepWorkflowFile(wf);
@@ -112,7 +114,6 @@ public class CuneiformController {
             "Hiway.jar");
     b.amMainClass(
             "de.huberlin.wbi.hiway.am.cuneiform.CuneiformApplicationMaster");
-    b.appName("Cuneiform " + jobName);
     b.addAmJarToLocalResources(false); // Weird way of hiway working
 
     String machineUser = Utils.getYarnUser();
@@ -137,6 +138,9 @@ public class CuneiformController {
     b.logPathsRelativeToResourcesPath(false);
 
     b.addToAppMasterEnvironment("CLASSPATH", "/srv/hiway/lib/*:/srv/hiway/*");
+
+    //Set Yarn configuration
+    b.setConfig(runData.getYarnConfig());
     YarnRunner r;
 
     try {
@@ -157,7 +161,7 @@ public class CuneiformController {
     Project project = projects.find(projectId);
 
     //TODO: include input and execution files
-    JobHistory jh = job.requestJobId(jobName, user,
+    JobHistory jh = job.requestJobId(runData.getYarnConfig().getAppName(), user,
             project, JobType.CUNEIFORM);
     if (jh != null) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(project.getName())
