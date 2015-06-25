@@ -36,7 +36,8 @@
     <dependency>
       <groupId>org.eclipse.persistence</groupId>
       <artifactId>eclipselink</artifactId>
-      <version>2.7.0-SNAPSHOT</version>
+      <version>2.5.2</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.sun.jersey.contribs</groupId>
@@ -49,6 +50,12 @@
       <artifactId>jersey-all</artifactId>
       <version>2.17</version>
       <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.persistence</groupId>
+      <artifactId>org.eclipse.persistence.jpa.modelgen.processor</artifactId>
+      <version>2.5.2</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>javax</groupId>

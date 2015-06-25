@@ -34,7 +34,7 @@ import se.kth.bbc.security.ua.model.User;
  * @author stig
  */
 @Entity
-@Table(name = "jobhistory")
+@Table(name = "vangelis_kthfs.jobhistory")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "JobHistory.findAll",

@@ -33,7 +33,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author Ermias<ermiasg@kth.se>
  */
 @Entity
-@Table(name = "users")
+@Table(name = "vangelis_kthfs.users")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Users.findAll",

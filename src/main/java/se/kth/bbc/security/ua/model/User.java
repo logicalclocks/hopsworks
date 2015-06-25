@@ -32,7 +32,7 @@ import se.kth.bbc.project.Project;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "users")
+@Table(name = "vangelis_kthfs.users")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "User.findAll",

@@ -25,8 +25,7 @@ public class InodePK implements Serializable {
   private int parentId;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-          max = 3000)
+  @Size(min = 1, max = 3000)
   @Column(name = "name")
   private String name;
 

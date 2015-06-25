@@ -18,7 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author stig
  */
 @Entity
-@Table(name = "diseases")
+@Table(name = "vangelis_kthfs.diseases")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Disease.findAll",

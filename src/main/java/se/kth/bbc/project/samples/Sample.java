@@ -31,7 +31,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author stig
  */
 @Entity
-@Table(name = "samples")
+@Table(name = "vangelis_kthfs.samples")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Sample.findAll",

@@ -232,7 +232,7 @@ public class UserManager {
   //TODO: remove native query. Use JPA
   public List<String> findGroups(int uid) {
     String sql
-            = "SELECT group_name FROM bbc_group INNER JOIN people_group ON (people_group.gid = bbc_group.gid AND people_group.uid = "
+            = "SELECT group_name FROM vangelis_kthfs.bbc_group INNER JOIN vangelis_kthfs.people_group ON (vangelis_kthfs.people_group.gid = vangelis_kthfs.bbc_group.gid AND vangelis_kthfs.people_group.uid = "
             + uid + " )";
     List existing = em.createNativeQuery(sql).getResultList();
     return existing;

@@ -18,7 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author vangelis
  */
 @Entity
-@Table(name = "meta_tuple_to_file")
+@Table(name = "vangelis_kthfs.meta_tuple_to_file")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "TupleToFile.findAll",

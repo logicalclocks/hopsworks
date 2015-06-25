@@ -34,7 +34,7 @@ import se.kth.bbc.security.ua.model.User;
  * @author stig
  */
 @Entity
-@Table(name = "samplecollections")
+@Table(name = "vangelis_kthfs.samplecollections")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Samplecollection.findAll",

@@ -30,7 +30,7 @@ import se.kth.bbc.project.Project;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "consent")
+@Table(name = "vangelis_kthfs.consent")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Consent.findAll",

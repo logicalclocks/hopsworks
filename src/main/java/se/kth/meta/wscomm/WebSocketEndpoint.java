@@ -46,7 +46,6 @@ public class WebSocketEndpoint {
   private Project project;
   private String userRole;
   private HttpSession httpSession;//this might be used to check the underlying http session
-  private Dbao db;
   private Protocol protocol;
 
   @OnOpen
@@ -151,6 +150,7 @@ public class WebSocketEndpoint {
   private Project getProject(String projectId) {
     Integer pId;
     Project proj;
+    
     try {
       pId = Integer.valueOf(projectId);
       proj = projectBean.find(pId);

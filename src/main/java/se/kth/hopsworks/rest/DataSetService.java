@@ -82,6 +82,7 @@ public class DataSetService {
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = projectFacade.find(projectId);
+
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator
             + this.project.getName();
@@ -99,14 +100,20 @@ public class DataSetService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
 
-
     Inode parent = inodes.getProjectRoot(this.project.getName());
 
+    System.out.println("PARENT FOUND PRIMARY KEY parent_id: " + parent.
+            getInodePK().getParentId() + " name: " + parent.getInodePK().
+            getName());
     List<Inode> cwdChildren;
     cwdChildren = inodes.findByParent(parent);
     List<InodeView> kids = new ArrayList<>();
 
     for (Inode i : cwdChildren) {
+      System.out.println("CHILD FOUND PRIMARY KEY parent_id: " + i.
+              getInodePK().getParentId() + " name: " + i.getInodePK().
+              getName());
+
       kids.add(new InodeView(i, inodes.getPath(i)));
     }
 
@@ -188,11 +195,17 @@ public class DataSetService {
           DataSetDTO dataSetName,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
+
     boolean success = false;
     boolean exist = true;
+
     String dsPath = File.separator + Constants.DIR_ROOT + File.separator
             + this.project.getName();
+
+    System.err.println("CREATING A DATASET " + dsPath);
+    
     JsonResponse json = new JsonResponse();
+
     if (dataSetName == null || dataSetName.getName() == null || dataSetName.
             getName().isEmpty()) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
@@ -201,11 +214,16 @@ public class DataSetService {
 
     //check if the folder is allowed and if it already exists
     Inode parent = inodes.getProjectRoot(this.project.getName());
+    
+    System.err.println("THE PARENT " + parent);
+    
     String[] pathArray = dataSetName.getName().split(File.separator);
     for (String p : pathArray) {
 
       if (parent != null) {
+
         parent = inodes.findByParentAndName(parent, p);
+
         if (parent != null) {
           dsPath = dsPath + File.separator + p;
         } else {//first time when we find non existing folder name
@@ -245,7 +263,6 @@ public class DataSetService {
             + dsPath);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
-
   }
 
   @DELETE
@@ -374,7 +391,8 @@ public class DataSetService {
         logger.log(Level.SEVERE, "Copied to HDFS");
         //might need try catch for security exception
 
-        Files.deleteIfExists(Paths.get(stagingManager.getStagingPath() + uploadPath + fileName));
+        Files.deleteIfExists(Paths.get(stagingManager.getStagingPath()
+                + uploadPath + fileName));
       } catch (IOException e) {
         logger.log(Level.SEVERE, "Failed to write to HDSF", e);
       }

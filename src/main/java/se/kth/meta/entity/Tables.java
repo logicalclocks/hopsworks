@@ -28,7 +28,7 @@ import javax.validation.constraints.Size;
  * @author Vangelis
  */
 @Entity
-@Table(name = "meta_tables")
+@Table(name = "vangelis_kthfs.meta_tables")
 @EntityListeners(EntityListener.class)
 
 @NamedQueries({

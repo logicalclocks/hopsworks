@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author vangelis
  */
 @Entity
-@Table(name = "meta_field_predefined_values")
+@Table(name = "vangelis_kthfs.meta_field_predefined_values")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "FieldPredefinedValues.findAll",

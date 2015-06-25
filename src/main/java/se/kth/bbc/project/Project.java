@@ -36,7 +36,7 @@ import se.kth.bbc.project.services.ProjectServices;
  * @author roshan
  */
 @Entity
-@Table(name = "project")
+@Table(name = "vangelis_kthfs.project")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Project.findAll",

@@ -3,13 +3,13 @@ package se.kth.bbc.project.fb;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
@@ -19,7 +19,6 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.ws.rs.HEAD;
 import javax.xml.bind.annotation.XmlRootElement;
 import se.kth.meta.entity.Templates;
 import org.eclipse.persistence.annotations.Convert;
@@ -30,7 +29,7 @@ import org.eclipse.persistence.annotations.Converter;
  * @author stig
  */
 @Entity
-@Table(name = "hdfs_inodes")
+@Table(name = "hops.hdfs_inodes")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Inode.findAll",
@@ -92,33 +91,44 @@ public class Inode implements Serializable {
   private static final long serialVersionUID = 1L;
   @EmbeddedId
   protected InodePK inodePK;
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "id")
   private int id;
+
   @Column(name = "modification_time")
   private BigInteger modificationTime;
+
   @Column(name = "access_time")
   private BigInteger accessTime;
+
   @Lob
   @Column(name = "permission")
   private byte[] permission;
+
   @Size(max = 100)
   @Column(name = "client_name")
   private String clientName;
+
   @Size(max = 100)
   @Column(name = "client_machine")
   private String clientMachine;
+
   @Size(max = 100)
   @Column(name = "client_node")
   private String clientNode;
+
   @Column(name = "generation_stamp")
   private Integer generationStamp;
+
   @Column(name = "header")
   private BigInteger header;
+
   @Size(max = 3000)
   @Column(name = "symlink")
   private String symlink;
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "quota_enabled")
@@ -126,6 +136,7 @@ public class Inode implements Serializable {
           converterClass = se.kth.bbc.project.fb.ByteConverter.class)
   @Convert("byteConverter")
   private Byte quotaEnabled;
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "under_construction")
@@ -133,20 +144,24 @@ public class Inode implements Serializable {
           converterClass = se.kth.bbc.project.fb.ByteConverter.class)
   @Convert("byteConverter")
   private Byte underConstruction;
+
   @Column(name = "subtree_locked")
   @Converter(name = "byteConverter",
           converterClass = se.kth.bbc.project.fb.ByteConverter.class)
   @Convert("byteConverter")
   private Byte subtreeLocked;
+
   @Column(name = "subtree_lock_owner")
   private BigInteger subtreeLockOwner;
 
   @ManyToMany
   @JoinTable(
-          name = "meta_template_to_inode",
+          name = "vangelis_kthfs.meta_template_to_inode",
           joinColumns = {
-            @JoinColumn(name = "inode_id",
-                    referencedColumnName = "id")},
+            @JoinColumn(name = "inode_parent_id",
+                    referencedColumnName = "inodePK.parentId"),
+            @JoinColumn(name = "inode_name",
+                    referencedColumnName = "inodePK.name")},
           inverseJoinColumns = {
             @JoinColumn(name = "template_id",
                     referencedColumnName = "templateid")})
@@ -161,8 +176,8 @@ public class Inode implements Serializable {
     //this.children = new LinkedList<>();
     this.templates = new LinkedList<>();
   }
-  
-    public Inode(InodePK inodePK) {
+
+  public Inode(InodePK inodePK) {
     this.inodePK = inodePK;
   }
 
@@ -191,11 +206,9 @@ public class Inode implements Serializable {
     this.inodePK = new InodePK(parentId, name);
   }
 
-
   public InodePK getInodePK() {
     return inodePK;
   }
-
 
   public void setInodePK(InodePK inodePK) {
     this.inodePK = inodePK;
@@ -331,6 +344,8 @@ public class Inode implements Serializable {
    * for the time being we treat the many to many relationship between inodes
    * and templates as a many to one, where an inode may be associated only to
    * one template, while the same template may be associated to many inodes
+   * <p>
+   * @return the template id
    */
   public int getTemplate() {
 

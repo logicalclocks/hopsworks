@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author vangelis
  */
 @Entity
-@Table(name = "meta_field_types")
+@Table(name = "vangelis_kthfs.meta_field_types")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "FieldTypes.findAll",
