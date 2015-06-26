@@ -47,7 +47,7 @@ angular.module('hopsWorksApp')
                 //Upon success, fill in jobs
                 self.jobs = success.data;
               }, function (error) {
-                //Upon error, do something else
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
                 self.jobs = null;
               });
             };
@@ -62,11 +62,10 @@ angular.module('hopsWorksApp')
                                   self.workflow = success.data.wf;
                                   self.yarnConfig = success.data.yarnConfig;
                                 }, function (error) {
-                          //TODO: display message.
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
 
                         })
                       }, function (error) {
-                //Nothing.
               });
             };
 
@@ -83,7 +82,7 @@ angular.module('hopsWorksApp')
                         //Start polling
                         poller = $interval(pollStatus, 3000);
                       }, function (error) {
-                //Display error message
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               })
             };
 
@@ -107,7 +106,7 @@ angular.module('hopsWorksApp')
                         }
                       }, function (error) {
                 $interval.cancel(poller);
-                //TODO: display error message
+                growl.error(error.data.errorMsg, {title: 'Error', ttl: 15000});
               })
             };
             var poller;
@@ -128,7 +127,7 @@ angular.module('hopsWorksApp')
                       && self.job.state !== 'FRAMEWORK_FAILURE'
                       && self.job.state !== 'APP_MASTER_START_FAILED') {
                 //if so: start executing
-                poller = $interval(pollStatus,3000);
+                poller = $interval(pollStatus, 3000);
               }
             };
 

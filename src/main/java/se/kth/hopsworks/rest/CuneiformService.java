@@ -76,11 +76,11 @@ public class CuneiformService {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Failed to inspect the workflow file.");
     } catch (IllegalArgumentException ex) {
-      Logger.getLogger(CuneiformService.class.getName()).log(Level.SEVERE,
-              "Error upon inspecting workflow: invalid project id.",
+      Logger.getLogger(CuneiformService.class.getName()).log(Level.WARNING,
+              "Error upon inspecting workflow:",
               ex);
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
-              "Could not find specified workflow file." + ex.getMessage());
+              "Failed not inspect the workflow file. Reason:" + ex.getMessage());
     }
   }
 
