@@ -135,6 +135,7 @@ public class DataSetService {
     for (String p : pathArray) {
       parent = inodes.findByParentAndName(parent, p);
     }
+    
     if (parent == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               ResponseMessages.FILE_NOT_FOUND);
@@ -147,6 +148,7 @@ public class DataSetService {
     for (Inode i : cwdChildren) {
       kids.add(new InodeView(i, inodes.getPath(i)));
     }
+    
     GenericEntity<List<InodeView>> inodViews
             = new GenericEntity<List<InodeView>>(kids) {
             };

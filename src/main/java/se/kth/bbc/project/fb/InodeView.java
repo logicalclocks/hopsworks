@@ -66,6 +66,10 @@ public final class InodeView {
     this.dir = dir;
   }
   
+  public void setId(int id){
+    this.id = id;
+  }
+  
   public void setTemplate(int template){
     this.template = template;
   }
@@ -94,6 +98,10 @@ public final class InodeView {
     return dir;
   }
 
+  public int getId(){
+    return this.id;
+  }
+  
   public int getTemplate(){
     return this.template;
   }
