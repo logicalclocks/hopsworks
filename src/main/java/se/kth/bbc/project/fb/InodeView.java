@@ -65,6 +65,10 @@ public final class InodeView {
   public void setDir(boolean dir) {
     this.dir = dir;
   }
+  
+  public void setTemplate(int template){
+    this.template = template;
+  }
 
   public void setParent(boolean parent) {
     this.parent = parent;
@@ -90,6 +94,10 @@ public final class InodeView {
     return dir;
   }
 
+  public int getTemplate(){
+    return this.template;
+  }
+  
   public boolean isParent() {
     return parent;
   }
