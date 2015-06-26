@@ -196,6 +196,27 @@ public class FileOperations {
    * @throws IOException
    */
   public void renameInHdfs(String source, String destination) throws IOException {
+    //Check if source and destination are the same
+    if (source.equals(destination)) {
+      return;
+    }
+    //If source does not start with hdfs, prepend.
+    if (!source.startsWith("hdfs")) {
+      source = "hdfs://" + source;
+    }
+
+    //Check destination place, create directory.
+    String destDir;
+    if (!destination.startsWith("hdfs")) {
+      destDir = Utils.getDirectoryPart(destination);
+      destination = "hdfs://" + destination;
+    } else {
+      String tmp = destination.substring("hdfs://".length());
+      destDir = Utils.getDirectoryPart(tmp);
+    }
+    if (!exists(destDir)) {
+      mkDir("hdfs://" + destDir);
+    }
     Path src = new Path(source);
     Path dst = new Path(destination);
     fsOps.moveWithinHdfs(src, dst);

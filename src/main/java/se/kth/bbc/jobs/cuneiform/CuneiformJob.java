@@ -125,9 +125,17 @@ public final class CuneiformJob extends YarnJob {
    */
   @Override
   protected void copyLogs() {
-    stdOutPath = stdOutPath.replaceAll(APPID_REGEX, getHistory().getAppId());
-    stdErrPath = stdErrPath.replaceAll(APPID_REGEX, getHistory().getAppId());
-    updateHistory(null, null, -1, null, stdOutPath, stdErrPath, null, null, null);
+    try {
+      stdOutPath = stdOutPath.replaceAll(APPID_REGEX, getHistory().getAppId());
+      getFileOperations().renameInHdfs(stdOutPath, getStdOutFinalDestination());
+      stdErrPath = stdErrPath.replaceAll(APPID_REGEX, getHistory().getAppId());
+      getFileOperations().renameInHdfs(stdErrPath, getStdErrFinalDestination());
+      updateHistory(null, null, -1, null, getStdOutFinalDestination(),
+              getStdErrFinalDestination(), null, null, null);
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, "Error while copying logs for job "
+              + getHistory().getId() + ".", ex);
+    }
   }
 
 }

@@ -69,7 +69,6 @@ public class CuneiformController {
       throw new IllegalArgumentException("No such file.");
     } else if (fops.isDir(path)) {
       throw new IllegalArgumentException("Specified path is a directory.");
-
     }
     // Get the workflow name.
     String wfName = Utils.getFileName(path);
@@ -116,8 +115,6 @@ public class CuneiformController {
             "de.huberlin.wbi.hiway.am.cuneiform.CuneiformApplicationMaster");
     b.addAmJarToLocalResources(false); // Weird way of hiway working
 
-    String machineUser = Utils.getYarnUser();
-
     b.localResourcesBasePath("/hiway/"
             + YarnRunner.APPID_PLACEHOLDER);
 
@@ -133,8 +130,8 @@ public class CuneiformController {
 
     //Pass on workflow file
     b.addFilePathToBeCopied(wfLocation, true);
-    b.stdOutPath(">(tee AppMaster.stdout <LOG_DIR>/" + OUT_LOGS + ")");
-    b.stdErrPath(">(tee AppMaster.stderr <LOG_DIR>/" + ERR_LOGS + " >&2)");
+    b.stdOutPath(OUT_LOGS);
+    b.stdErrPath(ERR_LOGS);
     b.logPathsRelativeToResourcesPath(false);
 
     b.addToAppMasterEnvironment("CLASSPATH", "/srv/hiway/lib/*:/srv/hiway/*");

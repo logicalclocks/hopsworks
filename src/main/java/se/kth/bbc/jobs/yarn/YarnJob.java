@@ -167,31 +167,25 @@ public class YarnJob extends HopsJob {
 
   protected void copyLogs() {
     try {
-      String stdout = null;
-      String stderr = null;
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
           fops.copyToHDFSFromPath(runner.getStdOutPath(),
                   stdOutFinalDestination);
-          stdout = stdOutFinalDestination;
         } else {
-          //TODO: move in HDFS
-          stdout = runner.getStdOutPath();
+          fops.renameInHdfs(runner.getStdOutPath(), stdOutFinalDestination);
         }
       }
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
           fops.copyToHDFSFromPath(runner.getStdErrPath(),
                   stdErrFinalDestination);
-          stderr = stdErrFinalDestination;
         } else {
-          //TODO: move in HDFS
-          stderr = runner.getStdErrPath();
+          fops.renameInHdfs(runner.getStdErrPath(), stdErrFinalDestination);
         }
       }
-      updateHistory(null, null, -1, null, stdout, stderr, null, null, null);
+      updateHistory(null, null, -1, null, stdOutFinalDestination,
+              stdErrFinalDestination, null, null, null);
     } catch (IOException e) {
-      //TODO: figure out how to handle this
       logger.log(Level.SEVERE, "Exception while trying to write logs for job "
               + getHistory() + " to HDFS.", e);
     }
