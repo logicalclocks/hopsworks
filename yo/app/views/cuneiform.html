@@ -81,27 +81,27 @@
             <button ng-click="cuneiformCtrl.execute()">
               <span>Execute</span>
             </button>
-            
+
             <div ng-show="cuneiformCtrl.yarnConfig">
-            <h3>Job configuration</h3>
-            <table>
-              <tr>
-                <td class="firstColumn">Job name</td>
-                <td class="secondColumn"><input type="text" ng-model="cuneiformCtrl.yarnConfig.appName"></td>
-              </tr>
-              <tr>
-                <td class="firstColumn">Application master memory</td>
-                <td class="secondColumn"><input type="number" ng-model="cuneiformCtrl.yarnConfig.amMemory" min="0"></td>
-              </tr>
-              <tr>
-                <td class="firstColumn">Application master vcores</td>
-                <td class="secondColumn"><input type="number" ng-model="cuneiformCtrl.yarnConfig.amVCores" min="1"></td>
-              </tr>
-              <tr>
-                <td class="firstColumn">ResourceManager queue</td>
-                <td class="secondColumn"><input type="text" ng-model="cuneiformCtrl.yarnConfig.amQueue"></td>
-              </tr>
-            </table>
+              <h3>Job configuration</h3>
+              <table>
+                <tr>
+                  <td class="firstColumn">Job name</td>
+                  <td class="secondColumn"><input type="text" ng-model="cuneiformCtrl.yarnConfig.appName"></td>
+                </tr>
+                <tr>
+                  <td class="firstColumn">Application master memory</td>
+                  <td class="secondColumn"><input type="number" ng-model="cuneiformCtrl.yarnConfig.amMemory" min="0"></td>
+                </tr>
+                <tr>
+                  <td class="firstColumn">Application master vcores</td>
+                  <td class="secondColumn"><input type="number" ng-model="cuneiformCtrl.yarnConfig.amVCores" min="1"></td>
+                </tr>
+                <tr>
+                  <td class="firstColumn">ResourceManager queue</td>
+                  <td class="secondColumn"><input type="text" ng-model="cuneiformCtrl.yarnConfig.amQueue"></td>
+                </tr>
+              </table>
             </div>
           </div>
         </div>
@@ -111,25 +111,25 @@
 
             <h3>Selected job</h3>
             <div ng-show="cuneiformCtrl.job">
-                <div class="about-task">
-                  <div class="header"> {{cuneiformCtrl.job.name}}
-                    <small class="muted" ng-show="cuneiformCtrl.job.user">Run by {{cuneiformCtrl.job.user.fname + ' ' + cuneiformCtrl.job.user.lname}} on {{cuneiformCtrl.job.submissionTime}}
-                    </small>
-                  </div>
-                  <p class="no-margin">
-                    <span ng-show="cuneiformCtrl.job.state">State: {{cuneiformCtrl.job.state}}</span>
-                    <span ng-show="cuneiformCtrl.job.executionDuration">Took {{cuneiformCtrl.job.executionDuration}}ms.</span>
-                    Logs:
-                  <ul>
-                    <li><a ng-click="" ng-show="cuneiformCtrl.job.stdoutPath">{{cuneiformCtrl.job.stdoutPath}}</a></li>
-                    <li><a ng-click="" ng-show="cuneiformCtrl.job.stderrPath">{{cuneiformCtrl.job.stderrPath}}</a></li>
-                  </ul>
-                  Results:
-                  <ul>
-                    <li ng-repeat="result in cuneiformCtrl.job.jobOutputFileCollection" ng-show="cuneiformCtrl.job.jobOutputFileCollection"><a ng-click="">{{result.jobOutputFilePK.name}} </a></li>
-                  </ul>
-                  </p>
+              <div class="about-task">
+                <div class="header"> {{cuneiformCtrl.job.name}}
+                  <small class="muted" ng-show="cuneiformCtrl.job.user">Run by {{cuneiformCtrl.job.user.fname + ' ' + cuneiformCtrl.job.user.lname}} on {{cuneiformCtrl.job.submissionTime}}
+                  </small>
                 </div>
+                <p class="no-margin">
+                  <span ng-show="cuneiformCtrl.job.state">State: {{cuneiformCtrl.job.state}}</span>
+                  <span ng-show="cuneiformCtrl.job.executionDuration">Took {{cuneiformCtrl.job.executionDuration}}ms.</span>
+                  Logs:
+                <ul>
+                  <li><a ng-click="" ng-show="cuneiformCtrl.job.stdoutPath">{{cuneiformCtrl.job.stdoutPath}}</a></li>
+                  <li><a ng-click="" ng-show="cuneiformCtrl.job.stderrPath">{{cuneiformCtrl.job.stderrPath}}</a></li>
+                </ul>
+                Results:
+                <ul>
+                  <li ng-repeat="result in cuneiformCtrl.job.jobOutputFileCollection" ng-show="cuneiformCtrl.job.jobOutputFileCollection"><a ng-click="">{{result.jobOutputFilePK.name}} </a></li>
+                </ul>
+                </p>
+              </div>
             </div>
           </div>
         </div>

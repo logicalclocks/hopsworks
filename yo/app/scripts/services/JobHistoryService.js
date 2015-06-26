@@ -15,8 +15,8 @@ angular.module('hopsWorksApp')
               getByProjectAndType: function (projectId, type) {
                 return $http.get('/api/project/' + projectId + '/jobs/history/' + type.toUpperCase());
               },
-              pollStatus: function(projectId, jobId) {
-                return $http.get('/api/project/'+projectId+'/jobs/status/'+jobId);
+              pollStatus: function (projectId, jobId) {
+                return $http.get('/api/project/' + projectId + '/jobs/status/' + jobId);
               }
             };
             return service;

@@ -11,7 +11,7 @@
   Select a file in the current project:
 
   <div class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
-    
+
     <table class="table table-bordred table-hover" >
       <tbody ui-sortable ng-model="datasetsCtrl.files">
         <tr ng-repeat="file in datasetsCtrl.files"
@@ -21,7 +21,7 @@
             ng-dblclick="selectFileCtrl.dblClick(datasetsCtrl, file)"
             ng-click="selectFileCtrl.select(file.path); datasetsCtrl.select($index, file);"
             id="table-{{ $index}}">
-          
+
           <td>
             <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
             <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i>
