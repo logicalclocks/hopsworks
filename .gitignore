@@ -3,3 +3,5 @@ nb-configuration.xml
 nbactions.xml
 
 src/main/java/se/kth/meta/listener/SessionListener.java
+src/main/java/se/kth/bbc/project/fb/InodeOps.java
+src/main/java/se/kth/bbc/project/fb/InodeOpsFacade.java

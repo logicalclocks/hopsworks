@@ -11,7 +11,6 @@ $(document).ready(function () {
               type: "parent",
               query: {
                 match: {
-
                   name: $('#hiddenProjectName').val()
                 }
               }

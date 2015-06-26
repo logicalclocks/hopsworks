@@ -1,8 +1,3 @@
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
 // MooTools: the javascript framework.
 // Load this file's selection again by visiting: http://mootools.net/more/98fc877e84c1594d47fd0ae27648bc30 

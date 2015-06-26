@@ -78,7 +78,7 @@ public class RequestAuthFilter implements ContainerRequestFilter {
         log.log(Level.INFO, "Accessing resource that is allowed for all");
         return;
       }
-      
+
       if (requestContext.getSecurityContext().getUserPrincipal() == null) {
         requestContext.abortWith(Response.
                 status(Response.Status.UNAUTHORIZED).build());

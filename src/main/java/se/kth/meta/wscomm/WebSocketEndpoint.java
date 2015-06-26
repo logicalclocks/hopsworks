@@ -150,7 +150,7 @@ public class WebSocketEndpoint {
   private Project getProject(String projectId) {
     Integer pId;
     Project proj;
-    
+
     try {
       pId = Integer.valueOf(projectId);
       proj = projectBean.find(pId);

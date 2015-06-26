@@ -157,7 +157,8 @@ public class Templates implements Serializable, EntityIntf {
 
   @Override
   public String toString() {
-    return "se.kth.meta.entity.Templates[ templateid=" + id + " name=" + name + " ]";
+    return "se.kth.meta.entity.Templates[ templateid=" + id + " name=" + name
+            + " ]";
   }
 
 }

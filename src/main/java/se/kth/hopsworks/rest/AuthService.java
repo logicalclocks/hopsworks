@@ -85,7 +85,8 @@ public class AuthService {
     if (sc.getUserPrincipal() == null) {
       if (user != null && statusValidator.checkStatus(user.getStatus())) {
         try {
-          req.getServletContext().log("going to login. User status: " + user.getStatus());
+          req.getServletContext().log("going to login. User status: " + user.
+                  getStatus());
           req.login(email, password);
           req.getServletContext().log("3 step: " + email);
           userController.resetFalseLogin(user);

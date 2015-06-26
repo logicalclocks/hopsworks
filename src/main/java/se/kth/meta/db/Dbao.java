@@ -445,13 +445,13 @@ public class Dbao {
    * @param template
    * @throws se.kth.meta.exception.DatabaseException
    */
-  public void updateTemplatesInodesMxN(Templates template) throws DatabaseException {
+  public void updateTemplatesInodesMxN(Templates template) throws
+          DatabaseException {
     try {
       this.utx.begin();
       this.em.merge(template);
       this.utx.commit();
-    } 
-    catch (IllegalStateException | SecurityException | HeuristicMixedException |
+    } catch (IllegalStateException | SecurityException | HeuristicMixedException |
             HeuristicRollbackException | NotSupportedException |
             RollbackException |
             SystemException e) {

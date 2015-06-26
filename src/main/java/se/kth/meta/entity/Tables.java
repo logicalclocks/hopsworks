@@ -182,7 +182,6 @@ public class Tables implements Serializable, EntityIntf {
     return this.inodeid;
   }
 
-
   @Override
   public int hashCode() {
     int hash = 0;
