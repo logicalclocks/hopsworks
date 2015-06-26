@@ -8,7 +8,6 @@ angular.module('hopsWorksApp')
 
             return {
                 fetchTemplates: function () {
-                    console.log("fetching the templates ");
                     return WSComm.send({
                         sender: 'evsav',
                         type: 'TemplateMessage',

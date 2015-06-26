@@ -41,8 +41,8 @@ angular.module('hopsWorksApp')
                       console.log(success);
                       self.currentProject = success;
                     }, function (error) {
-              $location.path('/');
-            });
+                      $location.path('/');
+                    });
 
             var getAll = function () {
               dataSetService.getAll().then(
@@ -50,9 +50,9 @@ angular.module('hopsWorksApp')
                         self.datasets = success.data;
                         console.log(success);
                       }, function (error) {
-                console.log("getAll error");
-                console.log(error);
-              });
+                        console.log("getAll error");
+                        console.log(error);
+                      });
             };
 
             var getDir = function (name) {
@@ -76,9 +76,9 @@ angular.module('hopsWorksApp')
                         }
                         console.log(success);
                       }, function (error) {
-                console.log("getDir error");
-                console.log(error);
-              });
+                        console.log("getDir error");
+                        console.log(error);
+                      });
             };
 
             self.setMetadataTemplate = function (file) {
@@ -91,7 +91,7 @@ angular.module('hopsWorksApp')
 
               MetadataActionService.fetchTemplate(templateId)
                       .then(function (response) {
-                        //console.log("LOADED TEMPLATE " + JSON.stringify(response.board));
+                        console.log("LOADED TEMPLATE " + JSON.stringify(response.board) + " template id " + templateId);
                         self.currentBoard = JSON.parse(response.board);
                         self.initializeMetadataTabs(JSON.parse(response.board));
 
@@ -183,9 +183,9 @@ angular.module('hopsWorksApp')
                         console.log("download success");
                         console.log(success);
                       }, function (error) {
-                console.log("download error");
-                console.log(error);
-              });
+                        console.log("download error");
+                        console.log(error);
+                      });
             };
 
             var upload = function (path) {
@@ -194,9 +194,9 @@ angular.module('hopsWorksApp')
                         console.log("upload success");
                         console.log(success);
                       }, function (error) {
-                console.log("upload error");
-                console.log(error);
-              });
+                        console.log("upload error");
+                        console.log(error);
+                      });
             };
 
             var removeDataSetDir = function (path) {
@@ -228,9 +228,9 @@ angular.module('hopsWorksApp')
                         console.log("CURRENT PATH " + self.currentPath);
                         getDir();
                       }, function (error) {
-                growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
-                getDir();
-              });
+                        growl.info("Closed without saving.", {title: 'Info', ttl: 5000});
+                        getDir();
+                      });
             };
 
             self.deleteFile = function (fileName) {
@@ -258,9 +258,9 @@ angular.module('hopsWorksApp')
                         var file = new Blob([data], {type: 'application/txt'});
                         //saveAs(file, 'filename');
                       }, function (error) {
-                console.log("download error");
-                console.log(error);
-              });
+                        console.log("download error");
+                        console.log(error);
+                      });
             };
 
             self.back = function () {
@@ -288,8 +288,7 @@ angular.module('hopsWorksApp')
                         });
               }, 300);
               return debounceFn;
-            }
-            ;
+            };
 
             self.close = function () {
               $mdSidenav('right').close()

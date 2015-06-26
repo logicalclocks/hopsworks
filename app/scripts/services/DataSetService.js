@@ -26,7 +26,6 @@ angular.module('hopsWorksApp')
                     data: dataSet
                   };
 
-
                   return $http(regReq);
                 },
                 removeDataSetDir: function (fileName) {
