@@ -177,6 +177,6 @@ angular.module('hopsWorksApp')
                   }
                 });
                 return modalInstance.result;
-              },
+              }
             }
           }]);

@@ -8,7 +8,6 @@ package se.kth.bbc.project.services;
 public enum ProjectServiceEnum {
 
   CUNEIFORM,
-  SAMPLES,
   ZEPPELIN,
   SPARK,
   ADAM,
@@ -21,8 +20,6 @@ public enum ProjectServiceEnum {
     switch (this) {
       case CUNEIFORM:
         return "Cuneiform";
-      case SAMPLES:
-        return "Samples";
       case ZEPPELIN:
         return "Zeppelin";
       case SPARK:

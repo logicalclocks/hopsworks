@@ -282,14 +282,13 @@ angular.module('hopsWorksApp')
                         $log.debug("Closed metadata designer");
                       });
             };
-
-
             self.availableTemplates = [];
-
             self.newTemplateName = "";
             $scope.extendedFrom = {};
-
             self.extendedFromBoard = {};
+
+            self.currentTemplateID = "";
+            self.currentBoard = {};
 
             self.currentTemplateID = "";
             self.currentBoard = {};
@@ -432,7 +431,6 @@ angular.module('hopsWorksApp')
               }
               );
             }
-
             self.deleteList = function (column) {
               return WSComm.send({
                 sender: 'evsav',
@@ -535,8 +533,6 @@ angular.module('hopsWorksApp')
 
             self.addNewList = function () {
               $scope.template = self.currentTemplateID;
-
-
               $modal.open({
                 templateUrl: 'views/metadata/newListModal.html',
                 controller: 'NewListCtrl',
