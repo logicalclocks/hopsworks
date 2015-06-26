@@ -165,22 +165,27 @@ public class DataSetService {
           @Context HttpServletRequest req) throws AppException {
     InputStream is = null;
     String fullPath = this.path + filePath;
-    logger.log(Level.INFO, "File to be downloaded from HDFS path: {0}", fullPath);
+    logger.
+            log(Level.INFO, "File to be downloaded from HDFS path: {0}",
+                    fullPath);
     if (inodes.getInodeAtPath(fullPath) == null) {
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               ResponseMessages.FILE_NOT_FOUND);
     }
     try {
       is = fileOps.getInputStream(fullPath);
-      logger.log(Level.FINE, "File was downloaded from HDFS path: {0}",fullPath);
+      logger.
+              log(Level.FINE, "File was downloaded from HDFS path: {0}",
+                      fullPath);
     } catch (IOException ex) {
       logger.log(Level.INFO, null, ex);
       throw new AppException(Response.Status.NOT_FOUND.getStatusCode(),
               "Could not open stream.");
     }
     String[] p = filePath.split(File.separator);
-    ResponseBuilder response = noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK);
-    response.header("filename", p[p.length-1]);
+    ResponseBuilder response = noCacheResponse.getNoCacheResponseBuilder(
+            Response.Status.OK);
+    response.header("filename", p[p.length - 1]);
     return response.entity(is).build();
   }
 

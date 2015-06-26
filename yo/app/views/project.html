@@ -11,7 +11,7 @@
 
     <section>
       <div class="content-wrapper">
-        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName }} / Start</h3>
+        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Start</h3>
 
         <!-- Page Content -->
 
@@ -19,19 +19,19 @@
           <div class="timeline clearfix">
             <div class="mid-line"></div>
 
-            <div ng-repeat="activity in projectCtrl.activities | startFrom:(projectCtrl.currentPage-1) * projectCtrl.pageSize | limitTo:projectCtrl.pageSize">
+            <div ng-repeat="activity in projectCtrl.activities| startFrom:(projectCtrl.currentPage - 1) * projectCtrl.pageSize | limitTo:projectCtrl.pageSize">
 
               <div class="right">
                 <div class="r-arrow"></div>
                 <div class="about-task">
-                  <div class="header">{{activity.user.fname }} {{activity.user.lname}} {{activity.activity}}
-                    <small class="muted">On {{activity.timestamp |
+                  <div class="header">{{activity.user.fname}} {{activity.user.lname}} {{activity.activity}}
+                    <small class="muted">On {{activity.timestamp|
                       date:'medium'}}
                     </small>
                   </div>
                   <p class="no-margin">
                     Project name: {{activity.project.name}} Owner: {{activity.project.owner.fname}}
-                    Created on: {{activity.project.created | date:'medium'}}
+                    Created on: {{activity.project.created| date:'medium'}}
                   </p>
                 </div>
               </div>

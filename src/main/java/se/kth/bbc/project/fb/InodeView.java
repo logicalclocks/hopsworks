@@ -13,17 +13,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public final class InodeView {
 
-  private  String name;
-  private  boolean dir;
-  private  boolean parent;
-  private  String path;
-  private  Date modification;
-  private  Date accessTime;
-  
+  private String name;
+  private boolean dir;
+  private boolean parent;
+  private String path;
+  private Date modification;
+  private Date accessTime;
 
   public InodeView() {
   }
-  
+
   public InodeView(Inode i, String path) {
     this.name = i.getInodePK().getName();
     this.dir = i.isDir();
@@ -76,7 +75,7 @@ public final class InodeView {
   public void setAccessTime(Date accessTime) {
     this.accessTime = accessTime;
   }
-  
+
   public String getName() {
     return name;
   }
