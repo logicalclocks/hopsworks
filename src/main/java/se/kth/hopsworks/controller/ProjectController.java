@@ -213,7 +213,7 @@ public class ProjectController {
 
     String rootDir = Constants.DIR_ROOT;
     String projectPath = File.separator + rootDir + File.separator + projectName;
-    fileOps.mkDir(projectPath, -1);
+    fileOps.mkDir(projectPath);
   }
 
   /**

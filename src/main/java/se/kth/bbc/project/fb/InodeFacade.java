@@ -156,6 +156,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @return
    */
   public Inode findByParentAndName(Inode parent, String name) {
+    System.out.println("FIND BY PARENT ID " + parent.getId() + " AND NAME " + name);
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findByPrimaryKey",
             Inode.class);
     q.setParameter("inodePk", new InodePK(parent.getId(), name));

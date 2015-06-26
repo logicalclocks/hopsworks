@@ -30,6 +30,7 @@ public final class InodeView {
     this.name = i.getInodePK().getName();
     this.dir = i.isDir();
     this.id = i.getId();
+    //put the template id in the REST response
     this.template = i.getTemplate();
     this.parent = false;
     this.path = path;

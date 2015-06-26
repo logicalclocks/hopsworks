@@ -76,7 +76,7 @@ public class FileOperationsManagedBean implements Serializable {
       location = path + File.separator + newFolderName;
     }
     try {
-      boolean success = fileOps.mkDir(location, -1);
+      boolean success = fileOps.mkDir(location);
       if (success) {
         newFolderName = null;
       } else {

@@ -53,7 +53,7 @@ public class FileOperations {
     return fsOps.getInputStream(location);
   }
 
-  public boolean mkDir(String path, int templateId) throws IOException {
+  public boolean mkDir(String path) throws IOException {
     Path location = new Path(path);
     return fsOps.mkdir(location);
   }
@@ -74,7 +74,7 @@ public class FileOperations {
     File localfile = getLocalFile(localFilename);
 
     String dirs = Utils.getDirectoryPart(destination);
-    mkDir(dirs, -1);
+    mkDir(dirs);
 
     //Actually copy to HDFS
     Path destp = new Path(destination);
@@ -92,7 +92,7 @@ public class FileOperations {
     File localfile = new File(path);
 
     String dirs = Utils.getDirectoryPart(destination);
-    mkDir(dirs, -1);
+    mkDir(dirs);
 
     //Actually copy to HDFS
     Path destp = new Path(destination);
@@ -246,7 +246,7 @@ public class FileOperations {
     Path dstPath = new Path(dst);
     //Make the necessary output directories
     String dirPart = Utils.getDirectoryPart(dst);
-    mkDir(dirPart, -1);
+    mkDir(dirPart);
     //Actually copy
     fsOps.copyInHdfs(srcPath, dstPath);
   }

@@ -15,6 +15,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -30,8 +31,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.lims.Constants;
-import se.kth.bbc.lims.StagingManager;
-import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
 import se.kth.hopsworks.controller.ResponseMessages;
@@ -47,6 +46,9 @@ import se.kth.bbc.upload.ResumableInfo;
 import se.kth.bbc.upload.ResumableInfoStorage;
 import se.kth.hopsworks.controller.DataSetDTO;
 import se.kth.hopsworks.controller.FolderNameValidator;
+import se.kth.meta.db.Dbao;
+import se.kth.meta.entity.Templates;
+import se.kth.meta.exception.DatabaseException;
 
 /**
  * @author André<amore@kth.se>
@@ -102,18 +104,11 @@ public class DataSetService {
 
     Inode parent = inodes.getProjectRoot(this.project.getName());
 
-    System.out.println("PARENT FOUND PRIMARY KEY parent_id: " + parent.
-            getInodePK().getParentId() + " name: " + parent.getInodePK().
-            getName());
     List<Inode> cwdChildren;
     cwdChildren = inodes.findByParent(parent);
     List<InodeView> kids = new ArrayList<>();
 
     for (Inode i : cwdChildren) {
-      System.out.println("CHILD FOUND PRIMARY KEY parent_id: " + i.
-              getInodePK().getParentId() + " name: " + i.getInodePK().
-              getName());
-
       kids.add(new InodeView(i, inodes.getPath(i)));
     }
 
@@ -194,7 +189,7 @@ public class DataSetService {
   public Response createDataSetDir(
           DataSetDTO dataSetName,
           @Context SecurityContext sc,
-          @Context HttpServletRequest req) throws AppException {
+          @Context HttpServletRequest request) throws AppException {
 
     boolean success = false;
     boolean exist = true;
@@ -202,8 +197,8 @@ public class DataSetService {
     String dsPath = File.separator + Constants.DIR_ROOT + File.separator
             + this.project.getName();
 
-    System.err.println("CREATING A DATASET " + dsPath);
-    
+    logger.log(Level.INFO, "CREATING A DATASET IN PATH: {0}", dsPath);
+
     JsonResponse json = new JsonResponse();
 
     if (dataSetName == null || dataSetName.getName() == null || dataSetName.
@@ -214,19 +209,25 @@ public class DataSetService {
 
     //check if the folder is allowed and if it already exists
     Inode parent = inodes.getProjectRoot(this.project.getName());
-    
-    System.err.println("THE PARENT " + parent);
-    
-    String[] pathArray = dataSetName.getName().split(File.separator);
-    for (String p : pathArray) {
+    Inode lastVisitedParent = new Inode(parent);
 
+    String[] pathArray = dataSetName.getName().split(File.separator);
+
+    for (String p : pathArray) {
       if (parent != null) {
 
         parent = inodes.findByParentAndName(parent, p);
 
         if (parent != null) {
           dsPath = dsPath + File.separator + p;
-        } else {//first time when we find non existing folder name
+
+          /*
+           * need to keep track of the last visited parent to
+           * avoid NullPointerException below when retrieving the inode
+           */
+          lastVisitedParent = new Inode(parent);
+        } else {
+          //first time when we find non existing folder name
           if (datasetNameValidator.isValidName(p)) {
             dsPath = dsPath + File.separator + p;
             exist = false;
@@ -246,14 +247,34 @@ public class DataSetService {
     }
 
     try {
-      success = fileOps.mkDir(dsPath, dataSetName.getTemplate());
+      success = fileOps.mkDir(dsPath);
       logger.log(Level.SEVERE, "DATASET RECEIVED {0} ", dataSetName.
               getTemplate());
 
+      //the inode has been created in the file system
+      if (success) {
+        ServletContext context = request.getSession().getServletContext();
+        Dbao db = (Dbao) context.getAttribute("db");
+
+        //get the newly created inode and the template it comes with
+        Inode neww = inodes.findByParentAndName(lastVisitedParent,
+                pathArray[pathArray.length - 1]);
+
+        Templates template = db.findTemplateById(dataSetName.getTemplate());
+        template.getInodes().add(neww);
+
+        //persist the relationship table
+        db.updateTemplatesInodesMxN(template);
+      }
     } catch (IOException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               "Could not create the directory at " + dsPath);
+    } catch (DatabaseException e) {
+      logger.log(Level.SEVERE, null, e);
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(),
+              "Could not attach template to inode " + e.getMessage());
     }
     if (!success) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),

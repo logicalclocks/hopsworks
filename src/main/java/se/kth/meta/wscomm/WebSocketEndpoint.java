@@ -73,7 +73,7 @@ public class WebSocketEndpoint {
 
     //returns the user role in project. Null if the user has no role in project
     this.userRole = projectTeamBean.findCurrentRole(this.project, this.sender);
-    logger.log(Level.SEVERE, "User role in this projuct {0}", this.userRole);
+    logger.log(Level.SEVERE, "User role in this product {0}", this.userRole);
 
     if (this.userRole == null) {
       try {

@@ -14,6 +14,7 @@ import javax.naming.NamingException;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.NotSupportedException;
@@ -55,7 +56,6 @@ public class Dbao {
       throw new DatabaseException(Dbao.class.getName(), ex.getMessage());
     }
   }
-
 
   /**
    * adds a new record into 'tables' table. Represents a new metadata template
@@ -105,7 +105,6 @@ public class Dbao {
       throw new DatabaseException(Dbao.class.getName(), e.getMessage());
     }
   }
-  
 
   /**
    * adds a new record into 'fields' table. Each record represents a table
@@ -158,7 +157,7 @@ public class Dbao {
               "Could not add predefined value " + e.getMessage());
     }
   }
-  
+
   public Tables getTable(int tableid) throws DatabaseException {
 
     return this.em.find(Tables.class, tableid);
@@ -225,7 +224,7 @@ public class Dbao {
               "Could not delete table " + ex.getMessage());
     }
   }
-  
+
   /**
    * adds a new record into 'templates' table.
    *
@@ -247,7 +246,7 @@ public class Dbao {
               "Could not add template " + e.getMessage());
     }
   }
-  
+
   public void removeTemplate(Templates template) throws DatabaseException {
     try {
       Templates t = this.em.find(Templates.class, template.getId());
@@ -308,7 +307,6 @@ public class Dbao {
               "Could not delete field " + ex.getMessage());
     }
   }
-
 
   /**
    * Deletes a field's predefined values. When a field modification happens
@@ -426,7 +424,44 @@ public class Dbao {
     return query.getResultList();
   }
 
-  //TEST TO SEE DATABASE UPDATES
+  /**
+   * Find the Template that has <i>templateid</i> as id.
+   * <p>
+   * @param templateid
+   * @return
+   */
+  public Templates findTemplateById(int templateid) {
+    TypedQuery<Templates> query = em.createNamedQuery(
+            "Templates.findByTemplateid",
+            Templates.class);
+
+    query.setParameter("templateid", templateid);
+    return query.getSingleResult();
+  }
+
+  /**
+   * Update the relationship table <i>meta_template_to_inode</i>
+   * <p>
+   * @param template
+   * @throws se.kth.meta.exception.DatabaseException
+   */
+  public void updateTemplatesInodesMxN(Templates template) throws DatabaseException {
+    try {
+      this.utx.begin();
+      this.em.merge(template);
+      this.utx.commit();
+    } 
+    catch (IllegalStateException | SecurityException | HeuristicMixedException |
+            HeuristicRollbackException | NotSupportedException |
+            RollbackException |
+            SystemException e) {
+
+      throw new DatabaseException(Dbao.class.getName(),
+              "Problem when attaching template " + template.getId());
+    }
+  }
+
+//    TEST TO SEE DATABASE UPDATES
 //    @Override
 //    public void run() {
 //        while (true) {
@@ -471,13 +506,11 @@ public class Dbao {
     //this.em.clear();
 
     //this.em.close();
-
     //this.utx = null;
     //        try {
     //            this.ic.close();
     //        } catch (NamingException e) {
     //            throw new ApplicationException(e.getMessage());
     //        }
-
   }
 }
