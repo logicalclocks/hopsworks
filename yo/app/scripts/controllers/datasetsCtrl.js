@@ -290,9 +290,6 @@ angular.module('hopsWorksApp')
             self.currentTemplateID = "";
             self.currentBoard = {};
 
-            self.currentTemplateID = "";
-            self.currentBoard = {};
-
             self.getAllTemplates = function () {
               WSComm.send({
                 sender: 'evsav',
