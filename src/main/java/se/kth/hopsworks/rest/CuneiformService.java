@@ -1,6 +1,5 @@
 package se.kth.hopsworks.rest;
 
-import se.kth.bbc.jobs.cuneiform.model.CuneiformRunWrapper;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -20,6 +19,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import se.kth.bbc.jobs.cuneiform.model.CuneiformRunWrapper;
 import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.yarn.YarnJobConfiguration;

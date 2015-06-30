@@ -1,7 +1,6 @@
 package se.kth.bbc.jobs.cuneiform.model;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import se.kth.bbc.jobs.cuneiform.model.WorkflowDTO;
 import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
 
 /**
