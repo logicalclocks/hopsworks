@@ -13,6 +13,3 @@ The yeoman-maven-plugin copies the dist folder produced by grunt from the yo dir
 Both the frontend and backend are packaged together in a single war file.
 
 To access the admin page go to index.xhtml.
-
-### Issues
- * The Grant minifier has messed up some css and js files, so the app is not behaving as it should.
