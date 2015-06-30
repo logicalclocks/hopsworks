@@ -2,6 +2,10 @@ package se.kth.hopsworks.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.jar.Attributes;
+import java.util.jar.Attributes.Name;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -20,6 +24,7 @@ import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.Project;
+import se.kth.bbc.project.ProjectFacade;
 
 /**
  * Interaction point between the Spark front- and backend.
@@ -34,15 +39,15 @@ public class SparkController {
 
   @EJB
   private FileOperations fops;
-
   @EJB
   private JobHistoryFacade history;
-
   @EJB
   private AsynchronousJobExecutor submitter;
-  
   @EJB
   private ActivityFacade activityFacade;
+  @EJB
+  private ProjectFacade projects;
+  
 
   /**
    * Start the job specified by jobconfig, as the user with the given username
@@ -50,13 +55,13 @@ public class SparkController {
    * <p>
    * @param jobconfig
    * @param user
-   * @param project
+   * @param projectId
    * @return
    * @throws IllegalStateException
    * @throws IOException
    */
   public JobHistory startJob(SparkJobConfiguration jobconfig, String user,
-          Project project) throws
+          Integer projectId) throws
           IllegalStateException, IOException {
     if (!isSparkJarAvailable()) {
       throw new IllegalStateException("Spark is not installed on this system.");
@@ -81,6 +86,7 @@ public class SparkController {
     }
 
     SparkJob job = new SparkJob(history, r, fops);
+    Project project = projects.find(projectId);
     JobHistory jh = job.requestJobId(jobconfig.getAppName(), user, project,
             JobType.SPARK);
     if (jh != null) {
@@ -133,5 +139,25 @@ public class SparkController {
       return false;
     }
     return true;
+  }
+
+  /**
+   * Inspect the jar on the given path for execution. Returns a
+   * SparkJobConfiguration object with a default configuration for this job.
+   * <p>
+   * @param path
+   * @return
+   * @throws IOException
+   */
+  public SparkJobConfiguration inspectJar(String path) throws IOException {
+    JarInputStream jis = new JarInputStream(fops.getInputStream(path));
+    Manifest mf = jis.getManifest();
+    Attributes atts = mf.getMainAttributes();
+    SparkJobConfiguration config = new SparkJobConfiguration();
+    if(atts.containsKey(Name.MAIN_CLASS)){
+      config.setMainClass(atts.getValue(Name.MAIN_CLASS));
+    }
+    config.setJarPath(path);
+    return config;
   }
 }

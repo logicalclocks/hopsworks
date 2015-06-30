@@ -165,7 +165,7 @@ public final class SparkMB extends JobMB {
       config.setArgs(args);
       //TODO: config.addExtraFiles(getExtraFiles());
       JobHistory jh = controller.startJob(config, sessionState.
-              getLoggedInUsername(), sessionState.getActiveProject());
+              getLoggedInUsername(), sessionState.getActiveProject().getId());
       setSelectedJob(jh);
     } catch (IllegalStateException | IOException e) {
       MessagesController.addErrorMessage("Failed to start application master.",
