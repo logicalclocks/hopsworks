@@ -53,7 +53,7 @@ public class CuneiformService {
    * <p>
    * @param path
    * @param sc
-   * @param reqJobType
+   * @param req
    * @return
    * @throws AppException
    */
@@ -62,7 +62,7 @@ public class CuneiformService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response inspectStoredWorkflow(@PathParam("path") String path,
-          @Context SecurityContext sc, @Context HttpServletRequest reqJobType)
+          @Context SecurityContext sc, @Context HttpServletRequest req)
           throws AppException {
     try {
       WorkflowDTO wf = cfCtrl.inspectWorkflow(path);
@@ -93,7 +93,7 @@ public class CuneiformService {
    * <p>
    * @param runData
    * @param sc
-   * @param reqJobType
+   * @param req
    * @return
    * @throws se.kth.hopsworks.rest.AppException
    */
@@ -104,12 +104,11 @@ public class CuneiformService {
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
   public Response runWorkFlow(CuneiformRunWrapper runData,
           @Context SecurityContext sc,
-          @Context HttpServletRequest reqJobType) throws AppException {
+          @Context HttpServletRequest req) throws AppException {
     System.out.println("Starting CF job.");
     try {
-      JobHistory jh = cfCtrl.startWorkflow(runData, reqJobType.
-              getUserPrincipal().getName(),
-              projectId);
+      JobHistory jh = cfCtrl.startWorkflow(runData, req.getUserPrincipal().
+              getName(), projectId);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(jh).build();
     } catch (IOException ex) {
