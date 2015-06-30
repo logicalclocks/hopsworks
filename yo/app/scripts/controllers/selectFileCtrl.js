@@ -3,8 +3,8 @@
  * Controller for the file selection dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('SelectFileCtrl', ['$modalInstance', '$scope', 'growl',
-          function ($modalInstance, $scope, growl) {
+        .controller('SelectFileCtrl', ['$modalInstance', 'growl',
+          function ($modalInstance, growl) {
 
             var self = this;
 
