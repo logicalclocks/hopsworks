@@ -14,8 +14,9 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.FileSelectionController;
-import se.kth.bbc.jobs.JobController;
+import se.kth.bbc.jobs.JobMB;
 import se.kth.bbc.jobs.JobControllerEvent;
+import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnRunner;
@@ -24,6 +25,7 @@ import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
+import se.kth.hopsworks.controller.SparkController;
 
 /**
  * Written for Spark 1.2. If the internals of running Spark on Yarn change,
@@ -34,10 +36,9 @@ import se.kth.bbc.lims.Utils;
  */
 @ManagedBean
 @ViewScoped
-public final class SparkController extends JobController {
+public final class SparkMB extends JobMB {
 
-  private static final Logger logger = Logger.getLogger(
-          SparkController.class.getName());
+  private static final Logger logger = Logger.getLogger(SparkMB.class.getName());
 
   //Variables for new job
   private String jobName, mainClass, args, appJarName;
@@ -47,9 +48,6 @@ public final class SparkController extends JobController {
 
   @ManagedProperty(value = "#{fileSelectionController}")
   private FileSelectionController fileSelectionController;
-
-  @EJB
-  private AsynchronousJobExecutor submitter;
 
   @EJB
   private JobHistoryFacade history;
@@ -62,6 +60,9 @@ public final class SparkController extends JobController {
 
   @EJB
   private ActivityFacade activityFacade;
+
+  @EJB
+  private SparkController controller;
 
   public String getJobName() {
     return jobName;
@@ -124,61 +125,6 @@ public final class SparkController extends JobController {
     //TODO: allow for file input in Spark
   }
 
-  public void startJob() {
-    if (!isSparkJarAvailable()) {
-      MessagesController.addErrorMessage("Failed to start application master.",
-              "The Spark jar is not in HDFS and could not be copied over.");
-      return;
-    }
-    if (jobName == null || jobName.isEmpty()) {
-      jobName = "Untitled Spark Job";
-    }
-    SparkYarnRunnerBuilder runnerbuilder = new SparkYarnRunnerBuilder(
-            getMainFilePath(), mainClass);
-    runnerbuilder.setJobName(jobName);
-    String[] jobArgs = args.trim().split(" ");
-    runnerbuilder.addAllJobArgs(jobArgs);
-    runnerbuilder.setExtraFiles(getExtraFiles());
-
-    YarnRunner r;
-    try {
-      r = runnerbuilder.getYarnRunner();
-    } catch (IOException e) {
-      logger.log(Level.SEVERE,
-              "Failed to create YarnRunner.", e);
-      MessagesController.addErrorMessage("Failed to start Yarn client.", e.
-              getLocalizedMessage());
-      return;
-    }
-
-    SparkJob job = new SparkJob(history, r, fops);
-
-    setSelectedJob(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
-            sessionState.getActiveProject(), JobType.SPARK));
-    if (isJobSelected()) {
-      String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveProjectname())
-              + Constants.SPARK_DEFAULT_OUTPUT_PATH + getSelectedJob().getId()
-              + File.separator + "stdout.log";
-      String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
-              getActiveProjectname())
-              + Constants.SPARK_DEFAULT_OUTPUT_PATH + getSelectedJob().getId()
-              + File.separator + "stderr.log";
-      job.setStdOutFinalDestination(stdOutFinalDestination);
-      job.setStdErrFinalDestination(stdErrFinalDestination);
-      submitter.startExecution(job);
-      MessagesController.addInfoMessage("Job submitted!");
-    } else {
-      logger.log(Level.SEVERE,
-              "Failed to persist JobHistory. Aborting execution.");
-      MessagesController.addErrorMessage(
-              "Failed to write job history. Aborting execution.");
-      return;
-    }
-    writeJobStartedActivity(sessionState.getActiveProject(), sessionState.
-            getLoggedInUsername());
-  }
-
   @Override
   protected String getUserMessage(JobControllerEvent event, String extraInfo) {
     switch (event) {
@@ -211,35 +157,20 @@ public final class SparkController extends JobController {
     this.fileSelectionController = fs;
   }
 
-  /**
-   * Check if the Spark jar is in HDFS. If it's not, try and copy it there from
-   * the local filesystem. If it's still not there, then return false.
-   * <p>
-   * @return
-   */
-  private boolean isSparkJarAvailable() {
-    boolean isInHdfs;
+  public void startJob() {
     try {
-      isInHdfs = fops.exists(Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
-    } catch (IOException e) {
-      //Can't connect to HDFS: return false
-      return false;
+      SparkJobConfiguration config = new SparkJobConfiguration();
+      config.setJarPath(getMainFilePath());
+      config.setMainClass(mainClass);
+      config.setArgs(args);
+      //TODO: config.addExtraFiles(getExtraFiles());
+      JobHistory jh = controller.startJob(config, sessionState.
+              getLoggedInUsername(), sessionState.getActiveProject());
+      setSelectedJob(jh);
+    } catch (IllegalStateException | IOException e) {
+      MessagesController.addErrorMessage("Failed to start application master.",
+              e.getLocalizedMessage());
     }
-    if (isInHdfs) {
-      return true;
-    }
-
-    File localSparkJar = new File(Constants.DEFAULT_SPARK_JAR_PATH);
-    if (localSparkJar.exists()) {
-      try {
-        fops.copyToHDFSFromPath(Constants.DEFAULT_SPARK_JAR_PATH,
-                Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
-      } catch (IOException e) {
-        return false;
-      }
-    } else {
-      return false;
-    }
-    return true;
   }
+
 }

@@ -25,7 +25,7 @@ import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
 import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.FileSelectionController;
-import se.kth.bbc.jobs.JobController;
+import se.kth.bbc.jobs.JobMB;
 import se.kth.bbc.jobs.JobControllerEvent;
 import se.kth.bbc.jobs.cuneiform.model.InputParameter;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
@@ -46,7 +46,7 @@ import se.kth.bbc.lims.Utils;
  */
 @ManagedBean
 @ViewScoped
-public final class CuneiformMB extends JobController {
+public final class CuneiformMB extends JobMB {
 
   private static final String KEY_PREFIX_TARGET = "TARGET_";
   private static final Logger logger = Logger.getLogger(CuneiformMB.class.

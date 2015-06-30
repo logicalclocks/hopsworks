@@ -32,29 +32,29 @@
               <div>
                 <h:panelGrid columns="2">
                   <h:outputLabel for="spark_JobName" value="Job name"/>
-                  <h:inputText id="spark_JobName" value="#{sparkController.jobName}"/>
+                  <h:inputText id="spark_JobName" value="#{sparkMB.jobName}"/>
 
                   <h:outputLabel value="Upload job jar" for="sparkAppUploader"/>
                   <p:commandButton process="@this"
                                    value="Select..." id="sparkAppUploader"
                                    oncomplete="PF('chooseFileDlg').show()"
-                                   actionListener="#{sparkController.prepareFileSelector(true,'')}">
+                                   actionListener="#{sparkMB.prepareFileSelector(true,'')}">
                   </p:commandButton>
 
                   <h:outputLabel value="Uploaded file"/>
-                  <h:outputLabel value="#{sparkController.appJarName==null ? 'No file uploaded yet' : sparkController.appJarName}"/>
+                  <h:outputLabel value="#{sparkMB.appJarName==null ? 'No file uploaded yet' : sparkMB.appJarName}"/>
 
                   <h:outputLabel value="Main class name" for="sparkMC"/>
-                  <h:inputText id="sparkMC" value="#{sparkController.mainClass}" required="true"/>
+                  <h:inputText id="sparkMC" value="#{sparkMB.mainClass}" required="true"/>
 
                   <h:outputLabel value="Arguments" for="sparkArgs"/>
-                  <h:inputText id="sparkArgs" value="#{sparkController.args}"/>
+                  <h:inputText id="sparkArgs" value="#{sparkMB.args}"/>
                 </h:panelGrid>
               </div>
 
               <div>
                 <p:commandButton id="sparkExecuteButton" value="Execute" 
-                                 action="#{sparkController.startJob()}" 
+                                 action="#{sparkMB.startJob()}" 
                                  update="@(.historyForm) @(.resultsForm) @(.runConfForm)"/>
               </div>
             </div>
@@ -65,27 +65,27 @@
             </h3>
             <h:panelGrid columns="2">
               <h:outputLabel value="Current state:" for="spark_curr_state"/>
-              <h:outputText id="spark_curr_state" value="#{sparkController.selectedJob.state}" 
+              <h:outputText id="spark_curr_state" value="#{sparkMB.selectedJob.state}" 
                             styleClass="stateSpan"/>
             </h:panelGrid>
             <h:graphicImage library="images" name="ajax-loader.GIF" 
-                            rendered="#{sparkController.selectedJobRunning}"/>
-            <h:panelGroup rendered="#{sparkController.selectedJobHasFinished}" >
+                            rendered="#{sparkMB.selectedJobRunning}"/>
+            <h:panelGroup rendered="#{sparkMB.selectedJobHasFinished}" >
               <div>
                 <h:outputText value="Logs:"/>
               </div>
               <div>
                 <p:commandLink ajax="false">
                   <strong>stdout.log</strong>
-                  <p:fileDownload value="#{sparkController.downloadStdout()}" 
-                                  rendered="#{sparkController.selectedJob.stdoutPath != null}"/>
+                  <p:fileDownload value="#{sparkMB.downloadStdout()}" 
+                                  rendered="#{sparkMB.selectedJob.stdoutPath != null}"/>
                 </p:commandLink>
               </div>
               <div>
                 <p:commandLink ajax="false">
                   <strong>stderr.log</strong>
-                  <p:fileDownload value="#{sparkController.downloadStderr()}" 
-                                  rendered="#{sparkController.selectedJob.stderrPath != null}"/>
+                  <p:fileDownload value="#{sparkMB.downloadStderr()}" 
+                                  rendered="#{sparkMB.selectedJob.stderrPath != null}"/>
                 </p:commandLink>
               </div>
             </h:panelGroup>

@@ -73,4 +73,17 @@ public class YarnJobConfiguration {
     this.appName = appName;
   }
 
+  /**
+   * As found in Effective Java, the equals contract cannot be satisfied for
+   * inheritance hierarchies. Hence, these objects are not meant to be comared.
+   * <p>
+   * @param o
+   * @return
+   */
+  @Override
+  public final boolean equals(Object o) {
+    throw new UnsupportedOperationException(
+            "YarnJobConfiguration objects should not be compared.");
+  }
+
 }
