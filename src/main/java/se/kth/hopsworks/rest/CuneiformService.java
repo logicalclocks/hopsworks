@@ -105,7 +105,6 @@ public class CuneiformService {
   public Response runWorkFlow(CuneiformRunWrapper runData,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
-    System.out.println("Starting CF job.");
     try {
       JobHistory jh = cfCtrl.startWorkflow(runData, req.getUserPrincipal().
               getName(), projectId);

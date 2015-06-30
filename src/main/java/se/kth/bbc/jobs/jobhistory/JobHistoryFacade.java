@@ -119,7 +119,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
     em.persist(jh);
     em.flush(); //To get the id.
-    System.out.println("Id: " + jh.getId());
     return jh;
   }
 
