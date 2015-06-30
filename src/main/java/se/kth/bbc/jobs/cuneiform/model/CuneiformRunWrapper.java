@@ -12,6 +12,7 @@ import se.kth.bbc.jobs.yarn.YarnJobConfiguration;
  */
 @XmlRootElement
 public class CuneiformRunWrapper {
+
   private YarnJobConfiguration yarnConfig;
   private WorkflowDTO wf;
 
@@ -19,9 +20,9 @@ public class CuneiformRunWrapper {
     this.yarnConfig = yjc;
     this.wf = wf;
   }
-  
+
   public CuneiformRunWrapper() {
-  }  
+  }
 
   public YarnJobConfiguration getYarnConfig() {
     return yarnConfig;
@@ -38,5 +39,5 @@ public class CuneiformRunWrapper {
   public void setWf(WorkflowDTO wf) {
     this.wf = wf;
   }
-  
+
 }

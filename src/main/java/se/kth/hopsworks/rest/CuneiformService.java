@@ -47,8 +47,9 @@ public class CuneiformService {
   }
 
   /**
-   * Inspect the workflow stored at the given path. Returns a WorkflowDTO
-   * containing the workflow parameters and the likes.
+   * Inspect the workflow stored at the given path. Returns a CuneiformWrapper
+   * containing a WorkflowDTO with the workflow details and a
+   * YarnJobConfiguration with Yarn job config.
    * <p>
    * @param path
    * @param sc
@@ -65,7 +66,8 @@ public class CuneiformService {
           throws AppException {
     try {
       WorkflowDTO wf = cfCtrl.inspectWorkflow(path);
-      CuneiformRunWrapper ret = new CuneiformRunWrapper(new YarnJobConfiguration(),wf);
+      CuneiformRunWrapper ret = new CuneiformRunWrapper(
+              new YarnJobConfiguration(), wf);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(ret).build();
     } catch (IOException |
@@ -100,11 +102,13 @@ public class CuneiformService {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedRoles(roles = {AllowedRoles.DATA_SCIENTIST, AllowedRoles.DATA_OWNER})
-  public Response runWorkFlow(CuneiformRunWrapper runData, @Context SecurityContext sc,
+  public Response runWorkFlow(CuneiformRunWrapper runData,
+          @Context SecurityContext sc,
           @Context HttpServletRequest reqJobType) throws AppException {
     System.out.println("Starting CF job.");
     try {
-      JobHistory jh = cfCtrl.startWorkflow(runData, reqJobType.getUserPrincipal().getName(),
+      JobHistory jh = cfCtrl.startWorkflow(runData, reqJobType.
+              getUserPrincipal().getName(),
               projectId);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
               entity(jh).build();
