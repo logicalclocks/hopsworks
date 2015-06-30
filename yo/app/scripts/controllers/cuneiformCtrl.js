@@ -70,6 +70,9 @@ angular.module('hopsWorksApp')
             };
 
             self.execute = function () {
+              //First: stop polling for previous jobs.
+              $interval.cancel(poller);
+              //Then: submit job.
               CuneiformService.runWorkflow(self.pId, {"wf": self.workflow, "yarnConfig": self.yarnConfig}).then(
                       function (success) {
                         //get the resulting job
