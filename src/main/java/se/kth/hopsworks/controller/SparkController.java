@@ -47,7 +47,6 @@ public class SparkController {
   private ActivityFacade activityFacade;
   @EJB
   private ProjectFacade projects;
-  
 
   /**
    * Start the job specified by jobconfig, as the user with the given username
@@ -149,12 +148,16 @@ public class SparkController {
    * @return
    * @throws IOException
    */
-  public SparkJobConfiguration inspectJar(String path) throws IOException {
+  public SparkJobConfiguration inspectJar(String path) throws IOException,
+          IllegalArgumentException {
+    if (!path.endsWith(".jar")) {
+      throw new IllegalArgumentException("Path does not point to a jar file.");
+    }
     JarInputStream jis = new JarInputStream(fops.getInputStream(path));
     Manifest mf = jis.getManifest();
     Attributes atts = mf.getMainAttributes();
     SparkJobConfiguration config = new SparkJobConfiguration();
-    if(atts.containsKey(Name.MAIN_CLASS)){
+    if (atts.containsKey(Name.MAIN_CLASS)) {
       config.setMainClass(atts.getValue(Name.MAIN_CLASS));
     }
     config.setJarPath(path);

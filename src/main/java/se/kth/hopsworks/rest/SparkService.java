@@ -24,7 +24,8 @@ import se.kth.hopsworks.controller.SparkController;
 import se.kth.hopsworks.filters.AllowedRoles;
 
 /**
- *
+ * Service offering functionality to run a Spark fatjar job.
+ * <p>
  * @author stig
  */
 @RequestScoped
@@ -72,6 +73,11 @@ public class SparkService {
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
               getStatusCode(), "Error reading jar file: " + ex.
               getLocalizedMessage());
+    } catch (IllegalArgumentException e) {
+      logger.log(Level.WARNING, "Got a non-jar file to inspect as Spark jar.");
+      throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
+              getStatusCode(), "Error reading jar file: " + e.
+              getLocalizedMessage());
     }
   }
 
@@ -100,7 +106,7 @@ public class SparkService {
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Error running Spark job.", ex);
       throw new AppException(Response.Status.INTERNAL_SERVER_ERROR.
-              getStatusCode(), "Error running job: "+ex.getLocalizedMessage());
+              getStatusCode(), "Error running job: " + ex.getLocalizedMessage());
     }
   }
 }

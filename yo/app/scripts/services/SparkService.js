@@ -1,22 +1,22 @@
 'use strict';
 /*
- * Service responsible for communicating with the Cuneiform backend.
+ * Service responsible for communicating with the Spark backend.
  */
 angular.module('hopsWorksApp')
 
-        .factory('CuneiformService', ['$http', function ($http) {
+        .factory('SparkService', ['$http', function ($http) {
             var service = {
               /**
-               * Inspects the workflow at the given path.
+               * Inspect the jar at the given path.
                * @param {int} projectId
                */
-              inspectStoredWorkflow: function (projectId, path) {
-                return $http.get('/api/project/' + projectId + '/jobs/cuneiform/inspect/' + path);
+              inspectJar: function (projectId, path) {
+                return $http.get('/api/project/' + projectId + '/jobs/spark/inspect/' + path);
               },
-              runWorkflow: function (projectId, runConfig) {
+              runJob: function (projectId, runConfig) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/jobs/cuneiform/run',
+                  url: '/api/project/' + projectId + '/jobs/spark/run',
                   headers: {
                     'Content-Type': 'application/json'
                   },
