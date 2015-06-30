@@ -34,7 +34,7 @@ import se.kth.meta.entity.TupleToFile;
         name = "persistence/em")
 @Resource(type = javax.transaction.UserTransaction.class,
         name = "UserTransaction")
-public class Dbao {
+public class Dbao { 
 
   private static final Logger logger = Logger.getLogger(Dbao.class.getName());
 
