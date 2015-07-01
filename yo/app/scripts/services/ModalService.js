@@ -19,6 +19,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+
               createProject: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/projectModal.html',
@@ -40,6 +41,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+
               projectSettings: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/projectSettingsModal.html',
@@ -61,6 +63,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+
               profile: function (size) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/profile.html',
@@ -82,6 +85,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+
               projectMembers: function (size, projectId) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/members.html',
@@ -106,10 +110,11 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+              
               newDataSet: function (size, dataSet) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/newDataSet.html',
-                  controller: 'DataSetCreatorCtrl as datasetsCtrl',
+                  controller: 'DataSetCreatorCtrl as datasetCreatorCtrl',
                   size: size,
                   resolve: {
                     auth: ['$q', '$location', 'AuthService',
@@ -130,6 +135,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
+
               upload: function (size, projectId, path) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/fileUpload.html',

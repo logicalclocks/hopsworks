@@ -47,9 +47,10 @@ angular.module('hopsWorksApp')
 
             };
 
+            //define the elastic index where the searches will be directed to
+            UtilsService.setIndex("parent");
+
             loadProjects();
-
-
             self.histories = [];
             var histories = [];
 
@@ -161,9 +162,6 @@ angular.module('hopsWorksApp')
               loadProjects();
               loadActivity();
             };
-
-
-
           }]);
 
 

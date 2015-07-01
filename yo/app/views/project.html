@@ -3,6 +3,9 @@
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
 
+    <div align="center" id="projectSearchResults">
+      <p ng-bind-html="mainCtrl.searchResult"></p>
+    </div>
 
   <div id="wrapper" class="toggled">
     <div class="overlay"></div>
@@ -46,9 +49,6 @@
                         rotate="false"
                         num-pages="projectCtrl.totalPages" >
             </pagination>
-
-
-
           </div>
         </div>
 
@@ -65,26 +65,13 @@
                     labels="labels2" legend="true" series="series"
                     click="onClick">
             </canvas>
-
-
           </div>
         </div>
-
-
-
         <!-- /#page-content-wrapper -->
       </div>
-
-
     </section>
-
-
   </div>
   <!-- /#wrapper -->
-
-
 </div>
-
-
 </div>
 

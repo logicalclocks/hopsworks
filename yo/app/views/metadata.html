@@ -1,0 +1,77 @@
+<div ng-model="tabs" id="board" ng-controller="MetadataController">
+    <p>Associating metadata to: <a ng-href="{{returnnUrl}}"><b>'{{fileName}}'</b></a></p>
+
+    <tabset justified="false">
+        <tab ng-repeat="tab in tabs" class="tab-title" heading="{{tab.title}}" active="tab.active"
+             disabled="tab.disabled">
+
+            <form name="{{tab.title}}{{$index}}" ng-submit="submit(data)">
+
+                <ul class="cards card-list" as-sortable="sortOptions" ng-model="column.cards">
+                    <!--<li class="card" ng-repeat="card in tab.cards" as-sortable-item-->
+                    <!--ng-include="'views/partials/fillinCard.html'">-->
+
+                    <li class="card" ng-repeat="card in tab.cards">
+                        <div>
+                            <div class="row">
+                                <table>
+                                    <tr>
+                                        <td width="50em">
+                                            <div class="col-sm-10">
+                                                <span class="card-title"
+                                                      class=" removeCard pull-left btn btn-xs">{{card.title}}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <!--text input field type-->
+                                            <div ng-if="card.fieldtypeid === 1">
+                                                <input size="10" value="" class="fillInMetadataInput" id="sizeFieldInput"
+                                                       tooltips title="{{card.description}}"
+                                                       ng-show="true"
+                                                       ng-model="data[card.id]"/>
+                                                <!--ng-model="data[tab.title + '|' + card.title + '|' + card.id]"/>-->
+                                            </div>
+                                            
+                                            <!--select list input type-->
+                                            <div ng-if="card.fieldtypeid === 2">
+                                                <ui-select ng-model="data[card.id]" theme="select2" ng-disabled="disabled" style="min-width: 300px;" required>
+                                                    <ui-select-match placeholder="Select a value...">{{$select.selected.value}}</ui-select-match>
+                                                    <ui-select-choices repeat="item.value as item in card.fieldtypeContent | filter: $select.search">
+                                                        <!--<div ng-bind-html="item.value | highlight: $select.search"></div>-->
+                                                        <small>
+                                                            <span ng-bind-html="''+item.value | highlight: $select.search"></span>
+                                                        </small>
+                                                    </ui-select-choices>
+                                                </ui-select>
+                                            </div>
+                                            
+                                            <!--yes/no input type-->
+                                            <div ng-if="card.fieldtypeid === 3">
+                                                {{card.fieldtypeContent[0].value}} / {{card.fieldtypeContent[1].value}}
+                                                <input type="checkbox" ng-model="card.fieldtypeContent[0].value"
+                                                       tooltips title="{{card.description}}"
+                                                       ng-checked="true"
+                                                       ng-change=''
+                                                       ng-true-value="'{{card.fieldtypeContent[0].value}}'" ng-false-value="'{{card.fieldtypeContent[1].value}}'"/>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+                <hr/>
+                <button class="btn btn-default">
+                    <i class="glyphicon glyphicon-floppy-save"></i>
+                    Save
+                </button>
+                <button class="btn btn-default" type="button" ng-click="Return()">
+                    <i class="glyphicon glyphicon-chevron-left"></i>
+                    Back
+                </button>
+            </form>
+        </tab>
+    </tabset>
+
+</div>

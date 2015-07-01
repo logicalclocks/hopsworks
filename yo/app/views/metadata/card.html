@@ -1,18 +1,18 @@
 <!-- Item template -->
 <div as-sortable-item-handle>
-  <div class="row"
-       style="width: 60em;">
-
+  <div class="row" style="width: 60em;">
 
     <div class="col-md-12">
-      <span ng-hide="card.editing" class="card-title"
-            class=" removeCard pull-left btn btn-xs"
-            ng-dblclick="editCardText(card);">
-        {{card.title}}
-        <span ng-show="card.required"
-              class="asteriskRed glyphicon glyphicon-asterisk"
-              title="required field"></span>
-      </span>
+        
+            <span editable-text="card.title"
+                  style="font-size: 16px;"
+                  onaftersave="datasetsCtrl.storeTemplate(false)"
+                  class="column-title ng-binding">
+              {{card.title}}
+              <span ng-show="card.required"
+                      class="asteriskRed glyphicon glyphicon-asterisk"
+                      title="required field"></span>
+            </span>
 
       <input type="text"
              ng-show="card.editing"
@@ -40,19 +40,17 @@
       <!-- experiment starts here -->
       <!-- add a find button in each card. Means that the card/attribute is going to be searchable -->
       <a data-no-drag class="pull-left btn btn-xs">
-        <span class="searchable-{{card.find}} glyphicon glyphicon-search"
-              ng-click="makeSearchable(card)"
-              tooltips title="make a card available to search"> find</span></a>
-
+                <span class="searchable-{{card.find}} glyphicon glyphicon-search"
+                      ng-click="datasetsCtrl.makeSearchable(card)"
+                      tooltips title="make a card available to search"> find</span></a>
     </div>
 
     <div class="col-md-2" style="padding-left:0px; width: 19%">
 
       <a data-no-drag class="pull-left btn btn-xs">
-        <span class="required-{{card.required}} glyphicon glyphicon-asterisk"
-              ng-click="makeRequired(card)"
-              tooltips title="required field"> req</span></a>
-
+                <span class="required-{{card.required}} glyphicon glyphicon-asterisk"
+                      ng-click="datasetsCtrl.makeRequired(card)"
+                      tooltips title="required field"> req</span></a>
     </div>
 
 
@@ -61,14 +59,14 @@
       <div ng-if="card.fieldtypeid === 1">
         <a data-no-drag
            class="pull-left btn btn-xs"
-           ng-click="editSizeField(card)"
+           ng-click="datasetsCtrl.editSizeField(card)"
            ng-show="!card.sizefield.showing">
           <span class="glyphicon glyphicon-chevron-right"
                 tooltips
                 title="data field max length"> length</span></a>
 
         <a data-no-drag class="pull-left btn btn-xs"
-           ng-click="doneEditingSizeField(card)"
+           ng-click="datasetsCtrl.doneEditingSizeField(card)"
            ng-show="card.sizefield.showing">
           <span class="glyphicon glyphicon-chevron-down"
                 tooltips
@@ -79,7 +77,7 @@
                type="text"
                ng-show="card.sizefield.showing"
                ng-model="card.sizefield.value"
-               ng-blur="doneEditingSizeField(card)"
+               ng-blur="datasetsCtrl.doneEditingSizeField(card)"
                ng-enter="doneEditingSizeField(card)"
                ng-focus="card == editedField"/>
 
@@ -91,13 +89,11 @@
 
       <a data-no-drag
          class="pull-left btn btn-xs"
-         ng-click="modifyField(column, card)">
+         ng-click="datasetsCtrl.modifyField(column, card)">
         <span class="glyphicon glyphicon-edit"
               tooltips
-              title="modify field"> mod</span></a>
+              title="modify field"> edit</span></a>
     </div>
   </div>
 
 </div>
-</div>
-

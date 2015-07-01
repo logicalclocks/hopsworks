@@ -1,3 +1,6 @@
+/*jshint undef: false, unused: false, indent: 2*/
+/*global angular: false */
+
 'use strict';
 
 angular.module('hopsWorksApp')
@@ -5,7 +8,7 @@ angular.module('hopsWorksApp')
 
           // Keep all pending requests here until they get responses
           var callbacks = [];
-          var projectID = 23;
+          var projectID = 47;
 
           //generic
           var ws = $websocket("ws://" + $location.host() + ":8080/hopsworks/wspoint/" + projectID);
@@ -43,7 +46,9 @@ angular.module('hopsWorksApp')
               $rootScope.$apply(callbacks.shift().def.resolve(response));
             } catch (e) {
               var res = {sender: 'anonymous', message: e};
-              $rootScope.$apply(callbacks.shift().def.resolve(res));
+
+              //$rootScope.$apply(callbacks.shift().def.resolve(res));
+              console.log('ErrorLocal:');
               console.log(res);
             }
           };

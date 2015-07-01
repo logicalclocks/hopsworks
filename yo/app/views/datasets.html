@@ -1,5 +1,6 @@
 <div ng-controller="MainCtrl as mainCtrl">
   <div ng-include="'nav.html'"></div>
+
   <div id="wrapper"
        class="toggled"
        ng-controller="DatasetsCtrl as datasetsCtrl">
@@ -130,7 +131,7 @@
             </h2>
             <span flex></span>
             <button style="font-size:15px;height:28px;color:white;padding-top: 3px; padding-right: 3px"
-                    ng-click="datasetsCtrl.close()"
+                    ng-click="datasetsCtrl.storeTemplate('true')"
                     class="btn btn-success">
               <i class="fa fa-save"></i>
               Save
@@ -314,5 +315,3 @@
   </div>
   <!-- /#wrapper -->
 </div>
-
-

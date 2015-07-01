@@ -1,0 +1,31 @@
+<div id="board">
+
+    <div class="modal-header">
+        <button type="button" class="close" ng-click="close()">&times;</button>
+        <h4 class="modal-title" ng-model="columnName">Metadata in table <font size="5" color="green"><b>{{tableName}}</b></font></h4>
+    </div>
+
+    <div class="modal-body">
+        <div class="input-group-lg" align="center">
+            <table>
+                <tr>
+                    <th ng-repeat="fieldName in metadata.headers" width="25%">{{fieldName}}</th>
+                </tr>
+                <tr ng-repeat="valueArray in metadata.values">
+                    <td ng-repeat="value in valueArray">
+                        {{value.raw}}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <div align="center">
+            <button class="btn btn-danger" ng-click="close()">
+                <i class="glyphicon glyphicon-remove"></i>
+                Close
+            </button>
+        </div>
+    </div>
+</div>
