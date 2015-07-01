@@ -1,6 +1,3 @@
-/*
- * 
- */
 package se.kth.hopsworks.rest;
 
 import java.io.File;
