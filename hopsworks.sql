@@ -146,7 +146,9 @@ CREATE TABLE `jobhistory` (
   `stdout_path` VARCHAR(255) DEFAULT NULL,
   `stderr_path` VARCHAR(255) DEFAULT NULL,
   `type` VARCHAR(128) NOT NULL,
+  `app_id` char(30) DEFAULT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE (`app_id`),
   FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   FOREIGN KEY (`user`) REFERENCES `users` (`email`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;

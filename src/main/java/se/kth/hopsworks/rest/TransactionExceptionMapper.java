@@ -1,5 +1,3 @@
-/*
- */
 package se.kth.hopsworks.rest;
 
 import java.util.logging.Level;
@@ -31,7 +29,7 @@ public class TransactionExceptionMapper implements
     json.setStatusCode(Response.Status.CONFLICT.getStatusCode());
     String cause = ex.getCause().getCause().getCause().getMessage();
     json.setErrorMsg(
-            "Ops! somthing went wrong. The last transaction did not complete as expected :(");
+            "Oops! something went wrong. The last transaction did not complete as expected :(");
     return Response.status(Response.Status.CONFLICT)
             .entity(json)
             .type(MediaType.APPLICATION_JSON).

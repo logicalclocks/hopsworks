@@ -163,6 +163,25 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
+                    .when('/project/:projectID/cuneiform', {
+                      templateUrl: 'views/cuneiform.html',
+                      controller: 'ProjectCtrl as projectCtrl',
+                      resolve: {
+                        auth: ['$q', '$location', 'AuthService', '$cookies',
+                          function ($q, $location, AuthService, $cookies) {
+                            return AuthService.session().then(
+                                    function (success) {
+                                      $cookies.email = success.data.data.value;
+                                    },
+                                    function (err) {
+                                      delete $cookies.email;
+                                      $location.path('/login');
+                                      $location.replace();
+                                      return $q.reject(err);
+                                    });
+                          }]
+                      }
+                    })
 
                     .otherwise({
                       redirectTo: '/'

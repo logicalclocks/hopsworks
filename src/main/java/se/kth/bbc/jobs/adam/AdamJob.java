@@ -60,7 +60,8 @@ public class AdamJob extends YarnJob {
     makeOutputAvailable();
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    getJobHistoryFacade().update(getJobId(), getFinalState(), duration);
+    updateHistory(null, getFinalState(), duration, null, null, null, null, null,
+            null);
   }
 
   /**
@@ -73,7 +74,7 @@ public class AdamJob extends YarnJob {
         try {
           if (getFileOperations().exists(aia.getValue())) {
             getJobHistoryFacade().persist(new JobOutputFile(new JobOutputFilePK(
-                    getJobId(), Utils.
+                    getHistory().getId(), Utils.
                     getFileName(aia.getValue())), aia.getValue()));
           }
         } catch (IOException e) {
@@ -89,7 +90,7 @@ public class AdamJob extends YarnJob {
         try {
           if (getFileOperations().exists(aio.getStringValue())) {
             getJobHistoryFacade().persist(new JobOutputFile(new JobOutputFilePK(
-                    getJobId(), Utils.
+                    getHistory().getId(), Utils.
                     getFileName(aio.getStringValue())), aio.getStringValue()));
           }
         } catch (IOException e) {

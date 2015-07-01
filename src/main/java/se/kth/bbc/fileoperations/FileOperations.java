@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import org.apache.hadoop.fs.Path;
+import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
@@ -69,12 +70,12 @@ public class FileOperations {
     Path srcp = new Path(src);
     fsOps.copyFromLocal(deleteSource, srcp, destp);
   }
-  
+
   /**
-   * Delete the file represented by Inode i.
+   * Delete the file at the given path.
    *
-   * @param path The Inode to be removed.
-   * @return
+   * @param path The path to the file to be removed.
+   * @return true if the file has been deleted, false otherwise.
    * @throws IOException
    */
   public boolean rm(String path) throws IOException {
@@ -113,6 +114,27 @@ public class FileOperations {
    * @throws IOException 
    */
   public void renameInHdfs(String source, String destination) throws IOException {
+    //Check if source and destination are the same
+    if (source.equals(destination)) {
+      return;
+    }
+    //If source does not start with hdfs, prepend.
+    if (!source.startsWith("hdfs")) {
+      source = "hdfs://" + source;
+    }
+
+    //Check destination place, create directory.
+    String destDir;
+    if (!destination.startsWith("hdfs")) {
+      destDir = Utils.getDirectoryPart(destination);
+      destination = "hdfs://" + destination;
+    } else {
+      String tmp = destination.substring("hdfs://".length());
+      destDir = Utils.getDirectoryPart(tmp);
+    }
+    if (!exists(destDir)) {
+      mkDir("hdfs://" + destDir);
+    }
     Path src = new Path(source);
     Path dst = new Path(destination);
     fsOps.moveWithinHdfs(src, dst);
@@ -133,10 +155,11 @@ public class FileOperations {
   }
 
   /**
-   * Copy the file at HDFS path src to HDFS path dst.
+   * Copy a file from one location (src) in HDFS to another (dst).
+   * <p>
    * @param src
    * @param dst
-   * @throws IOException 
+   * @throws IOException
    */
   public void copyWithinHdfs(String src, String dst) throws IOException {
     //Convert into Paths
@@ -174,4 +197,22 @@ public class FileOperations {
   public boolean exists(String path) throws IOException {
     return inodes.existsPath(path);
   }
+
+  /**
+   * Get the absolute HDFS path of the form
+   * <i>hdfs:///projects/projectname/relativepath</i>
+   * <p>
+   * @param projectname
+   * @param relativePath
+   * @return
+   */
+  public String getAbsoluteHDFSPath(String projectname, String relativePath) {
+    //Strip relativePath from all leading slashes
+    while (relativePath.startsWith("/")) {
+      relativePath = relativePath.substring(1);
+    }
+    return "hdfs:///" + Constants.DIR_ROOT + "/" + projectname + "/"
+            + relativePath;
+  }
+
 }

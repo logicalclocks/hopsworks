@@ -156,6 +156,33 @@ angular.module('hopsWorksApp')
                   }
                 });
                 return modalInstance.result;
+              },
+              selectFile: function (size, regex, errorMsg) {
+                var modalInstance = $modal.open({
+                  templateUrl: 'views/selectFile.html',
+                  controller: 'SelectFileCtrl as selectFileCtrl',
+                  size: size,
+                  resolve: {
+                    auth: ['$q', '$location', 'AuthService',
+                      function ($q, $location, AuthService) {
+                        return AuthService.session().then(
+                                function (success) {
+                                },
+                                function (err) {
+                                  $location.path('/login');
+                                  $location.replace();
+                                  return $q.reject(err);
+                                });
+                      }],
+                    regex: function () {
+                      return regex;
+                    },
+                    errorMsg: function () {
+                      return errorMsg;
+                    }
+                  }
+                });
+                return modalInstance.result;
               }
-            }
+            };
           }]);

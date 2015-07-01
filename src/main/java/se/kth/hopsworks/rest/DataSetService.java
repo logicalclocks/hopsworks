@@ -95,7 +95,6 @@ public class DataSetService {
     for (Inode i : cwdChildren) {
       kids.add(new InodeView(i, inodes.getPath(i)));
     }
-
     GenericEntity<List<InodeView>> inodViews
             = new GenericEntity<List<InodeView>>(kids) {
             };

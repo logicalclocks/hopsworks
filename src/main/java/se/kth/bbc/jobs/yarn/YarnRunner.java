@@ -559,6 +559,27 @@ public class YarnRunner {
       return this;
     }
 
+    public Builder amQueue(String queuename) {
+      this.amQueue = queuename;
+      return this;
+    }
+
+    /**
+     * Set the configuration of the Yarn Application to the values contained in
+     * the YarnJobConfiguration object. This overrides any defaults or
+     * previously set values contained in the config file.
+     * <p>
+     * @param config
+     * @return
+     */
+    public Builder setConfig(YarnJobConfiguration config) {
+      this.amQueue = config.getAmQueue();
+      this.amMemory = config.getAmMemory();
+      this.amVCores = config.getAmVCores();
+      this.appName = config.getAppName();
+      return this;
+    }
+
     /**
      * Set a file to be copied over to HDFS. It will be copied to
      * localresourcesBasePath/filename and the original will be removed.

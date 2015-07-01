@@ -45,6 +45,14 @@ public class YarnJob extends HopsJob {
     this.stdErrFinalDestination = stdErrFinalDestination;
   }
 
+  protected final String getStdOutFinalDestination() {
+    return this.stdOutFinalDestination;
+  }
+
+  protected final String getStdErrFinalDestination() {
+    return this.stdErrFinalDestination;
+  }
+
   protected final void updateArgs() {
     super.updateArgs(runner.getAmArgs());
   }
@@ -73,10 +81,12 @@ public class YarnJob extends HopsJob {
       updateState(JobState.STARTING_APP_MASTER);
       monitor = runner.startAppMaster();
       started = true;
+      updateHistory(null, null, -1, null, null, null,
+              monitor.getApplicationId().toString(), null, null);
       return true;
     } catch (YarnException | IOException e) {
       logger.log(Level.SEVERE,
-              "Failed to start application master for job " + getJobId()
+              "Failed to start application master for job " + getHistory()
               + ". Aborting execution",
               e);
       updateState(JobState.APP_MASTER_START_FAILED);
@@ -100,7 +110,7 @@ public class YarnJob extends HopsJob {
       } catch (YarnException | IOException ex) {
         logger.log(Level.WARNING,
                 "Failed to get application state for job id "
-                + getJobId(), ex);
+                + getHistory(), ex);
         appState = null;
         failures = 1;
       }
@@ -129,7 +139,7 @@ public class YarnJob extends HopsJob {
           failures++;
           logger.log(Level.WARNING,
                   "Failed to get application state for job id "
-                  + getJobId() + ". Tried " + failures + " time(s).", ex);
+                  + getHistory() + ". Tried " + failures + " time(s).", ex);
         }
       }
 
@@ -137,13 +147,13 @@ public class YarnJob extends HopsJob {
         try {
           logger.log(Level.SEVERE,
                   "Killing application, jobId {0}, because unable to poll for status.",
-                  getJobId());
+                  getHistory());
           r.cancelJob();
           updateState(JobState.KILLED);
           finalState = JobState.KILLED;
         } catch (YarnException | IOException ex) {
           logger.log(Level.SEVERE,
-                  "Failed to cancel job, jobId " + getJobId()
+                  "Failed to cancel job, jobId " + getHistory()
                   + " after failing to poll for status.", ex);
           updateState(JobState.FRAMEWORK_FAILURE);
           finalState = JobState.FRAMEWORK_FAILURE;
@@ -155,37 +165,29 @@ public class YarnJob extends HopsJob {
     }
   }
 
-  protected final void copyLogs() {
+  protected void copyLogs() {
     try {
       if (stdOutFinalDestination != null && !stdOutFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
           fops.copyToHDFSFromLocal(true, runner.getStdOutPath(),
                   stdOutFinalDestination);
-          getJobHistoryFacade().updateStdOutPath(getJobId(),
-                  stdOutFinalDestination);
         } else {
-          //TODO: move in HDFS
-          getJobHistoryFacade().updateStdOutPath(getJobId(),
-                  runner.getStdOutPath());
+          fops.renameInHdfs(runner.getStdOutPath(), stdOutFinalDestination);
         }
-
       }
       if (stdErrFinalDestination != null && !stdErrFinalDestination.isEmpty()) {
         if (!runner.areLogPathsHdfs()) {
           fops.copyToHDFSFromLocal(true, runner.getStdErrPath(),
                   stdErrFinalDestination);
-          getJobHistoryFacade().updateStdErrPath(getJobId(),
-                  stdErrFinalDestination);
         } else {
-          //TODO: move in HDFS
-          getJobHistoryFacade().updateStdErrPath(getJobId(),
-                  runner.getStdErrPath());
+          fops.renameInHdfs(runner.getStdErrPath(), stdErrFinalDestination);
         }
       }
+      updateHistory(null, null, -1, null, stdOutFinalDestination,
+              stdErrFinalDestination, null, null, null);
     } catch (IOException e) {
-      //TODO: figure out how to handle this
       logger.log(Level.SEVERE, "Exception while trying to write logs for job "
-              + getJobId() + " to HDFS.", e);
+              + getHistory() + " to HDFS.", e);
     }
   }
 
@@ -210,7 +212,7 @@ public class YarnJob extends HopsJob {
     copyLogs();
     long endTime = System.currentTimeMillis();
     long duration = endTime - startTime;
-    getJobHistoryFacade().update(getJobId(), getFinalState(), duration);
-
+    updateHistory(null, getFinalState(), duration, null, null, null, null, null,
+            null);
   }
 }

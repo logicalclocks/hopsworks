@@ -1,5 +1,3 @@
-/*
- */
 package se.kth.hopsworks.rest;
 
 /**

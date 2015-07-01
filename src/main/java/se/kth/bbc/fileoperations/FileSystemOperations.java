@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.Stateless;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -38,11 +39,23 @@ public class FileSystemOperations {
     }
   }
 
+  @PreDestroy
+  public void closeFs() {
+    if (fs != null) {
+      try {
+        fs.close();
+      } catch (IOException ex) {
+        logger.log(Level.SEVERE, "Error while closing file system.", ex);
+      }
+    }
+  }
+
   /**
    * Get an input stream for the file at path <i>location</i>.
    *
    * @param location The location of the file.
    * @return An InputStream for the file.
+   * @throws java.io.IOException When an error occurs upon HDFS opening.
    */
   public InputStream getInputStream(Path location) throws IOException {
     return fs.open(location, 1048576); //TODO: undo hard coding of weird constant here...

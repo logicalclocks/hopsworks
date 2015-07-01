@@ -27,6 +27,7 @@ import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.FileSelectionController;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.JobControllerEvent;
+import se.kth.bbc.jobs.cuneiform.model.InputParameter;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
@@ -45,16 +46,16 @@ import se.kth.bbc.lims.Utils;
  */
 @ManagedBean
 @ViewScoped
-public final class CuneiformController extends JobController {
+public final class CuneiformMB extends JobController {
 
   private static final String KEY_PREFIX_TARGET = "TARGET_";
-  private static final Logger logger = Logger.getLogger(
-          CuneiformController.class.getName());
+  private static final Logger logger = Logger.getLogger(CuneiformMB.class.
+          getName());
 
   //Variables for new job
   private String workflowname;
   private boolean workflowUploaded = false;
-  private List<CuneiformParameter> freevars;
+  private List<InputParameter> freevars;
   private List<String> targetVars;
   private List<String> queryVars; //The target variables that should be queried
   private String jobName;
@@ -151,7 +152,7 @@ public final class CuneiformController extends JobController {
   }
 
   private void bindFreeVar(String name, String value) {
-    for (CuneiformParameter cp : freevars) {
+    for (InputParameter cp : freevars) {
       if (cp.getName().equals(name)) {
         cp.setValue(value);
         break;
@@ -163,6 +164,7 @@ public final class CuneiformController extends JobController {
     return workflowUploaded;
   }
 
+  //TODO use CuneiformController instead
   private void inspectWorkflow() {
     try {
       //Get the variables
@@ -171,7 +173,7 @@ public final class CuneiformController extends JobController {
       List<String> freenames = StaticNodeVisitor.getFreeVarNameList(tlc);
       this.freevars = new ArrayList<>(freenames.size());
       for (String s : freenames) {
-        this.freevars.add(new CuneiformParameter(s, null));
+        this.freevars.add(new InputParameter(s, null));
       }
 
       targetVars = StaticNodeVisitor.getTargetVarNameList(tlc);
@@ -207,7 +209,7 @@ public final class CuneiformController extends JobController {
     this.sessionState = sessionState;
   }
 
-  public List<CuneiformParameter> getFreeVars() {
+  public List<InputParameter> getFreeVars() {
     return freevars;
   }
 
@@ -215,7 +217,7 @@ public final class CuneiformController extends JobController {
     return targetVars;
   }
 
-  public void setFreeVars(List<CuneiformParameter> vars) {
+  public void setFreeVars(List<InputParameter> vars) {
     this.freevars = vars;
   }
 
@@ -248,7 +250,7 @@ public final class CuneiformController extends JobController {
     YarnRunner.Builder b = new YarnRunner.Builder(Constants.HIWAY_JAR_PATH,
             "Hiway.jar");
     b.amMainClass(
-            "de.huberlin.wbi.hiway.app.am.CuneiformApplicationMaster");
+            "de.huberlin.wbi.hiway.am.cuneiform.CuneiformApplicationMaster");
     b.appName("Cuneiform " + jobName);
     b.addAmJarToLocalResources(false); // Weird way of hiway working
 
@@ -293,16 +295,18 @@ public final class CuneiformController extends JobController {
     CuneiformJob job = new CuneiformJob(history, fops, r);
 
     //TODO: include input and execution files
-    setJobId(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
+    setSelectedJob(job.requestJobId(jobName, sessionState.getLoggedInUsername(),
             sessionState.getActiveProject(), JobType.CUNEIFORM));
     if (isJobSelected()) {
       String stdOutFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveProjectname())
-              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getJobId()
+              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getSelectedJob().
+              getId()
               + File.separator + "stdout.log";
       String stdErrFinalDestination = Utils.getHdfsRootPath(sessionState.
               getActiveProjectname())
-              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getJobId()
+              + Constants.CUNEIFORM_DEFAULT_OUTPUT_PATH + getSelectedJob().
+              getId()
               + File.separator + "stderr.log";
       job.setStdOutFinalDestination(stdOutFinalDestination);
       job.setStdErrFinalDestination(stdErrFinalDestination);
@@ -321,12 +325,13 @@ public final class CuneiformController extends JobController {
   }
 
   public boolean hasOutputFiles() {
-    return jobOutputFacade.findOutputFilesForJobid(getJobId()).size() > 0;
+    return jobOutputFacade.findOutputFilesForJobid(getSelectedJob().getId()).
+            size() > 0;
   }
 
   public List<String> getOutputFileNames() {
     List<JobOutputFile> files = jobOutputFacade.findOutputFilesForJobid(
-            getJobId());
+            getSelectedJob().getId());
     List<String> names = new ArrayList<>(files.size());
     for (JobOutputFile file : files) {
       names.add(file.getJobOutputFilePK().getName());
@@ -336,14 +341,15 @@ public final class CuneiformController extends JobController {
 
   public StreamedContent downloadOutput(String name) {
     //find file from facade, get input stream from path
-    JobOutputFile file = jobOutputFacade.findByNameAndJobId(name, getJobId());
+    JobOutputFile file = jobOutputFacade.findByNameAndJobId(name,
+            getSelectedJob().getId());
     if (file == null) {
       //should never happen
       MessagesController.addErrorMessage(
               "Something went wrong while downloading " + name + ".");
       logger.log(Level.SEVERE,
               "Trying to download an output file that does not exist. JobId:{0}, filename: {1}",
-              new Object[]{getJobId(),
+              new Object[]{getSelectedJob().getId(),
                 name});
       return null;
     }
@@ -352,7 +358,7 @@ public final class CuneiformController extends JobController {
       return downloadFile(path, name);
     } catch (IOException ex) {
       logger.log(Level.SEVERE, "Failed to download output file " + name
-              + ". Jobid: " + getJobId() + ", path: " + path, ex);
+              + ". Jobid: " + getSelectedJob().getId() + ", path: " + path, ex);
       MessagesController.addErrorMessage("Download failed.");
     }
     return null;
@@ -367,7 +373,7 @@ public final class CuneiformController extends JobController {
     String absoluteHDFSfoldername = "/user/" + System.getProperty("user.name")
             + "/" + foldername;
     //find out which free variables were bound (the ones that have a non-null value)
-    for (CuneiformParameter cp : freevars) {
+    for (InputParameter cp : freevars) {
       if (cp.getValue() != null) {
         //copy the input file to where cuneiform expects it
         if (getFilePath(cp.getValue()).startsWith("hdfs:")) {

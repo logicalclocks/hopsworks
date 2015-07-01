@@ -388,7 +388,7 @@ public class ProjectMB implements Serializable {
 
   /**
    * Add
-   *
+   * <p>
    * @return
    */
   public synchronized String addToTeam() {

@@ -37,7 +37,7 @@ import se.kth.hopsworks.filters.AllowedRoles;
 public class ActivityService {
 
   @EJB
-  private ActivityFacade activityBean;
+  private ActivityFacade activityFacade;
   @EJB
   private UserManager userBean;
   @EJB
@@ -50,7 +50,7 @@ public class ActivityService {
   public Response findAllByUser(@Context SecurityContext sc,
           @Context HttpServletRequest req) {
     User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
-    List<Activity> activityDetails = activityBean.getAllActivityByUser(user);
+    List<Activity> activityDetails = activityFacade.getAllActivityByUser(user);
     GenericEntity<List<Activity>> projectActivities
             = new GenericEntity<List<Activity>>(activityDetails) {
             };
@@ -67,7 +67,7 @@ public class ActivityService {
           @Context SecurityContext sc,
           @Context HttpServletRequest req) {
     User user = userBean.getUserByEmail(sc.getUserPrincipal().getName());
-    List<Activity> activityDetails = activityBean.
+    List<Activity> activityDetails = activityFacade.
             getPaginatedActivityByUser(from, to, user);
     GenericEntity<List<Activity>> projectActivities
             = new GenericEntity<List<Activity>>(activityDetails) {
@@ -84,7 +84,7 @@ public class ActivityService {
   public Response findAllByProject(@PathParam("id") Integer id,
           @Context SecurityContext sc, @Context HttpServletRequest req) {
     Project project = projectFacade.find(id);
-    List<Activity> activityDetails = activityBean.
+    List<Activity> activityDetails = activityFacade.
             getAllActivityOnProject(project);
     GenericEntity<List<Activity>> projectActivities
             = new GenericEntity<List<Activity>>(activityDetails) {
@@ -103,7 +103,7 @@ public class ActivityService {
           @QueryParam("to") int to,
           @Context SecurityContext sc, @Context HttpServletRequest req) {
     Project project = projectFacade.find(id);
-    List<Activity> activityDetails = activityBean.
+    List<Activity> activityDetails = activityFacade.
             getPaginatedActivityForProject(from, to, project);
     GenericEntity<List<Activity>> projectActivities
             = new GenericEntity<List<Activity>>(activityDetails) {
