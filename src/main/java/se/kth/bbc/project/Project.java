@@ -25,8 +25,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.activity.Activity;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.project.services.ProjectServices;
+import se.kth.bbc.security.ua.model.User;
 
 /**
  *

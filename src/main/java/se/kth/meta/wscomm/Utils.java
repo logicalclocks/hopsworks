@@ -1,19 +1,19 @@
 package se.kth.meta.wscomm;
 
 import java.util.LinkedList;
-import se.kth.meta.db.Dbao;
-import se.kth.meta.entity.EntityIntf;
-import se.kth.meta.entity.Fields;
-import se.kth.meta.entity.RawData;
-import se.kth.meta.entity.Tables;
-import se.kth.meta.exception.ApplicationException;
-import se.kth.meta.exception.DatabaseException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import se.kth.meta.db.Dbao;
+import se.kth.meta.entity.EntityIntf;
 import se.kth.meta.entity.FieldPredefinedValues;
+import se.kth.meta.entity.Fields;
+import se.kth.meta.entity.RawData;
+import se.kth.meta.entity.Tables;
 import se.kth.meta.entity.Templates;
 import se.kth.meta.entity.TupleToFile;
+import se.kth.meta.exception.ApplicationException;
+import se.kth.meta.exception.DatabaseException;
 
 /**
  *

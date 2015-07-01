@@ -1,6 +1,5 @@
 package se.kth.meta.wscomm;
 
-import se.kth.meta.exception.ApplicationException;
 import java.io.StringReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -9,6 +8,7 @@ import javax.json.JsonObject;
 import javax.websocket.DecodeException;
 import javax.websocket.Decoder;
 import javax.websocket.EndpointConfig;
+import se.kth.meta.exception.ApplicationException;
 import se.kth.meta.wscomm.message.Message;
 
 /**

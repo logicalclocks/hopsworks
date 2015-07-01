@@ -27,14 +27,14 @@ import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.FileSelectionController;
 import se.kth.bbc.jobs.JobController;
 import se.kth.bbc.jobs.JobControllerEvent;
-import se.kth.bbc.lims.Constants;
-import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobOutputFile;
 import se.kth.bbc.jobs.jobhistory.JobOutputFileFacade;
 import se.kth.bbc.jobs.jobhistory.JobType;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.ClientSessionState;
+import se.kth.bbc.lims.Constants;
+import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
 
@@ -374,7 +374,7 @@ public final class CuneiformController extends JobController {
           fops.copyWithinHdfs(getFilePath(cp.getValue()), absoluteHDFSfoldername
                   + File.separator + cp.getValue());
         } else {
-          fops.copyFromLocalNoInode(getFilePath(cp.getValue()),
+          fops.copyToHDFSFromLocal(true, getFilePath(cp.getValue()),
                   absoluteHDFSfoldername + File.separator + cp.getValue());
         }
         //add a line to the workflow file

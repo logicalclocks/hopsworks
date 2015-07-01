@@ -23,7 +23,6 @@ import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
 import se.kth.bbc.jobs.jobhistory.JobState;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.Utils;
-import se.kth.bbc.security.ua.model.User;
 import se.kth.bbc.project.Project;
 
 /**

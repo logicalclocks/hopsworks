@@ -447,7 +447,7 @@ public final class AdamController extends JobController {
     File localSparkJar = new File(Constants.DEFAULT_SPARK_JAR_PATH);
     if (localSparkJar.exists()) {
       try {
-        fops.copyToHDFSFromPath(Constants.DEFAULT_SPARK_JAR_PATH,
+        fops.copyToHDFSFromLocal(false, Constants.DEFAULT_SPARK_JAR_PATH,
                 Constants.DEFAULT_SPARK_JAR_HDFS_PATH);
       } catch (IOException e) {
         return false;

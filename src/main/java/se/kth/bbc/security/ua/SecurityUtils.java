@@ -1,11 +1,11 @@
 package se.kth.bbc.security.ua;
 
 import java.io.UnsupportedEncodingException;
-import org.apache.commons.codec.binary.Base32;
-import java.security.SecureRandom;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.UUID;
+import org.apache.commons.codec.binary.Base32;
 
 /**
  *

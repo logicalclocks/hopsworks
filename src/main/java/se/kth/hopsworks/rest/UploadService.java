@@ -24,7 +24,6 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.StagingManager;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
@@ -200,21 +199,17 @@ public class UploadService {
     if (finished) {
       try {
         this.path = Utils.ensurePathEndsInSlash(this.path);
-        fileOps.copyAfterUploading(this.path + info.resumableFilename, this.path
+        fileOps.copyToHDFSFromLocal(true, stagingManager.getStagingPath()
+                + this.path + fileName, this.path
                 + fileName);
         logger.log(Level.SEVERE, "Copied to HDFS");
-        //might need try catch for security exception
-        //if the fileOps.copyAfterUploading  method is non blocking this will 
-        //create a problem by trying to delete the file while it is being copied.
-        Files.deleteIfExists(Paths.get(stagingManager.getStagingPath()
-                + this.path + fileName));
         
         json.setSuccessMessage("Successfuly uploaded file to " + this.path);
         return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
                 entity(json).build();
       } catch (IOException e) {
-        logger.log(Level.SEVERE, "Failed to write to HDSF", e);
-        json.setErrorMsg("Failed to write to HDSF");
+        logger.log(Level.SEVERE, "Failed to write to HDFS", e);
+        json.setErrorMsg("Failed to write to HDFS");
         return noCacheResponse.getNoCacheResponseBuilder(
                 Response.Status.BAD_REQUEST).entity(json).build();
       }
