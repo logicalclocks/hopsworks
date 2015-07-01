@@ -98,7 +98,18 @@ public class SparkService {
   public Response runJob(SparkJobConfiguration config,
           @Context SecurityContext sc,
           @Context HttpServletRequest req) throws AppException {
+    if (config == null || config.getJarPath() == null || config.getJarPath().
+            isEmpty()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "You must set a jar path before running.");
+    } else if (config.getMainClass() == null || config.getMainClass().isEmpty()) {
+      throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
+              "You must set a main class before running.");
+    }
     try {
+      if (!config.getJarPath().startsWith("hdfs")) {
+        config.setJarPath("hdfs://" + config.getJarPath());
+      }
       JobHistory jh = sparkController.startJob(config, req.getUserPrincipal().
               getName(), projectId);
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).

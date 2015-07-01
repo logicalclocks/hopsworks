@@ -130,6 +130,7 @@ public final class SparkMB extends JobMB {
       JobHistory jh = controller.startJob(config, sessionState.
               getLoggedInUsername(), sessionState.getActiveProject().getId());
       setSelectedJob(jh);
+      MessagesController.addInfoMessage("Job submitted!");
     } catch (IllegalStateException | IOException e) {
       MessagesController.addErrorMessage("Failed to start application master.",
               e.getLocalizedMessage());

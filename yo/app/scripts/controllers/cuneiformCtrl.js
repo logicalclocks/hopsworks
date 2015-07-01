@@ -6,8 +6,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('CuneiformCtrl', ['$scope', '$timeout', '$mdSidenav', '$mdUtil', '$log', '$location', '$routeParams', 'growl', 'ModalService', 'JobHistoryService', 'CuneiformService', '$interval',
-          function ($scope, $timeout, $mdSidenav, $mdUtil, $log, $location, $routeParams, growl, ModalService, JobHistoryService, CuneiformService, $interval) {
+        .controller('CuneiformCtrl', ['$scope', '$routeParams', 'growl', 'ModalService', 'JobHistoryService', 'CuneiformService', '$interval',
+          function ($scope, $routeParams, growl, ModalService, JobHistoryService, CuneiformService, $interval) {
             //Set all the variables required to be a jobcontroller:
             //For fetching job history
             var self = this;

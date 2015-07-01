@@ -21,7 +21,6 @@ import se.kth.bbc.jobs.spark.SparkJobConfiguration;
 import se.kth.bbc.jobs.spark.SparkYarnRunnerBuilder;
 import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.Constants;
-import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.Project;
 import se.kth.bbc.project.ProjectFacade;
@@ -98,7 +97,6 @@ public class SparkController {
       job.setStdOutFinalDestination(stdOutFinalDestination);
       job.setStdErrFinalDestination(stdErrFinalDestination);
       submitter.startExecution(job);
-      MessagesController.addInfoMessage("Job submitted!");
     } else {
       logger.log(Level.SEVERE,
               "Failed to persist JobHistory. Aborting execution.");
