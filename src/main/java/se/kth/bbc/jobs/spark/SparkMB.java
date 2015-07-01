@@ -12,19 +12,14 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import se.kth.bbc.activity.ActivityFacade;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.jobs.AsynchronousJobExecutor;
 import se.kth.bbc.jobs.FileSelectionController;
 import se.kth.bbc.jobs.JobMB;
 import se.kth.bbc.jobs.JobControllerEvent;
 import se.kth.bbc.jobs.jobhistory.JobHistory;
 import se.kth.bbc.jobs.jobhistory.JobHistoryFacade;
-import se.kth.bbc.jobs.jobhistory.JobType;
-import se.kth.bbc.jobs.yarn.YarnRunner;
 import se.kth.bbc.lims.ClientSessionState;
-import se.kth.bbc.lims.Constants;
 import se.kth.bbc.lims.MessagesController;
 import se.kth.bbc.lims.StagingManager;
-import se.kth.bbc.lims.Utils;
 import se.kth.hopsworks.controller.SparkController;
 
 /**
@@ -125,6 +120,22 @@ public final class SparkMB extends JobMB {
     //TODO: allow for file input in Spark
   }
 
+  public void startJob() {
+    try {
+      SparkJobConfiguration config = new SparkJobConfiguration();
+      config.setJarPath(getMainFilePath());
+      config.setMainClass(mainClass);
+      config.setArgs(args);
+      //TODO: config.addExtraFiles(getExtraFiles());
+      JobHistory jh = controller.startJob(config, sessionState.
+              getLoggedInUsername(), sessionState.getActiveProject().getId());
+      setSelectedJob(jh);
+    } catch (IllegalStateException | IOException e) {
+      MessagesController.addErrorMessage("Failed to start application master.",
+              e.getLocalizedMessage());
+    }
+  }
+
   @Override
   protected String getUserMessage(JobControllerEvent event, String extraInfo) {
     switch (event) {
@@ -155,22 +166,6 @@ public final class SparkMB extends JobMB {
 
   public void setFileSelectionController(FileSelectionController fs) {
     this.fileSelectionController = fs;
-  }
-
-  public void startJob() {
-    try {
-      SparkJobConfiguration config = new SparkJobConfiguration();
-      config.setJarPath(getMainFilePath());
-      config.setMainClass(mainClass);
-      config.setArgs(args);
-      //TODO: config.addExtraFiles(getExtraFiles());
-      JobHistory jh = controller.startJob(config, sessionState.
-              getLoggedInUsername(), sessionState.getActiveProject().getId());
-      setSelectedJob(jh);
-    } catch (IllegalStateException | IOException e) {
-      MessagesController.addErrorMessage("Failed to start application master.",
-              e.getLocalizedMessage());
-    }
   }
 
 }
