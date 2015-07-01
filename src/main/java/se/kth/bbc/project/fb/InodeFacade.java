@@ -17,7 +17,7 @@ import se.kth.kthfsdashboard.user.AbstractFacade;
 @Stateless
 public class InodeFacade extends AbstractFacade<Inode> {
 
-  @PersistenceContext(unitName = "hopsPU")
+  @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   @Override
@@ -27,17 +27,6 @@ public class InodeFacade extends AbstractFacade<Inode> {
 
   public InodeFacade() {
     super(Inode.class);
-  }
-
-  public Inode findByName(String name) {
-    TypedQuery<Inode> query = em.createNamedQuery("Inode.findByName",
-            Inode.class);
-    query.setParameter("name", name);
-    try {
-      return query.getSingleResult();
-    } catch (NoResultException e) {
-      return null;
-    }
   }
 
   /**
@@ -148,11 +137,19 @@ public class InodeFacade extends AbstractFacade<Inode> {
     return getInode(path);
   }
 
+  /**
+   * Get the Inode representing the project root directory of the project with
+   * given name.
+   * <p>
+   * @param name
+   * @return The sought for Inode, or null if this Inode does not exist.
+   */
   public Inode getProjectRoot(String name) {
     return getInode("/" + Constants.DIR_ROOT + "/" + name);
   }
 
   public Inode findByParentAndName(Inode parent, String name) {
+
     TypedQuery<Inode> q = em.createNamedQuery("Inode.findByPrimaryKey",
             Inode.class);
     q.setParameter("inodePk", new InodePK(parent.getId(), name));
@@ -163,7 +160,15 @@ public class InodeFacade extends AbstractFacade<Inode> {
     }
   }
 
-  public Inode getProjectRootForInode(Inode i) {
+  /**
+   * Get the project base directory of which the given Inode is a descendant.
+   * <p>
+   * @param i
+   * @return The Inode representing the project root directory.
+   * @throws IllegalStateException when the given Inode is not under a project
+   * root directory.
+   */
+  public Inode getProjectRootForInode(Inode i) throws IllegalStateException {
     if (isProjectRoot(i)) {
       return i;
     } else {
@@ -176,6 +181,12 @@ public class InodeFacade extends AbstractFacade<Inode> {
     }
   }
 
+  /**
+   * Find out if an Inode is a project root directory.
+   * <p>
+   * @param i
+   * @return
+   */
   public boolean isProjectRoot(Inode i) {
     Inode parent = findParent(i);
     if (!parent.getInodePK().getName().equals(
@@ -187,11 +198,28 @@ public class InodeFacade extends AbstractFacade<Inode> {
     }
   }
 
-  public String getProjectNameForInode(Inode i) {
+  /**
+   * Get the name of the project of which this Inode is a descendant.
+   * <p>
+   * @param i
+   * @return
+   * @throws IllegalStateException When the given Inode is not a descendant of
+   * any project.
+   */
+  public String getProjectNameForInode(Inode i) throws IllegalStateException {
     Inode projectRoot = getProjectRootForInode(i);
     return projectRoot.getInodePK().getName();
   }
 
+
+  /**
+   * Get a list of NavigationPath objects representing the project-relative path
+   * to the given Inode. The first element in the list is the project root
+   * directory.
+   * <p>
+   * @param i
+   * @return
+   */
   public List<NavigationPath> getConstituentsPath(Inode i) {
     if (isProjectRoot(i)) {
       List<NavigationPath> p = new ArrayList<>();
@@ -213,6 +241,12 @@ public class InodeFacade extends AbstractFacade<Inode> {
     }
   }
 
+  /**
+   * Get the path to the given Inode.
+   * <p>
+   * @param i
+   * @return
+   */
   public String getPath(Inode i) {
     List<String> pathComponents = new ArrayList<>();
     Inode parent = i;

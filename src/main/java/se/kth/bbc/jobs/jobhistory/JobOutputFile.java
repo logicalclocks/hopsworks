@@ -19,7 +19,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author stig
  */
 @Entity
-@Table(name = "job_output_files")
+@Table(name = "vangelis_kthfs.job_output_files")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "JobOutputFile.findAll",

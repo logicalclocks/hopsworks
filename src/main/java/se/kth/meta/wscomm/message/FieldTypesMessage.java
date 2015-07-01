@@ -1,6 +1,7 @@
 package se.kth.meta.wscomm.message;
 
 import java.util.List;
+import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -13,6 +14,9 @@ import se.kth.meta.entity.FieldTypes;
  * @author vangelis
  */
 public class FieldTypesMessage extends PlainMessage {
+
+  private static final Logger logger = Logger.
+          getLogger(FieldTypesMessage.class.getName());
 
   private String TYPE = "FieldTypesMessage";
   private String sender;
@@ -81,7 +85,6 @@ public class FieldTypesMessage extends PlainMessage {
   public String buildSchema(List<EntityIntf> list) {
 
     List<FieldTypes> ft = (List<FieldTypes>) (List<?>) list;
-    System.out.println("LIST SIZE " + list.size());
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
     JsonArrayBuilder fieldTypes = Json.createArrayBuilder();

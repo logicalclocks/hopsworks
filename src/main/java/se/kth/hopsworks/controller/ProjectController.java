@@ -58,6 +58,7 @@ public class ProjectController {
   @EJB
   private InodeFacade inodes;
 
+
   /**
    * Creates a new project(project), the related DIR, the different services
    * in the project, and the master of the project.

@@ -49,13 +49,11 @@ public class User implements HttpSessionBindingListener {
 
   @Override
   public void valueBound(HttpSessionBindingEvent event) {
-
-    System.out.println("USER " + username + " WAS BOUND TO THE SESSION");
+    //System.out.println("USER " + username + " WAS BOUND TO THE SESSION");
   }
 
   @Override
   public void valueUnbound(HttpSessionBindingEvent event) {
-
-    System.out.println("USER " + username + " WAS UNBOUND FROM THE SESSION");
+    //System.out.println("USER " + username + " WAS UNBOUND FROM THE SESSION");
   }
 }

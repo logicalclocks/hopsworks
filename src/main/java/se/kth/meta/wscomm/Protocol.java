@@ -1,5 +1,6 @@
 package se.kth.meta.wscomm;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import se.kth.meta.db.Dbao;
 import se.kth.meta.entity.EntityIntf;
@@ -45,9 +46,8 @@ public class Protocol {
 
   /**
    * Process an incoming message and create and send back the response
-   * <p>
+   *
    * @param message the incoming message
-   * <p>
    * @return a new response message or an error message
    */
   public Message GFR(Message message) {
@@ -105,7 +105,8 @@ public class Protocol {
 
       case FETCH_METADATA:
         table = (Tables) message.parseSchema().get(0);
-        return this.fetchTableMetadata(table);
+        //return this.fetchTableMetadata(table);
+        return this.fetchTableMetadataForInode(table, table.getInodeid());
 
       case FETCH_FIELD_TYPES:
         return this.fetchFieldTypes(message);
@@ -185,6 +186,13 @@ public class Protocol {
     return message;
   }
 
+  /**
+   * Fetches ALL the metadata a metadata table carries. It does not do any
+   * filtering
+   *
+   * @param table
+   * @return
+   */
   private Message fetchTableMetadata(Tables table) {
 
     try {
@@ -193,18 +201,72 @@ public class Protocol {
 
       List<Fields> fields = t.getFields();
       for (Fields field : fields) {
+        /*
+         * Load raw data based on the field id. Need to filter this further
+         * according to tupleid and inodeid
+         */
         List<RawData> raw = field.getRawData();
 
         for (RawData rawdata : raw) {
           TupleToFile ttf = this.db.getTupletofile(rawdata.getTupleid());
           rawdata.setInodeid(ttf.getInodeid());
+          System.err.println("SETTING THE INODE FOR TUPLE TO FILE " + ttf.
+                  getInodeid());
         }
       }
 
       List<Tables> tables = new LinkedList<>();
       tables.add(t);
       String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
-      //System.out.println("JSONMSG " + jsonMsg);
+
+      message.setMessage(jsonMsg);
+
+      return message;
+
+    } catch (DatabaseException e) {
+      return new ErrorMessage("Server", e.getMessage());
+    }
+  }
+
+  /**
+   * Fetches the metadata a metadata table carries ONLY for a specific inodeid
+   *
+   * @param table
+   * @return
+   */
+  private Message fetchTableMetadataForInode(Tables table, int inodeid) {
+
+    try {
+      MetadataMessage message = new MetadataMessage("Server", "");
+      Tables t = this.db.getTable(table.getId());
+
+      List<Fields> fields = t.getFields();
+
+      for (Fields field : fields) {
+        /*
+         * Load raw data based on the field id. Need to filter this further
+         * according to tupleid and inodeid
+         */
+        List<RawData> rawList = field.getRawData();
+        List<RawData> toKeep = new LinkedList<>();
+
+        for (RawData raw : rawList) {
+          TupleToFile ttf = this.db.getTupletofile(raw.getTupleid());
+
+          //keep only the data related to the specific inode
+          if (ttf.getInodeid() == inodeid) {
+            //System.err.println("GOING TO KEEP RAW RECORD " + ttf.getTupleid());
+            raw.setInodeid(ttf.getInodeid());
+            toKeep.add(raw);
+          }
+        }
+
+        field.setRawData(toKeep);
+      }
+
+      List<Tables> tables = new LinkedList<>();
+      tables.add(t);
+      String jsonMsg = message.buildSchema((List<EntityIntf>) (List<?>) tables);
 
       message.setMessage(jsonMsg);
 

@@ -7,12 +7,24 @@ import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Lob;
+import java.util.Collection;
+import java.util.Iterator;
+import javax.persistence.Basic;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import se.kth.meta.entity.Templates;
 import org.eclipse.persistence.annotations.Convert;
 import org.eclipse.persistence.annotations.Converter;
 
@@ -21,7 +33,7 @@ import org.eclipse.persistence.annotations.Converter;
  * @author stig
  */
 @Entity
-@Table(name = "hdfs_inodes")
+@Table(name = "hops.hdfs_inodes")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Inode.findAll",
@@ -134,6 +146,20 @@ public class Inode implements Serializable {
 
   public Inode() {
   }
+  @Column(name = "subtree_lock_owner")
+  private BigInteger subtreeLockOwner;
+
+  @ManyToMany(mappedBy = "inodes",
+          cascade = CascadeType.PERSIST,
+          fetch = FetchType.EAGER)
+  private Collection<Templates> templates;
+
+  public Inode() {
+  }
+
+  public Inode(Integer id) {
+    this.id = id;
+  }
 
   public Inode(InodePK inodePK) {
     this.inodePK = inodePK;
@@ -145,6 +171,13 @@ public class Inode implements Serializable {
     this.id = id;
     this.quotaEnabled = quotaEnabled;
     this.underConstruction = underConstruction;
+  }
+
+  //copy constructor
+  public Inode(Inode inode) {
+    this(new InodePK(inode.getInodePK().getParentId(), inode.getInodePK().
+            getName()), inode.getId(), inode.getQuotaEnabled(), inode.
+            getUnderConstruction());
   }
 
   public Inode(int parentId, String name) {
@@ -271,6 +304,41 @@ public class Inode implements Serializable {
     this.subtreeLockOwner = subtreeLockOwner;
   }
 
+  @XmlTransient
+  public Collection<Templates> getTemplates() {
+    return this.templates;
+  }
+
+  public void setTemplates(Collection<Templates> templates) {
+    this.templates = templates;
+  }
+
+  public void addTemplate(Templates template) {
+    if (template != null) {
+      this.templates.add(template);
+    }
+  }
+
+  /**
+   * for the time being we treat the many to many relationship between inodes
+   * and templates as a many to one, where an inode may be associated only to
+   * one template, while the same template may be associated to many inodes
+   * <p>
+   * @return the template id
+   */
+  public int getTemplate() {
+
+    int templateId = -1;
+
+    if (this.templates != null && !this.templates.isEmpty()) {
+      Iterator it = this.templates.iterator();
+      Templates template = (Templates) it.next();
+      templateId = template.getId();
+    }
+
+    return templateId;
+  }
+
   @Override
   public int hashCode() {
     int hash = 0;
@@ -294,7 +362,7 @@ public class Inode implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.project.fb.Inode[ inodePK=" + inodePK + " ]";
+    return "se.kth.bbc.project.fb.Inode[ inodePK= " + inodePK + " ]";
   }
 
   public boolean isDir() {

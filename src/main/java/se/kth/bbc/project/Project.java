@@ -16,6 +16,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -26,6 +27,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import se.kth.bbc.activity.Activity;
 import se.kth.bbc.security.ua.model.User;
+import se.kth.bbc.project.metadata.ProjectMeta;
+import se.kth.bbc.project.samples.Samplecollection;
 import se.kth.bbc.project.services.ProjectServices;
 
 /**
@@ -33,7 +36,7 @@ import se.kth.bbc.project.services.ProjectServices;
  * @author roshan
  */
 @Entity
-@Table(name = "project")
+@Table(name = "vangelis_kthfs.project")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Project.findAll",
@@ -113,17 +116,26 @@ public class Project implements Serializable {
   @Column(name = "description")
   private String description;
 
+  @OneToMany(mappedBy = "project")
+  private Collection<Samplecollection> samplecollectionCollection;
+
+  @OneToOne(cascade = CascadeType.ALL,
+          mappedBy = "project")
+  private ProjectMeta projectMeta;
+
   public Project() {
   }
 
   public Project(String name) {
     this.name = name;
+    this.archived = false;
   }
 
   public Project(String name, User owner, Date timestamp) {
     this.name = name;
     this.owner = owner;
     this.created = timestamp;
+    this.archived = false;
   }
 
   public Date getCreated() {
@@ -182,9 +194,29 @@ public class Project implements Serializable {
     this.description = description;
   }
 
+  public ProjectMeta getProjectMeta() {
+    return projectMeta;
+  }
+
+  public void setProjectMeta(ProjectMeta projectMeta) {
+    this.projectMeta = projectMeta;
+  }
+
   @Override
   public String toString() {
-    return "se.kth.bbc.project.Project[ name=" + name + " ]";
+    return "se.kth.bbc.project.Project[ name=" + name + " archived=" + archived
+            + " ]";
+  }
+
+  @XmlTransient
+  @JsonIgnore
+  public Collection<Samplecollection> getSamplecollectionCollection() {
+    return samplecollectionCollection;
+  }
+
+  public void setSamplecollectionCollection(
+          Collection<Samplecollection> samplecollectionCollection) {
+    this.samplecollectionCollection = samplecollectionCollection;
   }
 
   public Project(Integer id) {

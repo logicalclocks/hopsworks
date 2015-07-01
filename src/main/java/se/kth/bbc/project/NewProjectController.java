@@ -37,7 +37,6 @@ public class NewProjectController implements Serializable {
   private static final String TEMPLATE_SPARK = "Spark";
   private static final ProjectServiceEnum[] SERVICES_SPARK = {
     ProjectServiceEnum.SPARK};
-
   private ProjectServiceEnum[] customServices; // Services selected by user
   private String chosenTemplate; // Chosen template: if custom, customServices is used
   private String newProjectName; //The name of the new project

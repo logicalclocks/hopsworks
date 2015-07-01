@@ -201,23 +201,24 @@ CREATE TABLE `organization` (
     FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `field_predefined_values` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `fieldid` INT(11) NOT NULL,
-  `valuee` VARCHAR(250) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=ndbcluster;
-
 -- Metadata --------------
 -- ------------------------
 
-CREATE TABLE `templates` (
+CREATE TABLE `meta_field_predefined_values` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `fieldid` INT(11) NOT NULL,
+  `valuee` VARCHAR(250) NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`fieldid`) REFERENCES `meta_fields` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
+
+CREATE TABLE `meta_templates` (
   `templateid` INT(11) NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(250) NOT NULL,
   PRIMARY KEY (`templateid`)
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `tables` (
+CREATE TABLE `meta_tables` (
   `tableid` INT(11) NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) DEFAULT NULL,
   `templateid` INT(11) NOT NULL,
@@ -225,13 +226,13 @@ CREATE TABLE `tables` (
   FOREIGN KEY (`templateid`) REFERENCES `templates` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `field_types` (
+CREATE TABLE `meta_field_types` (
   `id` MEDIUMINT(9) NOT NULL AUTO_INCREMENT,
   `description` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `fields` (
+CREATE TABLE `meta_fields` (
   `fieldid` INT(11) NOT NULL AUTO_INCREMENT,
   `maxsize` INT(11) DEFAULT NULL,
   `name` VARCHAR(255) DEFAULT NULL,
@@ -243,23 +244,52 @@ CREATE TABLE `fields` (
   `fieldtypeid` INT(11) NOT NULL,
   PRIMARY KEY (`fieldid`),
   FOREIGN KEY (`tableid`) REFERENCES `tables` (`tableid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  FOREIGN KEY (`fieldtypeid`) REFERENCES `meta_field_types` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `tuple_to_file` (
+CREATE TABLE `meta_tuple_to_file` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `inodeid` INT(11) DEFAULT NULL,
   `tupleid` INT(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=ndbcluster;
 
-CREATE TABLE `raw_data` (
+CREATE TABLE `meta_raw_data` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `data` LONGTEXT NOT NULL,
   `fieldid` INT(11) DEFAULT NULL,
   `tupleid` INT(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`fieldid`) REFERENCES `fields` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  FOREIGN KEY (`fieldid`) REFERENCES `meta_fields` (`fieldid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  FOREIGN KEY (`tupleid`) REFERENCES `meta_tuple_to_file` (`tupleid`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=ndbcluster;
+
+CREATE TABLE `meta_inodes_ops_children_deleted` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` INT(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=ndbcluster;
+
+CREATE TABLE `meta_inodes_ops_parents_deleted` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `inodeid` INT(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=ndbcluster;
+
+CREATE TABLE `meta_tuple_to_file` (
+  `inodeid` INT(11) DEFAULT NULL,
+  `tupleid` INT(11) DEFAULT NULL,
+  PRIMARY KEY (`tupleid`)
+) ENGINE=ndbcluster;
+
+CREATE TABLE `meta_template_to_inode` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `template_id` int(11) NOT NULL,
+  `inode_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`template_id`) REFERENCES `meta_templates` (`templateid`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=ndbcluster;
+
 
 -- VIEWS --------------
 -- ---------------------

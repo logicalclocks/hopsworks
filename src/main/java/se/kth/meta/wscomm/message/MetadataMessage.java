@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -21,6 +22,9 @@ import se.kth.meta.entity.Tables;
  * @author Vangelis
  */
 public class MetadataMessage implements Message {
+
+  private static final Logger logger = Logger.
+          getLogger(MetadataMessage.class.getName());
 
   private final String TYPE = "MetadataMessage";
   private String sender;
@@ -92,17 +96,23 @@ public class MetadataMessage implements Message {
             readObject();
     List<EntityIntf> data = new LinkedList<>();
 
+
+    int inodeid = -1;
+
     try {
+      inodeid = obj.getInt("inodeid");
       int tableId = obj.getInt("tableid");
+
       Tables table = new Tables(tableId);
+      table.setInodeid(inodeid);
       List<EntityIntf> list = new LinkedList<>();
       list.add(table);
       return list;
     } catch (NullPointerException e) {
 
+      System.err.println("MetadataMessage:parseSchema() " + e.getMessage());
     }
 
-    int inodeid = 1367; //Integer.parseInt(obj.getString("inodeid"));
     Set<Entry<String, JsonValue>> set = obj.entrySet();
 
     for (Entry<String, JsonValue> entry : set) {

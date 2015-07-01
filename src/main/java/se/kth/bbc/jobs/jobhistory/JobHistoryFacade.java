@@ -105,7 +105,10 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
    * @deprecated Need to fix this.
    */
   private void updateState(Long id, JobState state) {
-    Query q = em.createNativeQuery("UPDATE jobhistory SET state=? WHERE id=?");
+
+    Query q = em.createNativeQuery(
+            "UPDATE vangelis_kthfs.jobhistory SET state=? WHERE id=?");
+
     q.setParameter(1, state.name());
     q.setParameter(2, id);
     q.executeUpdate();

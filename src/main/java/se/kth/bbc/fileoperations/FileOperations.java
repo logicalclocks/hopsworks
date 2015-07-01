@@ -15,6 +15,7 @@ import se.kth.bbc.lims.Utils;
 import se.kth.bbc.project.fb.Inode;
 import se.kth.bbc.project.fb.InodeFacade;
 
+
 /**
  * Session bean for file operations. Translates high-level operations into
  * operations on both the file system (HDFS) and the backing DB model (table
@@ -25,8 +26,8 @@ import se.kth.bbc.project.fb.InodeFacade;
 @Stateless
 public class FileOperations {
 
-  private static final Logger logger = Logger.getLogger(
-          FileOperationsManagedBean.class.getName());
+  private static final Logger logger = Logger.getLogger(FileOperations.class.
+          getName());
 
   @EJB
   private FileSystemOperations fsOps;
@@ -158,6 +159,41 @@ public class FileOperations {
     return fsOps.rm(location, true);
   }
 
+  /**
+   * Deletes a file or folder at the given path recursively. In a folder it
+   * visits all the subfolders until it reaches the leaves of the hierarchy.
+   * For every leaf (file/folder) deleted, creates and stores an event to the
+   * event queue. This way elastic will know which children in the flattened
+   * hierarchy to remove
+   *
+   * @param i The path to file or folder to be removed recursively.
+   * @return True if successful, false otherwise.
+   *
+   * @throws java.io.IOException in case of an error
+   */
+//  public boolean rmR(Inode i) throws IOException {
+//
+//    if (i.getChildren().size() > 0) {
+//      //remove recursively all the children
+//      for (Inode node : i.getChildren()) {
+//        this.rmR(node);
+//      }
+//      //empty the children list
+//      i.clearChildren();
+//    }
+//
+//    //remove self
+//    Path location = new Path(i.getPath());
+//    boolean success = fsOps.rm(location, true);
+//
+//    if (success) {
+//      inodes.remove(i);
+//      this.inodeOps.createAndStoreOperation(i, REMOVE);
+//    }
+//
+//    return success;
+//  }
+  
   /**
    * Copy a file from the local file system to HDFS after its upload. Finds
    * the corresponding Inode for the file and copies the file, updating the

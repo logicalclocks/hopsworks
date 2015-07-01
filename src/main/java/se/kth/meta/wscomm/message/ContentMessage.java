@@ -1,6 +1,7 @@
 package se.kth.meta.wscomm.message;
 
 import java.util.List;
+import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
@@ -16,6 +17,9 @@ import se.kth.meta.exception.ApplicationException;
  * @author vangelis
  */
 public abstract class ContentMessage implements Message {
+
+  private static final Logger logger = Logger.
+          getLogger(ContentMessage.class.getName());
 
   protected int templateId;
   protected String action;
@@ -88,8 +92,6 @@ public abstract class ContentMessage implements Message {
 
       template.add("id", te.getId());
       template.add("name", te.getName());
-//            System.out.println("TEMPLATE ID " + te.getId());
-//            System.out.println("TEMPLATE NAME " + te.getName());
       templates.add(template);
     }
 

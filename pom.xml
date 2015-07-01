@@ -130,7 +130,6 @@
             </resource>
           </webResources>
         </configuration>
-
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -184,7 +183,6 @@
           </dependency>
         </dependencies>
       </plugin>
-      
     </plugins>
   </build>
 

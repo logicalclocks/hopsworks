@@ -37,8 +37,6 @@ public class ServletAwareConfig extends ServerEndpointConfig.Configurator {
           HandshakeRequest request, HandshakeResponse response) {
 
     HttpSession httpSession = (HttpSession) request.getHttpSession();
-    System.out.println("SESSION IS NULL " + (httpSession == null));
-    System.out.println("WSSESSIONID " + httpSession.getId());
     ServletContext context = (ServletContext) httpSession.getServletContext();
 
     config.getUserProperties().put("httpSession", httpSession);

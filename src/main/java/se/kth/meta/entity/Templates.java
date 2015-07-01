@@ -1,6 +1,7 @@
 package se.kth.meta.entity;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import javax.persistence.Basic;
@@ -11,6 +12,9 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -18,13 +22,15 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import se.kth.bbc.project.fb.Inode;
 
 /**
  *
  * @author vangelis
  */
 @Entity
-@Table(name = "templates")
+@Table(name = "vangelis_kthfs.meta_templates")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Templates.findAll",
@@ -55,18 +61,35 @@ public class Templates implements Serializable, EntityIntf {
           cascade = CascadeType.ALL)
   private List<Tables> tables;
 
+
+  @JoinTable(name = "vangelis_kthfs.meta_template_to_inode",
+          inverseJoinColumns = {
+            @JoinColumn(name = "inode_pid",
+                    referencedColumnName = "parent_id"),
+            @JoinColumn(name = "inode_name",
+                    referencedColumnName = "name")
+          },
+          joinColumns = {
+            @JoinColumn(name = "template_id",
+                    referencedColumnName = "templateid")
+          })
+  @ManyToMany(fetch = FetchType.EAGER)
+  private Collection<Inode> inodes;
+
   public Templates() {
   }
 
   public Templates(Integer templateid) {
     this.id = templateid;
     this.tables = new LinkedList<>();
+    this.inodes = new LinkedList<>();
   }
 
   public Templates(Integer templateid, String name) {
     this.id = templateid;
     this.name = name;
     this.tables = new LinkedList<>();
+    this.inodes = new LinkedList<>();
   }
 
   @Override
@@ -103,6 +126,15 @@ public class Templates implements Serializable, EntityIntf {
     this.tables = tables;
   }
 
+  @XmlTransient
+  public Collection<Inode> getInodes() {
+    return this.inodes;
+  }
+
+  public void setInodes(List<Inode> inodes) {
+    this.inodes = inodes;
+  }
+
   @Override
   public int hashCode() {
     int hash = 0;
@@ -126,7 +158,8 @@ public class Templates implements Serializable, EntityIntf {
 
   @Override
   public String toString() {
-    return "se.kth.meta.entity.Templates[ templateid=" + id + " ]";
+    return "se.kth.meta.entity.Templates[ templateid=" + id + " name=" + name
+            + " ]";
   }
 
 }

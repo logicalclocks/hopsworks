@@ -24,7 +24,7 @@ import se.kth.bbc.security.ua.model.User;
  * @author roshan
  */
 @Entity
-@Table(name = "project_team")
+@Table(name = "vangelis_kthfs.project_team")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "ProjectTeam.findRoleForUserInProject",

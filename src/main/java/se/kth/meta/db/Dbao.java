@@ -14,6 +14,7 @@ import javax.naming.NamingException;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.NotSupportedException;
@@ -34,7 +35,7 @@ import se.kth.meta.entity.TupleToFile;
         name = "persistence/em")
 @Resource(type = javax.transaction.UserTransaction.class,
         name = "UserTransaction")
-public class Dbao { 
+public class Dbao {
 
   private static final Logger logger = Logger.getLogger(Dbao.class.getName());
 
@@ -49,12 +50,6 @@ public class Dbao {
       this.ic = (Context) new InitialContext();
       this.em = (EntityManager) ic.lookup("java:comp/env/persistence/em");
       this.utx = (UserTransaction) ic.lookup("java:comp/env/UserTransaction");
-
-      logger.log(Level.SEVERE, "Database initialized.\n");
-
-//            Fields field = this.em.find(Fields.class, 10);
-//            field.setForceDelete(true);
-//            this.deleteField(field);
     } catch (NamingException | IllegalStateException | SecurityException ex) {
       logger.log(Level.SEVERE, null, ex);
       throw new DatabaseException(Dbao.class.getName(), ex.getMessage());
@@ -196,11 +191,13 @@ public class Dbao {
 
     try {
       Tables t = this.getTable(table.getId());
-      t.setForceDelete(table.forceDelete());
-      if (!t.getFields().isEmpty() && !t.forceDelete()) {
-        throw new DatabaseException("Table '" + t.getName() + "' has fields "
-                + "associated to it");
-      }
+
+//    NEEDS TO BE REEMPLOYED
+//            t.setForceDelete(table.forceDelete());
+//            if (!t.getFields().isEmpty() && !t.forceDelete()) {
+//                throw new DatabaseException("Table '" + t.getName() + "' has fields "
+//                        + "associated to it");
+//            }
 
       //first remove all the child elements of this table to avoid foreign key violation
       List<Fields> fields = t.getFields();
@@ -314,8 +311,7 @@ public class Dbao {
    * Deletes a field's predefined values. When a field modification happens
    * all its previously defined values need to be purged before the new
    * ones take their place i.e. a field gets its type changed from a dropdown
-   * list
-   * to true/false, or to plain text
+   * list to true/false, or to plain text
    * <p>
    *
    * @param fieldid
@@ -427,7 +423,44 @@ public class Dbao {
     return query.getResultList();
   }
 
-  //TEST TO SEE DATABASE UPDATES
+  /**
+   * Find the Template that has <i>templateid</i> as id.
+   * <p>
+   * @param templateid
+   * @return
+   */
+  public Templates findTemplateById(int templateid) {
+    TypedQuery<Templates> query = em.createNamedQuery(
+            "Templates.findByTemplateid",
+            Templates.class);
+
+    query.setParameter("templateid", templateid);
+    return query.getSingleResult();
+  }
+
+  /**
+   * Update the relationship table <i>meta_template_to_inode</i>
+   * <p>
+   * @param template
+   * @throws se.kth.meta.exception.DatabaseException
+   */
+  public void updateTemplatesInodesMxN(Templates template) throws
+          DatabaseException {
+    try {
+      this.utx.begin();
+      this.em.merge(template);
+      this.utx.commit();
+    } catch (IllegalStateException | SecurityException | HeuristicMixedException |
+            HeuristicRollbackException | NotSupportedException |
+            RollbackException |
+            SystemException e) {
+
+      throw new DatabaseException(Dbao.class.getName(),
+              "Problem when attaching template " + template.getId());
+    }
+  }
+
+//    TEST TO SEE DATABASE UPDATES
 //    @Override
 //    public void run() {
 //        while (true) {
@@ -468,14 +501,15 @@ public class Dbao {
 //        }
 //    }
   public void shutdown() throws DatabaseException {
-//        this.em.clear();
-    //this.em.close();
+    //TODO RETHINK ABOUT SHUTTING DOWN DB CONNECTION
+    //this.em.clear();
 
+    //this.em.close();
     //this.utx = null;
-//        try {
-//            this.ic.close();
-//        } catch (NamingException e) {
-//            throw new ApplicationException(e.getMessage());
-//        }
+    //        try {
+    //            this.ic.close();
+    //        } catch (NamingException e) {
+    //            throw new ApplicationException(e.getMessage());
+    //        }
   }
 }

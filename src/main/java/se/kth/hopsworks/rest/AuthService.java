@@ -78,13 +78,16 @@ public class AuthService {
     JsonResponse json = new JsonResponse();
     Users user = userBean.findByEmail(email);
 
+    req.getServletContext().log("USER: " + user);
     req.getServletContext().log("1 step: " + email);
 
     //only login if not already logged in...
     if (sc.getUserPrincipal() == null) {
       if (user != null && statusValidator.checkStatus(user.getStatus())) {
         try {
-          req.getServletContext().log("going to login " + user.getStatus());
+
+          req.getServletContext().log("going to login. User status: " + user.
+                  getStatus());
           req.login(email, password);
           req.getServletContext().log("3 step: " + email);
           userController.resetFalseLogin(user);

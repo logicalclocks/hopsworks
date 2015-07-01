@@ -22,7 +22,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
  * @author Ali Gholami <gholami@pdc.kth.se>
  */
 @Entity
-@Table(name = "organization")
+@Table(name = "vangelis_kthfs.organization")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Organization.findAll",
