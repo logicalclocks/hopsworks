@@ -91,7 +91,7 @@ public class ResponseMessages {
           = "A directory with the same name already exists. "
           + "If you want to replace it delete it first then try recreating.";
   public final static String FILE_NAME_EXIST
-          = "File already exists at this path.";
+          = "File with the same name already exists.";
   public final static String FILE_NOT_FOUND = "File not found.";
   public final static String PROJECT_SERVICE_NOT_FOUND
           = " service was not found. ";
