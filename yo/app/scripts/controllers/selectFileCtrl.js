@@ -3,8 +3,8 @@
  * Controller for the file selection dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('SelectFileCtrl', ['$modalInstance', 'growl',
-          function ($modalInstance, growl) {
+        .controller('SelectFileCtrl', ['$modalInstance', 'growl', 'regex', 'errorMsg',
+          function ($modalInstance, growl, regex, errorMsg) {
 
             var self = this;
 
@@ -25,17 +25,17 @@ angular.module('hopsWorksApp')
              */
             self.select = function (filepath) {
               selectedFilePath = filepath;
-            }
+            };
 
             self.confirmSelection = function () {
               if (selectedFilePath == null) {
                 growl.error("Please select a file.", {title: "No file selected", ttl: 15000});
-              } else if (!selectedFilePath.match(/.cf\b/)) {
-                growl.error("Please select a Cuneiform workflow. The file should have the extension '.cf'.", {title: "Invalid file extension", ttl: 15000});
+              } else if (!selectedFilePath.match(regex)) {
+                growl.error(errorMsg, {title: "Invalid file extension", ttl: 15000});
               } else {
                 $modalInstance.close(selectedFilePath);
               }
-            }
+            };
 
             self.dblClick = function (datasetsCtrl, file) {
               if (file.dir) {
@@ -44,6 +44,6 @@ angular.module('hopsWorksApp')
                 self.select(file.path);
                 self.confirmSelection();
               }
-            }
+            };
 
           }]);

@@ -157,7 +157,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
               },
-              selectFile: function (size) {
+              selectFile: function (size, regex, errorMsg) {
                 var modalInstance = $modal.open({
                   templateUrl: 'views/selectFile.html',
                   controller: 'SelectFileCtrl as selectFileCtrl',
@@ -173,10 +173,16 @@ angular.module('hopsWorksApp')
                                   $location.replace();
                                   return $q.reject(err);
                                 });
-                      }]
+                      }],
+                    regex: function () {
+                      return regex;
+                    },
+                    errorMsg: function () {
+                      return errorMsg;
+                    }
                   }
                 });
                 return modalInstance.result;
               }
-            }
+            };
           }]);
