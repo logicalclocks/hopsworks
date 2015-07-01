@@ -82,10 +82,7 @@ public class UploadService {
               "Not a valid path!");
     }
     //check if all the non existing dir names in the path are valid.
-    Inode projectInode = inodes.findByName(Constants.DIR_ROOT);
-    Inode parent = inodes.findByParentAndName(projectInode,
-            pathArray[2]);
-
+    Inode parent = inodes.getProjectRoot(pathArray[2]);
     if (parent == null) {
       throw new AppException(Response.Status.BAD_REQUEST.getStatusCode(),
               ResponseMessages.PROJECT_NOT_FOUND);

@@ -20,7 +20,8 @@ buildNumber.properties
 */nbactions.xml
 */nb-configuration.xml
 .nb-gradle/
-
+nb-configuration.xml
+nbactions.xml
 
 ### Java ###
 *.class
