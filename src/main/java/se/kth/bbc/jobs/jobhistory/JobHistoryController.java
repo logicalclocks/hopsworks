@@ -13,10 +13,10 @@ import javax.faces.bean.RequestScoped;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
 import se.kth.bbc.fileoperations.FileOperations;
-import se.kth.bbc.jobs.JobController;
+import se.kth.bbc.jobs.JobMB;
 import se.kth.bbc.jobs.adam.AdamController;
 import se.kth.bbc.jobs.cuneiform.CuneiformMB;
-import se.kth.bbc.jobs.spark.SparkController;
+import se.kth.bbc.jobs.spark.SparkMB;
 import se.kth.bbc.jobs.yarn.YarnController;
 import se.kth.bbc.lims.ClientSessionState;
 import se.kth.bbc.lims.MessagesController;
@@ -48,7 +48,7 @@ public class JobHistoryController implements Serializable {
   @ManagedProperty(value = "#{adamController}")
   private AdamController adamCont;
   @ManagedProperty(value = "#{sparkController}")
-  private SparkController sparkCont;
+  private SparkMB sparkCont;
   @ManagedProperty(value = "#{yarnController}")
   private YarnController yarnCont;
 
@@ -64,7 +64,7 @@ public class JobHistoryController implements Serializable {
     this.adamCont = adamCont;
   }
 
-  public void setSparkCont(SparkController sparkCont) {
+  public void setSparkCont(SparkMB sparkCont) {
     this.sparkCont = sparkCont;
   }
 
@@ -95,7 +95,7 @@ public class JobHistoryController implements Serializable {
   }
 
   public void selectJob(JobHistory job) {
-    JobController c;
+    JobMB c;
     switch (job.getType()) {
       case CUNEIFORM:
         c = cfCont;

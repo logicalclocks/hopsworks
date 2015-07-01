@@ -16,7 +16,7 @@ public class FileSelectionController implements Serializable {
 
   private String selectedPath;
   private boolean isMainFile;
-  private JobController controller;
+  private JobMB controller;
   private boolean initialized = false;
   private Map<String, String> attributes;
 
@@ -28,7 +28,7 @@ public class FileSelectionController implements Serializable {
     this.selectedPath = selectedPath;
   }
 
-  public void init(JobController controller, boolean isMainFile,
+  public void init(JobMB controller, boolean isMainFile,
           Map<String, String> attributes) {
     this.controller = controller;
     this.isMainFile = isMainFile;

@@ -14,7 +14,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import se.kth.bbc.project.Project;
-import se.kth.bbc.project.ProjectFacade;
 import se.kth.bbc.security.ua.UserManager;
 import se.kth.bbc.security.ua.model.User;
 import se.kth.kthfsdashboard.user.AbstractFacade;
@@ -34,9 +33,6 @@ public class JobHistoryFacade extends AbstractFacade<JobHistory> {
 
   @EJB
   private UserManager users;
-
-  @EJB
-  private ProjectFacade studies;
 
   public JobHistoryFacade() {
     super(JobHistory.class);
